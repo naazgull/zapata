@@ -12,7 +12,6 @@
 //%debug
 %no-lines
 
-
 %left METHOD VERSION
 %left URL STATUS
 %left CR_LF
