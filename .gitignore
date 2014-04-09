@@ -1,0 +1,6 @@
+*.o
+*.d
+*.so
+/cpp/zapata/Debug/zapata
+/cpp/zapata/Release/zapata
+
