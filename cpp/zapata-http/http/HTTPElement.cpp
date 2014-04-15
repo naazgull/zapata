@@ -128,7 +128,19 @@ zapata::HTTPElement::HTTPElement() {
 zapata::HTTPElement::~HTTPElement() {
 }
 
+void zapata::HTTPElement::unset(ObjectOp _in) {
+	if ((this->__flags & _in) == _in) {
+		this->__flags ^= _in;
+	}
+}
+
 void zapata::HTTPElement::put(ObjectOp _in) {
+	if (_in == zapata::headers) {
+		this->unset(zapata::params);
+	}
+	if (_in == zapata::params) {
+		this->unset(zapata::headers);
+	}
 	this->__flags |= _in;
 }
 
@@ -187,5 +199,25 @@ zapata::HTTPElement& zapata::HTTPElement::operator<<(double _in) {
 
 zapata::HTTPElement& zapata::HTTPElement::operator<<(zapata::ObjectOp _in) {
 	this->put(_in);
+	return *this;
+}
+
+zapata::HTTPElement& zapata::HTTPElement::operator>>(const char* _in) {
+	this->unset(string(_in));
+	return *this;
+}
+
+zapata::HTTPElement& zapata::HTTPElement::operator>>(long long _in) {
+	this->unset(_in);
+	return *this;
+}
+
+zapata::HTTPElement& zapata::HTTPElement::operator>>(string _in) {
+	this->unset(_in);
+	return *this;
+}
+
+zapata::HTTPElement& zapata::HTTPElement::operator>>(zapata::ObjectOp _in) {
+	this->unset(_in);
 	return *this;
 }

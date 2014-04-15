@@ -21,7 +21,7 @@ namespace zapata {
 	unsigned int djb2(string key);
 
 	enum ObjectOp {
-		pretty = 0x01, minified = 0x02, json = 0x04,  xml = 0x08,  undefined = 0x16
+		pretty = 1, minified = 2, json = 4,  xml = 8,  undefined = 16,  headers = 32,  params = 64,  body = 128
 	};
 
 	template<typename K, typename V>

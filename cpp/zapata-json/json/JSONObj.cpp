@@ -19,6 +19,16 @@ zapata::JSONType zapata::JSONObjRef::type() {
 	return zapata::JSObject;
 }
 
+void zapata::JSONObjRef::unset(string _in) {
+	JSONObjRef::iterator _i;
+	if ((_i = this->find(_in)) != this->end()) {
+		return this->erase(_i);
+	}
+}
+
+void zapata::JSONObjRef::unset(long long _in) {
+}
+
 void zapata::JSONObjRef::put(int _in) {
 	if (this->__name == NULL) {
 		this->__name = new string();

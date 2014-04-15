@@ -92,6 +92,11 @@ namespace zapata {
 			JSONElement& operator<<(JSONStr& _in);
 			JSONElement& operator<<(JSONNil& _in);
 
+			JSONElement& operator>>(const char* _in);
+			JSONElement& operator>>(long long _in);
+			JSONElement& operator>>(string _in);
+			JSONElement& operator>>(ObjectOp _in);
+
 			JSONElement& operator[](size_t _idx);
 			JSONElement& operator[](const char* _idx);
 
@@ -117,6 +122,10 @@ namespace zapata {
 			virtual void put(JSONDbl& _in);
 			virtual void put(JSONStr& _in);
 			virtual void put(JSONNil& _in);
+
+			virtual void unset(long long _in);
+			virtual void unset(string _in);
+			virtual void unset(ObjectOp _in);
 
 			virtual bool compare(JSONElement& _in);
 
@@ -323,6 +332,9 @@ namespace zapata {
 			virtual void put(JSONStr& _in);
 			virtual void put(JSONNil& _in);
 
+			virtual void unset(long long _in);
+			virtual void unset(string _in);
+
 			virtual bool compare(JSONElement& _in);
 
 			virtual int getInt();
@@ -367,6 +379,9 @@ namespace zapata {
 			virtual void put(JSONDbl& _in);
 			virtual void put(JSONStr& _in);
 			virtual void put(JSONNil& _in);
+
+			virtual void unset(long long _in);
+			virtual void unset(string _in);
 
 			virtual bool compare(JSONElement& _in);
 

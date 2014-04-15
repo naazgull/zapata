@@ -171,6 +171,22 @@ namespace zapata {
 				(*this->__target) << _in;
 				return *this;
 			}
+			smart_ptr<T>& operator>>(string _in) {
+				(*this->__target) >> _in;
+				return *this;
+			}
+			smart_ptr<T>& operator>>(const char* _in) {
+				(*this->__target) >> _in;
+				return *this;
+			}
+			smart_ptr<T>& operator>>(long long _in) {
+				(*this->__target) >> _in;
+				return *this;
+			}
+			smart_ptr<T>& operator>>(ObjectOp _in) {
+				(*this->__target) >> _in;
+				return *this;
+			}
 			T& operator[](size_t _idx) {
 				return (T&) this->__target->get(_idx);
 			}

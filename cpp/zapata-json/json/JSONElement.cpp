@@ -45,6 +45,16 @@ void zapata::JSONElement::put(ObjectOp _in) {
 	this->__flags |= _in;
 }
 
+void zapata::JSONElement::unset(string _in) {
+}
+
+void zapata::JSONElement::unset(long long _in) {
+}
+
+void zapata::JSONElement::unset(ObjectOp _in) {
+	this->__flags ^= _in;
+}
+
 void zapata::JSONElement::put(JSONObj& _in) {
 }
 
@@ -277,6 +287,26 @@ zapata::JSONElement& zapata::JSONElement::operator<<(JSONStr& _in) {
 
 zapata::JSONElement& zapata::JSONElement::operator<<(JSONNil& _in) {
 	this->put(_in);
+	return *this;
+}
+
+zapata::JSONElement& zapata::JSONElement::operator>>(const char* _in) {
+	this->unset(string(_in));
+	return *this;
+}
+
+zapata::JSONElement& zapata::JSONElement::operator>>(long long _in) {
+	this->unset(_in);
+	return *this;
+}
+
+zapata::JSONElement& zapata::JSONElement::operator>>(string _in) {
+	this->unset(_in);
+	return *this;
+}
+
+zapata::JSONElement& zapata::JSONElement::operator>>(zapata::ObjectOp _in) {
+	this->unset(_in);
 	return *this;
 }
 

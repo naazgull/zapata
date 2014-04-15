@@ -17,6 +17,15 @@ zapata::JSONType zapata::JSONArrRef::type() {
 	return zapata::JSArray;
 }
 
+void zapata::JSONArrRef::unset(string _in) {
+}
+
+void zapata::JSONArrRef::unset(long long _in) {
+	if (_in < (long long) this->size()) {
+		this->erase(this->begin() + _in);
+	}
+}
+
 void zapata::JSONArrRef::put(int _in) {
 	JSONInt* _sp = new JSONInt(new JSONIntRef(_in));
 	this->push_back((smart_ptr<JSONElement>*) _sp);

@@ -26,6 +26,12 @@ void zapata::HTTPRepRef::status(zapata::HTTPStatus _in) {
 	this->__status = _in;
 }
 
+void zapata::HTTPRepRef::unset(string _in) {
+}
+
+void zapata::HTTPRepRef::unset(long long _in) {
+}
+
 void zapata::HTTPRepRef::put(int _in) {
 	if (this->__name == NULL) {
 		this->__name = new string();

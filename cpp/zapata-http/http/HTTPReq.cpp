@@ -42,6 +42,23 @@ void zapata::HTTPReqRef::query(string _query) {
 	this->__query.assign(_query.data());
 }
 
+void zapata::HTTPReqRef::unset(string _in) {
+	HTTPReqRef::iterator _i;
+	if ((this->__flags & zapata::params) == zapata::params) {
+		if ((_i = this->__params.find(_in)) != this->__params.end()) {
+			return this->__params.erase(_i);
+		}
+	}
+	else {
+		if ((_i = this->find(_in)) != this->end()) {
+			return this->erase(_i);
+		}
+	}
+}
+
+void zapata::HTTPReqRef::unset(long long _in) {
+}
+
 void zapata::HTTPReqRef::put(int _in) {
 	if (this->__name == NULL) {
 		this->__name = new string();
@@ -51,7 +68,12 @@ void zapata::HTTPReqRef::put(int _in) {
 	else {
 		string* _s = new string();
 		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
@@ -66,7 +88,12 @@ void zapata::HTTPReqRef::put(long _in) {
 	else {
 		string* _s = new string();
 		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
@@ -81,7 +108,12 @@ void zapata::HTTPReqRef::put(long long _in) {
 	else {
 		string* _s = new string();
 		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
@@ -101,7 +133,12 @@ void zapata::HTTPReqRef::put(double _in) {
 	else {
 		string* _s = new string();
 		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
@@ -116,7 +153,12 @@ void zapata::HTTPReqRef::put(bool _in) {
 	else {
 		string* _s = new string();
 		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
@@ -128,23 +170,42 @@ void zapata::HTTPReqRef::put(string _in) {
 	}
 	else {
 		string* _s = new string(_in);
-		this->insert(string(this->__name->data()), _s);
+		if ((this->__flags & zapata::params) == zapata::params) {
+			this->__params.insert(string(this->__name->data()), _s);
+		}
+		else {
+			this->insert(string(this->__name->data()), _s);
+		}
 		delete this->__name;
 		this->__name = NULL;
 	}
 }
 
 string& zapata::HTTPReqRef::get(size_t _idx) {
-	if(_idx < this->size()) {
-		return *this->at(_idx);
+	if ((this->__flags & zapata::params) == zapata::params) {
+		if(_idx < this->__params.size()) {
+			return *this->__params.at(_idx);
+		}
+	}
+	else {
+		if(_idx < this->size()) {
+			return *this->at(_idx);
+		}
 	}
 	return zapata::nil_header;
 }
 
 string& zapata::HTTPReqRef::get(const char* _idx) {
 	HTTPReqRef::iterator i;
-	if ((i = this->find(_idx)) != this->end()) {
-		return *((*i)->second);
+	if ((this->__flags & zapata::params) == zapata::params) {
+		if ((i = this->__params.find(_idx)) != this->__params.end()) {
+			return *((*i)->second);
+		}
+	}
+	else {
+		if ((i = this->find(_idx)) != this->end()) {
+			return *((*i)->second);
+		}
 	}
 	return zapata::nil_header;
 }
@@ -154,15 +215,27 @@ string& zapata::HTTPReqRef::header(const char* _idx) {
 }
 
 string& zapata::HTTPReqRef::param(const char* _idx) {
-	string _s(_idx);
-	_s.insert(0, "x-param-");
-	return this->get(_idx);
+	HTTPReqRef::iterator i;
+	if ((i = this->__params.find(_idx)) != this->__params.end()) {
+		return *((*i)->second);
+	}
+	return zapata::nil_header;
 }
 
 void zapata::HTTPReqRef::stringify(ostream& _out, short _flags, string _tabs) {
 	if (_flags & zapata::pretty) {
 	}
-	_out << zapata::method_names[this->__method] << " " << this->__url << (this->__query.length() != 0 ? "?" : "") << this->__query  << " HTTP/1.1" << CRLF;
+	_out << zapata::method_names[this->__method] << " " << this->__url;
+	if (this->__params.size() != 0) {
+		_out << "?";
+		for (HTTPReqRef::iterator i = this->__params.begin(); i != this->__params.end(); i++) {
+			if (i != this->__params.begin()) {
+				_out << "&";
+			}
+			_out << (*i)->first << "=" << *(*i)->second;
+		}
+	}
+	_out  << " HTTP/1.1" << CRLF;;
 	for (HTTPReqRef::iterator i = this->begin(); i != this->end(); i++) {
 		_out << (*i)->first << ": " << *(*i)->second << CRLF;
 	}

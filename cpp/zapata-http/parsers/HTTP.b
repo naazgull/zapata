@@ -27,11 +27,11 @@ exp :
 	{
 		d_scanner.init(zapata::HTTPRequest);
 	}
-	SPACE URL params
+	SPACE URL
 	{
 		d_scanner.url();
 	}
-	SPACE VERSION headers BODY
+	params SPACE VERSION headers BODY
 	{
 		d_scanner.body();
 	}

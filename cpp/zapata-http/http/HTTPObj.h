@@ -134,6 +134,11 @@ namespace zapata {
 			HTTPElement& operator<<(string _in);
 			HTTPElement& operator<<(ObjectOp _in);
 
+			HTTPElement& operator>>(long long _in);
+			HTTPElement& operator>>(const char* _in);
+			HTTPElement& operator>>(string _in);
+			HTTPElement& operator>>(ObjectOp _in);
+
 			friend ostream& operator<<(ostream& _out, HTTPElement& _in) {
 				_in.stringify(_out, _in.__flags, "");
 				return _out;
@@ -150,6 +155,10 @@ namespace zapata {
 			virtual void put(string _in) = 0;
 			virtual void put(ObjectOp _in);
 
+			virtual void unset(long long _in) = 0;
+			virtual void unset(string _in) = 0;
+			virtual void unset(ObjectOp _in);
+
 	};
 
 	class HTTPReqRef: public HTTPElement, public str_map<string*> {
@@ -159,6 +168,7 @@ namespace zapata {
 			string __query;
 			string __body;
 			HTTPMethod __method;
+			str_map<string*> __params;
 
 		public:
 			HTTPReqRef();
@@ -189,6 +199,10 @@ namespace zapata {
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
+
+			virtual void unset(long long _in);
+			virtual void unset(string _in);
+
 
 	};
 
@@ -224,6 +238,9 @@ namespace zapata {
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
+
+			virtual void unset(long long _in);
+			virtual void unset(string _in);
 
 	};
 
