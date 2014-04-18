@@ -13,6 +13,10 @@ namespace zapata {
 	void fromfile(ifstream& _in, HTTPRep& _out) ;
 	void fromfile(ifstream& _in, HTTPElement** _out, zapata::HTTPType* type ) ;
 
+	void fromstream(istream& _in, HTTPReq& _out) ;
+	void fromstream(istream& _in, HTTPRep& _out) ;
+	void fromstream(istream& _in, HTTPElement** _out, zapata::HTTPType* type ) ;
+
 	void fromstr(string& _in, HTTPReq& _out) ;
 	void fromstr(string& _in, HTTPRep& _out) ;
 	void fromstr(string& _in, HTTPElement** _out, zapata::HTTPType* type ) ;

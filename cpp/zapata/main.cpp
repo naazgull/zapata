@@ -58,19 +58,17 @@ int main(int argc, char* argv[]) {
 			f.open("/home/pf/some.http");
 			zapata::fromfile(f, obj);
 			f.close();
-
-			//obj >> "Authorization";
 			cout << obj << endl;
 		}
-		/*{
+		{
 			zapata::HTTPRep obj;
 			ifstream f;
 			f.open("/home/pf/someresp.http");
 			zapata::fromfile(f, obj);
 			f.close();
-		}*/
+			cout << obj << endl;
+		}
 #endif
-
 		zapata::process_mem_usage(vm, resident);
 		cout << "\t\t\t\t\t\t\tAfter Cycle Nr. " << k << "\n\tVM: " << vm << "kB\tRESIDENT: " << resident << "kB" << endl << flush;
 	}
