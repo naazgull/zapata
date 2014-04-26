@@ -31,6 +31,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1566280544" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2083267871" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -41,11 +42,13 @@
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-json"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
+									<listOptionValue builtIn="false" value="zapata-net"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1111415997" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1196759899" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -92,6 +95,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1837819429" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1225739774" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -102,11 +106,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Release}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1316913589" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-json"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
+									<listOptionValue builtIn="false" value="zapata-net"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1520026589" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

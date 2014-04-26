@@ -24,10 +24,10 @@
 
 %namespace = "zapata"
 
-//%debug
+%debug
 %no-lines
 
-%x request reply headers headerval crlf plain_body statustext contenttypeval contentlengthval params
+%x request reply headers headerval crlf plain_body statustext contentlengthval params
 %%
 
 [\f\t]+                  // skip white space
@@ -147,10 +147,7 @@
 		return 261;
 	}
 	([^:\n\r]+) {
-		if (matched() == string("Content-Type")) {
-			begin(StartCondition__::contenttypeval);
-		}
-		else if (matched() == string("Content-Length")) {
+		if (matched() == string("Content-Length")) {
 			begin(StartCondition__::contentlengthval);
 		}
 		return 263;
@@ -159,28 +156,6 @@
 
 <headerval>{
 	([^\n\r]+) {
-		begin(StartCondition__::headers);
-		return 263;
-	}
-}
-
-<contenttypeval>{
-	":" {
-		return 262;
-	}
-	([^:\n\r]+) {
-		if (matched().find("/json") != string::npos) {
-			__HTTP_LEXER_CONTENT_TYPE = zapata::Json;
-		}
-		else if (matched().find("/x-www-form-urlencoded") != string::npos) {
-			__HTTP_LEXER_CONTENT_TYPE = zapata::FormUrlEncoded;
-		}
-		else if (matched().find("/form-data") != string::npos) {
-			__HTTP_LEXER_CONTENT_TYPE = zapata::FormData;
-		}
-		else {
-			__HTTP_LEXER_CONTENT_TYPE = zapata::Text;
-		}
 		begin(StartCondition__::headers);
 		return 263;
 	}
@@ -200,11 +175,21 @@
 
 <crlf>{
 	"\r\n" {
-		begin(StartCondition__::plain_body);
+		if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+			begin(StartCondition__::INITIAL);
+		}
+		else {
+			begin(StartCondition__::plain_body);
+		}
 		return 261;
 	}
 	"\n" {
-		begin(StartCondition__::plain_body);
+		if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+			begin(StartCondition__::INITIAL);
+		}
+		else {
+			begin(StartCondition__::plain_body);
+		}
 		return 261;
 	}
 	[^\r\n] {

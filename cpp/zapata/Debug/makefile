@@ -43,7 +43,7 @@ all: zapata
 zapata: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-json/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Debug" -o "zapata" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-json/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Debug" -o "zapata" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

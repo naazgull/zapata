@@ -9,6 +9,7 @@
 #include <zapata/core.h>
 #include <zapata/json.h>
 #include <zapata/http.h>
+#include <zapata/net.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -19,10 +20,11 @@ void sigsev(int sig) {
 void stop(int sig) {
 }
 
-#define CYCLES 5
+#define CYCLES 1
 #define OBJECTS 100
 //#define TEST_JSON
-#define TEST_HTTP
+//#define TEST_HTTP
+#define TEST_SOCK
 
 int main(int argc, char* argv[]) {
 	locale loc("");
@@ -69,6 +71,19 @@ int main(int argc, char* argv[]) {
 			cout << obj << endl;
 		}
 #endif
+#ifdef TEST_SOCK
+		zapata::serversocketstream ss;
+		ss.bind(9090);
+
+		zapata::socketstream cs;
+		ss.accept(&cs);
+
+		zapata::HTTPReq obj;
+		zapata::fromstream(cs, obj);
+		cout << obj << endl;
+
+#endif
+
 		zapata::process_mem_usage(vm, resident);
 		cout << "\t\t\t\t\t\t\tAfter Cycle Nr. " << k << "\n\tVM: " << vm << "kB\tRESIDENT: " << resident << "kB" << endl << flush;
 	}

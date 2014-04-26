@@ -24,13 +24,6 @@ namespace zapata {
 		HTTPReply
 	};
 
-	enum HTTPContentType {
-		Text = 0,
-		Json = 1,
-		FormUrlEncoded = 2,
-		FormData = 4
-	};
-
 	enum HTTPMethod {
 		HTTPGet = 0,
 		HTTPPut = 1,

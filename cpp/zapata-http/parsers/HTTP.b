@@ -31,10 +31,7 @@ exp :
 	{
 		d_scanner.url();
 	}
-	params SPACE VERSION headers BODY
-	{
-		d_scanner.body();
-	}
+	params SPACE VERSION headers rest
 |
 	VERSION
 	{
@@ -47,10 +44,7 @@ exp :
 	SPACE STRING
 	{
 	}
-	 headers BODY
-	{
-		d_scanner.body();
-	}
+	 headers rest
 ;
 
 params :
@@ -105,4 +99,13 @@ headerslist :
 		d_scanner.add();
 	}
 	CR_LF
+;
+
+rest :
+	BODY
+	{
+		d_scanner.body();
+	}
+|
+
 ;

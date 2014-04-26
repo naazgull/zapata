@@ -11,6 +11,5 @@
     // symbols from the namespace zapata without prefixing zapata::
 //using namespace zapata;
 namespace zapata {
-	HTTPContentType __HTTP_LEXER_CONTENT_TYPE;
 	size_t __HTTP_LEXER_CONTENT_LENGTH;
 }

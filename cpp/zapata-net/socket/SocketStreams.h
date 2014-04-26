@@ -6,6 +6,9 @@
 #include <streambuf>
 #include <istream>
 #include <ostream>
+#include <strings.h>
+#include <unistd.h>
+#include <exceptions/ClosedException.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -111,25 +114,31 @@ namespace zapata {
 				__buf.set_socket(s);
 			}
 
+			void assign(int _sockfd) {
+				__buf.set_socket(_sockfd);
+			}
+
 			void close() {
-				if (__buf.get_socket() != 0) close(__buf.get_socket());
+				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
 				__stream_type::clear();
 			}
 
-			bool open(const std::string& host, uint16_t port) {
-				close();
-				int sd = socket(AF_INET, SOCK_STREAM, 0);
-				sockaddr_in sin;
-				hostent *he = gethostbyname(host.c_str());
+			bool open(const std::string& _host, uint16_t _port) {
+				this->close();
+				int _sd = socket(AF_INET, SOCK_STREAM, 0);
+				sockaddr_in _sin;
+				hostent *_he = gethostbyname(_host.c_str());
 
-				std::copy(reinterpret_cast<char*>(he->h_addr), reinterpret_cast<char*>(he->h_addr) + he->h_length, reinterpret_cast<char*>(&sin.sin_addr.s_addr));
-				sin.sin_family = AF_INET;
-				sin.sin_port = htons(port);
+				std::copy(reinterpret_cast<char*>(_he->h_addr), reinterpret_cast<char*>(_he->h_addr) + _he->h_length, reinterpret_cast<char*>(&_sin.sin_addr.s_addr));
+				_sin.sin_family = AF_INET;
+				_sin.sin_port = htons(_port);
 
-				if (connect(sd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)) < 0)
+				if (connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 					__stream_type::setstate(std::ios::failbit);
-				else
-				__buf.set_socket(sd);
+				}
+				else {
+					__buf.set_socket(_sd);
+				}
 				return *this;
 			}
 	};
@@ -158,39 +167,59 @@ namespace zapata {
 			}
 
 			void close() {
-				if (__buf.get_socket() != 0) close(__buf.get_socket());
+				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
 				__stream_type::clear();
 			}
 
-			bool bind(int _port) {
+			bool bind(uint16_t _port) {
 				this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
 				if (this->__sockfd < 0) {
-					throw new KRestException(1, "Could not create server socket");
+					__stream_type::setstate(std::ios::failbit);
+					throw zapata::ClosedException("Could not create server socket");
 				}
 
-				int opt = 1;
-				if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt, sizeof(opt)) == SO_ERROR) {
-					close(this->__sockfd);
+				int _opt = 1;
+				if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &_opt, sizeof(_opt)) == SO_ERROR) {
+					::close(this->__sockfd);
 					this->__sockfd = -1;
-					throw new KRestException(2, "Could not bind to the provided port");
+					__stream_type::setstate(std::ios::failbit);
+					throw zapata::ClosedException("Could not bind to the provided port");
 				}
 
-				struct sockaddr_in serv_addr;
-				bzero((char *) &serv_addr, sizeof(serv_addr));
-				serv_addr.sin_family = AF_INET;
-				serv_addr.sin_addr.s_addr = INADDR_ANY;
-				serv_addr.sin_port = htons(_port);
-				if (bind(this->__sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-					close(this->__sockfd);
+				struct sockaddr_in _serv_addr;
+				bzero((char *) &_serv_addr, sizeof(_serv_addr));
+				_serv_addr.sin_family = AF_INET;
+				_serv_addr.sin_addr.s_addr = INADDR_ANY;
+				_serv_addr.sin_port = htons(_port);
+				if (::bind(this->__sockfd, (struct sockaddr *) &_serv_addr, sizeof(_serv_addr)) < 0) {
+					::close(this->__sockfd);
 					this->__sockfd = -1;
-					throw new KRestException(3, "Could not bind to the provided port");
+					__stream_type::setstate(std::ios::failbit);
+					throw zapata::ClosedException("Could not bind to the provided port");
 				}
-				listen(this->__sockfd, 100);
+				::listen(this->__sockfd, 100);
+				__buf.set_socket(this->__sockfd);
 				return true;
 			}
 
 			bool accept(socketstream* _out) {
-				return true;
+				if (this->__sockfd != -1) {
+					struct sockaddr_in* _cli_addr = new struct sockaddr_in();
+					socklen_t _clilen = sizeof(struct sockaddr_in);
+					int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
+
+					if (_newsockfd < 0) {
+						throw zapata::ClosedException("Could not accept client socket");
+					}
+
+					struct linger _so_linger;
+					_so_linger.l_onoff = 1;
+					_so_linger.l_linger = 30;
+					::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+					_out->assign(_newsockfd);
+					return true;
+				}
+				return false;
 			}
 	};
 
