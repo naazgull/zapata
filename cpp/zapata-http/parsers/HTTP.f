@@ -24,7 +24,7 @@
 
 %namespace = "zapata"
 
-%debug
+//%debug
 %no-lines
 
 %x request reply headers headerval crlf plain_body statustext contentlengthval params
@@ -213,8 +213,13 @@
 }
 
 <plain_body>{
-	(.|\n)* {
-		begin(StartCondition__::INITIAL);
-		return 265;
+	(.|\n) {
+		more();
+		if (matched().length() == __HTTP_LEXER_CONTENT_LENGTH - 1) {
+			string _out(matched());
+			_out.push_back(get__());
+			setMatched(_out);
+			leave(-1);
+		}
 	}
 }

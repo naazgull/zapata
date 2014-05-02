@@ -96,10 +96,10 @@ void zapata::fromstr(string& _in, HTTPMethod* _out) {
 		*_out = zapata::HTTPGet;
 	}
 	if (_in == string("PUT")) {
-		*_out = zapata::HTTPGet;
+		*_out = zapata::HTTPPut;
 	}
 	if (_in == string("POST")) {
-		*_out = zapata::HTTPGet;
+		*_out = zapata::HTTPPost;
 	}
 	if (_in == string("DELETE")) {
 		*_out = zapata::HTTPDelete;

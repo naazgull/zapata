@@ -25,6 +25,7 @@
 exp :
 	METHOD
 	{
+		__HTTP_LEXER_CONTENT_LENGTH = 0;
 		d_scanner.init(zapata::HTTPRequest);
 	}
 	SPACE URL
@@ -32,9 +33,16 @@ exp :
 		d_scanner.url();
 	}
 	params SPACE VERSION headers rest
+	{
+		if (__HTTP_LEXER_CONTENT_LENGTH != 0) {
+			d_scanner.body();
+			__HTTP_LEXER_CONTENT_LENGTH = 0;
+		}
+	}
 |
 	VERSION
 	{
+		__HTTP_LEXER_CONTENT_LENGTH = 0;
 		d_scanner.init(zapata::HTTPReply);
 	}
 	SPACE STATUS
@@ -45,6 +53,12 @@ exp :
 	{
 	}
 	 headers rest
+	{
+		if (__HTTP_LEXER_CONTENT_LENGTH != 0) {
+			d_scanner.body();
+			__HTTP_LEXER_CONTENT_LENGTH = 0;
+		}
+	}
 ;
 
 params :
@@ -105,6 +119,7 @@ rest :
 	BODY
 	{
 		d_scanner.body();
+		__HTTP_LEXER_CONTENT_LENGTH = 0;
 	}
 |
 

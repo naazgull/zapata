@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../exceptions/CastException.cpp 
+../exceptions/CastException.cpp \
+../exceptions/ParserEOF.cpp 
 
 OBJS += \
-./exceptions/CastException.o 
+./exceptions/CastException.o \
+./exceptions/ParserEOF.o 
 
 CPP_DEPS += \
-./exceptions/CastException.d 
+./exceptions/CastException.d \
+./exceptions/ParserEOF.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

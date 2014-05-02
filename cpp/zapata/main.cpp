@@ -20,7 +20,7 @@ void sigsev(int sig) {
 void stop(int sig) {
 }
 
-#define CYCLES 1
+#define CYCLES 3
 #define OBJECTS 100
 //#define TEST_JSON
 //#define TEST_HTTP
@@ -35,6 +35,15 @@ int main(int argc, char* argv[]) {
 
 	zapata::process_mem_usage(vm, resident);
 	cout << "Initial\n\tVM: " << vm << "kB\tRESIDENT: " << resident << "kB" << endl << flush;
+
+#ifdef TEST_SOCK
+		zapata::serversocketstream ss;
+		ss.bind(9090);
+
+		zapata::socketstream cs;
+		ss.accept(&cs);
+#endif
+
 
 	for (int k = 0; k != CYCLES; k++) {
 #ifdef TEST_JSON
@@ -72,15 +81,20 @@ int main(int argc, char* argv[]) {
 		}
 #endif
 #ifdef TEST_SOCK
-		zapata::serversocketstream ss;
-		ss.bind(9090);
-
-		zapata::socketstream cs;
-		ss.accept(&cs);
-
 		zapata::HTTPReq obj;
 		zapata::fromstream(cs, obj);
 		cout << obj << endl;
+
+		{
+			zapata::HTTPRep obj2;
+			ifstream f;
+			f.open("/home/pf/someresp.http");
+			zapata::fromfile(f, obj2);
+			f.close();
+
+			cs << obj2 << flush;
+		}
+
 
 #endif
 

@@ -9,3 +9,4 @@
 #include <mem/usage.h>
 
 #include <exceptions/CastException.h>
+#include <exceptions/ParserEOF.h>
