@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../socket/SSLSocketStreams.cpp \
 ../socket/SocketStreams.cpp 
 
 OBJS += \
+./socket/SSLSocketStreams.o \
 ./socket/SocketStreams.o 
 
 CPP_DEPS += \
+./socket/SSLSocketStreams.d \
 ./socket/SocketStreams.d 
 
 
