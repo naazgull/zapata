@@ -91,6 +91,8 @@ paramslist :
 
 headers :
 	CR_LF headerslist CR_LF
+|
+	CR_LF headerslist
 ;
 
 headerslist :
@@ -102,9 +104,8 @@ headerslist :
 	{
 		d_scanner.add();
 	}
-	CR_LF
 |
-	headerslist STRING
+	headerslist CR_LF STRING
 	{
 		d_scanner.add();
 	}
@@ -112,7 +113,6 @@ headerslist :
 	{
 		d_scanner.add();
 	}
-	CR_LF
 ;
 
 rest :

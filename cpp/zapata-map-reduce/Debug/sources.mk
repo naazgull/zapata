@@ -23,9 +23,7 @@ C_UPPER_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-thread \
-text \
-mem \
-exceptions \
-base \
+reduce \
+map \
+algorithm \
 

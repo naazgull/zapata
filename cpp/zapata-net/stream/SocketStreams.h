@@ -113,13 +113,18 @@ namespace zapata {
 			basic_socketstream(int s) : __stream_type(&__buf) {
 				__buf.set_socket(s);
 			}
+			virtual ~basic_socketstream() {
+				this->close();
+			}
 
 			void assign(int _sockfd) {
 				__buf.set_socket(_sockfd);
 			}
 
 			void close() {
-				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
+				if (__buf.get_socket() != 0) {
+					::close(__buf.get_socket());
+				}
 				__stream_type::clear();
 			}
 
@@ -165,9 +170,14 @@ namespace zapata {
 			basic_serversocketstream(int s) : __stream_type(&__buf) {
 				__buf.set_socket(s);
 			}
+			virtual ~basic_serversocketstream() {
+				this->close();
+			}
 
 			void close() {
-				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
+				if (__buf.get_socket() != 0) {
+					::close(__buf.get_socket());
+				}
 				__stream_type::clear();
 			}
 

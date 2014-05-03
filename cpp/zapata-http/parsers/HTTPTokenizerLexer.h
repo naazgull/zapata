@@ -11,6 +11,7 @@ namespace zapata {
 			virtual ~HTTPTokenizerLexer();
 
 			void switchRoots(HTTPReq* _rootreq, HTTPRep* _rootrep);
+			void justLeave();
 
 			void init(zapata::HTTPType _in_type);
 			void body();

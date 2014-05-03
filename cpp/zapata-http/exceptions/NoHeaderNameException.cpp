@@ -1,4 +1,4 @@
-#include "NoHeaderNameException.h"
+#include <exceptions/NoHeaderNameException.h>
 
 zapata::NoHeaderNameException::NoHeaderNameException(string _in) : __what(_in){
 }

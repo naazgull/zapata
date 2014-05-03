@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -8,6 +9,7 @@
 #include <ostream>
 #include <strings.h>
 #include <unistd.h>
+#include <openssl/ssl.h>
 #include <exceptions/ClosedException.h>
 
 using namespace std;
@@ -33,15 +35,19 @@ namespace zapata {
 			__char_type ibuf[SIZE];
 
 			int __sock;
+			SSL* __sslstream;
+			SSL_CTX* __context;
 
 		public:
-			basic_sslsocketbuf() : __sock(0) {
+			basic_sslsocketbuf() : __sock(0), __sslstream(NULL), __context(NULL) {
 				__buf_type::setp(obuf, obuf + (SIZE - 1));
 				__buf_type::setg(ibuf, ibuf, ibuf);
 			}
-
 			virtual ~basic_sslsocketbuf() {
 				sync();
+				if (this->__sslstream != NULL) {
+					SSL_free(this->__sslstream);
+				}
 			}
 
 			void set_socket(int sock) {
@@ -50,12 +56,17 @@ namespace zapata {
 			int get_socket() {
 				return this->__sock;
 			}
+			void set_context(SSL_CTX* _ctx) {
+				this->__context = _ctx;
+				this->__sslstream = SSL_new(_ctx);
+				SSL_set_fd(this->__sslstream, this->__sock);
+			}
 
 		protected:
 
 			int output_buffer() {
 				int num = __buf_type::pptr() - __buf_type::pbase();
-				if (send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num)
+				if (SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), num * char_size) != num)
 				                    return __traits_type::eof();
 				__buf_type::pbump(-num);
 				return num;
@@ -84,7 +95,7 @@ namespace zapata {
 				                    return *__buf_type::gptr();
 
 				int num;
-				if ((num = recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) <= 0)
+				if ((num = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) <= 0)
 				                    return __traits_type::eof();
 
 				__buf_type::setg(ibuf, ibuf, ibuf + num);
@@ -110,16 +121,23 @@ namespace zapata {
 			basic_sslsocketstream() :
 				__stream_type(&__buf) {
 			}
-			basic_sslsocketstream(int s) : __stream_type(&__buf) {
+			basic_sslsocketstream(int s, SSL_CTX* _ctx) : __stream_type(&__buf) {
 				__buf.set_socket(s);
+				__buf.set_context(_ctx);
+			}
+			virtual ~basic_sslsocketstream() {
+				this->close();
 			}
 
-			void assign(int _sockfd) {
+			void assign(int _sockfd, SSL_CTX* _ctx) {
 				__buf.set_socket(_sockfd);
+				__buf.set_context(_ctx);
 			}
 
 			void close() {
-				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
+				if (__buf.get_socket() != 0) {
+					::close(__buf.get_socket());
+				}
 				__stream_type::clear();
 			}
 
@@ -157,21 +175,68 @@ namespace zapata {
 		protected:
 			__buf_type __buf;
 			int __sockfd;
-
+			SSL_CTX* __context;
+			bool __chained;
 		public:
-			basic_serversslsocketstream() :
-				__stream_type(&__buf) {
+			basic_serversslsocketstream() : __stream_type(&__buf), __sockfd(-1), __context(NULL), __chained(false)  {
+				SSL_library_init();
+				OpenSSL_add_all_algorithms();
+				SSL_load_error_strings();
+				this->__context = SSL_CTX_new(SSLv23_server_method());
+				if (this->__context == NULL) {
+					abort();
+				}
 			}
-			basic_serversslsocketstream(int s) : __stream_type(&__buf) {
+			basic_serversslsocketstream(int s) : __stream_type(&__buf), __sockfd(-1), __context(NULL), __chained(false) {
 				__buf.set_socket(s);
+
+				SSL_library_init();
+				OpenSSL_add_all_algorithms();
+				SSL_load_error_strings();
+				this->__context = SSL_CTX_new(SSLv23_server_method());
+				if (this->__context == NULL) {
+					abort();
+				}
+			}
+			virtual ~basic_serversslsocketstream() {
+				this->close();
 			}
 
 			void close() {
-				if (__buf.get_socket() != 0) ::close(__buf.get_socket());
+				EVP_cleanup();
+				SSL_CTX_free(this->__context);
+				if (__buf.get_socket() != 0) {
+					::close(__buf.get_socket());
+				}
 				__stream_type::clear();
 			}
 
-			bool bind(uint16_t _port) {
+			void certificates(SSL_CTX* _ctx, string _cert, string _key) {
+				if (this->__chained) {
+					if (SSL_CTX_use_certificate_chain_file(_ctx, _cert.data()) <= 0) {
+						fprintf(stderr, "Chain file is not available or not valid\n");
+						abort();
+					}
+				}
+				else {
+					if (SSL_CTX_use_certificate_file(_ctx, _cert.data(), SSL_FILETYPE_PEM) <= 0) {
+						fprintf(stderr, "PEM file is not available or not valid\n");
+						abort();
+					}
+				}
+				if (SSL_CTX_use_PrivateKey_file(_ctx, _key.data(), SSL_FILETYPE_PEM) <= 0) {
+					fprintf(stderr, "Private key file is not available or not valid\n");
+					abort();
+				}
+				if (!SSL_CTX_check_private_key(_ctx)) {
+					fprintf(stderr, "Private key does not match the public certificate\n");
+					abort();
+				}
+			}
+
+			bool bind(uint16_t _port, string _cert, string _key) {
+				this->certificates(this->__context, _cert, _key);
+
 				this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
 				if (this->__sockfd < 0) {
 					__stream_type::setstate(std::ios::failbit);
@@ -216,7 +281,7 @@ namespace zapata {
 					_so_linger.l_onoff = 1;
 					_so_linger.l_linger = 30;
 					::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
-					_out->assign(_newsockfd);
+					_out->assign(_newsockfd, this->__context);
 					return true;
 				}
 				return false;

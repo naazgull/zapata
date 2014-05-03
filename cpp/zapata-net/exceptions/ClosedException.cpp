@@ -1,4 +1,4 @@
-#include "ClosedException.h"
+#include <exceptions/ClosedException.h>
 
 zapata::ClosedException::ClosedException(string _in) : __what(_in){
 }

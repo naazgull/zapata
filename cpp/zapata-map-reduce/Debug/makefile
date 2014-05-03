@@ -8,8 +8,9 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include stream/subdir.mk
--include exceptions/subdir.mk
+-include reduce/subdir.mk
+-include map/subdir.mk
+-include algorithm/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -39,19 +40,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libzapata-net.so
+all: libzapata-map-reduce.so
 
 # Tool invocations
-libzapata-net.so: $(OBJS) $(USER_OBJS)
+libzapata-map-reduce.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -shared -o "libzapata-net.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -shared -o "libzapata-map-reduce.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-net.so
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-map-reduce.so
 	-@echo ' '
 
 .PHONY: all clean dependents

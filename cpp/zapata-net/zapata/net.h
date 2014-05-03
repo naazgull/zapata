@@ -1,5 +1,6 @@
 #pragma once
 
-#include <socket/SocketStreams.h>
+#include <stream/SocketStreams.h>
+#include <stream/SSLSocketStreams.h>
 
 #include <exceptions/ClosedException.h>

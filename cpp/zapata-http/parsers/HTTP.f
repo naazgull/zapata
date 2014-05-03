@@ -71,6 +71,11 @@
 	begin(StartCondition__::reply);
 	return 258;
 }
+<<EOF>> {
+	if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+		return 261;
+	}
+}
 
 <request>{
 	"HTTP/1.1" {
@@ -139,11 +144,34 @@
 		return 262;
 	}
 	"\r\n"   {
-		begin(StartCondition__::crlf);
+		char _c = get__();
+		if (_c == '\n' || _c == '\r') {
+			if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+				leave(-1);
+			}
+			else {
+				get__();
+				begin(StartCondition__::plain_body);
+			}
+		}
+		else {
+			push(_c);
+		}
 		return 261;
 	}
 	"\n"  {
-		begin(StartCondition__::crlf);
+		char _c = get__();
+		if (_c == '\n' || _c == '\r') {
+			if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+				leave(-1);
+			}
+			else {
+				begin(StartCondition__::plain_body);
+			}
+		}
+		else {
+			push(_c);
+		}
 		return 261;
 	}
 	([^:\n\r]+) {
@@ -175,22 +203,8 @@
 
 <crlf>{
 	"\r\n" {
-		if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
-			begin(StartCondition__::INITIAL);
-		}
-		else {
-			begin(StartCondition__::plain_body);
-		}
-		return 261;
 	}
 	"\n" {
-		if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
-			begin(StartCondition__::INITIAL);
-		}
-		else {
-			begin(StartCondition__::plain_body);
-		}
-		return 261;
 	}
 	[^\r\n] {
 		more();

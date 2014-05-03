@@ -1,4 +1,4 @@
-#include "NoAttributeNameException.h"
+#include <exceptions/NoAttributeNameException.h>
 
 zapata::NoAttributeNameException::NoAttributeNameException(string _in) : __what(_in){
 }

@@ -20,7 +20,7 @@ void sigsev(int sig) {
 void stop(int sig) {
 }
 
-#define CYCLES 3
+#define CYCLES 9999
 #define OBJECTS 100
 //#define TEST_JSON
 //#define TEST_HTTP
@@ -38,14 +38,14 @@ int main(int argc, char* argv[]) {
 
 #ifdef TEST_SOCK
 		zapata::serversocketstream ss;
+		//ss.bind(9090, "/home/pf/Develop/PUB/server.crt", "/home/pf/Develop/PUB/server.key");
 		ss.bind(9090);
-
 		zapata::socketstream cs;
 		ss.accept(&cs);
 #endif
-
-
 	for (int k = 0; k != CYCLES; k++) {
+#ifdef TEST_SOCK
+#endif
 #ifdef TEST_JSON
 		{
 			zapata::JSONObj obj;
@@ -94,8 +94,6 @@ int main(int argc, char* argv[]) {
 
 			cs << obj2 << flush;
 		}
-
-
 #endif
 
 		zapata::process_mem_usage(vm, resident);

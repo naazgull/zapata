@@ -12,6 +12,10 @@ void zapata::HTTPTokenizerLexer::switchRoots(HTTPReq* _rootreq, HTTPRep* _rootre
 	this->__root_rep = _rootrep;
 }
 
+void zapata::HTTPTokenizerLexer::justLeave() {
+	this->leave(-1);
+}
+
 void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
 	this->__root_type = _in_type;
 	switch (_in_type) {
