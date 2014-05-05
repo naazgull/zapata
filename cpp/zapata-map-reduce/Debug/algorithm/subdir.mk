@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../algorithm/DirectoryService.cpp \
 ../algorithm/MapReduce.cpp 
 
 OBJS += \
+./algorithm/DirectoryService.o \
 ./algorithm/MapReduce.o 
 
 CPP_DEPS += \
+./algorithm/DirectoryService.d \
 ./algorithm/MapReduce.d 
 
 

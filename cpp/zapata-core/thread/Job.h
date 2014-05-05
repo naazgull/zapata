@@ -20,11 +20,11 @@ namespace zapata {
 			static void* start(void* thread);
 
 			size_t pending();
-			void start();
+			virtual void start();
 			virtual void run() = 0;
-			void assign();
-			void wait(int seconds);
-			void wait();
+			virtual void assign();
+			virtual void wait(int seconds);
+			virtual void wait();
 
 			size_t idx();
 			size_t max();
@@ -37,6 +37,8 @@ namespace zapata {
 			size_t __idx;
 			size_t __max_idx;
 			int __sem;
+
+		protected:
 			string __skey;
 			pthread_mutex_t* __mtx;
 			pthread_t* __thr;

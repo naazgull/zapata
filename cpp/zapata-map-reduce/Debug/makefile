@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include reduce/subdir.mk
+-include partition/subdir.mk
 -include map/subdir.mk
 -include algorithm/subdir.mk
 -include subdir.mk

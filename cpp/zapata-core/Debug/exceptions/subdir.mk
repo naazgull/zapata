@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../exceptions/CastException.cpp \
+../exceptions/NoAttributeNameException.cpp \
 ../exceptions/ParserEOF.cpp 
 
 OBJS += \
 ./exceptions/CastException.o \
+./exceptions/NoAttributeNameException.o \
 ./exceptions/ParserEOF.o 
 
 CPP_DEPS += \
 ./exceptions/CastException.d \
+./exceptions/NoAttributeNameException.d \
 ./exceptions/ParserEOF.d 
 
 

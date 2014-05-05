@@ -25,7 +25,9 @@ C_UPPER_DEPS :=
 SUBDIRS := \
 thread \
 text \
+parsers \
 mem \
+json \
 exceptions \
 base \
 
