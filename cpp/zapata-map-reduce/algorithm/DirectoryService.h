@@ -11,9 +11,9 @@ namespace zapata {
 			DirectoryService();
 			virtual ~DirectoryService();
 
-			virtual void signalPartioners();
-			virtual void signalMappers();
-			virtual void signalReducers();
+			virtual void signalPartioners() = 0;
+			virtual void signalMappers() = 0;
+			virtual void signalReducers() = 0;
 
 	};
 

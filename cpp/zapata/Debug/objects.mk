@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lssl -lcrypto -lzapata-core -lzapata-json -lzapata-http -lzapata-net
+LIBS := -lssl -lcrypto -lzapata-core -lzapata-http -lzapata-net
 

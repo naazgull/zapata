@@ -44,6 +44,8 @@ int main(int argc, char* argv[]) {
 		ss.accept(&cs);
 #endif
 	for (int k = 0; k != CYCLES; k++) {
+		time_t ti_partial = time(NULL);
+
 #ifdef TEST_SOCK
 #endif
 #ifdef TEST_JSON
@@ -83,7 +85,12 @@ int main(int argc, char* argv[]) {
 #ifdef TEST_SOCK
 		zapata::HTTPReq obj;
 		zapata::fromstream(cs, obj);
-		cout << obj << endl;
+		//cout << obj << endl;
+
+		zapata::JSONObj jsobj;
+		zapata::fromstr(obj->body(), jsobj);
+		jsobj << zapata::pretty;
+		//cout << jsobj << endl << flush;
 
 		{
 			zapata::HTTPRep obj2;
@@ -98,6 +105,9 @@ int main(int argc, char* argv[]) {
 
 		zapata::process_mem_usage(vm, resident);
 		cout << "\t\t\t\t\t\t\tAfter Cycle Nr. " << k << "\n\tVM: " << vm << "kB\tRESIDENT: " << resident << "kB" << endl << flush;
+
+		time_t tf_partial = time(NULL);
+		cout << "Took " << (tf_partial - ti_partial) << "s" << endl << flush;
 	}
 
 

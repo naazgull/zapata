@@ -11,7 +11,7 @@ namespace zapata {
 			virtual ~Partitioner();
 
 			virtual void run();
-			virtual void divide(I _in, O _out) = 0;
+			virtual void divide(I* _in, O* _out) = 0;
 			virtual void collect(O* _out) = 0;
 
 			virtual I* in();

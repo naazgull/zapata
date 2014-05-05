@@ -29,7 +29,6 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1047066912" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1348097656" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
 								</option>
@@ -42,13 +41,11 @@
 									<listOptionValue builtIn="false" value="ssl"/>
 									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
-									<listOptionValue builtIn="false" value="zapata-json"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1111415997" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Debug}&quot;"/>
 								</option>
@@ -95,7 +92,6 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.455453652" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.2037731509" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
 								</option>
@@ -106,7 +102,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1485755416" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option id="gnu.cpp.link.option.paths.582929721" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-json/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Release}&quot;"/>
 								</option>
@@ -114,7 +109,6 @@
 									<listOptionValue builtIn="false" value="ssl"/>
 									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
-									<listOptionValue builtIn="false" value="zapata-json"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>
 								</option>

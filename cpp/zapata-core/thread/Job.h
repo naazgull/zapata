@@ -6,6 +6,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <string>
+#include <thread/JobChannel.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -26,6 +27,7 @@ namespace zapata {
 			virtual void wait(int seconds);
 			virtual void wait();
 
+			virtual JobChannel& channel() = 0;
 			size_t idx();
 			size_t max();
 			int semid();

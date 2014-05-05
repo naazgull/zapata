@@ -12,3 +12,4 @@
 #include <exceptions/ParserEOF.h>
 
 #include <thread/Job.h>
+#include <thread/JobChannel.h>

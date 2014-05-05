@@ -11,7 +11,7 @@ namespace zapata {
 			virtual ~Mapper();
 
 			virtual void run();
-			virtual void map(I _in, O _out) = 0;
+			virtual void map(I* _in, O* _out) = 0;
 			virtual void collect(O* _out) = 0;
 
 			virtual I* in();
