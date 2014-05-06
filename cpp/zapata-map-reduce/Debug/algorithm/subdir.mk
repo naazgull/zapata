@@ -5,15 +5,15 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../algorithm/DirectoryService.cpp \
-../algorithm/MapReduce.cpp 
+../algorithm/JobServer.cpp 
 
 OBJS += \
 ./algorithm/DirectoryService.o \
-./algorithm/MapReduce.o 
+./algorithm/JobServer.o 
 
 CPP_DEPS += \
 ./algorithm/DirectoryService.d \
-./algorithm/MapReduce.d 
+./algorithm/JobServer.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

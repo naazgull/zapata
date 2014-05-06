@@ -27,7 +27,7 @@ namespace zapata {
 			virtual void wait(int seconds);
 			virtual void wait();
 
-			virtual JobChannel& channel() = 0;
+			virtual JobChannel* channel() = 0;
 			size_t idx();
 			size_t max();
 			int semid();
