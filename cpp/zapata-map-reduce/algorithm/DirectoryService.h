@@ -12,9 +12,9 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	class DirectoryService {
+	class DirectoryService : public Job {
 		public:
-			DirectoryService();
+			DirectoryService(string _key_file_path);
 			virtual ~DirectoryService();
 
 			virtual void signalPartioners();
@@ -31,6 +31,8 @@ namespace zapata {
 			virtual void removePartioner(zapata::Partitioner& _partitioner);
 			virtual void removeMapper(zapata::Mapper& _mapper);
 			virtual void removeReducer(zapata::Reducer& _reducer);
+
+			virtual void run();
 
 		private:
 			vector<JobChannel*> __partitioners;

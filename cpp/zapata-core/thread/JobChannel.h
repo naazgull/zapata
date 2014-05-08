@@ -7,7 +7,7 @@ namespace zapata {
 			JobChannel();
 			virtual ~JobChannel();
 
-			virtual void* notify(void* _in) = 0;
+			virtual void notify(void* _in, void* _out) = 0;
 
 	};
 }

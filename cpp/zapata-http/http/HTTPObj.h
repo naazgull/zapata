@@ -199,9 +199,6 @@ namespace zapata {
 
 	};
 
-	class HTTPReqRef;
-	typedef smart_ptr<HTTPReqRef> HTTPReq;
-
 	class HTTPRepRef: public HTTPElement, public str_map<string*> {
 		private:
 			string* __name;
@@ -237,6 +234,6 @@ namespace zapata {
 
 	};
 
-	class HTTPRepRef;
+	typedef smart_ptr<HTTPReqRef> HTTPReq;
 	typedef smart_ptr<HTTPRepRef> HTTPRep;
 }

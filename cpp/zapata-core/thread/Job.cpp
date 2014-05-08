@@ -1,10 +1,17 @@
 #include <thread/Job.h>
 
+#include <fstream>
+#include <parsers/json.h>
+
 zapata::Job::Job(string _key_file_path) : __idx(-1), __max_idx(-1), __sem(-1), __skey(_key_file_path) {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
 	pthread_mutexattr_init(&this->__attr);
 	pthread_mutex_init(this->__mtx, &this->__attr);
+
+	ifstream _key_file;
+	_key_file.open(_key_file_path.data());
+	zapata::fromfile(_key_file, this->__configuration);
 }
 
 zapata::Job::~Job(){
@@ -53,6 +60,10 @@ size_t zapata::Job::max() {
 
 int zapata::Job::semid() {
 	return this->__sem;
+}
+
+zapata::JSONObj& zapata::Job::configuration() {
+	return this->__configuration;
 }
 
 void zapata::Job::idx(size_t _idx) {

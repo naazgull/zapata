@@ -128,6 +128,10 @@ namespace zapata {
 				__stream_type::clear();
 			}
 
+			__buf_type& buffer() {
+				return this->__buf;
+			}
+
 			bool open(const std::string& _host, uint16_t _port) {
 				this->close();
 				int _sd = socket(AF_INET, SOCK_STREAM, 0);
@@ -181,6 +185,10 @@ namespace zapata {
 				__stream_type::clear();
 			}
 
+			__buf_type& buffer() {
+				return this->__buf;
+			}
+
 			bool bind(uint16_t _port) {
 				this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
 				if (this->__sockfd < 0) {
@@ -227,6 +235,26 @@ namespace zapata {
 					_so_linger.l_linger = 30;
 					::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
 					_out->assign(_newsockfd);
+					return true;
+				}
+				return false;
+			}
+
+			bool accept(int* _out) {
+				if (this->__sockfd != -1) {
+					struct sockaddr_in* _cli_addr = new struct sockaddr_in();
+					socklen_t _clilen = sizeof(struct sockaddr_in);
+					int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
+
+					if (_newsockfd < 0) {
+						throw zapata::ClosedException("Could not accept client socket");
+					}
+
+					struct linger _so_linger;
+					_so_linger.l_onoff = 1;
+					_so_linger.l_linger = 30;
+					::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+					*_out = _newsockfd;
 					return true;
 				}
 				return false;

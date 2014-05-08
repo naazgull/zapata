@@ -10,6 +10,12 @@
 
 #include <exceptions/CastException.h>
 #include <exceptions/ParserEOF.h>
+#include <exceptions/NoAttributeNameException.h>
+
+#include <json/JSONObj.h>
+
+#include <parsers/json.h>
+#include <parsers/JSONParser.h>
 
 #include <thread/Job.h>
 #include <thread/JobChannel.h>

@@ -7,6 +7,7 @@
 #include <sys/sem.h>
 #include <string>
 #include <thread/JobChannel.h>
+#include <json/JSONObj.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -31,6 +32,7 @@ namespace zapata {
 			size_t idx();
 			size_t max();
 			int semid();
+			zapata::JSONObj& configuration();
 
 			void idx(size_t _idx);
 			void max(size_t _max);
@@ -45,6 +47,7 @@ namespace zapata {
 			pthread_mutex_t* __mtx;
 			pthread_t* __thr;
 			pthread_mutexattr_t __attr;
+			JSONObj __configuration;
 	};
 
 }
