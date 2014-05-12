@@ -1,14 +1,8 @@
-#include <algorithm/RESTPool.h>
+#include <api/RESTPool.h>
 
-//zapata
-RESTPool::RESTPool()
-{
-	// TODO Auto-generated constructor stub
-	
+zapata::RESTPool::RESTPool() {
 }
 
-RESTPool::~RESTPool()
-{
-	// TODO Auto-generated destructor stub
+zapata::RESTPool::~RESTPool() {
 }
 
