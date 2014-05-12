@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lzapata-core -lzapata-map-reduce -lzapata-net -lzapata-http
+LIBS := -lzapata-core -lzapata-http -lzapata-net
 

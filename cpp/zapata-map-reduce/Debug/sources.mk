@@ -26,5 +26,4 @@ SUBDIRS := \
 reduce \
 partition \
 map \
-algorithm \
 

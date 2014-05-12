@@ -29,7 +29,7 @@ void* zapata::Job::start(void* thread) {
 }
 
 void zapata::Job::start() {
-	key_t key = ftok(this->__skey.data(), this->__idx);
+	key_t key = ftok(this->__skey.data(), this->__max_idx);
 	this->__sem = semget(key, this->__max_idx, IPC_CREAT | 0777);
 	if (this->__sem == 0) {
 	}
@@ -58,7 +58,7 @@ size_t zapata::Job::max() {
 	return this->__max_idx;
 }
 
-int zapata::Job::semid() {
+semid_t zapata::Job::semid() {
 	return this->__sem;
 }
 

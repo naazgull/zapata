@@ -18,4 +18,5 @@
 #include <parsers/JSONParser.h>
 
 #include <thread/Job.h>
-#include <thread/JobChannel.h>
+#include <thread/JobServer.h>
+

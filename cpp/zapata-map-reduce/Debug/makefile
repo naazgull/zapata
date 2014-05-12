@@ -11,7 +11,6 @@ RM := rm -rf
 -include reduce/subdir.mk
 -include partition/subdir.mk
 -include map/subdir.mk
--include algorithm/subdir.mk
 -include subdir.mk
 -include objects.mk
 

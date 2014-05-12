@@ -27,6 +27,10 @@ void zapata::JSONStrRef::put(long long _in) {
 	zapata::tostr(this->__value, _in);
 }
 
+void zapata::JSONStrRef::put(unsigned int _in) {
+	zapata::tostr(this->__value, _in);
+}
+
 void zapata::JSONStrRef::put(double _in) {
 	zapata::tostr(this->__value, _in);
 }
@@ -82,25 +86,31 @@ zapata::JSONElement& zapata::JSONStrRef::get(const char* _idx) {
 int zapata::JSONStrRef::getInt() {
 	int _ret = 0;
 	zapata::fromstr(this->__value, &_ret);
-	return _ret;;
+	return _ret;
 }
 
 long zapata::JSONStrRef::getLong() {
 	long _ret = 0;
 	zapata::fromstr(this->__value, &_ret);
-	return _ret;;
+	return _ret;
 }
 
 long zapata::JSONStrRef::getLongLong() {
 	long long _ret = 0;
 	zapata::fromstr(this->__value, &_ret);
-	return _ret;;
+	return _ret;
+}
+
+unsigned int zapata::JSONStrRef::getUnsignedInt() {
+	unsigned int _ret = 0;
+	zapata::fromstr(this->__value, &_ret);
+	return _ret;
 }
 
 double zapata::JSONStrRef::getDouble() {
 	double _ret = 0;
 	zapata::fromstr(this->__value, &_ret);
-	return _ret;;
+	return _ret;
 }
 
 bool zapata::JSONStrRef::getBool() {

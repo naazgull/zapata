@@ -41,6 +41,11 @@ void zapata::JSONArrRef::put(long long _in) {
 	this->push_back((smart_ptr<JSONElement>*) _sp);
 }
 
+void zapata::JSONArrRef::put(unsigned int _in) {
+	JSONInt* _sp = new JSONInt(new JSONIntRef(_in));
+	this->push_back((smart_ptr<JSONElement>*) _sp);
+}
+
 void zapata::JSONArrRef::put(double _in) {
 	JSONDbl* _sp = new JSONDbl(new JSONDblRef(_in));
 	this->push_back((smart_ptr<JSONElement>*) _sp);
@@ -111,6 +116,10 @@ long zapata::JSONArrRef::getLong() {
 }
 
 long zapata::JSONArrRef::getLongLong() {
+	return 0;
+}
+
+unsigned int zapata::JSONArrRef::getUnsignedInt() {
 	return 0;
 }
 

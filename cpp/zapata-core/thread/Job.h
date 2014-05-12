@@ -6,11 +6,12 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <string>
-#include <thread/JobChannel.h>
 #include <json/JSONObj.h>
 
 using namespace std;
 using namespace __gnu_cxx;
+
+typedef int semid_t;
 
 namespace zapata {
 
@@ -28,10 +29,9 @@ namespace zapata {
 			virtual void wait(int seconds);
 			virtual void wait();
 
-			virtual JobChannel* channel() = 0;
 			size_t idx();
 			size_t max();
-			int semid();
+			semid_t semid();
 			zapata::JSONObj& configuration();
 
 			void idx(size_t _idx);
@@ -40,7 +40,7 @@ namespace zapata {
 		private:
 			size_t __idx;
 			size_t __max_idx;
-			int __sem;
+			semid_t __sem;
 
 		protected:
 			string __skey;

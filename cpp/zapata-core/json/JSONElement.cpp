@@ -28,6 +28,9 @@ void zapata::JSONElement::put(long _in) {
 void zapata::JSONElement::put(long long _in) {
 }
 
+void zapata::JSONElement::put(unsigned int _in) {
+}
+
 void zapata::JSONElement::put(double _in) {
 }
 
@@ -97,6 +100,10 @@ long zapata::JSONElement::getLong() {
 }
 
 long zapata::JSONElement::getLongLong() {
+	return 0;
+}
+
+unsigned int zapata::JSONElement::getUnsignedInt() {
 	return 0;
 }
 
@@ -207,8 +214,16 @@ zapata::JSONElement::operator long long() {
 	return this->getLongLong();
 }
 
+zapata::JSONElement::operator unsigned int() {
+	return this->getUnsignedInt();
+}
+
+zapata::JSONElement::operator size_t() {
+	return this->getUnsignedInt();
+}
+
 zapata::JSONElement::operator double() {
-	return this->getLongLong();
+	return this->getDouble();
 }
 
 zapata::JSONElement::operator zapata::JSONElement&() {

@@ -7,7 +7,6 @@
 #include <string>
 
 #include <zapata/core.h>
-#include <zapata/json.h>
 #include <zapata/http.h>
 #include <zapata/net.h>
 

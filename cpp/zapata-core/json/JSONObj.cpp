@@ -71,6 +71,20 @@ void zapata::JSONObjRef::put(long long _in) {
 	}
 }
 
+void zapata::JSONObjRef::put(unsigned int _in) {
+	if (this->__name == NULL) {
+		this->__name = new string();
+		zapata::tostr(*this->__name, _in);
+		this->__name->insert(0, "_");
+	}
+	else {
+		JSONInt* _sp = new JSONInt(new JSONIntRef(_in));
+		this->insert(string(this->__name->data()), (smart_ptr<JSONElement>*) _sp);
+		delete this->__name;
+		this->__name = NULL;
+	}
+}
+
 void zapata::JSONObjRef::put(double _in) {
 	if (this->__name == NULL) {
 		this->__name = new string();
@@ -196,6 +210,10 @@ long zapata::JSONObjRef::getLong() {
 }
 
 long zapata::JSONObjRef::getLongLong() {
+	return 0;
+}
+
+unsigned int zapata::JSONObjRef::getUnsignedInt() {
 	return 0;
 }
 

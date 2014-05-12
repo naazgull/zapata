@@ -5,15 +5,15 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../thread/Job.cpp \
-../thread/JobChannel.cpp 
+../thread/JobServer.cpp 
 
 OBJS += \
 ./thread/Job.o \
-./thread/JobChannel.o 
+./thread/JobServer.o 
 
 CPP_DEPS += \
 ./thread/Job.d \
-./thread/JobChannel.d 
+./thread/JobServer.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -9,7 +9,6 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include thread/subdir.mk
--include algorithm/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -39,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libzapata-map-reduce-cluster.so
+all: libzapata-rest.so
 
 # Tool invocations
-libzapata-map-reduce-cluster.so: $(OBJS) $(USER_OBJS)
+libzapata-rest.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-map-reduce/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Debug" -shared -o "libzapata-map-reduce-cluster.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Debug" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Debug" -shared -o "libzapata-rest.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-map-reduce-cluster.so
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-rest.so
 	-@echo ' '
 
 .PHONY: all clean dependents

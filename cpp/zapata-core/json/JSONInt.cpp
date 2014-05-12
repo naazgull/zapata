@@ -27,6 +27,10 @@ void zapata::JSONIntRef::put(long long _in) {
 	this->__value = _in;
 }
 
+void zapata::JSONIntRef::put(unsigned int _in) {
+	this->__value = _in;
+}
+
 void zapata::JSONIntRef::put(double _in) {
 	this->__value = _in;
 }
@@ -87,6 +91,10 @@ long zapata::JSONIntRef::getLong() {
 
 long zapata::JSONIntRef::getLongLong() {
 	return (long long) this->__value;
+}
+
+unsigned int zapata::JSONIntRef::getUnsignedInt() {
+	return (unsigned int) this->__value;
 }
 
 double zapata::JSONIntRef::getDouble() {

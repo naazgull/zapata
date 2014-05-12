@@ -74,6 +74,8 @@ namespace zapata {
 			operator int();
 			operator long();
 			operator long long();
+			operator unsigned int();
+			operator size_t();
 			operator double();
 			operator JSONElement&();
 
@@ -112,6 +114,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -133,6 +136,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -159,6 +163,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -175,6 +180,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -200,6 +206,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -216,6 +223,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -241,6 +249,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -257,6 +266,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -281,6 +291,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -297,6 +308,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -322,6 +334,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -341,6 +354,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
@@ -370,6 +384,7 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+			virtual void put(unsigned int _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -389,6 +404,7 @@ namespace zapata {
 			virtual int getInt();
 			virtual long getLong();
 			virtual long getLongLong();
+			virtual unsigned int getUnsignedInt();
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();

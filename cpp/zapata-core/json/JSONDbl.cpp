@@ -27,6 +27,10 @@ void zapata::JSONDblRef::put(long long _in) {
 	this->__value = _in;
 }
 
+void zapata::JSONDblRef::put(unsigned int _in) {
+	this->__value = _in;
+}
+
 void zapata::JSONDblRef::put(double _in) {
 	this->__value = _in;
 }
@@ -87,6 +91,10 @@ long zapata::JSONDblRef::getLong() {
 
 long zapata::JSONDblRef::getLongLong() {
 	return (long long) this->__value;
+}
+
+unsigned int zapata::JSONDblRef::getUnsignedInt() {
+	return (unsigned int) this->__value;
 }
 
 double zapata::JSONDblRef::getDouble() {
