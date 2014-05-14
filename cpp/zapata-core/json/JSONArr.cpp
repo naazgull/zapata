@@ -137,6 +137,14 @@ string zapata::JSONArrRef::getString() {
 	return _ret;
 }
 
+zapata::JSONObjRef& zapata::JSONArrRef::getJSONObj() {
+	throw CastException("can not convert from JSONArr to JSONObj");
+}
+
+zapata::JSONArrRef& zapata::JSONArrRef::getJSONArr() {
+	return *this;
+}
+
 void zapata::JSONArrRef::stringify(ostream& _out, short _flags, string _tabs) {
 #ifdef DEBUG_JSON
 	_out << "(" << this << ")";
@@ -169,6 +177,10 @@ void zapata::JSONArrRef::stringify(string& _out, short _flags, string _tabs) {
 	_ret << flush;
 	_out.insert(_out.length(), _ret.str());
 	_ret.clear();
+}
+
+zapata::JSONElement& zapata::JSONArrRef::operator[](int _idx) {
+	return this->get(_idx);
 }
 
 zapata::JSONElement& zapata::JSONArrRef::operator[](size_t _idx) {

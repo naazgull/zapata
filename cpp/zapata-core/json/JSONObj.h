@@ -36,9 +36,11 @@ namespace zapata {
 
 	class JSONArrRef;
 	typedef smart_ptr<JSONArrRef> JSONArr;
+	typedef vector<smart_ptr<JSONElement>*>::iterator JSONArrIterator;
 
 	class JSONObjRef;
 	typedef smart_ptr<JSONObjRef> JSONObj;
+	typedef str_map<smart_ptr<JSONElement>*>::iterator JSONObjIterator;
 
 	class JSONElement {
 		public:
@@ -77,6 +79,8 @@ namespace zapata {
 			operator unsigned int();
 			operator size_t();
 			operator double();
+			operator JSONObjRef&();
+			operator JSONArrRef&();
 			operator JSONElement&();
 
 			JSONElement& operator<<(const char* _in);
@@ -100,6 +104,7 @@ namespace zapata {
 			JSONElement& operator>>(string _in);
 			JSONElement& operator>>(ObjectOp _in);
 
+			JSONElement& operator[](int _idx);
 			JSONElement& operator[](size_t _idx);
 			JSONElement& operator[](const char* _idx);
 
@@ -140,6 +145,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 			virtual JSONElement& getJSONElement();
 	};
 
@@ -184,6 +191,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 	};
 
 	class JSONIntRef: public JSONElement {
@@ -227,6 +236,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 	};
 
 	class JSONDblRef: public JSONElement {
@@ -270,6 +281,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 	};
 
 	class JSONStrRef: public JSONElement {
@@ -312,7 +325,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
-
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 	};
 
 	class JSONArrRef: public JSONElement, public vector<smart_ptr<JSONElement>*> {
@@ -328,6 +342,7 @@ namespace zapata {
 			virtual JSONElement& get(size_t _idx);
 			virtual JSONElement& get(const char* _idx);
 
+			JSONElement& operator[](int _idx);
 			JSONElement& operator[](size_t _idx);
 
 		protected:
@@ -358,7 +373,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
-
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 	};
 
 	class JSONObjRef: public JSONElement, public str_map<smart_ptr<JSONElement>*> {
@@ -377,6 +393,7 @@ namespace zapata {
 			virtual JSONElement& get(size_t _idx);
 			virtual JSONElement& get(const char* _idx);
 
+			JSONElement& operator[](int _idx);
 			JSONElement& operator[](size_t _idx);
 			JSONElement& operator[](const char* _idx);
 
@@ -408,6 +425,8 @@ namespace zapata {
 			virtual double getDouble();
 			virtual bool getBool();
 			virtual string getString();
+			virtual JSONObjRef& getJSONObj();
+			virtual JSONArrRef& getJSONArr();
 
 	};
 

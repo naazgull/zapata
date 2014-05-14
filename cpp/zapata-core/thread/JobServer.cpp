@@ -1,8 +1,8 @@
 #include <thread/JobServer.h>
 
 zapata::JobServer::JobServer(string _key_file_path) : Job(_key_file_path) {
-	if (!!this->configuration()["core"]["max_jobs"] && ((int) this->configuration()["core"]["max_jobs"]) != -1) {
-		this->max(1 + (size_t) this->configuration()["core"]["max_jobs"]);
+	if (!!this->configuration()["zapata"]["core"]["max_jobs"] && ((int) this->configuration()["zapata"]["core"]["max_jobs"]) != -1) {
+		this->max(1 + (size_t) this->configuration()["zapata"]["core"]["max_jobs"]);
 	}
 	else {
 		this->max(1);

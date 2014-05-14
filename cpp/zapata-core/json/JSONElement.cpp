@@ -119,6 +119,14 @@ string zapata::JSONElement::getString() {
 	return "";
 }
 
+zapata::JSONObjRef& zapata::JSONElement::getJSONObj() {
+	throw CastException("can not convert from generic type to JSONObj");
+}
+
+zapata::JSONArrRef& zapata::JSONElement::getJSONArr() {
+	throw CastException("can not convert from generic type to JSONArr");
+}
+
 zapata::JSONElement& zapata::JSONElement::getJSONElement() {
 	return *this;
 }
@@ -226,6 +234,14 @@ zapata::JSONElement::operator double() {
 	return this->getDouble();
 }
 
+zapata::JSONElement::operator zapata::JSONObjRef&() {
+	return this->getJSONObj();
+}
+
+zapata::JSONElement::operator zapata::JSONArrRef&() {
+	return this->getJSONArr();
+}
+
 zapata::JSONElement::operator zapata::JSONElement&() {
 	return *this;
 }
@@ -323,6 +339,10 @@ zapata::JSONElement& zapata::JSONElement::operator>>(string _in) {
 zapata::JSONElement& zapata::JSONElement::operator>>(zapata::ObjectOp _in) {
 	this->unset(_in);
 	return *this;
+}
+
+zapata::JSONElement& zapata::JSONElement::operator[](int _idx) {
+	return this->get(_idx);
 }
 
 zapata::JSONElement& zapata::JSONElement::operator[](size_t _idx) {

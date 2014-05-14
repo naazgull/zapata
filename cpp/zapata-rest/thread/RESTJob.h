@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread/Job.h>
+#include <api/RESTPool.h>
 
 namespace zapata {
 
@@ -12,8 +13,12 @@ namespace zapata {
 			virtual void run();
 			virtual void assign(int _cs_fd);
 
+			RESTPool& pool();
+			void pool(RESTPool* _pool);
+
 		private:
 			int __cur_fd;
+			RESTPool* __pool;
 	};
 
 }

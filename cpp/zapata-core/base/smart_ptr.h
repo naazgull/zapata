@@ -51,6 +51,11 @@ namespace zapata {
 				this->set(ptr);
 			}
 
+			explicit smart_ptr(T& ptr) throw () {
+				this->__target = NULL;
+				this->set(&ptr);
+			}
+
 			smart_ptr(smart_ptr& rhs) throw () {
 				this->__target = NULL;
 				this->set(rhs.__target);
@@ -70,6 +75,16 @@ namespace zapata {
 			template<typename Y>
 			smart_ptr& operator=(smart_ptr<Y>& rhs) throw () {
 				this->set(rhs.__target);
+				return *this;
+			}
+
+			smart_ptr& operator=(T* rhs) throw () {
+				this->set(rhs);
+				return *this;
+			}
+
+			smart_ptr& operator=(T& rhs) throw () {
+				this->set(&rhs);
 				return *this;
 			}
 

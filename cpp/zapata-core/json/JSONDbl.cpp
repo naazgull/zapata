@@ -111,6 +111,14 @@ string zapata::JSONDblRef::getString() {
 	return _ret;
 }
 
+zapata::JSONObjRef& zapata::JSONDblRef::getJSONObj() {
+	throw CastException("can not convert from basic type to JSONObj");
+}
+
+zapata::JSONArrRef& zapata::JSONDblRef::getJSONArr() {
+	throw CastException("can not convert from basic type to JSONArr");
+}
+
 void zapata::JSONDblRef::stringify(ostream& _out, short _flags, string _tabs) {
 #ifdef DEBUG_JSON
 	_out << "(" << this << ")";

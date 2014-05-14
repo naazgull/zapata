@@ -19,11 +19,11 @@ void sigsev(int sig) {
 void stop(int sig) {
 }
 
-#define CYCLES 9999
+#define CYCLES 100
 #define OBJECTS 100
-//#define TEST_JSON
+#define TEST_JSON
 //#define TEST_HTTP
-#define TEST_SOCK
+//#define TEST_SOCK
 
 int main(int argc, char* argv[]) {
 	locale loc("");
@@ -54,6 +54,13 @@ int main(int argc, char* argv[]) {
 			f.open("/home/pf/some.json");
 			zapata::fromfile(f, obj);
 			f.close();
+
+			zapata::JSONObj obj2(obj["elements"][0]);
+			cout << obj2 << endl << flush;
+
+			zapata::JSONArr obj3(obj["elements"]);
+			cout << obj3 << endl << flush;
+
 		}
 		{
 			zapata::JSONArr obj;
@@ -89,7 +96,7 @@ int main(int argc, char* argv[]) {
 		zapata::JSONObj jsobj;
 		zapata::fromstr(obj->body(), jsobj);
 		jsobj << zapata::pretty;
-		//cout << jsobj << endl << flush;
+		cout << jsobj << endl << flush;
 
 		{
 			zapata::HTTPRep obj2;
