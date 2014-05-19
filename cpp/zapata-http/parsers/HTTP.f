@@ -30,7 +30,8 @@
 %x request reply headers headerval crlf plain_body statustext contentlengthval params
 %%
 
-[\f\t]+                  // skip white space
+[\f\t\n\r ]+                  // skip white space
+<<EOF>>
 "GET" {
 	begin(StartCondition__::request);
 	return 257;
@@ -70,11 +71,6 @@
 "HTTP/1.1" {
 	begin(StartCondition__::reply);
 	return 258;
-}
-<<EOF>> {
-	if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
-		return 261;
-	}
 }
 
 <request>{
@@ -146,7 +142,7 @@
 	"\r\n"   {
 		char _c = get__();
 		if (_c == '\n' || _c == '\r') {
-			if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+			if (d_content_length == 0) {
 				leave(-1);
 			}
 			else {
@@ -162,7 +158,7 @@
 	"\n"  {
 		char _c = get__();
 		if (_c == '\n' || _c == '\r') {
-			if (__HTTP_LEXER_CONTENT_LENGTH == 0) {
+			if (d_content_length == 0) {
 				leave(-1);
 			}
 			else {
@@ -195,7 +191,7 @@
 	}
 	([^:\n\r]+) {
 		std::string _s(matched());
-		zapata::fromstr(_s, &__HTTP_LEXER_CONTENT_LENGTH);
+		zapata::fromstr(_s, &d_content_length);
 		begin(StartCondition__::headers);
 		return 263;
 	}
@@ -229,7 +225,7 @@
 <plain_body>{
 	(.|\n) {
 		more();
-		if (matched().length() == __HTTP_LEXER_CONTENT_LENGTH - 1) {
+		if (matched().length() == d_content_length - 1) {
 			string _out(matched());
 			_out.push_back(get__());
 			setMatched(_out);

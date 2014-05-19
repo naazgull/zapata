@@ -87,3 +87,8 @@ zapata::RESTPool& zapata::RESTResource::pool() {
 void zapata::RESTResource::pool(RESTPool* _pool){
 	this->__pool = _pool;
 }
+
+// TO DELETE
+bool zapata::RESTResource::allowed(HTTPReq& _req){
+	return true;
+}

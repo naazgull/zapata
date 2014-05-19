@@ -49,6 +49,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1067074802" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1353900969" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.587218570" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>
@@ -121,6 +122,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.759689404" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1591947391" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.866581023" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>

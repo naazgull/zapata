@@ -27,6 +27,7 @@ thread \
 text \
 parsers \
 mem \
+log \
 json \
 exceptions \
 base \

@@ -5,6 +5,7 @@
 
 // $insert class.h
 #include "HTTPTokenizer.h"
+#include <exceptions/SyntaxErrorException.h>
 
 // $insert namespace-open
 namespace zapata
@@ -12,7 +13,9 @@ namespace zapata
 
 inline void HTTPTokenizer::error(char const *msg)
 {
-    std::cerr << msg << '\n';
+    //std::cerr << msg << '\n';
+   throw zapata::SyntaxErrorException(string(msg));
+
 }
 
 // $insert lex
@@ -46,9 +49,5 @@ inline void HTTPTokenizer::exceptionHandler__(std::exception const &exc)
     // UN-comment the next using-declaration if you want to use
     // int HTTPTokenizer's sources symbols from the namespace std without
     // specifying std::
-
-namespace zapata {
-	extern size_t __HTTP_LEXER_CONTENT_LENGTH;
-}
 
 //using namespace std;

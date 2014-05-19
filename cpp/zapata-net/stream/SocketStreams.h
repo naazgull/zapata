@@ -3,7 +3,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <streambuf>
+#include <iostream>
 #include <istream>
 #include <ostream>
 #include <strings.h>
@@ -44,8 +46,13 @@ namespace zapata {
 				sync();
 			}
 
-			void set_socket(int sock) {
-				this->__sock = sock;
+			void set_socket(int _sock) {
+				this->__sock = _sock;
+
+//				int _opts = fcntl(this->__sock, F_GETFL);
+//				_opts = _opts & ~O_NONBLOCK;
+//				if (fcntl(this->__sock, F_SETFL, _opts) < 0) {
+//				}
 			}
 			int get_socket() {
 				return this->__sock;
@@ -55,38 +62,41 @@ namespace zapata {
 
 			int output_buffer() {
 				int num = __buf_type::pptr() - __buf_type::pbase();
-				if (send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num)
+				if (::send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num) {
 				                    return __traits_type::eof();
+				}
 				__buf_type::pbump(-num);
 				return num;
 			}
 
 			virtual __int_type overflow(__int_type c) {
-				if (c != __traits_type::eof())
-				                    {
+				if (c != __traits_type::eof()) {
 					*__buf_type::pptr() = c;
 					__buf_type::pbump(1);
 				}
 
-				if (output_buffer() == __traits_type::eof())
+				if (output_buffer() == __traits_type::eof()) {
 				                    return __traits_type::eof();
+				}
 				return c;
 			}
 
 			virtual int sync() {
-				if (output_buffer() == __traits_type::eof())
+				if (output_buffer() == __traits_type::eof()) {
 				                    return __traits_type::eof();
+				}
 				return 0;
 			}
 
 			virtual __int_type underflow() {
-				if (__buf_type::gptr() < __buf_type::egptr())
+				if (__buf_type::gptr() < __buf_type::egptr()) {
 				                    return *__buf_type::gptr();
+				}
 
-				int num;
-				if ((num = recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) <= 0)
+				int num = -1;
+				if ((num = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) <= 0) {
 				                    return __traits_type::eof();
-
+				}
 				__buf_type::setg(ibuf, ibuf, ibuf + num);
 				return *__buf_type::gptr();
 			}
@@ -122,10 +132,11 @@ namespace zapata {
 			}
 
 			void close() {
+				__stream_type::flush();
+				__stream_type::clear();
 				if (__buf.get_socket() != 0) {
 					::close(__buf.get_socket());
 				}
-				__stream_type::clear();
 			}
 
 			__buf_type& buffer() {
@@ -179,10 +190,11 @@ namespace zapata {
 			}
 
 			void close() {
+				__stream_type::flush();
+				__stream_type::clear();
 				if (__buf.get_socket() != 0) {
 					::close(__buf.get_socket());
 				}
-				__stream_type::clear();
 			}
 
 			__buf_type& buffer() {

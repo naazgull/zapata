@@ -10,7 +10,35 @@ void zapata::RESTPool::add(RESTResource* _res) {
 	this->__resources.push_back(_res);
 }
 
+void zapata::RESTPool::init(HTTPRep& _rep) {
+	time_t _rawtime = time(NULL);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	_ptm.tm_hour += 1;
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	_rep->status(zapata::HTTP404);
+	_rep <<
+		"Connection" << "close" <<
+		"Server" << "Zapata RESTful Server" <<
+		"Cache-Control" << "max-age=3600" <<
+		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
+		"Date" << string(_buffer_date) <<
+		"Expires" << string(_buffer_expires);
+
+	/*if (allowOrigin != NULL) {
+		reply->setHeader("Access-Control-Allow-Origin", allowOrigin->data(), false);
+		reply->setHeader("Access-Control-Expose-Headers", KREST_ACCESS_CONTROL_HEADERS, false);
+	}*/
+
+}
+
 void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
+	this->init(_rep);
 	for (vector<RESTResource*>::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
 		if ((*_i)->matches(_req->url())) {
 			switch(_req->method()) {

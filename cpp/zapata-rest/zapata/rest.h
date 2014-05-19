@@ -4,5 +4,10 @@
 #include <thread/RESTServer.h>
 
 #include <api/RESTPool.h>
-#include <api/RESTService.h>
+
+#include <resource/RESTCollection.h>
+#include <resource/RESTController.h>
+#include <resource/RESTDocument.h>
+#include <resource/RESTResource.h>
+#include <resource/RESTStore.h>
 

@@ -11,6 +11,7 @@ namespace zapata {
 
 			void populate();
 			void add(RESTResource* _res);
+			void init(HTTPRep& _rep);
 			void process(HTTPReq& _req, HTTPRep& _rep);
 
 		private:

@@ -6,11 +6,15 @@
 #include <text/convert.h>
 #include <text/manip.h>
 
+#include <log/log.h>
+
 #include <mem/usage.h>
 
 #include <exceptions/CastException.h>
 #include <exceptions/ParserEOF.h>
 #include <exceptions/NoAttributeNameException.h>
+#include <exceptions/InterruptedException.h>
+#include <exceptions/SyntaxErrorException.h>
 
 #include <json/JSONObj.h>
 

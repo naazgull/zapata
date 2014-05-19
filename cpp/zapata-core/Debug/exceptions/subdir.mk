@@ -5,18 +5,24 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../exceptions/CastException.cpp \
+../exceptions/InterruptedException.cpp \
 ../exceptions/NoAttributeNameException.cpp \
-../exceptions/ParserEOF.cpp 
+../exceptions/ParserEOF.cpp \
+../exceptions/SyntaxErrorException.cpp 
 
 OBJS += \
 ./exceptions/CastException.o \
+./exceptions/InterruptedException.o \
 ./exceptions/NoAttributeNameException.o \
-./exceptions/ParserEOF.o 
+./exceptions/ParserEOF.o \
+./exceptions/SyntaxErrorException.o 
 
 CPP_DEPS += \
 ./exceptions/CastException.d \
+./exceptions/InterruptedException.d \
 ./exceptions/NoAttributeNameException.d \
-./exceptions/ParserEOF.d 
+./exceptions/ParserEOF.d \
+./exceptions/SyntaxErrorException.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

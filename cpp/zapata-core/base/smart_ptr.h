@@ -2,6 +2,7 @@
 
 #include <string>
 #include <base/str_map.h>
+#include <log/log.h>
 
 using namespace std;
 using namespace __gnu_cxx;

@@ -2,7 +2,14 @@
 
 #include <dlfcn.h>
 
-zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(1) {
+zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
+	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
+		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
+	}
+	if (!!this->configuration()["zapata"]["core"]["log"]["file"]) {
+		zapata::log_fd = new ofstream();
+		((ofstream*) zapata::log_fd)->open(((string) this->configuration()["zapata"]["core"]["log"]["file"]).data());
+	}
 	for (JSONObjIterator _i = this->configuration()->begin(); _i != this->configuration()->end(); _i++) {
 		if ((*_i)->first != "zapata") {
 			JSONObj _att((zapata::JSONObjRef*) (*_i)->second->get());
@@ -13,7 +20,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == NULL) {
-					cerr << dlerror() << endl;
+					zapata::log(string(dlerror()), zapata::error);
 				}
 				else {
 					void (*_populate)(RESTPool&);
@@ -23,6 +30,9 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			}
 		}
 	}
+	ostringstream _text;
+	_text << "starting RESTful server on port " << (unsigned int) this->configuration()["zapata"]["rest"]["port"] << flush;
+	zapata::log(_text.str(), zapata::system);
 	this->__ss.bind((unsigned int) this->configuration()["zapata"]["rest"]["port"]);
 }
 
@@ -33,20 +43,26 @@ zapata::RESTServer::~RESTServer(){
 }
 
 void zapata::RESTServer::wait() {
-	int _cs_fd;
-	this->__ss.accept(&_cs_fd);
+	try {
+		int _cs_fd;
+		this->__ss.accept(&_cs_fd);
 
-	if (this->__n_jobs < this->max()) {
-		RESTJob* _job = new RESTJob(this->__skey);
-		_job->max(this->max());
-		_job->idx(this->next());
-		_job->pool(&this->__pool);
-		_job->start();
+		if (this->__n_jobs < this->max()) {
+			RESTJob* _job = new RESTJob(this->__skey);
+			_job->max(this->max());
+			_job->idx(this->next());
+			_job->pool(&this->__pool);
+			_job->start();
 
-		this->__jobs.push_back(_job);
+			this->__jobs.push_back(_job);
+			this->__n_jobs++;
+		}
+
+		this->__jobs.at(this->next())->assign(_cs_fd);
 	}
-
-	this->__jobs.at(this->next() - 1)->assign(_cs_fd);
+	catch(zapata::ClosedException& e) {
+		throw zapata::InterruptedException(e.what());
+	}
 }
 
 void zapata::RESTServer::notify() {

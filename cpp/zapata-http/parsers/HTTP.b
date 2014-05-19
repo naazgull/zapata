@@ -25,7 +25,7 @@
 exp :
 	METHOD
 	{
-		__HTTP_LEXER_CONTENT_LENGTH = 0;
+		d_scanner.d_content_length = 0;
 		d_scanner.init(zapata::HTTPRequest);
 	}
 	SPACE URL
@@ -34,15 +34,15 @@ exp :
 	}
 	params SPACE VERSION headers rest
 	{
-		if (__HTTP_LEXER_CONTENT_LENGTH != 0) {
+		if (d_scanner.d_content_length != 0) {
 			d_scanner.body();
-			__HTTP_LEXER_CONTENT_LENGTH = 0;
+			d_scanner.d_content_length = 0;
 		}
 	}
 |
 	VERSION
 	{
-		__HTTP_LEXER_CONTENT_LENGTH = 0;
+		d_scanner.d_content_length = 0;
 		d_scanner.init(zapata::HTTPReply);
 	}
 	SPACE STATUS
@@ -54,9 +54,9 @@ exp :
 	}
 	 headers rest
 	{
-		if (__HTTP_LEXER_CONTENT_LENGTH != 0) {
+		if (d_scanner.d_content_length != 0) {
 			d_scanner.body();
-			__HTTP_LEXER_CONTENT_LENGTH = 0;
+			d_scanner.d_content_length = 0;
 		}
 	}
 ;
@@ -119,7 +119,7 @@ rest :
 	BODY
 	{
 		d_scanner.body();
-		__HTTP_LEXER_CONTENT_LENGTH = 0;
+		d_scanner.d_content_length = 0;
 	}
 |
 

@@ -26,7 +26,7 @@
 //%debug
 %no-lines
 
-%x string escaped unicode
+%x string escaped unicode number
 
 %%
 
@@ -41,9 +41,23 @@
 \] return 265;
 \: return 267;
 \, return 266;
-[0-9]+ return 259;
+[\-0-9] {
+	more();
+	begin(StartCondition__::number);
+}
 \" {
 	begin(StartCondition__::string);
+}
+<number>{
+	[0-9\.]* {
+		begin(StartCondition__::INITIAL);
+		if (matched().find(".") != std::string::npos) {
+			return 260;
+		}
+		else {
+			return 259;
+		}
+	}
 }
 <string>{
 	\" {
