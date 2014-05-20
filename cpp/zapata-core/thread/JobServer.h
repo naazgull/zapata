@@ -24,9 +24,9 @@ namespace zapata {
 			size_t __next;
 			size_t __max_idx;
 			semid_t __sem;
-			JSONObj __configuration;
 
 		protected:
+			JSONObj __configuration;
 			string __skey;
 	};
 }

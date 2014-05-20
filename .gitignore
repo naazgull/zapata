@@ -3,4 +3,5 @@
 *.so
 /cpp/zapata/Debug/zapata
 /cpp/zapata/Release/zapata
-
+/cpp/zapata-rest-server/Debug/zapata-rest-daemon
+/cpp/zapata-rest-server/Release/zapata-rest-daemon

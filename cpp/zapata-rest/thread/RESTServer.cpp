@@ -10,6 +10,9 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		zapata::log_fd = new ofstream();
 		((ofstream*) zapata::log_fd)->open(((string) this->configuration()["zapata"]["core"]["log"]["file"]).data());
 	}
+
+	this->__pool.configuration(&this->__configuration);
+
 	for (JSONObjIterator _i = this->configuration()->begin(); _i != this->configuration()->end(); _i++) {
 		if ((*_i)->first != "zapata") {
 			JSONObj _att((zapata::JSONObjRef*) (*_i)->second->get());

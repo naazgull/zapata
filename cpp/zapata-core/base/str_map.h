@@ -225,7 +225,7 @@ namespace zapata {
 
 			V& operator[](int idx);
 			V& operator[](const char* name);
-			V& operator[](string name);
+			V& operator[](string& name);
 
 			inline friend ostream& operator<<(ostream& os, iterator& f) {
 				os << "iterator pointing to " << f->second;
@@ -503,7 +503,7 @@ V& zapata::str_map<V>::operator[](const char* name) {
 }
 
 template<typename V>
-V& zapata::str_map<V>::operator[](string name) {
+V& zapata::str_map<V>::operator[](string& name) {
 	return this->find(name)->second;
 }
 

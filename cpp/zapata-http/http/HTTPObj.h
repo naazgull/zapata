@@ -2,9 +2,9 @@
 
 #define DEBUG_JSON
 
-#include <zapata/core.h>
 #include <ostream>
 #include <vector>
+#include <zapata/core.h>
 
 using namespace std;
 using namespace __gnu_cxx;

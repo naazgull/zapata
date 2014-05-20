@@ -22,7 +22,7 @@ void zapata::RESTJob::run() {
 				try  {
 					zapata::fromstream(_cs, _req);
 					if (zapata::log_lvl) {
-						if (zapata::log_lvl >= zapata::info) {
+						if (zapata::log_lvl >= zapata::debug) {
 							string _text;
 							zapata::tostr(_text, _req);
 							zapata::log(_text, zapata::info);
@@ -46,12 +46,13 @@ void zapata::RESTJob::run() {
 							zapata::log(_text, zapata::system);
 						}
 					}
+
 					this->__pool->process(_req, _rep);
 
 					if (zapata::log_lvl) {
-						if (zapata::log_lvl >= zapata::info) {
+						if (zapata::log_lvl >= zapata::debug) {
 							string _text;
-							zapata::tostr(_text, _req);
+							zapata::tostr(_text, _rep);
 							zapata::log(_text, zapata::info);
 						}
 						else {

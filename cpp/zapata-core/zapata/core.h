@@ -6,6 +6,7 @@
 
 #include <text/convert.h>
 #include <text/manip.h>
+#include <text/html.h>
 
 #include <log/log.h>
 

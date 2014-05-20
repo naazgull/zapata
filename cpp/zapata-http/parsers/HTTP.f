@@ -223,7 +223,7 @@
 }
 
 <plain_body>{
-	(.|\n) {
+	[[:alnum:][:alpha:][:blank:][:cntrl:][:digit:][:graph:][:lower:][:print:][:punct:][:space:][:upper:][:xdigit:]] {
 		more();
 		if (matched().length() == d_content_length - 1) {
 			string _out(matched());

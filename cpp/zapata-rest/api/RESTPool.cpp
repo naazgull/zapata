@@ -1,12 +1,21 @@
 #include <api/RESTPool.h>
 
-zapata::RESTPool::RESTPool() {
+zapata::RESTPool::RESTPool() : __configuration(NULL) {
 }
 
 zapata::RESTPool::~RESTPool() {
 }
 
+zapata::JSONObj& zapata::RESTPool::configuration() {
+	return *this->__configuration;
+}
+
+void zapata::RESTPool::configuration(JSONObj* _conf) {
+	this->__configuration = _conf;
+}
+
 void zapata::RESTPool::add(RESTResource* _res) {
+	_res->configuration(this->__configuration);
 	this->__resources.push_back(_res);
 }
 

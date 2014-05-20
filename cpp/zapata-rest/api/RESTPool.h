@@ -9,13 +9,17 @@ namespace zapata {
 			RESTPool();
 			virtual ~RESTPool();
 
-			void populate();
+			//void populate();
+			JSONObj& configuration();
+			void configuration(JSONObj* _conf);
+
 			void add(RESTResource* _res);
 			void init(HTTPRep& _rep);
 			void process(HTTPReq& _req, HTTPRep& _rep);
 
 		private:
 			vector<RESTResource*> __resources;
+			JSONObj* __configuration;
 	};
 
 }

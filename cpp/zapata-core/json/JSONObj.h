@@ -108,6 +108,7 @@ namespace zapata {
 			JSONElement& operator[](int _idx);
 			JSONElement& operator[](size_t _idx);
 			JSONElement& operator[](const char* _idx);
+			JSONElement& operator[](string& _idx);
 
 			friend ostream& operator<<(ostream& _out, JSONElement& _in) {
 				_in.stringify(_out, _in.__flags, "");

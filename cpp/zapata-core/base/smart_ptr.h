@@ -225,6 +225,9 @@ namespace zapata {
 			T& operator[](const char* _idx){
 				return (T&) this->__target->get(_idx);
 			}
+			T& operator[](string& _idx){
+				return (T&) this->__target->get(_idx.data());
+			}
 
 	};
 

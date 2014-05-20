@@ -18,6 +18,7 @@ using namespace std;
 using namespace __gnu_cxx;
 
 namespace zapata {
+
 	void tostr(string& s, int i);
 	void tostr(std::string&, int, std::ios_base& (&)(std::ios_base&));
 	void tostr(string& s, unsigned int i);
@@ -62,10 +63,6 @@ namespace zapata {
 	void utf8_encode(wstring s, string& _out, bool quote = true);
 	void utf8_encode(string& _out, bool quote = true);
 	void utf8_decode(string& _out);
-
-	void html_entities_encode(wstring s, ostream& out, bool quote = true, bool tags = false);
-	void html_entities_encode(string& out, bool quote = true, bool tags = false);
-	void html_entities_decode(string& out);
 
 	void url_encode(wstring s, ostream& out);
 	void url_encode(string& out);

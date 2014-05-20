@@ -349,3 +349,7 @@ zapata::JSONElement& zapata::JSONElement::operator[](size_t _idx) {
 zapata::JSONElement& zapata::JSONElement::operator[](const char* _idx) {
 	return this->get(_idx);
 }
+
+zapata::JSONElement& zapata::JSONElement::operator[](string& _idx) {
+	return this->get(_idx.data());
+}
