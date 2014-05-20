@@ -30,11 +30,6 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 		"Date" << string(_buffer_date) <<
 		"Expires" << string(_buffer_expires);
 
-	/*if (allowOrigin != NULL) {
-		reply->setHeader("Access-Control-Allow-Origin", allowOrigin->data(), false);
-		reply->setHeader("Access-Control-Expose-Headers", KREST_ACCESS_CONTROL_HEADERS, false);
-	}*/
-
 }
 
 void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
@@ -96,10 +91,11 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 				zapata::tostr(_text, _body);
 				_rep->body(_text);
 			}
+			break;
 		}
 	}
 }
 
-/*extern "C" void populate(RESTPool& _pool) {
+/*extern "C" void populate(zapata::RESTPool& _pool) {
 }*/
 
