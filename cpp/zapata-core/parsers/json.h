@@ -18,5 +18,7 @@ namespace zapata {
 	void fromstr(string& _in, JSONElement** _out, zapata::JSONType* type ) ;
 
 	void tostr(string& _out, JSONElement& _in) ;
+	void tostr(string& _out, JSONObj& _in) ;
+	void tostr(string& _out, JSONArr& _in) ;
 
 }

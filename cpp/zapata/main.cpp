@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
 	double vm;
 	double resident;
 
+	pthread_key_create(&zapata::__memory_key, NULL);
+
 	zapata::process_mem_usage(vm, resident);
 	cout << "Initial\n\tVM: " << vm << "kB\tRESIDENT: " << resident << "kB" << endl << flush;
 

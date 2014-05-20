@@ -130,18 +130,15 @@ zapata::JSONArrRef& zapata::JSONStrRef::getJSONArr() {
 }
 
 void zapata::JSONStrRef::stringify(ostream& _out, short _flags, string _tabs) {
-#ifdef DEBUG_JSON
-	_out << "(" << this << ")";
-#endif
 	string encoded(this->__value);
 	zapata::utf8_encode(encoded);
-	_out << "\"" <<encoded << "\"" << flush;
+	_out << "\"" << encoded << "\"" << flush;
 }
 
 void zapata::JSONStrRef::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	string encoded(this->__value);
+	zapata::utf8_encode(encoded);
+	_out.insert(_out.length(),  "\"");
+	_out.insert(_out.length(), encoded);
+	_out.insert(_out.length(), "\"");
 }

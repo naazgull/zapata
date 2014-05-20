@@ -146,37 +146,34 @@ zapata::JSONArrRef& zapata::JSONArrRef::getJSONArr() {
 }
 
 void zapata::JSONArrRef::stringify(ostream& _out, short _flags, string _tabs) {
-#ifdef DEBUG_JSON
-	_out << "(" << this << ")";
-#endif
-	_out <<  "[";
+	string _ret;
+	this->stringify(_ret, _flags, _tabs);
+	_out << _ret << flush;
+}
+
+void zapata::JSONArrRef::stringify(string& _out, short _flags, string _tabs) {
+	_out.insert(_out.length(), "[");
 	if (_flags & zapata::pretty) {
 		_tabs.insert(_tabs.length(), "\t");
 	}
 	bool first = true;
 	for (JSONArrRef::iterator i = this->begin(); i != this->end(); i++) {
 		if (!first) {
-			_out << ",";
+			_out.insert(_out.length(), ",");
 		}
 		first = false;
 		if (_flags & zapata::pretty) {
-			_out << "\n" << _tabs;
+			_out.insert(_out.length(), "\n");
+			_out.insert(_out.length(), _tabs);
 		}
 		(*i)->get()->stringify(_out, _flags, _tabs);
 	}
 	if (_flags & zapata::pretty) {
-		_out << "\n";
+		_out.insert(_out.length(), "\n");
 		_tabs .erase(_tabs.length() - 1, 1);
 	}
-	_out << _tabs << "]" << flush;
-}
-
-void zapata::JSONArrRef::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	_out.insert(_out.length(),  _tabs);
+	_out.insert(_out.length(),  "]");
 }
 
 zapata::JSONElement& zapata::JSONArrRef::operator[](int _idx) {

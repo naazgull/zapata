@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lzapata-core -lzapata-http -lzapata-net -lzapata-rest
+LIBS := -lpthread -lzapata-core -lzapata-http -lzapata-net -lzapata-rest
 

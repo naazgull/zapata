@@ -48,6 +48,7 @@ namespace zapata {
 			virtual ~JSONElement();
 
 			virtual JSONType type();
+			virtual short flags();
 
 			virtual void stringify(string& _out, short _flags = 0, string _tabs = "");
 			virtual void stringify(ostream& _out,short _flags = 0,  string _tabs = "");

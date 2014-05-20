@@ -3,6 +3,7 @@
 #include <string>
 #include <base/str_map.h>
 #include <log/log.h>
+#include <pthread.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -37,7 +38,7 @@ namespace zapata {
 			void remove(void* ptr);
 	};
 
-	extern smart_ref_table* __memory;
+	extern pthread_key_t __memory_key;
 
 	template<typename T>
 	class smart_ptr {
@@ -90,8 +91,13 @@ namespace zapata {
 			}
 
 			~smart_ptr() throw () {
-				if (this->__target != NULL && zapata::__memory->release(this->__target) == 0) {
-					zapata::__memory->remove(this->__target);
+				smart_ref_table* _memory = NULL;
+				if ((_memory = static_cast<smart_ref_table*>(pthread_getspecific(zapata::__memory_key))) == NULL) {
+					_memory = new smart_ref_table();
+					pthread_setspecific(zapata::__memory_key, _memory);
+				}
+				if (this->__target != NULL && _memory->release(this->__target) == 0) {
+					_memory->remove(this->__target);
 					delete this->__target;
 				}
 			}
@@ -107,7 +113,12 @@ namespace zapata {
 			}
 
 			T* release() throw () {
-				zapata::__memory->release(this->__target);
+				smart_ref_table* _memory = NULL;
+				if ((_memory = static_cast<smart_ref_table*>(pthread_getspecific(zapata::__memory_key))) == NULL) {
+					_memory = new smart_ref_table();
+					pthread_setspecific(zapata::__memory_key, _memory);
+				}
+				_memory->release(this->__target);
 
 				T* tmp = this->__target;
 				this->__target = NULL;
@@ -124,12 +135,17 @@ namespace zapata {
 					ptr = new T();
 				}
 				if (this->__target != ptr) {
-					if (this->__target != NULL && zapata::__memory->release(this->__target) == 0) {
-						zapata::__memory->remove(this->__target);
+					smart_ref_table* _memory = NULL;
+					if ((_memory = static_cast<smart_ref_table*>(pthread_getspecific(zapata::__memory_key))) == NULL) {
+						_memory = new smart_ref_table();
+						pthread_setspecific(zapata::__memory_key, _memory);
+					}
+					if (this->__target != NULL && _memory->release(this->__target) == 0) {
+						_memory->remove(this->__target);
 						delete this->__target;
 					}
 					this->__target = ptr;
-					zapata::__memory->add(ptr);
+					_memory->add(ptr);
 				}
 			}
 

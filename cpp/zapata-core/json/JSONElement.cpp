@@ -19,6 +19,10 @@ zapata::JSONType zapata::JSONElement::type() {
 	return zapata::JSNil;
 }
 
+short zapata::JSONElement::flags() {
+	return this->__flags;
+}
+
 void zapata::JSONElement::put(int _in) {
 }
 
@@ -132,18 +136,11 @@ zapata::JSONElement& zapata::JSONElement::getJSONElement() {
 }
 
 void zapata::JSONElement::stringify(ostream& _out, short _flags, string _tabs) {
-#ifdef DEBUG_JSON
-	_out << "(" << this << ")";
-#endif
-	_out << _tabs << "null" << flush;
+	_out << "null" << flush;
 }
 
 void zapata::JSONElement::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	_out.insert(_out.length(), "null");
 }
 
 bool zapata::JSONElement::operator==(JSONElement& _in) {

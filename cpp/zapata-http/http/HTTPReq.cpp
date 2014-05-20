@@ -222,33 +222,39 @@ string& zapata::HTTPReqRef::param(const char* _idx) {
 	return zapata::nil_header;
 }
 
+zapata::str_map<string*>& zapata::HTTPReqRef::params() {
+	return this->__params;
+}
+
 void zapata::HTTPReqRef::stringify(ostream& _out, short _flags, string _tabs) {
-	if (_flags & zapata::pretty) {
-	}
-	_out << zapata::method_names[this->__method] << " " << this->__url;
-	if (this->__params.size() != 0) {
-		_out << "?";
-		for (HTTPReqRef::iterator i = this->__params.begin(); i != this->__params.end(); i++) {
-			if (i != this->__params.begin()) {
-				_out << "&";
-			}
-			_out << (*i)->first << "=" << *(*i)->second;
-		}
-	}
-	_out  << " HTTP/1.1" << CRLF;;
-	for (HTTPReqRef::iterator i = this->begin(); i != this->end(); i++) {
-		_out << (*i)->first << ": " << *(*i)->second << CRLF;
-	}
-	_out << CRLF;
-	_out << this->__body;
-	if (_flags & zapata::pretty) {
-	}
+	string _ret;
+	this->stringify(_ret, _flags, _tabs);
+	_out << _ret << flush;
 }
 
 void zapata::HTTPReqRef::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	_out.insert(_out.length(), zapata::method_names[this->__method]);
+	_out.insert(_out.length(),  " ");
+	_out.insert(_out.length(), this->__url);
+	if (this->__params.size() != 0) {
+		_out.insert(_out.length(), "?");
+		for (HTTPReqRef::iterator i = this->__params.begin(); i != this->__params.end(); i++) {
+			if (i != this->__params.begin()) {
+				_out.insert(_out.length(), "&");
+			}
+			_out.insert(_out.length(), (*i)->first);
+			_out.insert(_out.length(), "=");
+			_out.insert(_out.length(), *(*i)->second);
+		}
+	}
+	_out.insert(_out.length(), " HTTP/1.1");
+	_out.insert(_out.length(),  CRLF);
+	for (HTTPReqRef::iterator i = this->begin(); i != this->end(); i++) {
+		_out.insert(_out.length(), (*i)->first);
+		_out.insert(_out.length(), ": ");
+		_out.insert(_out.length(), *(*i)->second);
+		_out.insert(_out.length(), CRLF);
+	}
+	_out.insert(_out.length(), CRLF);
+	_out.insert(_out.length(), this->__body);
 }

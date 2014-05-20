@@ -9,7 +9,7 @@ zapata::RESTResource::RESTResource(string _url_pattern) {
 	this->__pool = NULL;
 }
 
-zapata::RESTResource::~RESTResource(){
+zapata::RESTResource::~RESTResource() {
 	delete this->__url_pattern;
 }
 
@@ -34,11 +34,26 @@ void zapata::RESTResource::head(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTResource::trace(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP405);
+	_rep->status(zapata::HTTP200);
+
+	string _body;
+	zapata::tostr(_body, _req);
+	_rep->body(_body);
 }
 
 void zapata::RESTResource::options(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP405);
+	_rep->status(zapata::HTTP200);
+
+	string _origin = _req->header("Origin");
+	if (_origin.length() != 0) {
+		_rep
+			<< "Access-Control-Allow-Origin" << _origin
+		                    << "Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY"
+		                    << "Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS
+		                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS
+		                    << "Access-Control-Max-Age" << "1728000";
+	}
+
 }
 
 void zapata::RESTResource::patch(HTTPReq& _req, HTTPRep& _rep) {
@@ -84,11 +99,10 @@ zapata::RESTPool& zapata::RESTResource::pool() {
 	return *this->__pool;
 }
 
-void zapata::RESTResource::pool(RESTPool* _pool){
+void zapata::RESTResource::pool(RESTPool* _pool) {
 	this->__pool = _pool;
 }
 
-// TO DELETE
-bool zapata::RESTResource::allowed(HTTPReq& _req){
+bool zapata::RESTResource::allowed(HTTPReq& _req) {
 	return true;
 }

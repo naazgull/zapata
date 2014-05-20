@@ -113,3 +113,11 @@ void zapata::fromstream(istream& _in, HTTPElement** _out, zapata::HTTPType* _typ
 void zapata::tostr(string& _out, HTTPElement& _in)  {
 	_in.stringify(_out);
 }
+
+void zapata::tostr(string& _out, HTTPRep& _in)  {
+	_in->stringify(_out);
+}
+
+void zapata::tostr(string& _out, HTTPReq& _in)  {
+	_in->stringify(_out);
+}

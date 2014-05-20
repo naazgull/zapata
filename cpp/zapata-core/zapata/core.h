@@ -2,6 +2,7 @@
 
 #include <base/str_map.h>
 #include <base/smart_ptr.h>
+#include <base/assert.h>
 
 #include <text/convert.h>
 #include <text/manip.h>

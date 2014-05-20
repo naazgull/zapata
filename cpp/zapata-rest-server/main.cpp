@@ -22,14 +22,17 @@ void sigsev(int sig) {
 		semctl(__semid, 0, IPC_RMID);
 		__semid = 0;
 	}
+	exit(-1);
 }
 
 void stop(int sig) {
 	(*zapata::log_fd ) << endl << flush;
-	ostringstream _text;
-	_text << "finishing thread " << __thread_id << " with semid " << __semid << flush;
-	zapata::log(_text.str(), zapata::system);
-	if (pthread_self() == __thread_id) {
+	string _text("finishing thread ");
+	zapata::tostr(_text, __thread_id);
+	_text.insert(_text.length(),  " with semid ");
+	zapata::tostr(_text, __semid);
+	zapata::log(_text, zapata::system);
+	if (pthread_self() == __thread_id && __semid != 0) {
 		semctl(__semid, 0, IPC_RMID);
 		__semid = 0;
 	}
@@ -84,6 +87,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	__thread_id = pthread_self();
+	pthread_key_create(&zapata::__memory_key, NULL);
 
 	zapata::RESTServer _server(_conf_file);
 	__semid = _server.semid();

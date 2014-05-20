@@ -70,6 +70,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="api|resource|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="api"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="resource"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="thread"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -143,6 +150,13 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="api|resource|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="api"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="resource"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="thread"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

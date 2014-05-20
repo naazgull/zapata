@@ -15,7 +15,7 @@ string& zapata::HTTPRepRef::body() {
 }
 
 void zapata::HTTPRepRef::body(string _body) {
-	this->__body.assign(_body.data());
+	this->__body.assign(_body);
 }
 
 zapata::HTTPStatus zapata::HTTPRepRef::status() {
@@ -144,22 +144,21 @@ string& zapata::HTTPRepRef::header(const char* _idx) {
 }
 
 void zapata::HTTPRepRef::stringify(ostream& _out, short _flags, string _tabs) {
-	if (_flags & zapata::pretty) {
-	}
-	_out << "HTTP/1.1 " << zapata::status_names[this->__status] << CRLF;
-	for (HTTPRepRef::iterator i = this->begin(); i != this->end(); i++) {
-		_out << (*i)->first << ": " << *(*i)->second << CRLF;
-	}
-	_out << CRLF;
-	_out << this->__body;
-	if (_flags & zapata::pretty) {
-	}
+	string _ret;
+	this->stringify(_ret, _flags, _tabs);
+	_out << _ret << flush;
 }
 
 void zapata::HTTPRepRef::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	_out.insert(_out.length(), "HTTP/1.1 "),
+	_out.insert(_out.length(),  zapata::status_names[this->__status]);
+	_out.insert(_out.length(), CRLF);
+	for (HTTPRepRef::iterator i = this->begin(); i != this->end(); i++) {
+		_out.insert(_out.length(), (*i)->first);
+		_out.insert(_out.length(), ": ");
+		_out.insert(_out.length(), *(*i)->second);
+		_out.insert(_out.length(), CRLF);
+	}
+	_out.insert(_out.length(), CRLF);
+	_out.insert(_out.length(), this->__body);
 }

@@ -46,10 +46,10 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1545243273" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.229771399" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.libs.584416935" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.584416935" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="zapata-core"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.1841788036" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+								<option id="gnu.cpp.link.option.paths.1841788036" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.55656377" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -63,6 +63,14 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="algorithm|map|partition|reduce|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="algorithm"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="map"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="partition"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="reduce"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -112,10 +120,10 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.834411552" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1141898854" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.libs.419843147" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.419843147" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="zapata-core"/>
 								</option>
-								<option id="gnu.cpp.link.option.paths.886926326" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+								<option id="gnu.cpp.link.option.paths.886926326" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.660054394" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -129,6 +137,14 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="algorithm|map|partition|reduce|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="algorithm"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="map"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="partition"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="reduce"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

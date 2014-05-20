@@ -30,9 +30,9 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			}
 		}
 	}
-	ostringstream _text;
-	_text << "starting RESTful server on port " << (unsigned int) this->configuration()["zapata"]["rest"]["port"] << flush;
-	zapata::log(_text.str(), zapata::system);
+	string _text("starting RESTful server on port ");
+	zapata::tostr(_text, (unsigned int) this->configuration()["zapata"]["rest"]["port"]);
+	zapata::log(_text, zapata::system);
 	this->__ss.bind((unsigned int) this->configuration()["zapata"]["rest"]["port"]);
 }
 

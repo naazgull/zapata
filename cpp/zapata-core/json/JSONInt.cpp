@@ -120,17 +120,10 @@ zapata::JSONArrRef& zapata::JSONIntRef::getJSONArr() {
 }
 
 void zapata::JSONIntRef::stringify(ostream& _out, short _flags, string _tabs) {
-#ifdef DEBUG_JSON
-	_out << "(" << this << ")";
-#endif
 	_out << this->__value << flush;
 }
 
 void zapata::JSONIntRef::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	zapata::tostr(_out, this->__value);
 }
 

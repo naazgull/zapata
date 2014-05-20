@@ -22,5 +22,7 @@ namespace zapata {
 	void fromstr(string& _in, HTTPElement** _out, zapata::HTTPType* type ) ;
 
 	void tostr(string& _out, HTTPElement& _in) ;
+	void tostr(string& _out, HTTPReq& _in) ;
+	void tostr(string& _out, HTTPRep& _in) ;
 
 }

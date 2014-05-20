@@ -145,15 +145,11 @@ void zapata::HTTPElement::put(ObjectOp _in) {
 }
 
 void zapata::HTTPElement::stringify(ostream& _out, short _flags, string _tabs) {
-	_out << _tabs << "null" << flush;
+	_out << "null" << flush;
 }
 
 void zapata::HTTPElement::stringify(string& _out, short _flags, string _tabs) {
-	ostringstream _ret;
-	this->stringify(_ret, _flags, _tabs);
-	_ret << flush;
-	_out.insert(_out.length(), _ret.str());
-	_ret.clear();
+	_out.insert(_out.length(), "null");
 }
 
 zapata::HTTPElement::operator string() {

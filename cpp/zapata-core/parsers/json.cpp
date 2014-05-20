@@ -79,5 +79,13 @@ void zapata::fromfile(ifstream& _in, JSONElement** _out, zapata::JSONType* _type
 }
 
 void zapata::tostr(string& _out, JSONElement& _in)  {
-	_in.stringify(_out);
+	_in.stringify(_out, _in.flags());
+}
+
+void zapata::tostr(string& _out, JSONObj& _in)  {
+	_in->stringify(_out, _in->flags());
+}
+
+void zapata::tostr(string& _out, JSONArr& _in)  {
+	_in->stringify(_out, _in->flags());
 }

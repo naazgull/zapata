@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../exceptions/AssertionException.cpp \
 ../exceptions/CastException.cpp \
 ../exceptions/InterruptedException.cpp \
 ../exceptions/NoAttributeNameException.cpp \
@@ -11,6 +12,7 @@ CPP_SRCS += \
 ../exceptions/SyntaxErrorException.cpp 
 
 OBJS += \
+./exceptions/AssertionException.o \
 ./exceptions/CastException.o \
 ./exceptions/InterruptedException.o \
 ./exceptions/NoAttributeNameException.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./exceptions/SyntaxErrorException.o 
 
 CPP_DEPS += \
+./exceptions/AssertionException.d \
 ./exceptions/CastException.d \
 ./exceptions/InterruptedException.d \
 ./exceptions/NoAttributeNameException.d \

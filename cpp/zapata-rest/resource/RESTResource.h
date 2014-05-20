@@ -1,11 +1,14 @@
 #pragma once
 
 #include <regex.h>
+#include <base/assert.h>
 #include <json/JSONObj.h>
 #include <zapata/http.h>
 
 using namespace std;
 using namespace __gnu_cxx;
+
+#define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
 
 namespace zapata {
 
@@ -21,10 +24,10 @@ namespace zapata {
 			virtual void post(HTTPReq& _req, HTTPRep& _rep);
 			virtual void remove(HTTPReq& _req, HTTPRep& _rep);
 			virtual void head(HTTPReq& _req, HTTPRep& _rep);
-			virtual void trace(HTTPReq& _req, HTTPRep& _rep);
+			virtual void trace(HTTPReq& _req, HTTPRep& _rep) final;
 			virtual void options(HTTPReq& _req, HTTPRep& _rep);
 			virtual void patch(HTTPReq& _req, HTTPRep& _rep);
-			virtual void connect(HTTPReq& _req, HTTPRep& _rep);
+			virtual void connect(HTTPReq& _req, HTTPRep& _rep) final;
 
 			virtual bool relations(HTTPReq& _req, JSONObj& _out);
 			virtual void fields(HTTPReq& _req, JSONObj& _in_out);

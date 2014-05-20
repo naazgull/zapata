@@ -1,7 +1,7 @@
 #include <base/smart_ptr.h>
 
 namespace zapata {
-	smart_ref_table* __memory = new smart_ref_table();
+	pthread_key_t __memory_key;
 }
 
 zapata::smart_counter::smart_counter() : __pointed(0) {

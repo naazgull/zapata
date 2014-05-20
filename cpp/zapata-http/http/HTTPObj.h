@@ -154,7 +154,7 @@ namespace zapata {
 
 	};
 
-	class HTTPReqRef: public HTTPElement, public str_map<string*> {
+	class HTTPReqRef: public str_map<string*>, public HTTPElement {
 		private:
 			string* __name;
 			string __url;
@@ -178,6 +178,7 @@ namespace zapata {
 			string& host();
 			string& header(const char* _idx);
 			string& param(const char* _idx);
+			str_map<string*>& params();
 
 			virtual void stringify(string& _out, short _flags = 0, string _tabs = "");
 			virtual void stringify(ostream& _out, short _flags = 0, string _tabs = "");
@@ -199,7 +200,7 @@ namespace zapata {
 
 	};
 
-	class HTTPRepRef: public HTTPElement, public str_map<string*> {
+	class HTTPRepRef: public str_map<string*>, public HTTPElement {
 		private:
 			string* __name;
 			string __body;
