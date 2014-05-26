@@ -1,4 +1,4 @@
-![zapata](http://media.dfz.pt/logo_zapata.png)
+![zapata](http://dfz.pt/~naazgull/logo_zapata.png)
 ================================
 
 RESTful API's Framework for C++ named after Emiliano Zapata
