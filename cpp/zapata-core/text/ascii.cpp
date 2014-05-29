@@ -26,3 +26,15 @@ void zapata::ascii_encode(string& _out, bool quote) {
 	}
 	_out.assign(_oss.str());
 }
+
+void zapata::generate_key(string& _out) {
+	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+	string _randompass;
+	_randompass.resize(45);
+
+	srand(time(NULL));
+	for (int i = 0; i < 45; i++) {
+		_randompass[i] = _charset[rand() % _charset.length()];
+	};
+	_out.insert(_out.length(), _randompass);
+}

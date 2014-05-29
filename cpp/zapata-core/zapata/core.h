@@ -26,3 +26,4 @@
 #include <thread/Job.h>
 #include <thread/JobServer.h>
 
+#include <file/manip.h>

@@ -31,7 +31,7 @@ void stop(int sig) {
 	zapata::tostr(_text, __thread_id);
 	_text.insert(_text.length(),  " with semid ");
 	zapata::tostr(_text, __semid);
-	zapata::log(_text, zapata::system);
+	zapata::log(_text, zapata::sys);
 	if (pthread_self() == __thread_id && __semid != 0) {
 		semctl(__semid, 0, IPC_RMID);
 		__semid = 0;

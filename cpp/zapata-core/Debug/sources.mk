@@ -29,6 +29,7 @@ parsers \
 mem \
 log \
 json \
+file \
 exceptions \
 base \
 

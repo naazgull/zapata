@@ -16,6 +16,8 @@
     };
 */
 
+size_t              d_content_length;
+
 %baseclass-header = "HTTPLexerbase.h"
 %class-header = "HTTPLexer.h"
 %implementation-header = "HTTPLexerimpl.h"
@@ -68,12 +70,19 @@
 	begin(StartCondition__::request);
 	return 257;
 }
+"HTTP/1.0" {
+	begin(StartCondition__::reply);
+	return 258;
+}
 "HTTP/1.1" {
 	begin(StartCondition__::reply);
 	return 258;
 }
 
 <request>{
+	"HTTP/1.0" {
+		return 258;
+	}
 	"HTTP/1.1" {
 		return 258;
 	}
@@ -223,7 +232,7 @@
 }
 
 <plain_body>{
-	[[:alnum:][:alpha:][:blank:][:cntrl:][:digit:][:graph:][:lower:][:print:][:punct:][:space:][:upper:][:xdigit:]] {
+	.|\n {
 		more();
 		if (matched().length() == d_content_length - 1) {
 			string _out(matched());

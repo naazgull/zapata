@@ -31,3 +31,16 @@ void zapata::replace(string& str, string find, string replace) {
 		start += replace.length();
 	}
 }
+
+void zapata::normalize_path(string& _in_out, bool _with_trailing) {
+	if (_with_trailing) {
+		if (_in_out[_in_out.length() - 1] != '/') {
+			_in_out.insert(_in_out.length(), "/");
+		}
+	}
+	else {
+		if (_in_out[_in_out.length() - 1] == '/') {
+			_in_out.erase(_in_out.length() - 1, 1);
+		}
+	}
+}

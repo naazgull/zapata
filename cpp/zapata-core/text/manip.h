@@ -19,4 +19,6 @@ namespace zapata {
 	void trim(std::string &_in_out);
 	void replace(string& str, string find, string replace);
 
+	void normalize_path(string& _in_out, bool _with_trailing);
+
 }

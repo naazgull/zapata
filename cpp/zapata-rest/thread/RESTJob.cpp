@@ -42,8 +42,7 @@ void zapata::RESTJob::run() {
 									_text.insert(_text.length(), *(*i)->second);
 								}
 							}
-							_text.insert(_text.length(), " HTTP/1.1");
-							zapata::log(_text, zapata::system);
+							zapata::log(_text, zapata::sys);
 						}
 					}
 
@@ -56,9 +55,8 @@ void zapata::RESTJob::run() {
 							zapata::log(_text, zapata::info);
 						}
 						else {
-							string _text("HTTP/1.1 ");
-							_text.insert(_text.length(), zapata::status_names[_rep->status()]);
-							zapata::log(_text, zapata::system);
+							string _text(zapata::status_names[_rep->status()]);
+							zapata::log(_text, zapata::sys);
 						}
 					}
 					_cs << _rep << flush;

@@ -69,5 +69,6 @@ namespace zapata {
 	void url_decode(string& out);
 
 	void ascii_encode(string& out, bool quote = true);
+	void generate_key(string& _out);
 
 }

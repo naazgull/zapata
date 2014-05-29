@@ -14,7 +14,7 @@ namespace zapata {
 	extern const char* log_lvl_names[];
 
 	enum LogLevel {
-		system = 0,
+		sys = 0,
 		error = 1,
 		warning = 2,
 		info = 3,

@@ -33,7 +33,7 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 	_rep->status(zapata::HTTP404);
 	_rep <<
 		"Connection" << "close" <<
-		"Server" << "Zapata RESTful Server" <<
+		"Server" << "zapata rest-ful server" <<
 		"Cache-Control" << "max-age=3600" <<
 		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
 		"Date" << string(_buffer_date) <<
@@ -44,61 +44,77 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 	this->init(_rep);
 	for (vector<RESTResource*>::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
-		if ((*_i)->matches(_req->url()) && (*_i)->allowed(_req)) {
-			try {
-				switch(_req->method()) {
-					case zapata::HTTPGet : {
-						(*_i)->get(_req, _rep);
-						break;
-					}
-					case zapata::HTTPPut : {
-						(*_i)->put(_req, _rep);
-						break;
-					}
-					case zapata::HTTPPost : {
-						(*_i)->post(_req, _rep);
-						break;
-					}
-					case zapata::HTTPDelete : {
-						(*_i)->remove(_req, _rep);
-						break;
-					}
-					case zapata::HTTPHead : {
-						(*_i)->head(_req, _rep);
-						break;
-					}
-					case zapata::HTTPTrace : {
-						(*_i)->trace(_req, _rep);
-						break;
-					}
-					case zapata::HTTPOptions : {
-						(*_i)->options(_req, _rep);
-						break;
-					}
-					case zapata::HTTPPatch : {
-						(*_i)->patch(_req, _rep);
-						break;
-					}
-					case zapata::HTTPConnect : {
-						(*_i)->connect(_req, _rep);
-						break;
-					}
-				}
-			}
-			catch(zapata::AssertionException& _e) {
+		if ((*_i)->matches(_req->url())) {
+			if (!(*_i)->allowed(_req)) {
 				zapata::JSONObj _body;
 				_body
 					<< "error" << true
-					<< "assertion_failed" << _e.description()
-					<< "message" << _e.what()
-					<< "code" << _e.code();;
+					<< "message" << "valid credentials are required to access this resource"
+					<< "code" << 401;;
 
-				_rep->status((zapata::HTTPStatus) _e.code());
+				_rep->status(zapata::HTTP401);
 				_rep << "Content-Type" << "application/json";
 
 				string _text;
 				zapata::tostr(_text, _body);
 				_rep->body(_text);
+			}
+			else {
+				try {
+					switch(_req->method()) {
+						case zapata::HTTPGet : {
+							(*_i)->get(_req, _rep);
+							break;
+						}
+						case zapata::HTTPPut : {
+							(*_i)->put(_req, _rep);
+							break;
+						}
+						case zapata::HTTPPost : {
+							(*_i)->post(_req, _rep);
+							break;
+						}
+						case zapata::HTTPDelete : {
+							(*_i)->remove(_req, _rep);
+							break;
+						}
+						case zapata::HTTPHead : {
+							(*_i)->head(_req, _rep);
+							break;
+						}
+						case zapata::HTTPTrace : {
+							(*_i)->trace(_req, _rep);
+							break;
+						}
+						case zapata::HTTPOptions : {
+							(*_i)->options(_req, _rep);
+							break;
+						}
+						case zapata::HTTPPatch : {
+							(*_i)->patch(_req, _rep);
+							break;
+						}
+						case zapata::HTTPConnect : {
+							(*_i)->connect(_req, _rep);
+							break;
+						}
+					}
+				}
+				catch(zapata::AssertionException& _e) {
+					zapata::JSONObj _body;
+					_body
+						<< "error" << true
+						<< "assertion_failed" << _e.description()
+						<< "message" << _e.what()
+						<< "code" << _e.code();;
+
+					_rep->status((zapata::HTTPStatus) _e.code());
+					_rep << "Content-Type" << "application/json";
+
+					string _text;
+					zapata::tostr(_text, _body);
+					_rep->body(_text);
+				}
 			}
 			break;
 		}

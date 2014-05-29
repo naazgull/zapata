@@ -47,6 +47,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1068078376" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.1217452533" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="magic"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.619541676" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -60,9 +61,10 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="file|base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="base"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="exceptions"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="file"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="json"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="log"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="mem"/>
@@ -121,6 +123,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1768276643" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.1992437609" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="magix"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1006071246" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

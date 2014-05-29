@@ -1,6 +1,7 @@
 #include <thread/RESTServer.h>
 
 #include <dlfcn.h>
+#include <resource/FileUpload.h>
 
 zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
@@ -33,10 +34,17 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			}
 		}
 	}
+
+	if (!!this->configuration()["zapata"]["rest"]["uploads"]["upload_controller"]) {
+		zapata::FileUpload* _file_upload = new zapata::FileUpload();
+		this->__pool.add(_file_upload);
+	}
+
+	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];
 	string _text("starting RESTful server on port ");
-	zapata::tostr(_text, (unsigned int) this->configuration()["zapata"]["rest"]["port"]);
-	zapata::log(_text, zapata::system);
-	this->__ss.bind((unsigned int) this->configuration()["zapata"]["rest"]["port"]);
+	zapata::tostr(_text, _port);
+	zapata::log(_text, zapata::sys);
+	this->__ss.bind(_port);
 }
 
 zapata::RESTServer::~RESTServer(){
