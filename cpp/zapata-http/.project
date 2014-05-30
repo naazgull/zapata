@@ -3,6 +3,8 @@
 	<name>zapata-http</name>
 	<comment></comment>
 	<projects>
+		<project>zapata-core</project>
+		<project>zapata-net</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

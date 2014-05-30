@@ -7,6 +7,7 @@
 		<project>zapata-http</project>
 		<project>zapata-map-reduce</project>
 		<project>zapata-net</project>
+		<project>zapata-rest</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

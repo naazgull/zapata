@@ -3,6 +3,9 @@
 	<name>zapata-rest</name>
 	<comment></comment>
 	<projects>
+		<project>zapata-core</project>
+		<project>zapata-http</project>
+		<project>zapata-net</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include <iomanip>
+#include <sys/time.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -28,6 +29,39 @@ void zapata::ascii_encode(string& _out, bool quote) {
 }
 
 void zapata::generate_key(string& _out) {
+	timeval _tv;
+	gettimeofday (&_tv, NULL);
+
+	static string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	string code1;
+	code1.resize(2);
+	srand(_tv.tv_usec);
+	code1[0] = charset[rand() % charset.length()];
+	code1[1] = charset[rand() % charset.length()];
+	string code2;
+	code2.resize(2);
+	srand(_tv.tv_usec * 2);
+	code2[0] = charset[rand() % charset.length()];
+	code2[1] = charset[rand() % charset.length()];
+	string code3;
+	code3.resize(2);
+	srand(_tv.tv_usec * 3);
+	code3[0] = charset[rand() % charset.length()];
+	code3[1] = charset[rand() % charset.length()];
+
+	string _ts;
+	zapata::tostr(_ts, time(NULL), "%y%m%d");
+	string _usec;
+	zapata::tostr(_usec, _tv.tv_usec);
+
+	_out.insert(_out.length(), code3);
+	_out.insert(_out.length(), _ts);
+	_out.insert(_out.length(), code1);
+	_out.insert(_out.length(), _usec);
+	_out.insert(_out.length(), code2);
+}
+
+void zapata::generate_hash(string& _out) {
 	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	string _randompass;
 	_randompass.resize(45);

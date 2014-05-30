@@ -70,5 +70,6 @@ namespace zapata {
 
 	void ascii_encode(string& out, bool quote = true);
 	void generate_key(string& _out);
+	void generate_hash(string& _out);
 
 }

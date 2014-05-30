@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <fstream>
 #include <sstream>
 #include <unistd.h>
 #include <sys/sendfile.h>
@@ -40,12 +41,53 @@ bool zapata::copy_path(string _from, string _to) {
 	close(_read_fd);
 	close(_write_fd);
 
-	return _error == -1;
+	return _error != -1;
 }
 
-bool zapata::move_path(string from, string to) {
-	if (zapata::copy_path(from, to) == 0) {
-		return remove(from.c_str()) != 0;
+bool zapata::move_path(string _from, string _to) {
+	if (zapata::copy_path(_from, _to)) {
+		return std::remove(_from.c_str()) != 0;
 	}
 	return false;
+}
+
+bool zapata::load_path(string _in, string& _out) {
+	ifstream _ifs;
+	_ifs.open(_in.data());
+
+	if (_ifs.is_open()) {
+		while(_ifs >> _out);
+		_ifs.close();
+		return true;
+	}
+	return false;
+}
+
+bool zapata::load_path(string _in, wstring& _out) {
+	wifstream _ifs;
+	_ifs.open(_in.data());
+
+	if (_ifs.is_open()) {
+		while(_ifs >> _out);
+		_ifs.close();
+		return true;
+	}
+	return false;
+}
+
+
+bool zapata::dump_path(string _in, string& _content) {
+	ofstream _ofs;
+	_ofs.open(_in.data());
+	_ofs << _content << flush;
+	_ofs.close();
+	return true;
+}
+
+bool zapata::dump_path(string _in, wstring& _content) {
+	wofstream _ofs;
+	_ofs.open(_in.data());
+	_ofs << _content << flush;
+	_ofs.close();
+	return true;
 }
