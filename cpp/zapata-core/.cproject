@@ -61,12 +61,13 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="file|base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="mail|file|base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="base"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="exceptions"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="file"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="json"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="log"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="mail"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="mem"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="parsers"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="text"/>
@@ -137,11 +138,13 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="file|mail|base|exceptions|json|log|mem|parsers|text|thread|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="base"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="exceptions"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="file"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="json"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="log"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="mail"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="mem"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="parsers"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="text"/>

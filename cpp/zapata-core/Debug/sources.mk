@@ -27,6 +27,7 @@ thread \
 text \
 parsers \
 mem \
+mail \
 log \
 json \
 file \

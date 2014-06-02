@@ -27,3 +27,5 @@
 #include <thread/JobServer.h>
 
 #include <file/manip.h>
+
+#include <mail/manip.h>

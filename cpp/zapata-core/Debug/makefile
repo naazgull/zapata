@@ -12,6 +12,7 @@ RM := rm -rf
 -include text/subdir.mk
 -include parsers/subdir.mk
 -include mem/subdir.mk
+-include mail/subdir.mk
 -include log/subdir.mk
 -include json/subdir.mk
 -include file/subdir.mk
