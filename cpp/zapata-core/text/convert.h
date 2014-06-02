@@ -52,6 +52,8 @@ namespace zapata {
 
 	void base64_encode(string& _out);
 	void base64_decode(string& _out);
+	void base64_encode(istream& _in, ostream& _out);
+	void base64_decode(istream& _in, ostream& _out);
 	void base64url_encode(string& _out);
 	void base64url_decode(string& _out);
 

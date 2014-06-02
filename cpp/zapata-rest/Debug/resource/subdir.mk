@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../resource/FileRemove.cpp \
 ../resource/FileUpload.cpp \
 ../resource/RESTCollection.cpp \
 ../resource/RESTController.cpp \
@@ -12,6 +13,7 @@ CPP_SRCS += \
 ../resource/RESTStore.cpp 
 
 OBJS += \
+./resource/FileRemove.o \
 ./resource/FileUpload.o \
 ./resource/RESTCollection.o \
 ./resource/RESTController.o \
@@ -20,6 +22,7 @@ OBJS += \
 ./resource/RESTStore.o 
 
 CPP_DEPS += \
+./resource/FileRemove.d \
 ./resource/FileUpload.d \
 ./resource/RESTCollection.d \
 ./resource/RESTController.d \

@@ -1,5 +1,8 @@
 #include <mem/usage.h>
 
+#include <log/log.h>
+#include <text/convert.h>
+
 void zapata::process_mem_usage(double& vm_usage, double& resident_set) {
 	using std::ios_base;
 	using std::ifstream;
@@ -28,4 +31,16 @@ void zapata::process_mem_usage(double& vm_usage, double& resident_set) {
 	long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
 	vm_usage = vsize / 1024.0;
 	resident_set = rss * page_size_kb;
+}
+
+void zapata::log_mem_usage() {
+	double _vm;
+	double _resident;
+	zapata::process_mem_usage(_vm, _resident);
+	string _text("virtual_memory: ");
+	zapata::tostr(_text, _vm);
+	_text.insert(_text.length(), "kb | resident_memory: ");
+	zapata::tostr(_text, _resident);
+	_text.insert(_text.length(), "kb");
+	zapata::log(_text, zapata::debug);
 }

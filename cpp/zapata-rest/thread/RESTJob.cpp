@@ -11,6 +11,8 @@ zapata::RESTJob::~RESTJob() {
 }
 
 void zapata::RESTJob::run() {
+	bool _debug = !!this->__pool->configuration()["zapata"]["rest"]["debug"];
+
 	for (; true; ) {
 		this->wait();
 		if (this->__cur_fd != -1) {
@@ -21,15 +23,22 @@ void zapata::RESTJob::run() {
 			for (; true; ) {
 				try  {
 					zapata::fromstream(_cs, _req);
+					this->__pool->process(_req, _rep);
+
 					if (zapata::log_lvl) {
-						if (zapata::log_lvl >= zapata::debug) {
+						if (_debug) {
 							string _text;
 							zapata::tostr(_text, _req);
-							zapata::log(_text, zapata::info);
+							_text.insert(_text.length(), "\n\n<->\n\n");
+							zapata::tostr(_text, _rep);
+							zapata::log(_text, zapata::sys);
 						}
 						else {
 							string _text(zapata::method_names[_req->method()]);
+							_text.insert(0, "\033[38;5;105m");
+							_text.insert(_text.length(), "\033[0m");
 							_text.insert(_text.length(), " ");
+							_text.insert(_text.length(), "\033[38;5;15m");
 							_text.insert(_text.length(),  _req->url());
 							if (_req->params().size() != 0) {
 								_text.insert(_text.length(), "?");
@@ -42,20 +51,19 @@ void zapata::RESTJob::run() {
 									_text.insert(_text.length(), *(*i)->second);
 								}
 							}
-							zapata::log(_text, zapata::sys);
-						}
-					}
-
-					this->__pool->process(_req, _rep);
-
-					if (zapata::log_lvl) {
-						if (zapata::log_lvl >= zapata::debug) {
-							string _text;
-							zapata::tostr(_text, _rep);
-							zapata::log(_text, zapata::info);
-						}
-						else {
-							string _text(zapata::status_names[_rep->status()]);
+							_text.insert(_text.length(), "\033[0m");
+							_text.insert(_text.length(), " <-> ");
+							if (_rep->status() < 300) {
+								_text.insert(_text.length(), "\033[38;5;118m");
+							}
+							else if (_rep->status() < 400) {
+								_text.insert(_text.length(), "\033[38;5;172m");
+							}
+							else {
+								_text.insert(_text.length(), "\033[38;5;88m");
+							}
+							_text.insert(_text.length(), zapata::status_names[_rep->status()]);
+							_text.insert(_text.length(), "\033[0m");
 							zapata::log(_text, zapata::sys);
 						}
 					}

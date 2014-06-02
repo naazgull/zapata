@@ -80,6 +80,7 @@ bool zapata::dump_path(string _in, string& _content) {
 	ofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
+	_ofs.flush();
 	_ofs.close();
 	return true;
 }
@@ -88,6 +89,7 @@ bool zapata::dump_path(string _in, wstring& _content) {
 	wofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
+	_ofs.flush();
 	_ofs.close();
 	return true;
 }

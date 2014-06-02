@@ -65,9 +65,14 @@ void zapata::generate_hash(string& _out) {
 	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	string _randompass;
 	_randompass.resize(45);
+	timeval _tv;
+	gettimeofday (&_tv, NULL);
 
-	srand(time(NULL));
+	srand(_tv.tv_usec);
 	for (int i = 0; i < 45; i++) {
+		if (i % 10 == 0) {
+			srand(_tv.tv_usec * i);
+		}
 		_randompass[i] = _charset[rand() % _charset.length()];
 	};
 	_out.insert(_out.length(), _randompass);

@@ -7,10 +7,10 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	class FileUpload: public zapata::RESTController {
+	class FileRemove: public zapata::RESTController {
 		public:
-			FileUpload();
-			virtual ~FileUpload();
+			FileRemove();
+			virtual ~FileRemove();
 
 			virtual void post(zapata::HTTPReq& _req, zapata::HTTPRep& _rep);
 	};

@@ -16,5 +16,6 @@ namespace zapata {
 	struct is_pointer<T*> { static const bool value = true; };
 
 	void process_mem_usage(double& vm_usage, double& resident_set);
+	void log_mem_usage();
 }
 
