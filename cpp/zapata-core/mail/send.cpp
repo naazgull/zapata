@@ -8,7 +8,7 @@ bool zapata::sendmail(string _to, string _from, string _subject, string _message
 		fprintf(_mailpipe, "From: %s\n", _from.data());
 		fprintf(_mailpipe, "Subject: %s\n", _subject.data());
 		fprintf(_mailpipe, "Mime-Version: 1.0\n");
-		fprintf(_mailpipe, "Content-Type: text/html\n\n");
+		fprintf(_mailpipe, "Content-Type: text/html; charset=utf-8\n\n");
 		fwrite(_message.data(), 1, _message.length(), _mailpipe);
 		fwrite(".\n", 1, 2, _mailpipe);
 		pclose(_mailpipe);
