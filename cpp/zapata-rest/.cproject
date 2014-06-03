@@ -35,10 +35,10 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1340832090" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.1539202312" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1904613188" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
+									<listOptionValue builtIn="false" value="../../zapata-core"/>
+									<listOptionValue builtIn="false" value="../../zapata-http"/>
+									<listOptionValue builtIn="false" value="../../zapata-net"/>
+									<listOptionValue builtIn="false" value="../"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.676470183" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.407035151" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -115,10 +115,10 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1616663097" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.1592682655" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1045119954" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
+									<listOptionValue builtIn="false" value="../../zapata-core"/>
+									<listOptionValue builtIn="false" value="../../zapata-http"/>
+									<listOptionValue builtIn="false" value="../../zapata-net"/>
+									<listOptionValue builtIn="false" value="../"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1217545953" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.134414534" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>

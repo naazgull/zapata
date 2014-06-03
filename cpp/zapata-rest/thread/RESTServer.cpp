@@ -58,7 +58,7 @@ zapata::RESTServer::~RESTServer(){
 
 void zapata::RESTServer::wait() {
 	try {
-		int _cs_fd;
+		int _cs_fd = -1;
 		this->__ss.accept(&_cs_fd);
 
 		if (this->__n_jobs < this->max()) {
