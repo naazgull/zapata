@@ -1,3 +1,5 @@
+package_version=0.1
+
 all: debug release
 
 debug: 
@@ -14,5 +16,7 @@ install:
 	mkdir -p debian/tmp/usr/src
 
 package:
-	rm -rf ../zapata-core-0.1.tar.gz.
-	tar cvzf ../zapata-core-0.1.tar.gz ../zapata-core 
+	rm -rf ../zapata-core-$(package_version).tar.gz.
+	cp -rf ../zapata-core ../zapata-core_$(package_version)
+	tar cvzf ../zapata-core_$(package_version).tar.gz ../zapata-core_$(package_version)
+	rm -rf ../zapata-core_$(package_version)
