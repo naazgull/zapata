@@ -5,7 +5,6 @@
 	<projects>
 		<project>zapata-core</project>
 		<project>zapata-http</project>
-		<project>zapata-json</project>
 		<project>zapata-rest</project>
 	</projects>
 	<buildSpec>
