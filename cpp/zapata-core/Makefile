@@ -22,5 +22,8 @@ install:
 package:
 	rm -rf ../zapata-core-$(package_version).tar.gz.
 	cp -rf ../zapata-core ../zapata-core_$(package_version)
+	find ../zapata-core_$(package_version) -name "*.o" | xargs rm -rf
+	find ../zapata-core_$(package_version) -name "*.d" | xargs rm -rf
+	find ../zapata-core_$(package_version) -name "*.so" | xargs rm -rf
 	tar cvzf ../zapata-core_$(package_version).tar.gz ../zapata-core_$(package_version)
 	rm -rf ../zapata-core_$(package_version)
