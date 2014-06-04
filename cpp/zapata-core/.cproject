@@ -49,6 +49,7 @@
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="magic"/>
 								</option>
+								<option id="gnu.cpp.link.option.soname.194164619" superClass="gnu.cpp.link.option.soname" value="libzapata-core.so" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1330018682" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
