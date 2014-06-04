@@ -37,6 +37,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.855206175" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../zapata-core"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1889407139" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1402255768" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -58,7 +59,7 @@
 								<option id="gnu.cpp.link.option.paths.982332897" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.1981804688" superClass="gnu.cpp.link.option.soname" value="libzapata-mongodb.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.1981804688" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-mongodb.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.674400019" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -115,6 +116,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.390697529" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../zapata-core"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.pic.1870627208" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1626338253" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -136,7 +138,7 @@
 								<option id="gnu.cpp.link.option.paths.2133053271" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.808346452" superClass="gnu.cpp.link.option.soname" value="libzapata-mongodb.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.808346452" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-mongodb.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1938882342" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

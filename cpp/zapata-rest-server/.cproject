@@ -34,6 +34,7 @@
 									<listOptionValue builtIn="false" value="../../zapata-net"/>
 									<listOptionValue builtIn="false" value="../../zapata-rest"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.775444634" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -100,6 +101,7 @@
 									<listOptionValue builtIn="false" value="../../zapata-net"/>
 									<listOptionValue builtIn="false" value="../../zapata-rest"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1202383036" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

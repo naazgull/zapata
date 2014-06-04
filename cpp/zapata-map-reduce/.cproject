@@ -36,6 +36,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.336449875" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../zapata-core"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.924060276" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.381588847" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -52,7 +53,7 @@
 								<option id="gnu.cpp.link.option.paths.1841788036" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.367140324" superClass="gnu.cpp.link.option.soname" value="libzapata-map-reduce.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.367140324" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-map-reduce.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.55656377" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -111,6 +112,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.366514789" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../zapata-core"/>
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1799727270" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.743224740" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -127,7 +129,7 @@
 								<option id="gnu.cpp.link.option.paths.886926326" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.1851010443" superClass="gnu.cpp.link.option.soname" value="libzapata-map-reduce.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.1851010443" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-map-reduce.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.660054394" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

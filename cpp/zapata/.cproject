@@ -28,9 +28,10 @@
 								<option id="gnu.cpp.compiler.option.optimization.level.598919690" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1047066912" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1348097656" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
+									<listOptionValue builtIn="false" value="../../zapata-core"/>
+									<listOptionValue builtIn="false" value="../../zapata-http"/>
+									<listOptionValue builtIn="false" value="../../zapata-net"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1566280544" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2083267871" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -92,9 +93,10 @@
 								<option id="gnu.cpp.compiler.option.optimization.level.1097609876" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.455453652" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.2037731509" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net}&quot;"/>
+									<listOptionValue builtIn="false" value="../../zapata-core"/>
+									<listOptionValue builtIn="false" value="../../zapata-http"/>
+									<listOptionValue builtIn="false" value="../../zapata-net"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1837819429" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1225739774" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>

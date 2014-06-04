@@ -35,6 +35,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.194998977" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.986625080" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.785957621" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.45299824" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -49,7 +50,7 @@
 									<listOptionValue builtIn="false" value="ssl"/>
 									<listOptionValue builtIn="false" value="crypto"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.34478410" superClass="gnu.cpp.link.option.soname" value="libzapata-net.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.34478410" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-net.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.773617079" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -105,6 +106,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1929536842" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.169077000" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.75681482" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.1980850531" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -119,7 +121,7 @@
 									<listOptionValue builtIn="false" value="ssl"/>
 									<listOptionValue builtIn="false" value="crypto"/>
 								</option>
-								<option id="gnu.cpp.link.option.soname.728830147" superClass="gnu.cpp.link.option.soname" value="libzapata-net.so.0.1" valueType="string"/>
+								<option id="gnu.cpp.link.option.soname.728830147" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-net.so.0.1" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1648793728" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
