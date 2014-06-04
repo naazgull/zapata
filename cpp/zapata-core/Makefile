@@ -1,4 +1,5 @@
 package_version=0.1
+build_configuration=Release
 
 all: debug release
 
@@ -11,9 +12,11 @@ release:
 	make -C Release all
 
 install:
-	mkdir -p debian/tmp/usr/lib/zapata-dbg
-	mkdir -p debian/tmp/usr/include
-	mkdir -p debian/tmp/usr/src
+	mkdir -p debian/tmp/usr/lib
+	mkdir -p debian/tmp/usr/include/zapata
+	cp base exceptions file json log mail mem parsers text thread zapata/core.h debian/tmp/usr/include/zapata -rf
+	cp $(build_configuration)/libzapata-core.so debian/tmp/usr/lib
+	ln -s debian/tmp/usr/lib/libzapata-core.so debian/tmp/usr/lib/libzapata-core.so.0.1
 
 package:
 	rm -rf ../zapata-core-$(package_version).tar.gz.
