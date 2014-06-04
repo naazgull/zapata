@@ -21,7 +21,9 @@ namespace zapata {
 
 	void tostr(string& s, int i);
 	void tostr(std::string&, int, std::ios_base& (&)(std::ios_base&));
+#ifdef __LP64__
 	void tostr(string& s, unsigned int i);
+#endif
 	void tostr(string& s, size_t i);
 	void tostr(string& s, long i);
 	void tostr(string& s, long long i);
@@ -31,7 +33,9 @@ namespace zapata {
 	void tostr(string& s, time_t i, const char* f);
 
 	void fromstr(string& s, int* i);
+#ifdef __LP64__
 	void fromstr(string& s, unsigned int* i);
+#endif
 	void fromstr(string& s, size_t* i);
 	void fromstr(string& s, long* i);
 	void fromstr(string& s, long long* i);

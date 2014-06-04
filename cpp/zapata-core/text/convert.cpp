@@ -15,15 +15,21 @@ void zapata::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&))
 	s.insert(s.length(), oss);
 }
 
+#ifdef __LP64__
 void zapata::tostr(string& s, unsigned int i){
 	char oss[512];
 	sprintf(oss,"%u", i);
 	s.insert(s.length(), oss);
 }
+#endif
 
 void zapata::tostr(string& s, size_t i){
 	char oss[512];
+#ifdef __LP64__
 	sprintf(oss,"%lu", i);
+#else
+	sprintf(oss,"%u", i);
+#endif
 	s.insert(s.length(), oss);
 }
 
@@ -70,12 +76,18 @@ void zapata::fromstr(string& s, int* i){
 	sscanf(s.data(),"%i", i);
 }
 
+#ifdef __LP64__
 void zapata::fromstr(string& s, unsigned int* i){
 	sscanf(s.data(),"%u", i);
 }
+#endif
 
 void zapata::fromstr(string& s, size_t* i){
+#ifdef __LP64__
 	sscanf(s.data(),"%lu", i);
+#else
+	sscanf(s.data(),"%u", i);
+#endif
 }
 
 void zapata::fromstr(string& s, long* i){
