@@ -219,9 +219,11 @@ zapata::JSONElement::operator long long() {
 	return this->getLongLong();
 }
 
+#ifdef __LP64__
 zapata::JSONElement::operator unsigned int() {
 	return this->getUnsignedInt();
 }
+#endif
 
 zapata::JSONElement::operator size_t() {
 	return this->getUnsignedInt();
