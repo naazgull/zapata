@@ -40,19 +40,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libzapata-http.so
+all: libzapata-http.so.0.1
 
 # Tool invocations
-libzapata-http.so: $(OBJS) $(USER_OBJS)
+libzapata-http.so.0.1: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -shared -o "libzapata-http.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -shared -Wl,-soname=libzapata-http.so.0.1 -o "libzapata-http.so.0.1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-http.so
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-http.so.0.1
 	-@echo ' '
 
 .PHONY: all clean dependents

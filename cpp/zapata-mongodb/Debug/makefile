@@ -38,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libzapata-mongodb.so
+all: libzapata-mongodb.so.0.1
 
 # Tool invocations
-libzapata-mongodb.so: $(OBJS) $(USER_OBJS)
+libzapata-mongodb.so.0.1: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -shared -o "libzapata-mongodb.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Debug" -shared -Wl,-soname=libzapata-mongodb.so.0.1 -o "libzapata-mongodb.so.0.1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-mongodb.so
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-mongodb.so.0.1
 	-@echo ' '
 
 .PHONY: all clean dependents

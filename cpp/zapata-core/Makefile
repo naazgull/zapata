@@ -20,7 +20,7 @@ install:
 	ln -s libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
 
 package:
-	rm -rf ../zapata-core-$(package_version).tar.gz.
+	rm -rf ../zapata-core-$(package_version).tar.gz
 	cp -rf ../zapata-core ../zapata-core_$(package_version)
 	find ../zapata-core_$(package_version) -name "*.o" | xargs rm -rf
 	find ../zapata-core_$(package_version) -name "*.d" | xargs rm -rf
