@@ -15,8 +15,7 @@ install:
 	mkdir -p debian/tmp/usr/lib
 	mkdir -p debian/tmp/usr/include/zapata
 	cp base exceptions file json log mail mem parsers text thread zapata/core.h debian/tmp/usr/include/zapata -rf
-	cp $(build_configuration)/libzapata-core.so debian/tmp/usr/lib/libzapata-core.so.$(package_version)
-	ln -s debian/tmp/usr/lib/libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
+	cp $(build_configuration)/libzapata-core.so debian/tmp/usr/lib/libzapata-core.so
 
 package:
 	rm -rf ../zapata-core-$(package_version).tar.gz.
