@@ -17,7 +17,7 @@ install:
 	cp base exceptions file json log mail mem parsers text thread zapata/core.h debian/tmp/usr/include/zapata -rf
 	find debian/tmp/usr/include/zapata -name "*.cpp" | xargs rm -rf
 	cp $(build_configuration)/libzapata-core.so debian/tmp/usr/lib/libzapata-core.so.$(package_version)
-	ln -s debian/tmp/usr/lib/libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
+	ln -s libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
 
 package:
 	rm -rf ../zapata-core-$(package_version).tar.gz.
