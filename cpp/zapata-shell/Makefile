@@ -1,4 +1,5 @@
 package_version=0.1
+minor_version=2
 build_configuration=Release
 
 all: debug release
@@ -12,19 +13,16 @@ release:
 	make -C Release all
 
 install:
-	mkdir -p debian/tmp/usr/lib
-	mkdir -p debian/tmp/usr/include/zapata
-	cp base exceptions file json log mail mem parsers text thread zapata/core.h debian/tmp/usr/include/zapata -rf
-	find debian/tmp/usr/include/zapata -name "*.cpp" | xargs rm -rf
-	cp $(build_configuration)/libzapata-core.so.$(package_version) debian/tmp/usr/lib/
-	ln -s libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
+	mkdir -p debian/tmp/usr/bin
+	cp $(build_configuration)/zptsh debian/tmp/usr/bin/
 
 package:
-	rm -rf ../zapata-core-$(package_version).tar.gz
-	cp -rf ../zapata-core ../zapata-core_$(package_version)
-	find ../zapata-core_$(package_version) -name "*.o" | xargs rm -rf
-	find ../zapata-core_$(package_version) -name "*.d" | xargs rm -rf
-	find ../zapata-core_$(package_version) -name "*.so" | xargs rm -rf
-	find ../zapata-core_$(package_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../zapata-core_$(package_version).tar.gz ../zapata-core_$(package_version)
-	rm -rf ../zapata-core_$(package_version)
+	rm -rf ../zapata-shell_$(package_version)-$(minor_version).tar.gz
+	cp -rf ../zapata-shell ../zapata-shell_$(package_version)-$(minor_version)
+	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	find ../zapata-shell_$(package_version)-$(minor_version) -name "zapata-rest-daemon" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-shell_$(package_version)-$(minor_version).tar.gz ../zapata-shell_$(package_version)-$(minor_version)
+	rm -rf ../zapata-shell_$(package_version)-$(minor_version)

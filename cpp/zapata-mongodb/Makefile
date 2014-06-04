@@ -1,4 +1,5 @@
 package_version=0.1
+minor_version=2
 build_configuration=Release
 
 all: debug release
@@ -20,11 +21,11 @@ install:
 	ln -s libzapata-mongodb.so.$(package_version) debian/tmp/usr/lib/libzapata-mongodb.so
 
 package:
-	rm -rf ../zapata-mongodb-$(package_version).tar.gz
-	cp -rf ../zapata-mongodb ../zapata-mongodb_$(package_version)
-	find ../zapata-mongodb_$(package_version) -name "*.o" | xargs rm -rf
-	find ../zapata-mongodb_$(package_version) -name "*.d" | xargs rm -rf
-	find ../zapata-mongodb_$(package_version) -name "*.so" | xargs rm -rf
-	find ../zapata-mongodb_$(package_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../zapata-mongodb_$(package_version).tar.gz ../zapata-mongodb_$(package_version)
-	rm -rf ../zapata-mongodb_$(package_version)
+	rm -rf ../zapata-mongodb_$(package_version)-$(minor_version).tar.gz
+	cp -rf ../zapata-mongodb ../zapata-mongodb_$(package_version)-$(minor_version)
+	find ../zapata-mongodb_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-mongodb_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-mongodb_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-mongodb_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-mongodb_$(package_version)-$(minor_version).tar.gz ../zapata-mongodb_$(package_version)-$(minor_version)
+	rm -rf ../zapata-mongodb_$(package_version)-$(minor_version)

@@ -1,4 +1,5 @@
 package_version=0.1
+minor_version=2
 build_configuration=Release
 
 all: debug release
@@ -20,11 +21,11 @@ install:
 	ln -s libzapata-map-reduce-cluster.so.$(package_version) debian/tmp/usr/lib/libzapata-map-reduce-cluster.so
 
 package:
-	rm -rf ../zapata-map-reduce-cluster-$(package_version).tar.gz
-	cp -rf ../zapata-map-reduce-cluster ../zapata-map-reduce-cluster_$(package_version)
-	find ../zapata-map-reduce-cluster_$(package_version) -name "*.o" | xargs rm -rf
-	find ../zapata-map-reduce-cluster_$(package_version) -name "*.d" | xargs rm -rf
-	find ../zapata-map-reduce-cluster_$(package_version) -name "*.so" | xargs rm -rf
-	find ../zapata-map-reduce-cluster_$(package_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../zapata-map-reduce-cluster_$(package_version).tar.gz ../zapata-map-reduce-cluster_$(package_version)
-	rm -rf ../zapata-map-reduce-cluster_$(package_version)
+	rm -rf ../zapata-map-reduce-cluster_$(package_version)-$(minor_version).tar.gz
+	cp -rf ../zapata-map-reduce-cluster ../zapata-map-reduce-cluster_$(package_version)-$(minor_version)
+	find ../zapata-map-reduce-cluster_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-map-reduce-cluster_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-map-reduce-cluster_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-map-reduce-cluster_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-map-reduce-cluster_$(package_version)-$(minor_version).tar.gz ../zapata-map-reduce-cluster_$(package_version)-$(minor_version)
+	rm -rf ../zapata-map-reduce-cluster_$(package_version)-$(minor_version)
