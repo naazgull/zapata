@@ -1,6 +1,7 @@
 *.o
 *.d
 *.so
+*.so.*
 /cpp/zapata/Debug/zapata
 /cpp/zapata/Release/zapata
 /cpp/zapata-rest-server/Debug/zapata-rest-daemon

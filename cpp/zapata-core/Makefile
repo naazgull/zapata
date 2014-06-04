@@ -25,5 +25,6 @@ package:
 	find ../zapata-core_$(package_version) -name "*.o" | xargs rm -rf
 	find ../zapata-core_$(package_version) -name "*.d" | xargs rm -rf
 	find ../zapata-core_$(package_version) -name "*.so" | xargs rm -rf
+	find ../zapata-core_$(package_version) -name "*.so.$(package_version)" | xargs rm -rf
 	tar cvzf ../zapata-core_$(package_version).tar.gz ../zapata-core_$(package_version)
 	rm -rf ../zapata-core_$(package_version)
