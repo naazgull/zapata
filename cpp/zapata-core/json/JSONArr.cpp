@@ -108,27 +108,27 @@ zapata::JSONElement& zapata::JSONArrRef::get(const char* _idx) {
 }
 
 int zapata::JSONArrRef::getInt() {
-	return 0;
+	return this->size();
 }
 
 long zapata::JSONArrRef::getLong() {
-	return 0;
+	return this->size();
 }
 
 long zapata::JSONArrRef::getLongLong() {
-	return 0;
+	return this->size();
 }
 
 unsigned int zapata::JSONArrRef::getUnsignedInt() {
-	return 0;
+	return this->size();
 }
 
 double zapata::JSONArrRef::getDouble() {
-	return 0;
+	return this->size();
 }
 
 bool zapata::JSONArrRef::getBool() {
-	return false;
+	return true;
 }
 
 string zapata::JSONArrRef::getString() {

@@ -202,27 +202,27 @@ zapata::JSONElement& zapata::JSONObjRef::get(const char* _idx) {
 }
 
 int zapata::JSONObjRef::getInt() {
-	return 0;
+	return this->size();
 }
 
 long zapata::JSONObjRef::getLong() {
-	return 0;
+	return this->size();
 }
 
 long zapata::JSONObjRef::getLongLong() {
-	return 0;
+	return this->size();
 }
 
 unsigned int zapata::JSONObjRef::getUnsignedInt() {
-	return 0;
+	return this->size();
 }
 
 double zapata::JSONObjRef::getDouble() {
-	return 0;
+	return this->size();
 }
 
 bool zapata::JSONObjRef::getBool() {
-	return false;
+	return true;
 }
 
 string zapata::JSONObjRef::getString() {

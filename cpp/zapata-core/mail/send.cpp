@@ -14,6 +14,7 @@ bool zapata::sendmail(string _to, string _from, string _subject, string _message
 		fprintf(_mailpipe, "Content-Type: text/html; charset=utf-8\n\n");
 		fwrite(_message.data(), 1, _message.length(), _mailpipe);
 		fwrite(".\n", 1, 2, _mailpipe);
+		fflush(_mailpipe);
 		pclose(_mailpipe);
 		_retval = true;
 	}
