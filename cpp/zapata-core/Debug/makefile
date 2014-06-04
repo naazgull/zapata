@@ -53,7 +53,7 @@ all: libzapata-core.so
 libzapata-core.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -shared -Wl,-soname=libzapata-core.so.0 -o "libzapata-core.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -shared -Wl,-soname=libzapata-core.so.0.1 -o "libzapata-core.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
