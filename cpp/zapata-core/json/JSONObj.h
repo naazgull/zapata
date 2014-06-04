@@ -77,7 +77,9 @@ namespace zapata {
 			operator int();
 			operator long();
 			operator long long();
+#ifdef __LP64__
 			operator unsigned int();
+#endif
 			operator size_t();
 			operator double();
 			operator JSONObjRef&();

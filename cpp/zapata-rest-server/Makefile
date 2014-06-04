@@ -1,14 +1,14 @@
 package_version=0.1
-minor_version=2
+minor_version=3
 build_configuration=Release
 
-all: debug release
+all: build_$(build_configuration)
 
-debug: 
+build_Debug:  
 	make -C Debug clean
 	make -C Debug all
 
-release: 
+build_Release:  
 	make -C Release clean
 	make -C Release all
 
