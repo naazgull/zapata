@@ -21,11 +21,11 @@ install:
 	ln -s libzapata-net.so.$(package_version) debian/tmp/usr/lib/libzapata-net.so
 
 package:
-	rm -rf ../zapata-net_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-net ../zapata-net_$(package_version)-$(minor_version)
-	find ../zapata-net_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-net_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-net_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-net_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-net_$(package_version)-$(minor_version).tar.gz ../zapata-net_$(package_version)-$(minor_version)
-	rm -rf ../zapata-net_$(package_version)-$(minor_version)
+	rm -rf ../zapata-net_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-net ../zapata-net_$(package_version).$(minor_version)
+	find ../zapata-net_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-net_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-net_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-net_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-net_$(package_version).$(minor_version).tar.gz ../zapata-net_$(package_version).$(minor_version)
+	rm -rf ../zapata-net_$(package_version).$(minor_version)

@@ -17,12 +17,12 @@ install:
 	cp $(build_configuration)/zptsh debian/tmp/usr/bin/
 
 package:
-	rm -rf ../zapata-shell_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-shell ../zapata-shell_$(package_version)-$(minor_version)
-	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-shell_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	find ../zapata-shell_$(package_version)-$(minor_version) -name "zapata-rest-daemon" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-shell_$(package_version)-$(minor_version).tar.gz ../zapata-shell_$(package_version)-$(minor_version)
-	rm -rf ../zapata-shell_$(package_version)-$(minor_version)
+	rm -rf ../zapata-shell_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-shell ../zapata-shell_$(package_version).$(minor_version)
+	find ../zapata-shell_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-shell_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-shell_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-shell_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	find ../zapata-shell_$(package_version).$(minor_version) -name "zapata-rest-daemon" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-shell_$(package_version).$(minor_version).tar.gz ../zapata-shell_$(package_version).$(minor_version)
+	rm -rf ../zapata-shell_$(package_version).$(minor_version)

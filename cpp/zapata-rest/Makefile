@@ -21,11 +21,11 @@ install:
 	ln -s libzapata-rest.so.$(package_version) debian/tmp/usr/lib/libzapata-rest.so
 
 package:
-	rm -rf ../zapata-rest_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-rest ../zapata-rest_$(package_version)-$(minor_version)
-	find ../zapata-rest_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-rest_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-rest_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-rest_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-rest_$(package_version)-$(minor_version).tar.gz ../zapata-rest_$(package_version)-$(minor_version)
-	rm -rf ../zapata-rest_$(package_version)-$(minor_version)
+	rm -rf ../zapata-rest_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-rest ../zapata-rest_$(package_version).$(minor_version)
+	find ../zapata-rest_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-rest_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-rest_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-rest_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-rest_$(package_version).$(minor_version).tar.gz ../zapata-rest_$(package_version).$(minor_version)
+	rm -rf ../zapata-rest_$(package_version).$(minor_version)

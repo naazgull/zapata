@@ -21,11 +21,11 @@ install:
 	ln -s libzapata-core.so.$(package_version) debian/tmp/usr/lib/libzapata-core.so
 
 package:
-	rm -rf ../zapata-core_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-core ../zapata-core_$(package_version)-$(minor_version)
-	find ../zapata-core_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-core_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-core_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-core_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-core_$(package_version)-$(minor_version).tar.gz ../zapata-core_$(package_version)-$(minor_version)
-	rm -rf ../zapata-core_$(package_version)-$(minor_version)
+	rm -rf ../zapata-core_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-core ../zapata-core_$(package_version).$(minor_version)
+	find ../zapata-core_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-core_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-core_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-core_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-core_$(package_version).$(minor_version).tar.gz ../zapata-core_$(package_version).$(minor_version)
+	rm -rf ../zapata-core_$(package_version).$(minor_version)

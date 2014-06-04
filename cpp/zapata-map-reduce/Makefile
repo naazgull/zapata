@@ -21,11 +21,11 @@ install:
 	ln -s libzapata-map-reduce.so.$(package_version) debian/tmp/usr/lib/libzapata-map-reduce.so
 
 package:
-	rm -rf ../zapata-map-reduce_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-map-reduce ../zapata-map-reduce_$(package_version)-$(minor_version)
-	find ../zapata-map-reduce_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-map-reduce_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-map-reduce_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-map-reduce_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-map-reduce_$(package_version)-$(minor_version).tar.gz ../zapata-map-reduce_$(package_version)-$(minor_version)
-	rm -rf ../zapata-map-reduce_$(package_version)-$(minor_version)
+	rm -rf ../zapata-map-reduce_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-map-reduce ../zapata-map-reduce_$(package_version).$(minor_version)
+	find ../zapata-map-reduce_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-map-reduce_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-map-reduce_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-map-reduce_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-map-reduce_$(package_version).$(minor_version).tar.gz ../zapata-map-reduce_$(package_version).$(minor_version)
+	rm -rf ../zapata-map-reduce_$(package_version).$(minor_version)

@@ -21,11 +21,11 @@ install:
 	ln -s libzapata-http.so.$(package_version) debian/tmp/usr/lib/libzapata-http.so
 
 package:
-	rm -rf ../zapata-http_$(package_version)-$(minor_version).tar.gz
-	cp -rf ../zapata-http ../zapata-http_$(package_version)-$(minor_version)
-	find ../zapata-http_$(package_version)-$(minor_version) -name "*.o" | xargs rm -rf
-	find ../zapata-http_$(package_version)-$(minor_version) -name "*.d" | xargs rm -rf
-	find ../zapata-http_$(package_version)-$(minor_version) -name "*.so" | xargs rm -rf
-	find ../zapata-http_$(package_version)-$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
-	tar cvzf ../../upstream/zapata-http_$(package_version)-$(minor_version).tar.gz ../zapata-http_$(package_version)-$(minor_version)
-	rm -rf ../zapata-http_$(package_version)-$(minor_version)
+	rm -rf ../zapata-http_$(package_version).$(minor_version).tar.gz
+	cp -rf ../zapata-http ../zapata-http_$(package_version).$(minor_version)
+	find ../zapata-http_$(package_version).$(minor_version) -name "*.o" | xargs rm -rf
+	find ../zapata-http_$(package_version).$(minor_version) -name "*.d" | xargs rm -rf
+	find ../zapata-http_$(package_version).$(minor_version) -name "*.so" | xargs rm -rf
+	find ../zapata-http_$(package_version).$(minor_version) -name "*.so.$(package_version)" | xargs rm -rf
+	tar cvzf ../../upstream/zapata-http_$(package_version).$(minor_version).tar.gz ../zapata-http_$(package_version).$(minor_version)
+	rm -rf ../zapata-http_$(package_version).$(minor_version)
