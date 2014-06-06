@@ -64,6 +64,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="base"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="conf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="exceptions"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="file"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="json"/>
@@ -142,6 +143,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="base"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="conf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="exceptions"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="file"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="json"/>

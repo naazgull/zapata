@@ -17,6 +17,7 @@ RM := rm -rf
 -include json/subdir.mk
 -include file/subdir.mk
 -include exceptions/subdir.mk
+-include conf/subdir.mk
 -include base/subdir.mk
 -include subdir.mk
 -include objects.mk

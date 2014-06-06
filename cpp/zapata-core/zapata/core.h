@@ -29,3 +29,5 @@
 #include <file/manip.h>
 
 #include <mail/manip.h>
+
+#include <conf/load.h>

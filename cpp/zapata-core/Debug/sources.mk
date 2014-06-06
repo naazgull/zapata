@@ -32,5 +32,6 @@ log \
 json \
 file \
 exceptions \
+conf \
 base \
 

@@ -1,5 +1,5 @@
 package_version=0.1
-minor_version=5
+minor_version=6
 build_configuration=Release
 
 all: build_$(build_configuration)
