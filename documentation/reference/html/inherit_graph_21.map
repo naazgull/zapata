@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classzapata_1_1_h_t_t_p_element.html" title="zapata::HTTPElement" alt="" coords="20,5,172,32"/>
+<area shape="rect" id="node2" href="$classzapata_1_1_h_t_t_p_rep_ref.html" title="zapata::HTTPRepRef" alt="" coords="235,5,384,32"/>
+<area shape="rect" id="node3" href="$classzapata_1_1_h_t_t_p_req_ref.html" title="zapata::HTTPReqRef" alt="" coords="235,56,384,83"/>
+<area shape="rect" id="node4" href="$classzapata_1_1str__map.html" title="zapata::str_map\&lt; string * \&gt;" alt="" coords="5,56,187,83"/>
+</map>

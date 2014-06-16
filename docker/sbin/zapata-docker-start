@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+service nginx start && touch /var/log/default.zapata.log && service zapata-rest-server start && tail -f /var/log/default.zapata.log
+
