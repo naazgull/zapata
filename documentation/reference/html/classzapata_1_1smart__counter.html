@@ -72,6 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -94,7 +95,7 @@ $(document).ready(function(){initNavTree('classzapata_1_1smart__counter.html',''
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -113,20 +114,28 @@ $(document).ready(function(){initNavTree('classzapata_1_1smart__counter.html',''
 <div class="title">zapata::smart_counter Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Responsible for counting references to a given <b><em><a class="el" href="classzapata_1_1smart__ptr.html">smart_ptr</a></em></b>.  
+ <a href="classzapata_1_1smart__counter.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="smart__ptr_8h_source.html">smart_ptr.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aedca68a7fdc2e830d57a16dd58050c52"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aedca68a7fdc2e830d57a16dd58050c52"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>add</b> ()</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzapata_1_1smart__counter.html#aedca68a7fdc2e830d57a16dd58050c52">add</a> ()</td></tr>
+<tr class="memdesc:aedca68a7fdc2e830d57a16dd58050c52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Increases the value hold by <b><em>__pointed</em></b> <br/></td></tr>
 <tr class="separator:aedca68a7fdc2e830d57a16dd58050c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3c33e613180db31b22edd2359a61efb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa3c33e613180db31b22edd2359a61efb"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>release</b> ()</td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzapata_1_1smart__counter.html#aa3c33e613180db31b22edd2359a61efb">release</a> ()</td></tr>
+<tr class="memdesc:aa3c33e613180db31b22edd2359a61efb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decreases the value hold by <b><em>__pointed</em></b> <br/></td></tr>
 <tr class="separator:aa3c33e613180db31b22edd2359a61efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ae0ac9e902c0fb3eb77b48f72893bbcc1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0ac9e902c0fb3eb77b48f72893bbcc1"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>__pointed</b></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzapata_1_1smart__counter.html#ae0ac9e902c0fb3eb77b48f72893bbcc1">__pointed</a></td></tr>
+<tr class="memdesc:ae0ac9e902c0fb3eb77b48f72893bbcc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The actual counter variable. <br/></td></tr>
 <tr class="separator:ae0ac9e902c0fb3eb77b48f72893bbcc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
@@ -136,11 +145,14 @@ ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;
 <tr class="separator:a15a261293957bd8311d20cd9cb4951a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p>Definition at line <a class="el" href="smart__ptr_8h_source.html#l00013">13</a> of file <a class="el" href="smart__ptr_8h_source.html">smart_ptr.h</a>.</p>
+<div class="textblock"><p>Responsible for counting references to a given <b><em><a class="el" href="classzapata_1_1smart__ptr.html">smart_ptr</a></em></b>. </p>
+<p>Invoking <b><em>add</em></b> increases the counter. Invoking <b><em>release</em></b> decreases the counter. </p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="classzapata_1_1smart__ptr.html">smart_ptr</a> </dd></dl>
+
+<p>Definition at line <a class="el" href="smart__ptr_8h_source.html#l00018">18</a> of file <a class="el" href="smart__ptr_8h_source.html">smart_ptr.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>zapata-core/base/<a class="el" href="smart__ptr_8h_source.html">smart_ptr.h</a></li>
-<li>zapata-core/base/<a class="el" href="smart__ptr_8cpp_source.html">smart_ptr.cpp</a></li>
+<li>cpp/zapata-core/base/<a class="el" href="smart__ptr_8h_source.html">smart_ptr.h</a></li>
+<li>cpp/zapata-core/base/<a class="el" href="smart__ptr_8cpp_source.html">smart_ptr.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -148,7 +160,7 @@ ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>zapata</b></li><li class="navelem"><a class="el" href="classzapata_1_1smart__counter.html">smart_counter</a></li>
-    <li class="footer">Generated on Mon Jun 16 2014 12:28:59 for zapata by
+    <li class="footer">Generated on Mon Jun 16 2014 21:03:03 for zapata by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

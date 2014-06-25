@@ -1,4 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
 <area shape="rect" id="node1" href="$classzapata_1_1str__map.html" title="zapata::str_map\&lt; smart\l_counter * \&gt;" alt="" coords="6,5,167,46"/>
-<area shape="rect" id="node2" href="$classzapata_1_1smart__ref__table.html" title="zapata::smart_ref_table" alt="" coords="217,12,375,39"/>
+<area shape="rect" id="node2" href="$classzapata_1_1smart__ref__table.html" title="Table that holds the list of smart_counters for allocated smart_ptrs. " alt="" coords="217,12,375,39"/>
 </map>

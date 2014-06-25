@@ -1,5 +1,7 @@
 #include <api/RESTPool.h>
 
+#include <http/requester.h>
+
 zapata::RESTPool::RESTPool() : __configuration(NULL) {
 }
 
@@ -108,16 +110,35 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 						<< "message" << _e.what()
 						<< "code" << _e.code();;
 
-					_rep->status((zapata::HTTPStatus) _e.code());
-					_rep << "Content-Type" << "application/json";
-
 					string _text;
 					zapata::tostr(_text, _body);
+
 					_rep->body(_text);
+					_rep->status((zapata::HTTPStatus) _e.code());
+					_rep << "Content-Type" << "application/json" << "Content-Length" <<(int) _text.length();
+
+					string _origin = _req->header("Origin");
+					if (_origin.length() != 0) {
+						_rep
+							<< "Access-Control-Allow-Origin" << _origin
+						                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+					}
+
 				}
 			}
 			break;
 		}
+	}
+}
+
+void zapata::RESTPool::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
+	string _host(_req->header("Host"));
+
+	if (_host.length() == 0 || _host.find("localhost") != string::npos || _host.find((string) this->configuration()["zapata"]["rest"]["bind"]) != string::npos) {
+		this->process(_req, _rep);
+	}
+	else {
+		zapata::send(_req, _rep, _is_ssl);
 	}
 }
 

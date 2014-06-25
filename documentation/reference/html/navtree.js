@@ -4,7 +4,12 @@ var NAVTREE =
     [ "Classes", null, [
       [ "Class List", "annotated.html", "annotated" ],
       [ "Class Index", "classes.html", null ],
-      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ]
+      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
+      [ "Class Members", "functions.html", [
+        [ "All", "functions.html", null ],
+        [ "Functions", "functions_func.html", null ],
+        [ "Variables", "functions_vars.html", null ]
+      ] ]
     ] ],
     [ "Files", null, [
       [ "File List", "files.html", "files" ]
@@ -15,11 +20,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classzapata_1_1_h_t_t_p_element.html#a0be52b3407e3039ffe1c6ad338359c0d",
-"classzapata_1_1_j_s_o_n_arr_ref.html#a98555d4072a92cc669bc49eea7051b90",
-"classzapata_1_1_j_s_o_n_lexer_base.html#ac1e209324c6a8c4f9835db5bd2d452d5a20244d5079bbd5a833bafc336b1a3270",
-"classzapata_1_1_r_e_s_t_pool.html#a6266bcc341a7f1d10d87d441a8701d34",
-"classzapata_1_1str__map_1_1ordered__iterator.html"
+"classzapata_1_1_file_upload.html#a53025d704c79384eee39f77ee4c6359a",
+"classzapata_1_1_j_s_o_n_arr_ref.html#a9391ead16c705d3061ae7fa8ea76628f",
+"classzapata_1_1_j_s_o_n_lexer_base.html#ab9b027b123c056167ae584dc4c39d5b9",
+"classzapata_1_1_r_e_s_t_controller.html#a69022b8ae14ec3d43709d351c07cc621",
+"classzapata_1_1str__map.html#ad779c865ce6e7fc689cc53454a6c4565"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

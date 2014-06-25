@@ -49,6 +49,7 @@ var annotated =
       [ "basic_sslsocketbuf", "classzapata_1_1basic__sslsocketbuf.html", "classzapata_1_1basic__sslsocketbuf" ],
       [ "basic_sslsocketstream", "classzapata_1_1basic__sslsocketstream.html", "classzapata_1_1basic__sslsocketstream" ],
       [ "basic_serversslsocketstream", "classzapata_1_1basic__serversslsocketstream.html", "classzapata_1_1basic__serversslsocketstream" ],
+      [ "OAuth2", "classzapata_1_1_o_auth2.html", "classzapata_1_1_o_auth2" ],
       [ "RESTPool", "classzapata_1_1_r_e_s_t_pool.html", "classzapata_1_1_r_e_s_t_pool" ],
       [ "FileRemove", "classzapata_1_1_file_remove.html", "classzapata_1_1_file_remove" ],
       [ "FileUpload", "classzapata_1_1_file_upload.html", "classzapata_1_1_file_upload" ],

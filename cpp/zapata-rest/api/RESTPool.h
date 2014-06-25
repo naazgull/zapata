@@ -17,6 +17,8 @@ namespace zapata {
 			void init(HTTPRep& _rep);
 			void process(HTTPReq& _req, HTTPRep& _rep);
 
+			void invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
+
 		private:
 			vector<RESTResource*> __resources;
 			JSONObj* __configuration;

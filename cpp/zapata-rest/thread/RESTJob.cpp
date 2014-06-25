@@ -25,6 +25,13 @@ void zapata::RESTJob::run() {
 					zapata::fromstream(_cs, _req);
 					this->__pool->process(_req, _rep);
 
+					string _origin = _req->header("Origin");
+					if (_origin.length() != 0) {
+						_rep
+							<< "Access-Control-Allow-Origin" << _origin
+						                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+					}
+
 					if (zapata::log_lvl) {
 						if (_debug) {
 							string _text;
@@ -80,12 +87,19 @@ void zapata::RESTJob::run() {
 						<< "message" << e.what()
 						<< "code" << 400;
 
-					_rep->status(zapata::HTTP400);
-					_rep << "Content-Type" << "application/json";
-
 					string _text;
 					zapata::tostr(_text, _body);
+
 					_rep->body(_text);
+					_rep->status(zapata::HTTP400);
+					_rep << "Content-Type" << "application/json" << "Content-Length" <<(int) _text.length();
+
+					string _origin = _req->header("Origin");
+					if (_origin.length() != 0) {
+						_rep
+							<< "Access-Control-Allow-Origin" << _origin
+						                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+					}
 				}
 				catch(zapata::ClosedException& e) {
 					zapata::log(e.what(), zapata::error);

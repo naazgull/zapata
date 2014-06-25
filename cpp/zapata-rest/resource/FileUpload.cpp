@@ -1,5 +1,7 @@
 #include <resource/FileUpload.h>
 
+#include <http/requester.h>
+
 zapata::FileUpload::FileUpload() :
 	zapata::RESTController("^/file/upload$") {
 }

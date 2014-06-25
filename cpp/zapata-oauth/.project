@@ -3,6 +3,10 @@
 	<name>zapata-oauth</name>
 	<comment></comment>
 	<projects>
+		<project>zapata-core</project>
+		<project>zapata-http</project>
+		<project>zapata-net</project>
+		<project>zapata-rest</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

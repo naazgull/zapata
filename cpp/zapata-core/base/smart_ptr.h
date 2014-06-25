@@ -10,15 +10,29 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
+	/**
+	 * Responsible for counting references to a given <b><i>smart_ptr</i></b>.
+	 * Invoking <b><i>add</i></b> increases the counter. Invoking <b><i>release</i></b> decreases the counter.
+	 * @see smart_ptr
+	 */
 	class smart_counter {
 		private:
 
 		public:
+			/**
+			 * The actual counter variable.
+			 */
 			size_t __pointed;
 			smart_counter();
 			~smart_counter();
 
+			/**
+			 * Increases the value hold by <b><i>__pointed</i></b>
+			 */
 			void add();
+			/**
+			 * Decreases the value hold by <b><i>__pointed</i></b>
+			 */
 			size_t release();
 
 			inline friend ostream& operator<<(ostream& os, smart_counter& f) {
@@ -28,6 +42,11 @@ namespace zapata {
 	};
 
 
+	/**
+	 * Table that holds the list of <b><i>smart_counter</i></b>s for allocated <b><i>smart_ptr</i></b>s
+	 * @see smart_counter
+	 * @see smart_ptr
+	 */
 	class smart_ref_table : public str_map<smart_counter*> {
 		public:
 			smart_ref_table();

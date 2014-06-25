@@ -36,6 +36,8 @@ namespace zapata {
 			virtual bool allowed(HTTPReq& _req);
 			bool matches(string _url);
 
+			void invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
+
 			regex_t* pattern();
 			JSONObj& configuration();
 			void configuration(JSONObj* _conf);

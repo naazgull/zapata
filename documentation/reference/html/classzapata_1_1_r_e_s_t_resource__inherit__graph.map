@@ -2,7 +2,8 @@
 <area shape="rect" id="node2" href="$classzapata_1_1_r_e_s_t_collection.html" title="zapata::RESTCollection" alt="" coords="217,5,380,32"/>
 <area shape="rect" id="node3" href="$classzapata_1_1_r_e_s_t_controller.html" title="zapata::RESTController" alt="" coords="218,56,379,83"/>
 <area shape="rect" id="node6" href="$classzapata_1_1_r_e_s_t_document.html" title="zapata::RESTDocument" alt="" coords="216,107,381,133"/>
-<area shape="rect" id="node7" href="$classzapata_1_1_r_e_s_t_store.html" title="zapata::RESTStore" alt="" coords="231,157,367,184"/>
-<area shape="rect" id="node4" href="$classzapata_1_1_file_remove.html" title="zapata::FileRemove" alt="" coords="429,31,568,57"/>
-<area shape="rect" id="node5" href="$classzapata_1_1_file_upload.html" title="zapata::FileUpload" alt="" coords="433,81,564,108"/>
+<area shape="rect" id="node8" href="$classzapata_1_1_r_e_s_t_store.html" title="zapata::RESTStore" alt="" coords="231,157,367,184"/>
+<area shape="rect" id="node4" href="$classzapata_1_1_file_remove.html" title="zapata::FileRemove" alt="" coords="429,5,568,32"/>
+<area shape="rect" id="node5" href="$classzapata_1_1_file_upload.html" title="zapata::FileUpload" alt="" coords="433,56,564,83"/>
+<area shape="rect" id="node7" href="$classzapata_1_1_o_auth2.html" title="zapata::OAuth2" alt="" coords="442,107,555,133"/>
 </map>

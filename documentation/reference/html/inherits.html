@@ -72,6 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li class="current"><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -94,7 +95,7 @@ $(document).ready(function(){initNavTree('hierarchy.html','');});
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -177,11 +178,11 @@ $(document).ready(function(){initNavTree('hierarchy.html','');});
 </td></tr>
 <tr><td><img src="inherit_graph_16.png" border="0" alt="" usemap="#zapata_1_1_r_e_s_t_resource"/>
 <map name="zapata_1_1_r_e_s_t_resource" id="zapata_1_1_r_e_s_t_resource">
-<area shape="rect" id="node1" href="classzapata_1_1_r_e_s_t_resource.html" title="zapata::RESTResource" alt="" coords="6,81,167,108"/><area shape="rect" id="node2" href="classzapata_1_1_r_e_s_t_collection.html" title="zapata::RESTCollection" alt="" coords="217,5,380,32"/><area shape="rect" id="node3" href="classzapata_1_1_r_e_s_t_controller.html" title="zapata::RESTController" alt="" coords="218,56,379,83"/><area shape="rect" id="node6" href="classzapata_1_1_r_e_s_t_document.html" title="zapata::RESTDocument" alt="" coords="216,107,381,133"/><area shape="rect" id="node7" href="classzapata_1_1_r_e_s_t_store.html" title="zapata::RESTStore" alt="" coords="231,157,367,184"/><area shape="rect" id="node4" href="classzapata_1_1_file_remove.html" title="zapata::FileRemove" alt="" coords="429,31,568,57"/><area shape="rect" id="node5" href="classzapata_1_1_file_upload.html" title="zapata::FileUpload" alt="" coords="433,81,564,108"/></map>
+<area shape="rect" id="node1" href="classzapata_1_1_r_e_s_t_resource.html" title="zapata::RESTResource" alt="" coords="6,81,167,108"/><area shape="rect" id="node2" href="classzapata_1_1_r_e_s_t_collection.html" title="zapata::RESTCollection" alt="" coords="217,5,380,32"/><area shape="rect" id="node3" href="classzapata_1_1_r_e_s_t_controller.html" title="zapata::RESTController" alt="" coords="218,56,379,83"/><area shape="rect" id="node6" href="classzapata_1_1_r_e_s_t_document.html" title="zapata::RESTDocument" alt="" coords="216,107,381,133"/><area shape="rect" id="node8" href="classzapata_1_1_r_e_s_t_store.html" title="zapata::RESTStore" alt="" coords="231,157,367,184"/><area shape="rect" id="node4" href="classzapata_1_1_file_remove.html" title="zapata::FileRemove" alt="" coords="429,5,568,32"/><area shape="rect" id="node5" href="classzapata_1_1_file_upload.html" title="zapata::FileUpload" alt="" coords="433,56,564,83"/><area shape="rect" id="node7" href="classzapata_1_1_o_auth2.html" title="zapata::OAuth2" alt="" coords="442,107,555,133"/></map>
 </td></tr>
 <tr><td><img src="inherit_graph_17.png" border="0" alt="" usemap="#zapata_1_1smart__counter"/>
 <map name="zapata_1_1smart__counter" id="zapata_1_1smart__counter">
-<area shape="rect" id="node1" href="classzapata_1_1smart__counter.html" title="zapata::smart_counter" alt="" coords="5,5,157,32"/></map>
+<area shape="rect" id="node1" href="classzapata_1_1smart__counter.html" title="Responsible for counting references to a given smart_ptr. " alt="" coords="5,5,157,32"/></map>
 </td></tr>
 <tr><td><img src="inherit_graph_18.png" border="0" alt="" usemap="#zapata_1_1smart__ptr_3_01_j_s_o_n_obj_ref_01_4"/>
 <map name="zapata_1_1smart__ptr_3_01_j_s_o_n_obj_ref_01_4" id="zapata_1_1smart__ptr_3_01_j_s_o_n_obj_ref_01_4">
@@ -193,7 +194,7 @@ $(document).ready(function(){initNavTree('hierarchy.html','');});
 </td></tr>
 <tr><td><img src="inherit_graph_20.png" border="0" alt="" usemap="#zapata_1_1str__map_3_01smart__counter_01_5_01_4"/>
 <map name="zapata_1_1str__map_3_01smart__counter_01_5_01_4" id="zapata_1_1str__map_3_01smart__counter_01_5_01_4">
-<area shape="rect" id="node1" href="classzapata_1_1str__map.html" title="zapata::str_map\&lt; smart\l_counter * \&gt;" alt="" coords="6,5,167,46"/><area shape="rect" id="node2" href="classzapata_1_1smart__ref__table.html" title="zapata::smart_ref_table" alt="" coords="217,12,375,39"/></map>
+<area shape="rect" id="node1" href="classzapata_1_1str__map.html" title="zapata::str_map\&lt; smart\l_counter * \&gt;" alt="" coords="6,5,167,46"/><area shape="rect" id="node2" href="classzapata_1_1smart__ref__table.html" title="Table that holds the list of smart_counters for allocated smart_ptrs. " alt="" coords="217,12,375,39"/></map>
 </td></tr>
 <tr><td><img src="inherit_graph_21.png" border="0" alt="" usemap="#zapata_1_1str__map_3_01string_01_5_01_4"/>
 <map name="zapata_1_1str__map_3_01string_01_5_01_4" id="zapata_1_1str__map_3_01string_01_5_01_4">
@@ -213,7 +214,7 @@ $(document).ready(function(){initNavTree('hierarchy.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Jun 16 2014 12:28:59 for zapata by
+    <li class="footer">Generated on Mon Jun 16 2014 21:03:04 for zapata by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

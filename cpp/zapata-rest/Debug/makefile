@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include thread/subdir.mk
 -include resource/subdir.mk
+-include http/subdir.mk
 -include api/subdir.mk
 -include subdir.mk
 -include objects.mk

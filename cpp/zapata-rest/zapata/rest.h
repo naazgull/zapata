@@ -12,3 +12,5 @@
 #include <resource/RESTStore.h>
 #include <resource/FileRemove.h>
 #include <resource/FileUpload.h>
+
+#include <http/requester.h>

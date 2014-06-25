@@ -106,3 +106,7 @@ void zapata::RESTResource::pool(RESTPool* _pool) {
 bool zapata::RESTResource::allowed(HTTPReq& _req) {
 	return true;
 }
+
+void zapata::RESTResource::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
+	this->__pool->invoke(_req, _rep, _is_ssl);
+}

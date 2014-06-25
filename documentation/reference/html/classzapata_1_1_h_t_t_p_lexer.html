@@ -72,6 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -94,7 +95,7 @@ $(document).ready(function(){initNavTree('classzapata_1_1_h_t_t_p_lexer.html',''
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -117,13 +118,6 @@ Inheritance diagram for zapata::HTTPLexer:</div>
 <div class="center"><img src="classzapata_1_1_h_t_t_p_lexer__inherit__graph.png" border="0" usemap="#zapata_1_1_h_t_t_p_lexer_inherit__map" alt="Inheritance graph"/></div>
 <map name="zapata_1_1_h_t_t_p_lexer_inherit__map" id="zapata_1_1_h_t_t_p_lexer_inherit__map">
 <area shape="rect" id="node3" href="classzapata_1_1_h_t_t_p_tokenizer_lexer.html" title="zapata::HTTPTokenizerLexer" alt="" coords="5,155,197,181"/><area shape="rect" id="node2" href="classzapata_1_1_h_t_t_p_lexer_base.html" title="zapata::HTTPLexerBase" alt="" coords="18,5,184,32"/></map>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for zapata::HTTPLexer:</div>
-<div class="dyncontent">
-<div class="center"><img src="classzapata_1_1_h_t_t_p_lexer__coll__graph.png" border="0" usemap="#zapata_1_1_h_t_t_p_lexer_coll__map" alt="Collaboration graph"/></div>
-<map name="zapata_1_1_h_t_t_p_lexer_coll__map" id="zapata_1_1_h_t_t_p_lexer_coll__map">
-<area shape="rect" id="node2" href="classzapata_1_1_h_t_t_p_lexer_base.html" title="zapata::HTTPLexerBase" alt="" coords="5,5,171,32"/></map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -354,8 +348,8 @@ static size_t const&#160;</td><td class="memItemRight" valign="bottom"><b>s_rfc_
 <div class="textblock">
 <p>Definition at line <a class="el" href="_h_t_t_p_lexer_8h_source.html#l00014">14</a> of file <a class="el" href="_h_t_t_p_lexer_8h_source.html">HTTPLexer.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>zapata-http/parsers/<a class="el" href="_h_t_t_p_lexer_8h_source.html">HTTPLexer.h</a></li>
-<li>zapata-http/parsers/<a class="el" href="_h_t_t_p_lexer_8cpp_source.html">HTTPLexer.cpp</a></li>
+<li>cpp/zapata-http/parsers/<a class="el" href="_h_t_t_p_lexer_8h_source.html">HTTPLexer.h</a></li>
+<li>cpp/zapata-http/parsers/<a class="el" href="_h_t_t_p_lexer_8cpp_source.html">HTTPLexer.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -363,7 +357,7 @@ static size_t const&#160;</td><td class="memItemRight" valign="bottom"><b>s_rfc_
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>zapata</b></li><li class="navelem"><a class="el" href="classzapata_1_1_h_t_t_p_lexer.html">HTTPLexer</a></li>
-    <li class="footer">Generated on Mon Jun 16 2014 12:28:59 for zapata by
+    <li class="footer">Generated on Mon Jun 16 2014 21:03:03 for zapata by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

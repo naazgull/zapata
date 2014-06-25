@@ -72,6 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="inherits.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -94,7 +95,7 @@ $(document).ready(function(){initNavTree('classzapata_1_1_partitioner.html','');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -117,13 +118,6 @@ Inheritance diagram for zapata::Partitioner:</div>
 <div class="center"><img src="classzapata_1_1_partitioner__inherit__graph.png" border="0" usemap="#zapata_1_1_partitioner_inherit__map" alt="Inheritance graph"/></div>
 <map name="zapata_1_1_partitioner_inherit__map" id="zapata_1_1_partitioner_inherit__map">
 <area shape="rect" id="node2" href="classzapata_1_1_job.html" title="zapata::Job" alt="" coords="24,5,115,32"/></map>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for zapata::Partitioner:</div>
-<div class="dyncontent">
-<div class="center"><img src="classzapata_1_1_partitioner__coll__graph.png" border="0" usemap="#zapata_1_1_partitioner_coll__map" alt="Collaboration graph"/></div>
-<map name="zapata_1_1_partitioner_coll__map" id="zapata_1_1_partitioner_coll__map">
-<area shape="rect" id="node2" href="classzapata_1_1_job.html" title="zapata::Job" alt="" coords="25,112,116,139"/><area shape="rect" id="node3" href="classzapata_1_1smart__ptr.html" title="zapata::smart_ptr\&lt;\l JSONObjRef \&gt;" alt="" coords="5,6,136,47"/></map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -205,8 +199,8 @@ pthread_mutexattr_t&#160;</td><td class="memItemRight" valign="bottom"><b>__attr
 <div class="textblock">
 <p>Definition at line <a class="el" href="_partitioner_8h_source.html#l00007">7</a> of file <a class="el" href="_partitioner_8h_source.html">Partitioner.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>zapata-map-reduce/partition/<a class="el" href="_partitioner_8h_source.html">Partitioner.h</a></li>
-<li>zapata-map-reduce/partition/<a class="el" href="_partitioner_8cpp_source.html">Partitioner.cpp</a></li>
+<li>cpp/zapata-map-reduce/partition/<a class="el" href="_partitioner_8h_source.html">Partitioner.h</a></li>
+<li>cpp/zapata-map-reduce/partition/<a class="el" href="_partitioner_8cpp_source.html">Partitioner.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -214,7 +208,7 @@ pthread_mutexattr_t&#160;</td><td class="memItemRight" valign="bottom"><b>__attr
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>zapata</b></li><li class="navelem"><a class="el" href="classzapata_1_1_partitioner.html">Partitioner</a></li>
-    <li class="footer">Generated on Mon Jun 16 2014 12:28:59 for zapata by
+    <li class="footer">Generated on Mon Jun 16 2014 21:03:04 for zapata by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>
   </ul>

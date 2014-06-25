@@ -78,7 +78,9 @@ var hierarchy =
         [ "zapata::FileRemove", "classzapata_1_1_file_remove.html", null ],
         [ "zapata::FileUpload", "classzapata_1_1_file_upload.html", null ]
       ] ],
-      [ "zapata::RESTDocument", "classzapata_1_1_r_e_s_t_document.html", null ],
+      [ "zapata::RESTDocument", "classzapata_1_1_r_e_s_t_document.html", [
+        [ "zapata::OAuth2", "classzapata_1_1_o_auth2.html", null ]
+      ] ],
       [ "zapata::RESTStore", "classzapata_1_1_r_e_s_t_store.html", null ]
     ] ],
     [ "zapata::smart_counter", "classzapata_1_1smart__counter.html", null ],
@@ -95,8 +97,8 @@ var hierarchy =
       [ "zapata::HTTPRepRef", "classzapata_1_1_h_t_t_p_rep_ref.html", null ],
       [ "zapata::HTTPReqRef", "classzapata_1_1_h_t_t_p_req_ref.html", null ]
     ] ],
-    [ "zapata::JSONLexerBase::StreamStruct", "structzapata_1_1_j_s_o_n_lexer_base_1_1_stream_struct.html", null ],
     [ "zapata::HTTPLexerBase::StreamStruct", "structzapata_1_1_h_t_t_p_lexer_base_1_1_stream_struct.html", null ],
+    [ "zapata::JSONLexerBase::StreamStruct", "structzapata_1_1_j_s_o_n_lexer_base_1_1_stream_struct.html", null ],
     [ "vector", null, [
       [ "zapata::JSONArrRef", "classzapata_1_1_j_s_o_n_arr_ref.html", null ]
     ] ]

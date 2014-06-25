@@ -159,7 +159,16 @@ namespace zapata {
 					__stream_type::setstate(std::ios::failbit);
 				}
 				else {
-					__buf.set_socket(_sd);
+					SSL_library_init();
+					OpenSSL_add_all_algorithms();
+					SSL_load_error_strings();
+					SSL_CTX* _context = SSL_CTX_new(SSLv23_server_method());
+					if (_context == NULL) {
+						__stream_type::setstate(std::ios::failbit);
+					}
+					else {
+						this->assign(_sd, _context);
+					}
 				}
 				return *this;
 			}
