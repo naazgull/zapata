@@ -133,8 +133,10 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 
 void zapata::RESTPool::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	string _host(_req->header("Host"));
+	string _uri(_req->url());
+	_uri.insert(0, _host);
 
-	if (_host.length() == 0 || _host.find("localhost") != string::npos || _host.find((string) this->configuration()["zapata"]["rest"]["bind"]) != string::npos) {
+	if (_host.length() == 0 || _uri.find((string) this->configuration()["zapata"]["rest"]["bind_url"]) != string::npos) {
 		this->process(_req, _rep);
 	}
 	else {
