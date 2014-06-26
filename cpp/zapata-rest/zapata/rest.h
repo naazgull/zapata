@@ -14,3 +14,4 @@
 #include <resource/FileUpload.h>
 
 #include <http/requester.h>
+#include <http/params.h>

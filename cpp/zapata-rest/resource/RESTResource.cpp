@@ -39,6 +39,7 @@ void zapata::RESTResource::trace(HTTPReq& _req, HTTPRep& _rep) {
 	string _body;
 	zapata::tostr(_body, _req);
 	_rep->body(_body);
+	_rep  << "Content-Length" << (long) _body.length();
 }
 
 void zapata::RESTResource::options(HTTPReq& _req, HTTPRep& _rep) {

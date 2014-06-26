@@ -27,7 +27,13 @@ void zapata::JSONBoolRef::put(long long _in) {
 	this->__value = _in;
 }
 
+#ifdef __LP64__
 void zapata::JSONBoolRef::put(unsigned int _in) {
+	this->__value = _in;
+}
+#endif
+
+void zapata::JSONBoolRef::put(size_t _in) {
 	this->__value = _in;
 }
 

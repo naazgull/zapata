@@ -1,6 +1,16 @@
+#include <api/codes_rest.h>
+#include <base/assert.h>
+#include <base/smart_ptr.h>
+#include <exceptions/AssertionException.h>
+#include <http/HTTPObj.h>
+#include <json/JSONObj.h>
+#include <parsers/json.h>
 #include <resource/Login.h>
+#include <text/convert.h>
+#include <text/html.h>
 
-zapata::Login::Login() : zapata::RESTController("^/auth/login$") {
+zapata::Login::Login() :
+	zapata::RESTController("^/auth/login$") {
 }
 
 zapata::Login::~Login() {
@@ -8,11 +18,11 @@ zapata::Login::~Login() {
 
 void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 	string _body = _req->body();
-	assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412);
+	assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
 	bool _is_json = _req->header("Content-Type").find("application/json") != string::npos;
 	bool _is_form_encoded = _req->header("Content-Type").find("application/x-www-form-urlencoded") != string::npos;
-	assertz(_is_json || _is_form_encoded, "Body ENTITY must be provided either in JSON or Form URL encoded format", zapata::HTTP406);
+	assertz(_is_json || _is_form_encoded, "Body ENTITY must be provided either in JSON or Form URL encoded format", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 	zapata::JSONObj _params;
 	if (_is_json) {
@@ -22,8 +32,8 @@ void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 		zapata::fromformurlencoded(_body, _params);
 	}
 
-	assertz(!!_params["id"], "Parameter 'id' must be provided", zapata::HTTP412);
-	assertz(!!_params["secret"], "Parameter 'secret' must be provided", zapata::HTTP412);
+	assertz(!!_params["id"], "Parameter 'id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+	assertz(!!_params["secret"], "Parameter 'secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 	string _code;
 	if (this->authenticate((string) _params["id"], (string) _params["secret"], _code)) {
@@ -44,14 +54,11 @@ void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 		else {
 			string _token_body_s;
 			zapata::JSONObj _token_body;
-			_token_body <<
-				"grant_type" << "user_code" <<
-				"client_id" << (string) _params["id"] <<
-				"client_secret" << (string) _params["secret"] <<
-				"code" << _code;
+			_token_body << "grant_type" << "user_code" << "client_id" << (string) _params["id"] << "client_secret" << (string) _params["secret"] << "code" << _code;
 			zapata::tostr(_token_body_s, _token_body);
 
 			zapata::HTTPReq _token_req;
+			_token_req << "Content-Length" << (long) _token_body_s.length();
 			_token_req->method(zapata::HTTPPost);
 			_token_req->body(_token_body_s);
 
@@ -61,7 +68,7 @@ void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 
 			string _token = _token_rep->body();
 			_rep->status(zapata::HTTP200);
-			_rep << "Content-Length" << (long) _token.length() << "Content-Type" << "application/json";
+			_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _token.length();
 			_rep->body(_token);
 		}
 	}

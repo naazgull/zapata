@@ -48,7 +48,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.491589183" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.2056891505" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.1452692014" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="mongoclient"/>
 									<listOptionValue builtIn="false" value="boost_program_options"/>
 									<listOptionValue builtIn="false" value="boost_thread"/>
 									<listOptionValue builtIn="false" value="boost_filesystem"/>

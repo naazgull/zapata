@@ -27,7 +27,13 @@ void zapata::JSONStrRef::put(long long _in) {
 	zapata::tostr(this->__value, _in);
 }
 
+#ifdef __LP64__
 void zapata::JSONStrRef::put(unsigned int _in) {
+	zapata::tostr(this->__value, _in);
+}
+#endif
+
+void zapata::JSONStrRef::put(size_t _in) {
 	zapata::tostr(this->__value, _in);
 }
 

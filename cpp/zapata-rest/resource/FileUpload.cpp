@@ -1,6 +1,19 @@
+#include <api/codes_rest.h>
+#include <base/assert.h>
+#include <base/smart_ptr.h>
+#include <exceptions/AssertionException.h>
+#include <file/manip.h>
+#include <http/HTTPObj.h>
+#include <json/JSONObj.h>
+#include <parsers/json.h>
 #include <resource/FileUpload.h>
-
-#include <http/requester.h>
+#include <text/convert.h>
+#include <text/manip.h>
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <iterator>
+#include <string>
 
 zapata::FileUpload::FileUpload() :
 	zapata::RESTController("^/file/upload$") {
@@ -12,14 +25,14 @@ zapata::FileUpload::~FileUpload() {
 void zapata::FileUpload::post(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	{
 		string _body = _req->body();
-		assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412);
+		assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-		assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406);
+		assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 		zapata::JSONObj _params;
 		zapata::fromstr(_body, _params);
 
-		assertz(!!_params["uploaded_file"], "The 'uploaded_file' parameter must be provided.", zapata::HTTP412);
+		assertz(!!_params["uploaded_file"], "The 'uploaded_file' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
 
 		string _from((string) _params["uploaded_file"]);
 		string _to((string) this->configuration()["zapata"]["rest"]["uploads"]["upload_path"]);
@@ -73,7 +86,7 @@ void zapata::FileUpload::post(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 			_ofs.close();
 		}
 		else {
-			assertz(zapata::copy_path((string ) _params["uploaded_file"], _path), "There was an error copying the temporary file to the 'upload_path' directory.", zapata::HTTP500);
+			assertz(zapata::copy_path((string ) _params["uploaded_file"], _path), "There was an error copying the temporary file to the 'upload_path' directory.", zapata::HTTP500, zapata::ERRFilePermissions);
 		}
 
 		string _location((string) this->configuration()["zapata"]["rest"]["uploads"]["upload_url"]);

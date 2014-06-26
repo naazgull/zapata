@@ -200,6 +200,16 @@ namespace zapata {
 				(*this->__target) << _in;
 				return *this;
 			}
+#ifdef __LP64__
+			smart_ptr<T>& operator<<(unsigned int _in) {
+				(*this->__target) << _in;
+				return *this;
+			}
+#endif
+			smart_ptr<T>& operator<<(size_t _in) {
+				(*this->__target) << _in;
+				return *this;
+			}
 			smart_ptr<T>& operator<<(ObjectOp _in) {
 				(*this->__target) << _in;
 				return *this;

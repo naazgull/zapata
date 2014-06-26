@@ -41,7 +41,14 @@ void zapata::JSONArrRef::put(long long _in) {
 	this->push_back((smart_ptr<JSONElement>*) _sp);
 }
 
+#ifdef __LP64__
 void zapata::JSONArrRef::put(unsigned int _in) {
+	JSONInt* _sp = new JSONInt(new JSONIntRef(_in));
+	this->push_back((smart_ptr<JSONElement>*) _sp);
+}
+#endif
+
+void zapata::JSONArrRef::put(size_t _in) {
 	JSONInt* _sp = new JSONInt(new JSONIntRef(_in));
 	this->push_back((smart_ptr<JSONElement>*) _sp);
 }

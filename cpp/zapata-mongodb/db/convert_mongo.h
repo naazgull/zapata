@@ -13,4 +13,8 @@ namespace zapata {
 
 	void tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out);
 	void tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out);
+
+	void tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _query, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
+
+	void torestcollection(mongo::ScopedDbConnection* _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
 }

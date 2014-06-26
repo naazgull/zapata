@@ -1,5 +1,7 @@
 #include <db/convert_mongo.h>
 
+#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^")
+
 void zapata::frommongo(bson::bo& _in, zapata::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
 		bson::be _it = _i.next();
@@ -186,4 +188,218 @@ void zapata::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 			}
 		}
 	}
+}
+
+void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
+	for (JSONObjIterator _i = _in->begin(); _i != _in->end(); _i++) {
+		string _key = (*_i)->first;
+		smart_ptr<JSONElement>* _value = (*_i)->second;
+
+		if (_key == "fields" || _key == "embed") {
+			continue;
+		}
+
+		if (_key == "pageSize") {
+			istringstream iss((string) (*_value->get()));
+			int i = 0;
+			iss >> i;
+			if (!iss.eof()) {
+				_page_size = 0;
+			}
+			else {
+				_page_size = i;
+				if (_page_size < 0) {
+					_page_size *= -1;
+				}
+			}
+			continue;
+		}
+
+		if (_key == "pageStartIndex") {
+			istringstream iss((string) (*_value->get()));
+			int i = 0;
+			iss >> i;
+			if (!iss.eof()) {
+				_page_start_index = 0;
+			}
+			else {
+				_page_start_index = i;
+				if (_page_start_index < 0) {
+					_page_start_index *= -1;
+				}
+			}
+			continue;
+		}
+
+		if (_key == "orderBy") {
+			istringstream lss(((string) (*_value->get())).data());
+			string part;
+			while (std::getline(lss, part, ',')) {
+				if (part.length() > 0) {
+					int dir = 1;
+
+					if (part[0] == '-') {
+						dir = -1;
+						part.erase(0, 1);
+					}
+					else if (part[0] == '+') {
+						part.erase(0, 1);
+					}
+
+					if (part.length() > 0) {
+						ostringstream oss;
+						oss << part << flush;
+
+						_order.append(oss.str(), dir);
+					}
+				}
+			}
+
+			continue;
+		}
+
+		ostringstream oss;
+		oss << _key << flush;
+
+		string key = oss.str();
+		string value = ((string) (*_value->get()));
+		if (value.length() > 3 && value.find('/') != string::npos) {
+			int bar_count = 0;
+
+			istringstream lss(value);
+			string part;
+
+			string command;
+			string expression;
+			string options;
+			while (std::getline(lss, part, '/')) {
+				if (bar_count == 0) {
+					command = part;
+					++bar_count;
+				}
+				else if (bar_count == 1) {
+					expression.append(part);
+
+					if (expression.length() == 0
+					                || expression[expression.length() - 1] != '\\') {
+						++bar_count;
+					}
+					else {
+						if (expression.length() > 0) {
+							expression[expression.length() - 1] = '/';
+						}
+					}
+				}
+				else if (bar_count == 2) {
+					options = part;
+					++bar_count;
+				}
+				else {
+					++bar_count;
+				}
+			}
+
+			if (command == "m") {
+				if (bar_count == 3) {
+					_queryr.appendRegex(key, expression, options);
+					continue;
+				}
+			}
+			else if (command == "n") {
+				if (bar_count == 2) {
+					istringstream iss(expression);
+					int i = 0;
+					iss >> i;
+					if (!iss.eof()) {
+						iss.clear();
+						double d = 0;
+						iss >> d;
+						if (!iss.eof()) {
+							string bexpr(expression.data());
+							std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
+							if (bexpr != "true" && bexpr != "false") {
+								_queryr.append(key, expression);
+							}
+							else {
+								_queryr.append(key, bexpr == "true");
+							}
+						}
+						else {
+							_queryr.append(key, d);
+						}
+					}
+					else {
+						_queryr.append(key, i);
+					}
+					continue;
+				}
+			}
+			else {
+				string comp("$");
+				comp.insert(comp.length(), command);
+
+				if (_VALID_OPS.find(comp + string("^")) != string::npos) {
+					if (bar_count == 2) {
+						_queryr.append(key, BSON(comp << expression));
+					}
+					else if (options == "n") {
+						istringstream iss(expression);
+						int i = 0;
+						iss >> i;
+						if (!iss.eof()) {
+							iss.str(expression);
+							double d = 0;
+							iss >> d;
+							if (!iss.eof()) {
+								_queryr.append(key, BSON(comp << expression));
+							}
+							else {
+								_queryr.append(key, BSON(comp << d));
+							}
+						}
+						else {
+							_queryr.append(key, BSON(comp << i));
+						}
+					}
+					continue;
+				}
+
+			}
+		}
+
+		_queryr.append(key, value);
+	}
+}
+
+void zapata::torestcollection(mongo::ScopedDbConnection* _conn, string _collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::tomongoquery(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	size_t _count = -1;
+	mongo::Query _query(_query_b.done());
+	mongo::BSONObj _order = _order_b.done();
+
+	_count = (*_conn)->count(_collection, _query.obj);
+	if (!_order.isEmpty()) {
+		_query.sort(_order);
+	}
+
+	unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, _query, (_page_start_index > 0 ? _page_size : _page_start_index + _page_size), (_page_start_index > 0 ? _page_start_index : 0));
+
+	zapata::JSONArr _elements;
+	while (_ptr->more()) {
+		mongo::BSONObj obj = _ptr->next();
+		zapata::JSONObj _record;
+		zapata::frommongo(obj, _record);
+		_elements << _record;
+	}
+	 _ptr->decouple();
+	 (*_conn)->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+
+	_out << "size" << _count;
+	_out << "elements" << _elements;
 }

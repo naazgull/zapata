@@ -12,6 +12,14 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
+	enum RESTfulType {
+		RESTfulResource = 0,
+		RESTfulDocument = 1,
+		RESTfulCollection = 2,
+		RESTfulStore = 3,
+		RESTfulController = 4
+	};
+
 	class RESTPool;
 
 	class RESTResource {

@@ -92,7 +92,7 @@ void zapata::RESTJob::run() {
 
 					_rep->body(_text);
 					_rep->status(zapata::HTTP400);
-					_rep << "Content-Type" << "application/json" << "Content-Length" <<(int) _text.length();
+					_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
 
 					string _origin = _req->header("Origin");
 					if (_origin.length() != 0) {

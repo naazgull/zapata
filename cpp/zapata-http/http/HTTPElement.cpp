@@ -188,6 +188,18 @@ zapata::HTTPElement& zapata::HTTPElement::operator<<(long long _in) {
 	return *this;
 }
 
+#ifdef __LP64__
+zapata::HTTPElement& zapata::HTTPElement::operator<<(unsigned int _in) {
+	this->put((long long) _in);
+	return *this;
+}
+#endif
+
+zapata::HTTPElement& zapata::HTTPElement::operator<<(size_t _in) {
+	this->put((long long) _in);
+	return *this;
+}
+
 zapata::HTTPElement& zapata::HTTPElement::operator<<(double _in) {
 	this->put(_in);
 	return *this;

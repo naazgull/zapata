@@ -27,7 +27,13 @@ void zapata::JSONIntRef::put(long long _in) {
 	this->__value = _in;
 }
 
+#ifdef __LP64__
 void zapata::JSONIntRef::put(unsigned int _in) {
+	this->__value = _in;
+}
+#endif
+
+void zapata::JSONIntRef::put(size_t _in) {
 	this->__value = _in;
 }
 

@@ -92,6 +92,10 @@ namespace zapata {
 			JSONElement& operator<<(long _in);
 			JSONElement& operator<<(long long _in);
 			JSONElement& operator<<(double _in);
+#ifdef __LP64__
+			JSONElement& operator<<(unsigned int _in);
+#endif
+			JSONElement& operator<<(size_t _in);
 			JSONElement& operator<<(string _in);
 			JSONElement& operator<<(ObjectOp _in);
 			JSONElement& operator<<(JSONObj& _in);
@@ -123,7 +127,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -174,7 +181,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -219,7 +229,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -264,7 +277,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -308,7 +324,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -353,7 +372,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);
@@ -405,7 +427,10 @@ namespace zapata {
 			virtual void put(int _in);
 			virtual void put(long _in);
 			virtual void put(long long _in);
+#ifdef __LP64__
 			virtual void put(unsigned int _in);
+#endif
+			virtual void put(size_t _in);
 			virtual void put(double _in);
 			virtual void put(bool _in);
 			virtual void put(string _in);

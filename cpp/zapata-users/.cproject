@@ -24,10 +24,25 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.so.debug.187371149." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.so.debug.2109073237" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.so.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1516981160" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder buildPath="${workspace_loc:/zapata-users}/Debug" id="cdt.managedbuild.builder.gnu.cross.1584689244" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/zapata-users}/Debug" id="cdt.managedbuild.builder.gnu.cross.1584689244" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.668224374" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1660213019" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1369586142" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.include.paths.721815420" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-core"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-http"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-net"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-rest"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-oauth"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users/"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1039732170" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.688079649" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
@@ -41,6 +56,7 @@
 									<listOptionValue builtIn="false" value="../../zapata-net"/>
 									<listOptionValue builtIn="false" value="../../zapata-rest"/>
 									<listOptionValue builtIn="false" value="../../zapata-oauth"/>
+									<listOptionValue builtIn="false" value="../../zapata-mongodb"/>
 									<listOptionValue builtIn="false" value="../"/>
 									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
@@ -53,18 +69,26 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1706490404" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.soname.1670555652" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-users.so.0.1" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.1961877556" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="mongoclient"/>
+									<listOptionValue builtIn="false" value="boost_program_options"/>
+									<listOptionValue builtIn="false" value="boost_thread"/>
+									<listOptionValue builtIn="false" value="boost_filesystem"/>
+									<listOptionValue builtIn="false" value="ssl"/>
+									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>
 									<listOptionValue builtIn="false" value="zapata-rest"/>
 									<listOptionValue builtIn="false" value="zapata-oauth"/>
+									<listOptionValue builtIn="false" value="zapata-mongodb"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1768748060" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-mongodb/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-rest/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-oauth/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-rest/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1703904376" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -73,14 +97,25 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1854774366" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1815710281" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<option id="gnu.both.asm.option.include.paths.347724026" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-core"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-http"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-net"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-rest"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-oauth"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users/"/>
+									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users"/>
+									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.913388851" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="resource|auth|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="resource"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
+						<entry excluding="api|zapata|resource|auth" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="api"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="resource"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="zapata"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -126,6 +161,7 @@
 									<listOptionValue builtIn="false" value="../../zapata-net"/>
 									<listOptionValue builtIn="false" value="../../zapata-rest"/>
 									<listOptionValue builtIn="false" value="../../zapata-oauth"/>
+									<listOptionValue builtIn="false" value="../../zapata-mongodb"/>
 									<listOptionValue builtIn="false" value="../"/>
 									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
 								</option>
@@ -138,18 +174,25 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1504778859" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.soname.45946063" name="Shared object name (-Wl,-soname=)" superClass="gnu.cpp.link.option.soname" value="libzapata-users.so.0.1" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.871764680" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="boost_program_options"/>
+									<listOptionValue builtIn="false" value="boost_thread"/>
+									<listOptionValue builtIn="false" value="boost_filesystem"/>
+									<listOptionValue builtIn="false" value="ssl"/>
+									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 									<listOptionValue builtIn="false" value="zapata-http"/>
 									<listOptionValue builtIn="false" value="zapata-net"/>
 									<listOptionValue builtIn="false" value="zapata-rest"/>
 									<listOptionValue builtIn="false" value="zapata-oauth"/>
+									<listOptionValue builtIn="false" value="zapata-mongodb"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.2098818174" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Releaase}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Releaase}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Releaase}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-rest/Releaase}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-oauth/Releaase}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-core/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-http/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-mongodb/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-net/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-oauth/Release}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/zapata-rest/Release}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1875487914" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -163,8 +206,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="resource|auth|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="auth"/>
+						<entry excluding="api|resource|auth|zapata" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="api"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="resource"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="zapata"/>
 					</sourceEntries>
 				</configuration>

@@ -32,7 +32,12 @@ void zapata::JSONElement::put(long _in) {
 void zapata::JSONElement::put(long long _in) {
 }
 
+#ifdef __LP64__
 void zapata::JSONElement::put(unsigned int _in) {
+}
+#endif
+
+void zapata::JSONElement::put(size_t _in) {
 }
 
 void zapata::JSONElement::put(double _in) {
@@ -276,6 +281,18 @@ zapata::JSONElement& zapata::JSONElement::operator<<(long long _in) {
 }
 
 zapata::JSONElement& zapata::JSONElement::operator<<(double _in) {
+	this->put(_in);
+	return *this;
+}
+
+#ifdef __LP64__
+zapata::JSONElement& zapata::JSONElement::operator <<(unsigned int _in) {
+	this->put(_in);
+	return *this;
+}
+#endif
+
+zapata::JSONElement& zapata::JSONElement::operator <<(size_t _in) {
 	this->put(_in);
 	return *this;
 }

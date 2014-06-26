@@ -54,12 +54,12 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 					<< "message" << "valid credentials are required to access this resource"
 					<< "code" << 401;;
 
-				_rep->status(zapata::HTTP401);
-				_rep << "Content-Type" << "application/json";
 
 				string _text;
 				zapata::tostr(_text, _body);
+				_rep->status(zapata::HTTP401);
 				_rep->body(_text);
+				_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
 			}
 			else {
 				try {
@@ -103,25 +103,27 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 					}
 				}
 				catch(zapata::AssertionException& _e) {
-					zapata::JSONObj _body;
-					_body
-						<< "error" << true
-						<< "assertion_failed" << _e.description()
-						<< "message" << _e.what()
-						<< "code" << _e.code();;
+					if (_e.status() > 399) {
+						zapata::JSONObj _body;
+						_body
+							<< "error" << true
+							<< "assertion_failed" << _e.description()
+							<< "message" << _e.what()
+							<< "code" << _e.code();;
 
-					string _text;
-					zapata::tostr(_text, _body);
+						string _text;
+						zapata::tostr(_text, _body);
+						_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+						_rep->body(_text);
+					}
 
-					_rep->body(_text);
-					_rep->status((zapata::HTTPStatus) _e.code());
-					_rep << "Content-Type" << "application/json" << "Content-Length" <<(int) _text.length();
+					_rep->status((zapata::HTTPStatus) _e.status());
 
 					string _origin = _req->header("Origin");
 					if (_origin.length() != 0) {
 						_rep
 							<< "Access-Control-Allow-Origin" << _origin
-						                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+							<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
 					}
 
 				}

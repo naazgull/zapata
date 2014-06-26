@@ -123,6 +123,10 @@ namespace zapata {
 			HTTPElement& operator<<(int _in);
 			HTTPElement& operator<<(long _in);
 			HTTPElement& operator<<(long long _in);
+#ifdef __LP64__
+			HTTPElement& operator<<(unsigned int _in);
+#endif
+			HTTPElement& operator<<(size_t _in);
 			HTTPElement& operator<<(double _in);
 			HTTPElement& operator<<(string _in);
 			HTTPElement& operator<<(ObjectOp _in);
