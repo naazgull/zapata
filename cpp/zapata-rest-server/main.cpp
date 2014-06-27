@@ -40,8 +40,8 @@ void stop(int sig) {
 }
 
 int main(int argc, char* argv[]) {
-	locale loc("");
-	cout.imbue(loc);
+//	locale loc("");
+//	cout.imbue(loc);
 
 	char _c;
 	char* _conf_file = NULL;

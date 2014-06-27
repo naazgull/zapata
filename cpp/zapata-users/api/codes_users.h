@@ -8,6 +8,8 @@ namespace zapata {
 		ERRPasswordMandatory = 1002,
 		ERRConfirmationMandatory = 1003,
 		ERRPasswordConfirmationDontMatch = 1004,
-		ERRUserAlreadyExists = 1005
+		ERRUserAlreadyExists = 1005,
+		ERRUserNotFound = 1006,
+		ERRIDMandatory = 1007
 	};
 }

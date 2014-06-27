@@ -4,3 +4,4 @@
 
 #include <resource/UserLogin.h>
 #include <resource/UsersCollection.h>
+#include <resource/UsersDocument.h>

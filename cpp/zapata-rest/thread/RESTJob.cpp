@@ -4,7 +4,7 @@
 #include <zapata/http.h>
 #include <exceptions/SyntaxErrorException.h>
 
-zapata::RESTJob::RESTJob(string _key_file_path) : Job(_key_file_path), __cur_fd(-1) {
+zapata::RESTJob::RESTJob(string _key_file_path) : Job(_key_file_path) {
 }
 
 zapata::RESTJob::~RESTJob() {
@@ -15,8 +15,13 @@ void zapata::RESTJob::run() {
 
 	for (; true; ) {
 		this->wait();
-		if (this->__cur_fd != -1) {
-			socketstream _cs(this->__cur_fd);
+
+		if (this->__cur_fd.size() != 0) {
+			pthread_mutex_lock(this->__mtx);
+			int _cur_fd = this->__cur_fd.front();
+			this->__cur_fd.pop();
+			pthread_mutex_unlock(this->__mtx);
+			socketstream _cs(_cur_fd);
 
 			HTTPRep _rep;
 			HTTPReq _req;
@@ -106,14 +111,14 @@ void zapata::RESTJob::run() {
 					break;
 				}
 			}
-			this->__cur_fd = -1;
 		}
-
 	}
 }
 
 void zapata::RESTJob::assign(int _cs_fd) {
-	this->__cur_fd = _cs_fd;
+	pthread_mutex_lock(this->__mtx);
+	this->__cur_fd.push(_cs_fd);
+	pthread_mutex_unlock(this->__mtx);
 }
 
 zapata::RESTPool& zapata::RESTJob::pool() {

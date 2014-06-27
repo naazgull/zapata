@@ -111,8 +111,9 @@ bool zapata::RESTResource::allowed(HTTPReq& _req) {
 void zapata::RESTResource::invoke(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	size_t _b = _url.find("://") + 3;
 	size_t _e = _url.find("/", _b);
-	string _domain(_url.substr(_b, _e));
+	string _domain(_url.substr(_b, _e - _b));
 	string _path(_url.substr(_e));
+	_req >> zapata::params;
 	_req << "Host" << _domain;
 	_req->url(_path);
 	this->__pool->invoke(_req, _rep, _is_ssl);
@@ -120,4 +121,10 @@ void zapata::RESTResource::invoke(string _url, HTTPReq& _req, HTTPRep& _rep, boo
 
 void zapata::RESTResource::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	this->__pool->invoke(_req, _rep, _is_ssl);
+}
+
+void zapata::RESTResource::invoke(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl) {
+	zapata::HTTPReq _req;
+	_req->method(_method);
+	this->invoke(_url, _req, _rep, _is_ssl);
 }

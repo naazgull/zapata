@@ -18,6 +18,7 @@ void zapata::RESTPool::configuration(JSONObj* _conf) {
 
 void zapata::RESTPool::add(RESTResource* _res) {
 	_res->configuration(this->__configuration);
+	_res->pool(this);
 	this->__resources.push_back(_res);
 }
 
@@ -137,8 +138,12 @@ void zapata::RESTPool::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
 	_uri.insert(0, _host);
+	_uri.insert(0, _is_ssl ? "https://" : "http://");
+	string _bind_url((string) this->configuration()["zapata"]["rest"]["bind_url"]);
 
-	if (_host.length() == 0 || _uri.find((string) this->configuration()["zapata"]["rest"]["bind_url"]) != string::npos) {
+	if (_host.length() == 0 || _uri.find(_bind_url) != string::npos) {
+		zapata::replace(_uri, _bind_url, "");
+		_req->url(_uri);
 		this->process(_req, _rep);
 	}
 	else {

@@ -8,6 +8,9 @@ namespace zapata {
 		ERRBodyEntityWrongContentType = 2,
 		ERRRequiredField = 3,
 		ERRFileNotFound = 4,
-		ERRFilePermissions = 5
+		ERRFilePermissions = 5,
+		ERRResourceNotFound = 6,
+		ERRResourceIsEmpty = 7,
+		ERRResourceDuplicate = 8
 	};
 }

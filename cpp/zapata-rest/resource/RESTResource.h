@@ -45,6 +45,7 @@ namespace zapata {
 			bool matches(string _url);
 
 			void invoke(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
+			void invoke(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl = false);
 			void invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
 
 			regex_t* pattern();

@@ -9,6 +9,6 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	void fromparams(HTTPReq& _in, JSONObj& _out, zapata::RESTfulType _resource_type = zapata::RESTfulResource);
+	void fromparams(HTTPReq& _in, JSONObj& _out, zapata::RESTfulType _resource_type = zapata::RESTfulResource, bool _regexp = false);
 
 }

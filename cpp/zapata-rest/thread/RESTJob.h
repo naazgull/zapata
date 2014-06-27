@@ -2,6 +2,10 @@
 
 #include <thread/Job.h>
 #include <api/RESTPool.h>
+#include <queue>
+
+using namespace std;
+using namespace __gnu_cxx;
 
 namespace zapata {
 
@@ -17,7 +21,7 @@ namespace zapata {
 			void pool(RESTPool* _pool);
 
 		private:
-			int __cur_fd;
+			queue<int> __cur_fd;
 			RESTPool* __pool;
 	};
 
