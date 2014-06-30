@@ -11,7 +11,7 @@ void zapata::RESTStore::get(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTStore::put(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP201);
+	_rep->status(zapata::HTTP202);
 }
 
 void zapata::RESTStore::post(HTTPReq& _req, HTTPRep& _rep) {

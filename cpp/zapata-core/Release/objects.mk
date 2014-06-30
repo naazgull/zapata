@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -ldl -lmagic
+LIBS := -ldl -lmagic -lz
 

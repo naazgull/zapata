@@ -11,7 +11,7 @@ void zapata::RESTDocument::get(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTDocument::put(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP201);
+	_rep->status(zapata::HTTP202);
 }
 
 void zapata::RESTDocument::post(HTTPReq& _req, HTTPRep& _rep) {
@@ -19,7 +19,7 @@ void zapata::RESTDocument::post(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTDocument::remove(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP201);
+	_rep->status(zapata::HTTP202);
 }
 
 void zapata::RESTDocument::head(HTTPReq& _req, HTTPRep& _rep) {
@@ -27,5 +27,5 @@ void zapata::RESTDocument::head(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTDocument::patch(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP201);
+	_rep->status(zapata::HTTP202);
 }

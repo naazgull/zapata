@@ -29,6 +29,8 @@ class JSONLexer: public JSONLexerBase
         void print();
         void preCode();     // re-implement this function for code that must 
                             // be exec'ed before the patternmatching starts
+        void postCode(zapata::JSONLexerBase::PostEnum__);     // re-implement this function for code that must
+                            // be exec'ed before the patternmatching starts
 };
 
 // $insert scannerConstructors
@@ -49,6 +51,11 @@ inline int JSONLexer::lex()
 }
 
 inline void JSONLexer::preCode() 
+{
+    // optionally replace by your own code
+}
+
+inline void JSONLexer::postCode(zapata::JSONLexerBase::PostEnum__ a)
 {
     // optionally replace by your own code
 }

@@ -4,16 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../resource/UserExchangeToken.cpp \
 ../resource/UserLogin.cpp \
 ../resource/UsersCollection.cpp \
 ../resource/UsersDocument.cpp 
 
 OBJS += \
+./resource/UserExchangeToken.o \
 ./resource/UserLogin.o \
 ./resource/UsersCollection.o \
 ./resource/UsersDocument.o 
 
 CPP_DEPS += \
+./resource/UserExchangeToken.d \
 ./resource/UserLogin.d \
 ./resource/UsersCollection.d \
 ./resource/UsersDocument.d 

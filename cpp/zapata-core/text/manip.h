@@ -21,4 +21,8 @@ namespace zapata {
 
 	void normalize_path(string& _in_out, bool _with_trailing);
 
+	void cipher(string _in, string _key, string& _out);
+	void decipher(string _in, string _key, string& _out);
+	void encrypt(string& _out, string _in, string _key);
+	void decrypt(string& _out, string _in, string _key);
 }

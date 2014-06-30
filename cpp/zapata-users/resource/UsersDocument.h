@@ -13,6 +13,7 @@ namespace zapata {
 			virtual void put(HTTPReq& _req, HTTPRep& _rep);
 			virtual void remove(HTTPReq& _req, HTTPRep& _rep);
 			virtual void head(HTTPReq& _req, HTTPRep& _rep);
+			virtual void patch(HTTPReq& _req, HTTPRep& _rep);
 
 	};
 

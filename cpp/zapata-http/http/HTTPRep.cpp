@@ -4,7 +4,7 @@
 #include <exceptions/CastException.h>
 #include <exceptions/NoHeaderNameException.h>
 
-zapata::HTTPRepRef::HTTPRepRef() : __name(NULL) {
+zapata::HTTPRepRef::HTTPRepRef() : __name(NULL), __status(zapata::HTTP100) {
 }
 
 zapata::HTTPRepRef::~HTTPRepRef() {

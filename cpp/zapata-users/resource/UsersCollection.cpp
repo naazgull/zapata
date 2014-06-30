@@ -55,7 +55,7 @@ void zapata::UsersCollection::get(HTTPReq& _req, HTTPRep& _rep) {
 	zapata::tostr(_text, _out);
 	_rep->status(zapata::HTTP200);
 	_rep->body(_text);
-	_rep << "Content-Type" << "application/json" << "Content-Length" << _text.length();
+	_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 }
 
 void zapata::UsersCollection::post(HTTPReq& _req, HTTPRep& _rep) {
@@ -160,5 +160,5 @@ void zapata::UsersCollection::head(HTTPReq& _req, HTTPRep& _rep) {
 	string _text;
 	zapata::tostr(_text, _out);
 	_rep->status(zapata::HTTP200);
-	_rep << "Content-Type" << "application/json" << "Content-Length" << _text.length();
+	_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 }

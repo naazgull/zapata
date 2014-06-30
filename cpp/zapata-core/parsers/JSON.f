@@ -26,7 +26,7 @@
 //%debug
 %no-lines
 
-%x string escaped unicode number
+%x string string_single escaped unicode number
 
 %%
 
@@ -48,6 +48,9 @@
 \" {
 	begin(StartCondition__::string);
 }
+\' {
+	begin(StartCondition__::string_single);
+}
 <number>{
 	[0-9\.]* {
 		begin(StartCondition__::INITIAL);
@@ -65,10 +68,6 @@
 		std::string _out(matched());
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
-
-		// echo();
-		// std::cout << std::endl;
-
 		begin(StartCondition__::INITIAL);
 		return 257;
 	}
@@ -80,6 +79,26 @@
 		begin(StartCondition__::escaped);
 	}
 	[^\\"] {
+		more();
+	}
+}
+<string_single>{
+	\' {
+
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		setMatched(_out);
+		begin(StartCondition__::INITIAL);
+		return 257;
+	}
+	\\   {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		setMatched(_out);
+		more();
+		begin(StartCondition__::escaped);
+	}
+	[^\\'] {
 		more();
 	}
 }

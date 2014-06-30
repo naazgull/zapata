@@ -179,7 +179,6 @@ namespace zapata {
 			void body(string);
 			string& query();
 			void query(string);
-			string& host();
 			string& header(const char* _idx);
 			string& param(const char* _idx);
 			str_map<string*>& params();

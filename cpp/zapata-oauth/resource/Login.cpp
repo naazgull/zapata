@@ -57,16 +57,18 @@ void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 			_token_body << "grant_type" << "user_code" << "client_id" << (string) _params["id"] << "client_secret" << (string) _params["secret"] << "code" << _code;
 			zapata::tostr(_token_body_s, _token_body);
 
+			_redirect.insert(0, this->configuration()["zapata"]["rest"]["bind_url"]);
+
 			zapata::HTTPReq _token_req;
 			_token_req << "Content-Length" << (long) _token_body_s.length();
 			_token_req->method(zapata::HTTPPost);
 			_token_req->body(_token_body_s);
 
 			zapata::HTTPRep _token_rep;
-
 			this->invoke(_redirect, _token_req, _token_rep);
 
 			string _token = _token_rep->body();
+			cout << _token << endl << flush;
 			_rep->status(zapata::HTTP200);
 			_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _token.length();
 			_rep->body(_token);

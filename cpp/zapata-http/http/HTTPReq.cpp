@@ -4,7 +4,7 @@
 #include <exceptions/CastException.h>
 #include <exceptions/NoHeaderNameException.h>
 
-zapata::HTTPReqRef::HTTPReqRef() : __name(NULL) {
+zapata::HTTPReqRef::HTTPReqRef() : __name(NULL), __method(zapata::HTTPGet) {
 }
 
 zapata::HTTPReqRef::~HTTPReqRef() {

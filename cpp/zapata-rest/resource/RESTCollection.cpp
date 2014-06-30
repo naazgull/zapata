@@ -15,7 +15,7 @@ void zapata::RESTCollection::put(HTTPReq& _req, HTTPRep& _rep) {
 }
 
 void zapata::RESTCollection::post(HTTPReq& _req, HTTPRep& _rep) {
-	_rep->status(zapata::HTTP201);
+	_rep->status(zapata::HTTP202);
 }
 
 void zapata::RESTCollection::remove(HTTPReq& _req, HTTPRep& _rep) {
