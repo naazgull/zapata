@@ -20,9 +20,9 @@ bool zapata::UserLogin::authenticate(string _id, string _secret, string& _out_co
 
 	mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) this->configuration()["zapata"]["mongodb"]["address"]);
 	string _collection((string) this->configuration()["zapata"]["mongodb"]["db"]);
-	_collection.insert(_collection.length(), this->configuration()["zapata_users"]["mongodb"]["collection"]);
+	_collection.insert(_collection.length(), "." + ((string) this->configuration()["zapata_users"]["mongodb"]["collection"]));
 
-	unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << _id << "secret" << _secret));
+	unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << _id << "password" << _secret));
 	_exists = _ptr->more();
 	_ptr->decouple();
 	 (*_conn)->killCursor(_ptr->getCursorId());
@@ -30,6 +30,10 @@ bool zapata::UserLogin::authenticate(string _id, string _secret, string& _out_co
 
 	_conn->done();
 	delete _conn;
+
+	if (_exists) {
+		zapata::generate_hash(_out_code);
+	}
 
 	return _exists;
 }

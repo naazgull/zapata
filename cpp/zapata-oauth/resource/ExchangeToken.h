@@ -16,8 +16,8 @@ namespace zapata {
 			virtual void get(HTTPReq& _req, HTTPRep& _rep);
 			virtual void post(HTTPReq& _req, HTTPRep& _rep);
 
-			virtual bool usrtoken(string _id, string _secret, string _code, string& _out_token) = 0;
-			virtual bool apptoken(string _id, string _secret, string _code, string& _out_token) = 0;
+			virtual bool usrtoken(string _id, string _secret, string _code, zapata::JSONObj& _out_token) = 0;
+			virtual bool apptoken(string _id, string _secret, string _code, zapata::JSONObj& _out_token) = 0;
 
 	};
 

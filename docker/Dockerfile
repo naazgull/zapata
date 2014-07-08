@@ -3,10 +3,12 @@ MAINTAINER Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
 
 # install zapata from Launchpad PPA
 RUN apt-get -qq update
+RUN apt-get -qqy upgrade
+RUN apt-get -qqy dist-upgrade
 RUN echo "deb http://ppa.launchpad.net/dfz-team/zapata/ubuntu trusty main" > /etc/apt/sources.list.d/dfz-team-zapata-trusty.list
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FEDBD267
 RUN apt-get -qq update
-RUN apt-get -qqy install nginx sendmail zapata-rest-server 
+RUN apt-get -qqy install nginx sendmail zapata-rest-server mongodb-clients mongodb-dev
 RUN mkdir -p /etc/zapata/backend-available
 RUN mkdir -p /etc/zapata/backend-enabled
 RUN mkdir -p /etc/zapata/conf.d

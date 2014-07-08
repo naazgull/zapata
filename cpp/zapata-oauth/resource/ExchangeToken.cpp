@@ -23,8 +23,7 @@ void zapata::ExchangeToken::get(HTTPReq& _req, HTTPRep& _rep) {
 	assertz(_req->param("code").length() != 0, "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 	assertz(_grant_type == string("user_code") || _req->param("redirect_uri").length() != 0, "Parameter 'redirect_uri' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
-	string _token;
-
+	zapata::JSONObj _token;
 	bool _has_token = (_grant_type == string("user_code") && this->usrtoken(_req->param("client_id"), _req->param("client_secret"), _req->param("code"), _token)) || (_grant_type == string("autorization_code") && this->apptoken(_req->param("client_id"), _req->param("client_secret"), _req->param("code"), _token));
 
 	string _redirect_uri(_req->param("redirect_uri"));
@@ -41,7 +40,7 @@ void zapata::ExchangeToken::get(HTTPReq& _req, HTTPRep& _rep) {
 		}
 		else {
 			_redirect_uri.insert(_redirect_uri.length(), "access_token=");
-			_redirect_uri.insert(_redirect_uri.length(), _token);
+			_redirect_uri.insert(_redirect_uri.length(), _token["access_token"]);
 		}
 		_rep->status(zapata::HTTP307);
 		_req << "Location" << _redirect_uri;
@@ -49,11 +48,11 @@ void zapata::ExchangeToken::get(HTTPReq& _req, HTTPRep& _rep) {
 	else {
 		assertz(_has_token, "Unauthorized code", zapata::HTTP401, zapata::ERRGeneric);
 
-		_token.insert(0, "{ \"access_token\" : \"");
-		_token.insert(_token.length(), "\" }");
+		string _body;
+		zapata::tostr(_body, _token);
 		_rep->status(zapata::HTTP200);
-		_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _token.length();
-		_rep->body(_token);
+		_rep << "Content-Type" << "application/json" << "Content-Length" << (size_t) _body.length();
+		_rep->body(_body);
 	}
 }
 
@@ -77,10 +76,10 @@ void zapata::ExchangeToken::post(HTTPReq& _req, HTTPRep& _rep) {
 	assertz(!!_params["grant_type"], "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 	assertz(!!_params["client_id"], "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 	assertz(!!_params["client_secret"], "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-	assertz(!!_params["code"], "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+	assertz(!!_params["code"], "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 	assertz(_grant_type == string("user_code") || !!_params["redirect_uri"], "Parameter 'redirect_uri' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
-	string _token;
+	zapata::JSONObj _token;
 
 	bool _has_token = (_grant_type == string("user_code") && this->usrtoken((string) _params["client_id"], (string) _params["client_secret"], (string) _params["code"], _token)) || (_grant_type == string("autorization_code") && this->apptoken((string) _params["client_id"], (string) _params["client_secret"], (string) _params["code"], _token));
 
@@ -98,7 +97,7 @@ void zapata::ExchangeToken::post(HTTPReq& _req, HTTPRep& _rep) {
 		}
 		else {
 			_redirect_uri.insert(_redirect_uri.length(), "access_token=");
-			_redirect_uri.insert(_redirect_uri.length(), _token);
+			_redirect_uri.insert(_redirect_uri.length(), _token["access_token"]);
 		}
 		_rep->status(zapata::HTTP303);
 		_req << "Location" << _redirect_uri;
@@ -106,11 +105,11 @@ void zapata::ExchangeToken::post(HTTPReq& _req, HTTPRep& _rep) {
 	else {
 		assertz(_has_token, "Unauthorized code", zapata::HTTP401, zapata::ERRGeneric);
 
-		_token.insert(0, "{ \"access_token\" : \"");
-		_token.insert(_token.length(), "\" }");
+		string _body;
+		zapata::tostr(_body, _token);
 		_rep->status(zapata::HTTP200);
-		_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _token.length();
-		_rep->body(_token);
+		_rep << "Content-Type" << "application/json" << "Content-Length" << (size_t) _body.length();
+		_rep->body(_body);
 	}
 
 }

@@ -60,7 +60,7 @@ void zapata::Login::post(HTTPReq& _req, HTTPRep& _rep) {
 			_redirect.insert(0, this->configuration()["zapata"]["rest"]["bind_url"]);
 
 			zapata::HTTPReq _token_req;
-			_token_req << "Content-Length" << (long) _token_body_s.length();
+			_token_req << "Content-Length" << (long) _token_body_s.length() << "Content-Type" << "application/json";
 			_token_req->method(zapata::HTTPPost);
 			_token_req->body(_token_body_s);
 

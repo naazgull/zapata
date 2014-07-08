@@ -9,8 +9,8 @@ namespace zapata {
 			UserExchangeToken();
 			virtual ~UserExchangeToken();
 
-			virtual bool usrtoken(string _id, string _secret, string _code, string& _out_token);
-			virtual bool apptoken(string _id, string _secret, string _code, string& _out_token);
+			virtual bool usrtoken(string _id, string _secret, string _code, zapata::JSONObj& _out_token);
+			virtual bool apptoken(string _id, string _secret, string _code, zapata::JSONObj& _out_token);
 
 	};
 
