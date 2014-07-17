@@ -8,10 +8,10 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	class Connect: public RESTResource {
+	class ConnectClient: public RESTResource {
 		public:
-			Connect();
-			virtual ~Connect();
+			ConnectClient();
+			virtual ~ConnectClient();
 
 			virtual void get(HTTPReq& _req, HTTPRep& _rep);
 			virtual void post(HTTPReq& _req, HTTPRep& _rep);

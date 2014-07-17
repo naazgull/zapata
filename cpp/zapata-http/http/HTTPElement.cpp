@@ -121,6 +121,60 @@ void zapata::fromstr(string& _in, HTTPMethod* _out) {
 	}
 }
 
+void zapata::init(HTTPReq& _req) {
+	time_t _rawtime = time(NULL);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	_ptm.tm_hour += 1;
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	string _url(_req->url());
+	if (_url != "") {
+		size_t _b = _url.find("://") + 3;
+		size_t _e = _url.find("/", _b);
+		string _domain(_url.substr(_b, _e - _b));
+		string _path(_url.substr(_e));
+		_req >> zapata::params;
+		_req << "Host" << _domain;
+		_req->url(_path);
+	}
+
+	_req->method(zapata::HTTPGet);
+	_req <<
+		"Connection" << "close" <<
+		"User-Agent" << "zapata rest-ful server" <<
+		"Cache-Control" << "max-age=3600" <<
+		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
+		"Date" << string(_buffer_date);
+
+}
+
+void zapata::init(HTTPRep& _rep) {
+	time_t _rawtime = time(NULL);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	_ptm.tm_hour += 1;
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	_rep->status(zapata::HTTP404);
+	_rep <<
+		"Connection" << "close" <<
+		"Server" << "zapata rest-ful server" <<
+		"Cache-Control" << "max-age=3600" <<
+		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
+		"Date" << string(_buffer_date) <<
+		"Expires" << string(_buffer_expires);
+
+}
+
 zapata::HTTPElement::HTTPElement() {
 	this->__flags = 0;
 }

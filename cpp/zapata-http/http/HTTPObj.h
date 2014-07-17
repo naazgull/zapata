@@ -240,4 +240,7 @@ namespace zapata {
 
 	typedef smart_ptr<HTTPReqRef> HTTPReq;
 	typedef smart_ptr<HTTPRepRef> HTTPRep;
+
+	void init(HTTPReq& _out);
+	void init(HTTPRep& _out);
 }

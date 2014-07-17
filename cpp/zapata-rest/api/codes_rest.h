@@ -11,6 +11,7 @@ namespace zapata {
 		ERRFilePermissions = 5,
 		ERRResourceNotFound = 6,
 		ERRResourceIsEmpty = 7,
-		ERRResourceDuplicate = 8
+		ERRResourceDuplicate = 8,
+		ERRConfigParameterNotFound = 9
 	};
 }
