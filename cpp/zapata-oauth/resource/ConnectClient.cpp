@@ -30,7 +30,7 @@ void zapata::ConnectClient::get(HTTPReq& _req, HTTPRep& _rep) {
 	string _client_secret(_client_config["client_secret"]);
 	string _type(_client_config["type"]);
 
-	assertz(!!this->configuration()["zapata"]["auth"]["endpoints"][_type], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+	assertz(!!this->configuration()["zapata"]["auth"]["endpoints"][_type], "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 	zapata::JSONObj _endpoint_config(this->configuration()["zapata"]["auth"]["endpoints"][_type]);
 
 	string _auth_endpoint(_endpoint_config["authorization"]);

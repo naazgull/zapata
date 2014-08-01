@@ -17,7 +17,6 @@ void zapata::RESTPool::configuration(JSONObj* _conf) {
 }
 
 void zapata::RESTPool::add(RESTResource* _res) {
-	_res->configuration(this->__configuration);
 	_res->pool(this);
 	this->__resources.push_back(_res);
 }

@@ -4,14 +4,20 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../resource/CollectCode.cpp \
+../resource/ConnectClient.cpp \
 ../resource/ExchangeToken.cpp \
 ../resource/Login.cpp 
 
 OBJS += \
+./resource/CollectCode.o \
+./resource/ConnectClient.o \
 ./resource/ExchangeToken.o \
 ./resource/Login.o 
 
 CPP_DEPS += \
+./resource/CollectCode.d \
+./resource/ConnectClient.d \
 ./resource/ExchangeToken.d \
 ./resource/Login.d 
 

@@ -56,7 +56,7 @@ namespace zapata {
 
 		private:
 			regex_t* __url_pattern;
-			JSONObj* __configuration;
+			//JSONObj* __configuration;
 			RESTPool* __pool;
 	};
 

@@ -19,7 +19,7 @@ void sigsev(int sig) {
 void stop(int sig) {
 }
 
-#define CYCLES 100
+#define CYCLES 1
 #define OBJECTS 100
 #define TEST_JSON
 //#define TEST_HTTP
@@ -50,27 +50,24 @@ int main(int argc, char* argv[]) {
 #ifdef TEST_SOCK
 #endif
 #ifdef TEST_JSON
-		{
-			zapata::JSONObj obj;
-			ifstream f;
-			f.open("/home/pf/some.json");
-			zapata::fromfile(f, obj);
-			f.close();
+		zapata::JSONObj obj;
+		ifstream f;
+		f.open("/home/pf/Develop/COOKING/event-checkin/cpp/event-checkin.conf");
+		zapata::fromfile(f, obj);
+		f.close();
 
-			zapata::JSONObj obj2(obj["elements"][0]);
+		obj << zapata::pretty;
+		cout << obj << endl << flush;
+		{
+
+			zapata::JSONObj obj2(obj["zapata"]["core"]);
 			cout << obj2 << endl << flush;
 
-			zapata::JSONArr obj3(obj["elements"]);
+			zapata::JSONObj obj3(obj["zapata"]["auth"]["clients"]);
 			cout << obj3 << endl << flush;
 
 		}
-		{
-			zapata::JSONArr obj;
-			ifstream f;
-			f.open("/home/pf/someother.json");
-			zapata::fromfile(f, obj);
-			f.close();
-		}
+		cout << obj << endl << flush;
 #endif
 #ifdef TEST_HTTP
 		{

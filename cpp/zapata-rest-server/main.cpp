@@ -88,6 +88,7 @@ int main(int argc, char* argv[]) {
 
 	__thread_id = pthread_self();
 	pthread_key_create(&zapata::__memory_key, NULL);
+	pthread_key_create(&zapata::__configuration_key, NULL);
 
 	zapata::RESTServer _server(_conf_file);
 	__semid = _server.semid();

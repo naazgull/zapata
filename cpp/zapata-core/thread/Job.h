@@ -15,6 +15,8 @@ typedef int semid_t;
 
 namespace zapata {
 
+	extern pthread_key_t __configuration_key;
+
 	class Job {
 		public:
 			Job(string _key_file_path);

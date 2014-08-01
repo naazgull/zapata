@@ -11,7 +11,7 @@ zapata::RESTJob::~RESTJob() {
 }
 
 void zapata::RESTJob::run() {
-	bool _debug = !!this->__pool->configuration()["zapata"]["rest"]["debug"];
+	bool _debug = !!this->configuration()["zapata"]["rest"]["debug"];
 
 	for (; true; ) {
 		this->wait();

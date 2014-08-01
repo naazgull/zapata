@@ -2,6 +2,7 @@
 
 #include <api/RESTPool.h>
 
+
 zapata::RESTResource::RESTResource(string _url_pattern) {
 	this->__url_pattern = new regex_t();
 	if (regcomp(this->__url_pattern, _url_pattern.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
@@ -89,11 +90,11 @@ regex_t* zapata::RESTResource::pattern() {
 }
 
 zapata::JSONObj& zapata::RESTResource::configuration() {
-	return *this->__configuration;
+	return *static_cast<zapata::JSONObj*>(pthread_getspecific(zapata::__configuration_key));
 }
 
 void zapata::RESTResource::configuration(JSONObj* _conf) {
-	this->__configuration = _conf;
+	//this->__configuration = _conf;
 }
 
 zapata::RESTPool& zapata::RESTResource::pool() {

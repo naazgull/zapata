@@ -3,6 +3,10 @@
 #include <fstream>
 #include <parsers/json.h>
 
+namespace zapata {
+	pthread_key_t __configuration_key;
+}
+
 zapata::Job::Job(string _key_file_path) : __idx(-1), __max_idx(-1), __sem(-1), __skey(_key_file_path) {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
@@ -22,9 +26,10 @@ zapata::Job::~Job(){
 	pthread_exit(NULL);
 }
 
-void* zapata::Job::start(void* thread) {
-	Job* running = static_cast<Job*>(thread);
-	running->run();
+void* zapata::Job::start(void* _thread) {
+	Job* _running = static_cast<Job*>(_thread);
+	pthread_setspecific(zapata::__configuration_key, &_running->__configuration);
+	_running->run();
 	return NULL;
 }
 

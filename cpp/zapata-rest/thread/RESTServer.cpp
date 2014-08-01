@@ -1,10 +1,23 @@
-#include <thread/RESTServer.h>
-
+#include <base/smart_ptr.h>
+#include <base/str_map.h>
 #include <dlfcn.h>
-#include <resource/FileUpload.h>
+#include <exceptions/ClosedException.h>
+#include <exceptions/InterruptedException.h>
+#include <json/JSONObj.h>
+#include <log/log.h>
 #include <resource/FileRemove.h>
+#include <resource/FileUpload.h>
+#include <sys/sem.h>
+#include <text/convert.h>
+#include <thread/RESTServer.h>
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <vector>
 
 zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
+	this->__configuration << zapata::pretty;
+
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
 		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
 	}
