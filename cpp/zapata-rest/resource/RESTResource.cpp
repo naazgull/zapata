@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -20,15 +22,15 @@
 #include <api/RESTPool.h>
 
 
-zapata::RESTResource::RESTResource(string _url_pattern) {
-	this->__url_pattern = new regex_t();
-	if (regcomp(this->__url_pattern, _url_pattern.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
+zapata::RESTResource::RESTResource() {
+//	this->__url_pattern = new regex_t();
+//	if (regcomp(this->__url_pattern, _url_pattern.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+//	}
 	this->__pool = NULL;
 }
 
 zapata::RESTResource::~RESTResource() {
-	delete this->__url_pattern;
+//	delete this->__url_pattern;
 }
 
 void zapata::RESTResource::get(HTTPReq& _req, HTTPRep& _rep) {
@@ -134,11 +136,9 @@ void zapata::RESTResource::invoke(string _url, HTTPReq& _req, HTTPRep& _rep, boo
 	_req >> zapata::params;
 	_req << "Host" << _domain;
 	_req->url(_path);
-	this->__pool->invoke(_req, _rep, _is_ssl);
 }
 
 void zapata::RESTResource::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
-	this->__pool->invoke(_req, _rep, _is_ssl);
 }
 
 void zapata::RESTResource::invoke(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl) {

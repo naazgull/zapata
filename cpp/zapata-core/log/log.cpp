@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -24,11 +26,11 @@ namespace zapata {
 	ostream* log_fd = NULL;
 
 	const char* log_lvl_names[] = {
-		"\033[1;34m\033[4;34mlog\033[0m    | ",
+		"\033[1;34m\033[4;35msys\033[0m    | ",
 		"\033[1;31m\033[4;31merror\033[0m  | ",
 		"\033[1;33m\033[4;33mwarning\033[0m| ",
-		"\033[1;32m\033[4;32minfo\033[0m   | ",
-		"\033[1;35m\033[4;35mdebug\033[0m  | "
+		"\033[1;32m\033[4;34minfo\033[0m   | ",
+		"\033[1;35m\033[4;36mdebug\033[0m  | "
 	};
 }
 
@@ -36,6 +38,7 @@ void zapata::log(string _text, zapata::LogLevel _level) {
 	if (_level <= zapata::log_lvl) {
 		string _time;
 		zapata::tostr(_time, time(NULL), "%F %T");
+		zapata::replace(_text, "\n", "\n       | ");
 		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[1;37m" << _time << "\033[0m | " << _text << endl << flush;
 	}
 }

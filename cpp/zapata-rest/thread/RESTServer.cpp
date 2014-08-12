@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -67,10 +69,10 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 	}
 
 	if (!!this->configuration()["zapata"]["rest"]["uploads"]["upload_controller"]) {
-		zapata::FileUpload* _file_upload = new zapata::FileUpload();
-		this->__pool.add(_file_upload);
-		zapata::FileRemove* _file_remove = new zapata::FileRemove();
-		this->__pool.add(_file_remove);
+//		zapata::FileUpload* _file_upload = new zapata::FileUpload();
+//		this->__pool.add(_file_upload);
+//		zapata::FileRemove* _file_remove = new zapata::FileRemove();
+//		this->__pool.add(_file_remove);
 	}
 
 	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];

@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -25,23 +27,13 @@
 using namespace std;
 using namespace __gnu_cxx;
 
-#define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
-
 namespace zapata {
-
-	enum RESTfulType {
-		RESTfulResource = 0,
-		RESTfulDocument = 1,
-		RESTfulCollection = 2,
-		RESTfulStore = 3,
-		RESTfulController = 4
-	};
 
 	class RESTPool;
 
 	class RESTResource {
 		public:
-			RESTResource(string _url_pattern);
+			RESTResource();
 			virtual ~RESTResource();
 
 			virtual void get(HTTPReq& _req, HTTPRep& _rep);

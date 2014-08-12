@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify

@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -158,6 +160,13 @@ namespace zapata {
 				__stream_type::clear();
 			}
 
+			bool ready() {
+				fd_set sockset;
+				FD_ZERO(&sockset);
+				FD_SET(__buf.get_socket(), &sockset);
+				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
+			}
+
 			__buf_type& buffer() {
 				return this->__buf;
 			}
@@ -239,6 +248,13 @@ namespace zapata {
 					::close(__buf.get_socket());
 				}
 				__stream_type::clear();
+			}
+
+			bool ready() {
+				fd_set sockset;
+				FD_ZERO(&sockset);
+				FD_SET(__buf.get_socket(), &sockset);
+				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
 			}
 
 			__buf_type& buffer() {

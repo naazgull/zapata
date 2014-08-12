@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -21,14 +23,6 @@
 #include <thread/RESTServer.h>
 
 #include <api/RESTPool.h>
-
-#include <resource/RESTCollection.h>
-#include <resource/RESTController.h>
-#include <resource/RESTDocument.h>
-#include <resource/RESTResource.h>
-#include <resource/RESTStore.h>
-#include <resource/FileRemove.h>
-#include <resource/FileUpload.h>
 
 #include <http/requester.h>
 #include <http/params.h>

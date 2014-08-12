@@ -1,4 +1,6 @@
 /*
+    Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+    Copyright (c) 2014 Pedro (n@zgul)Figueiredo
     This file is part of Zapata.
 
     Zapata is free software: you can redistribute it and/or modify
@@ -45,7 +47,7 @@ void zapata::RESTJob::run() {
 			for (; true; ) {
 				try  {
 					zapata::fromstream(_cs, _req);
-					this->__pool->process(_req, _rep);
+					this->__pool->trigger(_req, _rep);
 
 					string _origin = _req->header("Origin");
 					if (_origin.length() != 0) {

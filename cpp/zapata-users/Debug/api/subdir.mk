@@ -4,13 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../api/zapata-users.cpp 
+../api/zapata-api-users.cpp 
 
 OBJS += \
-./api/zapata-users.o 
+./api/zapata-api-users.o 
 
 CPP_DEPS += \
-./api/zapata-users.d 
+./api/zapata-api-users.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

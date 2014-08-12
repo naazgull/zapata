@@ -1,28 +1,77 @@
 /*
-    This file is part of Zapata.
+ Author: Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+ Copyright (c) 2014 Pedro (n@zgul)Figueiredo
+ This file is part of Zapata.
 
-    Zapata is free software: you can redistribute it and/or modify
-    it under the terms of the Lesser GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+ Zapata is free software: you can redistribute it and/or modify
+ it under the terms of the Lesser GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-    Zapata is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ Zapata is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the Lesser GNU General Public License
-    along with Zapata.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ You should have received a copy of the Lesser GNU General Public License
+ along with Zapata.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <api/RESTPool.h>
 
 #include <http/requester.h>
 
-zapata::RESTPool::RESTPool() : __configuration(NULL) {
+zapata::RESTPool::RESTPool() :
+	__configuration(NULL) {
+	this->__default_get = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_put = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_post = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_delete = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_head = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_trace = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP200);
+
+		string _body;
+		zapata::tostr(_body, _req);
+		_rep->body(_body);
+		_rep  << "Content-Length" << (long) _body.length();
+	};
+	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP200);
+
+		string _origin = _req->header("Origin");
+		if (_origin.length() != 0) {
+			_rep
+				<< "Access-Control-Allow-Origin" << _origin
+			                    << "Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY"
+			                    << "Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS
+			                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS
+			                    << "Access-Control-Max-Age" << "1728000";
+		}
+	};
+	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+	this->__default_connect = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_rep->status(zapata::HTTP405);
+	};
+
 }
 
 zapata::RESTPool::~RESTPool() {
+	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
+		delete _i->first;
+	}
 }
 
 zapata::JSONObj& zapata::RESTPool::configuration() {
@@ -33,124 +82,121 @@ void zapata::RESTPool::configuration(JSONObj* _conf) {
 	this->__configuration = _conf;
 }
 
-void zapata::RESTPool::add(RESTResource* _res) {
-	_res->pool(this);
-	this->__resources.push_back(_res);
-}
+void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
 
-void zapata::RESTPool::init(HTTPRep& _rep) {
-	time_t _rawtime = time(NULL);
-	struct tm _ptm;
-	char _buffer_date[80];
-	localtime_r(&_rawtime, &_ptm);
-	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+	vector<zapata::RESTHandler> _handlers;
 
-	char _buffer_expires[80];
-	_ptm.tm_hour += 1;
-	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+	_handlers[zapata::HTTPGet] =  this->__default_get;
+	_handlers[zapata::HTTPPut] = this->__default_put;
+	_handlers[zapata::HTTPPost] = this->__default_post;
+	_handlers[zapata::HTTPDelete] =  this->__default_delete;
+	_handlers[zapata::HTTPHead] =  this->__default_head;
+	_handlers[zapata::HTTPTrace] = this->__default_trace;
+	_handlers[zapata::HTTPOptions] = this->__default_options;
+	_handlers[zapata::HTTPPatch] = this->__default_patch;
+	_handlers[zapata::HTTPConnect] = this->__default_connect;
 
-	_rep->status(zapata::HTTP404);
-	_rep <<
-		"Connection" << "close" <<
-		"Server" << "zapata rest-ful server" <<
-		"Cache-Control" << "max-age=3600" <<
-		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
-		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires);
-
-}
-
-void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
-	this->init(_rep);
-	for (vector<RESTResource*>::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
-		if ((*_i)->matches(_req->url())) {
-			if (!(*_i)->allowed(_req)) {
-				zapata::JSONObj _body;
-				_body
-					<< "error" << true
-					<< "message" << "valid credentials are required to access this resource"
-					<< "code" << 401;;
-
-
-				string _text;
-				zapata::tostr(_text, _body);
-				_rep->status(zapata::HTTP401);
-				_rep->body(_text);
-				_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+	for (size_t _i = 0; _i != _events.size(); _i++) {
+		switch (_events[_i]) {
+			case zapata::HTTPGet : {
+				_handlers[zapata::HTTPGet] =  (_resource_type == zapata::RESTfulController ? this->__default_get : _handler);
+				break;
 			}
-			else {
-				try {
-					switch(_req->method()) {
-						case zapata::HTTPGet : {
-							(*_i)->get(_req, _rep);
-							break;
-						}
-						case zapata::HTTPPut : {
-							(*_i)->put(_req, _rep);
-							break;
-						}
-						case zapata::HTTPPost : {
-							(*_i)->post(_req, _rep);
-							break;
-						}
-						case zapata::HTTPDelete : {
-							(*_i)->remove(_req, _rep);
-							break;
-						}
-						case zapata::HTTPHead : {
-							(*_i)->head(_req, _rep);
-							break;
-						}
-						case zapata::HTTPTrace : {
-							(*_i)->trace(_req, _rep);
-							break;
-						}
-						case zapata::HTTPOptions : {
-							(*_i)->options(_req, _rep);
-							break;
-						}
-						case zapata::HTTPPatch : {
-							(*_i)->patch(_req, _rep);
-							break;
-						}
-						case zapata::HTTPConnect : {
-							(*_i)->connect(_req, _rep);
-							break;
-						}
-					}
-				}
-				catch(zapata::AssertionException& _e) {
-					if (_e.status() > 399) {
-						zapata::JSONObj _body;
-						_body
-							<< "error" << true
-							<< "assertion_failed" << _e.description()
-							<< "message" << _e.what()
-							<< "code" << _e.code();;
-
-						string _text;
-						zapata::tostr(_text, _body);
-						_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
-						_rep->body(_text);
-					}
-
-					_rep->status((zapata::HTTPStatus) _e.status());
-
-					string _origin = _req->header("Origin");
-					if (_origin.length() != 0) {
-						_rep
-							<< "Access-Control-Allow-Origin" << _origin
-							<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
-					}
-
-				}
+			case zapata::HTTPPut : {
+				_handlers[zapata::HTTPPut] = (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore ? this->__default_put : _handler);
+				break;
 			}
-			break;
+			case zapata::HTTPPost : {
+				_handlers[zapata::HTTPPost] = (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection ? this->__default_post : _handler);
+				break;
+			}
+			case zapata::HTTPDelete : {
+				_handlers[zapata::HTTPDelete] = (_resource_type != zapata::RESTfulDocument ? this->__default_delete : _handler);
+				break;
+			}
+			case zapata::HTTPHead : {
+				_handlers[zapata::HTTPHead] = (_resource_type == zapata::RESTfulController ? this->__default_head : _handler);
+				break;
+			}
+			case zapata::HTTPPatch : {
+				_handlers[zapata::HTTPPatch] = (_resource_type != zapata::RESTfulDocument ? this->__default_patch : _handler);
+				break;
+			}
+			case zapata::HTTPConnect : {
+				_handlers[zapata::HTTPConnect] = _handler;
+				break;
+			}
+			default : {
+			}
+
 		}
 	}
+
+	this->__resources.insert(make_pair(_url_pattern, _handlers));
 }
 
-void zapata::RESTPool::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
+void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	vector<zapata::RESTHandler> _handlers;
+	_handlers[zapata::HTTPGet] = (_handler == NULL || _event != zapata::HTTPGet || (_resource_type == zapata::RESTfulController) ? this->__default_get : _handler);
+	_handlers[zapata::HTTPPut] = (_handler == NULL || _event != zapata::HTTPPut || (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore) ? this->__default_put : _handler);
+	_handlers[zapata::HTTPPost] = (_handler == NULL || _event != zapata::HTTPPost || (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection) ? this->__default_post : _handler);
+	_handlers[zapata::HTTPDelete] = (_handler == NULL || _event != zapata::HTTPDelete || (_resource_type != zapata::RESTfulDocument) ? this->__default_delete : _handler);
+	_handlers[zapata::HTTPHead] = (_handler == NULL || _event != zapata::HTTPHead || (_resource_type == zapata::RESTfulController) ? this->__default_head : _handler);
+	_handlers[zapata::HTTPTrace] = this->__default_trace;
+	_handlers[zapata::HTTPOptions] = this->__default_options;
+	_handlers[zapata::HTTPPatch] = (_handler == NULL || _event != zapata::HTTPPatch || (_resource_type != zapata::RESTfulDocument) ? this->__default_patch : _handler);
+	_handlers[zapata::HTTPConnect] = (_handler == NULL || _event != zapata::HTTPConnect ? this->__default_connect : _handler);
+
+	this->__resources.insert(make_pair(_url_pattern, _handlers));
+
+}
+
+void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9], zapata::RESTfulType _resource_type) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	vector<zapata::RESTHandler> _handlers;
+	_handlers[zapata::HTTPGet] = _handler_set[zapata::HTTPGet] == NULL ?  this->__default_get : _handler_set[zapata::HTTPGet];
+	_handlers[zapata::HTTPPut] = _handler_set[zapata::HTTPPut] == NULL ?  this->__default_put : _handler_set[zapata::HTTPPut];
+	_handlers[zapata::HTTPPost] = _handler_set[zapata::HTTPPost] == NULL ?  this->__default_post : _handler_set[zapata::HTTPPost];
+	_handlers[zapata::HTTPDelete] = _handler_set[zapata::HTTPDelete] == NULL ?  this->__default_delete : _handler_set[zapata::HTTPDelete];
+	_handlers[zapata::HTTPHead] = _handler_set[zapata::HTTPHead] == NULL ?  this->__default_head : _handler_set[zapata::HTTPHead];
+	_handlers[zapata::HTTPTrace] = this->__default_trace;
+	_handlers[zapata::HTTPOptions] = this->__default_options;
+	_handlers[zapata::HTTPPatch] = _handler_set[zapata::HTTPPatch] == NULL ?  this->__default_patch : _handler_set[zapata::HTTPPatch];
+	_handlers[zapata::HTTPConnect] = _handler_set[zapata::HTTPConnect] == NULL ?  this->__default_connect : _handler_set[zapata::HTTPConnect];
+
+	this->__resources.insert(make_pair(_url_pattern, _handlers));
+}
+
+void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect, zapata::RESTfulType _resource_type) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	vector<zapata::RESTHandler> _handlers;
+	_handlers[zapata::HTTPGet] = _get == NULL ?  this->__default_get : _get;
+	_handlers[zapata::HTTPPut] = _put == NULL ?  this->__default_put : _put;
+	_handlers[zapata::HTTPPost] = _post == NULL ?  this->__default_post : _post;
+	_handlers[zapata::HTTPDelete] = _delete == NULL ?  this->__default_delete : _delete;
+	_handlers[zapata::HTTPHead] = _head == NULL ?  this->__default_head : _head;
+	_handlers[zapata::HTTPTrace] = this->__default_trace;
+	_handlers[zapata::HTTPOptions] = this->__default_options;
+	_handlers[zapata::HTTPPatch] = _patch == NULL ?  this->__default_patch : _patch;
+	_handlers[zapata::HTTPConnect] = _connect == NULL ?  this->__default_connect : _connect;
+
+	this->__resources.insert(make_pair(_url_pattern, _handlers));
+}
+
+void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
 	_uri.insert(0, _host);
@@ -167,6 +213,87 @@ void zapata::RESTPool::invoke(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	}
 }
 
-/*extern "C" void populate(zapata::RESTPool& _pool) {
-}*/
+void zapata::RESTPool::trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
+	size_t _b = _url.find("://") + 3;
+	size_t _e = _url.find("/", _b);
+	string _domain(_url.substr(_b, _e - _b));
+	string _path(_url.substr(_e));
+	_req >> zapata::params;
+	_req << "Host" << _domain;
+	_req->url(_path);
+	this->trigger(_req, _rep, _is_ssl);
+}
+
+void zapata::RESTPool::trigger(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl) {
+	zapata::HTTPReq _req;
+	_req->method(_method);
+	this->trigger(_url, _req, _rep, _is_ssl);
+}
+
+void zapata::RESTPool::init(HTTPRep& _rep) {
+	time_t _rawtime = time(NULL);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	_ptm.tm_hour += 1;
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	_rep->status(zapata::HTTP404);
+	_rep <<
+	                    "Connection" << "close" <<
+	                    "Server" << "zapata rest-ful server" <<
+	                    "Cache-Control" << "max-age=3600" <<
+	                    "Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
+	                    "Date" << string(_buffer_date) <<
+	                    "Expires" << string(_buffer_expires);
+
+}
+
+void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
+	this->init(_rep);
+	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
+		if (regexec(_i->first, _req->url().c_str(), (size_t) (0), NULL, 0) == 0) {
+
+//				string _text;
+//				zapata::tostr(_text, JSON(
+//					"error" << true
+//					<< "message" << "valid credentials are required to access this resource"
+//					<< "code" << 401
+//				));
+//				_rep->status(zapata::HTTP401);
+//				_rep->body(_text);
+//				_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+
+			try {
+				_i->second[_req->method()](_req, _rep, this->configuration(), *this);
+			}
+			catch (zapata::AssertionException& _e) {
+				if (_e.status() > 399) {
+					string _text;
+					zapata::tostr(_text, JSON(
+					                    "error" << true
+					                                        << "assertion_failed" << _e.description()
+					                                        << "message" << _e.what()
+					                                        << "code" << _e.code()
+					                                        ));
+					_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+					_rep->body(_text);
+				}
+
+				_rep->status((zapata::HTTPStatus) _e.status());
+
+				string _origin = _req->header("Origin");
+				if (_origin.length() != 0) {
+					_rep
+					<< "Access-Control-Allow-Origin" << _origin
+					                    << "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+				}
+
+			}
+		}
+	}
+}
 
