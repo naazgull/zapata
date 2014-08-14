@@ -7,29 +7,26 @@
 	 */
 	{
 		_pool.on("^/name$",
-		                    //get
+		                    //--- GET ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //put
+		                    //--- PUT ---//
+		                    NULL,
+		                    //--- POST ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //post
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		                    },
-		                    //delete
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		                    },
-		                    //head
+		                    //--- DELETE ---//
+		                    NULL,
+		                    //--- HEAD ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
 		                    },
-		                    //trace
+		                    //--- TRACE ---//
 		                    NULL,
-		                    //options
+		                    //--- OPTIONS ---//
 		                    NULL,
-		                    //patch
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		                    },
-		                    //connect
+		                    //--- PATCH ---//
+		                    NULL,
+		                    //--- CONNECT ---//
 		                    NULL,
 		                    zapata::RESTfulCollection);
 	}
@@ -42,29 +39,92 @@
 	 */
 	{
 		_pool.on("^/name/([^/]+)$",
-		                    //get
+		                    //--- GET ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //put
+		                    //--- PUT ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //post
+		                    //--- POST ---//
+		                    NULL,
+		                    //--- DELETE ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //delete
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		                    },
-		                    //head
+		                    //--- HEAD ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
 		                    },
-		                    //trace
+		                    //--- TRACE ---//
 		                    NULL,
-		                    //options
+		                    //--- OPTIONS ---//
 		                    NULL,
-		                    //patch
+		                    //--- PATCH ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
-		                    //connect
+		                    //--- CONNECT ---//
 		                    NULL,
 		                    zapata::RESTfulDocument);
 	}
+	
+# Registering all handlers for a store
+
+	/*
+	 *  definition of handlers for the '/users' store
+	 *  registered as a Store
+	 */
+	{
+		_pool.on("^/name",
+		                    //--- GET ---//
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    },
+		                    //--- PUT ---//
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    },
+		                    //--- POST ---//
+		                    NULL,
+		                    //--- DELETE ---//
+		                    NULL,
+		                    //--- HEAD ---//
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		                    },
+		                    //--- TRACE ---//
+		                    NULL,
+		                    //--- OPTIONS ---//
+		                    NULL,
+		                    //--- PATCH ---//
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    },
+		                    //--- CONNECT ---//
+		                    NULL,
+		                    zapata::RESTfulStore);
+	}
+	
+# Registering all handlers for a controller
+
+	/*
+	 *  definition of handlers for the '/users' controller
+	 *  registered as a Controller
+	 */
+	{
+		_pool.on("^/name",
+		                    //--- GET ---//
+		                    NULL,
+		                    //--- PUT ---//
+		                    NULL,
+		                    //--- POST ---//
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    },
+		                    //--- DELETE ---//
+		                    NULL,
+		                    //--- HEAD ---//
+		                    NULL,
+		                    //--- TRACE ---//
+		                    NULL,
+		                    //--- OPTIONS ---//
+		                    NULL,
+		                    //--- PATCH ---//
+		                    NULL,
+		                    //--- CONNECT ---//
+		                    NULL,
+		                    zapata::RESTfulController);
+	}
+	
