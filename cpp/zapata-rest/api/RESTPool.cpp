@@ -201,13 +201,11 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTH
 	this->__resources.insert(make_pair(_url_pattern, _handlers));
 }
 
-void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, __INTERNAL_TRIGGER__) {
-	this->process(_req, _rep);
-}
-
 void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
+	size_t _port_idx = string::npos;
+	string _port((_port_idx = _host.find(":")) != string::npos ? _host.substr(_port_idx + 1) : "");
 	_uri.insert(0, _host);
 	_uri.insert(0, _is_ssl ? "https://" : "http://");
 	string _bind_url((string) this->configuration()["zapata"]["rest"]["bind_url"]);
@@ -215,6 +213,9 @@ void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 	if (_host.length() == 0 || _uri.find(_bind_url) != string::npos) {
 		zapata::replace(_uri, _bind_url, "");
 		_req->url(_uri);
+		this->process(_req, _rep);
+	}
+	else if (_host.find("127.0.0") != string::npos && _port == (string) this->configuration()["zapata"]["rest"]["port"]) {
 		this->process(_req, _rep);
 	}
 	else {
