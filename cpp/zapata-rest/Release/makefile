@@ -9,7 +9,6 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include thread/subdir.mk
--include resource/subdir.mk
 -include http/subdir.mk
 -include api/subdir.mk
 -include subdir.mk
@@ -41,19 +40,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: libzapata-rest.so.0.1
+all: libzapata-rest.so
 
 # Tool invocations
-libzapata-rest.so.0.1: $(OBJS) $(USER_OBJS)
+libzapata-rest.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Release" -shared -Wl,-soname=libzapata-rest.so.0.1 -o "libzapata-rest.so.0.1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Release" -shared -Wl,-soname=libzapata-rest.so.0.1 -o "libzapata-rest.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-rest.so.0.1
+	-$(RM) $(C++_DEPS)$(OBJS)$(C_DEPS)$(CC_DEPS)$(LIBRARIES)$(CPP_DEPS)$(CXX_DEPS)$(C_UPPER_DEPS) libzapata-rest.so
 	-@echo ' '
 
 .PHONY: all clean dependents

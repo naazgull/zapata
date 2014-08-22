@@ -8,7 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include resource/subdir.mk
 -include api/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -45,7 +44,7 @@ all: libzapata-users.so.0.1
 libzapata-users.so.0.1: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross G++ Linker'
-	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-mongodb/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-oauth/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-rest/Release" -shared -Wl,-soname=libzapata-users.so.0.1 -o "libzapata-users.so.0.1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-core/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-http/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-mongodb/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-net/Release" -L"/home/pf/Develop/COOKING/zapata/cpp/zapata-rest/Release" -shared -Wl,-soname=libzapata-users.so.0.1 -o "libzapata-users.so.0.1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

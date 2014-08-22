@@ -1,5 +1,5 @@
 
-package: core http map_reduce map_reduce_cluster mongodb net rest rest_server oauth users
+package: core http map_reduce map_reduce_cluster mongodb net rest rest_server users
 
 core:
 	make package -C zapata-core
@@ -21,9 +21,6 @@ net:
 
 rest:
 	make package -C zapata-rest
-
-oauth:
-	make package -C zapata-oauth
 
 users:
 	make package -C zapata-users

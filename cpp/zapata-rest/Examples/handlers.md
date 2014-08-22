@@ -2,7 +2,7 @@
 # Registering all handlers for a collection
 
 	/*
-	 *  definition of handlers for the '/users' collection
+	 *  definition of handlers for the '/name' collection
 	 *  registered as a Collection
 	 */
 	{
@@ -34,7 +34,7 @@
 # Registering all handlers for a document
 
 	/*
-	 *  definition of handlers for the '/users/{id}' document
+	 *  definition of handlers for the '/name/{id}' document
 	 *  registered as a Document
 	 */
 	{
@@ -68,11 +68,11 @@
 # Registering all handlers for a store
 
 	/*
-	 *  definition of handlers for the '/users' store
+	 *  definition of handlers for the '/name' store
 	 *  registered as a Store
 	 */
 	{
-		_pool.on("^/name",
+		_pool.on("^/name$",
 		                    //--- GET ---//
 		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		                    },
@@ -101,11 +101,11 @@
 # Registering all handlers for a controller
 
 	/*
-	 *  definition of handlers for the '/users' controller
+	 *  definition of handlers for the '/name' controller
 	 *  registered as a Controller
 	 */
 	{
-		_pool.on("^/name",
+		_pool.on("^/name$",
 		                    //--- GET ---//
 		                    NULL,
 		                    //--- PUT ---//
