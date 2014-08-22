@@ -1,6 +1,0 @@
-<map id="zapata::JSONTokenizerLexer" name="zapata::JSONTokenizerLexer">
-<area shape="rect" id="node2" href="$classzapata_1_1_j_s_o_n_lexer.html" title="zapata::JSONLexer" alt="" coords="19,83,156,109"/>
-<area shape="rect" id="node3" href="$classzapata_1_1_j_s_o_n_lexer_base.html" title="zapata::JSONLexerBase" alt="" coords="5,5,171,32"/>
-<area shape="rect" id="node4" href="$classzapata_1_1smart__ptr.html" title="zapata::smart_ptr\&lt; T \&gt;" alt="" coords="181,83,336,109"/>
-<area shape="rect" id="node5" href="$classzapata_1_1_j_s_o_n_element.html" title="zapata::JSONElement" alt="" coords="361,83,513,109"/>
-</map>

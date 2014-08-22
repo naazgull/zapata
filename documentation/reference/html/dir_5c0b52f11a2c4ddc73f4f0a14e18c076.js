@@ -1,4 +1,0 @@
-var dir_5c0b52f11a2c4ddc73f4f0a14e18c076 =
-[
-    [ "db", "dir_33f138575493d232a5d4bb540072e637.html", "dir_33f138575493d232a5d4bb540072e637" ]
-];

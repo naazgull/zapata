@@ -1,6 +1,0 @@
-<map id="zapata::Job" name="zapata::Job">
-<area shape="rect" id="node2" href="$classzapata_1_1_mapper.html" title="zapata::Mapper" alt="" coords="5,80,116,107"/>
-<area shape="rect" id="node3" href="$classzapata_1_1_partitioner.html" title="zapata::Partitioner" alt="" coords="141,80,269,107"/>
-<area shape="rect" id="node4" href="$classzapata_1_1_reducer.html" title="zapata::Reducer" alt="" coords="294,80,412,107"/>
-<area shape="rect" id="node5" href="$classzapata_1_1_r_e_s_t_job.html" title="zapata::RESTJob" alt="" coords="437,80,563,107"/>
-</map>
