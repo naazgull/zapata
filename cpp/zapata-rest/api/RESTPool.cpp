@@ -94,15 +94,15 @@ void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zap
 
 	vector<zapata::RESTHandler> _handlers;
 
-	_handlers[zapata::HTTPGet] =  this->__default_get;
-	_handlers[zapata::HTTPPut] = this->__default_put;
-	_handlers[zapata::HTTPPost] = this->__default_post;
-	_handlers[zapata::HTTPDelete] =  this->__default_delete;
-	_handlers[zapata::HTTPHead] =  this->__default_head;
-	_handlers[zapata::HTTPTrace] = this->__default_trace;
-	_handlers[zapata::HTTPOptions] = this->__default_options;
-	_handlers[zapata::HTTPPatch] = this->__default_patch;
-	_handlers[zapata::HTTPConnect] = this->__default_connect;
+	_handlers.push_back( this->__default_get);
+	_handlers.push_back(this->__default_put);
+	_handlers.push_back(this->__default_post);
+	_handlers.push_back( this->__default_delete);
+	_handlers.push_back( this->__default_head);
+	_handlers.push_back(this->__default_trace);
+	_handlers.push_back(this->__default_options);
+	_handlers.push_back(this->__default_patch);
+	_handlers.push_back(this->__default_connect);
 
 	for (size_t _i = 0; _i != _events.size(); _i++) {
 		switch (_events[_i]) {
@@ -149,15 +149,15 @@ void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::REST
 	}
 
 	vector<zapata::RESTHandler> _handlers;
-	_handlers[zapata::HTTPGet] = (_handler == NULL || _event != zapata::HTTPGet || (_resource_type == zapata::RESTfulController) ? this->__default_get : _handler);
-	_handlers[zapata::HTTPPut] = (_handler == NULL || _event != zapata::HTTPPut || (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore) ? this->__default_put : _handler);
-	_handlers[zapata::HTTPPost] = (_handler == NULL || _event != zapata::HTTPPost || (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection) ? this->__default_post : _handler);
-	_handlers[zapata::HTTPDelete] = (_handler == NULL || _event != zapata::HTTPDelete || (_resource_type != zapata::RESTfulDocument) ? this->__default_delete : _handler);
-	_handlers[zapata::HTTPHead] = (_handler == NULL || _event != zapata::HTTPHead || (_resource_type == zapata::RESTfulController) ? this->__default_head : _handler);
-	_handlers[zapata::HTTPTrace] = this->__default_trace;
-	_handlers[zapata::HTTPOptions] = this->__default_options;
-	_handlers[zapata::HTTPPatch] = (_handler == NULL || _event != zapata::HTTPPatch || (_resource_type != zapata::RESTfulDocument) ? this->__default_patch : _handler);
-	_handlers[zapata::HTTPConnect] = (_handler == NULL || _event != zapata::HTTPConnect ? this->__default_connect : _handler);
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPGet || (_resource_type == zapata::RESTfulController) ? this->__default_get : _handler));
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPPut || (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore) ? this->__default_put : _handler));
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPPost || (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection) ? this->__default_post : _handler));
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPDelete || (_resource_type != zapata::RESTfulDocument) ? this->__default_delete : _handler));
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPHead || (_resource_type == zapata::RESTfulController) ? this->__default_head : _handler));
+	_handlers.push_back(this->__default_trace);
+	_handlers.push_back(this->__default_options);
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPPatch || (_resource_type != zapata::RESTfulDocument) ? this->__default_patch : _handler));
+	_handlers.push_back((_handler == NULL || _event != zapata::HTTPConnect ? this->__default_connect : _handler));
 
 	this->__resources.insert(make_pair(_url_pattern, _handlers));
 
@@ -169,15 +169,15 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9], za
 	}
 
 	vector<zapata::RESTHandler> _handlers;
-	_handlers[zapata::HTTPGet] = _handler_set[zapata::HTTPGet] == NULL ?  this->__default_get : _handler_set[zapata::HTTPGet];
-	_handlers[zapata::HTTPPut] = _handler_set[zapata::HTTPPut] == NULL ?  this->__default_put : _handler_set[zapata::HTTPPut];
-	_handlers[zapata::HTTPPost] = _handler_set[zapata::HTTPPost] == NULL ?  this->__default_post : _handler_set[zapata::HTTPPost];
-	_handlers[zapata::HTTPDelete] = _handler_set[zapata::HTTPDelete] == NULL ?  this->__default_delete : _handler_set[zapata::HTTPDelete];
-	_handlers[zapata::HTTPHead] = _handler_set[zapata::HTTPHead] == NULL ?  this->__default_head : _handler_set[zapata::HTTPHead];
-	_handlers[zapata::HTTPTrace] = this->__default_trace;
-	_handlers[zapata::HTTPOptions] = this->__default_options;
-	_handlers[zapata::HTTPPatch] = _handler_set[zapata::HTTPPatch] == NULL ?  this->__default_patch : _handler_set[zapata::HTTPPatch];
-	_handlers[zapata::HTTPConnect] = _handler_set[zapata::HTTPConnect] == NULL ?  this->__default_connect : _handler_set[zapata::HTTPConnect];
+	_handlers.push_back(_handler_set[zapata::HTTPGet] == NULL ?  this->__default_get : _handler_set[zapata::HTTPGet]);
+	_handlers.push_back(_handler_set[zapata::HTTPPut] == NULL ?  this->__default_put : _handler_set[zapata::HTTPPut]);
+	_handlers.push_back(_handler_set[zapata::HTTPPost] == NULL ?  this->__default_post : _handler_set[zapata::HTTPPost]);
+	_handlers.push_back(_handler_set[zapata::HTTPDelete] == NULL ?  this->__default_delete : _handler_set[zapata::HTTPDelete]);
+	_handlers.push_back(_handler_set[zapata::HTTPHead] == NULL ?  this->__default_head : _handler_set[zapata::HTTPHead]);
+	_handlers.push_back(this->__default_trace);
+	_handlers.push_back(this->__default_options);
+	_handlers.push_back(_handler_set[zapata::HTTPPatch] == NULL ?  this->__default_patch : _handler_set[zapata::HTTPPatch]);
+	_handlers.push_back(_handler_set[zapata::HTTPConnect] == NULL ?  this->__default_connect : _handler_set[zapata::HTTPConnect]);
 
 	this->__resources.insert(make_pair(_url_pattern, _handlers));
 }
@@ -188,17 +188,21 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTH
 	}
 
 	vector<zapata::RESTHandler> _handlers;
-	_handlers[zapata::HTTPGet] = _get == NULL ?  this->__default_get : _get;
-	_handlers[zapata::HTTPPut] = _put == NULL ?  this->__default_put : _put;
-	_handlers[zapata::HTTPPost] = _post == NULL ?  this->__default_post : _post;
-	_handlers[zapata::HTTPDelete] = _delete == NULL ?  this->__default_delete : _delete;
-	_handlers[zapata::HTTPHead] = _head == NULL ?  this->__default_head : _head;
-	_handlers[zapata::HTTPTrace] = this->__default_trace;
-	_handlers[zapata::HTTPOptions] = this->__default_options;
-	_handlers[zapata::HTTPPatch] = _patch == NULL ?  this->__default_patch : _patch;
-	_handlers[zapata::HTTPConnect] = _connect == NULL ?  this->__default_connect : _connect;
+	_handlers.push_back(_get == NULL ?  this->__default_get : _get);
+	_handlers.push_back(_put == NULL ?  this->__default_put : _put);
+	_handlers.push_back(_post == NULL ?  this->__default_post : _post);
+	_handlers.push_back(_delete == NULL ?  this->__default_delete : _delete);
+	_handlers.push_back(_head == NULL ?  this->__default_head : _head);
+	_handlers.push_back(this->__default_trace);
+	_handlers.push_back(this->__default_options);
+	_handlers.push_back(_patch == NULL ?  this->__default_patch : _patch);
+	_handlers.push_back(_connect == NULL ?  this->__default_connect : _connect);
 
 	this->__resources.insert(make_pair(_url_pattern, _handlers));
+}
+
+void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, __INTERNAL_TRIGGER__) {
+	this->process(_req, _rep);
 }
 
 void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {

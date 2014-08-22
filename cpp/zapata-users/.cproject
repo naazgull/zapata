@@ -27,17 +27,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.668224374" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1660213019" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.1369586142" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.721815420" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-core"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-http"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-net"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-rest"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-oauth"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users/"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users"/>
-									<listOptionValue builtIn="false" value="/usr/include/zapata"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-mongodb"/>
-								</option>
+								<option id="gnu.c.compiler.option.include.paths.721815420" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath"/>
+								<option id="gnu.c.compiler.option.dialect.std.1278879523" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1039732170" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.688079649" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
@@ -94,7 +85,6 @@
 									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-http"/>
 									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-net"/>
 									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-rest"/>
-									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-oauth"/>
 									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users/"/>
 									<listOptionValue builtIn="false" value="/home/pf/Develop/COOKING/zapata/cpp/zapata-users"/>
 									<listOptionValue builtIn="false" value="/usr/include/zapata"/>

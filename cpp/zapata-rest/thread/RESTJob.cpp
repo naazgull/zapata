@@ -52,7 +52,7 @@ void zapata::RESTJob::run() {
 			for (; true; ) {
 				try  {
 					zapata::fromstream(_cs, _req);
-					this->__pool->trigger(_req, _rep);
+					this->__pool->trigger(_req, _rep, 1.0);
 
 					string _origin = _req->header("Origin");
 					if (_origin.length() != 0) {

@@ -34,7 +34,7 @@ using namespace std;
 using namespace __gnu_cxx;
 
 #define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
-
+#define __INTERNAL_TRIGGER__ double _dummy_arg
 namespace zapata {
 
 	enum RESTfulType {
@@ -67,6 +67,7 @@ namespace zapata {
 			void trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
 			void trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
 			void trigger(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl = false);
+			void trigger(HTTPReq& _req, HTTPRep& _rep, __INTERNAL_TRIGGER__);
 
 		private:
 			JSONObj* __configuration;
