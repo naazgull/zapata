@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lboost_program_options -lboost_thread -lboost_filesystem -lssl -lcrypto -lzapata-core
+LIBS := -lssl -lcrypto -lmongoclient -lboost_program_options -lboost_thread -lboost_filesystem -lzapata-core
 

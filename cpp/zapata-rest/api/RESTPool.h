@@ -49,7 +49,7 @@ namespace zapata {
 
 	typedef std::function<void (zapata::HTTPReq&, zapata::HTTPRep&, zapata::JSONObj&, zapata::RESTPool&)> RESTHandler;
 	typedef RESTHandler RESTCallback;
-	typedef map<regex_t*, vector<zapata::RESTHandler> > RESTHandlerStack;
+	typedef vector<pair<regex_t*, vector<zapata::RESTHandler> > > RESTHandlerStack;
 
 	class RESTPool {
 		public:

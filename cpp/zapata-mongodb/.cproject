@@ -48,11 +48,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.491589183" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.2056891505" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.1452692014" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="ssl"/>
+									<listOptionValue builtIn="false" value="crypto"/>
+									<listOptionValue builtIn="false" value="mongoclient"/>
 									<listOptionValue builtIn="false" value="boost_program_options"/>
 									<listOptionValue builtIn="false" value="boost_thread"/>
 									<listOptionValue builtIn="false" value="boost_filesystem"/>
-									<listOptionValue builtIn="false" value="ssl"/>
-									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.982332897" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
@@ -126,12 +127,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1772640871" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.3072313" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.libs.537510944" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="ssl"/>
+									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="mongoclient"/>
 									<listOptionValue builtIn="false" value="boost_program_options"/>
 									<listOptionValue builtIn="false" value="boost_thread"/>
 									<listOptionValue builtIn="false" value="boost_filesystem"/>
-									<listOptionValue builtIn="false" value="ssl"/>
-									<listOptionValue builtIn="false" value="crypto"/>
 									<listOptionValue builtIn="false" value="zapata-core"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.2133053271" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">

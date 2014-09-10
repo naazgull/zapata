@@ -48,18 +48,17 @@ namespace zapata {
 	bool authenticate(string _id, string _secret, string& _out_code, zapata::JSONObj& _config) {
 		bool _exists = false;
 
-		mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+		mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 		string _collection((string) _config["zapata"]["mongodb"]["db"]);
 		_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
-		unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << _id << "password" << _secret));
+		unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
 		_exists = _ptr->more();
 		_ptr->decouple();
-		 (*_conn)->killCursor(_ptr->getCursorId());
+		 _conn->killCursor(_ptr->getCursorId());
 		 delete _ptr.release();
 
-		_conn->done();
-		delete _conn;
+		_conn.done();
 
 		if (_exists) {
 			zapata::generate_hash(_out_code);
@@ -77,11 +76,11 @@ namespace zapata {
 		_out_token.insert(_out_token.length(), _id);
 		_out_token.insert(_out_token.length(), "|");
 
-		mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+		mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 		string _collection((string) _config["zapata"]["mongodb"]["db"]);
 		_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
-		unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << _id << "password" << _secret));
+		unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
 		if(_ptr->more()) {
 			mongo::BSONObj _bo = _ptr->next();
 			zapata::frommongo(_bo, _out);
@@ -94,11 +93,10 @@ namespace zapata {
 			_out_token.insert(_out_token.length(), _expiration);
 		}
 		_ptr->decouple();
-		 (*_conn)->killCursor(_ptr->getCursorId());
+		 _conn->killCursor(_ptr->getCursorId());
 		 delete _ptr.release();
 
-		_conn->done();
-		delete _conn;
+		_conn.done();
 
 		string _enc_token;
 		zapata::encrypt(_enc_token, _out_token, (string) _config["zapata"]["auth"]["signing_key"]);
@@ -118,11 +116,11 @@ namespace zapata {
 		_out_token.insert(_out_token.length(), _id);
 		_out_token.insert(_out_token.length(), "|");
 
-		mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+		mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 		string _collection((string) _config["zapata"]["mongodb"]["db"]);
 		_collection.insert(_collection.length(), _config["zapata_users"]["mongodb"]["collection"]);
 
-		unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << _id << "password" << _secret));
+		unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
 		if(_ptr->more()) {
 			mongo::BSONObj _bo = _ptr->next();
 			zapata::frommongo(_bo, _out);
@@ -135,11 +133,10 @@ namespace zapata {
 			_out_token.insert(_out_token.length(), _expiration);
 		}
 		_ptr->decouple();
-		 (*_conn)->killCursor(_ptr->getCursorId());
+		 _conn->killCursor(_ptr->getCursorId());
 		 delete _ptr.release();
 
-		_conn->done();
-		delete _conn;
+		_conn.done();
 
 		string _enc_token;
 		zapata::encrypt(_enc_token, _out_token, (string) _config["zapata"]["auth"]["signing_key"]);
@@ -165,7 +162,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 		_pool.on("^/users$",
 			//get
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -176,13 +173,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				try {
 					zapata::torestcollection(_conn, _collection, _params, _out);
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				assertz(((size_t) _out["size"]) != 0, "The requested resource is empty", zapata::HTTP204, zapata::ERRResourceIsEmpty);
 
@@ -221,7 +216,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				assertz(!!_record["confirmation_password"], "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 				assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -229,10 +224,10 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				bool _exists = true;
 				try {
 
-					unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_collection, QUERY("id" << (string) _record["id"]));
+					unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << (string) _record["id"]));
 					_exists = _ptr->more();
 					_ptr->decouple();
-					 (*_conn)->killCursor(_ptr->getCursorId());
+					 _conn->killCursor(_ptr->getCursorId());
 					 delete _ptr.release();
 
 					 if (!_exists) {
@@ -244,21 +239,19 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 							mongo::BSONObjBuilder _bo;
 							zapata::tomongo(_record, _bo);
-							(*_conn)->insert(_collection, _bo.obj());
+							_conn->insert(_collection, _bo.obj());
 
-							_error = (*_conn)->getLastError().length() != 0;
+							_error = _conn->getLastError().length() != 0;
 						}
 						while(_error);
 					 }
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
 
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				 assertz(!_exists, "Already exists a user identified by that ID", zapata::HTTP412, zapata::ERRUserAlreadyExists);
 
@@ -273,8 +266,8 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 			//delete
 			NULL,
 			//head
-			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -285,13 +278,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				try {
 					zapata::torestcollection(_conn, _collection, _params, _out);
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				assertz(((size_t) _out["size"]) != 0, "The requested resource is empty", zapata::HTTP204, zapata::ERRResourceIsEmpty);
 
@@ -318,7 +309,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 		_pool.on("^/users/([^/]+)$",
 			//get
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -329,13 +320,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				try {
 					zapata::torestdocument(_conn, _collection, _params, _out);
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				assertz(_out->size() != 0, "The requested user was not found", zapata::HTTP404, zapata::ERRUserNotFound);
 
@@ -363,7 +352,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				assertz(!!_record["confirmation_password"], "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 				assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -377,18 +366,16 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					mongo::BSONObjBuilder _bo;
 					zapata::tomongo(_record, _bo);
 
-					(*_conn)->update(_collection, _id_bo.obj(),  _bo.obj());
+					_conn->update(_collection, _id_bo.obj(),  _bo.obj());
 
-					_exists = (*_conn)->getLastError().length() == 0;
+					_exists = _conn->getLastError().length() == 0;
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
 
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				 assertz(_exists, "The requested user was not found", zapata::HTTP404, zapata::ERRUserNotFound);
 
@@ -404,7 +391,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 			NULL,
 			//delete
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -414,15 +401,13 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				zapata::JSONObj _out;
 				try {
 					zapata::torestdocument(_conn, _collection, _params, _out);
-					(*_conn)->remove(_collection, QUERY("_id" << _req->url()), true);
+					_conn->remove(_collection, QUERY("_id" << _req->url()), true);
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				string _text;
 				zapata::tostr(_text, _out);
@@ -431,8 +416,8 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//head
-			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -443,13 +428,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				try {
 					zapata::torestdocument(_conn, _collection, _params, _out);
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				assertz(_out->size() != 0, "The requested user was not found", zapata::HTTP404, zapata::ERRUserNotFound);
 
@@ -475,7 +458,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-				mongo::ScopedDbConnection* _conn = mongo::ScopedDbConnection::getScopedDbConnection((string) _config["zapata"]["mongodb"]["address"]);
+				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
@@ -489,18 +472,16 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					mongo::BSONObjBuilder _bo;
 					zapata::tomongo(_record, _bo);
 
-					(*_conn)->update(_collection, _id_bo.obj(), BSON("$set" << _bo.obj()));
+					_conn->update(_collection, _id_bo.obj(), BSON("$set" << _bo.obj()));
 
-					_exists = (*_conn)->getLastError().length() == 0;
+					_exists = _conn->getLastError().length() == 0;
 				}
-				catch (mongo::exception& _e) {
-					_conn->done();
-					delete _conn;
+				catch (exception& _e) {
+					_conn.done();
 					assertz(false, _e.what(), zapata::HTTP500, zapata::ERRGeneric);
 				}
 
-				_conn->done();
-				delete _conn;
+				_conn.done();
 
 				assertz(_exists, "The requested user was not found", zapata::HTTP404, zapata::ERRUserNotFound);
 

@@ -26,9 +26,9 @@ SOFTWARE.
 
 #define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^")
 
-void zapata::frommongo(bson::bo& _in, zapata::JSONObj& _out) {
+void zapata::frommongo(mongo::bo& _in, zapata::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
-		bson::be _it = _i.next();
+		mongo::be _it = _i.next();
 		string _key(_it.fieldName());
 
 		switch (_it.type()) {
@@ -55,7 +55,7 @@ void zapata::frommongo(bson::bo& _in, zapata::JSONObj& _out) {
 				break;
 			}
 			case mongo::Object: {
-				bson::bo _mobj = _it.Obj();
+				mongo::bo _mobj = _it.Obj();
 				zapata::JSONObj _obj;
 				zapata::frommongo(_mobj, _obj);
 				_out << _key << _obj;
@@ -74,10 +74,10 @@ void zapata::frommongo(bson::bo& _in, zapata::JSONObj& _out) {
 	}
 }
 
-void zapata::frommongo(bson::be& _in, zapata::JSONArr& _out) {
-	vector<bson::be> _obj = _in.Array();
-	for (vector<bson::be>::iterator _i = _obj.begin(); _i != _obj.end(); _i++) {
-		bson::be _it = *_i;
+void zapata::frommongo(mongo::be& _in, zapata::JSONArr& _out) {
+	vector<mongo::be> _obj = _in.Array();
+	for (vector<mongo::be>::iterator _i = _obj.begin(); _i != _obj.end(); _i++) {
+		mongo::be _it = *_i;
 		switch (_it.type()) {
 			case mongo::jstNULL: {
 				_out << "null";
@@ -102,7 +102,7 @@ void zapata::frommongo(bson::be& _in, zapata::JSONArr& _out) {
 				break;
 			}
 			case mongo::Object: {
-				bson::bo _mobj = _it.Obj();
+				mongo::bo _mobj = _it.Obj();
 				zapata::JSONObj _obj;
 				zapata::frommongo(_mobj, _obj);
 				_out <<  _obj;
@@ -395,7 +395,7 @@ void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr,
 	}
 }
 
-void zapata::torestcollection(mongo::ScopedDbConnection* _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+void zapata::torestcollection(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
@@ -406,12 +406,12 @@ void zapata::torestcollection(mongo::ScopedDbConnection* _conn, string _mongo_co
 	mongo::Query _query(_query_b.done());
 	mongo::BSONObj _order = _order_b.done();
 
-	_count = (*_conn)->count(_mongo_collection, _query.obj);
+	_count = _conn->count(_mongo_collection, _query.obj);
 	if (!_order.isEmpty()) {
 		_query.sort(_order);
 	}
 
-	unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_mongo_collection, _query, (_page_start_index > 0 ? _page_size : _page_start_index + _page_size), (_page_start_index > 0 ? _page_start_index : 0));
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query, (_page_start_index > 0 ? _page_size : _page_start_index + _page_size), (_page_start_index > 0 ? _page_start_index : 0));
 
 	zapata::JSONArr _elements;
 	while (_ptr->more()) {
@@ -421,18 +421,18 @@ void zapata::torestcollection(mongo::ScopedDbConnection* _conn, string _mongo_co
 		_elements << _record;
 	}
 	 _ptr->decouple();
-	 (*_conn)->killCursor(_ptr->getCursorId());
+	 _conn->killCursor(_ptr->getCursorId());
 	 delete _ptr.release();
 
 	_out << "size" << _count;
 	_out << "elements" << _elements;
 }
 
-void zapata::toreststore(mongo::ScopedDbConnection* _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+void zapata::toreststore(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
 	zapata::torestcollection(_conn,  _mongo_collection, _params, _out);
 }
 
-void zapata::torestdocument(mongo::ScopedDbConnection* _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+void zapata::torestdocument(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
@@ -440,13 +440,13 @@ void zapata::torestdocument(mongo::ScopedDbConnection* _conn, string _mongo_coll
 	zapata::tomongoquery(_params, _query_b, _order_b, _page_size, _page_start_index);
 
 	mongo::Query _query(_query_b.done());
-	unique_ptr<mongo::DBClientCursor> _ptr = (*_conn)->query(_mongo_collection, _query);
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
 
 	if (_ptr->more()) {
 		mongo::BSONObj _obj = _ptr->next();
 		zapata::frommongo(_obj, _out);
 	}
 	 _ptr->decouple();
-	 (*_conn)->killCursor(_ptr->getCursorId());
+	 _conn->killCursor(_ptr->getCursorId());
 	 delete _ptr.release();
 }

@@ -77,7 +77,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__pool.on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		this->__pool.on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -156,7 +156,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__pool.on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		this->__pool.on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
