@@ -124,37 +124,36 @@ void zapata::frommongo(mongo::be& _in, zapata::JSONArr& _out) {
 void zapata::tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 	for (JSONObjIterator _i = _in->begin(); _i != _in->end(); _i++) {
 		string _key = (*_i)->first;
-		smart_ptr<JSONElement>* _value = (*_i)->second;
 
-		switch ((*_value)->type()) {
+		switch (_in[_key].type()) {
 			case zapata::JSObject: {
 				mongo::BSONObjBuilder _mobj;
-				JSONObj _obj = *((JSONObj*) _value->get());
+				JSONObj _obj(_in[_key]);
 				zapata::tomongo(_obj, _mobj);
 				_out << _key << _mobj.obj();
 				break;
 			}
 			case zapata::JSArray: {
 				mongo::BSONArrayBuilder _mobj;
-				JSONArr _arr = *((JSONArr*) _value->get());
+				JSONArr _arr(_in[_key]);
 				zapata::tomongo(_arr, _mobj);
 				_out << _key << _mobj.arr();
 				break;
 			}
 			case zapata::JSString: {
-				_out << _key << (string) (*(*_value));
+				_out << _key << (string) _in[_key];
 				break;
 			}
 			case zapata::JSBoolean: {
-				_out << _key << (bool) (*(*_value));
+				_out << _key << (bool) _in[_key];
 				break;
 			}
 			case zapata::JSDouble: {
-				_out << _key << (double) (*(*_value));
+				_out << _key << (double) _in[_key];
 				break;
 			}
 			case zapata::JSInteger: {
-				_out << _key << (int) (*(*_value));
+				_out << _key << (int) _in[_key];
 				break;
 			}
 			case zapata::JSNil: {

@@ -220,7 +220,7 @@ void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 		_req->url(_uri);
 		this->process(_req, _rep);
 	}
-	else if (_host.find("127.0.0") != string::npos && _port == (string) this->configuration()["zapata"]["rest"]["port"]) {
+	else if ((_host.find("127.0.0") != string::npos || _host.find("localhost") != string::npos) && _port == (string) this->configuration()["zapata"]["rest"]["port"]) {
 		this->process(_req, _rep);
 	}
 	else {

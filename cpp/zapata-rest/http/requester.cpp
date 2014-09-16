@@ -32,7 +32,7 @@ void zapata::send(zapata::HTTPReq& _in, zapata::HTTPRep& _out, bool _ssl) {
 	if ((_idx = _address.find(":")) != string::npos) {
 		string _ports(_address.substr(_idx + 1));
 		zapata::fromstr(_ports, &_port);
-		_address.assign(_address.substr(_idx));
+		_address.assign(_address.substr(0, _idx));
 	}
 
 	if (_ssl) {
