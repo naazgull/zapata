@@ -137,7 +137,7 @@ bool zapata::JSONBoolRef::getBool() {
 
 string zapata::JSONBoolRef::getString() {
 	string _ret;
-	zapata::tostr(_ret, this->__value);
+	zapata::tostr(_ret, (bool) this->__value);
 	return _ret;
 }
 
@@ -150,9 +150,9 @@ zapata::JSONArrRef& zapata::JSONBoolRef::getJSONArr() {
 }
 
 void zapata::JSONBoolRef::stringify(ostream& _out, short _flags, string _tabs) {
-	_out << this->__value << flush;
+	_out << (bool) this->__value << flush;
 }
 
 void zapata::JSONBoolRef::stringify(string& _out, short _flags, string _tabs) {
-	zapata::tostr(_out, this->__value);
+	zapata::tostr(_out, (bool) this->__value);
 }

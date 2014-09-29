@@ -401,6 +401,7 @@ void zapata::torestcollection(mongo::ScopedDbConnection& _conn, string _mongo_co
 	mongo::BSONObjBuilder _order_b;
 	zapata::tomongoquery(_params, _query_b, _order_b, _page_size, _page_start_index);
 
+
 	size_t _count = -1;
 	mongo::Query _query(_query_b.done());
 	mongo::BSONObj _order = _order_b.done();
