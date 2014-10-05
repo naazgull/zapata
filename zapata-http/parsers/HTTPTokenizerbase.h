@@ -32,7 +32,7 @@ SOFTWARE.
 #include <iostream>
 
 // $insert preincludes
-#include "HTTPinc.h"
+#include <parsers/HTTPinc.h>
 
 namespace // anonymous
 {
@@ -48,6 +48,10 @@ class HTTPTokenizerBase
 {
     public:
 // $insert tokens
+
+#ifdef VERSION
+#undef VERSION
+#endif
 
     // Symbolic tokens:
     enum Tokens__

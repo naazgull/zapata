@@ -1,12 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 
 FULL-PACKAGE-NAME=zapata
-VERSION=0.1.8
 BUG-REPORT-ADDRESS=pedro.figueiredo@pedro.figueiredo@gmail.com
 
 AC_PREREQ(2.59)
 AC_INIT(zapata, 0.1.8)
 AC_PROG_CXX
+
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)

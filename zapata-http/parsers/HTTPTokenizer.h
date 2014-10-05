@@ -28,9 +28,9 @@ SOFTWARE.
 #define zapataHTTPTokenizer_h_included
 
 // $insert baseclass
-#include "HTTPTokenizerbase.h"
+#include <parsers/HTTPTokenizerbase.h>
 // $insert scanner.h
-#include "HTTPLexer.h"
+#include <parsers/HTTPLexer.h>
 
 // $insert namespace-open
 namespace zapata

@@ -28,7 +28,7 @@ SOFTWARE.
 #define HTTPLexer_H_INCLUDED_
 
 // $insert baseclass_h
-#include "HTTPLexerbase.h"
+#include <parsers/HTTPLexerbase.h>
 
 // $insert namespace-open
 namespace zapata

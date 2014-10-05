@@ -28,7 +28,7 @@ SOFTWARE.
 #pragma once
 
 // $insert class.h
-#include "HTTPTokenizer.h"
+#include <parsers/HTTPTokenizer.h>
 #include <exceptions/SyntaxErrorException.h>
 
 // $insert namespace-open

@@ -26,7 +26,7 @@ SOFTWARE.
 #pragma once
 
 // $insert class_h
-#include "HTTPLexer.h"
+#include <parsers/HTTPLexer.h>
 #include <string.h>
 #include <text/convert.h>
 #include <http/HTTPObj.h>

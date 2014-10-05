@@ -30,7 +30,7 @@ SOFTWARE.
 #include <stdexcept>
 
 // $insert class_ih
-#include "HTTPLexerimpl.h"
+#include <parsers/HTTPLexerimpl.h>
 
 // $insert namespace-open
 namespace zapata
