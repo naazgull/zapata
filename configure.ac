@@ -39,5 +39,8 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile
                 zapata-core/Makefile
-                zapata-http/Makefile)
+                zapata-http/Makefile
+                zapata-mongodb/Makefile
+                zapata-net/Makefile
+                zapata-rest/Makefile)
 AC_OUTPUT
