@@ -42,5 +42,6 @@ AC_CONFIG_FILES(Makefile
                 zapata-http/Makefile
                 zapata-mongodb/Makefile
                 zapata-net/Makefile
-                zapata-rest/Makefile)
+                zapata-rest/Makefile
+                zapata-users/Makefile)
 AC_OUTPUT

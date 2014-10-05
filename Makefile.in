@@ -317,7 +317,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = zapata-core zapata-http zapata-mongodb zapata-net zapata-rest
+SUBDIRS = zapata-core zapata-http zapata-mongodb zapata-net zapata-rest zapata-users
 all: all-recursive
 
 .SUFFIXES:
