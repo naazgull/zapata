@@ -32,3 +32,7 @@ unsigned int zapata::djb2(string key) {
 
     return hash % HASH_SIZE;
 }
+
+extern "C" int zapata_core() {
+	return 1;
+}

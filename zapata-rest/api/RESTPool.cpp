@@ -304,3 +304,6 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 	}
 }
 
+extern "C" int zapata_rest() {
+	return 1;
+}

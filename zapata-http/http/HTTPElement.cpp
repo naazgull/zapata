@@ -307,3 +307,6 @@ zapata::HTTPElement& zapata::HTTPElement::operator>>(zapata::ObjectOp _in) {
 	this->unset(_in);
 	return *this;
 }
+extern "C" int zapata_http() {
+	return 1;
+}

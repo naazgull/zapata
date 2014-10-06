@@ -33,3 +33,7 @@ zapata::ClosedException::~ClosedException() throw() {
 const char* zapata::ClosedException::what() {
 	return this->__what.data();
 }
+
+extern "C" int zapata_net() {
+	return 1;
+}

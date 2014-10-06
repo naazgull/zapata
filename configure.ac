@@ -1,13 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
 
-FULL-PACKAGE-NAME=zapata
-BUG-REPORT-ADDRESS=pedro.figueiredo@pedro.figueiredo@gmail.com
-
 AC_PREREQ(2.59)
-AC_INIT(zapata, 0.1.8)
-AC_PROG_CXX
+AC_INIT(zapata, 0.1.8, pedro.figueiredo@gmail.com)
 
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([.])
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
@@ -20,7 +17,6 @@ AC_HAVE_LIBRARY(mongoclient)
 AC_HAVE_LIBRARY(boost_program_options)
 AC_HAVE_LIBRARY(boost_thread)
 AC_HAVE_LIBRARY(boost_filesystem)
-AC_HAVE_LIBRARY(mongoclient)
 
 AC_CANONICAL_SYSTEM
 
@@ -28,6 +24,7 @@ dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects])
 
 dnl this allows us specify individual liking flags for each target
+AC_PROG_CXX
 AM_PROG_CC_C_O 
 
 dnl Initialize Libtool
@@ -43,5 +40,6 @@ AC_CONFIG_FILES(Makefile
                 zapata-mongodb/Makefile
                 zapata-net/Makefile
                 zapata-rest/Makefile
-                zapata-users/Makefile)
+                zapata-users/Makefile
+                zapata-rest-server/Makefile)
 AC_OUTPUT

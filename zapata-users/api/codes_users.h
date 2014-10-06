@@ -37,3 +37,5 @@ namespace zapata {
 		ERRIDMandatory = 1007
 	};
 }
+
+extern "C" int zapata_users();

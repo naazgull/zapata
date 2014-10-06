@@ -51,4 +51,8 @@ namespace zapata {
 	void torestcollection(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
 	void toreststore(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
 	void torestdocument(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
+
+	float valid_mongo_version();
 }
+
+extern "C" int zapata_mongodb();

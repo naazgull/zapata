@@ -31,3 +31,5 @@ SOFTWARE.
 
 #include <http/requester.h>
 #include <http/params.h>
+
+extern "C" int zapata_rest();

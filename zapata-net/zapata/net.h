@@ -28,3 +28,5 @@ SOFTWARE.
 #include <stream/SSLSocketStreams.h>
 
 #include <exceptions/ClosedException.h>
+
+extern "C" int zapata_net();

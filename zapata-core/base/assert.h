@@ -33,3 +33,4 @@ SOFTWARE.
  * @param z the HTTP status code to be replied to the invoking HTTP client
  */
 #define assertz(x,y,z,c) if (! (x)) { throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+

@@ -821,3 +821,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 		}, zapata::RESTfulController);
 	}
 }
+
+extern "C" int zapata_users() {
+	return 1;
+}

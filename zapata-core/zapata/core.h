@@ -55,3 +55,5 @@ SOFTWARE.
 #include <mail/manip.h>
 
 #include <conf/load.h>
+
+extern "C" int zapata_core();

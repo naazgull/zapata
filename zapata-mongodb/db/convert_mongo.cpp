@@ -450,3 +450,7 @@ void zapata::torestdocument(mongo::ScopedDbConnection& _conn, string _mongo_coll
 	 _conn->killCursor(_ptr->getCursorId());
 	 delete _ptr.release();
 }
+
+extern "C" int zapata_mongodb() {
+	return 1;
+}

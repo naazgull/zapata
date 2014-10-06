@@ -29,3 +29,5 @@ SOFTWARE.
 #include <parsers/http.h>
 
 #include <exceptions/NoHeaderNameException.h>
+
+extern "C" int zapata_http();
