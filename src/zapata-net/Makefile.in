@@ -80,7 +80,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = zapata-users
+subdir = src/zapata-net
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(nobase_pkginclude_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -122,17 +122,20 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libzapata_users_la_DEPENDENCIES =
+libzapata_net_la_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libzapata_users_la_OBJECTS = ./api/libzapata_users_la-users.lo
-libzapata_users_la_OBJECTS = $(am_libzapata_users_la_OBJECTS)
+am_libzapata_net_la_OBJECTS =  \
+	./exceptions/libzapata_net_la-ClosedException.lo \
+	./stream/libzapata_net_la-SocketStreams.lo \
+	./stream/libzapata_net_la-SSLSocketStreams.lo
+libzapata_net_la_OBJECTS = $(am_libzapata_net_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libzapata_users_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+libzapata_net_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(AM_CXXFLAGS) $(CXXFLAGS) $(libzapata_users_la_LDFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS) $(libzapata_net_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -168,8 +171,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libzapata_users_la_SOURCES)
-DIST_SOURCES = $(libzapata_users_la_SOURCES)
+SOURCES = $(libzapata_net_la_SOURCES)
+DIST_SOURCES = $(libzapata_net_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -319,12 +322,12 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libzapata-users.la
-libzapata_users_la_LIBADD = -lpthread -lzapata-core -lzapata-http -lzapata-net -lzapata-rest -lzapata-mongodb
-libzapata_users_la_LDFLAGS = -L../zapata-core/.libs -L../zapata-http/.libs -L../zapata-net/.libs -L../zapata-rest/.libs -L../zapata-mongodb/.libs
-libzapata_users_la_CPPFLAGS = -std=c++0x -I../zapata-core -I../zapata-http -I../zapata-net -I../zapata-rest -I../zapata-mongodb
-libzapata_users_la_SOURCES = ./api/users.cpp 
-nobase_pkginclude_HEADERS = ./api/codes_users.h
+lib_LTLIBRARIES = libzapata-net.la
+libzapata_net_la_LIBADD = -lpthread -lzapata-core -lssl -lcrypto
+libzapata_net_la_LDFLAGS = -L../zapata-core/.libs
+libzapata_net_la_CPPFLAGS = -std=c++0x -I../zapata-core 
+libzapata_net_la_SOURCES = ./exceptions/ClosedException.cpp ./stream/SocketStreams.cpp ./stream/SSLSocketStreams.cpp 
+nobase_pkginclude_HEADERS = ./zapata/net.h ./exceptions/ClosedException.h ./stream/SocketStreams.h ./stream/SSLSocketStreams.h 
 all: all-am
 
 .SUFFIXES:
@@ -338,9 +341,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu zapata-users/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/zapata-net/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu zapata-users/Makefile
+	  $(AUTOMAKE) --gnu src/zapata-net/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -394,27 +397,42 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-api/$(am__dirstamp):
-	@$(MKDIR_P) ./api
-	@: > api/$(am__dirstamp)
-api/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ./api/$(DEPDIR)
-	@: > api/$(DEPDIR)/$(am__dirstamp)
-./api/libzapata_users_la-users.lo: api/$(am__dirstamp) \
-	api/$(DEPDIR)/$(am__dirstamp)
+exceptions/$(am__dirstamp):
+	@$(MKDIR_P) ./exceptions
+	@: > exceptions/$(am__dirstamp)
+exceptions/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./exceptions/$(DEPDIR)
+	@: > exceptions/$(DEPDIR)/$(am__dirstamp)
+./exceptions/libzapata_net_la-ClosedException.lo:  \
+	exceptions/$(am__dirstamp) \
+	exceptions/$(DEPDIR)/$(am__dirstamp)
+stream/$(am__dirstamp):
+	@$(MKDIR_P) ./stream
+	@: > stream/$(am__dirstamp)
+stream/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./stream/$(DEPDIR)
+	@: > stream/$(DEPDIR)/$(am__dirstamp)
+./stream/libzapata_net_la-SocketStreams.lo: stream/$(am__dirstamp) \
+	stream/$(DEPDIR)/$(am__dirstamp)
+./stream/libzapata_net_la-SSLSocketStreams.lo: stream/$(am__dirstamp) \
+	stream/$(DEPDIR)/$(am__dirstamp)
 
-libzapata-users.la: $(libzapata_users_la_OBJECTS) $(libzapata_users_la_DEPENDENCIES) $(EXTRA_libzapata_users_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(libzapata_users_la_LINK) -rpath $(libdir) $(libzapata_users_la_OBJECTS) $(libzapata_users_la_LIBADD) $(LIBS)
+libzapata-net.la: $(libzapata_net_la_OBJECTS) $(libzapata_net_la_DEPENDENCIES) $(EXTRA_libzapata_net_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(libzapata_net_la_LINK) -rpath $(libdir) $(libzapata_net_la_OBJECTS) $(libzapata_net_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ./api/*.$(OBJEXT)
-	-rm -f ./api/*.lo
+	-rm -f ./exceptions/*.$(OBJEXT)
+	-rm -f ./exceptions/*.lo
+	-rm -f ./stream/*.$(OBJEXT)
+	-rm -f ./stream/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./api/$(DEPDIR)/libzapata_users_la-users.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -440,19 +458,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-./api/libzapata_users_la-users.lo: ./api/users.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_users_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./api/libzapata_users_la-users.lo -MD -MP -MF ./api/$(DEPDIR)/libzapata_users_la-users.Tpo -c -o ./api/libzapata_users_la-users.lo `test -f './api/users.cpp' || echo '$(srcdir)/'`./api/users.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./api/$(DEPDIR)/libzapata_users_la-users.Tpo ./api/$(DEPDIR)/libzapata_users_la-users.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./api/users.cpp' object='./api/libzapata_users_la-users.lo' libtool=yes @AMDEPBACKSLASH@
+./exceptions/libzapata_net_la-ClosedException.lo: ./exceptions/ClosedException.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./exceptions/libzapata_net_la-ClosedException.lo -MD -MP -MF ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Tpo -c -o ./exceptions/libzapata_net_la-ClosedException.lo `test -f './exceptions/ClosedException.cpp' || echo '$(srcdir)/'`./exceptions/ClosedException.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Tpo ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./exceptions/ClosedException.cpp' object='./exceptions/libzapata_net_la-ClosedException.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_users_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./api/libzapata_users_la-users.lo `test -f './api/users.cpp' || echo '$(srcdir)/'`./api/users.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./exceptions/libzapata_net_la-ClosedException.lo `test -f './exceptions/ClosedException.cpp' || echo '$(srcdir)/'`./exceptions/ClosedException.cpp
+
+./stream/libzapata_net_la-SocketStreams.lo: ./stream/SocketStreams.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./stream/libzapata_net_la-SocketStreams.lo -MD -MP -MF ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Tpo -c -o ./stream/libzapata_net_la-SocketStreams.lo `test -f './stream/SocketStreams.cpp' || echo '$(srcdir)/'`./stream/SocketStreams.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Tpo ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./stream/SocketStreams.cpp' object='./stream/libzapata_net_la-SocketStreams.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./stream/libzapata_net_la-SocketStreams.lo `test -f './stream/SocketStreams.cpp' || echo '$(srcdir)/'`./stream/SocketStreams.cpp
+
+./stream/libzapata_net_la-SSLSocketStreams.lo: ./stream/SSLSocketStreams.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./stream/libzapata_net_la-SSLSocketStreams.lo -MD -MP -MF ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Tpo -c -o ./stream/libzapata_net_la-SSLSocketStreams.lo `test -f './stream/SSLSocketStreams.cpp' || echo '$(srcdir)/'`./stream/SSLSocketStreams.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Tpo ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./stream/SSLSocketStreams.cpp' object='./stream/libzapata_net_la-SSLSocketStreams.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./stream/libzapata_net_la-SSLSocketStreams.lo `test -f './stream/SSLSocketStreams.cpp' || echo '$(srcdir)/'`./stream/SSLSocketStreams.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf ./api/.libs ./api/_libs
+	-rm -rf ./exceptions/.libs ./exceptions/_libs
+	-rm -rf ./stream/.libs ./stream/_libs
 install-nobase_pkgincludeHEADERS: $(nobase_pkginclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
@@ -593,8 +626,10 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f api/$(DEPDIR)/$(am__dirstamp)
-	-rm -f api/$(am__dirstamp)
+	-rm -f exceptions/$(DEPDIR)/$(am__dirstamp)
+	-rm -f exceptions/$(am__dirstamp)
+	-rm -f stream/$(DEPDIR)/$(am__dirstamp)
+	-rm -f stream/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -605,7 +640,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./api/$(DEPDIR)
+	-rm -rf ./exceptions/$(DEPDIR) ./stream/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -651,7 +686,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./api/$(DEPDIR)
+	-rm -rf ./exceptions/$(DEPDIR) ./stream/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

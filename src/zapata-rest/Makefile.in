@@ -80,7 +80,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = zapata-net
+subdir = src/zapata-rest
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(nobase_pkginclude_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -122,20 +122,22 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libzapata_net_la_DEPENDENCIES =
+libzapata_rest_la_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libzapata_net_la_OBJECTS =  \
-	./exceptions/libzapata_net_la-ClosedException.lo \
-	./stream/libzapata_net_la-SocketStreams.lo \
-	./stream/libzapata_net_la-SSLSocketStreams.lo
-libzapata_net_la_OBJECTS = $(am_libzapata_net_la_OBJECTS)
+am_libzapata_rest_la_OBJECTS =  \
+	./thread/libzapata_rest_la-RESTServer.lo \
+	./thread/libzapata_rest_la-RESTJob.lo \
+	./http/libzapata_rest_la-params.lo \
+	./http/libzapata_rest_la-requester.lo \
+	./api/libzapata_rest_la-RESTPool.lo
+libzapata_rest_la_OBJECTS = $(am_libzapata_rest_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libzapata_net_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+libzapata_rest_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(AM_CXXFLAGS) $(CXXFLAGS) $(libzapata_net_la_LDFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS) $(libzapata_rest_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -171,8 +173,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libzapata_net_la_SOURCES)
-DIST_SOURCES = $(libzapata_net_la_SOURCES)
+SOURCES = $(libzapata_rest_la_SOURCES)
+DIST_SOURCES = $(libzapata_rest_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -322,12 +324,12 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libzapata-net.la
-libzapata_net_la_LIBADD = -lpthread -lzapata-core -lssl -lcrypto
-libzapata_net_la_LDFLAGS = -L../zapata-core/.libs
-libzapata_net_la_CPPFLAGS = -std=c++0x -I../zapata-core 
-libzapata_net_la_SOURCES = ./exceptions/ClosedException.cpp ./stream/SocketStreams.cpp ./stream/SSLSocketStreams.cpp 
-nobase_pkginclude_HEADERS = ./zapata/net.h ./exceptions/ClosedException.h ./stream/SocketStreams.h ./stream/SSLSocketStreams.h 
+lib_LTLIBRARIES = libzapata-rest.la
+libzapata_rest_la_LIBADD = -lpthread -lzapata-core -lzapata-http -lzapata-net
+libzapata_rest_la_LDFLAGS = -L../zapata-core/.libs -L../zapata-http/.libs -L../zapata-net/.libs
+libzapata_rest_la_CPPFLAGS = -std=c++0x -I../zapata-core -I../zapata-http -I../zapata-net
+libzapata_rest_la_SOURCES = ./thread/RESTServer.cpp ./thread/RESTJob.cpp ./http/params.cpp ./http/requester.cpp ./api/RESTPool.cpp 
+nobase_pkginclude_HEADERS = ./zapata/rest.h ./thread/RESTJob.h ./thread/RESTServer.h ./http/params.h ./http/requester.h ./api/RESTPool.h ./api/codes_rest.h 
 all: all-am
 
 .SUFFIXES:
@@ -341,9 +343,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu zapata-net/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/zapata-rest/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu zapata-net/Makefile
+	  $(AUTOMAKE) --gnu src/zapata-rest/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -397,42 +399,55 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-exceptions/$(am__dirstamp):
-	@$(MKDIR_P) ./exceptions
-	@: > exceptions/$(am__dirstamp)
-exceptions/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ./exceptions/$(DEPDIR)
-	@: > exceptions/$(DEPDIR)/$(am__dirstamp)
-./exceptions/libzapata_net_la-ClosedException.lo:  \
-	exceptions/$(am__dirstamp) \
-	exceptions/$(DEPDIR)/$(am__dirstamp)
-stream/$(am__dirstamp):
-	@$(MKDIR_P) ./stream
-	@: > stream/$(am__dirstamp)
-stream/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ./stream/$(DEPDIR)
-	@: > stream/$(DEPDIR)/$(am__dirstamp)
-./stream/libzapata_net_la-SocketStreams.lo: stream/$(am__dirstamp) \
-	stream/$(DEPDIR)/$(am__dirstamp)
-./stream/libzapata_net_la-SSLSocketStreams.lo: stream/$(am__dirstamp) \
-	stream/$(DEPDIR)/$(am__dirstamp)
+thread/$(am__dirstamp):
+	@$(MKDIR_P) ./thread
+	@: > thread/$(am__dirstamp)
+thread/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./thread/$(DEPDIR)
+	@: > thread/$(DEPDIR)/$(am__dirstamp)
+./thread/libzapata_rest_la-RESTServer.lo: thread/$(am__dirstamp) \
+	thread/$(DEPDIR)/$(am__dirstamp)
+./thread/libzapata_rest_la-RESTJob.lo: thread/$(am__dirstamp) \
+	thread/$(DEPDIR)/$(am__dirstamp)
+http/$(am__dirstamp):
+	@$(MKDIR_P) ./http
+	@: > http/$(am__dirstamp)
+http/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./http/$(DEPDIR)
+	@: > http/$(DEPDIR)/$(am__dirstamp)
+./http/libzapata_rest_la-params.lo: http/$(am__dirstamp) \
+	http/$(DEPDIR)/$(am__dirstamp)
+./http/libzapata_rest_la-requester.lo: http/$(am__dirstamp) \
+	http/$(DEPDIR)/$(am__dirstamp)
+api/$(am__dirstamp):
+	@$(MKDIR_P) ./api
+	@: > api/$(am__dirstamp)
+api/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./api/$(DEPDIR)
+	@: > api/$(DEPDIR)/$(am__dirstamp)
+./api/libzapata_rest_la-RESTPool.lo: api/$(am__dirstamp) \
+	api/$(DEPDIR)/$(am__dirstamp)
 
-libzapata-net.la: $(libzapata_net_la_OBJECTS) $(libzapata_net_la_DEPENDENCIES) $(EXTRA_libzapata_net_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(libzapata_net_la_LINK) -rpath $(libdir) $(libzapata_net_la_OBJECTS) $(libzapata_net_la_LIBADD) $(LIBS)
+libzapata-rest.la: $(libzapata_rest_la_OBJECTS) $(libzapata_rest_la_DEPENDENCIES) $(EXTRA_libzapata_rest_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(libzapata_rest_la_LINK) -rpath $(libdir) $(libzapata_rest_la_OBJECTS) $(libzapata_rest_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f ./exceptions/*.$(OBJEXT)
-	-rm -f ./exceptions/*.lo
-	-rm -f ./stream/*.$(OBJEXT)
-	-rm -f ./stream/*.lo
+	-rm -f ./api/*.$(OBJEXT)
+	-rm -f ./api/*.lo
+	-rm -f ./http/*.$(OBJEXT)
+	-rm -f ./http/*.lo
+	-rm -f ./thread/*.$(OBJEXT)
+	-rm -f ./thread/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./api/$(DEPDIR)/libzapata_rest_la-RESTPool.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./http/$(DEPDIR)/libzapata_rest_la-params.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./http/$(DEPDIR)/libzapata_rest_la-requester.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./thread/$(DEPDIR)/libzapata_rest_la-RESTJob.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./thread/$(DEPDIR)/libzapata_rest_la-RESTServer.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -458,34 +473,49 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-./exceptions/libzapata_net_la-ClosedException.lo: ./exceptions/ClosedException.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./exceptions/libzapata_net_la-ClosedException.lo -MD -MP -MF ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Tpo -c -o ./exceptions/libzapata_net_la-ClosedException.lo `test -f './exceptions/ClosedException.cpp' || echo '$(srcdir)/'`./exceptions/ClosedException.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Tpo ./exceptions/$(DEPDIR)/libzapata_net_la-ClosedException.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./exceptions/ClosedException.cpp' object='./exceptions/libzapata_net_la-ClosedException.lo' libtool=yes @AMDEPBACKSLASH@
+./thread/libzapata_rest_la-RESTServer.lo: ./thread/RESTServer.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./thread/libzapata_rest_la-RESTServer.lo -MD -MP -MF ./thread/$(DEPDIR)/libzapata_rest_la-RESTServer.Tpo -c -o ./thread/libzapata_rest_la-RESTServer.lo `test -f './thread/RESTServer.cpp' || echo '$(srcdir)/'`./thread/RESTServer.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./thread/$(DEPDIR)/libzapata_rest_la-RESTServer.Tpo ./thread/$(DEPDIR)/libzapata_rest_la-RESTServer.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./thread/RESTServer.cpp' object='./thread/libzapata_rest_la-RESTServer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./exceptions/libzapata_net_la-ClosedException.lo `test -f './exceptions/ClosedException.cpp' || echo '$(srcdir)/'`./exceptions/ClosedException.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./thread/libzapata_rest_la-RESTServer.lo `test -f './thread/RESTServer.cpp' || echo '$(srcdir)/'`./thread/RESTServer.cpp
 
-./stream/libzapata_net_la-SocketStreams.lo: ./stream/SocketStreams.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./stream/libzapata_net_la-SocketStreams.lo -MD -MP -MF ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Tpo -c -o ./stream/libzapata_net_la-SocketStreams.lo `test -f './stream/SocketStreams.cpp' || echo '$(srcdir)/'`./stream/SocketStreams.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Tpo ./stream/$(DEPDIR)/libzapata_net_la-SocketStreams.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./stream/SocketStreams.cpp' object='./stream/libzapata_net_la-SocketStreams.lo' libtool=yes @AMDEPBACKSLASH@
+./thread/libzapata_rest_la-RESTJob.lo: ./thread/RESTJob.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./thread/libzapata_rest_la-RESTJob.lo -MD -MP -MF ./thread/$(DEPDIR)/libzapata_rest_la-RESTJob.Tpo -c -o ./thread/libzapata_rest_la-RESTJob.lo `test -f './thread/RESTJob.cpp' || echo '$(srcdir)/'`./thread/RESTJob.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./thread/$(DEPDIR)/libzapata_rest_la-RESTJob.Tpo ./thread/$(DEPDIR)/libzapata_rest_la-RESTJob.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./thread/RESTJob.cpp' object='./thread/libzapata_rest_la-RESTJob.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./stream/libzapata_net_la-SocketStreams.lo `test -f './stream/SocketStreams.cpp' || echo '$(srcdir)/'`./stream/SocketStreams.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./thread/libzapata_rest_la-RESTJob.lo `test -f './thread/RESTJob.cpp' || echo '$(srcdir)/'`./thread/RESTJob.cpp
 
-./stream/libzapata_net_la-SSLSocketStreams.lo: ./stream/SSLSocketStreams.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./stream/libzapata_net_la-SSLSocketStreams.lo -MD -MP -MF ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Tpo -c -o ./stream/libzapata_net_la-SSLSocketStreams.lo `test -f './stream/SSLSocketStreams.cpp' || echo '$(srcdir)/'`./stream/SSLSocketStreams.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Tpo ./stream/$(DEPDIR)/libzapata_net_la-SSLSocketStreams.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./stream/SSLSocketStreams.cpp' object='./stream/libzapata_net_la-SSLSocketStreams.lo' libtool=yes @AMDEPBACKSLASH@
+./http/libzapata_rest_la-params.lo: ./http/params.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./http/libzapata_rest_la-params.lo -MD -MP -MF ./http/$(DEPDIR)/libzapata_rest_la-params.Tpo -c -o ./http/libzapata_rest_la-params.lo `test -f './http/params.cpp' || echo '$(srcdir)/'`./http/params.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./http/$(DEPDIR)/libzapata_rest_la-params.Tpo ./http/$(DEPDIR)/libzapata_rest_la-params.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./http/params.cpp' object='./http/libzapata_rest_la-params.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_net_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./stream/libzapata_net_la-SSLSocketStreams.lo `test -f './stream/SSLSocketStreams.cpp' || echo '$(srcdir)/'`./stream/SSLSocketStreams.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./http/libzapata_rest_la-params.lo `test -f './http/params.cpp' || echo '$(srcdir)/'`./http/params.cpp
+
+./http/libzapata_rest_la-requester.lo: ./http/requester.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./http/libzapata_rest_la-requester.lo -MD -MP -MF ./http/$(DEPDIR)/libzapata_rest_la-requester.Tpo -c -o ./http/libzapata_rest_la-requester.lo `test -f './http/requester.cpp' || echo '$(srcdir)/'`./http/requester.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./http/$(DEPDIR)/libzapata_rest_la-requester.Tpo ./http/$(DEPDIR)/libzapata_rest_la-requester.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./http/requester.cpp' object='./http/libzapata_rest_la-requester.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./http/libzapata_rest_la-requester.lo `test -f './http/requester.cpp' || echo '$(srcdir)/'`./http/requester.cpp
+
+./api/libzapata_rest_la-RESTPool.lo: ./api/RESTPool.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./api/libzapata_rest_la-RESTPool.lo -MD -MP -MF ./api/$(DEPDIR)/libzapata_rest_la-RESTPool.Tpo -c -o ./api/libzapata_rest_la-RESTPool.lo `test -f './api/RESTPool.cpp' || echo '$(srcdir)/'`./api/RESTPool.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./api/$(DEPDIR)/libzapata_rest_la-RESTPool.Tpo ./api/$(DEPDIR)/libzapata_rest_la-RESTPool.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./api/RESTPool.cpp' object='./api/libzapata_rest_la-RESTPool.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_rest_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./api/libzapata_rest_la-RESTPool.lo `test -f './api/RESTPool.cpp' || echo '$(srcdir)/'`./api/RESTPool.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-	-rm -rf ./exceptions/.libs ./exceptions/_libs
-	-rm -rf ./stream/.libs ./stream/_libs
+	-rm -rf ./api/.libs ./api/_libs
+	-rm -rf ./http/.libs ./http/_libs
+	-rm -rf ./thread/.libs ./thread/_libs
 install-nobase_pkgincludeHEADERS: $(nobase_pkginclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
@@ -626,10 +656,12 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f exceptions/$(DEPDIR)/$(am__dirstamp)
-	-rm -f exceptions/$(am__dirstamp)
-	-rm -f stream/$(DEPDIR)/$(am__dirstamp)
-	-rm -f stream/$(am__dirstamp)
+	-rm -f api/$(DEPDIR)/$(am__dirstamp)
+	-rm -f api/$(am__dirstamp)
+	-rm -f http/$(DEPDIR)/$(am__dirstamp)
+	-rm -f http/$(am__dirstamp)
+	-rm -f thread/$(DEPDIR)/$(am__dirstamp)
+	-rm -f thread/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -640,7 +672,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./exceptions/$(DEPDIR) ./stream/$(DEPDIR)
+	-rm -rf ./api/$(DEPDIR) ./http/$(DEPDIR) ./thread/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -686,7 +718,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./exceptions/$(DEPDIR) ./stream/$(DEPDIR)
+	-rm -rf ./api/$(DEPDIR) ./http/$(DEPDIR) ./thread/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

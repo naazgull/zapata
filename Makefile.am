@@ -1,3 +1,3 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = zapata-core zapata-http zapata-mongodb zapata-net zapata-rest zapata-users zapata-rest-server
+SUBDIRS = src/zapata-core src/zapata-http src/zapata-mongodb src/zapata-net src/zapata-rest src/zapata-users src/zapata-rest-server
