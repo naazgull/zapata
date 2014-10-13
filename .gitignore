@@ -11,7 +11,7 @@ Makefile
 libtool
 config.log
 config.status
-zapata-rest-server/zapata-rest-daemon
+src/zapata-rest-server/zapata-rest-daemon
 *.deps
 *.dirstamp
 */**/Makefile
