@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <thread/RESTJob.h>
+#include <zapata/thread/RESTJob.h>
 
 #include <zapata/net.h>
 #include <zapata/http.h>
-#include <exceptions/SyntaxErrorException.h>
+#include <zapata/exceptions/SyntaxErrorException.h>
 
 zapata::RESTJob::RESTJob(string _key_file_path) : Job(_key_file_path) {
 }

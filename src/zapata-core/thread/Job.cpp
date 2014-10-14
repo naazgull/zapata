@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <thread/Job.h>
+#include <zapata/thread/Job.h>
 
 #include <fstream>
-#include <parsers/json.h>
+#include <zapata/parsers/json.h>
 
 namespace zapata {
 	pthread_key_t __configuration_key;

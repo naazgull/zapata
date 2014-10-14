@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/HTTPTokenizerLexer.h>
+#include <zapata/parsers/HTTPTokenizerLexer.h>
 
 zapata::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &_out, zapata::HTTPReq* _rootreq, zapata::HTTPRep* _rootrep) :
 	zapata::HTTPLexer(_in, _out) {

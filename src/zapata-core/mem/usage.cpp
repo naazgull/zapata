@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <mem/usage.h>
+#include <zapata/mem/usage.h>
 
-#include <log/log.h>
-#include <text/convert.h>
+#include <zapata/log/log.h>
+#include <zapata/text/convert.h>
 
 void zapata::process_mem_usage(double& vm_usage, double& resident_set) {
 	using std::ios_base;

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <db/convert_mongo.h>
+#include <zapata/db/convert_mongo.h>
 
 #define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^")
 

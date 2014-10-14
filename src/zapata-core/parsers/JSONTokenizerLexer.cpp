@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/JSONTokenizerLexer.h>
+#include <zapata/parsers/JSONTokenizerLexer.h>
 
 zapata::JSONTokenizerLexer::JSONTokenizerLexer(std::istream &_in, std::ostream &_out, zapata::JSONObj* _rootobj, zapata::JSONArr* _rootarr) :
 	zapata::JSONLexer(_in, _out), __root_obj(_rootobj), __root_arr(_rootarr), __root_type(zapata::JSObject), __value(NULL), __parent(NULL) {

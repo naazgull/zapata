@@ -22,21 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <base/smart_ptr.h>
-#include <base/str_map.h>
+#include <zapata/base/smart_ptr.h>
+#include <zapata/base/str_map.h>
 #include <dlfcn.h>
-#include <exceptions/ClosedException.h>
-#include <exceptions/InterruptedException.h>
-#include <json/JSONObj.h>
-#include <log/log.h>
+#include <zapata/exceptions/ClosedException.h>
+#include <zapata/exceptions/InterruptedException.h>
+#include <zapata/json/JSONObj.h>
+#include <zapata/log/log.h>
 #include <sys/sem.h>
-#include <text/convert.h>
-#include <thread/RESTServer.h>
+#include <zapata/text/convert.h>
+#include <zapata/thread/RESTServer.h>
 #include <fstream>
 #include <iterator>
 #include <string>
 #include <vector>
-#include <api/codes_rest.h>
+#include <zapata/api/codes_rest.h>
 
 zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
 	this->__configuration << zapata::pretty;

@@ -30,7 +30,7 @@ SOFTWARE.
 #include <stdexcept>
 
 // $insert class_ih
-#include "JSONLexerimpl.h"
+#include <zapata/parsers/JSONLexerimpl.h>
 
 // $insert namespace-open
 namespace zapata

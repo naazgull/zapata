@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <thread/JobServer.h>
+#include <zapata/thread/JobServer.h>
 
-#include <exceptions/InterruptedException.h>
+#include <zapata/exceptions/InterruptedException.h>
 
 zapata::JobServer::JobServer(string _key_file_path) : __next(0), __max_idx(-1), __sem(-1), __skey(_key_file_path){
 	ifstream _key_file;

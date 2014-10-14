@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <exceptions/ClosedException.h>
+#include <zapata/exceptions/ClosedException.h>
 
 zapata::ClosedException::ClosedException(string _in) : __what(_in){
 }

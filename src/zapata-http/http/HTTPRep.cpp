@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <http/HTTPObj.h>
+#include <zapata/http/HTTPObj.h>
 
 #include <iostream>
-#include <exceptions/CastException.h>
-#include <exceptions/NoHeaderNameException.h>
+#include <zapata/exceptions/CastException.h>
+#include <zapata/exceptions/NoHeaderNameException.h>
 
 zapata::HTTPRepRef::HTTPRepRef() : __name(NULL), __status(zapata::HTTP100) {
 }

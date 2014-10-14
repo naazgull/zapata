@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/JSONParser.h>
+#include <zapata/parsers/JSONParser.h>
 
 zapata::JSONParser::JSONParser(std::istream &_in, std::ostream &_out, zapata::JSONObj* _rootobj, zapata::JSONArr* _rootarr) {
 	this->d_scanner.switchStreams(_in, _out);

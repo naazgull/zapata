@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <base/smart_ptr.h>
+#include <zapata/base/smart_ptr.h>
 
 namespace zapata {
 	pthread_key_t __memory_key;

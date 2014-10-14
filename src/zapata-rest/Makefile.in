@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -82,7 +81,7 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = src/zapata-rest
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/depcomp $(nobase_pkginclude_HEADERS)
+	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -120,7 +119,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
+am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libzapata_rest_la_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
@@ -180,7 +179,6 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(nobase_pkginclude_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -327,9 +325,8 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libzapata-rest.la
 libzapata_rest_la_LIBADD = -lpthread -lzapata-core -lzapata-http -lzapata-net
 libzapata_rest_la_LDFLAGS = -L../zapata-core/.libs -L../zapata-http/.libs -L../zapata-net/.libs
-libzapata_rest_la_CPPFLAGS = -std=c++0x -I../zapata-core -I../zapata-http -I../zapata-net
+libzapata_rest_la_CPPFLAGS = -std=c++0x -I../../include
 libzapata_rest_la_SOURCES = ./thread/RESTServer.cpp ./thread/RESTJob.cpp ./http/params.cpp ./http/requester.cpp ./api/RESTPool.cpp 
-nobase_pkginclude_HEADERS = ./zapata/rest.h ./thread/RESTJob.h ./thread/RESTServer.h ./http/params.h ./http/requester.h ./api/RESTPool.h ./api/codes_rest.h 
 all: all-am
 
 .SUFFIXES:
@@ -516,30 +513,6 @@ clean-libtool:
 	-rm -rf ./api/.libs ./api/_libs
 	-rm -rf ./http/.libs ./http/_libs
 	-rm -rf ./thread/.libs ./thread/_libs
-install-nobase_pkgincludeHEADERS: $(nobase_pkginclude_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgincludedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)" || exit 1; \
-	fi; \
-	$(am__nobase_list) | while read dir files; do \
-	  xfiles=; for file in $$files; do \
-	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
-	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
-	  test -z "$$xfiles" || { \
-	    test "x$$dir" = x. || { \
-	      echo " $(MKDIR_P) '$(DESTDIR)$(pkgincludedir)/$$dir'"; \
-	      $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)/$$dir"; }; \
-	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(pkgincludedir)/$$dir'"; \
-	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(pkgincludedir)/$$dir" || exit $$?; }; \
-	done
-
-uninstall-nobase_pkgincludeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
-	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
-	dir='$(DESTDIR)$(pkgincludedir)'; $(am__uninstall_files_from_dir)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -625,9 +598,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -689,7 +662,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-nobase_pkgincludeHEADERS
+install-data-am:
 
 install-dvi: install-dvi-am
 
@@ -735,8 +708,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libLTLIBRARIES \
-	uninstall-nobase_pkgincludeHEADERS
+uninstall-am: uninstall-libLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -747,14 +719,12 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-libLTLIBRARIES install-man \
-	install-nobase_pkgincludeHEADERS install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-am uninstall uninstall-am uninstall-libLTLIBRARIES \
-	uninstall-nobase_pkgincludeHEADERS
+	tags tags-am uninstall uninstall-am uninstall-libLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

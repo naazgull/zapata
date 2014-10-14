@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <exceptions/CastException.h>
+#include <zapata/exceptions/CastException.h>
 
 zapata::CastException::CastException(string _in) : __what(_in){
 }

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <http/requester.h>
+#include <zapata/http/requester.h>
 
 void zapata::send(zapata::HTTPReq& _in, zapata::HTTPRep& _out, bool _ssl) {
 	string _address(_in->header("Host"));

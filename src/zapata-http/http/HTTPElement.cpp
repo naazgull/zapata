@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <http/HTTPObj.h>
+#include <zapata/http/HTTPObj.h>
 
 #include <iostream>
-#include <exceptions/CastException.h>
+#include <zapata/exceptions/CastException.h>
 
 namespace zapata {
 	string nil_header = "";

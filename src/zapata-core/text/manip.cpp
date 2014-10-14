@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 #include <stddef.h>
-#include <text/convert.h>
-#include <text/manip.h>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
 #include <zconf.h>
 #include <zlib.h>
 #include <algorithm>

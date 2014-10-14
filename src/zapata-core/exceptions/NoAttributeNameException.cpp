@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <exceptions/NoAttributeNameException.h>
+#include <zapata/exceptions/NoAttributeNameException.h>
 
 zapata::NoAttributeNameException::NoAttributeNameException(string _in) : __what(_in){
 }

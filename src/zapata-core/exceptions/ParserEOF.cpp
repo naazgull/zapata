@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <exceptions/ParserEOF.h>
+#include <zapata/exceptions/ParserEOF.h>
 
 zapata::ParserEOF::ParserEOF(string _in) : __what(_in){
 }

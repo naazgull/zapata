@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <api/RESTPool.h>
+#include <zapata/api/RESTPool.h>
 
-#include <http/requester.h>
+#include <zapata/http/requester.h>
 
 zapata::RESTPool::RESTPool() :
 	__configuration(NULL) {

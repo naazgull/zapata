@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/http.h>
+#include <zapata/parsers/http.h>
 
 void zapata::fromstr(string& _in, HTTPReq& _out) {
 	istringstream _ss;

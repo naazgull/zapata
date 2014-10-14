@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <mail/manip.h>
+#include <zapata/mail/manip.h>
 
 bool zapata::sendmail(string _to, string _from, string _subject, string _message, string _replyto) {
 	bool _retval = false;

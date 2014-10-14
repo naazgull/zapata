@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <text/html.h>
+#include <zapata/text/html.h>
 
 #include <unistd.h>
 #include <iomanip>
-#include <text/manip.h>
+#include <zapata/text/manip.h>
 
 using namespace std;
 using namespace __gnu_cxx;

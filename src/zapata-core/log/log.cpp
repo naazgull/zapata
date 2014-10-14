@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <log/log.h>
+#include <zapata/log/log.h>
 
-#include <text/convert.h>
+#include <zapata/text/convert.h>
 
 namespace zapata {
 	short int log_lvl = 0;

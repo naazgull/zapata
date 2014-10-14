@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <file/manip.h>
+#include <zapata/file/manip.h>
 
 #include <magic.h>
 #include <iostream>

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/json.h>
+#include <zapata/parsers/json.h>
 
 void zapata::fromstr(string& _in, JSONObj& _out) {
 	istringstream _ss;

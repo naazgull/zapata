@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <conf/load.h>
+#include <zapata/conf/load.h>
 
 bool zapata::to_configuration(zapata::JSONObj& _out, string& _key_file_path) {
 	ifstream _global_file;

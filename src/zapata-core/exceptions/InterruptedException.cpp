@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <exceptions/InterruptedException.h>
+#include <zapata/exceptions/InterruptedException.h>
 
 zapata::InterruptedException::InterruptedException(string _in) : __what(_in){
 }

@@ -15529,7 +15529,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-ac_config_files="$ac_config_files Makefile src/zapata-core/Makefile src/zapata-http/Makefile src/zapata-mongodb/Makefile src/zapata-net/Makefile src/zapata-rest/Makefile src/zapata-users/Makefile src/zapata-rest-server/Makefile"
+ac_config_files="$ac_config_files Makefile include/Makefile src/zapata-core/Makefile src/zapata-http/Makefile src/zapata-mongodb/Makefile src/zapata-net/Makefile src/zapata-rest/Makefile src/zapata-users/Makefile src/zapata-rest-server/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -16654,6 +16654,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "src/zapata-core/Makefile") CONFIG_FILES="$CONFIG_FILES src/zapata-core/Makefile" ;;
     "src/zapata-http/Makefile") CONFIG_FILES="$CONFIG_FILES src/zapata-http/Makefile" ;;
     "src/zapata-mongodb/Makefile") CONFIG_FILES="$CONFIG_FILES src/zapata-mongodb/Makefile" ;;

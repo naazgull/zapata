@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <parsers/HTTPParser.h>
+#include <zapata/parsers/HTTPParser.h>
 
 zapata::HTTPParser::HTTPParser(std::istream &_in, std::ostream &_out, zapata::HTTPReq* _rootobj, zapata::HTTPRep* _rootarr) {
 	this->d_scanner.switchStreams(_in, _out);

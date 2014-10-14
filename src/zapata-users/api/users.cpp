@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <api/RESTPool.h>
-#include <api/codes_rest.h>
-#include <api/codes_users.h>
-#include <http/requester.h>
-#include <json/JSONObj.h>
+#include <zapata/api/RESTPool.h>
+#include <zapata/api/codes_rest.h>
+#include <zapata/api/codes_users.h>
+#include <zapata/http/requester.h>
+#include <zapata/json/JSONObj.h>
 #include <mongo/client/dbclient.h>
 #include <mongo/bson/bsonobj.h>
 #include <mongo/bson/bsonobjbuilder.h>
 #include <mongo/client/connpool.h>
 #include <mongo/client/dbclientcursor.h>
 #include <mongo/client/dbclientinterface.h>
-#include <base/smart_ptr.h>
-#include <db/convert_mongo.h>
-#include <text/convert.h>
-#include <text/manip.h>
-#include <http/params.h>
+#include <zapata/base/smart_ptr.h>
+#include <zapata/db/convert_mongo.h>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
+#include <zapata/http/params.h>
 #include <ctime>
 #include <memory>
 

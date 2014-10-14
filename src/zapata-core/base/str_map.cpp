@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <base/str_map.h>
+#include <zapata/base/str_map.h>
 
 unsigned int zapata::djb2(string key) {
     unsigned int hash = 5381;

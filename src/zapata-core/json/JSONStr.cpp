@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <json/JSONObj.h>
+#include <zapata/json/JSONObj.h>
 
 #include <iostream>
-#include <text/convert.h>
-#include <exceptions/CastException.h>
-#include <exceptions/NoAttributeNameException.h>
+#include <zapata/text/convert.h>
+#include <zapata/exceptions/CastException.h>
+#include <zapata/exceptions/NoAttributeNameException.h>
 
 zapata::JSONStrRef::JSONStrRef(string _in) : __value(_in) {
 }

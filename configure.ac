@@ -35,6 +35,7 @@ dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile
+                include/Makefile
                 src/zapata-core/Makefile
                 src/zapata-http/Makefile
                 src/zapata-mongodb/Makefile

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <http/params.h>
+#include <zapata/http/params.h>
 
 #define __SPECIAL_PARAMS string("orderBy pageSize pageStartIndex fields embed ")
 
