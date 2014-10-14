@@ -9,6 +9,7 @@ autom4te.cache
 .sublime-project.sublime-workspace
 Makefile.in
 Makefile
+m4
 libtool
 config.log
 config.status
