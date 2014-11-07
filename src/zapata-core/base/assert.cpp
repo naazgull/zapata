@@ -22,29 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#include <zapata/base/assert.h>
 
-#include <string>
-#include <zapata/json/JSONObj.h>
-#include <zapata/parsers/JSONParser.h>
-
-using namespace std;
-using namespace __gnu_cxx;
-
-namespace zapata {
-
-	void fromstream(istream& _in, JSONObj& _out);
-
-	void fromfile(ifstream& _in, JSONObj& _out) ;
-	void fromfile(ifstream& _in, JSONArr& _out) ;
-	JSONPtr fromfile(ifstream& _in);
-
-	void fromstr(string& _in, JSONObj& _out) ;
-	void fromstr(string& _in, JSONArr& _out) ;
-	JSONPtr fromstr(string& _in);
-
-	void tostr(string& _out, JSONElement& _in) ;
-	void tostr(string& _out, JSONObj& _in) ;
-	void tostr(string& _out, JSONArr& _in) ;
-
+extern "C" int zapata_core() {
+	return 1;
 }

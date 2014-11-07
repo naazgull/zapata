@@ -41,5 +41,6 @@ namespace zapata {
 
 	void process_mem_usage(double& vm_usage, double& resident_set);
 	void log_mem_usage();
+
 }
 

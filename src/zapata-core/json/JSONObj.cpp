@@ -1050,6 +1050,14 @@ zapata::JSONObj::JSONObj(JSONObjT* _target) : shared_ptr<JSONObjT>(_target) {
 zapata::JSONObj::~JSONObj(){
 }
 
+zapata::JSONObjT::iterator zapata::JSONObj::begin() {
+	return (* this)->begin();
+}
+
+zapata::JSONObjT::iterator zapata::JSONObj::end() {
+	return (* this)->end();
+}
+
 zapata::JSONObj& zapata::JSONObj::operator<<(string _in) {
 	(* this)->push(_in);
 	return * this;
@@ -1071,4 +1079,12 @@ zapata::JSONArr::JSONArr(JSONArrT* _target) : shared_ptr<JSONArrT>(_target) {
 }
 
 zapata::JSONArr::~JSONArr(){
+}
+
+zapata::JSONArrT::iterator zapata::JSONArr::begin() {
+	return (* this)->begin();
+}
+
+zapata::JSONArrT::iterator zapata::JSONArr::end() {
+	return (* this)->end();
 }

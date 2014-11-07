@@ -38,4 +38,8 @@ namespace zapata {
 	enum JSONType {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
 	};
+
+	enum ObjectOp {
+		pretty = 1, minified = 2, json = 4,  xml = 8,  nil = 16,  headers = 32,  params = 64,  body = 128
+	};
 }

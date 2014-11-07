@@ -13,7 +13,7 @@ m4
 libtool
 config.log
 config.status
-aclocal.m4 
+*aclocal.m4 
 compile 
 config.guess 
 config.sub 

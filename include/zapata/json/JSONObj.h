@@ -174,6 +174,9 @@ namespace zapata {
 		JSONObj(JSONObjT* _target);
 		virtual ~JSONObj();
 
+		JSONObjT::iterator begin();
+		JSONObjT::iterator end();
+
 		template <typename T>
 		bool operator==(T _rhs) {
 			return *(this->get()) == _rhs;
@@ -211,6 +214,9 @@ namespace zapata {
 		JSONArr(JSONArr& _rhs);
 		JSONArr(JSONArrT* _target);
 		virtual ~JSONArr();
+
+		JSONArrT::iterator begin();
+		JSONArrT::iterator end();
 
 		template <typename T>
 		bool operator==(T _rhs) {

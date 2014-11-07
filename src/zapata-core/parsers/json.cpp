@@ -24,6 +24,14 @@ SOFTWARE.
 
 #include <zapata/parsers/json.h>
 
+void zapata::fromstream(istream& _in, JSONObj& _out) {
+	zapata::JSONParser _p;
+	JSONPtr _root(new JSONElementT(_out));
+	_p.switchRoots(_root);
+	_p.switchStreams(_in);
+	_p.parse();
+}
+
 void zapata::fromstr(string& _in, JSONObj& _out) {
 	istringstream _ss;
 	_ss.str(_in);

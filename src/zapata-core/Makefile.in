@@ -123,7 +123,8 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libzapata_core_la_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libzapata_core_la_OBJECTS = ./log/libzapata_core_la-log.lo \
+am_libzapata_core_la_OBJECTS = ./base/libzapata_core_la-assert.lo \
+	./log/libzapata_core_la-log.lo \
 	./thread/libzapata_core_la-Job.lo \
 	./thread/libzapata_core_la-JobServer.lo \
 	./mem/libzapata_core_la-usage.lo \
@@ -155,6 +156,10 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libzapata_core_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(AM_CXXFLAGS) $(CXXFLAGS) $(libzapata_core_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -341,8 +346,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libzapata-core.la
 libzapata_core_la_LIBADD = -lpthread
+libzapata_core_la_LDFLAGS = -version-info 0:8:0
 libzapata_core_la_CPPFLAGS = -std=c++0x -I../../include
-libzapata_core_la_SOURCES = ./log/log.cpp ./thread/Job.cpp ./thread/JobServer.cpp ./mem/usage.cpp ./conf/load.cpp ./exceptions/InterruptedException.cpp ./exceptions/CastException.cpp ./exceptions/ParserEOF.cpp ./exceptions/AssertionException.cpp ./exceptions/NoAttributeNameException.cpp ./exceptions/SyntaxErrorException.cpp ./parsers/JSONLexer.cpp ./parsers/json.cpp ./parsers/JSONTokenizer.cpp ./parsers/JSONTokenizerLexer.cpp ./parsers/JSONParser.cpp ./file/info.cpp ./file/filesystem.cpp ./mail/send.cpp ./text/ascii.cpp ./text/html.cpp ./text/utf8.cpp ./text/manip.cpp ./text/url.cpp ./text/convert.cpp ./text/base64.cpp ./json/JSONObj.cpp 
+libzapata_core_la_SOURCES = ./base/assert.cpp ./log/log.cpp ./thread/Job.cpp ./thread/JobServer.cpp ./mem/usage.cpp ./conf/load.cpp ./exceptions/InterruptedException.cpp ./exceptions/CastException.cpp ./exceptions/ParserEOF.cpp ./exceptions/AssertionException.cpp ./exceptions/NoAttributeNameException.cpp ./exceptions/SyntaxErrorException.cpp ./parsers/JSONLexer.cpp ./parsers/json.cpp ./parsers/JSONTokenizer.cpp ./parsers/JSONTokenizerLexer.cpp ./parsers/JSONParser.cpp ./file/info.cpp ./file/filesystem.cpp ./mail/send.cpp ./text/ascii.cpp ./text/html.cpp ./text/utf8.cpp ./text/manip.cpp ./text/url.cpp ./text/convert.cpp ./text/base64.cpp ./json/JSONObj.cpp 
 all: all-am
 
 .SUFFIXES:
@@ -412,6 +418,14 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+base/$(am__dirstamp):
+	@$(MKDIR_P) ./base
+	@: > base/$(am__dirstamp)
+base/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./base/$(DEPDIR)
+	@: > base/$(DEPDIR)/$(am__dirstamp)
+./base/libzapata_core_la-assert.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
 log/$(am__dirstamp):
 	@$(MKDIR_P) ./log
 	@: > log/$(am__dirstamp)
@@ -534,10 +548,12 @@ json/$(DEPDIR)/$(am__dirstamp):
 	json/$(DEPDIR)/$(am__dirstamp)
 
 libzapata-core.la: $(libzapata_core_la_OBJECTS) $(libzapata_core_la_DEPENDENCIES) $(EXTRA_libzapata_core_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libzapata_core_la_OBJECTS) $(libzapata_core_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(libzapata_core_la_LINK) -rpath $(libdir) $(libzapata_core_la_OBJECTS) $(libzapata_core_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f ./base/*.$(OBJEXT)
+	-rm -f ./base/*.lo
 	-rm -f ./conf/*.$(OBJEXT)
 	-rm -f ./conf/*.lo
 	-rm -f ./exceptions/*.$(OBJEXT)
@@ -562,6 +578,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./base/$(DEPDIR)/libzapata_core_la-assert.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./conf/$(DEPDIR)/libzapata_core_la-load.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./exceptions/$(DEPDIR)/libzapata_core_la-AssertionException.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./exceptions/$(DEPDIR)/libzapata_core_la-CastException.Plo@am__quote@
@@ -613,6 +630,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+./base/libzapata_core_la-assert.lo: ./base/assert.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_core_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./base/libzapata_core_la-assert.lo -MD -MP -MF ./base/$(DEPDIR)/libzapata_core_la-assert.Tpo -c -o ./base/libzapata_core_la-assert.lo `test -f './base/assert.cpp' || echo '$(srcdir)/'`./base/assert.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ./base/$(DEPDIR)/libzapata_core_la-assert.Tpo ./base/$(DEPDIR)/libzapata_core_la-assert.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='./base/assert.cpp' object='./base/libzapata_core_la-assert.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_core_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ./base/libzapata_core_la-assert.lo `test -f './base/assert.cpp' || echo '$(srcdir)/'`./base/assert.cpp
 
 ./log/libzapata_core_la-log.lo: ./log/log.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libzapata_core_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ./log/libzapata_core_la-log.lo -MD -MP -MF ./log/$(DEPDIR)/libzapata_core_la-log.Tpo -c -o ./log/libzapata_core_la-log.lo `test -f './log/log.cpp' || echo '$(srcdir)/'`./log/log.cpp
@@ -808,6 +832,7 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf ./base/.libs ./base/_libs
 	-rm -rf ./conf/.libs ./conf/_libs
 	-rm -rf ./exceptions/.libs ./exceptions/_libs
 	-rm -rf ./file/.libs ./file/_libs
@@ -934,6 +959,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f base/$(DEPDIR)/$(am__dirstamp)
+	-rm -f base/$(am__dirstamp)
 	-rm -f conf/$(DEPDIR)/$(am__dirstamp)
 	-rm -f conf/$(am__dirstamp)
 	-rm -f exceptions/$(DEPDIR)/$(am__dirstamp)
@@ -964,7 +991,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./conf/$(DEPDIR) ./exceptions/$(DEPDIR) ./file/$(DEPDIR) ./json/$(DEPDIR) ./log/$(DEPDIR) ./mail/$(DEPDIR) ./mem/$(DEPDIR) ./parsers/$(DEPDIR) ./text/$(DEPDIR) ./thread/$(DEPDIR)
+	-rm -rf ./base/$(DEPDIR) ./conf/$(DEPDIR) ./exceptions/$(DEPDIR) ./file/$(DEPDIR) ./json/$(DEPDIR) ./log/$(DEPDIR) ./mail/$(DEPDIR) ./mem/$(DEPDIR) ./parsers/$(DEPDIR) ./text/$(DEPDIR) ./thread/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1010,7 +1037,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./conf/$(DEPDIR) ./exceptions/$(DEPDIR) ./file/$(DEPDIR) ./json/$(DEPDIR) ./log/$(DEPDIR) ./mail/$(DEPDIR) ./mem/$(DEPDIR) ./parsers/$(DEPDIR) ./text/$(DEPDIR) ./thread/$(DEPDIR)
+	-rm -rf ./base/$(DEPDIR) ./conf/$(DEPDIR) ./exceptions/$(DEPDIR) ./file/$(DEPDIR) ./json/$(DEPDIR) ./log/$(DEPDIR) ./mail/$(DEPDIR) ./mem/$(DEPDIR) ./parsers/$(DEPDIR) ./text/$(DEPDIR) ./thread/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
