@@ -34,3 +34,8 @@ SOFTWARE.
  */
 #define assertz(x,y,z,c) if (! (x)) { throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
+namespace zapata {
+	enum JSONType {
+		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
+	};
+}

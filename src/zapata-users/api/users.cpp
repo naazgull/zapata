@@ -33,7 +33,6 @@ SOFTWARE.
 #include <mongo/client/connpool.h>
 #include <mongo/client/dbclientcursor.h>
 #include <mongo/client/dbclientinterface.h>
-#include <zapata/base/smart_ptr.h>
 #include <zapata/db/convert_mongo.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
@@ -70,7 +69,7 @@ namespace zapata {
 	bool usrtoken(string _id, string _secret, string _code, zapata::JSONObj& _out, zapata::JSONObj& _config) {
 		string _out_token;
 		string _cur_date;
-		zapata::tostr(_cur_date, time(NULL));
+		zapata::tostr(_cur_date, time(nullptr));
 		_out_token.insert(_out_token.length(), _cur_date);
 		_out_token.insert(_out_token.length(), "|");
 		_out_token.insert(_out_token.length(), _id);
@@ -89,7 +88,7 @@ namespace zapata {
 			_out_token.insert(_out_token.length(), _bo.getStringField("_id"));
 			_out_token.insert(_out_token.length(), "|");
 			string _expiration;
-			zapata::tostr(_expiration, time(NULL) + 3600 * 24 * 60);
+			zapata::tostr(_expiration, time(nullptr) + 3600 * 24 * 60);
 			_out_token.insert(_out_token.length(), _expiration);
 		}
 		_ptr->decouple();
@@ -110,7 +109,7 @@ namespace zapata {
 	bool apptoken(string _id, string _secret, string _code, zapata::JSONObj& _out, zapata::JSONObj& _config) {
 		string _out_token;
 		string _cur_date;
-		zapata::tostr(_cur_date, time(NULL));
+		zapata::tostr(_cur_date, time(nullptr));
 		_out_token.insert(_out_token.length(), _cur_date);
 		_out_token.insert(_out_token.length(), "|");
 		_out_token.insert(_out_token.length(), _id);
@@ -129,7 +128,7 @@ namespace zapata {
 			_out_token.insert(_out_token.length(), _bo.getStringField("_id"));
 			_out_token.insert(_out_token.length(), "|");
 			string _expiration;
-			zapata::tostr(_expiration, time(NULL) + 3600 * 24 * 60);
+			zapata::tostr(_expiration, time(nullptr) + 3600 * 24 * 60);
 			_out_token.insert(_out_token.length(), _expiration);
 		}
 		_ptr->decouple();
@@ -183,18 +182,18 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				string _text;
 				zapata::tostr(_text, _out);
-				_rep->status(zapata::HTTP200);
-				_rep->body(_text);
+				_rep.status(zapata::HTTP200);
+				_rep.body(_text);
 				_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//put
-			NULL,
+			nullptr,
 			//post
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				string _body = _req->body();
+				string _body = _req.body();
 				assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-				string _content_type = _req->header("Content-Type");
+				string _content_type = _req.header("Content-Type");
 				assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 				zapata::JSONObj _record;
@@ -259,12 +258,12 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep_body << "href" << __id;
 				string _text;
 				zapata::tostr(_text, _rep_body);
-				_rep->status(zapata::HTTP201);
+				_rep.status(zapata::HTTP201);
 				_rep << "Location" << __id << "Content-Length" << (long) _text.length();
-				_rep->body(_text);
+				_rep.body(_text);
 			},
 			//delete
-			NULL,
+			nullptr,
 			//head
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -288,17 +287,17 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				string _text;
 				zapata::tostr(_text, _out);
-				_rep->status(zapata::HTTP200);
+				_rep.status(zapata::HTTP200);
 				_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//trace
-			NULL,
+			nullptr,
 			//options
-			NULL,
+			nullptr,
 			//patch
-			NULL,
+			nullptr,
 			//connect
-			NULL, zapata::RESTfulCollection);
+			nullptr, zapata::RESTfulCollection);
 	}
 
 	/*
@@ -330,16 +329,16 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				string _text;
 				zapata::tostr(_text, _out);
-				_rep->status(zapata::HTTP200);
-				_rep->body(_text);
+				_rep.status(zapata::HTTP200);
+				_rep.body(_text);
 				_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//put
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				string _body = _req->body();
+				string _body = _req.body();
 				assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-				string _content_type = _req->header("Content-Type");
+				string _content_type = _req.header("Content-Type");
 				assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 				zapata::JSONObj _record;
@@ -356,7 +355,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
-				string __id(_req->url());
+				string __id(_req.url());
 
 				bool _exists = false;
 				try {
@@ -383,12 +382,12 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep_body << "href" << __id;
 				string _text;
 				zapata::tostr(_text, _rep_body);
-				_rep->status(zapata::HTTP200);
+				_rep.status(zapata::HTTP200);
 				_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Location" << __id << "Content-Length" << (long) _text.length();
-				_rep->body(_text);
+				_rep.body(_text);
 			},
 			//post
-			NULL,
+			nullptr,
 			//delete
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -401,7 +400,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				zapata::JSONObj _out;
 				try {
 					zapata::torestdocument(_conn, _collection, _params, _out);
-					_conn->remove(_collection, QUERY("_id" << _req->url()), true);
+					_conn->remove(_collection, QUERY("_id" << _req.url()), true);
 				}
 				catch (exception& _e) {
 					_conn.done();
@@ -411,8 +410,8 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				string _text;
 				zapata::tostr(_text, _out);
-				_rep->status(zapata::HTTP200);
-				_rep->body(_text);
+				_rep.status(zapata::HTTP200);
+				_rep.body(_text);
 				_rep << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//head
@@ -438,19 +437,19 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				string _text;
 				zapata::tostr(_text, _out);
-				_rep->status(zapata::HTTP200);
+				_rep.status(zapata::HTTP200);
 				_rep << "Content-Type" << "application/json" << "Content-Length" << _text.length();
 			},
 			//trace
-			NULL,
+			nullptr,
 			//options
-			NULL,
+			nullptr,
 			//patch
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				string _body = _req->body();
+				string _body = _req.body();
 				assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-				string _content_type = _req->header("Content-Type");
+				string _content_type = _req.header("Content-Type");
 				assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 				zapata::JSONObj _record;
@@ -462,7 +461,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				string _collection((string) _config["zapata"]["mongodb"]["db"]);
 				_collection.insert(_collection.length(), "." + ((string) _config["zapata_users"]["mongodb"]["collection"]));
 
-				string __id(_req->url());
+				string __id(_req.url());
 
 				bool _exists = false;
 				try {
@@ -489,12 +488,12 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep_body << "href" << __id;
 				string _text;
 				zapata::tostr(_text, _rep_body);
-				_rep->status(zapata::HTTP200);
+				_rep.status(zapata::HTTP200);
 				_rep << "Cache-Control" << "no-store" << "Pragma" << "no-cache" << "Location" << __id << "Content-Length" << (long) _text.length();
-				_rep->body(_text);
+				_rep.body(_text);
 			},
 			//connect
-			NULL, zapata::RESTfulCollection);
+			nullptr, zapata::RESTfulCollection);
 	}
 
 	//-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -507,11 +506,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	{
 		vector<zapata::HTTPMethod> _ets = { zapata::HTTPGet, zapata::HTTPPost };
 		_pool.on(_ets, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			assertz(_req->param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-			assertz(_req->param("state").length() != 0, "Parameter 'state' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_req.param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_req.param("state").length() != 0, "Parameter 'state' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
-			string _code(_req->param("code"));
-			string _state(_req->param("state"));
+			string _code(_req.param("code"));
+			string _state(_req.param("state"));
 			zapata::base64url_decode(_state);
 
 			size_t _idx = _state.find("||");
@@ -547,7 +546,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 			zapata::HTTPReq _token_req;
 			zapata::HTTPRep _token_rep;
-			_token_req->url(_auth_endpoint);
+			_token_req.url(_auth_endpoint);
 			zapata::init(_token_req);
 			_pool.trigger(_token_req, _token_rep, true);
 
@@ -561,7 +560,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 			_redirect_uri.insert(_redirect_uri.length(), "access_token=");
 			_redirect_uri.insert(_redirect_uri.length(), _access_token);
 
-			_rep->status(_req->method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
+			_rep.status(_req.method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
 			_req << "Location" << _redirect_uri;
 		}, zapata::RESTfulResource);
 	}
@@ -573,11 +572,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	{
 		vector<zapata::HTTPMethod> _ets = { zapata::HTTPGet, zapata::HTTPPost };
 		_pool.on(_ets, "^/auth/connect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			assertz(_req->param("client_code").length() != 0, "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_req.param("client_code").length() != 0, "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 			string _grant_type("code");
-			string _client_code(_req->param("client_code"));
-			string _redirect_uri(_req->param("redirect_uri"));
+			string _client_code(_req.param("client_code"));
+			string _redirect_uri(_req.param("redirect_uri"));
 
 			assertz(!!_config["zapata"]["auth"]["clients"][_client_code], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
@@ -620,7 +619,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_auth_endpoint.insert(_auth_endpoint.length(), _redirect_uri);
 			}
 
-			_rep->status(_req->method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
+			_rep.status(_req.method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
 			_req << "Location" << _auth_endpoint;
 		}, zapata::RESTfulResource);
 	}
@@ -633,17 +632,17 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 		_pool.on("^/auth/token",
 			//get
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				string _grant_type(_req->param("grant_type"));
-				assertz(_req->param("grant_type").length() != 0, "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(_req->param("client_id").length() != 0, "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(_req->param("client_secret").length() != 0, "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(_req->param("code").length() != 0, "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(_grant_type == string("user_code") || _req->param("redirect_uri").length() != 0, "Parameter 'redirect_uri' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				string _grant_type(_req.param("grant_type"));
+				assertz(_req.param("grant_type").length() != 0, "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_req.param("client_id").length() != 0, "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_req.param("client_secret").length() != 0, "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_req.param("code").length() != 0, "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_grant_type == string("user_code") || _req.param("redirect_uri").length() != 0, "Parameter 'redirect_uri' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 				zapata::JSONObj _token;
-				bool _has_token = (_grant_type == string("user_code") && zapata::usrtoken(_req->param("client_id"), _req->param("client_secret"), _req->param("code"), _token, _config)) || (_grant_type == string("autorization_code") && zapata::apptoken(_req->param("client_id"), _req->param("client_secret"), _req->param("code"), _token, _config));
+				bool _has_token = (_grant_type == string("user_code") && zapata::usrtoken(_req.param("client_id"), _req.param("client_secret"), _req.param("code"), _token, _config)) || (_grant_type == string("autorization_code") && zapata::apptoken(_req.param("client_id"), _req.param("client_secret"), _req.param("code"), _token, _config));
 
-				string _redirect_uri(_req->param("redirect_uri"));
+				string _redirect_uri(_req.param("redirect_uri"));
 				if (_redirect_uri.length() != 0) {
 					if (_redirect_uri.find("?") != string::npos) {
 						_redirect_uri.insert(_redirect_uri.length(), "&");
@@ -659,7 +658,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 						_redirect_uri.insert(_redirect_uri.length(), "access_token=");
 						_redirect_uri.insert(_redirect_uri.length(), _token["access_token"]);
 					}
-					_rep->status(zapata::HTTP307);
+					_rep.status(zapata::HTTP307);
 					_req << "Location" << _redirect_uri;
 				}
 				else {
@@ -667,20 +666,20 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 					string _body;
 					zapata::tostr(_body, _token);
-					_rep->status(zapata::HTTP200);
+					_rep.status(zapata::HTTP200);
 					_rep << "Content-Type" << "application/json" << "Content-Length" << (size_t) _body.length();
-					_rep->body(_body);
+					_rep.body(_body);
 				}
 			},
 			//put
-			NULL,
+			nullptr,
 			//post
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-				string _body = _req->body();
+				string _body = _req.body();
 				assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-				bool _is_json = _req->header("Content-Type").find("application/json") != string::npos;
-				bool _is_form_encoded = _req->header("Content-Type").find("application/x-www-form-urlencoded") != string::npos;
+				bool _is_json = _req.header("Content-Type").find("application/json") != string::npos;
+				bool _is_form_encoded = _req.header("Content-Type").find("application/x-www-form-urlencoded") != string::npos;
 				assertz(_is_json || _is_form_encoded, "Body ENTITY must be provided either in JSON or Form URL encoded format", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 				zapata::JSONObj _params;
@@ -702,7 +701,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				bool _has_token = (_grant_type == string("user_code") && zapata::usrtoken((string) _params["client_id"], (string) _params["client_secret"], (string) _params["code"], _token, _config)) || (_grant_type == string("autorization_code") && zapata::apptoken((string) _params["client_id"], (string) _params["client_secret"], (string) _params["code"], _token, _config));
 
-				string _redirect_uri(_req->param("redirect_uri"));
+				string _redirect_uri(_req.param("redirect_uri"));
 				if (_redirect_uri.length() != 0) {
 					if (_redirect_uri.find("?") != string::npos) {
 						_redirect_uri.insert(_redirect_uri.length(), "&");
@@ -718,7 +717,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 						_redirect_uri.insert(_redirect_uri.length(), "access_token=");
 						_redirect_uri.insert(_redirect_uri.length(), _token["access_token"]);
 					}
-					_rep->status(zapata::HTTP303);
+					_rep.status(zapata::HTTP303);
 					_req << "Location" << _redirect_uri;
 				}
 				else {
@@ -726,23 +725,23 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 					string _body;
 					zapata::tostr(_body, _token);
-					_rep->status(zapata::HTTP200);
+					_rep.status(zapata::HTTP200);
 					_rep << "Content-Type" << "application/json" << "Content-Length" << (size_t) _body.length();
-					_rep->body(_body);
+					_rep.body(_body);
 				}
 			},
 			//delete
-			NULL,
+			nullptr,
 			//head
-			NULL,
+			nullptr,
 			//trace
-			NULL,
+			nullptr,
 			//options
-			NULL,
+			nullptr,
 			//patch
-			NULL,
+			nullptr,
 			//connect
-			NULL, zapata::RESTfulResource);
+			nullptr, zapata::RESTfulResource);
 	}
 
 	/*
@@ -751,11 +750,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	 */
 	{
 		_pool.on(zapata::HTTPPost, "^/auth/login", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			string _body = _req->body();
+			string _body = _req.body();
 			assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-			bool _is_json = _req->header("Content-Type").find("application/json") != string::npos;
-			bool _is_form_encoded = _req->header("Content-Type").find("application/x-www-form-urlencoded") != string::npos;
+			bool _is_json = _req.header("Content-Type").find("application/json") != string::npos;
+			bool _is_form_encoded = _req.header("Content-Type").find("application/x-www-form-urlencoded") != string::npos;
 			assertz(_is_json || _is_form_encoded, "Body ENTITY must be provided either in JSON or Form URL encoded format", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 
@@ -781,7 +780,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 			string _code;
 			if (zapata::authenticate((string) _params["id"], (string) _params["secret"], _code, _config)) {
-				string _redirect_uri(_req->param("redirect_uri"));
+				string _redirect_uri(_req.param("redirect_uri"));
 
 				string _redirect(_endpoint_config["token"]);
 				if (_redirect_uri.length() != 0) {
@@ -792,7 +791,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					_redirect.insert(_redirect.length(), "redirect_uri=");
 					_redirect.insert(_redirect.length(), _redirect_uri);
 
-					_rep->status(zapata::HTTP303);
+					_rep.status(zapata::HTTP303);
 					_req << "Location" << _redirect;
 				}
 				else {
@@ -805,17 +804,17 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 					zapata::HTTPReq _token_req;
 					_token_req << "Content-Length" << (long) _token_body_s.length() << "Content-Type" << "application/json";
-					_token_req->method(zapata::HTTPPost);
-					_token_req->body(_token_body_s);
+					_token_req.method(zapata::HTTPPost);
+					_token_req.body(_token_body_s);
 
 					zapata::HTTPRep _token_rep;
 					_pool.trigger(_redirect, _token_req, _token_rep);
 
-					string _token = _token_rep->body();
+					string _token = _token_rep.body();
 
-					_rep->status(zapata::HTTP200);
+					_rep.status(zapata::HTTP200);
 					_rep << "Content-Type" << "application/json" << "Content-Length" << (long) _token.length();
-					_rep->body(_token);
+					_rep.body(_token);
 				}
 			}
 		}, zapata::RESTfulController);

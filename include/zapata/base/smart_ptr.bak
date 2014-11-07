@@ -62,7 +62,7 @@ namespace zapata {
 			inline friend ostream& operator<<(ostream& os, smart_counter& f) {
 				os << "smart_counter<" << f.__pointed << ">";
 				return os;
-			}
+			};
 	};
 
 
@@ -94,7 +94,7 @@ namespace zapata {
 			explicit smart_ptr(T* ptr = NULL) throw () {
 				this->__target = NULL;
 				this->set(ptr);
-			}
+			};
 
 			explicit smart_ptr(T& ptr) throw () {
 				this->__target = NULL;

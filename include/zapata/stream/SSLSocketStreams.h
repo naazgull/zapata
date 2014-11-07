@@ -63,13 +63,13 @@ namespace zapata {
 			SSL_CTX* __context;
 
 		public:
-			basic_sslsocketbuf() : __sock(0), __sslstream(NULL), __context(NULL) {
+			basic_sslsocketbuf() : __sock(0), __sslstream(nullptr), __context(nullptr) {
 				__buf_type::setp(obuf, obuf + (SIZE - 1));
 				__buf_type::setg(ibuf, ibuf, ibuf);
 			}
 			virtual ~basic_sslsocketbuf() {
 				sync();
-				if (this->__sslstream != NULL) {
+				if (this->__sslstream != nullptr) {
 					SSL_free(this->__sslstream);
 				}
 			}
@@ -169,7 +169,7 @@ namespace zapata {
 				fd_set sockset;
 				FD_ZERO(&sockset);
 				FD_SET(__buf.get_socket(), &sockset);
-				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
+				return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
 			}
 
 			__buf_type& buffer() {
@@ -194,7 +194,7 @@ namespace zapata {
 					OpenSSL_add_all_algorithms();
 					SSL_load_error_strings();
 					SSL_CTX* _context = SSL_CTX_new(SSLv23_server_method());
-					if (_context == NULL) {
+					if (_context == nullptr) {
 						__stream_type::setstate(std::ios::failbit);
 					}
 					else {
@@ -222,23 +222,23 @@ namespace zapata {
 			SSL_CTX* __context;
 			bool __chained;
 		public:
-			basic_serversslsocketstream() : __stream_type(&__buf), __sockfd(-1), __context(NULL), __chained(false)  {
+			basic_serversslsocketstream() : __stream_type(&__buf), __sockfd(-1), __context(nullptr), __chained(false)  {
 				SSL_library_init();
 				OpenSSL_add_all_algorithms();
 				SSL_load_error_strings();
 				this->__context = SSL_CTX_new(SSLv23_server_method());
-				if (this->__context == NULL) {
+				if (this->__context == nullptr) {
 					abort();
 				}
 			}
-			basic_serversslsocketstream(int s) : __stream_type(&__buf), __sockfd(-1), __context(NULL), __chained(false) {
+			basic_serversslsocketstream(int s) : __stream_type(&__buf), __sockfd(-1), __context(nullptr), __chained(false) {
 				__buf.set_socket(s);
 
 				SSL_library_init();
 				OpenSSL_add_all_algorithms();
 				SSL_load_error_strings();
 				this->__context = SSL_CTX_new(SSLv23_server_method());
-				if (this->__context == NULL) {
+				if (this->__context == nullptr) {
 					abort();
 				}
 			}
@@ -259,7 +259,7 @@ namespace zapata {
 				fd_set sockset;
 				FD_ZERO(&sockset);
 				FD_SET(__buf.get_socket(), &sockset);
-				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
+				return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
 			}
 
 			__buf_type& buffer() {

@@ -42,12 +42,12 @@ namespace zapata {
 	                    "CONNECT"
 	};
 
-	const char* status_names[] = { NULL,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	const char* status_names[] = { nullptr,
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "100 Continue ",
 	                    "101 Switching Protocols ",
 	                    "102 Processing ",
-	                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "200 OK ",
 	                    "201 Created ",
 	                    "202 Accepted ",
@@ -57,9 +57,9 @@ namespace zapata {
 	                    "206 Partial Content ",
 	                    "207 Multi-Status ",
 	                    "208 Already Reported ",
-	                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "226 IM Used ",
-	                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "300 Multiple Choices ",
 	                    "301 Moved Permanently ",
 	                    "302 Found ",
@@ -69,7 +69,7 @@ namespace zapata {
 	                    "306 (Unused) ",
 	                    "307 Temporary Redirect ",
 	                    "308 Permanent Redirect ",
-	                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "400 Bad Request ",
 	                    "401 Unauthorized ",
 	                    "402 Payment Required ",
@@ -88,7 +88,7 @@ namespace zapata {
 	                    "415 Unsupported Media Type ",
 	                    "416 Requested Range Not Satisfiable ",
 	                    "417 Expectation Failed ",
-	                    NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr,
 	                    "422 Unprocessable Entity ",
 	                    "423 Locked ",
 	                    "424 Failed Dependency ",
@@ -99,7 +99,7 @@ namespace zapata {
 	                    "429 Too Many Requests ",
 	                    "430 Unassigned ",
 	                    "431 Request Header Fields Too Large ",
-	                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 	                    "500 Internal Server Error ",
 	                    "501 Not Implemented ",
 	                    "502 Bad Gateway ",
@@ -146,7 +146,7 @@ void zapata::fromstr(string& _in, HTTPMethod* _out) {
 }
 
 void zapata::init(HTTPReq& _req) {
-	time_t _rawtime = time(NULL);
+	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
 	localtime_r(&_rawtime, &_ptm);
@@ -156,19 +156,18 @@ void zapata::init(HTTPReq& _req) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	string _url(_req->url());
+	string _url(_req.url());
 	if (_url != "") {
 		size_t _b = _url.find("://") + 3;
 		size_t _e = _url.find("/", _b);
 		string _domain(_url.substr(_b, _e - _b));
 		string _path(_url.substr(_e));
-		_req >> zapata::params;
-		_req << "Host" << _domain;
-		_req->url(_path);
+		_req["headers"] << "Host" << _domain;
+		_req.url(_path);
 	}
 
-	_req->method(zapata::HTTPGet);
-	_req <<
+	_req.method(zapata::HTTPGet);
+	_req["headers"] <<
 		"Connection" << "close" <<
 		"User-Agent" << "zapata rest-ful server" <<
 		"Cache-Control" << "max-age=3600" <<
@@ -178,7 +177,7 @@ void zapata::init(HTTPReq& _req) {
 }
 
 void zapata::init(HTTPRep& _rep) {
-	time_t _rawtime = time(NULL);
+	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
 	localtime_r(&_rawtime, &_ptm);
@@ -188,8 +187,8 @@ void zapata::init(HTTPRep& _rep) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	_rep->status(zapata::HTTP404);
-	_rep <<
+	_rep.status(zapata::HTTP404);
+	_rep["headers"] <<
 		"Connection" << "close" <<
 		"Server" << "zapata rest-ful server" <<
 		"Cache-Control" << "max-age=3600" <<
@@ -199,114 +198,6 @@ void zapata::init(HTTPRep& _rep) {
 
 }
 
-zapata::HTTPElement::HTTPElement() {
-	this->__flags = 0;
-}
-
-zapata::HTTPElement::~HTTPElement() {
-}
-
-void zapata::HTTPElement::unset(ObjectOp _in) {
-	if ((this->__flags & _in) == _in) {
-		this->__flags ^= _in;
-	}
-}
-
-void zapata::HTTPElement::put(ObjectOp _in) {
-	if (_in == zapata::headers) {
-		this->unset(zapata::params);
-	}
-	if (_in == zapata::params) {
-		this->unset(zapata::headers);
-	}
-	this->__flags |= _in;
-}
-
-void zapata::HTTPElement::stringify(ostream& _out, short _flags, string _tabs) {
-	_out << "null" << flush;
-}
-
-void zapata::HTTPElement::stringify(string& _out, short _flags, string _tabs) {
-	_out.insert(_out.length(), "null");
-}
-
-zapata::HTTPElement::operator string() {
-	string _out;
-	this->stringify(_out);
-	return _out;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(const char* _in) {
-	this->put(string(_in));
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(string _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(bool _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(int _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(long _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(long long _in) {
-	this->put(_in);
-	return *this;
-}
-
-#ifdef __LP64__
-zapata::HTTPElement& zapata::HTTPElement::operator<<(unsigned int _in) {
-	this->put((long long) _in);
-	return *this;
-}
-#endif
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(size_t _in) {
-	this->put((long long) _in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(double _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator<<(zapata::ObjectOp _in) {
-	this->put(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator>>(const char* _in) {
-	this->unset(string(_in));
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator>>(long long _in) {
-	this->unset(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator>>(string _in) {
-	this->unset(_in);
-	return *this;
-}
-
-zapata::HTTPElement& zapata::HTTPElement::operator>>(zapata::ObjectOp _in) {
-	this->unset(_in);
-	return *this;
-}
 extern "C" int zapata_http() {
 	return 1;
 }

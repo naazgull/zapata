@@ -167,7 +167,7 @@ namespace zapata {
 				fd_set sockset;
 				FD_ZERO(&sockset);
 				FD_SET(__buf.get_socket(), &sockset);
-				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
+				return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
 			}
 
 			__buf_type& buffer() {
@@ -232,7 +232,7 @@ namespace zapata {
 				fd_set sockset;
 				FD_ZERO(&sockset);
 				FD_SET(__buf.get_socket(), &sockset);
-				return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
+				return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
 			}
 
 			__buf_type& buffer() {

@@ -28,159 +28,57 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
-zapata::HTTPRepRef::HTTPRepRef() : __name(NULL), __status(zapata::HTTP100) {
+zapata::HTTPRep::HTTPRep() : __status(zapata::HTTP100) {
+	JSONObj _headers;
+	(* this) << "headers" << _headers;
 }
 
-zapata::HTTPRepRef::~HTTPRepRef() {
+zapata::HTTPRep::~HTTPRep() {
 }
 
-string& zapata::HTTPRepRef::body() {
+string& zapata::HTTPRep::body() {
 	return this->__body;
 }
 
-void zapata::HTTPRepRef::body(string _body) {
+void zapata::HTTPRep::body(string _body) {
 	this->__body.assign(_body);
 }
 
-zapata::HTTPStatus zapata::HTTPRepRef::status() {
+zapata::HTTPStatus zapata::HTTPRep::status() {
 	return this->__status;
 }
 
-void zapata::HTTPRepRef::status(zapata::HTTPStatus _in) {
+void zapata::HTTPRep::status(zapata::HTTPStatus _in) {
 	this->__status = _in;
 }
 
-void zapata::HTTPRepRef::unset(string _in) {
+string zapata::HTTPRep::header(const char* _idx) {
+	return (string) (* this)["headers"][_idx];
 }
 
-void zapata::HTTPRepRef::unset(long long _in) {
+void zapata::HTTPRep::header(const char* _name, const char* _value) {
+	(* this)["headers"] << _name << _value;
 }
 
-void zapata::HTTPRepRef::put(int _in) {
-	if (this->__name == NULL) {
-		this->__name = new string();
-		zapata::tostr(*this->__name, _in);
-		this->__name->insert(0, "_");
-	}
-	else {
-		string* _s = new string();
-		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
+void zapata::HTTPRep::header(const char* _name, string _value) {
+	(* this)["headers"] << _name << _value;
 }
 
-void zapata::HTTPRepRef::put(long _in) {
-	if (this->__name == NULL) {
-		this->__name = new string();
-		zapata::tostr(*this->__name, _in);
-		this->__name->insert(0, "_");
-	}
-	else {
-		string* _s = new string();
-		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
-}
-
-void zapata::HTTPRepRef::put(long long _in) {
-	if (this->__name == NULL) {
-		this->__name = new string();
-		zapata::tostr(*this->__name, _in);
-		this->__name->insert(0, "_");
-	}
-	else {
-		string* _s = new string();
-		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
-}
-
-void zapata::HTTPRepRef::put(double _in) {
-	if (this->__name == NULL) {
-		this->__name = new string();
-		zapata::tostr(*this->__name, _in);
-		size_t dot = this->__name->find(".");
-		if (dot != string::npos) {
-			this->__name->erase(dot, 1);
-			this->__name->insert(dot, "_");
-		}
-		this->__name->insert(0, "_");
-	}
-	else {
-		string* _s = new string();
-		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
-}
-
-void zapata::HTTPRepRef::put(bool _in) {
-	if (this->__name == NULL) {
-		this->__name = new string();
-		zapata::tostr(*this->__name, _in);
-		this->__name->insert(0, "_");
-	}
-	else {
-		string* _s = new string();
-		zapata::tostr(*_s, _in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
-}
-
-void zapata::HTTPRepRef::put(string _in) {
-	if (this->__name == NULL) {
-		this->__name = new string(_in);
-	}
-	else {
-		string* _s = new string(_in);
-		this->insert(string(this->__name->data()), _s);
-		delete this->__name;
-		this->__name = NULL;
-	}
-}
-
-string& zapata::HTTPRepRef::get(size_t _idx) {
-	if(_idx < this->size()) {
-		return *this->at(_idx);
-	}
-	return zapata::nil_header;
-}
-
-string& zapata::HTTPRepRef::get(const char* _idx) {
-	HTTPRepRef::iterator i;
-	if ((i = this->find(_idx)) != this->end()) {
-		return *((*i)->second);
-	}
-	return zapata::nil_header;
-}
-
-string& zapata::HTTPRepRef::header(const char* _idx) {
-	return this->get(_idx);
-}
-
-void zapata::HTTPRepRef::stringify(ostream& _out, short _flags, string _tabs) {
+void zapata::HTTPRep::stringify(ostream& _out) {
 	string _ret;
-	this->stringify(_ret, _flags, _tabs);
+	this->stringify(_ret);
 	_out << _ret << flush;
 }
 
-void zapata::HTTPRepRef::stringify(string& _out, short _flags, string _tabs) {
+void zapata::HTTPRep::stringify(string& _out) {
 	_out.insert(_out.length(), "HTTP/1.1 "),
 	_out.insert(_out.length(),  zapata::status_names[this->__status]);
 	_out.insert(_out.length(), CRLF);
-	for (HTTPRepRef::iterator i = this->begin(); i != this->end(); i++) {
-		_out.insert(_out.length(), (*i)->first);
+	JSONObj _headers = (JSONObj&) (* this)["headers"];
+	for (auto i : *_headers) {
+		_out.insert(_out.length(), i.first);
 		_out.insert(_out.length(), ": ");
-		_out.insert(_out.length(), *(*i)->second);
+		_out.insert(_out.length(), i.second);
 		_out.insert(_out.length(), CRLF);
 	}
 	_out.insert(_out.length(), CRLF);

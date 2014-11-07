@@ -863,7 +863,7 @@ namespace zapata {
 
 zapata::MIMEType zapata::get_mime(string _in) {
 	magic_t myt = magic_open(MAGIC_CONTINUE | MAGIC_ERROR | MAGIC_MIME);
-	magic_load(myt, NULL);
+	magic_load(myt, nullptr);
 
 	string _mime(magic_file(myt, _in.data()));
 	_mime.assign(_mime.substr(0, _mime.find(";")));

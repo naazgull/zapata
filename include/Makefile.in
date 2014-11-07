@@ -283,8 +283,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-nobase_include_HEADERS = ./zapata/http.h ./zapata/base/str_map.h \
-	./zapata/base/smart_ptr.h ./zapata/base/assert.h \
+nobase_include_HEADERS = ./zapata/http.h ./zapata/base/assert.h \
 	./zapata/log/log.h ./zapata/thread/RESTJob.h \
 	./zapata/thread/JobServer.h ./zapata/thread/RESTServer.h \
 	./zapata/thread/Job.h ./zapata/http/params.h \

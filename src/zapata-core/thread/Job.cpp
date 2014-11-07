@@ -47,14 +47,14 @@ zapata::Job::~Job(){
 	pthread_mutex_destroy(this->__mtx);
 	delete this->__mtx;
 	delete this->__thr;
-	pthread_exit(NULL);
+	pthread_exit(nullptr);
 }
 
 void* zapata::Job::start(void* _thread) {
 	Job* _running = static_cast<Job*>(_thread);
 	pthread_setspecific(zapata::__configuration_key, &_running->__configuration);
 	_running->run();
-	return NULL;
+	return nullptr;
 }
 
 void zapata::Job::start() {

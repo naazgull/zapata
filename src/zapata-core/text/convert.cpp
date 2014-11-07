@@ -159,7 +159,7 @@ time_t zapata::timezone_offset() {
 	tm *ptr;
 	int day;
 	ulong num[2];
-	t = time(NULL);
+	t = time(nullptr);
 	ptr = gmtime(&t); // Standard UTC time
 	// Get difference in seconds
 	num[0] = (ptr->tm_hour * 3600) + (ptr->tm_min * 60);

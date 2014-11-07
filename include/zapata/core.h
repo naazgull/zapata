@@ -24,8 +24,6 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/base/str_map.h>
-#include <zapata/base/smart_ptr.h>
 #include <zapata/base/assert.h>
 
 #include <zapata/text/convert.h>

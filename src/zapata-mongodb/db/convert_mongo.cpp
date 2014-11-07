@@ -122,38 +122,37 @@ void zapata::frommongo(mongo::be& _in, zapata::JSONArr& _out) {
 }
 
 void zapata::tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
-	for (JSONObjIterator _i = _in->begin(); _i != _in->end(); _i++) {
-		string _key = (*_i)->first;
+	for (auto _i : *_in) {
+		string _key = _i.first;
+		JSONElement _value = _i.second;
 
-		switch (_in[_key].type()) {
+		switch (_value->type()) {
 			case zapata::JSObject: {
 				mongo::BSONObjBuilder _mobj;
-				JSONObj _obj(_in[_key]);
-				zapata::tomongo(_obj, _mobj);
+				zapata::tomongo(_value->obj(), _mobj);
 				_out << _key << _mobj.obj();
 				break;
 			}
 			case zapata::JSArray: {
 				mongo::BSONArrayBuilder _mobj;
-				JSONArr _arr(_in[_key]);
-				zapata::tomongo(_arr, _mobj);
+				zapata::tomongo(_value->arr(), _mobj);
 				_out << _key << _mobj.arr();
 				break;
 			}
 			case zapata::JSString: {
-				_out << _key << (string) _in[_key];
+				_out << _key << (string) _value;
 				break;
 			}
 			case zapata::JSBoolean: {
-				_out << _key << (bool) _in[_key];
+				_out << _key << (bool) _value;
 				break;
 			}
 			case zapata::JSDouble: {
-				_out << _key << (double) _in[_key];
+				_out << _key << (double) _value;
 				break;
 			}
 			case zapata::JSInteger: {
-				_out << _key << (int) _in[_key];
+				_out << _key << (int) _value;
 				break;
 			}
 			case zapata::JSNil: {
@@ -168,38 +167,36 @@ void zapata::tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 }
 
 void zapata::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
-	for (JSONArrIterator _i = _in->begin(); _i != _in->end(); _i++) {
-		smart_ptr<JSONElement>* _value = (*_i);
+	for (auto _i : *_in) {
+		JSONPtr _value = _i;
 
-		switch ((*_value)->type()) {
+		switch (_value->type()) {
 			case zapata::JSObject: {
 				mongo::BSONObjBuilder _mobj;
-				JSONObj _obj = *((JSONObj*) _value->get());
-				zapata::tomongo(_obj, _mobj);
+				zapata::tomongo(_value->obj(), _mobj);
 				_out << _mobj.obj();
 				break;
 			}
 			case zapata::JSArray: {
 				mongo::BSONArrayBuilder _mobj;
-				JSONArr _arr = *((JSONArr*) _value->get());
-				zapata::tomongo(_arr, _mobj);
+				zapata::tomongo(_value->arr(), _mobj);
 				_out << _mobj.arr();
 				break;
 			}
 			case zapata::JSString: {
-				_out << (string) (*(*_value));
+				_out << (string) _value;
 				break;
 			}
 			case zapata::JSBoolean: {
-				_out << (bool) (*(*_value));
+				_out << (bool) _value;
 				break;
 			}
 			case zapata::JSDouble: {
-				_out << (double) (*(*_value));
+				_out << (double) _value;
 				break;
 			}
 			case zapata::JSInteger: {
-				_out << (int) (*(*_value));
+				_out << (int) _value;
 				break;
 			}
 			case zapata::JSNil: {
@@ -214,16 +211,16 @@ void zapata::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 }
 
 void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
-	for (JSONObjIterator _i = _in->begin(); _i != _in->end(); _i++) {
-		string _key = (*_i)->first;
-		smart_ptr<JSONElement>* _value = (*_i)->second;
+	for (auto _i : *_in) {
+		string _key = _i.first;
+		JSONElement _value = _i.second;
 
 		if (_key == "fields" || _key == "embed") {
 			continue;
 		}
 
 		if (_key == "pageSize") {
-			istringstream iss((string) (*_value->get()));
+			istringstream iss((string) _value);
 			int i = 0;
 			iss >> i;
 			if (!iss.eof()) {
@@ -239,7 +236,7 @@ void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr,
 		}
 
 		if (_key == "pageStartIndex") {
-			istringstream iss((string) (*_value->get()));
+			istringstream iss((string) _value);
 			int i = 0;
 			iss >> i;
 			if (!iss.eof()) {
@@ -255,7 +252,7 @@ void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr,
 		}
 
 		if (_key == "orderBy") {
-			istringstream lss(((string) (*_value->get())).data());
+			istringstream lss(((string) _value).data());
 			string part;
 			while (std::getline(lss, part, ',')) {
 				if (part.length() > 0) {
@@ -285,7 +282,7 @@ void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr,
 		oss << _key << flush;
 
 		string key = oss.str();
-		string value = ((string) (*_value->get()));
+		string value = (string) _value;
 		if (value.length() > 3 && value.find('/') != string::npos) {
 			int bar_count = 0;
 

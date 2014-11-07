@@ -34,6 +34,7 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/net.h>
 #include <zapata/rest.h>
+#include <zapata/mem/usage.h>
 
 using namespace std;
 using namespace __gnu_cxx;
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
 //	cout.imbue(loc);
 
 	char _c;
-	char* _conf_file = NULL;
+	char* _conf_file = nullptr;
 
 	while ((_c = getopt(argc, argv, "c:")) != -1) {
 		switch (_c) {
@@ -80,8 +81,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	zapata::log_fd = &cout;
+	zapata::log_lvl = 5;
 
-	if (_conf_file == NULL) {
+	if (_conf_file == nullptr) {
 		zapata::log("a configuration file must be provided", zapata::error);
 		return -1;
 	}
@@ -109,10 +111,85 @@ int main(int argc, char* argv[]) {
 		sigaction(SIGQUIT, &action, 0);
 		sigaction(SIGINT, &action, 0);
 	}
-
+	
 	__thread_id = pthread_self();
-	pthread_key_create(&zapata::__memory_key, NULL);
-	pthread_key_create(&zapata::__configuration_key, NULL);
+	//pthread_key_create(&zapata::__memory_key, nullptr);
+	//pthread_key_create(&zapata::__configuration_key, nullptr);
+
+	/*zapata::log_mem_usage();
+	{
+		zapata::log_mem_usage();
+		{
+			for (int _k = 0;  _k != 1000; _k++){
+				ifstream _cs;
+				_cs.open(_conf_file);
+				zapata::JSONPtr _config = zapata::fromfile(_cs);
+				cout << *_config << endl << flush;
+				_cs.close();
+			}
+		}
+		zapata::log_mem_usage();
+
+		zapata::JSONObj _obj3;
+		zapata::JSONObj _obj2;
+		zapata::log_mem_usage();
+		{
+			_obj2 << "a" << JSON( "a" << 1 << "b" << time(nullptr) << "c" << "something really special");
+			zapata::JSONObj a = (zapata::JSONObj&) _obj2["a"];
+			cout << a << endl << (string) a["b"] << endl << flush;
+			_obj3 << "mya" << (zapata::JSONObj&) _obj2["a"];
+			zapata::log_mem_usage();
+		}
+		zapata::log_mem_usage();
+		zapata::JSONArr _arr;
+		_arr << _obj2 << _obj2 << _obj3;
+
+		cout << "done adding" << endl << flush;
+		cout << _arr << endl << flush;
+
+		_obj2 >> "a";
+		_arr >> 0;
+
+		cout << _arr << endl << flush;
+
+		for (int _k = 0;  _k != 1000; _k++){
+			zapata::JSONObj _options = JSON( 
+				"constants" << JSON( 
+					"TiU" << 10 <<
+					"StMR" << JSON_ARRAY( 10 << 2 << 4 ) << 
+					"FdMR" << JSON_ARRAY( 1 << 5 ) <<
+					"NoCT" << 0.7 << 
+					"AsRT" << 1 << 
+					"AcERR" << 1 << 
+					"WmF" << JSON_ARRAY( 3 <<  100 ) <<
+					"ExD" << 2
+					) << 
+				"variables" << JSON(
+					"MATCHING" << JSON(
+						"identifiers" << JSON_ARRAY( "terms" << "roles" << "context" ) <<
+						"exclusive" << JSON( 
+							"roles" << JSON_ARRAY( "roles.sender.type" << "roles.receiver.type" ) <<
+							"terms" << JSON_ARRAY( "a" << "d.p.io" << "d.p.component" << "d.p.property" ) 
+							) 
+						) <<
+					"CREATING" << JSON(
+						"identifier" << "terms"
+						) <<
+					"FETCHING" << JSON(
+						"identifier" << "roles.sender.type" << 
+						"sequence" << JSON_ARRAY( "sensor" << "actuator" ) 
+						)
+					) <<
+				"mongo" << JSON( 
+					"host" << "localhost" <<
+					"db" << "muzzley_profiler"
+					)
+				);
+			cout << _options << endl << flush;
+		}
+	}
+	zapata::log_mem_usage();
+	return 0;*/
 
 	zapata::RESTServer _server(_conf_file);
 	__semid = _server.semid();

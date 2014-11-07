@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/http/requester.h>
 
 void zapata::send(zapata::HTTPReq& _in, zapata::HTTPRep& _out, bool _ssl) {
-	string _address(_in->header("Host"));
+	string _address(_in.header("Host"));
 	unsigned int _port = _ssl ? 443 : 80;
 	size_t _idx = -1;
 

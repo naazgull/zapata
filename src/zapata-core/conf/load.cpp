@@ -31,11 +31,11 @@ bool zapata::to_configuration(zapata::JSONObj& _out, string& _key_file_path) {
 		zapata::fromfile(_global_file, _out);
 	}
 
-	DIR *_dp = NULL;
-	struct dirent *_dirp = NULL;
+	DIR *_dp = nullptr;
+	struct dirent *_dirp = nullptr;
 
-	if ((_dp = opendir("/etc/zapata/conf.d/")) != NULL) {
-		while ((_dirp = readdir(_dp)) != NULL) {
+	if ((_dp = opendir("/etc/zapata/conf.d/")) != nullptr) {
+		while ((_dirp = readdir(_dp)) != nullptr) {
 			string _cname = string(_dirp->d_name);
 			if (_cname.find('.') != 0 && _dirp->d_type == DT_REG) {
 				_cname.insert(0, "/etc/zapata/conf.d/");

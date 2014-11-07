@@ -54,7 +54,7 @@ void zapata::ascii_encode(string& _out, bool quote) {
 
 void zapata::generate_key(string& _out) {
 	timeval _tv;
-	gettimeofday (&_tv, NULL);
+	gettimeofday (&_tv, nullptr);
 
 	static string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	string code1;
@@ -74,7 +74,7 @@ void zapata::generate_key(string& _out) {
 	code3[1] = charset[rand() % charset.length()];
 
 	string _ts;
-	zapata::tostr(_ts, time(NULL), "%y%m%d");
+	zapata::tostr(_ts, time(nullptr), "%y%m%d");
 	string _usec;
 	zapata::tostr(_usec, _tv.tv_usec);
 
@@ -90,7 +90,7 @@ void zapata::generate_hash(string& _out) {
 	string _randompass;
 	_randompass.resize(45);
 	timeval _tv;
-	gettimeofday (&_tv, NULL);
+	gettimeofday (&_tv, nullptr);
 
 	srand(_tv.tv_usec);
 	for (int i = 0; i < 45; i++) {

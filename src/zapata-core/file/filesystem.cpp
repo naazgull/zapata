@@ -61,7 +61,7 @@ bool zapata::copy_path(string _from, string _to) {
 	}
 	fstat(_read_fd, &_stat_buf);
 	_write_fd = open(_to.c_str(), O_WRONLY | O_CREAT, _stat_buf.st_mode);
-	int _error = sendfile(_write_fd, _read_fd, NULL, _stat_buf.st_size);
+	int _error = sendfile(_write_fd, _read_fd, nullptr, _stat_buf.st_size);
 	close(_read_fd);
 	close(_write_fd);
 

@@ -125,145 +125,62 @@ namespace zapata {
 		HTTP511 = 511
 	};
 
+	typedef JSONObj HTTPObj;
+	typedef JSONPtr HTTPPtr;
+
 	void fromstr(string& _in, HTTPMethod* _out);
 
-	class HTTPElement {
-		public:
-			HTTPElement();
-			virtual ~HTTPElement();
+	class HTTPReq: public HTTPObj {
+	public:
+		HTTPReq();
+		virtual ~HTTPReq();
 
-			virtual void stringify(string& _out, short _flags = 0, string _tabs = "");
-			virtual void stringify(ostream& _out, short _flags = 0, string _tabs = "");
+		HTTPMethod method();
+		void method(HTTPMethod);
+		string& url();
+		void url(string);
+		string& body();
+		void body(string);
+		string& query();
+		void query(string);
+		string header(const char* _name);
+		void header(const char* _name, const char* _value);
+		void header(const char* _name, string _value);
+		string param(const char* _name);
+		void param(const char* _name, const char* _value);
+		void param(const char* _name, string _value);
 
-			virtual string& get(size_t _idx) = 0;
-			virtual string& get(const char* _idx) = 0;
+		virtual void stringify(string& _out);
+		virtual void stringify(ostream& _out);
 
-			virtual string& header(const char* _idx) = 0;
-
-			operator string();
-
-			HTTPElement& operator<<(const char* _in);
-			HTTPElement& operator<<(bool _in);
-			HTTPElement& operator<<(int _in);
-			HTTPElement& operator<<(long _in);
-			HTTPElement& operator<<(long long _in);
-#ifdef __LP64__
-			HTTPElement& operator<<(unsigned int _in);
-#endif
-			HTTPElement& operator<<(size_t _in);
-			HTTPElement& operator<<(double _in);
-			HTTPElement& operator<<(string _in);
-			HTTPElement& operator<<(ObjectOp _in);
-
-			HTTPElement& operator>>(long long _in);
-			HTTPElement& operator>>(const char* _in);
-			HTTPElement& operator>>(string _in);
-			HTTPElement& operator>>(ObjectOp _in);
-
-			friend ostream& operator<<(ostream& _out, HTTPElement& _in) {
-				_in.stringify(_out, _in.__flags, "");
-				return _out;
-			}
-
-		protected:
-			short __flags;
-
-			virtual void put(int _in) = 0;
-			virtual void put(long _in) = 0;
-			virtual void put(long long _in) = 0;
-			virtual void put(double _in) = 0;
-			virtual void put(bool _in) = 0;
-			virtual void put(string _in) = 0;
-			virtual void put(ObjectOp _in);
-
-			virtual void unset(long long _in) = 0;
-			virtual void unset(string _in) = 0;
-			virtual void unset(ObjectOp _in);
+	private:
+		string __url;
+		string __query;
+		string __body;
+		HTTPMethod __method;
 
 	};
 
-	class HTTPReqRef: public str_map<string*>, public HTTPElement {
-		private:
-			string* __name;
-			string __url;
-			string __query;
-			string __body;
-			HTTPMethod __method;
-			str_map<string*> __params;
+	class HTTPRep: public HTTPObj {
+	public:
+		HTTPRep();
+		virtual ~HTTPRep();
 
-		public:
-			HTTPReqRef();
-			virtual ~HTTPReqRef();
+		HTTPStatus status();
+		void status(HTTPStatus);
+		string& body();
+		void body(string);
+		string header(const char* _idx);
+		void header(const char* _name, const char* _value);
+		void header(const char* _name, string _value);
 
-			HTTPMethod method();
-			void method(HTTPMethod);
-			string& url();
-			void url(string);
-			string& body();
-			void body(string);
-			string& query();
-			void query(string);
-			string& header(const char* _idx);
-			string& param(const char* _idx);
-			str_map<string*>& params();
+		virtual void stringify(string& _out);
+		virtual void stringify(ostream& _out);
 
-			virtual void stringify(string& _out, short _flags = 0, string _tabs = "");
-			virtual void stringify(ostream& _out, short _flags = 0, string _tabs = "");
-
-			virtual string& get(size_t _idx);
-			virtual string& get(const char* _idx);
-
-		protected:
-			virtual void put(int _in);
-			virtual void put(long _in);
-			virtual void put(long long _in);
-			virtual void put(double _in);
-			virtual void put(bool _in);
-			virtual void put(string _in);
-
-			virtual void unset(long long _in);
-			virtual void unset(string _in);
-
-
+	private:
+		string __body;
+		HTTPStatus __status;
 	};
-
-	class HTTPRepRef: public str_map<string*>, public HTTPElement {
-		private:
-			string* __name;
-			string __body;
-			HTTPStatus __status;
-
-		public:
-			HTTPRepRef();
-			virtual ~HTTPRepRef();
-
-			HTTPStatus status();
-			void status(HTTPStatus);
-			string& body();
-			void body(string);
-			string& header(const char* _idx);
-
-			virtual void stringify(string& _out, short _flags = 0, string _tabs = "");
-			virtual void stringify(ostream& _out, short _flags = 0, string _tabs = "");
-
-			virtual string& get(size_t _idx);
-			virtual string& get(const char* _idx);
-
-		protected:
-			virtual void put(int _in);
-			virtual void put(long _in);
-			virtual void put(long long _in);
-			virtual void put(double _in);
-			virtual void put(bool _in);
-			virtual void put(string _in);
-
-			virtual void unset(long long _in);
-			virtual void unset(string _in);
-
-	};
-
-	typedef smart_ptr<HTTPReqRef> HTTPReq;
-	typedef smart_ptr<HTTPRepRef> HTTPRep;
 
 	void init(HTTPReq& _out);
 	void init(HTTPRep& _out);

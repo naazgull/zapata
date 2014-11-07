@@ -62,7 +62,7 @@ namespace zapata {
 			friend ostream& operator<<(ostream& _out, duo& _in) {
 				_out << "duo<" << _in.first << ", " << *_in.second << ", " << _in.third << ">";
 				return _out;
-			}
+			};
 	};
 
 	template<typename V>
@@ -82,66 +82,66 @@ namespace zapata {
 
 				public:
 					inline iterator() {
-					}
+					};
 					inline iterator(const iterator& other) :
 						_underlying(other._underlying), _idx(other._idx) {
-					}
+					};
 					inline iterator(iterator& other) :
 						_underlying(other._underlying), _idx(other._idx) {
-					}
+					};
 					inline iterator(vector<duo<string, V>*>* other, size_t pos = 0) :
 						_underlying(other), _idx(pos) {
-					}
+					};
 					inline ~iterator() {
-					}
+					};
 
 					inline iterator& operator++() {
 						++this->_idx;
 						return *this;
-					}
+					};
 
 					inline iterator operator++(int n) {
 						iterator tmp(*this);
 						operator++();
 						return tmp;
-					}
+					};
 
 					inline iterator& operator--() {
 						--this->_idx;
 						return *this;
-					}
+					};
 
 					inline iterator operator--(int n) {
 						iterator tmp(*this);
 						operator--();
 						return tmp;
-					}
+					};
 
 					inline iterator& operator+(size_t n) {
 						this->_idx += n;
 						return *this;
-					}
+					};
 
 					inline iterator& operator-(size_t n) {
 						this->_idx -= n;
 						return *this;
-					}
+					};
 
 					inline bool operator==(const iterator& rhs) {
 						return this->_underlying == rhs._underlying && this->_idx == rhs._idx;
-					}
+					};
 
 					inline bool operator!=(const iterator& rhs) {
 						return this->_underlying != rhs._underlying || this->_idx != rhs._idx;
-					}
+					};
 
 					inline duo<string, V>* operator*() {
 						return *(this->_underlying->begin() + this->_idx);
-					}
+					};
 
 					inline duo<string, V>* operator->() {
 						return *(this->_underlying->begin() + this->_idx);
-					}
+					};
 
 				private:
 					vector<duo<string, V>*>* _underlying;
@@ -153,67 +153,67 @@ namespace zapata {
 
 				public:
 					inline ordered_iterator() {
-					}
+					};
 					inline ordered_iterator(const ordered_iterator& other) :
 						_underlying(other._underlying), _idx(other._idx) {
-					}
+					};
 					inline ordered_iterator(ordered_iterator& other) :
 						_underlying(other._underlying), _idx(other._idx) {
-					}
+					};
 					inline ordered_iterator(vector<duo<string, V>*>* other, size_t pos = 0) :
 						_underlying(other), _idx(pos) {
-					}
+					};
 					inline ~ordered_iterator() {
-					}
+					};
 
 					inline ordered_iterator& operator++() {
 						++this->_idx;
 						return *this;
-					}
+					};
 
 					inline ordered_iterator operator++(int n) {
 						ordered_iterator tmp(*this);
 						operator++();
 						return tmp;
-					}
+					};
 
 					inline ordered_iterator& operator--() {
 						--this->_idx;
 						return *this;
-					}
+					};
 
 					inline ordered_iterator operator--(int n) {
 						ordered_iterator tmp(*this);
 						operator--();
 						return tmp;
-					}
+					};
 
 					inline ordered_iterator& operator+(size_t n) {
 						this->_idx += n;
 						return *this;
-					}
+					};
 
 					inline ordered_iterator& operator-(size_t n) {
 						this->_idx -= n;
 						return *this;
-					}
+					};
 
 					inline bool operator==(const ordered_iterator& rhs) {
 						return this->_underlying == rhs._underlying && this->_idx == rhs._idx;
-					}
+					};
 
 					inline bool operator!=(const ordered_iterator& rhs) {
 						return this->_underlying != rhs._underlying || this->_idx != rhs._idx;
-					}
+					};
 
 					inline V& operator*() {
 						duo<string, V>* d = *(this->_underlying->begin() + this->_idx);
 						return d->second;
-					}
+					};
 
 					inline V* operator->() {
 						return &((*(this->_underlying->begin() + this->_idx))->second);
-					}
+					};
 
 				private:
 					vector<duo<string, V>*>* _underlying;
@@ -254,17 +254,17 @@ namespace zapata {
 			inline friend ostream& operator<<(ostream& os, iterator& f) {
 				os << "iterator pointing to " << f->second;
 				return os;
-			}
+			};
 
 			inline friend ostream& operator<<(ostream& os, ordered_iterator& f) {
 				os << "iterator pointing to " << *f;
 				return os;
-			}
+			};
 
 			inline friend ostream& operator<<(ostream& os, str_map<V>& f) {
 				f.print(os);
 				return os;
-			}
+			};
 
 			void print(ostream& os = cout);
 

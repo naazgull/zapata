@@ -30,11 +30,11 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 	if (_resource_type != zapata::RESTfulResource) {
 		switch(_resource_type) {
 			case zapata::RESTfulDocument : {
-				_out << "_id" << _in->url();;
+				_out << "_id" << _in.url();;
 				break;
 			}
 			default : { // collection/store
-				string _uri(_in->url());
+				string _uri(_in.url());
 				_uri.insert(0, "^");
 				_uri.insert(_uri.length(), "/([^/]+)$");
 				zapata::replace(_uri, "/", "\\\\/");
@@ -45,9 +45,10 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 			}
 		}
 	}
-	for (HTTPReqRef::iterator _i = _in->params().begin(); _i != _in->params().end(); _i++) {
-		string _value(_i->second->data());
-		string _key(_i->first.data());
+	JSONObj _params = (JSONObj&) _in["params"];
+	for (auto _i : *_params) {
+		string _value = _i.second;
+		string _key(_i.first.data());
 		zapata::url_decode(_value);
 		if (_regexp && __SPECIAL_PARAMS.find(_key + string(" ")) == string::npos) {
 			zapata::replace(_value, "/", "\\\\/");
@@ -55,6 +56,6 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 			_value.insert(0, "m/");
 			_value.insert(_value.length(), "/i");
 		}
-		_out << _i->first << _value;
+		_out << _i.first << _value;
 	}
 }

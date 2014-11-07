@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/base/smart_ptr.h>
-#include <zapata/base/str_map.h>
 #include <dlfcn.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/exceptions/InterruptedException.h>
@@ -39,8 +37,6 @@ SOFTWARE.
 #include <zapata/api/codes_rest.h>
 
 zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
-	this->__configuration << zapata::pretty;
-
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
 		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
 	}
@@ -49,18 +45,20 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		((ofstream*) zapata::log_fd)->open(((string) this->configuration()["zapata"]["core"]["log"]["file"]).data());
 	}
 
-	this->__pool.configuration(&this->__configuration);
+	this->__pool.configuration(& this->__configuration);
 
-	for (JSONObjIterator _i = this->configuration()->begin(); _i != this->configuration()->end(); _i++) {
-		if ((*_i)->first != "zapata") {
-			JSONObj _att((zapata::JSONObjRef*) (*_i)->second->get());
+	for (auto _i : * this->__configuration) {
+		string _key = _i.first;
+		JSONElement _value = _i.second;
+		if (_key != "zapata") {
+			
 			string _lib_file("lib");
-			_lib_file.append(_att["lib"]);
+			_lib_file.append((string) _value["lib"]);
 			_lib_file.append(".so");
 
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
-				if (hndl == NULL) {
+				if (hndl == nullptr) {
 					zapata::log(string(dlerror()), zapata::error);
 				}
 				else {
@@ -78,10 +76,10 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		 *  registered as a Controller
 		 */
 		this->__pool.on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			string _body = _req->body();
+			string _body = _req.body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 			zapata::JSONObj _params;
 			zapata::fromstr(_body, _params);
@@ -92,7 +90,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			string _to((string) _config["zapata"]["rest"]["uploads"]["upload_path"]);
 			zapata::normalize_path(_to, true);
 
-			string _originalname(_req->header("X-Original-Filename"));
+			string _originalname(_req.header("X-Original-Filename"));
 			string _path;
 			string _name;
 			string _mime;
@@ -107,7 +105,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 				if (_originalname.length() != 0) {
 					_path.insert(_path.length(), _originalname);
 
-					_mime.assign(_req->header("X-Original-Mimetype"));
+					_mime.assign(_req.header("X-Original-Mimetype"));
 					if (_mime.length() != 0) {
 						_mime.assign(_mime.substr(0, _mime.find(";")));
 					}
@@ -125,7 +123,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			}
 			while (zapata::path_exists(_path));
 
-			string _encoding(_req->header("X-Content-Transfer-Encoding"));
+			string _encoding(_req.header("X-Content-Transfer-Encoding"));
 			transform(_encoding.begin(), _encoding.end(), _encoding.begin(), ::toupper);
 			if (_encoding == "BASE64") {
 				ifstream _ifs;
@@ -147,9 +145,9 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			zapata::normalize_path(_location, true);
 			_location.insert(_location.length(), _name);
 
-			_rep->status(zapata::HTTP201);
-			_rep << "X-File-Mimetype" << _mime;
-			_rep << "Location" << _location;
+			_rep.status(zapata::HTTP201);
+			_rep.header( "X-File-Mimetype", _mime);
+			_rep.header("Location", _location);
 		}, zapata::RESTfulController);
 
 		/*
@@ -157,10 +155,10 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 		 *  registered as a Controller
 		 */
 		this->__pool.on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			string _body = _req->body();
+			string _body = _req.body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 			zapata::JSONObj _params;
 			zapata::fromstr(_body, _params);
@@ -182,7 +180,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 			_cmd.insert(_cmd.length(), " > /dev/null");
 			assertz(system(_cmd.data()) == 0, "There was an error removing the uploaded file.", zapata::HTTP500, zapata::ERRFilePermissions);
 
-			_rep->status(zapata::HTTP200);
+			_rep.status(zapata::HTTP200);
 		}, zapata::RESTfulController);
 	}
 

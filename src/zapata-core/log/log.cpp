@@ -28,7 +28,7 @@ SOFTWARE.
 
 namespace zapata {
 	short int log_lvl = 0;
-	ostream* log_fd = NULL;
+	ostream* log_fd = nullptr;
 
 	const char* log_lvl_names[] = {
 		"\033[1;34m\033[4;35msys\033[0m    | ",
@@ -42,7 +42,7 @@ namespace zapata {
 void zapata::log(string _text, zapata::LogLevel _level) {
 	if (_level <= zapata::log_lvl) {
 		string _time;
-		zapata::tostr(_time, time(NULL), "%F %T");
+		zapata::tostr(_time, time(nullptr), "%F %T");
 		zapata::replace(_text, "\n", "\n       | ");
 		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[1;37m" << _time << "\033[0m | " << _text << endl << flush;
 	}

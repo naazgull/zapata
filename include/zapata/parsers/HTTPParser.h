@@ -30,12 +30,12 @@ SOFTWARE.
 namespace zapata {
 
 	class HTTPParser: public HTTPTokenizer {
-		public:
-			HTTPParser(std::istream &_in = std::cin, std::ostream &_out = std::cout, HTTPReq* _rootreq = NULL, HTTPRep* _rootrep = NULL);
-			virtual ~HTTPParser();
+	public:
+		HTTPParser(std::istream &_in = std::cin, std::ostream &_out = std::cout);
+		virtual ~HTTPParser();
 
-			void switchRoots(HTTPReq* _rootreq = NULL, HTTPRep* _rootrep = NULL);
-			void switchStreams(std::istream &_in = std::cin, std::ostream &_out = std::cout);
+		void switchRoots(JSONObj* _root);
+		void switchStreams(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 	};
 
 }

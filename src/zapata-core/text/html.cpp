@@ -115,7 +115,7 @@ void zapata::fromformurlencoded(string& _in, JSONObj& _out) {
 			zapata::url_decode(_pvalue);
 
 			if (!!_out[_pname.data()]) {
-				if (((JSONElement) _out[_pname]).type() == zapata::JSArray) {
+				if (((JSONElement) _out[_pname])->type() == zapata::JSArray) {
 					_out[_pname] << _pvalue;
 				}
 				else {
@@ -192,7 +192,7 @@ void zapata::fromformdata(string& _in, string _boundary, string _tmp_path, JSONO
 						}
 
 						string _tmp_file(_tmp_path);
-						zapata::tostr(_tmp_file, time(NULL));
+						zapata::tostr(_tmp_file, time(nullptr));
 						_tmp_file.insert(_tmp_file.length(), _filename);
 
 						ofstream ofs;

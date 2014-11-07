@@ -24,123 +24,132 @@ SOFTWARE.
 
 #include <zapata/parsers/JSONTokenizerLexer.h>
 
-zapata::JSONTokenizerLexer::JSONTokenizerLexer(std::istream &_in, std::ostream &_out, zapata::JSONObj* _rootobj, zapata::JSONArr* _rootarr) :
-	zapata::JSONLexer(_in, _out), __root_obj(_rootobj), __root_arr(_rootarr), __root_type(zapata::JSObject), __value(NULL), __parent(NULL) {
+zapata::JSONTokenizerLexer::JSONTokenizerLexer(std::istream &_in, std::ostream &_out) :
+	zapata::JSONLexer(_in, _out) {
 }
 
 zapata::JSONTokenizerLexer::~JSONTokenizerLexer() {
 }
 
-void zapata::JSONTokenizerLexer::switchRoots(JSONObj* _rootobj, JSONArr* _rootarr) {
-	this->__root_obj = _rootobj;
-	this->__root_arr = _rootarr;
+void zapata::JSONTokenizerLexer::switchRoots(JSONPtr& _root) {
+	this->__root = this->__parent = _root.get();
 }
 
 void zapata::JSONTokenizerLexer::result(zapata::JSONType _in) {
-	this->__root_type = _in;
-	switch (_in) {
-		case zapata::JSObject : {
-			this->__root_obj->set((JSONObjRef*) this->__parent);
-			break;
-		}
-		case zapata::JSArray : {
-			this->__root_arr->set((JSONArrRef*) this->__parent);
-			break;
-		}
-		default: {
-		}
+	try {			
+		this->__root_type = _in;
 	}
-	this->__parent = NULL;
-	this->__value = NULL;
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::finish(zapata::JSONType _in) {
-	this->__value = this->__parent;
-	if (this->__context.size() != 0) {
-		this->__parent = this->__context.back();
-		this->__context.pop_back();
+	try {			
+		//cout << "- finishing object: " << (* this->__parent) <<  " > " << this->__parent->type() << endl << flush;
+		this->__parent = this->__parent->parent();
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(zapata::JSONType _in_type, const string _in_str) {
-	(*this->__parent) << _in_str;
+	try {			
+		//cout << "- starting field: " << _in_str << endl << flush;
+		(* this->__parent) << _in_str;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::init(zapata::JSONType _in_type) {
-	if (this->__parent != NULL) {
-		this->__context.push_back(this->__parent);
-		this->__parent = NULL;
+	try {		
+		//cout << "- putting this object on hold: " << (* this->__parent) <<  " > " << this->__parent->type() << endl << flush;
+		switch (_in_type) {
+			case zapata::JSObject : {
+				JSONObj _obj;
+				JSONElementT* _ptr = new JSONElementT(_obj);
+				_ptr->parent(this->__parent);
+				(* this->__parent) << _ptr;
+				this->__parent = _ptr;
+				//cout << "- starting object: " << (* this->__parent) <<  " > " << this->__parent->type() << " with parent " << this->__parent->parent() << endl << flush;
+				break;
+			}
+			case zapata::JSArray : {
+				JSONArr _arr;
+				JSONElementT* _ptr = new JSONElementT(_arr);
+				_ptr->parent(this->__parent);
+				(* this->__parent) << _ptr;
+				this->__parent = _ptr;
+				//cout << "- starting object: " << (* this->__parent) <<  " > " << this->__parent->type() << " with parent " << this->__parent->parent() << endl << flush;
+				break;
+			}
+			default : {
+			}
+		}
 	}
-	switch (_in_type) {
-		case zapata::JSObject : {
-			this->__parent = new JSONObjRef();
-			break;
-		}
-		case zapata::JSArray : {
-			this->__parent = new JSONArrRef();
-			break;
-		}
-		default : {
-		}
+	catch (zapata::AssertionException& _e) {
+		this->__parent->type(_in_type);
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(bool _in) {
-	this->__value = new JSONBoolRef(_in);
+	try {			
+		//cout << "- adding value: " << _in << endl << flush;
+		JSONElementT* _ptr = new JSONElementT(_in);
+		_ptr->parent(this->__parent);
+		(* this->__parent) << _ptr;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::init(long long _in) {
-	this->__value = new JSONIntRef(_in);
+	try {			
+		//cout << "- adding value: " << _in << endl << flush;
+		JSONElementT* _ptr = new JSONElementT(_in);
+		_ptr->parent(this->__parent);
+		(* this->__parent) <<  _ptr;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::init(double _in) {
-	this->__value = new JSONDblRef(_in);
+	try {			
+		//cout << "- adding value: " << _in << endl << flush;
+		JSONElementT* _ptr = new JSONElementT(_in);
+		_ptr->parent(this->__parent);
+		(* this->__parent) <<  _ptr;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::init(string _in) {
-	this->__value = new JSONStrRef(_in);
+	try {			
+		//cout << "- adding value: " << _in << endl << flush;
+		JSONElementT* _ptr = new JSONElementT(_in);
+		_ptr->parent(this->__parent);
+		(* this->__parent) <<  _ptr;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
 }
 
 void zapata::JSONTokenizerLexer::add() {
-	switch (this->__value->type()) {
-		case zapata::JSObject : {
-			zapata::JSONObj _obj((JSONObjRef*) this->__value);
-			(*this->__parent) << _obj;
-			break;
-		}
-		case zapata::JSArray : {
-			zapata::JSONArr _arr((JSONArrRef*) this->__value);
-			(*this->__parent) << _arr;
-			break;
-		}
-		case zapata::JSBoolean : {
-			(*this->__parent) << (bool) *this->__value;
-			delete this->__value;
-			break;
-		}
-		case zapata::JSInteger : {
-			(*this->__parent) << (long long) *this->__value;
-			delete this->__value;
-			break;
-		}
-		case zapata::JSDouble : {
-			(*this->__parent) << (double) *this->__value;
-			delete this->__value;
-			break;
-		}
-		case zapata::JSString : {
-			(*this->__parent) << (string) *this->__value;
-			delete this->__value;
-			break;
-		}
-		case zapata::JSNil : {
-			(*this->__parent) << zapata::undefined;
-			delete this->__value;
-			break;
-		}
-		default: {
-		}
-	}
-	this->__value = NULL;
 }
 
