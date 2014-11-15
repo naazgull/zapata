@@ -30,7 +30,9 @@ SOFTWARE.
 #include <string>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 	extern short int log_lvl;

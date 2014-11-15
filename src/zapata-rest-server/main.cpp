@@ -37,7 +37,9 @@ SOFTWARE.
 #include <zapata/mem/usage.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 pthread_t __thread_id = 0;
 semid_t __semid = 0;

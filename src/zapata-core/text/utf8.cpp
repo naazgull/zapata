@@ -28,7 +28,9 @@ SOFTWARE.
 #include <iomanip>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 #define BOM8A 0xEF
 #define BOM8B 0xBB

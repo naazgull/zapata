@@ -93,7 +93,7 @@ void zapata::tostr(string& s, time_t i, const char* f){
 	bzero(_buffer_date, 80);
 	localtime_r(&i, &_ptm);
 	strftime(_buffer_date, 80, f, &_ptm);
-	s.assign(_buffer_date);
+	s.insert(s.length(), _buffer_date);
 }
 
 void zapata::fromstr(string& s, int* i){

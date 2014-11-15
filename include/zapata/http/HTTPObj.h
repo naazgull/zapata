@@ -31,7 +31,9 @@ SOFTWARE.
 #include <zapata/core.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 #ifndef CRLF
 #define CRLF "\r\n"

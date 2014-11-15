@@ -30,7 +30,9 @@ SOFTWARE.
 #include <zapata/api/RESTPool.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 
@@ -42,13 +44,21 @@ namespace zapata {
 			virtual void wait();
 			virtual void notify();
 
+			semid_t semid();
+			zapata::JSONObj& configuration();
+
 			RESTPool& pool();
 
 		private:
 			size_t __n_jobs;
 			serversocketstream __ss;
-			vector<RESTJob*> __jobs;
+			vector< RESTJob > __jobs;
 			RESTPool __pool;
+			semid_t __sem;
+
+		protected:
+			JSONObj __configuration;
+			string __skey;
 	};
 
 }

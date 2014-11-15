@@ -31,7 +31,7 @@ namespace zapata {
 
 	class JobServer {
 		public:
-			JobServer(string _key_file_path);
+			JobServer(size_t _max);
 			virtual ~JobServer();
 
 			virtual void start();
@@ -40,17 +40,10 @@ namespace zapata {
 
 			size_t max();
 			size_t next();
-			semid_t semid();
 			void max(size_t _max);
-			zapata::JSONObj& configuration();
 
 		private:
 			size_t __next;
 			size_t __max_idx;
-			semid_t __sem;
-
-		protected:
-			JSONObj __configuration;
-			string __skey;
 	};
 }

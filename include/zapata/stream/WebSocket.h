@@ -23,17 +23,19 @@ SOFTWARE.
 */
 
 #pragma once
-
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include <string>
+#include <zapata/stream/SocketStreams.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
+#ifndef CRLF
+#define CRLF "\r\n"
 #endif
 
 namespace zapata {
-	bool sendmail(string _to, string _from, string _subject, string _message, string _replyto = "");
+
+	namespace ws {
+		bool handshake(zapata::socketstream& _s);
+		bool read(zapata::socketstream& _s, string& _out, int* _op_code);
+		bool write(zapata::socketstream& _s, string _in);
+	}
+
 }

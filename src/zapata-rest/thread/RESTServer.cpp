@@ -36,7 +36,23 @@ SOFTWARE.
 #include <vector>
 #include <zapata/api/codes_rest.h>
 
-zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path), __n_jobs(0) {
+zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs(0), __sem(-1), __skey(_key_file_path) {
+	ifstream _key_file;
+	_key_file.open(_key_file_path.data());
+	zapata::fromfile(_key_file, this->__configuration);
+
+	if (!!this->configuration()["zapata"]["core"]["max_jobs"] && ((int) this->configuration()["zapata"]["core"]["max_jobs"]) != -1) {
+		this->max((size_t) this->configuration()["zapata"]["core"]["max_jobs"]);
+	}
+	else {
+		this->max(1);
+	}
+
+	key_t key = ftok(this->__skey.data(), this->max());
+	this->__sem = semget(key, this->max(), IPC_CREAT | 0777);
+	if (this->__sem == 0) {
+	}
+
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
 		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
 	}
@@ -131,7 +147,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 				ofstream _ofs;
 				_ofs.open(_path.data());
 
-				zapata::base64_decode(_ifs, _ofs);
+				zapata::base64::decode(_ifs, _ofs);
 
 				_ifs.close();
 				_ofs.flush();
@@ -192,9 +208,6 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer(_key_file_path
 }
 
 zapata::RESTServer::~RESTServer(){
-	for (vector<RESTJob*>::iterator i = this->__jobs.begin(); i != this->__jobs.end(); i++) {
-		delete (*i);
-	}
 }
 
 void zapata::RESTServer::wait() {
@@ -203,17 +216,16 @@ void zapata::RESTServer::wait() {
 		this->__ss.accept(&_cs_fd);
 
 		if (this->__n_jobs < this->max()) {
-			RESTJob* _job = new RESTJob(this->__skey);
-			_job->max(this->max());
-			_job->idx(this->next());
-			_job->pool(&this->__pool);
+			RESTJob _job(this->__skey);
+			_job->semaphore(this->__skey, this->next(), this->max());
+			_job.pool(&this->__pool);
 			_job->start();
 
 			this->__jobs.push_back(_job);
 			this->__n_jobs++;
 		}
 
-		this->__jobs.at(this->next())->assign(_cs_fd);
+		this->__jobs.at(this->next()).assign(_cs_fd);
 	}
 	catch(zapata::ClosedException& e) {
 		throw zapata::InterruptedException(e.what());
@@ -227,4 +239,12 @@ void zapata::RESTServer::notify() {
 
 zapata::RESTPool& zapata::RESTServer::pool() {
 	return this->__pool;
+}
+
+semid_t zapata::RESTServer::semid() {
+	return this->__sem;
+}
+
+zapata::JSONObj& zapata::RESTServer::configuration() {
+	return this->__configuration;
 }

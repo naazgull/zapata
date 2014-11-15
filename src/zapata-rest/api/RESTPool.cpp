@@ -76,7 +76,6 @@ zapata::RESTPool::RESTPool() :
 zapata::RESTPool::~RESTPool() {
 	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
 		delete _i->first;
-		delete &(_i->second);
 	}
 }
 
@@ -93,8 +92,7 @@ void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zap
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector<zapata::RESTHandler>* _handlers_ptr = new vector<zapata::RESTHandler>();
-	vector<zapata::RESTHandler>& _handlers = *_handlers_ptr;
+	vector<zapata::RESTHandler> _handlers;
 
 	_handlers.push_back( this->__default_get);
 	_handlers.push_back(this->__default_put);
@@ -150,8 +148,7 @@ void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::REST
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector<zapata::RESTHandler>* _handlers_ptr = new vector<zapata::RESTHandler>();
-	vector<zapata::RESTHandler>& _handlers = *_handlers_ptr;
+	vector<zapata::RESTHandler> _handlers;
 	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPGet || (_resource_type == zapata::RESTfulController) ? this->__default_get : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPut || (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore) ? this->__default_put : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPost || (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection) ? this->__default_post : _handler));
@@ -171,8 +168,7 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9], za
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector<zapata::RESTHandler>* _handlers_ptr = new vector<zapata::RESTHandler>();
-	vector<zapata::RESTHandler>& _handlers = *_handlers_ptr;
+	vector<zapata::RESTHandler> _handlers;
 	_handlers.push_back(_handler_set[zapata::HTTPGet] == nullptr ?  this->__default_get : _handler_set[zapata::HTTPGet]);
 	_handlers.push_back(_handler_set[zapata::HTTPPut] == nullptr ?  this->__default_put : _handler_set[zapata::HTTPPut]);
 	_handlers.push_back(_handler_set[zapata::HTTPPost] == nullptr ?  this->__default_post : _handler_set[zapata::HTTPPost]);
@@ -191,8 +187,7 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTH
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector<zapata::RESTHandler>* _handlers_ptr = new vector<zapata::RESTHandler>();
-	vector<zapata::RESTHandler>& _handlers = *_handlers_ptr;
+	vector<zapata::RESTHandler> _handlers;
 	_handlers.push_back(_get == nullptr ?  this->__default_get : _get);
 	_handlers.push_back(_put == nullptr ?  this->__default_put : _put);
 	_handlers.push_back(_post == nullptr ?  this->__default_post : _post);

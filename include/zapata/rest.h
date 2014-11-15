@@ -28,6 +28,8 @@ SOFTWARE.
 #include <zapata/thread/RESTServer.h>
 
 #include <zapata/api/RESTPool.h>
+#include <zapata/api/codes_rest.h>
+#include <zapata/api/codes_users.h>
 
 #include <zapata/http/requester.h>
 #include <zapata/http/params.h>

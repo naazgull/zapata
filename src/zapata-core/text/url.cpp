@@ -28,7 +28,9 @@ SOFTWARE.
 #include <iomanip>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 void zapata::url_encode(string& _out) {
 	const char DEC2HEX[16 + 1] = "0123456789ABCDEF";

@@ -39,7 +39,9 @@ SOFTWARE.
 #include <zapata/text/manip.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 
@@ -94,6 +96,9 @@ namespace zapata {
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
 
+		virtual void prettify(string& _out, uint _n_tabs = 0);
+		virtual void prettify(ostream& _out, uint _n_tabs = 0);
+
 		virtual void push(string _name);
 		virtual void push(JSONElementT& _value);
 		virtual void push(JSONElementT* _value);
@@ -104,11 +109,13 @@ namespace zapata {
 		virtual void pop(string _idx);
 
 		bool operator==(JSONObjT& _in);
+		bool operator==(JSONObj& _in);
 		template <typename T>
 		bool operator==(T _in) {
 			return false;
 		};
 		bool operator!=(JSONObjT& _in);
+		bool operator!=(JSONObj& _in);
 		template <typename T>
 		bool operator!=(T _in) {
 			return true;
@@ -136,6 +143,9 @@ namespace zapata {
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
 
+		virtual void prettify(string& _out, uint _n_tabs = 0);
+		virtual void prettify(ostream& _out, uint _n_tabs = 0);
+
 		virtual void push(JSONElementT& _value);
 		virtual void push(JSONElementT* _value);
 
@@ -145,11 +155,13 @@ namespace zapata {
 		virtual void pop(string _idx);
 
 		bool operator==(JSONArrT& _in);
+		bool operator==(JSONArr& _in);
 		template <typename T>
 		bool operator==(T _in) {
 			return false;
 		};
 		bool operator!=(JSONArrT& _in);
+		bool operator!=(JSONArr& _in);
 		template <typename T>
 		bool operator!=(T _in) {
 			return true;
@@ -291,6 +303,7 @@ namespace zapata {
 	public:
 		JSONElementT();
 		JSONElementT(JSONElementT& _element);
+		JSONElementT(JSONPtr& _value);
 		JSONElementT(JSONObj& _value);
 		JSONElementT(JSONArr& _value);
 		JSONElementT(string _value);
@@ -377,12 +390,14 @@ namespace zapata {
 			return zapata::undefined;
 		};
 		bool operator==(JSONElementT& _in);
+		bool operator==(JSONPtr& _rhs);
 		template <typename T>
 		bool operator==(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
 		};
 		bool operator!=(JSONElementT& _in);
+		bool operator!=(JSONPtr& _rhs);
 		template <typename T>
 		bool operator!=(T _in) {
 			JSONElementT _rhs(_in);
@@ -396,6 +411,9 @@ namespace zapata {
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
+
+		virtual void prettify(string& _out, uint _n_tabs = 0);
+		virtual void prettify(ostream& _out, uint _n_tabs = 0);
 
 	private:
 		JSONUnion __target;

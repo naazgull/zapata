@@ -29,7 +29,9 @@ SOFTWARE.
 #include <zapata/text/manip.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 void zapata::html_entities_encode(wstring s, ostream& out, bool quote, bool tags) {
 	ostringstream oss;
@@ -187,7 +189,7 @@ void zapata::fromformdata(string& _in, string _boundary, string _tmp_path, JSONO
 						_out << _pname << _filename;
 
 						if (_is_base64) {
-							zapata::base64_decode(_body);
+							zapata::base64::decode(_body);
 							_body_len = _body.length();
 						}
 

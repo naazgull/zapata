@@ -23,26 +23,71 @@ SOFTWARE.
 */
 
 #include <zapata/thread/Job.h>
-
 #include <fstream>
-#include <zapata/parsers/json.h>
 
-namespace zapata {
-	pthread_key_t __configuration_key;
+zapata::Job::Job() : shared_ptr<zapata::JobRef>(new JobRef()) {
 }
 
-zapata::Job::Job(string _key_file_path) : __idx(-1), __max_idx(-1), __sem(-1), __skey(_key_file_path) {
+zapata::Job::Job(Job& _rhs) : shared_ptr<zapata::JobRef>(_rhs) {
+}
+
+zapata::Job::Job(JobRef* _target) : shared_ptr<zapata::JobRef>(_target) {
+}
+
+zapata::Job::Job(JobLoopCallback _callback) : shared_ptr<zapata::JobRef>(new JobRef(_callback)) {
+}
+
+zapata::Job::~Job(){
+}
+
+zapata::JobRef::JobRef() : __idx(-1), __max_idx(-1), __sem(-1) {
+	this->__mtx = new pthread_mutex_t();
+	this->__thr = new pthread_t();
+	pthread_mutexattr_init(&this->__attr);
+	pthread_mutex_init(this->__mtx, &this->__attr);
+}
+
+zapata::JobRef::JobRef(JobLoopCallback _callback) : __idx(-1), __max_idx(-1), __sem(-1) {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
 	pthread_mutexattr_init(&this->__attr);
 	pthread_mutex_init(this->__mtx, &this->__attr);
 
-	ifstream _key_file;
-	_key_file.open(_key_file_path.data());
-	zapata::fromfile(_key_file, this->__configuration);
+	this->__callback = _callback;
 }
 
-zapata::Job::~Job(){
+zapata::JobRef::JobRef(JobRef& _rhs) {
+	this->__mtx = _rhs.__mtx;
+	this->__thr = _rhs.__thr;
+	this->__skey = _rhs.__skey;
+	this->__idx = _rhs.__idx;
+	this->__max_idx = _rhs.__max_idx;
+	this->__callback = _rhs.__callback;
+}
+
+zapata::JobRef::~JobRef(){
+}
+
+void* zapata::JobRef::start(void* _thread) {
+	JobRef* _running = static_cast<JobRef*>(_thread);
+	Job _self(_running);
+	_self->__callback(_self);
+	_self->exit();
+	return nullptr;
+}
+
+void zapata::JobRef::start() {
+	JobRef* _new = new JobRef(* this);
+	if (_new->__idx != -1 && _new->__max_idx != -1) {		
+		key_t key = ftok(_new->__skey.data(), _new->__max_idx);
+		_new->__sem = semget(key, _new->__max_idx, IPC_CREAT | 0777);
+		if (_new->__sem == 0) {
+		}
+	}
+	pthread_create(_new->__thr, 0, &JobRef::start, _new);
+}
+
+void zapata::JobRef::exit() {
 	pthread_mutexattr_destroy(&this->__attr);
 	pthread_mutex_destroy(this->__mtx);
 	delete this->__mtx;
@@ -50,55 +95,48 @@ zapata::Job::~Job(){
 	pthread_exit(nullptr);
 }
 
-void* zapata::Job::start(void* _thread) {
-	Job* _running = static_cast<Job*>(_thread);
-	pthread_setspecific(zapata::__configuration_key, &_running->__configuration);
-	_running->run();
-	return nullptr;
+void zapata::JobRef::loop(JobLoopCallback _callback) {
+	this->__callback = _callback;
 }
 
-void zapata::Job::start() {
-	key_t key = ftok(this->__skey.data(), this->__max_idx);
-	this->__sem = semget(key, this->__max_idx, IPC_CREAT | 0777);
-	if (this->__sem == 0) {
-	}
-	pthread_create(this->__thr, 0, &Job::start, this);
+void zapata::JobRef::semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size) {
+	this->__skey = _file_key;
+	this->__idx = _sem_arr_idx;
+	this->__max_idx = _sem_arr_size;
 }
 
-void zapata::Job::assign() {
+void zapata::JobRef::assign() {
+	assertz(this->__idx != -1 && this->__max_idx != -1, "*semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size)* must be invoked, PRIOR TO *start()*, to set-up semaphore synchronization.", 0, 0);
 	struct sembuf ops[1] = { { (short unsigned int) this->__idx, 1 } };
 	semop(this->__sem, ops, 1);
 }
 
-void zapata::Job::wait() {
+void zapata::JobRef::wait() {
+	assertz(this->__idx != -1 && this->__max_idx != -1, "*semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size)* must be invoked, PRIOR TO *start()*, to set-up semaphore synchronization.", 0, 0);
 	struct sembuf ops[1] = { { (short unsigned int) this->__idx, -1 } };
 	semop(this->__sem, ops, 1);
 }
 
-void zapata::Job::wait(int seconds) {
+void zapata::JobRef::wait(int seconds) {
 	sleep(seconds);
 }
 
-size_t zapata::Job::idx() {
+size_t zapata::JobRef::idx() {
 	return this->__idx;
 }
 
-size_t zapata::Job::max() {
+size_t zapata::JobRef::max() {
 	return this->__max_idx;
 }
 
-semid_t zapata::Job::semid() {
+semid_t zapata::JobRef::semid() {
 	return this->__sem;
 }
 
-zapata::JSONObj& zapata::Job::configuration() {
-	return this->__configuration;
-}
-
-void zapata::Job::idx(size_t _idx) {
+void zapata::JobRef::idx(size_t _idx) {
 	this->__idx = _idx;
 }
 
-void zapata::Job::max(size_t _max) {
+void zapata::JobRef::max(size_t _max) {
 	this->__max_idx = _max;
 }

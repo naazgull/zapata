@@ -37,7 +37,9 @@ SOFTWARE.
 #include <zapata/exceptions/ClosedException.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 
@@ -64,7 +66,7 @@ namespace zapata {
 			basic_socketbuf() : __sock(0) {
 				__buf_type::setp(obuf, obuf + (SIZE - 1));
 				__buf_type::setg(ibuf, ibuf, ibuf);
-			}
+			};
 
 			virtual ~basic_socketbuf() {
 				sync();
@@ -73,10 +75,10 @@ namespace zapata {
 			void set_socket(int _sock) {
 				this->__sock = _sock;
 
-//				int _opts = fcntl(this->__sock, F_GETFL);
-//				_opts = _opts & ~O_NONBLOCK;
-//				if (fcntl(this->__sock, F_SETFL, _opts) < 0) {
-//				}
+				int _opts = fcntl(this->__sock, F_GETFL);
+				_opts = _opts & ~O_NONBLOCK;
+				if (fcntl(this->__sock, F_SETFL, _opts) < 0) {
+				}
 			}
 			int get_socket() {
 				return this->__sock;
@@ -143,7 +145,8 @@ namespace zapata {
 		public:
 			basic_socketstream() :
 				__stream_type(&__buf) {
-			}
+			};
+
 			basic_socketstream(int s) : __stream_type(&__buf) {
 				__buf.set_socket(s);
 			}
@@ -212,7 +215,8 @@ namespace zapata {
 		public:
 			basic_serversocketstream() :
 				__stream_type(&__buf) {
-			}
+			};
+
 			basic_serversocketstream(int s) : __stream_type(&__buf) {
 				__buf.set_socket(s);
 			}

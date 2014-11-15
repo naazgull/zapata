@@ -29,7 +29,9 @@ SOFTWARE.
 #include <sys/time.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 void zapata::ascii_encode(string& _out, bool quote) {
 	wchar_t* wc = zapata::utf8_to_wstring(_out);

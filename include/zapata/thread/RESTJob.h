@@ -29,7 +29,9 @@ SOFTWARE.
 #include <queue>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 
@@ -38,8 +40,8 @@ namespace zapata {
 			RESTJob(string _key_file_path);
 			virtual ~RESTJob();
 
-			virtual void run();
 			virtual void assign(int _cs_fd);
+			zapata::JSONObj& configuration();
 
 			RESTPool& pool();
 			void pool(RESTPool* _pool);
@@ -47,6 +49,7 @@ namespace zapata {
 		private:
 			queue<int> __cur_fd;
 			RESTPool* __pool;
+			JSONObj __configuration;
 	};
 
 }

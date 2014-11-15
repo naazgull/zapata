@@ -24,55 +24,6 @@ SOFTWARE.
 
 #include <zapata/parsers/json.h>
 
-void zapata::fromstream(istream& _in, JSONObj& _out) {
-	zapata::JSONParser _p;
-	JSONPtr _root(new JSONElementT(_out));
-	_p.switchRoots(_root);
-	_p.switchStreams(_in);
-	_p.parse();
-}
-
-void zapata::fromstr(string& _in, JSONObj& _out) {
-	istringstream _ss;
-	_ss.str(_in);
-	zapata::JSONParser _p;
-	JSONPtr _root(new JSONElementT(_out));
-	_p.switchRoots(_root);
-	_p.switchStreams(_ss);
-	_p.parse();
-
-}
-
-void zapata::fromstr(string& _in, JSONArr& _out) {
-	istringstream _ss;
-	_ss.str(_in);
-	zapata::JSONParser _p;
-	JSONPtr _root(new JSONElementT(_out));
-	_p.switchRoots(_root);
-	_p.switchStreams(_ss);
-	_p.parse();
-}
-
-void zapata::fromfile(ifstream& _in, JSONObj& _out) {
-	if (_in.is_open()) {
-		zapata::JSONParser _p;
-		JSONPtr _root(new JSONElementT(_out));
-		_p.switchRoots(_root);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-}
-
-void zapata::fromfile(ifstream& _in, JSONArr& _out) {
-	if (_in.is_open()) {
-		zapata::JSONParser _p;
-		JSONPtr _root(new JSONElementT(_out));
-		_p.switchRoots(_root);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-}
-
 zapata::JSONPtr zapata::fromstr(string& _in) {
 	istringstream _ss;
 	_ss.str(_in);
@@ -92,6 +43,15 @@ zapata::JSONPtr zapata::fromfile(ifstream& _in) {
 		_p.switchStreams(_in);
 		_p.parse();
 	}
+	return _root;
+}
+
+zapata::JSONPtr zapata::fromstream(istream& _in) {
+	JSONPtr _root;
+	zapata::JSONParser _p;
+	_p.switchRoots(_root);
+	_p.switchStreams(_in);
+	_p.parse();
 	return _root;
 }
 

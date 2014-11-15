@@ -30,50 +30,68 @@ SOFTWARE.
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <string>
-#include <zapata/json/JSONObj.h>
+#include <functional>
+#include <memory>
+#include <zapata/base/assert.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 typedef int semid_t;
 
 namespace zapata {
+	class JobRef;
+	class Job;
+	typedef std::function< void (Job&) > JobLoopCallback;
+	
+	class Job : public shared_ptr< JobRef > {
+	public:
+		Job();
+		Job(Job& _rhs);
+		Job(JobRef* _target);
+		Job(JobLoopCallback _callback);
+		virtual ~Job();
+	};
 
-	extern pthread_key_t __configuration_key;
+	class JobRef {
+	public:
+		JobRef();
+		JobRef(JobRef& _rhs);
+		JobRef(JobLoopCallback _callback);
+		virtual ~JobRef();
 
-	class Job {
-		public:
-			Job(string _key_file_path);
-			virtual ~Job();
+		static void* start(void* thread);
 
-			static void* start(void* thread);
+		size_t pending();
+		virtual void start();
+		virtual void exit();
+		virtual void loop(zapata::JobLoopCallback _callback) final;
+		virtual void assign();
+		virtual void wait(int seconds);
+		virtual void wait();
 
-			size_t pending();
-			virtual void start();
-			virtual void run() = 0;
-			virtual void assign();
-			virtual void wait(int seconds);
-			virtual void wait();
+		virtual void semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size) final;
 
-			size_t idx();
-			size_t max();
-			semid_t semid();
-			zapata::JSONObj& configuration();
+	private:
+		size_t __idx;
+		size_t __max_idx;
+		semid_t __sem;
 
-			void idx(size_t _idx);
-			void max(size_t _max);
+		size_t idx();
+		size_t max();
+		semid_t semid();
+		void idx(size_t _idx);
+		void max(size_t _max);
 
-		private:
-			size_t __idx;
-			size_t __max_idx;
-			semid_t __sem;
+	protected:
+		string __skey;
+		pthread_mutex_t* __mtx;
+		pthread_t* __thr;
+		pthread_mutexattr_t __attr;
 
-		protected:
-			string __skey;
-			pthread_mutex_t* __mtx;
-			pthread_t* __thr;
-			pthread_mutexattr_t __attr;
-			JSONObj __configuration;
+		JobLoopCallback __callback;
 	};
 
 }

@@ -77,6 +77,48 @@ zapata::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr )
 	}
 }
 
+zapata::JSONElementT::JSONElementT(JSONPtr& _value) {
+	this->type(_value->type());
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			if (_value->obj().get() != nullptr) {
+				this->__target.__object = _value->obj();
+			}
+			break;
+		}
+		case zapata::JSArray : {
+			if (_value->arr().get() != nullptr) {
+				this->__target.__array = _value->arr();
+			}
+			break;
+		}
+		case zapata::JSString : {
+			this->__target.__string = make_shared<string>(_value->str());
+			break;
+		}
+		case zapata::JSInteger : {
+			this->__target.__integer = _value->intr();
+			break;
+		}
+		case zapata::JSDouble : {
+			this->__target.__double = _value->dbl();
+			break;
+		}
+		case zapata::JSBoolean : {
+			this->__target.__boolean = _value->bln();
+			break;
+		}
+		case zapata::JSNil : {
+			this->__target.__nil = nullptr;
+			break;
+		}
+		case zapata::JSDate : {
+			this->__target.__date = _value->date();
+			break;
+		}
+	}
+}
+
 zapata::JSONElementT::JSONElementT(JSONObj& _value) : __parent( nullptr ) {
 	this->type( zapata::JSObject);
 	if (_value.get() != nullptr) {
@@ -363,10 +405,10 @@ bool zapata::JSONElementT::operator==(zapata::JSONElementT& _in) {
 	}
 	switch(this->__target.__type) {
 		case zapata::JSObject : {
-			return this->__target.__object == _in.obj();
+			return *(this->__target.__object) == *(_in.obj());
 		}
 		case zapata::JSArray : {
-			return this->__target.__array == _in.arr();
+			return *(this->__target.__array) == *(_in.arr());
 		}
 		case zapata::JSString : {
 			return *(this->__target.__string.get()) == _in.str();
@@ -388,6 +430,10 @@ bool zapata::JSONElementT::operator==(zapata::JSONElementT& _in) {
 		}
 	}
 	return false;
+}
+
+bool zapata::JSONElementT::operator==(zapata::JSONPtr& _rhs) {
+	return * this == * _rhs;
 }
 
 bool zapata::JSONElementT::operator!=(JSONElementT& _in) {
@@ -424,6 +470,10 @@ bool zapata::JSONElementT::operator!=(JSONElementT& _in) {
 	return false;
 }
 
+bool zapata::JSONElementT::operator!=(zapata::JSONPtr& _rhs) {
+	return * this != * _rhs;
+}
+
 void zapata::JSONElementT::stringify(ostream& _out) {
 	switch(this->__target.__type) {
 		case zapata::JSObject : {
@@ -447,7 +497,7 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 			break;
 		}
 		case zapata::JSBoolean : {
-			_out << this->__target.__boolean << flush;
+			_out << (this->__target.__boolean ? "true" : "false") << flush;
 			break;
 		}
 		case zapata::JSNil : {
@@ -504,6 +554,87 @@ void zapata::JSONElementT::stringify(string& _out) {
 	}
 }
 
+void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			this->__target.__object->prettify(_out, _n_tabs);
+			break;
+		}
+		case zapata::JSArray : {
+			this->__target.__array->prettify(_out, _n_tabs);
+			break;
+		}
+		case zapata::JSString : {
+			_out << "\"" << this->str() << "\"" << flush;
+			break;
+		}
+		case zapata::JSInteger : {
+			_out << this->__target.__integer << flush;
+			break;
+		}
+		case zapata::JSDouble : {
+			_out << this->__target.__double << flush;
+			break;
+		}
+		case zapata::JSBoolean : {
+			_out << (this->__target.__boolean ? "true" : "false") << flush;
+			break;
+		}
+		case zapata::JSNil : {
+			_out <<  "undefined" << flush;
+			break;
+		}
+		case zapata::JSDate : {
+			string _date;
+			zapata::tostr(_date, this->__target.__date, "%Y-%m-%dT%H:%M:%S.000Z");
+			_out << "\"" << _date << "\"" << flush;
+			break;
+		}
+	}
+}
+
+void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			this->__target.__object->prettify(_out, _n_tabs);
+			break;
+		}
+		case zapata::JSArray : {
+			this->__target.__array->prettify(_out, _n_tabs);
+			break;
+		}
+		case zapata::JSString : {
+			_out.insert(_out.length(), "\"");
+			_out.insert(_out.length(), this->str());
+			_out.insert(_out.length(), "\"");
+			break;
+		}
+		case zapata::JSInteger : {
+			zapata::tostr(_out, this->__target.__integer);
+			break;
+		}
+		case zapata::JSDouble : {
+			zapata::tostr(_out, this->__target.__double);
+			break;
+		}
+		case zapata::JSBoolean : {
+			zapata::tostr(_out, this->__target.__boolean);
+			break;
+		}
+		case zapata::JSNil : {
+			_out.insert(_out.length(), "undefined");
+			break;
+		}
+		case zapata::JSDate : {
+			_out.insert(_out.length(), "\"");
+			zapata::tostr(_out, this->__target.__date, "%Y-%m-%dT%H-%M-%S.000Z");
+			_out.insert(_out.length(), "\"");
+			break;
+		}
+	}
+}
+
+
 /*JSON OBJECT*/
 zapata::JSONObjT::JSONObjT() {
 }
@@ -516,6 +647,7 @@ void zapata::JSONObjT::push(string _name) {
 		this->__name.assign(_name);
 	}
 	else {
+		this->pop(this->__name);
 		this->insert(pair<string, JSONPtr>(string(this->__name.data()), JSONPtr(new JSONElementT(_name))));
 		this->__name.clear();
 	}
@@ -523,12 +655,14 @@ void zapata::JSONObjT::push(string _name) {
 
 void zapata::JSONObjT::push(JSONElementT& _value) {
 	assertz(this->__name.length() != 0, "you must pass a field name first", 0, 0);
+	this->pop(this->__name);
 	this->insert(pair<string, JSONPtr>(this->__name, JSONPtr(new JSONElementT(_value))));
 	this->__name.clear();
 }
 
 void zapata::JSONObjT::push(JSONElementT* _value) {
 	assertz(this->__name.length() != 0, "you must pass a field name first", 0, 0);
+	this->pop(this->__name);
 	this->insert(pair<string, JSONPtr>(this->__name, JSONPtr(_value)));
 	this->__name.clear();
 }
@@ -553,11 +687,38 @@ void zapata::JSONObjT::pop(string _name) {
 }
 
 bool zapata::JSONObjT::operator==(zapata::JSONObjT& _rhs) {
-	return false;
+	for (auto _f : * this) {
+		auto _found = _rhs.find(_f.first);
+		if (_found == _rhs.end()) {
+			return false;
+		}
+		if (_found->second == _f.second) {
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool zapata::JSONObjT::operator==(zapata::JSONObj& _rhs) {
+	return * this == * _rhs;
 }
 
 bool zapata::JSONObjT::operator!=(JSONObjT& _rhs) {
+	for (auto _f : * this) {
+		auto _found = _rhs.find(_f.first);
+		if (_found == _rhs.end()) {
+			return true;
+		}
+		if (_found->second != _f.second) {
+			return true;
+		}
+	}
 	return false;
+}
+
+bool zapata::JSONObjT::operator!=(zapata::JSONObj& _rhs) {
+	return * this != * _rhs;
 }
 
 zapata::JSONPtr& zapata::JSONObjT::operator[](int _idx) {
@@ -579,7 +740,6 @@ zapata::JSONPtr& zapata::JSONObjT::operator[](string _idx) {
 	}
 	return zapata::undefined;
 }
-
 
 void zapata::JSONObjT::stringify(string& _out) {
 	_out.insert(_out.length(), "{");
@@ -609,6 +769,39 @@ void zapata::JSONObjT::stringify(ostream& _out) {
 		_i.second->stringify(_out);
 	}
 	_out << "}" << flush;
+}
+
+void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
+	_out.insert(_out.length(), "{\n");
+	bool _first = true;
+	for (auto _i : * this) {
+		if (!_first) {
+			_out.insert(_out.length(), ",\n");
+		}
+		_first = false;
+		_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+		_out.insert(_out.length(), "\"");
+		_out.insert(_out.length(), _i.first);
+		_out.insert(_out.length(), "\" : ");
+		_i.second->prettify(_out, _n_tabs + 1);
+	}
+	_out.insert(_out.length(), "\n");
+	_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+	_out.insert(_out.length(), "}");
+}
+
+void zapata::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
+	_out << "{\n" << flush;
+	bool _first = true;
+	for (auto _i : * this) {
+		if (!_first) {
+			_out << ",\n ";
+		}
+		_first = false;
+		_out << string(_n_tabs + 1, '\t') << "\"" << _i.first << "\" : " << flush;
+		_i.second->prettify(_out, _n_tabs + 1);
+	}
+	_out << "\n" << string(_n_tabs, '\t') << "}" << flush;
 }
 
 /*JSON ARRAY*/
@@ -650,11 +843,30 @@ void zapata::JSONArrT::pop(size_t _idx) {
 }
 
 bool zapata::JSONArrT::operator==(zapata::JSONArrT& _rhs) {
-	return false;
+	for (size_t _f  = 0; _f != this->size(); _f++) {
+		if ((* this)[_f]  == _rhs[_f]) {
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool zapata::JSONArrT::operator==(zapata::JSONArr& _rhs) {
+	return * this == * _rhs;
 }
 
 bool zapata::JSONArrT::operator!=(JSONArrT& _rhs) {
+	for (size_t _f  = 0; _f != this->size(); _f++) {
+		if ((* this)[_f]  != _rhs[_f]) {
+			return true;
+		}
+	}
 	return false;
+}
+
+bool zapata::JSONArrT::operator!=(zapata::JSONArr& _rhs) {
+	return * this != * _rhs;
 }
 
 zapata::JSONPtr& zapata::JSONArrT::operator[](int _idx) {
@@ -705,6 +917,36 @@ void zapata::JSONArrT::stringify(ostream& _out) {
 		_i->stringify(_out);
 	}
 	_out << "]" << flush;
+}
+
+void zapata::JSONArrT::prettify(string& _out, uint _n_tabs) {
+	_out.insert(_out.length(), "[\n");
+	bool _first = true;
+	for (auto _i : * this) {
+		if (!_first) {
+			_out.insert(_out.length(), ",\n");
+		}
+		_first = false;
+		_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+		_i->prettify(_out, _n_tabs + 1);
+	}
+	_out.insert(_out.length(), "\n]");
+	_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+	_out.insert(_out.length(), "]");
+}
+
+void zapata::JSONArrT::prettify(ostream& _out, uint _n_tabs) {
+	_out << "[\n" << flush;
+	bool _first = true;
+	for (auto _i : * this) {
+		if (!_first) {
+			_out << ",\n ";
+		}
+		_first = false;
+		_out << string(_n_tabs + 1, '\t')<< flush;
+		_i->prettify(_out, _n_tabs + 1);
+	}
+	_out << "\n" << string(_n_tabs, '\t') << "]" << flush;
 }
 
 /*JSON POINTER TO ELEMENT*/

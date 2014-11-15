@@ -29,6 +29,7 @@ SOFTWARE.
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 #include <zapata/text/html.h>
+#include <zapata/text/sha1.h>
 
 #include <zapata/log/log.h>
 

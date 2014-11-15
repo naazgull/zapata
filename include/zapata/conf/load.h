@@ -28,7 +28,9 @@ SOFTWARE.
 #include <zapata/parsers/json.h>
 
 using namespace std;
+#if !defined __APPLE__
 using namespace __gnu_cxx;
+#endif
 
 namespace zapata {
 
