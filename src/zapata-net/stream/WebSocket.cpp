@@ -40,7 +40,8 @@ bool zapata::ws::handshake(zapata::socketstream& _s) {
 	while (_line != "");
 
 	_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-	_key.assign(zapata::base64::encode(zapata::SHA1(_key)));
+	_key.assign(zapata::hash::SHA1(_key));
+	zapata::base64::encode(_key);
 
 	_s << 
 	"HTTP/1.1 101 Switching Protocols" << CRLF <<

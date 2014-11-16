@@ -46,11 +46,12 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	void html_entities_encode(wstring s, ostream& out, bool quote = true, bool tags = false);
-	void html_entities_encode(string& out, bool quote = true, bool tags = false);
-	void html_entities_decode(string& out);
-
-	void content_boundary(string& _in, string& _out);
+	namespace html {
+		void entities_encode(wstring s, ostream& out, bool quote = true, bool tags = false);
+		void entities_encode(string& out, bool quote = true, bool tags = false);
+		void entities_decode(string& out);
+		void content_boundary(string& _in, string& _out);
+	}
 
 	void fromformurlencoded(string& _in, JSONObj& _out);
 	void fromformdata(string& _in, string _boundary, string _tmp_path, JSONObj& _out);

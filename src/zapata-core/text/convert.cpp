@@ -150,7 +150,7 @@ void zapata::fromstr(string& s, time_t* i, const char* f){
 		tm->tm_isdst = _current_tz.tz_dsttime;
 		tm->tm_gmtoff = zapata::timezone_offset();
 		tm->tm_zone =_current_tz.tz_dsttime == 0 ? tzname[0] : tzname[1];
-	}
+	} 
 	*i = mktime(tm);
 }
 

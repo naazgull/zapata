@@ -118,7 +118,7 @@ void zapata::encrypt(string& _out, string _in, string _key) {
 
 	zapata::tostr(_out, _in.length());
 	_out.insert(_out.length(), ".");
-	zapata::base64url_encode(_encrypted);
+	zapata::base64::encode(_encrypted);
 
 	delete[] src;
 	delete[] dest;
@@ -136,7 +136,7 @@ void zapata::decrypt(string& _out, string _in, string _key) {
 	}
 
 	string _encrypted = _in.substr(_idx + 1);
-	zapata::base64url_decode(_encrypted);
+	zapata::base64::decode(_encrypted);
 
 	string _decrypted;
 	zapata::decipher(_encrypted, _key,  _decrypted);

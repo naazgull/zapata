@@ -32,7 +32,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::url_encode(string& _out) {
+void zapata::url::encode(string& _out) {
 	const char DEC2HEX[16 + 1] = "0123456789ABCDEF";
 	const unsigned char * pSrc = (const unsigned char *) _out.c_str();
 	const int SRC_LEN = _out.length();
@@ -56,7 +56,7 @@ void zapata::url_encode(string& _out) {
 	_out.assign(sResult);
 }
 
-void zapata::url_decode(string& _out) {
+void zapata::url::decode(string& _out) {
 	zapata::replace(_out, "+", "%20");
 
 	const unsigned char * pSrc = (const unsigned char *) _out.c_str();

@@ -39,7 +39,7 @@ SOFTWARE.
 zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs(0), __sem(-1), __skey(_key_file_path) {
 	ifstream _key_file;
 	_key_file.open(_key_file_path.data());
-	zapata::fromfile(_key_file, this->__configuration);
+	this->__configuration = zapata::fromfile(_key_file);
 
 	if (!!this->configuration()["zapata"]["core"]["max_jobs"] && ((int) this->configuration()["zapata"]["core"]["max_jobs"]) != -1) {
 		this->max((size_t) this->configuration()["zapata"]["core"]["max_jobs"]);
@@ -97,8 +97,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs
 
 			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-			zapata::JSONObj _params;
-			zapata::fromstr(_body, _params);
+			zapata::JSONObj& _params = zapata::fromstr(_body);
 
 			assertz(!!_params["uploaded_file"], "The 'uploaded_file' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
 
@@ -142,9 +141,9 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs
 			string _encoding(_req.header("X-Content-Transfer-Encoding"));
 			transform(_encoding.begin(), _encoding.end(), _encoding.begin(), ::toupper);
 			if (_encoding == "BASE64") {
-				ifstream _ifs;
+				fstream _ifs;
 				_ifs.open(_from.data());
-				ofstream _ofs;
+				fstream _ofs;
 				_ofs.open(_path.data());
 
 				zapata::base64::decode(_ifs, _ofs);
@@ -176,8 +175,7 @@ zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs
 
 			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-			zapata::JSONObj _params;
-			zapata::fromstr(_body, _params);
+			zapata::JSONObj& _params = zapata::fromstr(_body);
 
 			assertz(!!_params["file_url"], "The 'file_url' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
 

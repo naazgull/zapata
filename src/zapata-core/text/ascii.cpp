@@ -33,12 +33,12 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::ascii_encode(string& _out, bool quote) {
-	wchar_t* wc = zapata::utf8_to_wstring(_out);
+void zapata::ascii::encode(string& _out, bool quote) {
+	wchar_t* wc = zapata::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
 
 	for (size_t i = 0; i != iso.length(); i++) {
-		std::replace(ws.begin(), ws.end(), iso[i], ascii[i]);
+		std::replace(ws.begin(), ws.end(), iso[i], plain[i]);
 	}
 
 	ostringstream _oss;

@@ -33,7 +33,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::html_entities_encode(wstring s, ostream& out, bool quote, bool tags) {
+void zapata::html::entities_encode(wstring s, ostream& out, bool quote, bool tags) {
 	ostringstream oss;
 	for (size_t i = 0; i != s.length(); i++) {
 		if (((unsigned char) s[i]) > 127) {
@@ -59,16 +59,16 @@ void zapata::html_entities_encode(wstring s, ostream& out, bool quote, bool tags
 	out << oss.str();
 }
 
-void zapata::html_entities_encode(string& _out, bool quote, bool tags) {
-	wchar_t* wc = zapata::utf8_to_wstring(_out);
+void zapata::html::entities_encode(string& _out, bool quote, bool tags) {
+	wchar_t* wc = zapata::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
 	ostringstream out;
-	zapata::html_entities_encode(ws, out, quote, tags);
+	zapata::html::entities_encode(ws, out, quote, tags);
 	delete[] wc;
 	_out.assign(out.str());
 }
 
-void zapata::html_entities_decode(string& _out) {
+void zapata::html::entities_decode(string& _out) {
 	wostringstream oss;
 	for (size_t i = 0; i != _out.length(); i++) {
 		if (_out[i] == '&' && _out[i + 1] == '#') {
@@ -89,14 +89,14 @@ void zapata::html_entities_decode(string& _out) {
 	}
 	oss << flush;
 
-	char* c = zapata::wstring_to_utf8(oss.str());
+	char* c = zapata::utf8::wstring_to_utf8(oss.str());
 	string os(c);
 	_out.assign(os);
 
 	delete[] c;
 }
 
-void zapata::content_boundary(string& _in, string& _out) {
+void zapata::html::content_boundary(string& _in, string& _out) {
 	size_t _idx = _in.find("boundary=");
 	if (_idx != string::npos) {
 		_out.assign(_in.substr(_idx + 9));
@@ -113,8 +113,8 @@ void zapata::fromformurlencoded(string& _in, JSONObj& _out) {
 		if (_separator != string::npos) {
 			string _pname(_item.substr(0, _separator));
 			string _pvalue(_item.substr(_separator + 1));
-			zapata::url_decode(_pname);
-			zapata::url_decode(_pvalue);
+			zapata::url::decode(_pname);
+			zapata::url::decode(_pvalue);
 
 			if (!!_out[_pname.data()]) {
 				if (((JSONElement) _out[_pname])->type() == zapata::JSArray) {

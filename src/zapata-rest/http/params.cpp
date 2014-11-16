@@ -49,7 +49,7 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 	for (auto _i : *_params) {
 		string _value = _i.second;
 		string _key(_i.first.data());
-		zapata::url_decode(_value);
+		zapata::url::decode(_value);
 		if (_regexp && __SPECIAL_PARAMS.find(_key + string(" ")) == string::npos) {
 			zapata::replace(_value, "/", "\\\\/");
 			zapata::replace(_value, " ", "(.*)");

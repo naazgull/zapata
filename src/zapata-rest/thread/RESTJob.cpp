@@ -31,15 +31,15 @@ SOFTWARE.
 zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 	ifstream _key_file;
 	_key_file.open(_key_file_path.data());
-	zapata::fromfile(_key_file, this->__configuration);
+	this->__configuration = zapata::fromfile(_key_file);
 
 	(* this)->loop([ this ] (Job& _job) -> void {
-		bool _debug = !!(* this)->configuration()["zapata"]["rest"]["debug"];
+		bool _debug = !!this->__configuration["zapata"]["rest"]["debug"];
 
 		for (; true; ) {
 			(* this)->wait();
 
-			if ((* this)->__cur_fd.size() != 0) {
+			if (this->__cur_fd.size() != 0) {
 				pthread_mutex_lock((* this)->__mtx);
 				int _cur_fd = (* this)->__cur_fd.front();
 				(* this)->__cur_fd.pop();
