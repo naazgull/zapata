@@ -34,110 +34,73 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 	this->__configuration = zapata::fromfile(_key_file);
 
 	(* this)->loop([ this ] (Job& _job) -> void {
-		bool _debug = !!this->__configuration["zapata"]["rest"]["debug"];
+		bool _debug = !!this->configuration()["zapata"]["rest"]["debug"];
 
 		for (; true; ) {
-			(* this)->wait();
+			if (this->__peers.size() != 0) {				
+				int _rv = poll(& this->__peers[0], this->__peers.size(), 1000);
+				if (_rv > 0) {
 
-			if (this->__cur_fd.size() != 0) {
-				pthread_mutex_lock((* this)->__mtx);
-				int _cur_fd = (* this)->__cur_fd.front();
-				(* this)->__cur_fd.pop();
-				pthread_mutex_unlock((* this)->__mtx);
-				socketstream _cs(_cur_fd);
+					for (auto _fd : this->__peers) {
+						if (_fd.revents & POLLIN) {
+							socketstream _cs(_fd.fd);
 
-				HTTPRep _rep;
-				HTTPReq _req;
-				for (; true; ) {
-					try  {
-						zapata::fromstream(_cs, _req);
-						(* this)->__pool->trigger(_req, _rep);
+							HTTPRep _rep;
+							HTTPReq _req;
+							for (; true; ) {
+								try  {
+									zapata::fromstream(_cs, _req);
+									this->__pool->trigger(_req, _rep);
 
-						string _origin = _req.header("Origin");
-						if (_origin.length() != 0) {
-							_rep["headers"]
-								<< "Access-Control-Allow-Origin" << _origin
-								<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
-						}
+									string _origin = _req.header("Origin");
+									if (_origin.length() != 0) {
+										_rep["headers"]
+											<< "Access-Control-Allow-Origin" << _origin
+											<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+									}
 
-						if (zapata::log_lvl) {
-							if (_debug) {
-								string _text;
-								zapata::tostr(_text, _req);
-								_text.insert(_text.length(), "\n\n<->\n\n");
-								zapata::tostr(_text, _rep);
-								zapata::log(_text, zapata::sys);
-							}
-							else {
-								string _text(zapata::method_names[_req.method()]);
-								_text.insert(0, "\033[38;5;105m");
-								_text.insert(_text.length(), "\033[0m");
-								_text.insert(_text.length(), " ");
-								_text.insert(_text.length(), "\033[38;5;15m");
-								_text.insert(_text.length(),  _req.url());
-								if (_req["params"]->obj()->size() != 0) {
-									_text.insert(_text.length(), "?");
-									JSONObj _params = (JSONObj&) _req["params"];
-									bool _first = true;
-									for (auto i : *_params) {
-										if (!_first) {
-											_text.insert(_text.length(), "&");
-										}
-										_first = false;
-										_text.insert(_text.length(), i.first);
-										_text.insert(_text.length(), "=");
-										_text.insert(_text.length(), i.second);
+									if (zapata::log_lvl) {
+										this->log(_req, _rep);
+									}
+									_rep.stringify(_cs);
+									_cs << flush;
+									break;
+								}
+								catch(zapata::SyntaxErrorException& e) {
+									zapata::log(e.what(), zapata::error);
+
+									zapata::JSONObj _body;
+									_body
+										<< "error" << true
+										<< "assertion_failed" << e.what()
+										<< "message" << e.what()
+										<< "code" << 400;
+
+									string _text;
+									zapata::tostr(_text, _body);
+
+									_rep.body(_text);
+									_rep.status(zapata::HTTP400);
+									_rep["headers"] << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+
+									string _origin = _req.header("Origin");
+									if (_origin.length() != 0) {
+										_rep["headers"]
+											<< "Access-Control-Allow-Origin" << _origin
+											<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
 									}
 								}
-								_text.insert(_text.length(), "\033[0m");
-								_text.insert(_text.length(), " <-> ");
-								if (_rep.status() < 300) {
-									_text.insert(_text.length(), "\033[38;5;118m");
+								catch(zapata::ClosedException& e) {
+									zapata::log(e.what(), zapata::error);
+									break;
 								}
-								else if (_rep.status() < 400) {
-									_text.insert(_text.length(), "\033[38;5;172m");
-								}
-								else {
-									_text.insert(_text.length(), "\033[38;5;88m");
-								}
-								_text.insert(_text.length(), zapata::status_names[_rep.status()]);
-								_text.insert(_text.length(), "\033[0m");
-								zapata::log(_text, zapata::sys);
-							}
+							}	
 						}
-						_rep.stringify(_cs);
-						_cs << flush;
-						break;
-					}
-					catch(zapata::SyntaxErrorException& e) {
-						zapata::log(e.what(), zapata::error);
-
-						zapata::JSONObj _body;
-						_body
-							<< "error" << true
-							<< "assertion_failed" << e.what()
-							<< "message" << e.what()
-							<< "code" << 400;
-
-						string _text;
-						zapata::tostr(_text, _body);
-
-						_rep.body(_text);
-						_rep.status(zapata::HTTP400);
-						_rep["headers"] << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
-
-						string _origin = _req.header("Origin");
-						if (_origin.length() != 0) {
-							_rep["headers"]
-								<< "Access-Control-Allow-Origin" << _origin
-								<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
-						}
-					}
-					catch(zapata::ClosedException& e) {
-						zapata::log(e.what(), zapata::error);
-						break;
 					}
 				}
+			}
+			else {
+				sleep(1);
 			}
 		}
 	});
@@ -147,9 +110,14 @@ zapata::RESTJob::~RESTJob() {
 }
 
 void zapata::RESTJob::assign(int _cs_fd) {
-	pthread_mutex_lock(this->__mtx);
-	this->__cur_fd.push(_cs_fd);
-	pthread_mutex_unlock(this->__mtx);
+	pthread_mutex_lock((* this)->__mtx);
+
+	struct pollfd _fd;
+	_fd.fd = _cs_fd;
+	_fd.events = POLLIN;
+	this->__peers.push_back(_fd);
+
+	pthread_mutex_unlock((* this)->__mtx);
 }
 
 zapata::RESTPool& zapata::RESTJob::pool() {
@@ -162,4 +130,41 @@ void zapata::RESTJob::pool(RESTPool* _pool) {
 
 zapata::JSONObj& zapata::RESTJob::configuration() {
 	return this->__configuration;
+}
+
+void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
+	string _text(zapata::method_names[_req.method()]);
+	_text.insert(0, "\033[38;5;105m");
+	_text.insert(_text.length(), "\033[0m");
+	_text.insert(_text.length(), " ");
+	_text.insert(_text.length(), "\033[38;5;15m");
+	_text.insert(_text.length(),  _req.url());
+	if (_req["params"]->obj()->size() != 0) {
+		_text.insert(_text.length(), "?");
+		JSONObj _params = (JSONObj&) _req["params"];
+		bool _first = true;
+		for (auto i : *_params) {
+			if (!_first) {
+				_text.insert(_text.length(), "&");
+			}
+			_first = false;
+			_text.insert(_text.length(), i.first);
+			_text.insert(_text.length(), "=");
+			_text.insert(_text.length(), i.second);
+		}
+	}
+	_text.insert(_text.length(), "\033[0m");
+	_text.insert(_text.length(), " <-> ");
+	if (_rep.status() < 300) {
+		_text.insert(_text.length(), "\033[38;5;118m");
+	}
+	else if (_rep.status() < 400) {
+		_text.insert(_text.length(), "\033[38;5;172m");
+	}
+	else {
+		_text.insert(_text.length(), "\033[38;5;88m");
+	}
+	_text.insert(_text.length(), zapata::status_names[_rep.status()]);
+	_text.insert(_text.length(), "\033[0m");
+	zapata::log(_text, zapata::sys);
 }

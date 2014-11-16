@@ -26,9 +26,6 @@ SOFTWARE.
 
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
 #include <string>
 #include <functional>
 #include <memory>
@@ -68,25 +65,8 @@ namespace zapata {
 		virtual void start();
 		virtual void exit();
 		virtual void loop(zapata::JobLoopCallback _callback) final;
-		virtual void assign();
-		virtual void wait(int seconds);
-		virtual void wait();
 
-		virtual void semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size) final;
-
-	private:
-		size_t __idx;
-		size_t __max_idx;
-		semid_t __sem;
-
-		size_t idx();
-		size_t max();
-		semid_t semid();
-		void idx(size_t _idx);
-		void max(size_t _max);
-
-	protected:
-		string __skey;
+	public:
 		pthread_mutex_t* __mtx;
 		pthread_t* __thr;
 		pthread_mutexattr_t __attr;

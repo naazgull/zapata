@@ -36,21 +36,20 @@ SOFTWARE.
 #include <vector>
 #include <zapata/api/codes_rest.h>
 
-zapata::RESTServer::RESTServer(string _key_file_path) : JobServer( 0 ), __n_jobs(0), __sem(-1), __skey(_key_file_path) {
+zapata::RESTServer::RESTServer(string _config_file) {
 	ifstream _key_file;
-	_key_file.open(_key_file_path.data());
+	_key_file.open(_config_file.data());
+	this->__conf_file.assign(_config_file);
 	this->__configuration = zapata::fromfile(_key_file);
+
+	this->__n_jobs = 0;
+	this->__next = 0;
 
 	if (!!this->configuration()["zapata"]["core"]["max_jobs"] && ((int) this->configuration()["zapata"]["core"]["max_jobs"]) != -1) {
 		this->max((size_t) this->configuration()["zapata"]["core"]["max_jobs"]);
 	}
 	else {
 		this->max(1);
-	}
-
-	key_t key = ftok(this->__skey.data(), this->max());
-	this->__sem = semget(key, this->max(), IPC_CREAT | 0777);
-	if (this->__sem == 0) {
 	}
 
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
@@ -210,19 +209,18 @@ zapata::RESTServer::~RESTServer(){
 
 void zapata::RESTServer::wait() {
 	try {
-		int _cs_fd = -1;
-		this->__ss.accept(&_cs_fd);
 
 		if (this->__n_jobs < this->max()) {
-			RESTJob _job(this->__skey);
-			_job->semaphore(this->__skey, this->next(), this->max());
-			_job.pool(&this->__pool);
+			RESTJob _job();
+			_job->pool(& this->__pool);
 			_job->start();
 
 			this->__jobs.push_back(_job);
 			this->__n_jobs++;
 		}
 
+		int _cs_fd = -1;
+		this->__ss.accept(&_cs_fd);
 		this->__jobs.at(this->next()).assign(_cs_fd);
 	}
 	catch(zapata::ClosedException& e) {
@@ -230,17 +228,23 @@ void zapata::RESTServer::wait() {
 	}
 }
 
-void zapata::RESTServer::notify() {
-	struct sembuf ops[1] = { { (short unsigned int) this->next(), 1 } };
-	semop(this->semid(), ops, 1);
+void zapata::RESTServer::start() {
+	try {
+		for (; true; ) {
+			if (this->max() != 0 && this->__next == this->max()) {
+				this->__next = 0;
+			}
+			this->wait();
+			this->__next++;
+		}
+	}
+	catch (zapata::InterruptedException& e) {
+		return;
+	}
 }
 
 zapata::RESTPool& zapata::RESTServer::pool() {
 	return this->__pool;
-}
-
-semid_t zapata::RESTServer::semid() {
-	return this->__sem;
 }
 
 zapata::JSONObj& zapata::RESTServer::configuration() {

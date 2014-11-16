@@ -26,7 +26,8 @@ SOFTWARE.
 
 #include <zapata/thread/Job.h>
 #include <zapata/api/RESTPool.h>
-#include <queue>
+#include <vector>
+#include <sys/poll.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -45,9 +46,10 @@ namespace zapata {
 
 			RESTPool& pool();
 			void pool(RESTPool* _pool);
+			void log(zapata::HTTPReq&, zapata::HTTPRep&);
 
 		private:
-			queue<int> __cur_fd;
+			vector< struct pollfd > __peers;
 			RESTPool* __pool;
 			JSONObj __configuration;
 	};

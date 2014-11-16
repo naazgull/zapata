@@ -24,7 +24,6 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/thread/JobServer.h>
 #include <zapata/stream/SocketStreams.h>
 #include <zapata/thread/RESTJob.h>
 #include <zapata/api/RESTPool.h>
@@ -36,16 +35,19 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	class RESTServer: public JobServer {
+	class RESTServer {
 		public:
-			RESTServer(string _key_file_path);
+			RESTServer(string _config_file);
 			virtual ~RESTServer();
-
+	
+			virtual void start();
 			virtual void wait();
 			virtual void notify();
 
-			semid_t semid();
 			zapata::JSONObj& configuration();
+			size_t max();
+			size_t next();
+			void max(size_t _max);
 
 			RESTPool& pool();
 
@@ -54,11 +56,12 @@ namespace zapata {
 			serversocketstream __ss;
 			vector< RESTJob > __jobs;
 			RESTPool __pool;
-			semid_t __sem;
-
+			string __conf_file;
+			
 		protected:
 			JSONObj __configuration;
-			string __skey;
+			size_t __next;
+			size_t __max_idx;
 	};
 
 }

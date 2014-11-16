@@ -40,14 +40,14 @@ zapata::Job::Job(JobLoopCallback _callback) : shared_ptr<zapata::JobRef>(new Job
 zapata::Job::~Job(){
 }
 
-zapata::JobRef::JobRef() : __idx(-1), __max_idx(-1), __sem(-1) {
+zapata::JobRef::JobRef() {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
 	pthread_mutexattr_init(&this->__attr);
 	pthread_mutex_init(this->__mtx, &this->__attr);
 }
 
-zapata::JobRef::JobRef(JobLoopCallback _callback) : __idx(-1), __max_idx(-1), __sem(-1) {
+zapata::JobRef::JobRef(JobLoopCallback _callback) {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
 	pthread_mutexattr_init(&this->__attr);
@@ -59,9 +59,6 @@ zapata::JobRef::JobRef(JobLoopCallback _callback) : __idx(-1), __max_idx(-1), __
 zapata::JobRef::JobRef(JobRef& _rhs) {
 	this->__mtx = _rhs.__mtx;
 	this->__thr = _rhs.__thr;
-	this->__skey = _rhs.__skey;
-	this->__idx = _rhs.__idx;
-	this->__max_idx = _rhs.__max_idx;
 	this->__callback = _rhs.__callback;
 }
 
@@ -78,12 +75,6 @@ void* zapata::JobRef::start(void* _thread) {
 
 void zapata::JobRef::start() {
 	JobRef* _new = new JobRef(* this);
-	if (_new->__idx != -1 && _new->__max_idx != -1) {		
-		key_t key = ftok(_new->__skey.data(), _new->__max_idx);
-		_new->__sem = semget(key, _new->__max_idx, IPC_CREAT | 0777);
-		if (_new->__sem == 0) {
-		}
-	}
 	pthread_create(_new->__thr, 0, &JobRef::start, _new);
 }
 
@@ -97,46 +88,4 @@ void zapata::JobRef::exit() {
 
 void zapata::JobRef::loop(JobLoopCallback _callback) {
 	this->__callback = _callback;
-}
-
-void zapata::JobRef::semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size) {
-	this->__skey = _file_key;
-	this->__idx = _sem_arr_idx;
-	this->__max_idx = _sem_arr_size;
-}
-
-void zapata::JobRef::assign() {
-	assertz(this->__idx != -1 && this->__max_idx != -1, "*semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size)* must be invoked, PRIOR TO *start()*, to set-up semaphore synchronization.", 0, 0);
-	struct sembuf ops[1] = { { (short unsigned int) this->__idx, 1 } };
-	semop(this->__sem, ops, 1);
-}
-
-void zapata::JobRef::wait() {
-	assertz(this->__idx != -1 && this->__max_idx != -1, "*semaphore(string _file_key, size_t _sem_arr_idx, size_t _sem_arr_size)* must be invoked, PRIOR TO *start()*, to set-up semaphore synchronization.", 0, 0);
-	struct sembuf ops[1] = { { (short unsigned int) this->__idx, -1 } };
-	semop(this->__sem, ops, 1);
-}
-
-void zapata::JobRef::wait(int seconds) {
-	sleep(seconds);
-}
-
-size_t zapata::JobRef::idx() {
-	return this->__idx;
-}
-
-size_t zapata::JobRef::max() {
-	return this->__max_idx;
-}
-
-semid_t zapata::JobRef::semid() {
-	return this->__sem;
-}
-
-void zapata::JobRef::idx(size_t _idx) {
-	this->__idx = _idx;
-}
-
-void zapata::JobRef::max(size_t _max) {
-	this->__max_idx = _max;
 }

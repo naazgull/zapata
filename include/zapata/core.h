@@ -46,7 +46,6 @@ SOFTWARE.
 #include <zapata/parsers/JSONParser.h>
 
 #include <zapata/thread/Job.h>
-#include <zapata/thread/JobServer.h>
 
 #include <zapata/file/manip.h>
 
