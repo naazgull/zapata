@@ -56,6 +56,7 @@ namespace zapata {
 		virtual ~JSONPtr();
 
 		JSONElementT& value();
+		void parse(istream& _in);
 
 		template <typename T>
 		bool operator==(T _rhs);
@@ -80,6 +81,11 @@ namespace zapata {
 		operator JSONArr();
 		operator JSONObj&();
 		operator JSONArr&();
+
+		friend istream& operator>>(istream& _in, JSONPtr& _out) {
+			_out.parse(_in);
+			return _in;
+		};		
 	};
 
 	typedef JSONPtr JSONElement;

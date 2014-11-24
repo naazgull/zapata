@@ -207,6 +207,13 @@ namespace zapata {
 		HTTPReq();
 		HTTPReq(HTTPReqT* _target);
 		virtual ~HTTPReq();	
+
+		virtual void parse(istream& _in);
+
+		friend ostream& operator<<(ostream& _out, HTTPReq& _in) {
+			_in->stringify(_out);
+			return _out;
+		};
 	};
 
 	class HTTPRep :public shared_ptr< HTTPRepT > {
@@ -214,6 +221,18 @@ namespace zapata {
 		HTTPRep();
 		HTTPRep(HTTPRepT* _target);
 		virtual ~HTTPRep();	
+
+		virtual void parse(istream& _in);
+
+		friend ostream& operator<<(ostream& _out, HTTPRep& _in) {
+			_in->stringify(_out);
+			return _out;
+		};
+
+		friend istream& operator>>(istream& _in, HTTPRep& _out) {
+			_out.parse(_in);
+			return _in;
+		};
 	};
 
 	void init(HTTPReq& _out);

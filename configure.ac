@@ -6,6 +6,10 @@ AC_INIT(zapata, 0.0.8, pedro.figueiredo@gmail.com)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 
+AC_ARG_ENABLE(mongodb, [  --enable-mongodb    Turn on MongoDB support],
+	[ AC_DEFINE(HAVE_MONGO_DB, 1, "Turn on MongoDB support") ]
+)
+
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
 AC_HAVE_LIBRARY(pthread)
@@ -14,12 +18,11 @@ AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(zmq)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
-AC_HAVE_LIBRARY(mongoclient)
-AC_HAVE_LIBRARY(boost_program_options)
-AC_HAVE_LIBRARY(boost_thread)
-AC_HAVE_LIBRARY(boost_filesystem)
 
 AC_CANONICAL_SYSTEM
+
+dnl Create config.h header file
+AC_CONFIG_HEADERS([include/zapata/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects])

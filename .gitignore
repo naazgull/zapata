@@ -28,3 +28,6 @@ src/zapata-rest-server/zapata-rest-daemon
 */**/Makefile
 */**/Makefile.in
 */**/.libs/
+*/**/config.h.in~
+*/**/config.h.in
+*/**/stamp-h1

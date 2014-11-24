@@ -23,7 +23,9 @@ SOFTWARE.
 */
 
 #include <zapata/json/JSONObj.h>
+
 #include <ostream>
+#include <zapata/parsers/JSONParser.h>
 
 namespace zapata {
 	JSONPtr undefined;
@@ -1277,6 +1279,13 @@ zapata::JSONPtr::operator JSONObj&() {
 zapata::JSONPtr::operator JSONArr&() {
 	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, "this element is not of type JSArray", 0, 0);
 	return this->get()->arr();
+}
+
+void zapata::JSONPtr::parse(istream& _in) {
+	zapata::JSONParser _p;
+	_p.switchRoots(* this);
+	_p.switchStreams(_in);
+	_p.parse();
 }
 
 /*JSON POINTER TO OBJECT*/

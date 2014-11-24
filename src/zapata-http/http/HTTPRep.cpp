@@ -25,6 +25,7 @@ SOFTWARE.
 #include <zapata/http/HTTPObj.h>
 
 #include <iostream>
+#include <zapata/parsers/HTTPParser.h>
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
@@ -70,3 +71,11 @@ zapata::HTTPRep::HTTPRep(HTTPRepT* _target) : shared_ptr<HTTPRepT>(_target) {
 
 zapata::HTTPRep::~HTTPRep(){
 }
+
+void zapata::HTTPRep::parse(istream& _in){
+	zapata::HTTPParser _p;
+	_p.switchRoots(* this);
+	_p.switchStreams(_in);
+	_p.parse();
+}
+
