@@ -28,6 +28,11 @@ SOFTWARE.
 #include <zapata/api/RESTPool.h>
 #include <vector>
 #include <sys/poll.h>
+#include <sys/signalfd.h>
+#include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -35,6 +40,8 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zapata {
+
+	typedef struct signalfd_siginfo thr_signal_t;
 
 	class RESTJob: public Job {
 		public:

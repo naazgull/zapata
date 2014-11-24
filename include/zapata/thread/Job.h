@@ -65,6 +65,7 @@ namespace zapata {
 		virtual void start();
 		virtual void exit();
 		virtual void loop(zapata::JobLoopCallback _callback) final;
+		virtual pthread_t id();
 
 	public:
 		pthread_mutex_t* __mtx;

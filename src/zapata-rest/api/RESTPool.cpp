@@ -29,47 +29,47 @@ SOFTWARE.
 zapata::RESTPool::RESTPool() :
 	__configuration(nullptr) {
 	this->__default_get = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_put = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_post = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_delete = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_head = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_trace = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP200);
+		_rep->status(zapata::HTTP200);
 
 		string _body;
 		zapata::tostr(_body, _req);
-		_rep.body(_body);
+		_rep->body(_body);
 		string _length;
 		zapata::tostr(_length,  _body.length());
-		_rep.header("Content-Length", _length);
+		_rep->header("Content-Length", _length);
 	};
 	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP200);
+		_rep->status(zapata::HTTP200);
 
-		string _origin = _req.header("Origin");
+		string _origin = _req->header("Origin");
 		if (_origin.length() != 0) {
-			_rep.header("Access-Control-Allow-Origin", _origin);
-			_rep.header("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY");
-			_rep.header("Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS);
-			_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
-			_rep.header("Access-Control-Max-Age", "1728000");
+			_rep->header("Access-Control-Allow-Origin", _origin);
+			_rep->header("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY");
+			_rep->header("Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS);
+			_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
+			_rep->header("Access-Control-Max-Age", "1728000");
 		}
 	};
 	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 	this->__default_connect = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-		_rep.status(zapata::HTTP405);
+		_rep->status(zapata::HTTP405);
 	};
 
 }
@@ -203,8 +203,8 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTH
 }
 
 void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
-	string _host(_req.header("Host"));
-	string _uri(_req.url());
+	string _host(_req->header("Host"));
+	string _uri(_req->url());
 	size_t _port_idx = string::npos;
 	string _port((_port_idx = _host.find(":")) != string::npos ? _host.substr(_port_idx + 1) : "");
 	_uri.insert(0, _host);
@@ -213,7 +213,7 @@ void zapata::RESTPool::trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl) {
 
 	if (_host.length() == 0 || _uri.find(_bind_url) != string::npos) {
 		zapata::replace(_uri, _bind_url, "");
-		_req.url(_uri);
+		_req->url(_uri);
 		this->process(_req, _rep);
 	}
 	else if ((_host.find("127.0.0") != string::npos || _host.find("localhost") != string::npos) && _port == (string) this->configuration()["zapata"]["rest"]["port"]) {
@@ -229,14 +229,14 @@ void zapata::RESTPool::trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _
 	size_t _e = _url.find("/", _b);
 	string _domain(_url.substr(_b, _e - _b));
 	string _path(_url.substr(_e));
-	_req.header("Host", _domain);
-	_req.url(_path);
+	_req->header("Host", _domain);
+	_req->url(_path);
 	this->trigger(_req, _rep, _is_ssl);
 }
 
 void zapata::RESTPool::trigger(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl) {
 	zapata::HTTPReq _req;
-	_req.method(_method);
+	_req->method(_method);
 	this->trigger(_url, _req, _rep, _is_ssl);
 }
 
@@ -251,22 +251,22 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	_rep.status(zapata::HTTP404);
-	_rep.header("Connection", "close");
-	_rep.header("Server", "zapata rest-ful server");
-	_rep.header("Cache-Control", "max-age=3600");
-	_rep.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
-	_rep.header("Date", string(_buffer_date));
-	_rep.header("Expires", string(_buffer_expires));
+	_rep->status(zapata::HTTP404);
+	_rep->header("Connection", "close");
+	_rep->header("Server", "zapata rest-ful server");
+	_rep->header("Cache-Control", "max-age=3600");
+	_rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_rep->header("Date", string(_buffer_date));
+	_rep->header("Expires", string(_buffer_expires));
 
 }
 
 void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 	this->init(_rep);
 	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
-		if (regexec(_i->first, _req.url().c_str(), (size_t) (0), nullptr, 0) == 0) {
+		if (regexec(_i->first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				_i->second[_req.method()](_req, _rep, this->configuration(), *this);
+				_i->second[_req->method()](_req, _rep, this->configuration(), *this);
 			}
 			catch (zapata::AssertionException& _e) {
 				if (_e.status() > 399) {
@@ -277,18 +277,20 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 						<< "message" << _e.what()
 						<< "code" << _e.code()
 					));
-					_rep.header("Content-Type", "application/json");
-					_rep.header("Content-Length", (long) _text.length());
+					_rep->header("Content-Type", "application/json");
+					string _length;
+					zapata::tostr(_length, _text.length());
+					_rep->header("Content-Length", _length);
 
-					_rep.body(_text);
+					_rep->body(_text);
 				}
 
-				_rep.status((zapata::HTTPStatus) _e.status());
+				_rep->status((zapata::HTTPStatus) _e.status());
 
-				string _origin = _req.header("Origin");
+				string _origin = _req->header("Origin");
 				if (_origin.length() != 0) {
-					_rep.header("Access-Control-Allow-Origin", _origin);
-					_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
+					_rep->header("Access-Control-Allow-Origin", _origin);
+					_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 				}
 
 			}

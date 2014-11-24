@@ -24,50 +24,76 @@ SOFTWARE.
 
 #include <zapata/parsers/http.h>
 
-zapata::HTTPPtr zapata::fromhttpstr(string& _in) {
+zapata::HTTPReq& zapata::fromhttpstr(string& _in, zapata::HTTPReq& _out) {
 	istringstream _ss;
 	_ss.str(_in);
 	zapata::HTTPParser _p;
-	HTTPPtr _root;
-	_p.switchRoots(_root);
+	_p.switchRoots(_out);
 	_p.switchStreams(_ss);
 	_p.parse();
-	return _root;
-
+	return _out;
 }
 
-zapata::HTTPPtr zapata::fromhttpfile(ifstream& _in) {
-	HTTPPtr _root;
+zapata::HTTPRep& zapata::fromhttpstr(string& _in, zapata::HTTPRep& _out) {
+	istringstream _ss;
+	_ss.str(_in);
+	zapata::HTTPParser _p;
+	_p.switchRoots(_out);
+	_p.switchStreams(_ss);
+	_p.parse();
+	return _out;
+}
+
+zapata::HTTPReq& zapata::fromhttpfile(ifstream& _in, zapata::HTTPReq& _out) {
 	if (_in.is_open()) {
 		zapata::HTTPParser _p;
-		_p.switchRoots(_root);
+		_p.switchRoots(_out);
 		_p.switchStreams(_in);
 		_p.parse();
 	}
-	return _root;
+	return _out;
 }
 
-zapata::HTTPPtr zapata::fromhttpstream(istream& _in) {
-	HTTPPtr _root;
+zapata::HTTPRep& zapata::fromhttpfile(ifstream& _in, zapata::HTTPRep& _out) {
+	if (_in.is_open()) {
+		zapata::HTTPParser _p;
+		_p.switchRoots(_out);
+		_p.switchStreams(_in);
+		_p.parse();
+	}
+	return _out;
+}
+
+zapata::HTTPReq& zapata::fromhttpstream(istream& _in, zapata::HTTPReq& _out) {
 	zapata::HTTPParser _p;
-	_p.switchRoots(_root);
+	_p.switchRoots(_out);
 	_p.switchStreams(_in);
 	_p.parse();
-	return _root;
+	return _out;
+}
+
+zapata::HTTPRep& zapata::fromhttpstream(istream& _in, zapata::HTTPRep& _out) {
+	zapata::HTTPParser _p;
+	_p.switchRoots(_out);
+	_p.switchStreams(_in);
+	_p.parse();
+	return _out;
 }
 
 void zapata::tostr(string& _out, HTTPRep& _in)  {
-	_in.stringify(_out);
+	_in->stringify(_out);
 }
 
 void zapata::tostr(string& _out, HTTPReq& _in)  {
-	_in.stringify(_out);
+	_in->stringify(_out);
 }
 
 void zapata::tostr(ostream& _out, HTTPRep& _in)  {
-	_in.stringify(_out);
+	_in->stringify(_out);
+	_out << flush;
 }
 
 void zapata::tostr(ostream& _out, HTTPReq& _in)  {
-	_in.stringify(_out);
+	_in->stringify(_out);
+	_out << flush;
 }

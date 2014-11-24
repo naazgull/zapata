@@ -31,7 +31,11 @@ zapata::HTTPParser::HTTPParser(std::istream &_in, std::ostream &_out) {
 zapata::HTTPParser::~HTTPParser() {
 }
 
-void zapata::HTTPParser::switchRoots(HTTPPtr& _root) {
+void zapata::HTTPParser::switchRoots(HTTPReq& _root) {
+	this->d_scanner.switchRoots(_root);
+}
+
+void zapata::HTTPParser::switchRoots(HTTPRep& _root) {
 	this->d_scanner.switchRoots(_root);
 }
 

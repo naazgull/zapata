@@ -89,3 +89,7 @@ void zapata::JobRef::exit() {
 void zapata::JobRef::loop(JobLoopCallback _callback) {
 	this->__callback = _callback;
 }
+
+pthread_t zapata::JobRef::id() {
+	return * this->__thr;
+}

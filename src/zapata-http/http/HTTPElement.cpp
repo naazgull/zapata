@@ -156,22 +156,22 @@ void zapata::init(HTTPReq& _req) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	string _url(_req.url());
+	string _url(_req->url());
 	if (_url != "") {
 		size_t _b = _url.find("://") + 3;
 		size_t _e = _url.find("/", _b);
 		string _domain(_url.substr(_b, _e - _b));
 		string _path(_url.substr(_e));
-		_req.header("Host", _domain);
-		_req.url(_path);
+		_req->header("Host", _domain);
+		_req->url(_path);
 	}
 
-	_req.method(zapata::HTTPGet);
-	_req.header("Connection", "close");
-	_req.header("User-Agent", "zapata rest-ful server");
-	_req.header("Cache-Control", "max-age=3600");
-	_req.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
-	_req.header("Date", string(_buffer_date));
+	_req->method(zapata::HTTPGet);
+	_req->header("Connection", "close");
+	_req->header("User-Agent", "zapata rest-ful server");
+	_req->header("Cache-Control", "max-age=3600");
+	_req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_req->header("Date", string(_buffer_date));
 
 }
 
@@ -186,13 +186,13 @@ void zapata::init(HTTPRep& _rep) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	_rep.status(zapata::HTTP404);
-	_rep.header("Connection", "close");
-	_rep.header("User-Agent", "zapata rest-ful server");
-	_rep.header("Cache-Control", "max-age=3600");
-	_rep.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
-	_rep.header("Date", string(_buffer_date));
-	_rep.header("Expires", string(_buffer_expires));
+	_rep->status(zapata::HTTP404);
+	_rep->header("Connection", "close");
+	_rep->header("User-Agent", "zapata rest-ful server");
+	_rep->header("Cache-Control", "max-age=3600");
+	_rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_rep->header("Date", string(_buffer_date));
+	_rep->header("Expires", string(_buffer_expires));
 
 }
 
@@ -206,6 +206,9 @@ zapata::HTTPPtr::~HTTPPtr(){
 }
 
 zapata::HTTPObj::HTTPObj() {
+}
+
+zapata::HTTPObj::~HTTPObj() {
 }
 
 string& zapata::HTTPObj::body() {

@@ -31,8 +31,12 @@ zapata::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &
 zapata::HTTPTokenizerLexer::~HTTPTokenizerLexer() {
 }
 
-void zapata::HTTPTokenizerLexer::switchRoots(HTTPPtr& _root) {
-	this->__root = _root;
+void zapata::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) {
+	this->__root_req = _root.get();
+}
+
+void zapata::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) {
+	this->__root_rep = _root.get();
 }
 
 void zapata::HTTPTokenizerLexer::justLeave() {
@@ -43,17 +47,13 @@ void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
 	this->__root_type = _in_type;
 	switch (_in_type) {
 		case zapata::HTTPRequest : {
-			this->__root_req = new HTTPReq();
 			zapata::HTTPMethod _m;
 			string _ms(this->matched());
 			zapata::fromstr(_ms, &_m);
 			this->__root_req->method(_m);
-			this->__root.reset(this->__root_req);
 			break;
 		}
 		case zapata::HTTPReply : {
-			this->__root_rep = new HTTPRep();
-			this->__root.reset(this->__root_rep);
 			break;
 		}
 	}

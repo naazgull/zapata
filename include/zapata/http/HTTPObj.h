@@ -28,7 +28,10 @@ SOFTWARE.
 
 #include <ostream>
 #include <vector>
-#include <zapata/core.h>
+#include <map>
+#include <memory>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -157,10 +160,10 @@ namespace zapata {
 
 	void fromstr(string& _in, HTTPMethod* _out);
 
-	class HTTPReq: public HTTPObj {
+	class HTTPReqT: public HTTPObj {
 	public:
-		HTTPReq();
-		virtual ~HTTPReq();
+		HTTPReqT();
+		virtual ~HTTPReqT();
 
 		HTTPMethod method();
 		void method(HTTPMethod);
@@ -184,10 +187,10 @@ namespace zapata {
 		ParameterMap __params;
 	};
 
-	class HTTPRep: public HTTPObj {
+	class HTTPRepT: public HTTPObj {
 	public:
-		HTTPRep();
-		virtual ~HTTPRep();
+		HTTPRepT();
+		virtual ~HTTPRepT();
 
 		HTTPStatus status();
 		void status(HTTPStatus);
@@ -197,6 +200,20 @@ namespace zapata {
 
 	private:
 		HTTPStatus __status;
+	};
+
+	class HTTPReq :public shared_ptr< HTTPReqT > {
+	public:
+		HTTPReq();
+		HTTPReq(HTTPReqT* _target);
+		virtual ~HTTPReq();	
+	};
+
+	class HTTPRep :public shared_ptr< HTTPRepT > {
+	public:
+		HTTPRep();
+		HTTPRep(HTTPRepT* _target);
+		virtual ~HTTPRep();	
 	};
 
 	void init(HTTPReq& _out);

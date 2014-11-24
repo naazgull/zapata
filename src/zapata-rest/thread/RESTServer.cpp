@@ -25,10 +25,11 @@ SOFTWARE.
 #include <dlfcn.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/exceptions/InterruptedException.h>
-#include <zapata/json/JSONObj.h>
+#include <zapata/parsers/json.h>
 #include <zapata/log/log.h>
 #include <sys/sem.h>
 #include <zapata/text/convert.h>
+#include <zapata/file/manip.h>
 #include <zapata/thread/RESTServer.h>
 #include <fstream>
 #include <iterator>
@@ -91,10 +92,10 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		 *  registered as a Controller
 		 */
 		this->__pool.on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			string _body = _req.body();
+			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 			zapata::JSONObj& _params = zapata::fromstr(_body);
 
@@ -104,7 +105,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			string _to((string) _config["zapata"]["rest"]["uploads"]["upload_path"]);
 			zapata::normalize_path(_to, true);
 
-			string _originalname(_req.header("X-Original-Filename"));
+			string _originalname(_req->header("X-Original-Filename"));
 			string _path;
 			string _name;
 			string _mime;
@@ -119,7 +120,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 				if (_originalname.length() != 0) {
 					_path.insert(_path.length(), _originalname);
 
-					_mime.assign(_req.header("X-Original-Mimetype"));
+					_mime.assign(_req->header("X-Original-Mimetype"));
 					if (_mime.length() != 0) {
 						_mime.assign(_mime.substr(0, _mime.find(";")));
 					}
@@ -137,7 +138,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			}
 			while (zapata::path_exists(_path));
 
-			string _encoding(_req.header("X-Content-Transfer-Encoding"));
+			string _encoding(_req->header("X-Content-Transfer-Encoding"));
 			transform(_encoding.begin(), _encoding.end(), _encoding.begin(), ::toupper);
 			if (_encoding == "BASE64") {
 				fstream _ifs;
@@ -159,9 +160,9 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			zapata::normalize_path(_location, true);
 			_location.insert(_location.length(), _name);
 
-			_rep.status(zapata::HTTP201);
-			_rep.header( "X-File-Mimetype", _mime);
-			_rep.header("Location", _location);
+			_rep->status(zapata::HTTP201);
+			_rep->header( "X-File-Mimetype", _mime);
+			_rep->header("Location", _location);
 		}, zapata::RESTfulController);
 
 		/*
@@ -169,10 +170,10 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		 *  registered as a Controller
 		 */
 		this->__pool.on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
-			string _body = _req.body();
+			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-			assertz(_req.header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 			zapata::JSONObj& _params = zapata::fromstr(_body);
 
@@ -193,7 +194,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			_cmd.insert(_cmd.length(), " > /dev/null");
 			assertz(system(_cmd.data()) == 0, "There was an error removing the uploaded file.", zapata::HTTP500, zapata::ERRFilePermissions);
 
-			_rep.status(zapata::HTTP200);
+			_rep->status(zapata::HTTP200);
 		}, zapata::RESTfulController);
 	}
 

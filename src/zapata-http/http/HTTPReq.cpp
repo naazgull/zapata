@@ -28,41 +28,41 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
-zapata::HTTPReq::HTTPReq() : __method(zapata::HTTPGet) {
+zapata::HTTPReqT::HTTPReqT() : __method(zapata::HTTPGet) {
 }
 
-zapata::HTTPReq::~HTTPReq() {
+zapata::HTTPReqT::~HTTPReqT() {
 }
 
-zapata::HTTPMethod zapata::HTTPReq::method() {
+zapata::HTTPMethod zapata::HTTPReqT::method() {
 	return this->__method;
 }
 
-void zapata::HTTPReq::method(zapata::HTTPMethod _method) {
+void zapata::HTTPReqT::method(zapata::HTTPMethod _method) {
 	this->__method = _method;
 }
 
-string& zapata::HTTPReq::url() {
+string& zapata::HTTPReqT::url() {
 	return this->__url;
 }
 
-void zapata::HTTPReq::url(string _url) {
+void zapata::HTTPReqT::url(string _url) {
 	this->__url.assign(_url.data());
 }
 
-string& zapata::HTTPReq::query() {
+string& zapata::HTTPReqT::query() {
 	return this->__query;
 }
 
-void zapata::HTTPReq::query(string _query) {
+void zapata::HTTPReqT::query(string _query) {
 	this->__query.assign(_query.data());
 }
 
-zapata::ParameterMap& zapata::HTTPReq::params() {
+zapata::ParameterMap& zapata::HTTPReqT::params() {
 	return this->__params;
 }
 
-string zapata::HTTPReq::param(const char* _idx) {
+string zapata::HTTPReqT::param(const char* _idx) {
 	auto _found = this->__params.find(_idx);
 	if (_found != this->__params.end()) {
 		return _found->second;
@@ -70,25 +70,25 @@ string zapata::HTTPReq::param(const char* _idx) {
 	return "";
 }
 
-void zapata::HTTPReq::param(const char* _name, const char* _value) {
+void zapata::HTTPReqT::param(const char* _name, const char* _value) {
 	this->__params.insert(pair< string, string> (_name, _value));
 }
 
-void zapata::HTTPReq::param(const char* _name, string _value) {
+void zapata::HTTPReqT::param(const char* _name, string _value) {
 	this->__params.insert(pair< string, string> (_name, _value));
 }
 
-void zapata::HTTPReq::param(string _name, string _value) {
+void zapata::HTTPReqT::param(string _name, string _value) {
 	this->__params.insert(pair< string, string> (_name, _value));
 }
 
-void zapata::HTTPReq::stringify(ostream& _out) {
+void zapata::HTTPReqT::stringify(ostream& _out) {
 	string _ret;
 	this->stringify(_ret);
 	_out << _ret << flush;
 }
 
-void zapata::HTTPReq::stringify(string& _out) {
+void zapata::HTTPReqT::stringify(string& _out) {
 	_out.insert(_out.length(), zapata::method_names[this->__method]);
 	_out.insert(_out.length(),  " ");
 	_out.insert(_out.length(), this->__url);
@@ -117,3 +117,13 @@ void zapata::HTTPReq::stringify(string& _out) {
 	_out.insert(_out.length(), CRLF);
 	_out.insert(_out.length(), this->__body);
 }
+
+zapata::HTTPReq::HTTPReq()  : shared_ptr<HTTPReqT>(make_shared<HTTPReqT>()) {
+}
+
+zapata::HTTPReq::HTTPReq(HTTPReqT* _target) : shared_ptr<HTTPReqT>(_target) {
+}
+
+zapata::HTTPReq::~HTTPReq(){
+}
+

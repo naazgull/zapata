@@ -28,27 +28,27 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
-zapata::HTTPRep::HTTPRep() : __status(zapata::HTTP100) {
+zapata::HTTPRepT::HTTPRepT() : __status(zapata::HTTP100) {
 }
 
-zapata::HTTPRep::~HTTPRep() {
+zapata::HTTPRepT::~HTTPRepT() {
 }
 
-zapata::HTTPStatus zapata::HTTPRep::status() {
+zapata::HTTPStatus zapata::HTTPRepT::status() {
 	return this->__status;
 }
 
-void zapata::HTTPRep::status(zapata::HTTPStatus _in) {
+void zapata::HTTPRepT::status(zapata::HTTPStatus _in) {
 	this->__status = _in;
 }
 
-void zapata::HTTPRep::stringify(ostream& _out) {
+void zapata::HTTPRepT::stringify(ostream& _out) {
 	string _ret;
 	this->stringify(_ret);
 	_out << _ret << flush;
 }
 
-void zapata::HTTPRep::stringify(string& _out) {
+void zapata::HTTPRepT::stringify(string& _out) {
 	_out.insert(_out.length(), "HTTP/1.1 "),
 	_out.insert(_out.length(),  zapata::status_names[this->__status]);
 	_out.insert(_out.length(), CRLF);
@@ -60,4 +60,13 @@ void zapata::HTTPRep::stringify(string& _out) {
 	}
 	_out.insert(_out.length(), CRLF);
 	_out.insert(_out.length(), this->__body);
+}
+
+zapata::HTTPRep::HTTPRep()  : shared_ptr<HTTPRepT>(make_shared<HTTPRepT>()) {
+}
+
+zapata::HTTPRep::HTTPRep(HTTPRepT* _target) : shared_ptr<HTTPRepT>(_target) {
+}
+
+zapata::HTTPRep::~HTTPRep(){
 }

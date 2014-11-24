@@ -34,7 +34,8 @@ namespace zapata {
 		HTTPParser(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 		virtual ~HTTPParser();
 
-		void switchRoots(HTTPPtr& _root);
+		void switchRoots(HTTPReq& _root);
+		void switchRoots(HTTPRep& _root);
 		void switchStreams(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 	};
 
