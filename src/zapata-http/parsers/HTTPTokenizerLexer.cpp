@@ -31,7 +31,7 @@ zapata::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &
 zapata::HTTPTokenizerLexer::~HTTPTokenizerLexer() {
 }
 
-void zapata::HTTPTokenizerLexer::switchRoots(JSONObj* _root) {
+void zapata::HTTPTokenizerLexer::switchRoots(HTTPPtr& _root) {
 	this->__root = _root;
 }
 
@@ -43,15 +43,17 @@ void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
 	this->__root_type = _in_type;
 	switch (_in_type) {
 		case zapata::HTTPRequest : {
-			this->__root_req = (HTTPReq*) this->__root;
+			this->__root_req = new HTTPReq();
 			zapata::HTTPMethod _m;
 			string _ms(this->matched());
 			zapata::fromstr(_ms, &_m);
 			this->__root_req->method(_m);
+			this->__root.reset(this->__root_req);
 			break;
 		}
 		case zapata::HTTPReply : {
-			this->__root_rep = (HTTPRep*) this->__root;
+			this->__root_rep = new HTTPRep();
+			this->__root.reset(this->__root_rep);
 			break;
 		}
 	}
@@ -100,31 +102,27 @@ void zapata::HTTPTokenizerLexer::status() {
 void zapata::HTTPTokenizerLexer::add() {
 	string _s(this->matched());
 	zapata::trim(_s);
+	if (this->__header_name.length() == 0) {
+		this->__header_name.assign(_s);
+		return;
+	}
 	switch (this->__root_type) {
 		case zapata::HTTPRequest : {
-			(* this->__root_req)["headers"] << _s;
+			this->__root_req->header(this->__header_name, _s);
 			break;
 		}
 		case zapata::HTTPReply : {
-			(* this->__root_rep)["headers"] << _s;
+			this->__root_rep->header(this->__header_name, _s);
 			break;
 		}
 	}
+	this->__header_name.clear();
 }
 
 void zapata::HTTPTokenizerLexer::name() {
 	string _s(this->matched());
 	zapata::trim(_s);
-	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
-			(* this->__root_req)["params"] << _s;
-			break;
-		}
-		case zapata::HTTPReply : {
-			(* this->__root_rep)["params"] << _s;
-			break;
-		}
-	}
+	this->__param_name.assign(_s);			
 }
 
 void zapata::HTTPTokenizerLexer::value() {
@@ -132,13 +130,13 @@ void zapata::HTTPTokenizerLexer::value() {
 	zapata::trim(_s);
 	switch (this->__root_type) {
 		case zapata::HTTPRequest : {
-			(* this->__root_req)["params"] << _s;
+			this->__root_req->param(this->__param_name, _s);
 			break;
 		}
 		case zapata::HTTPReply : {
-			(* this->__root_rep)["params"] << _s;
 			break;
 		}
 	}
+	this->__param_name.clear();
 }
 

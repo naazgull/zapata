@@ -29,10 +29,6 @@ SOFTWARE.
 #include <zapata/exceptions/NoHeaderNameException.h>
 
 zapata::HTTPReq::HTTPReq() : __method(zapata::HTTPGet) {
-	JSONObj _headers;
-	JSONObj _params;
-	(* this) << "headers" << _headers;
-	(* this) << "params" << _params;
 }
 
 zapata::HTTPReq::~HTTPReq() {
@@ -54,14 +50,6 @@ void zapata::HTTPReq::url(string _url) {
 	this->__url.assign(_url.data());
 }
 
-string& zapata::HTTPReq::body() {
-	return this->__body;
-}
-
-void zapata::HTTPReq::body(string _body) {
-	this->__body.assign(_body.data());
-}
-
 string& zapata::HTTPReq::query() {
 	return this->__query;
 }
@@ -70,28 +58,28 @@ void zapata::HTTPReq::query(string _query) {
 	this->__query.assign(_query.data());
 }
 
-string zapata::HTTPReq::header(const char* _idx) {
-	return (string) (* this)["headers"][_idx];
-}
-
-void zapata::HTTPReq::header(const char* _name, const char* _value) {
-	(* this)["headers"] << _name << _value;
-}
-
-void zapata::HTTPReq::header(const char* _name, string _value) {
-	(* this)["headers"] << _name << _value;
+zapata::ParameterMap& zapata::HTTPReq::params() {
+	return this->__params;
 }
 
 string zapata::HTTPReq::param(const char* _idx) {
-	return (string) (* this)["params"][_idx];
+	auto _found = this->__params.find(_idx);
+	if (_found != this->__params.end()) {
+		return _found->second;
+	}
+	return "";
 }
 
 void zapata::HTTPReq::param(const char* _name, const char* _value) {
-	(* this)["params"] << _name << _value;
+	this->__params.insert(pair< string, string> (_name, _value));
 }
 
 void zapata::HTTPReq::param(const char* _name, string _value) {
-	(* this)["params"] << _name << _value;
+	this->__params.insert(pair< string, string> (_name, _value));
+}
+
+void zapata::HTTPReq::param(string _name, string _value) {
+	this->__params.insert(pair< string, string> (_name, _value));
 }
 
 void zapata::HTTPReq::stringify(ostream& _out) {
@@ -104,11 +92,10 @@ void zapata::HTTPReq::stringify(string& _out) {
 	_out.insert(_out.length(), zapata::method_names[this->__method]);
 	_out.insert(_out.length(),  " ");
 	_out.insert(_out.length(), this->__url);
-	if ((* this)["params"]->obj()->size() != 0) {
+	if (this->__params.size() != 0) {
 		_out.insert(_out.length(), "?");
-		JSONObj _params = (JSONObj&) (* this)["params"];
 		bool _first = true;
-		for (auto i : *_params) {
+		for (auto i : this->__params) {
 			if (!_first) {
 				_out.insert(_out.length(), "&");
 			}
@@ -120,9 +107,8 @@ void zapata::HTTPReq::stringify(string& _out) {
 	}
 	_out.insert(_out.length(), " HTTP/1.1");
 	_out.insert(_out.length(),  CRLF);
-	JSONObj _headers = (JSONObj&) (* this)["headers"];
 	bool _first = true;
-	for (auto h : *_headers) {
+	for (auto h : this->__headers) {
 		_out.insert(_out.length(), h.first);
 		_out.insert(_out.length(), ": ");
 		_out.insert(_out.length(), h.second);

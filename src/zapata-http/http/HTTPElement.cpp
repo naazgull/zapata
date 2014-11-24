@@ -162,17 +162,16 @@ void zapata::init(HTTPReq& _req) {
 		size_t _e = _url.find("/", _b);
 		string _domain(_url.substr(_b, _e - _b));
 		string _path(_url.substr(_e));
-		_req["headers"] << "Host" << _domain;
+		_req.header("Host", _domain);
 		_req.url(_path);
 	}
 
 	_req.method(zapata::HTTPGet);
-	_req["headers"] <<
-		"Connection" << "close" <<
-		"User-Agent" << "zapata rest-ful server" <<
-		"Cache-Control" << "max-age=3600" <<
-		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
-		"Date" << string(_buffer_date);
+	_req.header("Connection", "close");
+	_req.header("User-Agent", "zapata rest-ful server");
+	_req.header("Cache-Control", "max-age=3600");
+	_req.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_req.header("Date", string(_buffer_date));
 
 }
 
@@ -188,14 +187,57 @@ void zapata::init(HTTPRep& _rep) {
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
 	_rep.status(zapata::HTTP404);
-	_rep["headers"] <<
-		"Connection" << "close" <<
-		"Server" << "zapata rest-ful server" <<
-		"Cache-Control" << "max-age=3600" <<
-		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
-		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires);
+	_rep.header("Connection", "close");
+	_rep.header("User-Agent", "zapata rest-ful server");
+	_rep.header("Cache-Control", "max-age=3600");
+	_rep.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_rep.header("Date", string(_buffer_date));
+	_rep.header("Expires", string(_buffer_expires));
 
+}
+
+zapata::HTTPPtr::HTTPPtr()  : shared_ptr<HTTPObj>(make_shared<HTTPObj>()) {
+}
+
+zapata::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {
+}
+
+zapata::HTTPPtr::~HTTPPtr(){
+}
+
+zapata::HTTPObj::HTTPObj() {
+}
+
+string& zapata::HTTPObj::body() {
+	return this->__body;
+}
+
+void zapata::HTTPObj::body(string _body) {
+	this->__body.assign(_body.data());
+}
+
+zapata::HeaderMap& zapata::HTTPObj::headers() {
+	return this->__headers;
+}
+
+string zapata::HTTPObj::header(const char* _idx) {
+	auto _found = this->__headers.find(_idx);
+	if (_found != this->__headers.end()) {
+		return _found->second;
+	}
+	return "";
+}
+
+void zapata::HTTPObj::header(const char* _name, const char* _value) {
+	this->__headers.insert(pair< string, string> (_name, _value));
+}
+
+void zapata::HTTPObj::header(const char* _name, string _value) {
+	this->__headers.insert(pair< string, string> (_name, _value));
+}
+
+void zapata::HTTPObj::header(string _name, string _value) {
+	this->__headers.insert(pair< string, string> (_name, _value));
 }
 
 extern "C" int zapata_http() {

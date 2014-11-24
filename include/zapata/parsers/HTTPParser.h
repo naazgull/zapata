@@ -34,7 +34,7 @@ namespace zapata {
 		HTTPParser(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 		virtual ~HTTPParser();
 
-		void switchRoots(JSONObj* _root);
+		void switchRoots(HTTPPtr& _root);
 		void switchStreams(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 	};
 

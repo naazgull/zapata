@@ -35,16 +35,12 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	void fromfile(ifstream& _in, HTTPReq& _out) ;
-	void fromfile(ifstream& _in, HTTPRep& _out) ;
-
-	void fromstream(istream& _in, HTTPReq& _out) ;
-	void fromstream(istream& _in, HTTPRep& _out) ;
-
-	void fromstr(string& _in, HTTPReq& _out) ;
-	void fromstr(string& _in, HTTPRep& _out) ;
+	zapata::HTTPPtr fromhttpfile(ifstream& _in) ;
+	zapata::HTTPPtr fromhttpstream(istream& _in) ;
+	zapata::HTTPPtr fromhttpstr(string& _in) ;
 
 	void tostr(string& _out, HTTPReq& _in) ;
 	void tostr(string& _out, HTTPRep& _in) ;
-
+	void tostr(ostream& _out, HTTPReq& _in) ;
+	void tostr(ostream& _out, HTTPRep& _in) ;
 }

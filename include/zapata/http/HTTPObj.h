@@ -127,8 +127,33 @@ namespace zapata {
 		HTTP511 = 511
 	};
 
-	typedef JSONObj HTTPObj;
-	typedef JSONPtr HTTPPtr;
+	typedef map< string, string > HeaderMap;
+	typedef map< string, string > ParameterMap;
+
+	class HTTPObj {
+	public:
+		HTTPObj();
+		virtual ~HTTPObj();
+
+		string& body();
+		void body(string);
+		HeaderMap& headers();
+		string header(const char* _name);
+		void header(const char* _name, const char* _value);
+		void header(const char* _name, string _value);
+		void header(string _name, string _value);
+
+	protected:
+		string __body;
+		HeaderMap __headers;
+	};
+
+	class HTTPPtr :public shared_ptr< HTTPObj > {
+	public:
+		HTTPPtr();
+		HTTPPtr(HTTPObj* _target);
+		virtual ~HTTPPtr();	
+	};
 
 	void fromstr(string& _in, HTTPMethod* _out);
 
@@ -141,16 +166,13 @@ namespace zapata {
 		void method(HTTPMethod);
 		string& url();
 		void url(string);
-		string& body();
-		void body(string);
 		string& query();
 		void query(string);
-		string header(const char* _name);
-		void header(const char* _name, const char* _value);
-		void header(const char* _name, string _value);
+		ParameterMap& params();
 		string param(const char* _name);
 		void param(const char* _name, const char* _value);
 		void param(const char* _name, string _value);
+		void param(string _name, string _value);
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
@@ -158,9 +180,8 @@ namespace zapata {
 	private:
 		string __url;
 		string __query;
-		string __body;
 		HTTPMethod __method;
-
+		ParameterMap __params;
 	};
 
 	class HTTPRep: public HTTPObj {
@@ -170,17 +191,11 @@ namespace zapata {
 
 		HTTPStatus status();
 		void status(HTTPStatus);
-		string& body();
-		void body(string);
-		string header(const char* _idx);
-		void header(const char* _name, const char* _value);
-		void header(const char* _name, string _value);
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
 
 	private:
-		string __body;
 		HTTPStatus __status;
 	};
 

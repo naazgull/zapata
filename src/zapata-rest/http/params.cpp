@@ -45,8 +45,7 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 			}
 		}
 	}
-	JSONObj _params = (JSONObj&) _in["params"];
-	for (auto _i : *_params) {
+	for (auto _i : _in.params()) {
 		string _value = _i.second;
 		string _key(_i.first.data());
 		zapata::url::decode(_value);

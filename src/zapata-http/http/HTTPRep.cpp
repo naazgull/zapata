@@ -29,19 +29,9 @@ SOFTWARE.
 #include <zapata/exceptions/NoHeaderNameException.h>
 
 zapata::HTTPRep::HTTPRep() : __status(zapata::HTTP100) {
-	JSONObj _headers;
-	(* this) << "headers" << _headers;
 }
 
 zapata::HTTPRep::~HTTPRep() {
-}
-
-string& zapata::HTTPRep::body() {
-	return this->__body;
-}
-
-void zapata::HTTPRep::body(string _body) {
-	this->__body.assign(_body);
 }
 
 zapata::HTTPStatus zapata::HTTPRep::status() {
@@ -50,18 +40,6 @@ zapata::HTTPStatus zapata::HTTPRep::status() {
 
 void zapata::HTTPRep::status(zapata::HTTPStatus _in) {
 	this->__status = _in;
-}
-
-string zapata::HTTPRep::header(const char* _idx) {
-	return (string) (* this)["headers"][_idx];
-}
-
-void zapata::HTTPRep::header(const char* _name, const char* _value) {
-	(* this)["headers"] << _name << _value;
-}
-
-void zapata::HTTPRep::header(const char* _name, string _value) {
-	(* this)["headers"] << _name << _value;
 }
 
 void zapata::HTTPRep::stringify(ostream& _out) {
@@ -74,8 +52,7 @@ void zapata::HTTPRep::stringify(string& _out) {
 	_out.insert(_out.length(), "HTTP/1.1 "),
 	_out.insert(_out.length(),  zapata::status_names[this->__status]);
 	_out.insert(_out.length(), CRLF);
-	JSONObj _headers = (JSONObj&) (* this)["headers"];
-	for (auto i : *_headers) {
+	for (auto i : this->__headers) {
 		_out.insert(_out.length(), i.first);
 		_out.insert(_out.length(), ": ");
 		_out.insert(_out.length(), i.second);

@@ -24,61 +24,50 @@ SOFTWARE.
 
 #include <zapata/parsers/http.h>
 
-void zapata::fromstr(string& _in, HTTPReq& _out) {
+zapata::HTTPPtr zapata::fromhttpstr(string& _in) {
 	istringstream _ss;
 	_ss.str(_in);
 	zapata::HTTPParser _p;
-	_p.switchRoots((JSONObj*) &_out);
+	HTTPPtr _root;
+	_p.switchRoots(_root);
 	_p.switchStreams(_ss);
 	_p.parse();
+	return _root;
 
 }
 
-void zapata::fromstr(string& _in, HTTPRep& _out) {
-	istringstream _ss;
-	_ss.str(_in);
-	zapata::HTTPParser _p;
-	_p.switchRoots((JSONObj*) &_out);
-	_p.switchStreams(_ss);
-	_p.parse();
-}
-
-void zapata::fromfile(ifstream& _in, HTTPReq& _out) {
+zapata::HTTPPtr zapata::fromhttpfile(ifstream& _in) {
+	HTTPPtr _root;
 	if (_in.is_open()) {
 		zapata::HTTPParser _p;
-		_p.switchRoots((JSONObj*) &_out);
+		_p.switchRoots(_root);
 		_p.switchStreams(_in);
 		_p.parse();
 	}
+	return _root;
 }
 
-void zapata::fromfile(ifstream& _in, HTTPRep& _out) {
-	if (_in.is_open()) {
-		zapata::HTTPParser _p;
-		_p.switchRoots((JSONObj*) &_out);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-}
-
-void zapata::fromstream(istream& _in, HTTPReq& _out) {
+zapata::HTTPPtr zapata::fromhttpstream(istream& _in) {
+	HTTPPtr _root;
 	zapata::HTTPParser _p;
-	_p.switchRoots((JSONObj*) &_out);
+	_p.switchRoots(_root);
 	_p.switchStreams(_in);
 	_p.parse();
-}
-
-void zapata::fromstream(istream& _in, HTTPRep& _out) {
-	zapata::HTTPParser _p;
-	_p.switchRoots((JSONObj*) &_out);
-	_p.switchStreams(_in);
-	_p.parse();
+	return _root;
 }
 
 void zapata::tostr(string& _out, HTTPRep& _in)  {
-	_in->stringify(_out);
+	_in.stringify(_out);
 }
 
 void zapata::tostr(string& _out, HTTPReq& _in)  {
-	_in->stringify(_out);
+	_in.stringify(_out);
+}
+
+void zapata::tostr(ostream& _out, HTTPRep& _in)  {
+	_in.stringify(_out);
+}
+
+void zapata::tostr(ostream& _out, HTTPReq& _in)  {
+	_in.stringify(_out);
 }

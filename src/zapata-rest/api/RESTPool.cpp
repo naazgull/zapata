@@ -49,19 +49,20 @@ zapata::RESTPool::RESTPool() :
 		string _body;
 		zapata::tostr(_body, _req);
 		_rep.body(_body);
-		_rep["headers"] << "Content-Length" << (long) _body.length();
+		string _length;
+		zapata::tostr(_length,  _body.length());
+		_rep.header("Content-Length", _length);
 	};
 	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 		_rep.status(zapata::HTTP200);
 
 		string _origin = _req.header("Origin");
 		if (_origin.length() != 0) {
-			_rep["headers"]
-				<< "Access-Control-Allow-Origin" << _origin
-				<< "Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY"
-				<< "Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS
-				<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS
-				<< "Access-Control-Max-Age" << "1728000";
+			_rep.header("Access-Control-Allow-Origin", _origin);
+			_rep.header("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY");
+			_rep.header("Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS);
+			_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
+			_rep.header("Access-Control-Max-Age", "1728000");
 		}
 	};
 	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
@@ -228,7 +229,7 @@ void zapata::RESTPool::trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _
 	size_t _e = _url.find("/", _b);
 	string _domain(_url.substr(_b, _e - _b));
 	string _path(_url.substr(_e));
-	_req["headers"] << "Host" << _domain;
+	_req.header("Host", _domain);
 	_req.url(_path);
 	this->trigger(_req, _rep, _is_ssl);
 }
@@ -251,13 +252,12 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
 	_rep.status(zapata::HTTP404);
-	_rep["headers"] <<
-		"Connection" << "close" <<
-		"Server" << "zapata rest-ful server" <<
-		"Cache-Control" << "max-age=3600" <<
-		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
-		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires);
+	_rep.header("Connection", "close");
+	_rep.header("Server", "zapata rest-ful server");
+	_rep.header("Cache-Control", "max-age=3600");
+	_rep.header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+	_rep.header("Date", string(_buffer_date));
+	_rep.header("Expires", string(_buffer_expires));
 
 }
 
@@ -277,9 +277,8 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 						<< "message" << _e.what()
 						<< "code" << _e.code()
 					));
-					_rep["headers"] <<
-						"Content-Type" << "application/json" <<
-						"Content-Length" << (long) _text.length();
+					_rep.header("Content-Type", "application/json");
+					_rep.header("Content-Length", (long) _text.length());
 
 					_rep.body(_text);
 				}
@@ -288,9 +287,8 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 
 				string _origin = _req.header("Origin");
 				if (_origin.length() != 0) {
-					_rep["headers"] <<
-						"Access-Control-Allow-Origin" << _origin  <<
-						"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+					_rep.header("Access-Control-Allow-Origin", _origin);
+					_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 				}
 
 			}

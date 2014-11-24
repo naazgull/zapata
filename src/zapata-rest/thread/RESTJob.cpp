@@ -35,10 +35,20 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 
 	(* this)->loop([ this ] (Job& _job) -> void {
 		bool _debug = !!this->configuration()["zapata"]["rest"]["debug"];
+		pthread_t _pid = pthread_self();
+		sigset_t _mask;
+		int _sfd;
+		struct signalfd_siginfo _fdsi;
+
+		sigemptyset(&_mask);
+		sigaddset(&_mask, SIGINT);
+
+		sigprocmask(SIG_BLOCK, &_mask, NULL);
+		_sfd = signalfd(-1, &_mask, 0);		
 
 		for (; true; ) {
 			if (this->__peers.size() != 0) {				
-				int _rv = poll(& this->__peers[0], this->__peers.size(), 1000);
+				int _rv = poll(& this->__peers[0], this->__peers.size(), -1);
 				if (_rv > 0) {
 
 					for (auto _fd : this->__peers) {
@@ -46,21 +56,20 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 							socketstream _cs(_fd.fd);
 
 							HTTPRep _rep;
-							HTTPReq _req;
 							for (; true; ) {
 								try  {
-									zapata::fromstream(_cs, _req);
+									zapata::HTTPPtr _ptr = zapata::fromhttpstream(_cs);
+									zapata::HTTPReq * _req = (zapata::HTTPReq*) _ptr.get();
 									this->__pool->trigger(_req, _rep);
 
-									string _origin = _req.header("Origin");
+									string _origin = _req->header("Origin");
 									if (_origin.length() != 0) {
-										_rep["headers"]
-											<< "Access-Control-Allow-Origin" << _origin
-											<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+										_rep.header("Access-Control-Allow-Origin", _origin);
+										_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 									}
 
 									if (zapata::log_lvl) {
-										this->log(_req, _rep);
+										this->log(* _req, _rep);
 									}
 									_rep.stringify(_cs);
 									_cs << flush;
@@ -81,13 +90,15 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 
 									_rep.body(_text);
 									_rep.status(zapata::HTTP400);
-									_rep["headers"] << "Content-Type" << "application/json" << "Content-Length" << (long) _text.length();
+									_rep.header("Content-Type", "application/json");
+									string _length;
+									zapata::tostr(_length, _text.length());
+									_rep.header("Content-Length", _length);
 
 									string _origin = _req.header("Origin");
 									if (_origin.length() != 0) {
-										_rep["headers"]
-											<< "Access-Control-Allow-Origin" << _origin
-											<< "Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS;
+										_rep.header("Access-Control-Allow-Origin", _origin)
+										_rep.header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 									}
 								}
 								catch(zapata::ClosedException& e) {
@@ -139,11 +150,10 @@ void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	_text.insert(_text.length(), " ");
 	_text.insert(_text.length(), "\033[38;5;15m");
 	_text.insert(_text.length(),  _req.url());
-	if (_req["params"]->obj()->size() != 0) {
+	if (_req.params().size() != 0) {
 		_text.insert(_text.length(), "?");
-		JSONObj _params = (JSONObj&) _req["params"];
 		bool _first = true;
-		for (auto i : *_params) {
+		for (auto i : _req.params()) {
 			if (!_first) {
 				_text.insert(_text.length(), "&");
 			}

@@ -34,7 +34,7 @@ namespace zapata {
 		HTTPTokenizerLexer(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 		virtual ~HTTPTokenizerLexer();
 
-		void switchRoots(JSONObj* _root);
+		void switchRoots(HTTPPtr& _root);
 		void justLeave();
 
 		void init(zapata::HTTPType _in_type);
@@ -46,7 +46,9 @@ namespace zapata {
 		void name();
 		void value();
 
-		JSONObj* __root;
+		HTTPPtr __root;
+		string __header_name;
+		string __param_name;
 		HTTPReq* __root_req;
 		HTTPRep* __root_rep;
 		HTTPType __root_type;

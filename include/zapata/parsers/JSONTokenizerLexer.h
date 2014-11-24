@@ -50,7 +50,6 @@ namespace zapata {
 
 			JSONElementT* __root;
 			JSONType __root_type;
-			JSONPtr __value;
 			JSONElementT* __parent;
 	};
 
