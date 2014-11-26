@@ -212,17 +212,17 @@ void zapata::RESTServer::wait() {
 	try {
 
 		if (this->__n_jobs < this->max()) {
-			RESTJob _job();
+			/*RESTJob _job();
 			_job->pool(& this->__pool);
 			_job->start();
 
 			this->__jobs.push_back(_job);
-			this->__n_jobs++;
+			this->__n_jobs++;*/
 		}
 
 		int _cs_fd = -1;
 		this->__ss.accept(&_cs_fd);
-		this->__jobs.at(this->next()).assign(_cs_fd);
+		//this->__jobs.at(this->next()).assign(_cs_fd);
 	}
 	catch(zapata::ClosedException& e) {
 		throw zapata::InterruptedException(e.what());
@@ -250,4 +250,20 @@ zapata::RESTPool& zapata::RESTServer::pool() {
 
 zapata::JSONObj& zapata::RESTServer::configuration() {
 	return this->__configuration;
+}
+
+void zapata::RESTServer::notify() {
+
+}
+
+size_t zapata::RESTServer::max() {
+	return this->__max_idx;
+}
+
+size_t zapata::RESTServer::next() {
+	return 0;
+}
+
+void zapata::RESTServer::max(size_t _max) {
+	this->__max_idx = _max;
 }

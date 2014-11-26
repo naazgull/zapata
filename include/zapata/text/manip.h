@@ -51,4 +51,6 @@ namespace zapata {
 	void decipher(string _in, string _key, string& _out);
 	void encrypt(string& _out, string _in, string _key);
 	void decrypt(string& _out, string _in, string _key);
+
+	void prettify_header_name(string& name);
 }

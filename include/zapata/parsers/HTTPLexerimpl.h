@@ -30,6 +30,7 @@ SOFTWARE.
 #include <string.h>
 #include <zapata/text/convert.h>
 #include <zapata/http/HTTPObj.h>
+#include <sstream>
 
 // $insert namespace-use
     // UN-comment the next using-declaration if you want to use
@@ -39,5 +40,9 @@ namespace zapata {
 }
 
 /*
- 	 size_t              d_content_length;
+#include <zapata/parsers/HTTPLexerimpl.h>
+    size_t              d_content_length;
+    long int          d_chunked_length;
+    bool                d_chunked_body;
+    std::string      d_chunked;
 */

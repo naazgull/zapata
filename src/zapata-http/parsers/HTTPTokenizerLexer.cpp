@@ -44,6 +44,8 @@ void zapata::HTTPTokenizerLexer::justLeave() {
 }
 
 void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
+	this->d_chunked_body = false;
+	this->d_chunked.clear();
 	this->__root_type = _in_type;
 	switch (_in_type) {
 		case zapata::HTTPRequest : {

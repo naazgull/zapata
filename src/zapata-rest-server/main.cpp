@@ -35,6 +35,7 @@ SOFTWARE.
 #include <zapata/net.h>
 #include <zapata/rest.h>
 #include <zapata/mem/usage.h>
+#include <semaphore.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -46,7 +47,7 @@ semid_t __semid = 0;
 
 void sigsev(int sig) {
 	if (__semid != 0) {
-		semctl(__semid, 0, IPC_RMID);
+		//semctl(__semid, 0, IPC_RMID);
 		__semid = 0;
 	}
 	exit(-1);
@@ -60,7 +61,7 @@ void stop(int sig) {
 	zapata::tostr(_text, __semid);
 	zapata::log(_text, zapata::sys);
 	if (pthread_self() == __thread_id && __semid != 0) {
-		semctl(__semid, 0, IPC_RMID);
+		//semctl(__semid, 0, IPC_RMID);
 		__semid = 0;
 	}
 	exit(SIGTERM);
@@ -193,8 +194,26 @@ int main(int argc, char* argv[]) {
 	zapata::log_mem_usage();
 	return 0;*/
 
+	/*{
+		zapata::socketstream _socket;
+		_socket.open("localhost", 80);
+
+		zapata::HTTPReq _req;
+		_req->url("/");
+
+		_req->header("Host", "b.zapata");
+		_req->header("Accept", "*\/\*");
+		cout << _req << endl << flush;
+		_socket << _req << flush;
+
+		zapata::HTTPRep _rep;
+		_socket >> _rep;
+		cout << _rep << endl << flush;
+	}
+	return 0;*/
+
 	zapata::RESTServer _server(_conf_file);
-	__semid = _server.semid();
+	//__semid = _server.semid();
 	_server.start();
 
 	return 0;

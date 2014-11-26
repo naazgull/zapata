@@ -24,6 +24,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/config.h>
+
 #include <zapata/base/assert.h>
 
 #include <zapata/text/convert.h>

@@ -32,7 +32,7 @@
 #define HAVE_MEMORY_H 1
 
 /* "Turn on MongoDB support" */
-#define HAVE_MONGO_DB 1
+/* #undef HAVE_MONGO_DB */
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1

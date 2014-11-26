@@ -6,7 +6,7 @@ AC_INIT(zapata, 0.0.8, pedro.figueiredo@gmail.com)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 
-AC_ARG_ENABLE(mongodb, [  --enable-mongodb    Turn on MongoDB support],
+AC_ARG_ENABLE(mongodb, [  --enable-mongodb	Turn on MongoDB support],
 	[ AC_DEFINE(HAVE_MONGO_DB, 1, "Turn on MongoDB support") ]
 )
 

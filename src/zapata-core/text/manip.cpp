@@ -162,3 +162,18 @@ void zapata::decrypt(string& _out, string _in, string _key) {
 
 	_out.assign(cos.str());
 }
+
+void zapata::prettify_header_name(string& name) {
+	std::transform(name.begin(), name.begin() + 1, name.begin(), ::toupper);
+
+	stringstream iss;
+	iss << name;
+
+	char line[256];
+	size_t pos = 0;
+	while (iss.good()) {
+		iss.getline(line, 256, '-');
+		pos += iss.gcount();
+		std::transform(name.begin() + pos, name.begin() + pos + 1, name.begin() + pos, ::toupper);
+	}
+}

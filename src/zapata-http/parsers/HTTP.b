@@ -38,6 +38,11 @@ exp :
 			d_scanner.body();
 			d_scanner.d_content_length = 0;
 		}
+		else if (d_scanner.d_chunked.length() != 0) {
+			d_scanner.body();
+			d_scanner.d_chunked_length = -1;
+			d_scanner.d_chunked.assign("");
+		}
 	}
 |
 	VERSION
@@ -57,6 +62,11 @@ exp :
 		if (d_scanner.d_content_length != 0) {
 			d_scanner.body();
 			d_scanner.d_content_length = 0;
+		}
+		else if (d_scanner.d_chunked.length() != 0) {
+			d_scanner.body();
+			d_scanner.d_chunked_length = -1;
+			d_scanner.d_chunked.assign("");
 		}
 	}
 ;
@@ -120,6 +130,8 @@ rest :
 	{
 		d_scanner.body();
 		d_scanner.d_content_length = 0;
+		d_scanner.d_chunked_length = -1;
+		d_scanner.d_chunked.assign("");
 	}
 |
 

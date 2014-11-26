@@ -101,9 +101,13 @@ void zapata::HTTPReqT::stringify(string& _out) {
 				_out.insert(_out.length(), "&");
 			}
 			_first = false;
-			_out.insert(_out.length(), i.first);
+			string _n(i.first);
+			zapata::url::encode(_n);
+			string _v(i.second);
+			zapata::url::encode(_v);
+			_out.insert(_out.length(), _n);
 			_out.insert(_out.length(), "=");
-			_out.insert(_out.length(), i.second);
+			_out.insert(_out.length(), _v);
 		}
 	}
 	_out.insert(_out.length(), " HTTP/1.1");

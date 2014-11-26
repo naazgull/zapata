@@ -16,7 +16,9 @@
     };
 */
 
-size_t              d_content_length;
+size_t	d_content_length;
+bool	d_chunked_body;
+string	d_chunked;
 
 %baseclass-header = "HTTPLexerbase.h"
 %class-header = "HTTPLexer.h"
@@ -29,7 +31,7 @@ size_t              d_content_length;
 //%debug
 %no-lines
 
-%x request reply headers headerval crlf plain_body statustext contentlengthval params
+%x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval params
 %%
 
 [\f\t\n\r ]+                  // skip white space
@@ -151,7 +153,12 @@ size_t              d_content_length;
 	"\r\n"   {
 		char _c = get__();
 		if (_c == '\n' || _c == '\r') {
-			if (d_content_length == 0) {
+			if (d_chunked_body) {
+				get__();
+				d_chunked_length = -1;
+				begin(StartCondition__::chunked_body);
+			}
+			else if (d_content_length == 0) {
 				leave(-1);
 			}
 			else {
@@ -167,7 +174,11 @@ size_t              d_content_length;
 	"\n"  {
 		char _c = get__();
 		if (_c == '\n' || _c == '\r') {
-			if (d_content_length == 0) {
+			if (d_chunked_body) {
+				d_chunked_length = -1;
+				begin(StartCondition__::chunked_body);
+			}
+			else if (d_content_length == 0) {
 				leave(-1);
 			}
 			else {
@@ -180,8 +191,13 @@ size_t              d_content_length;
 		return 261;
 	}
 	([^:\n\r]+) {
-		if (matched() == string("Content-Length")) {
+		string _m(matched());
+		::transform(_m.begin(), _m.end(), _m.begin(), ::tolower);
+		if (_m == string("content-length")) {
 			begin(StartCondition__::contentlengthval);
+		}
+		else if (_m == string("transfer-encoding")) {
+			begin(StartCondition__::transferencodingval);
 		}
 		return 263;
 	}
@@ -201,6 +217,17 @@ size_t              d_content_length;
 	([^:\n\r]+) {
 		std::string _s(matched());
 		zapata::fromstr(_s, &d_content_length);
+		begin(StartCondition__::headers);
+		return 263;
+	}
+}
+
+<transferencodingval>{
+	":" {
+		return 262;
+	}
+	([^:\n\r]+) {
+		d_chunked_body = (matched() == string(" chunked"));
 		begin(StartCondition__::headers);
 		return 263;
 	}
@@ -242,3 +269,40 @@ size_t              d_content_length;
 		}
 	}
 }
+
+<chunked_body>{
+	"\r\n" {
+		if (d_chunked_length < 0) {
+			std::istringstream _is;
+			_is.str(matched());
+			_is >> std::hex >> d_chunked_length;
+			setMatched("");
+		}
+
+		if (d_chunked_length == 0) {
+			setMatched(d_chunked);
+			get__();
+			get__();
+			leave(-1);
+		}
+		else if (matched().length() - 2 == d_chunked_length) {
+			d_chunked.insert(d_chunked.length(), matched());
+			zapata::trim(d_chunked);
+			setMatched("");
+			d_chunked_length = -1;
+		}
+		else {
+			more();
+		}
+	}
+	"\r" {
+		more();
+	}
+	"\n" {
+		more();
+	}
+	[^\r\n] {
+		more();
+	}
+}
+
