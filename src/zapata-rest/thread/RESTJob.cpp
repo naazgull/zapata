@@ -28,6 +28,9 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
+zapata::RESTJob::RESTJob(const RESTJob& _rhs) : Job(_rhs.get()) {
+}
+
 zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 	ifstream _key_file;
 	_key_file.open(_key_file_path.data());
@@ -35,7 +38,7 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 
 	sigset_t _mask;
 	sigemptyset(&_mask);
-	sigaddset(&_mask, SIGINT);
+	sigaddset(&_mask, SIGPOLL);
 	pthread_sigmask(SIG_BLOCK, &_mask, NULL);
 	struct pollfd _sfd;
 	_sfd.fd = signalfd(-1, & _mask, 0);
@@ -50,6 +53,7 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 			int _rv = poll(& this->__peers[0], this->__peers.size(), -1);
 			if (_rv > 0) {
 				if (this->__peers[0].revents & POLLIN) {
+					zapata::log("sweet, got a new client!", zapata::debug);
 					thr_signal_t _fdsi;
 					if (read(this->__peers[0].fd, &_fdsi, _size_of) == _size_of) {
 					}
@@ -61,55 +65,51 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 
 						HTTPRep _rep;
 						HTTPReq _req;
-						for (; true; ) {
-							try  {
-								zapata::fromhttpstream(_cs, _req);
-								this->__pool->trigger(_req, _rep);
+						try  {
+							zapata::fromhttpstream(_cs, _req);
+							this->__pool->trigger(_req, _rep);
 
-								string _origin = _req->header("Origin");
-								if (_origin.length() != 0) {
-									_rep->header("Access-Control-Allow-Origin", _origin);
-									_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
-								}
-
-								if (zapata::log_lvl) {
-									this->log(_req, _rep);
-								}
-								_rep->stringify(_cs);
-								_cs << flush;
-								break;
+							string _origin = _req->header("Origin");
+							if (_origin.length() != 0) {
+								_rep->header("Access-Control-Allow-Origin", _origin);
+								_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 							}
-							catch(zapata::SyntaxErrorException& e) {
-								zapata::log(e.what(), zapata::error);
 
-								zapata::JSONObj _body;
-								_body
-									<< "error" << true
-									<< "assertion_failed" << e.what()
-									<< "message" << e.what()
-									<< "code" << 400;
-
-								string _text;
-								zapata::tostr(_text, _body);
-
-								_rep->body(_text);
-								_rep->status(zapata::HTTP400);
-								_rep->header("Content-Type", "application/json");
-								string _length;
-								zapata::tostr(_length, _text.length());
-								_rep->header("Content-Length", _length);
-
-								string _origin = _req->header("Origin");
-								if (_origin.length() != 0) {
-									_rep->header("Access-Control-Allow-Origin", _origin);
-									_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
-								}
+							if (zapata::log_lvl) {
+								this->log(_req, _rep);
 							}
-							catch(zapata::ClosedException& e) {
-								zapata::log(e.what(), zapata::error);
-								break;
+							_rep->stringify(_cs);
+							_cs << flush;
+						}
+						catch(zapata::SyntaxErrorException& e) {
+							zapata::log(e.what(), zapata::error);
+
+							zapata::JSONObj _body;
+							_body
+								<< "error" << true
+								<< "assertion_failed" << e.what()
+								<< "message" << e.what()
+								<< "code" << 400;
+
+							string _text;
+							zapata::tostr(_text, _body);
+
+							_rep->body(_text);
+							_rep->status(zapata::HTTP400);
+							_rep->header("Content-Type", "application/json");
+							string _length;
+							zapata::tostr(_length, _text.length());
+							_rep->header("Content-Length", _length);
+
+							string _origin = _req->header("Origin");
+							if (_origin.length() != 0) {
+								_rep->header("Access-Control-Allow-Origin", _origin);
+								_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 							}
-						}	
+						}
+						catch(zapata::ClosedException& e) {
+							zapata::log(e.what(), zapata::error);
+						}
 					}
 				}
 			}
@@ -135,7 +135,7 @@ zapata::RESTPool& zapata::RESTJob::pool() {
 	return * this->__pool;
 }
 
-void zapata::RESTJob::pool(RESTPool* _pool) {
+void zapata::RESTJob::pool(zapata::RESTPool * _pool) {
 	this->__pool = _pool;
 }
 

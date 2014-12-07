@@ -54,7 +54,7 @@ namespace zapata {
 		private:
 			size_t __n_jobs;
 			serversocketstream __ss;
-			vector< RESTJob > __jobs;
+			vector< zapata::RESTJob * > __jobs;
 			RESTPool __pool;
 			string __conf_file;
 			

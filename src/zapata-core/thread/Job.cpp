@@ -65,6 +65,14 @@ zapata::JobRef::JobRef(JobRef& _rhs) {
 zapata::JobRef::~JobRef(){
 }
 
+pthread_mutex_t& zapata::JobRef::mutex() {
+	return * this->__mtx;
+}
+
+pthread_t& zapata::JobRef::tid() {
+	return * this->__thr;
+}
+
 void* zapata::JobRef::start(void* _thread) {
 	JobRef* _running = static_cast<JobRef*>(_thread);
 	Job _self(_running);

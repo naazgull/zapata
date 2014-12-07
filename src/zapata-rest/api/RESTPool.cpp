@@ -252,8 +252,7 @@ void zapata::RESTPool::init(HTTPRep& _rep) {
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
 	_rep->status(zapata::HTTP404);
-	_rep->header("Connection", "close");
-	_rep->header("Server", "zapata rest-ful server");
+	_rep->header("Server", "zapata RESTful server");
 	_rep->header("Cache-Control", "max-age=3600");
 	_rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
 	_rep->header("Date", string(_buffer_date));
@@ -295,6 +294,9 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 
 			}
 		}
+	}
+	if (_rep->header("Content-Length").length() == 0) {
+		_rep->header("Content-Length", "0");
 	}
 }
 

@@ -203,6 +203,13 @@ zapata::RESTServer::RESTServer(string _config_file) {
 	zapata::tostr(_text, _port);
 	zapata::log(_text, zapata::sys);
 	this->__ss.bind(_port);
+
+	for (int i = 0; i != this->max(); i++) {
+		zapata::RESTJob * _job = new RESTJob(_config_file);
+		this->__jobs.push_back(_job);
+		(* _job).pool(& this->__pool);
+		(* _job)->start();
+	}
 }
 
 zapata::RESTServer::~RESTServer(){
@@ -210,19 +217,12 @@ zapata::RESTServer::~RESTServer(){
 
 void zapata::RESTServer::wait() {
 	try {
-
-		if (this->__n_jobs < this->max()) {
-			/*RESTJob _job();
-			_job->pool(& this->__pool);
-			_job->start();
-
-			this->__jobs.push_back(_job);
-			this->__n_jobs++;*/
-		}
-
 		int _cs_fd = -1;
 		this->__ss.accept(&_cs_fd);
-		//this->__jobs.at(this->next()).assign(_cs_fd);
+
+		size_t _next = this->next();
+		(* this->__jobs.at(_next)).assign(_cs_fd);
+		pthread_kill((* this->__jobs.at(_next))->tid(), SIGPOLL);
 	}
 	catch(zapata::ClosedException& e) {
 		throw zapata::InterruptedException(e.what());
@@ -236,7 +236,6 @@ void zapata::RESTServer::start() {
 				this->__next = 0;
 			}
 			this->wait();
-			this->__next++;
 		}
 	}
 	catch (zapata::InterruptedException& e) {
@@ -261,7 +260,7 @@ size_t zapata::RESTServer::max() {
 }
 
 size_t zapata::RESTServer::next() {
-	return 0;
+	return this->__next++;
 }
 
 void zapata::RESTServer::max(size_t _max) {

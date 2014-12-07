@@ -59,6 +59,9 @@ namespace zapata {
 		JobRef(JobLoopCallback _callback);
 		virtual ~JobRef();
 
+		pthread_mutex_t& mutex();
+		pthread_t& tid();
+
 		static void* start(void* thread);
 
 		size_t pending();

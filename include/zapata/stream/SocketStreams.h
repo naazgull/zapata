@@ -151,7 +151,6 @@ namespace zapata {
 				__buf.set_socket(s);
 			}
 			virtual ~basic_socketstream() {
-				this->close();
 			}
 
 			void assign(int _sockfd) {
@@ -221,7 +220,6 @@ namespace zapata {
 				__buf.set_socket(s);
 			}
 			virtual ~basic_serversocketstream() {
-				this->close();
 			}
 
 			void close() {

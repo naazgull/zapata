@@ -45,6 +45,7 @@ namespace zapata {
 
 	class RESTJob: public Job {
 		public:
+			RESTJob(const RESTJob& _rhs);
 			RESTJob(string _key_file_path);
 			virtual ~RESTJob();
 
