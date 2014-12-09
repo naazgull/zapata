@@ -50,6 +50,7 @@ namespace zapata {
 			virtual ~RESTJob();
 
 			virtual void assign(int _cs_fd);
+			virtual void unassign(vector< size_t > _to_remove);
 			zapata::JSONObj& configuration();
 
 			RESTPool& pool();

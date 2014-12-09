@@ -216,17 +216,12 @@ zapata::RESTServer::~RESTServer(){
 }
 
 void zapata::RESTServer::wait() {
-	try {
-		int _cs_fd = -1;
-		this->__ss.accept(&_cs_fd);
+	int _cs_fd = -1;
+	this->__ss.accept(&_cs_fd);
 
-		size_t _next = this->next();
-		(* this->__jobs.at(_next)).assign(_cs_fd);
-		pthread_kill((* this->__jobs.at(_next))->tid(), SIGPOLL);
-	}
-	catch(zapata::ClosedException& e) {
-		throw zapata::InterruptedException(e.what());
-	}
+	size_t _next = this->next();
+	(* this->__jobs.at(_next)).assign(_cs_fd);
+	pthread_kill((* this->__jobs.at(_next))->tid(), SIGPOLL);
 }
 
 void zapata::RESTServer::start() {

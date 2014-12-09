@@ -34,6 +34,7 @@ SOFTWARE.
 #include <ostream>
 #include <strings.h>
 #include <unistd.h>
+#include <zapata/log/log.h>
 #include <zapata/exceptions/ClosedException.h>
 
 using namespace std;
@@ -75,10 +76,10 @@ namespace zapata {
 			void set_socket(int _sock) {
 				this->__sock = _sock;
 
-				int _opts = fcntl(this->__sock, F_GETFL);
-				_opts = _opts & ~O_NONBLOCK;
-				if (fcntl(this->__sock, F_SETFL, _opts) < 0) {
-				}
+//				int _opts = fcntl(this->__sock, F_GETFL);
+//				_opts = _opts & ~O_NONBLOCK;
+//				if (fcntl(this->__sock, F_SETFL, _opts) < 0) {
+//				}
 			}
 			int get_socket() {
 				return this->__sock;
@@ -162,7 +163,16 @@ namespace zapata {
 				__stream_type::clear();
 				if (__buf.get_socket() != 0) {
 					::close(__buf.get_socket());
+					__buf.set_socket(0);
 				}
+			}
+
+			bool is_open() {
+				int _error_code = 0;
+				socklen_t _len = sizeof(_error_code);
+				getsockopt(__buf.get_socket(), SOL_SOCKET, SO_ERROR, &_error_code, &_len);
+				zapata::log(string("socket errno is ") + std::to_string(_error_code), zapata::info);
+				return __buf.get_socket() != 0;
 			}
 
 			bool ready() {
@@ -227,7 +237,15 @@ namespace zapata {
 				__stream_type::clear();
 				if (__buf.get_socket() != 0) {
 					::close(__buf.get_socket());
+					__buf.set_socket(0);
 				}
+			}
+
+			bool is_open() {
+				int _error_code = 0;
+				socklen_t _len = sizeof(_error_code);
+				getsockopt(__buf.get_socket(), SOL_SOCKET, SO_ERROR, &_error_code, &_len);
+				return __buf.get_socket() != 0 && _error_code != 0;
 			}
 
 			bool ready() {
