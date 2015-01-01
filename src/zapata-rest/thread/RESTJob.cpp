@@ -50,20 +50,17 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 	
 		size_t _size_of = sizeof(thr_signal_t);
 		for (; true; ) {
-			zapata::log("bummer, nothing to do, going to wait...", zapata::debug);
+			// zapata::log(string("polling ") + std::to_string(this->__peers.size()) + string(" file descriptors") , zapata::sys);
 			int _rv = poll(& this->__peers[0], this->__peers.size(), -1);
 			if (_rv > 0) {
 				size_t _idx = 0;
 				vector< size_t > _to_remove;
 				for (auto _fd : this->__peers) {
-					zapata::log(string("hell, theres something for me, let's see if is ") + std::to_string(_fd.revents), zapata::debug);
 					if (_fd.revents & POLLHUP) {
-						zapata::log(string("oh well, you wanna go, just go #") + std::to_string(_idx), zapata::debug);
 						_to_remove.push_back(_idx);
 					}
 					else if (_fd.revents & POLLIN) {
 						if (_idx == 0) {
-							zapata::log("sweet, got a new client!", zapata::debug);
 							thr_signal_t _fdsi;
 							if (read(_fd.fd, &_fdsi, _size_of) == _size_of) {
 							}
@@ -71,8 +68,8 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 						else {
 							socketstream _cs(_fd.fd);
 							if (!_cs.is_open()) {
-								zapata::log(string("oh well, you wanna go, just go #") + std::to_string(_idx), zapata::debug);
 								_to_remove.push_back(_idx);
+								_cs.close();
 							}
 							else {
 								HTTPRep _rep;

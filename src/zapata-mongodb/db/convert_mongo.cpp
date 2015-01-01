@@ -26,9 +26,9 @@ SOFTWARE.
 
 #define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^")
 
-void zapata::frommongo(mongo::bo& _in, zapata::JSONObj& _out) {
+void zapata::frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
-		mongo::be _it = _i.next();
+		mongo::BSONElement _it = _i.next();
 		string _key(_it.fieldName());
 
 		switch (_it.type()) {
@@ -55,7 +55,7 @@ void zapata::frommongo(mongo::bo& _in, zapata::JSONObj& _out) {
 				break;
 			}
 			case mongo::Object: {
-				mongo::bo _mobj = _it.Obj();
+				mongo::BSONObj _mobj = _it.Obj();
 				zapata::JSONObj _obj;
 				zapata::frommongo(_mobj, _obj);
 				_out << _key << _obj;
@@ -74,10 +74,10 @@ void zapata::frommongo(mongo::bo& _in, zapata::JSONObj& _out) {
 	}
 }
 
-void zapata::frommongo(mongo::be& _in, zapata::JSONArr& _out) {
-	vector<mongo::be> _obj = _in.Array();
-	for (vector<mongo::be>::iterator _i = _obj.begin(); _i != _obj.end(); _i++) {
-		mongo::be _it = *_i;
+void zapata::frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out) {
+	vector<mongo::BSONElement> _obj = _in.Array();
+	for (vector<mongo::BSONElement>::iterator _i = _obj.begin(); _i != _obj.end(); _i++) {
+		mongo::BSONElement _it = *_i;
 		switch (_it.type()) {
 			case mongo::jstNULL: {
 				_out << "null";
@@ -102,7 +102,7 @@ void zapata::frommongo(mongo::be& _in, zapata::JSONArr& _out) {
 				break;
 			}
 			case mongo::Object: {
-				mongo::bo _mobj = _it.Obj();
+				mongo::BSONObj _mobj = _it.Obj();
 				zapata::JSONObj _obj;
 				zapata::frommongo(_mobj, _obj);
 				_out <<  _obj;

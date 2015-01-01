@@ -143,5 +143,6 @@ value :
 |
 	NIL
 	{
+		d_scanner.init();
 	}
 ;

@@ -45,6 +45,7 @@ namespace zapata {
 			void init(long long _in);
 			void init(double _in);
 			void init(string _in);
+			void init();
 
 			void add();
 

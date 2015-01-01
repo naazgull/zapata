@@ -150,6 +150,19 @@ void zapata::JSONTokenizerLexer::init(string _in) {
 	}
 }
 
+void zapata::JSONTokenizerLexer::init() {
+	try {			
+		//cout << "- adding value: " << _in << endl << flush;
+		JSONElementT* _ptr = new JSONElementT();
+		_ptr->parent(this->__parent);
+		(* this->__parent) << _ptr;
+	}
+	catch (zapata::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		throw _e;
+	}
+}
+
 void zapata::JSONTokenizerLexer::add() {
 }
 
