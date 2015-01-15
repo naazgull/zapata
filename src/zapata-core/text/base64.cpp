@@ -32,7 +32,6 @@ using namespace __gnu_cxx;
 
 void zapata::base64::encode(string& _out) {
 	istringstream in;
-	ostringstream out;
 	char buff1[3];
 	char buff2[4];
 	uint8_t i = 0, j;
