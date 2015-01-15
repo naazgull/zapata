@@ -5,4 +5,4 @@ RESTful API's Framework for C++ named after Emiliano Zapata, with support for JS
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/naazgull/zapata?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-[![Trello](https://d2k1ftgv7pobq7.cloudfront.net/meta/u/res/images/c13d1cd96a2cff30f0460a5e1860c5ea/header-logo-blue.svg)](https://trello.com/b/wD0PvV0H/github-com-naazgull-zapata)
+[![Trello](http://dfz.pt/img/trello_board.png)](https://trello.com/b/wD0PvV0H/github-com-naazgull-zapata)
