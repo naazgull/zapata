@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #pragma once
 
 #include <sys/socket.h>
@@ -34,7 +33,7 @@ SOFTWARE.
 #include <ostream>
 #include <strings.h>
 #include <unistd.h>
-#include <zapata/log/log.h>
+#include <errno.h>
 #include <zapata/exceptions/ClosedException.h>
 
 using namespace std;
@@ -44,7 +43,7 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-template<typename Char>
+	template<typename Char>
 	class basic_socketbuf : public std::basic_streambuf<Char> {
 	public:
 		typedef Char __char_type;
@@ -99,6 +98,10 @@ template<typename Char>
 	protected:
 
 		int output_buffer() {
+			if (!__good()) {
+				return __traits_type::eof();
+			}
+
 			int num = __buf_type::pptr() - __buf_type::pbase();
 			if (::send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num) {
 				return __traits_type::eof();
@@ -129,6 +132,10 @@ template<typename Char>
 		virtual __int_type underflow() {
 			if (__buf_type::gptr() < __buf_type::egptr()) {
 				return *__buf_type::gptr();
+			}
+
+			if (!__good()) {
+				return __traits_type::eof();
 			}
 
 			int num = -1;
@@ -162,6 +169,7 @@ template<typename Char>
 			__buf.set_socket(s);
 		}
 		virtual ~basic_socketstream() {
+			this->close();
 		}
 
 		void assign(int _sockfd) {
@@ -173,8 +181,8 @@ template<typename Char>
 			__stream_type::clear();
 			if (__buf.get_socket() != 0) {
 				::close(__buf.get_socket());
-				__buf.set_socket(0);
 			}
+			__buf.set_socket(0);
 		}
 
 		bool is_open() {
@@ -185,7 +193,7 @@ template<typename Char>
 			fd_set sockset;
 			FD_ZERO(&sockset);
 			FD_SET(__buf.get_socket(), &sockset);
-			return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
+			return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
 		}
 
 		__buf_type& buffer() {
@@ -202,8 +210,9 @@ template<typename Char>
 			_sin.sin_family = AF_INET;
 			_sin.sin_port = htons(_port);
 
-			if (connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
+			if (::connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 				__stream_type::setstate(std::ios::failbit);
+				__buf.set_socket(0);
 			}
 			else {
 				__buf.set_socket(_sd);
@@ -235,6 +244,7 @@ template<typename Char>
 			__buf.set_socket(s);
 		}
 		virtual ~basic_serversocketstream() {
+			this->close();
 		}
 
 		void close() {
@@ -242,8 +252,8 @@ template<typename Char>
 			__stream_type::clear();
 			if (__buf.get_socket() != 0) {
 				::close(__buf.get_socket());
-				__buf.set_socket(0);
 			}
+			__buf.set_socket(0);
 		}
 
 		bool is_open() {
@@ -254,7 +264,7 @@ template<typename Char>
 			fd_set sockset;
 			FD_ZERO(&sockset);
 			FD_SET(__buf.get_socket(), &sockset);
-			return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
+			return select(__buf.get_socket() + 1, &sockset, NULL, NULL, NULL) == 1;
 		}
 
 		__buf_type& buffer() {
@@ -284,6 +294,7 @@ template<typename Char>
 			if (::bind(this->__sockfd, (struct sockaddr *) &_serv_addr, sizeof(_serv_addr)) < 0) {
 				::close(this->__sockfd);
 				this->__sockfd = -1;
+				__buf.set_socket(0);
 				__stream_type::setstate(std::ios::failbit);
 				throw zapata::ClosedException("Could not bind to the provided port");
 			}
