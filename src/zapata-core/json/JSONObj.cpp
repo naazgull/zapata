@@ -351,6 +351,9 @@ double zapata::JSONElementT::number() {
 		case zapata::JSBoolean : {
 			return (double) this->__target.__boolean;
 		}
+		default : {
+			return 0;
+		}
 	}
 	return 0;
 }
@@ -487,7 +490,12 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 			break;
 		}
 		case zapata::JSString : {
-			_out << "\"" << this->str() << "\"" << flush;
+			string _str(this->str());
+			zapata::replace(_str, "\"", "\\\"");
+			zapata::replace(_str, "\n", "\\\n");
+			zapata::replace(_str, "\r", "\\\b");
+			zapata::replace(_str, "\t", "\\\t");
+			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
 		case zapata::JSInteger : {
@@ -526,6 +534,11 @@ void zapata::JSONElementT::stringify(string& _out) {
 			break;
 		}
 		case zapata::JSString : {
+			string _str(this->str());
+			zapata::replace(_str, "\"", "\\\"");
+			zapata::replace(_str, "\n", "\\\n");
+			zapata::replace(_str, "\r", "\\\b");
+			zapata::replace(_str, "\t", "\\\t");
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), this->str());
 			_out.insert(_out.length(), "\"");
@@ -567,7 +580,12 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			break;
 		}
 		case zapata::JSString : {
-			_out << "\"" << this->str() << "\"" << flush;
+			string _str(this->str());
+			zapata::replace(_str, "\"", "\\\"");
+			zapata::replace(_str, "\n", "\\\n");
+			zapata::replace(_str, "\r", "\\\b");
+			zapata::replace(_str, "\t", "\\\t");
+			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
 		case zapata::JSInteger : {
@@ -606,6 +624,11 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			break;
 		}
 		case zapata::JSString : {
+			string _str(this->str());
+			zapata::replace(_str, "\"", "\\\"");
+			zapata::replace(_str, "\n", "\\\n");
+			zapata::replace(_str, "\r", "\\\b");
+			zapata::replace(_str, "\t", "\\\t");
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), this->str());
 			_out.insert(_out.length(), "\"");
@@ -670,11 +693,15 @@ void zapata::JSONObjT::push(JSONElementT* _value) {
 }
 
 void zapata::JSONObjT::pop(int _name) {
-	this->pop(to_string(_name));
+	string _sname;
+	zapata::tostr(_sname, _name);
+	this->pop(_sname);
 }
 
 void zapata::JSONObjT::pop(size_t _name) {
-	this->pop(to_string(_name));
+	string _sname;
+	zapata::tostr(_sname, _name);
+	this->pop(_sname);
 }
 
 void zapata::JSONObjT::pop(const char* _name) {
@@ -728,7 +755,9 @@ zapata::JSONPtr& zapata::JSONObjT::operator[](int _idx) {
 }
 
 zapata::JSONPtr& zapata::JSONObjT::operator[](size_t _idx) {
-	return (* this)[to_string(_idx)];
+	string _sidx;
+	zapata::tostr(_sidx, _idx);
+	return (* this)[_sidx];
 }
 
 zapata::JSONPtr& zapata::JSONObjT::operator[](const char* _idx) {
@@ -876,8 +905,9 @@ zapata::JSONPtr& zapata::JSONArrT::operator[](int _idx) {
 }
 
 zapata::JSONPtr& zapata::JSONArrT::operator[](size_t _idx) {
-	assertz(_idx >= 0, "the index of the element you want to remove must be higher then 0", 0, 0);
-	assertz(_idx < this->size(), "the index of the element you want to remove must be lower than the array size", 0, 0);
+	if (_idx < 0 ||_idx >= this->size()) {
+		return zapata::undefined;
+	}
 	return this->at(_idx);
 }
 
@@ -889,8 +919,9 @@ zapata::JSONPtr& zapata::JSONArrT::operator[](string _idx) {
 	size_t _i = 0;
 	zapata::fromstr(_idx, &_i);
 
-	assertz(_i >= 0, "the index of the element you want to remove must be higher then 0", 0, 0);
-	assertz(_i < this->size(), "the index of the element you want to remove must be lower than the array size", 0, 0);
+	if (_i < 0 ||_i >= this->size()) {
+		return zapata::undefined;
+	}
 
 	return this->at(_i);
 }

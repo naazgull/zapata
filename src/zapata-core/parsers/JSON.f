@@ -52,9 +52,9 @@
 	begin(StartCondition__::string_single);
 }
 <number>{
-	[0-9\.]* {
+	[0-9\.e\+]* {
 		begin(StartCondition__::INITIAL);
-		if (matched().find(".") != std::string::npos) {
+		if (matched().find(".") != std::string::npos || matched().find("e+") != std::string::npos) {
 			return 260;
 		}
 		else {

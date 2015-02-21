@@ -73,7 +73,7 @@ namespace zapata {
 	public:
 		pthread_mutex_t* __mtx;
 		pthread_t* __thr;
-		pthread_mutexattr_t __attr;
+		pthread_mutexattr_t* __attr;
 
 		JobLoopCallback __callback;
 	};

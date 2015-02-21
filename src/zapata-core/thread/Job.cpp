@@ -43,15 +43,17 @@ zapata::Job::~Job(){
 zapata::JobRef::JobRef() {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
-	pthread_mutexattr_init(&this->__attr);
-	pthread_mutex_init(this->__mtx, &this->__attr);
+	this->__attr = new pthread_mutexattr_t();
+	pthread_mutexattr_init(this->__attr);
+	pthread_mutex_init(this->__mtx, this->__attr);
 }
 
 zapata::JobRef::JobRef(JobLoopCallback _callback) {
 	this->__mtx = new pthread_mutex_t();
 	this->__thr = new pthread_t();
-	pthread_mutexattr_init(&this->__attr);
-	pthread_mutex_init(this->__mtx, &this->__attr);
+	this->__attr = new pthread_mutexattr_t();
+	pthread_mutexattr_init(this->__attr);
+	pthread_mutex_init(this->__mtx, this->__attr);
 
 	this->__callback = _callback;
 }
@@ -59,6 +61,7 @@ zapata::JobRef::JobRef(JobLoopCallback _callback) {
 zapata::JobRef::JobRef(JobRef& _rhs) {
 	this->__mtx = _rhs.__mtx;
 	this->__thr = _rhs.__thr;
+	this->__attr = _rhs.__attr;
 	this->__callback = _rhs.__callback;
 }
 
@@ -82,15 +85,16 @@ void* zapata::JobRef::start(void* _thread) {
 }
 
 void zapata::JobRef::start() {
-	JobRef* _new = new JobRef(* this);
+	JobRef * _new = new JobRef(* this);
 	pthread_create(_new->__thr, 0, &JobRef::start, _new);
 }
 
 void zapata::JobRef::exit() {
-	pthread_mutexattr_destroy(&this->__attr);
+	pthread_mutexattr_destroy(this->__attr);
 	pthread_mutex_destroy(this->__mtx);
 	delete this->__mtx;
 	delete this->__thr;
+	delete this->__attr;
 	pthread_exit(nullptr);
 }
 

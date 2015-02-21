@@ -406,6 +406,9 @@ namespace zapata {
 		bool operator!=(JSONPtr& _rhs);
 		template <typename T>
 		bool operator!=(T _in) {
+			if (_in == nullptr) {
+				return this->__target.__type == zapata::JSNil; 
+			}
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
 		};

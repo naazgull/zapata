@@ -42,42 +42,19 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-pthread_t __thread_id = 0;
-semid_t __semid = 0;
-
-void sigsev(int sig) {
-	if (__semid != 0) {
-		//semctl(__semid, 0, IPC_RMID);
-		__semid = 0;
-	}
-	exit(-1);
-}
-
-void stop(int sig) {
-	(*zapata::log_fd ) << endl << flush;
-	string _text("finishing thread ");
-	zapata::tostr(_text, __thread_id);
-	_text.insert(_text.length(),  " with semid ");
-	zapata::tostr(_text, __semid);
-	zapata::log(_text, zapata::sys);
-	if (pthread_self() == __thread_id && __semid != 0) {
-		//semctl(__semid, 0, IPC_RMID);
-		__semid = 0;
-	}
-	exit(SIGTERM);
-}
-
 int main(int argc, char* argv[]) {
-//	locale loc("");
-//	cout.imbue(loc);
-
 	char _c;
 	char* _conf_file = nullptr;
+	bool _keep_alive = false;
 
-	while ((_c = getopt(argc, argv, "c:")) != -1) {
+	while ((_c = getopt(argc, argv, "kc:")) != -1) {
 		switch (_c) {
 			case 'c': {
 				_conf_file = optarg;
+				break;
+			}
+			case 'k': {
+				_keep_alive = true;
 				break;
 			}
 		}
@@ -91,33 +68,30 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	// Adds listeners for SIGSEV and SIGABRT.
-	{
-		signal(SIGPIPE, SIG_IGN );
-
-		struct sigaction action;
-		action.sa_handler = sigsev;
-		sigemptyset(&action.sa_mask);
-		action.sa_flags = 0;
-		sigaction(SIGSEGV, &action, 0);
-		sigaction(SIGABRT, &action, 0);
-		sigaction(SIGKILL, &action, 0);
+	try {
+		zapata::RESTServer _server(_conf_file);
+		_server.start();
+	}
+	catch (zapata::AssertionException& _e) {
+		zapata::log(_e.what() + string("\n") + _e.description(), zapata::error);
 	}
 
-	// Adds listeners for SIGKILL, for gracefull stop
-	{
-		struct sigaction action;
-		action.sa_handler = stop;
-		sigemptyset(&action.sa_mask);
-		action.sa_flags = 0;
-		sigaction(SIGTERM, &action, 0);
-		sigaction(SIGQUIT, &action, 0);
-		sigaction(SIGINT, &action, 0);
-	}
-	__thread_id = pthread_self();
+	if (_keep_alive) {
+		string _exec_file(argv[0]);
+		string _conf_file(_conf_file);
+		string _cmd("touch /var/run/");
 
-	zapata::RESTServer _server(_conf_file);
-	_server.start();
+		_exec_file.assign(_exec_file.substr(_exec_file.rfind('/') + 1));
+		_conf_file.assign(_conf_file.substr(_conf_file.rfind('/') + 1));
+		zapata::replace(_conf_file, ".log", ".restart");
+
+		_cmd.insert(_cmd.length(), _exec_file);
+		_cmd.insert(_cmd.length(), ".");
+		_cmd.insert(_cmd.length(), _conf_file);
+
+		if (system(_cmd.data())) {
+		}
+	}
 
 	return 0;
 }

@@ -31,7 +31,7 @@ string	d_chunked;
 //%debug
 %no-lines
 
-%x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval params
+%x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
 %%
 
 [\f\t\n\r ]+                  // skip white space
@@ -199,6 +199,9 @@ string	d_chunked;
 		else if (_m == string("transfer-encoding")) {
 			begin(StartCondition__::transferencodingval);
 		}
+		else if (_m == string("trailer")) {
+			begin(StartCondition__::trailerval);
+		}
 		return 263;
 	}
 }
@@ -228,6 +231,17 @@ string	d_chunked;
 	}
 	([^:\n\r]+) {
 		d_chunked_body = (matched() == string(" chunked"));
+		begin(StartCondition__::headers);
+		return 263;
+	}
+}
+
+<trailerval>{
+	":" {
+		return 262;
+	}
+	([^:\n\r]+) {
+		d_chunked_trailer = matched();
 		begin(StartCondition__::headers);
 		return 263;
 	}
@@ -272,20 +286,33 @@ string	d_chunked;
 
 <chunked_body>{
 	"\r\n" {
-		if (d_chunked_length < 0) {
+		if (d_chunked_length == -1) {
 			std::istringstream _is;
 			_is.str(matched());
 			_is >> std::hex >> d_chunked_length;
 			setMatched("");
 		}
-
-		if (d_chunked_length == 0) {
+		else if (d_chunked_length == -2) {
+			d_chunked_length = -1;
 			setMatched(d_chunked);
 			get__();
 			get__();
 			leave(-1);
 		}
-		else if (matched().length() - 2 == d_chunked_length) {
+
+		if (d_chunked_length == 0) {
+			if (d_chunked_trailer.length() == 0) {
+				setMatched(d_chunked);
+				get__();
+				get__();
+				leave(-1);
+			}
+			else {
+				d_chunked_length = -2;
+				more();
+			}
+		}
+		else if (matched().length() - 2 == (size_t) d_chunked_length) {
 			d_chunked.insert(d_chunked.length(), matched());
 			zapata::trim(d_chunked);
 			setMatched("");

@@ -35,6 +35,8 @@ SOFTWARE.
 #include <unistd.h>
 #include <errno.h>
 #include <zapata/exceptions/ClosedException.h>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -86,7 +88,7 @@ namespace zapata {
 			_opts = _opts | O_NONBLOCK;
 			fcntl(this->__sock, F_SETFL, _opts);
 
-			int _err = ::recv(this->__sock, &_buf, 1, MSG_PEEK);
+			int _err = recv(this->__sock, &_buf, 1, MSG_PEEK);
 			bool _ret = errno == EAGAIN || errno == EWOULDBLOCK || _err > 0;
 
 			_opts = _opts & ~O_NONBLOCK;
@@ -98,12 +100,8 @@ namespace zapata {
 	protected:
 
 		int output_buffer() {
-			if (!__good()) {
-				return __traits_type::eof();
-			}
-
 			int num = __buf_type::pptr() - __buf_type::pbase();
-			if (::send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num) {
+			if (send(__sock, reinterpret_cast<char*>(obuf), num * char_size, 0) != num) {
 				return __traits_type::eof();
 			}
 			__buf_type::pbump(-num);
@@ -134,12 +132,8 @@ namespace zapata {
 				return *__buf_type::gptr();
 			}
 
-			if (!__good()) {
-				return __traits_type::eof();
-			}
-
 			int num = -1;
-			if ((num = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) <= 0) {
+			if ((num = recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) <= 0) {
 				return __traits_type::eof();
 			}
 			__buf_type::setg(ibuf, ibuf, ibuf + num);
@@ -210,7 +204,7 @@ namespace zapata {
 			_sin.sin_family = AF_INET;
 			_sin.sin_port = htons(_port);
 
-			if (::connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
+			if (connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 				__stream_type::setstate(std::ios::failbit);
 				__buf.set_socket(0);
 			}
@@ -298,7 +292,7 @@ namespace zapata {
 				__stream_type::setstate(std::ios::failbit);
 				throw zapata::ClosedException("Could not bind to the provided port");
 			}
-			::listen(this->__sockfd, 100);
+			listen(this->__sockfd, 100);
 			__buf.set_socket(this->__sockfd);
 			return true;
 		}
@@ -307,7 +301,7 @@ namespace zapata {
 			if (this->__sockfd != -1) {
 				struct sockaddr_in* _cli_addr = new struct sockaddr_in();
 				socklen_t _clilen = sizeof(struct sockaddr_in);
-				int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
+				int _newsockfd = accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
 
 				if (_newsockfd < 0) {
 					throw zapata::ClosedException("Could not accept client socket");
@@ -316,7 +310,7 @@ namespace zapata {
 				struct linger _so_linger;
 				_so_linger.l_onoff = 1;
 				_so_linger.l_linger = 30;
-				::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+				setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
 				_out->assign(_newsockfd);
 				return true;
 			}
@@ -336,7 +330,7 @@ namespace zapata {
 				struct linger _so_linger;
 				_so_linger.l_onoff = 1;
 				_so_linger.l_linger = 30;
-				::setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+				setsockopt(_newsockfd,SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
 				*_out = _newsockfd;
 				return true;
 			}
@@ -347,4 +341,133 @@ namespace zapata {
 	typedef basic_serversocketstream<char> serversocketstream;
 	typedef basic_serversocketstream<wchar_t> wserversocketstream;
 
+	#define CRLF "\r\n"
+
+	class websocketserverstream : public basic_serversocketstream<char> {
+	public:
+		websocketserverstream() {
+		};
+		virtual ~websocketserverstream() {
+		}
+
+		bool handshake() {
+			string _key;
+			string _line;
+			short _end = 0;
+			do {
+				std::getline((* this), _line);
+				zapata::trim(_line);
+				if (_line.find("Sec-WebSocket-Key:") != string::npos) {
+					_key.assign(_line.substr(19));
+				}
+			}
+			while (_line != "");
+
+			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+			string _sha1 = zapata::hash::SHA1(_key);
+			zapata::base64::encode(_sha1);
+			_key.assign(_sha1);
+
+			(* this) << 
+			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
+			"Upgrade: websocket" << CRLF << 
+			"Connection: Upgrade" << CRLF <<
+			"Sec-WebSocket-Accept: " << _key << CRLF <<
+			CRLF << std::flush;
+			return true;
+		}
+
+		bool read(string& _out, int* _op_code) {
+			unsigned char _hdr;
+			(* this) >> noskipws >> _hdr;
+
+			bool _fin = _hdr & 0x80;
+			*_op_code = _hdr & 0x0F;
+			(* this) >> noskipws >> _hdr;
+			bool _mask = _hdr & 0x80;
+			string _masking;
+			string _masked;
+
+			int _len = _hdr & 0x7F;
+			if (_len == 126) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				_len <<= 8;
+				(* this) >> noskipws >> _hdr;
+				_len += (int) _hdr;
+			}
+			else if (_len == 127) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				for (int _i = 0; _i < 7; _i++) {
+					_len <<= 8;
+					(* this) >> noskipws >> _hdr;
+					_len += (int) _hdr;
+				}
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < 4; _i++) {
+					(* this) >> noskipws >> _hdr;
+					_masking.push_back((char) _hdr);
+				}
+			}
+
+
+			for (int _i = 0; _i != _len; _i++) {
+				(* this) >> noskipws >> _hdr;
+				_masked.push_back((char) _hdr);
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < _masked.length(); _i++) {
+					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
+				}
+			}
+			else {
+				_out.assign(_masked);
+			}
+
+			return _fin;
+		}
+
+		bool write(string _in, bool _masked){
+			int _len = _in.length();
+
+			if (!this->is_open()) {
+				return false;
+			}
+			(* this) << (unsigned char) 0x81;
+			if (_len > 65535) {
+				(* this) << (unsigned char) 0x7F;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else if (_len > 125) {
+				(* this) << (unsigned char) 0x7E;
+				(* this) << ((unsigned char) (_len >> 8));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else {
+				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
+			}
+
+			if (_masked) {
+				for (int _i = 0; _i != 4; _i++) {
+					(* this) << (unsigned char) 0x00;
+				}		
+			}
+
+			(* this) << _in << std::flush;
+			return true;
+
+		}
+
+	};
 }
