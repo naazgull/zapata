@@ -53,6 +53,10 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		this->max(1);
 	}
 
+	if (!this->configuration()["zapata"]["core"]["max_connections_per_job"]->ok() || ((int) this->configuration()["zapata"]["core"]["max_connections_per_job"]) <= 0) {
+		((zapata::JSONObj&) this->configuration()["zapata"]["core"]) << "max_connections_per_job" << 1024;
+	}
+
 	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
 		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
 	}
@@ -221,7 +225,6 @@ void zapata::RESTServer::wait() {
 
 	size_t _next = this->next();
 	(* this->__jobs.at(_next)).assign(_cs_fd);
-	pthread_kill((* this->__jobs.at(_next))->tid(), SIGPOLL);
 }
 
 void zapata::RESTServer::start() {

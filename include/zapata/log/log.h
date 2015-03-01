@@ -47,6 +47,7 @@ namespace zapata {
 		debug = 4
 	};
 
-	void log(string __text, zapata::LogLevel _level);
+	void log(string _prefix, string _text, zapata::LogLevel _level);
+	void log(string _text, zapata::LogLevel _level);
 }
 

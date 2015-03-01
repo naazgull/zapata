@@ -39,11 +39,20 @@ namespace zapata {
 	};
 }
 
+void zapata::log(string _prefix, string _text, zapata::LogLevel _level) {
+	if (_level <= zapata::log_lvl) {
+		string _time;
+		zapata::tostr(_time, time(NULL), "%F %T");
+		zapata::replace(_text, "\n", "");
+		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[0;37m" << _time << "\033[0m | \033[4;32m" << _prefix << "\033[0m | " << _text << endl << flush;
+	}
+}
+
 void zapata::log(string _text, zapata::LogLevel _level) {
 	if (_level <= zapata::log_lvl) {
 		string _time;
 		zapata::tostr(_time, time(nullptr), "%F %T");
-		zapata::replace(_text, "\n", "\n       | ");
+		zapata::replace(_text, "\n", "");
 		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[1;37m" << _time << "\033[0m | " << _text << endl << flush;
 	}
 }

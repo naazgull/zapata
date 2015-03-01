@@ -27,9 +27,7 @@ SOFTWARE.
 #include <zapata/thread/Job.h>
 #include <zapata/api/RESTPool.h>
 #include <vector>
-#include <sys/poll.h>
-#include <sys/signalfd.h>
-#include <signal.h>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,18 +37,18 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+typedef struct epoll_event epoll_event_t;
+
 namespace zapata {
 
 	typedef struct signalfd_siginfo thr_signal_t;
 
 	class RESTJob: public Job {
 		public:
-			RESTJob(const RESTJob& _rhs);
 			RESTJob(string _key_file_path);
 			virtual ~RESTJob();
 
 			virtual void assign(int _cs_fd);
-			virtual void unassign(vector< size_t > _to_remove);
 			zapata::JSONObj& configuration();
 
 			RESTPool& pool();
@@ -58,7 +56,8 @@ namespace zapata {
 			void log(zapata::HTTPReq&, zapata::HTTPRep&);
 
 		private:
-			vector< struct pollfd > __peers;
+			int __epoll_fd;
+			struct epoll_event* __events;
 			RESTPool* __pool;
 			JSONObj __configuration;
 	};

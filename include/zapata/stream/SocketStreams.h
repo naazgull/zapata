@@ -170,6 +170,10 @@ namespace zapata {
 			__buf.set_socket(_sockfd);
 		}
 
+		void unassign() {
+			__buf.set_socket(0);
+		}
+
 		void close() {
 			__stream_type::flush();
 			__stream_type::clear();
@@ -431,7 +435,127 @@ namespace zapata {
 			return _fin;
 		}
 
-		bool write(string _in, bool _masked){
+		bool write(string _in){
+			int _len = _in.length();
+
+			if (!this->is_open()) {
+				return false;
+			}
+			(* this) << (unsigned char) 0x81;
+			if (_len > 65535) {
+				(* this) << (unsigned char) 0x7F;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else if (_len > 125) {
+				(* this) << (unsigned char) 0x7E;
+				(* this) << ((unsigned char) (_len >> 8));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else {
+				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
+			}
+
+			(* this) << _in << std::flush;
+			return true;
+		}
+	};
+
+	class websocketstream : public basic_socketstream<char> {
+	public:
+		websocketstream(int _socket) : basic_socketstream<char>(_socket) {
+		};
+		virtual ~websocketstream() {
+		}
+
+		bool handshake() {
+			string _key;
+			string _line;
+			short _end = 0;
+			do {
+				std::getline((* this), _line);
+				zapata::trim(_line);
+				if (_line.find("Sec-WebSocket-Key:") != string::npos) {
+					_key.assign(_line.substr(19));
+				}
+			}
+			while (_line != "");
+
+			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+			string _sha1 = zapata::hash::SHA1(_key);
+			zapata::base64::encode(_sha1);
+			_key.assign(_sha1);
+
+			(* this) << 
+			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
+			"Upgrade: websocket" << CRLF << 
+			"Connection: Upgrade" << CRLF <<
+			"Sec-WebSocket-Accept: " << _key << CRLF <<
+			CRLF << std::flush;
+			return true;
+		}
+
+		bool read(string& _out, int* _op_code) {
+			unsigned char _hdr;
+			(* this) >> noskipws >> _hdr;
+
+			bool _fin = _hdr & 0x80;
+			*_op_code = _hdr & 0x0F;
+			(* this) >> noskipws >> _hdr;
+			bool _mask = _hdr & 0x80;
+			string _masking;
+			string _masked;
+
+			int _len = _hdr & 0x7F;
+			if (_len == 126) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				_len <<= 8;
+				(* this) >> noskipws >> _hdr;
+				_len += (int) _hdr;
+			}
+			else if (_len == 127) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				for (int _i = 0; _i < 7; _i++) {
+					_len <<= 8;
+					(* this) >> noskipws >> _hdr;
+					_len += (int) _hdr;
+				}
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < 4; _i++) {
+					(* this) >> noskipws >> _hdr;
+					_masking.push_back((char) _hdr);
+				}
+			}
+
+
+			for (int _i = 0; _i != _len; _i++) {
+				(* this) >> noskipws >> _hdr;
+				_masked.push_back((char) _hdr);
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < _masked.length(); _i++) {
+					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
+				}
+			}
+			else {
+				_out.assign(_masked);
+			}
+
+			return _fin;
+		}
+
+		bool write(string _in, bool _masked = false){
 			int _len = _in.length();
 
 			if (!this->is_open()) {
@@ -466,8 +590,6 @@ namespace zapata {
 
 			(* this) << _in << std::flush;
 			return true;
-
 		}
-
-	};
+	};	
 }
