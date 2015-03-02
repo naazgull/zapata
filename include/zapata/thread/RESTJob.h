@@ -37,8 +37,6 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-typedef struct epoll_event epoll_event_t;
-
 namespace zapata {
 
 	typedef struct signalfd_siginfo thr_signal_t;

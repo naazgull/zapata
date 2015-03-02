@@ -53,4 +53,6 @@ SOFTWARE.
 
 #include <zapata/conf/load.h>
 
+typedef struct epoll_event epoll_event_t;
+
 extern "C" int zapata_core();

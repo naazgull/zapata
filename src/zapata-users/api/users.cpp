@@ -200,21 +200,21 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
 				zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
-				if (!_record["id"] && !!_record["email"]) {
+				if (!_record["id"]->ok() && _record["email"]->ok()) {
 					_record << "id" << (string) _record["email"];
 				}
-				if (!_record["email"] && !!_record["id"]) {
+				if (!_record["email"]->ok() && _record["id"]->ok()) {
 					string _email((string) _record["id"]);
 					_email.insert(_email.length(), "@");
 					_email.insert(_email.length(), (string) _config["zapata"] ["rest"]["bind_address"]);
 					_record << "email" << _email;
 				}
 
-				assertz(!!_record["fullname"], "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
-				assertz(!!_record["id"], "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
-				assertz(!!_record["email"], "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
-				assertz(!!_record["password"], "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
-				assertz(!!_record["confirmation_password"], "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
+				assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
+				assertz(_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
+				assertz(_record["email"]->ok(), "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+				assertz(_record["password"]->ok(), "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
+				assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 				assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -354,11 +354,11 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
 
-				assertz(!!_record["fullname"], "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
-				assertz(!!_record["id"], "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
-				assertz(!!_record["email"], "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
-				assertz(!!_record["password"], "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
-				assertz(!!_record["confirmation_password"], "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
+				assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
+				assertz(_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
+				assertz(_record["email"]->ok(), "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+				assertz(_record["password"]->ok(), "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
+				assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 				assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -534,14 +534,14 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 			string _redirect_uri(_state.substr(_idx + 2));
 			string _client_code(_state.substr(0, _idx));
 
-			assertz(!!_config["zapata"]["auth"]["clients"][_client_code], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
 
 			string _client_id(_client_config["client_id"]);
 			string _client_secret(_client_config["client_secret"]);
 			string _type(_client_config["type"]);
 
-			assertz(!!_config["zapata"]["auth"]["endpoints"][_type], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
 
 			string _auth_endpoint(_endpoint_config["token"]);
@@ -595,14 +595,14 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 			string _client_code(_req->param("client_code"));
 			string _redirect_uri(_req->param("redirect_uri"));
 
-			assertz(!!_config["zapata"]["auth"]["clients"][_client_code], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
 
 			string _client_id(_client_config["client_id"]);
 			string _client_secret(_client_config["client_secret"]);
 			string _type(_client_config["type"]);
 
-			assertz(!!_config["zapata"]["auth"]["endpoints"][_type], "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
 
 			string _auth_endpoint(_endpoint_config["authorization"]);
@@ -709,10 +709,10 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				}
 
 				string _grant_type((string) _params["grant_type"]);
-				assertz(!!_params["grant_type"], "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(!!_params["client_id"], "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(!!_params["client_secret"], "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-				assertz(!!_params["code"], "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_params["grant_type"]->ok(), "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_params["client_id"]->ok(), "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_params["client_secret"]->ok(), "Parameter 'client_secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+				assertz(_params["code"]->ok(), "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 				assertz(_grant_type == string("user_code") || !!_params["redirect_uri"], "Parameter 'redirect_uri' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 				zapata::JSONObj _token;
@@ -785,16 +785,16 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				zapata::fromformurlencoded(_body, _params);
 			}
 
-			assertz(!!_params["id"], "Parameter 'id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-			assertz(!!_params["secret"], "Parameter 'secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
-			assertz(!!_params["client_code"], "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_params["id"]->ok(), "Parameter 'id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_params["secret"]->ok(), "Parameter 'secret' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
+			assertz(_params["client_code"]->ok(), "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 			string _client_code(_params["client_code"]);
-			assertz(!!_config["zapata"]["auth"]["clients"][_client_code], "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
 
 			string _type(_client_config["type"]);
-			assertz(!!_config["zapata"]["auth"]["endpoints"][_type], "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+			assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
 			zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
 
 			string _code;
