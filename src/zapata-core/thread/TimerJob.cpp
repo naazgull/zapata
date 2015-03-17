@@ -85,6 +85,7 @@ void zapata::TimerJob::assign(long _tick_interval, zapata::JSONObj& _data, zapat
 	bzero(& _old, sizeof(_old));
 
 	_new.it_value.tv_sec = (_tick_interval / 1000);
+	_new.it_value.tv_nsec = ((_tick_interval % 1000) * 1000000);
 	_new.it_interval.tv_sec = (_tick_interval / 1000);
 	_new.it_interval.tv_nsec = ((_tick_interval % 1000) * 1000000);
 	timerfd_settime(_t_fd, 0, & _new, & _old);
