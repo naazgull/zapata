@@ -24,9 +24,14 @@ SOFTWARE.
 
 #pragma once
 
-#include <string>
+#include <zapata/thread/Job.h>
 #include <zapata/json/JSONObj.h>
-#include <zapata/parsers/JSONParser.h>
+#include <vector>
+#include <sys/epoll.h>
+#include <sys/timerfd.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -34,18 +39,27 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zapata {
+	class TimerJob;
 
-	JSONPtr fromfile(ifstream& _in);
-	JSONPtr fromstr(string& _in);
-	JSONPtr fromstream(istream& _in);
+	typedef std::function< bool (zapata::TimerJob&, zapata::JSONObj&) > TimerJobLoopCallback;
+	typedef struct _timer_data {
+		int __fd;
+		zapata::JSONObj __data;
+		zapata::TimerJobLoopCallback __callback;
+	} timer_data_t;
 
-	void tostr(string& _out, JSONElement& _in) ;
-	void tostr(string& _out, JSONObj& _in) ;
-	void tostr(string& _out, JSONArr& _in) ;
+	class TimerJob: public Job {
+		public:
+			TimerJob();
+			virtual ~TimerJob();
 
-	template <typename T>	
-	zapata::JSONElementT * make_element(T& _e) {
-		return new zapata::JSONElementT(_e);
-	}
+			void* data();
+			virtual void assign(long _tick_interval, zapata::JSONObj& _data, zapata::TimerJobLoopCallback _callback);
+
+		private:
+			int __epoll_fd;
+			struct epoll_event* __events;
+
+	};
 
 }

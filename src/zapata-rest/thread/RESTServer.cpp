@@ -167,7 +167,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			_rep->status(zapata::HTTP201);
 			_rep->header( "X-File-Mimetype", _mime);
 			_rep->header("Location", _location);
-		}, zapata::RESTfulController);
+		});
 
 		/*
 		 *  definition of handlers for the file upload removal controller
@@ -199,7 +199,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			assertz(system(_cmd.data()) == 0, "There was an error removing the uploaded file.", zapata::HTTP500, zapata::ERRFilePermissions);
 
 			_rep->status(zapata::HTTP200);
-		}, zapata::RESTfulController);
+		});
 	}
 
 	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];

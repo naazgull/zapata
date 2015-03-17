@@ -39,8 +39,6 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	typedef struct signalfd_siginfo thr_signal_t;
-
 	class RESTJob: public Job {
 		public:
 			RESTJob(string _key_file_path);

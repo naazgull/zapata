@@ -214,6 +214,10 @@ namespace zapata {
 			_in->stringify(_out);
 			return _out;
 		};
+		friend istream& operator>>(istream& _in, HTTPReq& _out) {
+			_out.parse(_in);
+			return _in;
+		};
 	};
 
 	class HTTPRep :public shared_ptr< HTTPRepT > {

@@ -189,8 +189,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->header("Content-Type", "application/json"); 
 				_rep->header("Content-Length", std::to_string(_text.length()));
 			},
-			//put
-			nullptr,
+			no_put,
 			//post
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				string _body = _req->body();
@@ -267,8 +266,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->header("Content-Length", std::to_string(_text.length()));
 				_rep->body(_text);
 			},
-			//delete
-			nullptr,
+			no_delete,
 			//head
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -298,14 +296,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->header("Content-Type", "application/json"); 
 				_rep->header("Content-Length", std::to_string(_text.length()));
 			},
-			//trace
-			nullptr,
-			//options
-			nullptr,
-			//patch
-			nullptr,
-			//connect
-			nullptr, zapata::RESTfulCollection);
+			no_trace, no_options, no_patch, no_connect);
 	}
 
 	/*
@@ -400,7 +391,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->body(_text);
 			},
 			//post
-			nullptr,
+			no_post,
 			//delete
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -455,10 +446,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->header("Content-Type", "application/json"); 
 				_rep->header("Content-Length", std::to_string(_text.length()));
 			},
-			//trace
-			nullptr,
-			//options
-			nullptr,
+			no_trace, no_options, 
 			//patch
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				string _body = _req->body();
@@ -509,8 +497,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 				_rep->header("Content-Length", std::to_string(_text.length()));
 				_rep->body(_text);
 			},
-			//connect
-			nullptr, zapata::RESTfulCollection);
+			no_connect);
 	}
 
 	//-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -522,7 +509,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	 */
 	{
 		vector<zapata::HTTPMethod> _ets = { zapata::HTTPGet, zapata::HTTPPost };
-		_pool.on(_ets, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_pool.on(zapata::HTTPPost, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 			assertz(_req->param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 			assertz(_req->param("state").length() != 0, "Parameter 'state' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
@@ -579,7 +566,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 			_rep->status(_req->method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
 			_rep->header("Location", _redirect_uri);
-		}, zapata::RESTfulResource);
+		});
 	}
 
 	/*
@@ -638,7 +625,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 			_rep->status(_req->method() == zapata::HTTPGet ? zapata::HTTP307 : zapata::HTTP303);
 			_rep->header("Location", _auth_endpoint);
-		}, zapata::RESTfulResource);
+		});
 	}
 
 	/*
@@ -689,8 +676,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					_rep->body(_body);
 				}
 			},
-			//put
-			nullptr,
+			no_put,
 			//post
 			[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 				string _body = _req->body();
@@ -749,18 +735,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					_rep->body(_body);
 				}
 			},
-			//delete
-			nullptr,
-			//head
-			nullptr,
-			//trace
-			nullptr,
-			//options
-			nullptr,
-			//patch
-			nullptr,
-			//connect
-			nullptr, zapata::RESTfulResource);
+			no_delete, no_head, no_trace, no_options, no_patch, no_connect);
 	}
 
 	/*
@@ -838,7 +813,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 					_rep->body(_token);
 				}
 			}
-		}, zapata::RESTfulController);
+		});
 	}
 }
 

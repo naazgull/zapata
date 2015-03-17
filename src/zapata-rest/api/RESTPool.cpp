@@ -88,7 +88,7 @@ void zapata::RESTPool::configuration(JSONObj* _conf) {
 	this->__configuration = _conf;
 }
 
-void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type) {
+void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -106,65 +106,33 @@ void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zap
 	_handlers.push_back(this->__default_connect);
 
 	for (size_t _i = 0; _i != _events.size(); _i++) {
-		switch (_events[_i]) {
-			case zapata::HTTPGet : {
-				_handlers[zapata::HTTPGet] =  (_resource_type == zapata::RESTfulController ? this->__default_get : _handler);
-				break;
-			}
-			case zapata::HTTPPut : {
-				_handlers[zapata::HTTPPut] = (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore ? this->__default_put : _handler);
-				break;
-			}
-			case zapata::HTTPPost : {
-				_handlers[zapata::HTTPPost] = (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection ? this->__default_post : _handler);
-				break;
-			}
-			case zapata::HTTPDelete : {
-				_handlers[zapata::HTTPDelete] = (_resource_type != zapata::RESTfulDocument ? this->__default_delete : _handler);
-				break;
-			}
-			case zapata::HTTPHead : {
-				_handlers[zapata::HTTPHead] = (_resource_type == zapata::RESTfulController ? this->__default_head : _handler);
-				break;
-			}
-			case zapata::HTTPPatch : {
-				_handlers[zapata::HTTPPatch] = (_resource_type != zapata::RESTfulDocument ? this->__default_patch : _handler);
-				break;
-			}
-			case zapata::HTTPConnect : {
-				_handlers[zapata::HTTPConnect] = _handler;
-				break;
-			}
-			default : {
-			}
-
-		}
+		_handlers[_events[_i]] = _handler;
 	}
 
 	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
 }
 
-void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type) {
+void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
 	vector<zapata::RESTHandler> _handlers;
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPGet || (_resource_type == zapata::RESTfulController) ? this->__default_get : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPut || (_resource_type != zapata::RESTfulDocument && _resource_type != zapata::RESTfulStore) ? this->__default_put : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPost || (_resource_type != zapata::RESTfulController && _resource_type != zapata::RESTfulCollection) ? this->__default_post : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPDelete || (_resource_type != zapata::RESTfulDocument) ? this->__default_delete : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPHead || (_resource_type == zapata::RESTfulController) ? this->__default_head : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPGet? this->__default_get : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPut ? this->__default_put : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPost ? this->__default_post : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPDelete ? this->__default_delete : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPHead ? this->__default_head : _handler));
 	_handlers.push_back(this->__default_trace);
 	_handlers.push_back(this->__default_options);
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPatch || (_resource_type != zapata::RESTfulDocument) ? this->__default_patch : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPatch ? this->__default_patch : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPConnect ? this->__default_connect : _handler));
 
 	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
 
 }
 
-void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9], zapata::RESTfulType _resource_type) {
+void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -183,7 +151,7 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9], za
 	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
 }
 
-void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect, zapata::RESTfulType _resource_type) {
+void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}

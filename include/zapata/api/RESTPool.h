@@ -37,6 +37,16 @@ using namespace __gnu_cxx;
 
 #define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
 
+#define no_get nullptr
+#define no_put nullptr
+#define no_post nullptr
+#define no_delete nullptr
+#define no_head nullptr
+#define no_trace nullptr
+#define no_options nullptr
+#define no_patch nullptr
+#define no_connect nullptr
+
 namespace zapata {
 
 	enum RESTfulType {
@@ -61,10 +71,10 @@ namespace zapata {
 			JSONObj& configuration();
 			void configuration(JSONObj* _conf);
 
-			void on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type);
-			void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler, zapata::RESTfulType _resource_type);
-			void on(string _regex, zapata::RESTHandler _handlers[9], zapata::RESTfulType _resource_type);
-			void on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect, zapata::RESTfulType _resource_type);
+			void on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
+			void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler);
+			void on(string _regex, zapata::RESTHandler _handlers[9]);
+			void on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect);
 
 			void trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
 			void trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);

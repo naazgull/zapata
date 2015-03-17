@@ -31,11 +31,11 @@ namespace zapata {
 	ostream* log_fd = nullptr;
 
 	const char* log_lvl_names[] = {
-		"\033[1;34m\033[4;35msys\033[0m    | ",
-		"\033[1;31m\033[4;31merror\033[0m  | ",
-		"\033[1;33m\033[4;33mwarning\033[0m| ",
-		"\033[1;32m\033[4;34minfo\033[0m   | ",
-		"\033[1;35m\033[4;36mdebug\033[0m  | "
+		"\033[1;34m\033[4;35msys\033[0m     | ",
+		"\033[1;31m\033[4;31merror\033[0m   | ",
+		"\033[1;33m\033[4;33mwarning\033[0m | ",
+		"\033[1;32m\033[4;34minfo\033[0m    | ",
+		"\033[1;35m\033[4;36mdebug\033[0m   | "
 	};
 }
 
@@ -44,7 +44,7 @@ void zapata::log(string _prefix, string _text, zapata::LogLevel _level) {
 		string _time;
 		zapata::tostr(_time, time(NULL), "%F %T");
 		zapata::replace(_text, "\n", "");
-		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[0;37m" << _time << "\033[0m | \033[4;32m" << _prefix << "\033[0m | " << _text << endl << flush;
+		(*zapata::log_fd) << zapata::log_lvl_names[_level] << _time << " | \033[4;32m" << _prefix << "\033[0m | " << _text << endl << flush;
 	}
 }
 
@@ -53,6 +53,6 @@ void zapata::log(string _text, zapata::LogLevel _level) {
 		string _time;
 		zapata::tostr(_time, time(nullptr), "%F %T");
 		zapata::replace(_text, "\n", "");
-		(*zapata::log_fd) << zapata::log_lvl_names[_level] << "\033[1;37m" << _time << "\033[0m | " << _text << endl << flush;
+		(*zapata::log_fd) << zapata::log_lvl_names[_level] << _time << " | " << _text << endl << flush;
 	}
 }

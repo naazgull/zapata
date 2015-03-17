@@ -8,6 +8,7 @@ libzapata_core_la_SOURCES = \
 ./base/assert.cpp \
 ./log/log.cpp \
 ./thread/Job.cpp \
+./thread/TimerJob.cpp \
 ./mem/usage.cpp \
 ./conf/load.cpp \
 ./exceptions/InterruptedException.cpp \

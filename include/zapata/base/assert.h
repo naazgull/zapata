@@ -34,6 +34,8 @@ SOFTWARE.
  */
 #define assertz(x,y,z,c) if (! (x)) { throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
+typedef struct epoll_event epoll_event_t;
+
 namespace zapata {
 	enum JSONType {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate

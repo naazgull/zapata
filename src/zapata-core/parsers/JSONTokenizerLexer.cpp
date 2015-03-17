@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/parsers/JSONTokenizerLexer.h>
 
-zapata::JSONTokenizerLexer::JSONTokenizerLexer(std::istream &_in, std::ostream &_out) :
-	zapata::JSONLexer(_in, _out) {
+zapata::JSONTokenizerLexer::JSONTokenizerLexer(std::istream &_in, std::ostream &_out) : zapata::JSONLexer(_in, _out) {
+	this->__root = this->__parent = nullptr;
 }
 
 zapata::JSONTokenizerLexer::~JSONTokenizerLexer() {
@@ -47,8 +47,9 @@ void zapata::JSONTokenizerLexer::result(zapata::JSONType _in) {
 
 void zapata::JSONTokenizerLexer::finish(zapata::JSONType _in) {
 	try {			
-		//cout << "- finishing object: " << (* this->__parent) <<  " > " << this->__parent->type() << endl << flush;
-		this->__parent = this->__parent->parent();
+		zapata::JSONElementT * _cur = this->__parent;
+		this->__parent = _cur->parent();
+		_cur->parent(nullptr);
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
@@ -58,7 +59,6 @@ void zapata::JSONTokenizerLexer::finish(zapata::JSONType _in) {
 
 void zapata::JSONTokenizerLexer::init(zapata::JSONType _in_type, const string _in_str) {
 	try {			
-		//cout << "- starting field: " << _in_str << endl << flush;
 		(* this->__parent) << _in_str;
 	}
 	catch (zapata::AssertionException& _e) {
@@ -68,97 +68,107 @@ void zapata::JSONTokenizerLexer::init(zapata::JSONType _in_type, const string _i
 }
 
 void zapata::JSONTokenizerLexer::init(zapata::JSONType _in_type) {
-	try {		
-		//cout << "- putting this object on hold: " << (* this->__parent) <<  " > " << this->__parent->type() << endl << flush;
-		switch (_in_type) {
-			case zapata::JSObject : {
-				JSONObj _obj;
-				JSONElementT* _ptr = new JSONElementT(_obj);
-				_ptr->parent(this->__parent);
-				(* this->__parent) << _ptr;
-				this->__parent = _ptr;
-				//cout << "- starting object: " << (* this->__parent) <<  " > " << this->__parent->type() << " with parent " << this->__parent->parent() << endl << flush;
-				break;
-			}
-			case zapata::JSArray : {
-				JSONArr _arr;
-				JSONElementT* _ptr = new JSONElementT(_arr);
-				_ptr->parent(this->__parent);
-				(* this->__parent) << _ptr;
-				this->__parent = _ptr;
-				//cout << "- starting object: " << (* this->__parent) <<  " > " << this->__parent->type() << " with parent " << this->__parent->parent() << endl << flush;
-				break;
-			}
-			default : {
-			}
-		}
-	}
-	catch (zapata::AssertionException& _e) {
+	if (this->__parent->type() != zapata::JSObject && this->__parent->type() != zapata::JSArray) {
 		this->__parent->type(_in_type);
+		return;
+	}
+	switch (_in_type) {
+		case zapata::JSObject : {
+			JSONObj _obj;
+			JSONElementT* _ptr = new JSONElementT(_obj);
+			_ptr->parent(this->__parent);
+			try {		
+				(* this->__parent) << _ptr;
+				this->__parent = _ptr;
+			}
+			catch (zapata::AssertionException& _e) {
+				cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+				delete _ptr;
+				this->__parent->type(_in_type);
+			}
+			break;
+		}
+		case zapata::JSArray : {
+			JSONArr _arr;
+			JSONElementT* _ptr = new JSONElementT(_arr);
+			_ptr->parent(this->__parent);
+			try {		
+				(* this->__parent) << _ptr;
+				this->__parent = _ptr;
+			}
+			catch (zapata::AssertionException& _e) {
+				cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+				delete _ptr;
+				this->__parent->type(_in_type);
+			}
+			break;
+		}
+		default : {
+		}
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(bool _in) {
+	JSONElementT* _ptr = new JSONElementT(_in);
+	_ptr->parent(this->__parent);
 	try {			
-		//cout << "- adding value: " << _in << endl << flush;
-		JSONElementT* _ptr = new JSONElementT(_in);
-		_ptr->parent(this->__parent);
 		(* this->__parent) << _ptr;
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
 		throw _e;
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(long long _in) {
-	try {			
-		//cout << "- adding value: " << _in << endl << flush;
-		JSONElementT* _ptr = new JSONElementT(_in);
-		_ptr->parent(this->__parent);
+	JSONElementT* _ptr = new JSONElementT(_in);
+	_ptr->parent(this->__parent);
+	try {
 		(* this->__parent) <<  _ptr;
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
 		throw _e;
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(double _in) {
-	try {			
-		//cout << "- adding value: " << _in << endl << flush;
-		JSONElementT* _ptr = new JSONElementT(_in);
-		_ptr->parent(this->__parent);
+	JSONElementT* _ptr = new JSONElementT(_in);
+	_ptr->parent(this->__parent);
+	try {
 		(* this->__parent) <<  _ptr;
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
 		throw _e;
 	}
 }
 
 void zapata::JSONTokenizerLexer::init(string _in) {
-	try {			
-		//cout << "- adding value: " << _in << endl << flush;
-		JSONElementT* _ptr = new JSONElementT(_in);
-		_ptr->parent(this->__parent);
+	JSONElementT* _ptr = new JSONElementT(_in);
+	_ptr->parent(this->__parent);
+	try {
 		(* this->__parent) <<  _ptr;
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
 		throw _e;
 	}
 }
 
 void zapata::JSONTokenizerLexer::init() {
-	try {			
-		//cout << "- adding value: " << _in << endl << flush;
-		JSONElementT* _ptr = new JSONElementT();
-		_ptr->parent(this->__parent);
+	JSONElementT* _ptr = new JSONElementT();
+	_ptr->parent(this->__parent);
+	try {
 		(* this->__parent) << _ptr;
 	}
 	catch (zapata::AssertionException& _e) {
 		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
 		throw _e;
 	}
 }

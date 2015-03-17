@@ -6,6 +6,7 @@ nobase_include_HEADERS = \
 ./zapata/thread/RESTJob.h \
 ./zapata/thread/RESTServer.h \
 ./zapata/thread/Job.h \
+./zapata/thread/TimerJob.h \
 ./zapata/http/params.h \
 ./zapata/http/requester.h \
 ./zapata/http/HTTPObj.h \

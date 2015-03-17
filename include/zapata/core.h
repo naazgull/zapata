@@ -46,13 +46,12 @@ SOFTWARE.
 #include <zapata/parsers/JSONParser.h>
 
 #include <zapata/thread/Job.h>
+#include <zapata/thread/TimerJob.h>
 
 #include <zapata/file/manip.h>
 
 #include <zapata/mail/manip.h>
 
 #include <zapata/conf/load.h>
-
-typedef struct epoll_event epoll_event_t;
 
 extern "C" int zapata_core();

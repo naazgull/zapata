@@ -28,15 +28,12 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-//zapata::RESTJob::RESTJob(const RESTJob& _rhs) : Job(_rhs.get()) {
-//}
-
 zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
-	ifstream _key_file;
+	std::ifstream _key_file;
 	_key_file.open(_key_file_path.data());
 	this->__configuration = zapata::fromfile(_key_file);
 
-	size_t _max = this->__configuration["zapata"]["core"]["max_descriptors_per_job"]->ok() ? (size_t) this->__configuration["zapata"]["core"]["max_descriptors_per_job"] : 1024;
+	size_t _max = this->__configuration["zapata"]["core"]["max_descriptors_per_job"]->ok() ? (size_t) this->__configuration["zapata"]["core"]["max_descriptors_per_job"] : 64;
 	this->__events = new epoll_event_t[ _max ];
 	this->__epoll_fd = epoll_create1 (0);
 
@@ -46,23 +43,21 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 		for (; true; ) {
 			int _rv = epoll_wait(this->__epoll_fd, this->__events, _max, -1);
 			if (_rv > 0) {
-				int _processed = 0;
-				for (size_t _idx = 0; _idx != _max; _idx++) {
+				for (int _idx = 0; _idx != _rv; _idx++) {
 					if ((this->__events[_idx].events & EPOLLERR) || (this->__events[_idx].events & EPOLLHUP) || (!(this->__events[_idx].events & EPOLLIN))) {
 						::close(this->__events[_idx].data.fd);
 					}
 					else {
-						_processed++;
-						socketstream _cs(this->__events[_idx].data.fd);
+						zapata::socketstream _cs(this->__events[_idx].data.fd);
+						
 						if (!_cs.is_open()) {
 							::close(this->__events[_idx].data.fd);
-							_cs.unassign();
 						}
 						else {
-							HTTPRep _rep;
-							HTTPReq _req;
+							zapata::HTTPRep _rep;
+							zapata::HTTPReq _req;
 							try  {
-								zapata::fromhttpstream(_cs, _req);
+								_cs >> _req;
 								this->__pool->trigger(_req, _rep);
 
 								string _origin = _req->header("Origin");
@@ -120,9 +115,6 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 
 							_cs.unassign();
 						}
-					}
-					if (_processed == _rv) {
-						break;
 					}
 				}
 			}

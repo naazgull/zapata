@@ -357,11 +357,12 @@ namespace zapata {
 		bool handshake() {
 			string _key;
 			string _line;
-			short _end = 0;
 			do {
 				std::getline((* this), _line);
 				zapata::trim(_line);
-				if (_line.find("Sec-WebSocket-Key:") != string::npos) {
+				string _header(_line);
+				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
+				if (_header.find("sec-websocket-key:") != string::npos) {
 					_key.assign(_line.substr(19));
 				}
 			}
@@ -424,7 +425,7 @@ namespace zapata {
 			}
 
 			if (_mask) {
-				for (int _i = 0; _i < _masked.length(); _i++) {
+				for (size_t _i = 0; _i < _masked.length(); _i++) {
 					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
 				}
 			}
@@ -477,11 +478,12 @@ namespace zapata {
 		bool handshake() {
 			string _key;
 			string _line;
-			short _end = 0;
 			do {
 				std::getline((* this), _line);
 				zapata::trim(_line);
-				if (_line.find("Sec-WebSocket-Key:") != string::npos) {
+				string _header(_line);
+				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
+				if (_header.find("sec-websocket-key:") != string::npos) {
 					_key.assign(_line.substr(19));
 				}
 			}
@@ -544,7 +546,7 @@ namespace zapata {
 			}
 
 			if (_mask) {
-				for (int _i = 0; _i < _masked.length(); _i++) {
+				for (size_t _i = 0; _i < _masked.length(); _i++) {
 					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
 				}
 			}

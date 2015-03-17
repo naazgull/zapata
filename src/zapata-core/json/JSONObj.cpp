@@ -335,7 +335,13 @@ bool zapata::JSONElementT::bln() {
 }
 
 time_t zapata::JSONElementT::date() {
-	assertz(this->__target.__type == zapata::JSDate, "this element is not of type JSDate", 0, 0);
+	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, "this element is not of type JSDate", 0, 0);
+	if (this->__target.__type == zapata::JSString) {
+		time_t _n = 0;
+		string _s(this->__target.__string.get()->data());
+		zapata::fromstr(_s, &_n, "%Y-%m-%dT%H-%M-%S.000Z");
+		return _n;
+	}
 	return this->__target.__date;
 }
 
@@ -611,6 +617,9 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			break;
 		}
 	}
+	if (_n_tabs == 0) {
+		_out << endl << flush;
+	}
 }
 
 void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
@@ -656,6 +665,9 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			_out.insert(_out.length(), "\"");
 			break;
 		}
+	}
+	if (_n_tabs == 0) {
+		_out.insert(_out.length(), "\n");
 	}
 }
 
@@ -994,7 +1006,7 @@ zapata::JSONPtr::~JSONPtr(){
 
 zapata::JSONElementT& zapata::JSONPtr::value() {
 	if (this->get() == nullptr) {
-		*(zapata::undefined.get());
+		return *(zapata::undefined.get());
 	}
 	return *(this->get());
 }
@@ -1340,6 +1352,15 @@ zapata::JSONObjT::iterator zapata::JSONObj::end() {
 	return (* this)->end();
 }
 
+zapata::JSONObj::operator string() {
+	if (this->get() == nullptr) {
+		return "";
+	}
+	string _out;
+	(* this)->stringify(_out);
+	return _out;
+}
+
 zapata::JSONObj& zapata::JSONObj::operator<<(string _in) {
 	(* this)->push(_in);
 	return * this;
@@ -1361,6 +1382,15 @@ zapata::JSONArr::JSONArr(JSONArrT* _target) : shared_ptr<JSONArrT>(_target) {
 }
 
 zapata::JSONArr::~JSONArr(){
+}
+
+zapata::JSONArr::operator string() {
+	if (this->get() == nullptr) {
+		return "";
+	}
+	string _out;
+	(* this)->stringify(_out);
+	return _out;
 }
 
 zapata::JSONArrT::iterator zapata::JSONArr::begin() {
