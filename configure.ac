@@ -21,6 +21,7 @@ AC_HAVE_LIBRARY(crypto)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
+AH_TOP([#include <zapata/unconfig.h>])
 AC_CONFIG_HEADERS([include/zapata/config.h])
 
 dnl Initialize automake

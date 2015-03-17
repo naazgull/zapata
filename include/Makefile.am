@@ -56,7 +56,9 @@ nobase_include_HEADERS = \
 ./zapata/stream/WebSocket.h \
 ./zapata/core.h \
 ./zapata/rest.h \
-./zapata/json/JSONObj.h 
+./zapata/json/JSONObj.h \
+./zapata/unconfig.h \
+./zapata/config.h
 
 etc_initdir = /etc/init.d
 etc_init_DATA = ../etc/init.d/zapata-rest-server
