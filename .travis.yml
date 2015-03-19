@@ -1,4 +1,21 @@
-install: sudo apt-get install g++ build-essential autoconf libtool libssl-dev scons libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
-before_script: autoreconf -vfi
-script: ./configure --prefix=/usr && make 
+language: cpp
+before_install:
+	- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+	- sudo apt-get update -qq
+install: 
+	- sudo apt-get install -qq gcc-4.8 g++-4.8 build-essential autoconf libtool inotify-tools unzip wget
+	- sudo update-alternatives --remove-all gcc
+	- sudo update-alternatives --remove-all g++
+	- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
+	- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
+	- sudo update-alternatives --config gcc
+	- sudo update-alternatives --config g++
+	- sudo wget http://dfz.pt/public/muzzley-profiler-dependencies_0.1-1_precise.deb
+	- sudo dpkg -i muzzley-profiler-dependencies_0.1-1_precise.deb
+	- sudo apt-get -f -qq install
+	- sudo dpkg -i muzzley-profiler-dependencies_0.1-1_precise.deb	
+before_script: 
+	- autoreconf -vfi
+script: 
+	- ./configure --prefix=/usr && make 
 
