@@ -29,3 +29,4 @@ src/zapata-rest-server/zapata-rest-daemon
 */**/config.h.in~
 */**/config.h.in
 */**/stamp-h1
+deps/
