@@ -509,7 +509,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	 */
 	{
 		vector<zapata::HTTPMethod> _ets = { zapata::HTTPGet, zapata::HTTPPost };
-		_pool.on(zapata::HTTPPost, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		_pool.on(_ets, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
 			assertz(_req->param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 			assertz(_req->param("state").length() != 0, "Parameter 'state' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
