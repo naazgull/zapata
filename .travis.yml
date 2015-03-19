@@ -1,2 +1,3 @@
-language: cpp
-install: make get-deps
+install: sudo apt-get install g++ build-essential autoconf libtool libssl-dev scons libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
+script: ./configure --prefix=/usr && make 
+
