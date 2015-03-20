@@ -33,3 +33,12 @@ libzapata_core_la_SOURCES = \
 ./text/convert.cpp \
 ./text/base64.cpp \
 ./json/JSONObj.cpp 
+
+bin_PROGRAMS = zat
+
+zat_LDADD = -lpthread -lzapata-core
+zat_LDFLAGS= 
+zat_CPPFLAGS = -std=c++11 -Wall -I../../include
+
+zat_SOURCES = \
+./log/zat.cpp

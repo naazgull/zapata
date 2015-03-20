@@ -22,26 +22,45 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-
+#include <signal.h>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <zapata/parsers/json.h>
+#include <zapata/log/log.h>
 
 using namespace std;
 #if !defined __APPLE__
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
-	template<typename T>
-	struct is_pointer { static const bool value = false; };
+int main(int argc, char* argv[]) {
+	char _c;
+	int _level = 8;
 
-	template<typename T>
-	struct is_pointer<T*> { static const bool value = true; };
+	while ((_c = getopt(argc, argv, "l:")) != -1) {
+		switch (_c) {
+			case 'l': {
+				string _l(optarg);
+				zapata::fromstr(_l, & _level);
+				break;
+			}
+		}
+	}
 
-	void process_mem_usage(double& vm_usage, double& resident_set);
-
-};
+	string _line;
+	while(std::getline(std::cin, _line)) {
+		zapata::JSONPtr _json = zapata::fromstr(_line);
+		if ((int) _json["level"] > _level) {
+			continue;
+		}
+		string _time;
+		zapata::tostr(_time, (long) ((double) _json["timestamp"]), "%FT%T");
+		std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | pid(" << (string) _json["pid"] << ") | \033[4;32m" << (((string) _json["user_id"]) + string(" @ ") + ((string) _json["host"])) << "\033[0m | " << ((int) _json["level"] == 1 || (int) _json["level"] == 2 ? (string) _json["full_message"] : (string) _json["short_message"]) << endl << flush;
+	}
+	return 0;
+}
 

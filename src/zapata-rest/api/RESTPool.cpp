@@ -233,7 +233,7 @@ void zapata::RESTPool::process(HTTPReq& _req, HTTPRep& _rep) {
 	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
 		if (regexec(_i->first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				_i->second[_req->method()](_req, _rep, this->configuration(), *this);
+				_i->second[_req->method()](_req, _rep, this->configuration(), * this);
 			}
 			catch (zapata::AssertionException& _e) {
 				if (_e.status() > 399) {

@@ -210,7 +210,7 @@ void zapata::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 	}
 }
 
-void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
+void zapata::get_query(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
 	for (auto _i : *_in) {
 		string _key = _i.first;
 		JSONElement _value = _i.second;
@@ -391,12 +391,12 @@ void zapata::tomongoquery(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _queryr,
 	}
 }
 
-void zapata::torestcollection(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+void zapata::get_collection(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::tomongoquery(_params, _query_b, _order_b, _page_size, _page_start_index);
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
 
 
 	size_t _count = -1;
@@ -425,16 +425,111 @@ void zapata::torestcollection(mongo::ScopedDbConnection& _conn, string _mongo_co
 	_out << "elements" << _elements;
 }
 
-void zapata::toreststore(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
-	zapata::torestcollection(_conn,  _mongo_collection, _params, _out);
+void zapata::get_store(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	zapata::get_collection(_conn,  _mongo_collection, _params, _out);
 }
 
-void zapata::torestdocument(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+void zapata::get_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::tomongoquery(_params, _query_b, _order_b, _page_size, _page_start_index);
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	mongo::Query _query(_query_b.done());
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
+
+	if (_ptr->more()) {
+		mongo::BSONObj _obj = _ptr->next();
+		zapata::frommongo(_obj, _out);
+	}
+	 _ptr->decouple();
+	 _conn->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+}
+
+void put_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	mongo::Query _query(_query_b.done());
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
+
+	if (_ptr->more()) {
+		mongo::BSONObj _obj = _ptr->next();
+		zapata::frommongo(_obj, _out);
+	}
+	 _ptr->decouple();
+	 _conn->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+}
+
+void patch_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	mongo::Query _query(_query_b.done());
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
+
+	if (_ptr->more()) {
+		mongo::BSONObj _obj = _ptr->next();
+		zapata::frommongo(_obj, _out);
+	}
+	 _ptr->decouple();
+	 _conn->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+}
+
+void delete_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	mongo::Query _query(_query_b.done());
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
+
+	if (_ptr->more()) {
+		mongo::BSONObj _obj = _ptr->next();
+		zapata::frommongo(_obj, _out);
+	}
+	 _ptr->decouple();
+	 _conn->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+}
+
+void insert_colletion(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
+
+	mongo::Query _query(_query_b.done());
+	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);
+
+	if (_ptr->more()) {
+		mongo::BSONObj _obj = _ptr->next();
+		zapata::frommongo(_obj, _out);
+	}
+	 _ptr->decouple();
+	 _conn->killCursor(_ptr->getCursorId());
+	 delete _ptr.release();
+}
+
+void insert_store(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out) {
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zapata::get_query(_params, _query_b, _order_b, _page_size, _page_start_index);
 
 	mongo::Query _query(_query_b.done());
 	unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_mongo_collection, _query);

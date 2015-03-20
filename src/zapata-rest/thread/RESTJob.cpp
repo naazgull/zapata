@@ -78,7 +78,7 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 								}
 							}
 							catch(zapata::SyntaxErrorException& e) {
-								zapata::log(e.what(), zapata::error);
+								zapata::log(e.what(), zapata::error, __HOST__, __LINE__, __FILE__);
 
 								zapata::JSONObj _body;
 								_body
@@ -109,7 +109,7 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 								::close(this->__events[_idx].data.fd);
 							}
 							catch(zapata::ClosedException& e) {
-								zapata::log(e.what(), zapata::error);
+								zapata::log(e.what(), zapata::error, __HOST__, __LINE__, __FILE__);
 								::close(this->__events[_idx].data.fd);
 							}
 
@@ -151,10 +151,7 @@ zapata::JSONObj& zapata::RESTJob::configuration() {
 
 void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	string _text(zapata::method_names[_req->method()]);
-	_text.insert(0, "\033[38;5;105m");
-	_text.insert(_text.length(), "\033[0m");
 	_text.insert(_text.length(), " ");
-	_text.insert(_text.length(), "\033[38;5;15m");
 	_text.insert(_text.length(),  _req->url());
 	if (_req->params().size() != 0) {
 		_text.insert(_text.length(), "?");
@@ -169,18 +166,7 @@ void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 			_text.insert(_text.length(), i.second);
 		}
 	}
-	_text.insert(_text.length(), "\033[0m");
 	_text.insert(_text.length(), " <-> ");
-	if (_rep->status() < 300) {
-		_text.insert(_text.length(), "\033[38;5;118m");
-	}
-	else if (_rep->status() < 400) {
-		_text.insert(_text.length(), "\033[38;5;172m");
-	}
-	else {
-		_text.insert(_text.length(), "\033[38;5;88m");
-	}
 	_text.insert(_text.length(), zapata::status_names[_rep->status()]);
-	_text.insert(_text.length(), "\033[0m");
-	zapata::log(_text, zapata::sys);
+	zapata::log(_text, zapata::info, __HOST__, __LINE__, __FILE__);
 }

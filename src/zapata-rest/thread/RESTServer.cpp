@@ -79,7 +79,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
-					zapata::log(string(dlerror()), zapata::error);
+					zapata::log(string(dlerror()), zapata::error, __HOST__, __LINE__, __FILE__);
 				}
 				else {
 					void (*_populate)(RESTPool&);
@@ -205,7 +205,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];
 	string _text("starting RESTful server on port ");
 	zapata::tostr(_text, _port);
-	zapata::log(_text, zapata::sys);
+	zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
 	this->__ss.bind(_port);
 
 	for (int i = 0; i != this->max(); i++) {

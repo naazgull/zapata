@@ -34,20 +34,28 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+extern const char* __HOST__;
+
 namespace zapata {
 	extern short int log_lvl;
 	extern ostream* log_fd;
+	extern long log_pid;
+	extern string* log_pname;
+
 	extern const char* log_lvl_names[];
 
 	enum LogLevel {
-		sys = 0,
-		error = 1,
-		warning = 2,
-		info = 3,
-		debug = 4
+		emergency = 0,
+		alert = 1,
+		critical = 2,
+		error = 3,
+		warning = 4,
+		notice = 5,
+		info = 6,
+		debug = 7
 	};
 
-	void log(string _prefix, string _text, zapata::LogLevel _level);
-	void log(string _text, zapata::LogLevel _level);
+	void log(string _text, zapata::LogLevel _level, string _host, int _line, string _file);
+	void log(string _user_id, string _text, zapata::LogLevel _level, string _host, int _line, string _file);
 }
 

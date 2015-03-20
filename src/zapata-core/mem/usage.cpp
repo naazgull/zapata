@@ -57,14 +57,4 @@ void zapata::process_mem_usage(double& vm_usage, double& resident_set) {
 	resident_set = rss * page_size_kb;
 }
 
-void zapata::log_mem_usage() {
-	double _vm;
-	double _resident;
-	zapata::process_mem_usage(_vm, _resident);
-	string _text("virtual_memory: ");
-	zapata::tostr(_text, _vm);
-	_text.insert(_text.length(), "kb | resident_memory: ");
-	zapata::tostr(_text, _resident);
-	_text.insert(_text.length(), "kb");
-	zapata::log(_text, zapata::debug);
-}
+

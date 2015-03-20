@@ -170,7 +170,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _out;
 				try {
-					zapata::torestcollection(_conn, _collection, _params, _out);
+					zapata::get_collection(_conn, _collection, _params, _out);
 				}
 				catch (exception& _e) {
 					_conn.done();
@@ -278,7 +278,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _out;
 				try {
-					zapata::torestcollection(_conn, _collection, _params, _out);
+					zapata::get_collection(_conn, _collection, _params, _out);
 				}
 				catch (exception& _e) {
 					_conn.done();
@@ -316,7 +316,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _out;
 				try {
-					zapata::torestdocument(_conn, _collection, _params, _out);
+					zapata::get_document(_conn, _collection, _params, _out);
 				}
 				catch (exception& _e) {
 					_conn.done();
@@ -403,7 +403,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _out;
 				try {
-					zapata::torestdocument(_conn, _collection, _params, _out);
+					zapata::get_document(_conn, _collection, _params, _out);
 					_conn->remove(_collection, QUERY("_id" << _req->url()), true);
 				}
 				catch (exception& _e) {
@@ -430,7 +430,7 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 
 				zapata::JSONObj _out;
 				try {
-					zapata::torestdocument(_conn, _collection, _params, _out);
+					zapata::get_document(_conn, _collection, _params, _out);
 				}
 				catch (exception& _e) {
 					_conn.done();

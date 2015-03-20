@@ -61,10 +61,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	zapata::log_fd = &cout;
-	zapata::log_lvl = 5;
+	zapata::log_pid = ::getpid();
+	zapata::log_pname = new string(argv[0]);
+	zapata::log_lvl = 8;
 
 	if (_conf_file == nullptr) {
-		zapata::log("a configuration file must be provided", zapata::error);
+		zapata::log("a configuration file must be provided", zapata::error, __HOST__, __LINE__, __FILE__);
 		return -1;
 	}
 
@@ -73,7 +75,7 @@ int main(int argc, char* argv[]) {
 		_server.start();
 	}
 	catch (zapata::AssertionException& _e) {
-		zapata::log(_e.what() + string("\n") + _e.description(), zapata::error);
+		zapata::log(_e.what() + string("\n") + _e.description(), zapata::error, __HOST__, __LINE__, __FILE__);
 	}
 
 	if (_keep_alive) {

@@ -25,34 +25,67 @@ SOFTWARE.
 #include <zapata/log/log.h>
 
 #include <zapata/text/convert.h>
+#include <sys/time.h>
+
+const char* __HOST__ = "localhost";
 
 namespace zapata {
 	short int log_lvl = 0;
 	ostream* log_fd = nullptr;
+	long log_pid = 0;
+	string* log_pname = nullptr;
 
 	const char* log_lvl_names[] = {
-		"\033[1;34m\033[4;35msys\033[0m     | ",
-		"\033[1;31m\033[4;31merror\033[0m   | ",
-		"\033[1;33m\033[4;33mwarning\033[0m | ",
-		"\033[1;32m\033[4;34minfo\033[0m    | ",
-		"\033[1;35m\033[4;36mdebug\033[0m   | "
+		"\033[1;31m\033[4;31memergency\033[0m| ",
+		"\033[0;31m\033[4;31malert\033[0m    | ",
+		"\033[0;33m\033[4;33mcritical\033[0m | ",
+		"\033[0;33m\033[4;33merror\033[0m    | ",
+		"\033[0;35m\033[4;35mwarning\033[0m  | ",
+		"\033[0;36m\033[4;36mnotice\033[0m   | ",
+		"\033[0;34m\033[4;34minfo\033[0m     | ",
+		"\033[0;37m\033[4;37mdebug\033[0m    | "
 	};
 }
 
-void zapata::log(string _prefix, string _text, zapata::LogLevel _level) {
-	if (_level <= zapata::log_lvl) {
-		string _time;
-		zapata::tostr(_time, time(NULL), "%F %T");
-		zapata::replace(_text, "\n", "");
-		(*zapata::log_fd) << zapata::log_lvl_names[_level] << _time << " | \033[4;32m" << _prefix << "\033[0m | " << _text << endl << flush;
-	}
+void zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
+	zapata::log("0000000", _text, _level, _host, _line, _file);
 }
 
-void zapata::log(string _text, zapata::LogLevel _level) {
-	if (_level <= zapata::log_lvl) {
-		string _time;
-		zapata::tostr(_time, time(nullptr), "%F %T");
-		zapata::replace(_text, "\n", "");
-		(*zapata::log_fd) << zapata::log_lvl_names[_level] << _time << " | " << _text << endl << flush;
+void zapata::log(string _user_id, string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
+	if (zapata::log_fd == nullptr) {
+		return;
 	}
+	struct timeval _tp;
+	gettimeofday(& _tp, nullptr);
+
+	zapata::replace(_text, "\n", "\\n");
+	zapata::replace(_text, "\"", "\\\"");
+
+	string _log("{\"version\": \"1.1\",\"host\":\"");
+	_log.insert(_log.length(), _host);
+	_log.insert(_log.length(), "\",\"source\":\"");
+	_log.insert(_log.length(), _host);
+	_log.insert(_log.length(), "\",\"short_message\":\"");
+	_log.insert(_log.length(), _text);
+	_log.insert(_log.length(), "\",\"full_message\":\"");
+	_log.insert(_log.length(), _file);
+	_log.insert(_log.length(), ":");
+	zapata::tostr(_log, _line);
+	_log.insert(_log.length(), " | ");
+	_log.insert(_log.length(), _text);
+	_log.insert(_log.length(), "\",\"timestamp\":");
+	zapata::tostr(_log, _tp.tv_sec);
+	_log.insert(_log.length(), ".");
+	zapata::tostr(_log, (int) (_tp.tv_usec / 1000));
+	_log.insert(_log.length(), ",\"level\":");
+	zapata::tostr(_log, (int) _level);
+	_log.insert(_log.length(), ",\"user_id\": \"");
+	_log.insert(_log.length(), _user_id);
+	_log.insert(_log.length(), "\",\"pid\":");
+	zapata::tostr(_log, zapata::log_pid);
+	_log.insert(_log.length(), ",\"exec\": \"");
+	_log.insert(_log.length(), * zapata::log_pname);
+	_log.insert(_log.length(), "\" }");
+
+	(* zapata::log_fd) << _log << endl << flush;
 }
