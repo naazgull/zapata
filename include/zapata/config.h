@@ -84,3 +84,6 @@
 
 /* Version number of package */
 #define VERSION "0.0.8"
+
+/* Machine hostname to be used in the log messages */
+#define __HOST__ "zapata"

@@ -28,13 +28,14 @@ SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <zapata/config.h>
 
 using namespace std;
 #if !defined __APPLE__
 using namespace __gnu_cxx;
 #endif
 
-extern const char* __HOST__;
+#define zlog(x,y) zapata::log(x, y, __HOST__, __LINE__, __FILE__)
 
 namespace zapata {
 	extern short int log_lvl;

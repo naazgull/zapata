@@ -34,6 +34,8 @@ SOFTWARE.
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <cmath>
+#include <sys/time.h>
 #include <zapata/base/assert.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
@@ -43,7 +45,9 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+
 namespace zapata {
+	typedef unsigned long long mstime_t;
 
 	class JSONElementT;
 	class JSONObj;
@@ -77,6 +81,7 @@ namespace zapata {
 #endif
 		operator size_t();
 		operator double();
+		operator mstime_t();
 		operator JSONObj();
 		operator JSONArr();
 		operator JSONObj&();
@@ -305,7 +310,7 @@ namespace zapata {
 			double __double;
 			bool __boolean;
 			void* __nil;
-			time_t __date;
+			zapata::mstime_t __date;
 		};
 	} JSONUnion;
 
@@ -321,7 +326,7 @@ namespace zapata {
 		JSONElementT(long long _value);
 		JSONElementT(double _value);
 		JSONElementT(bool _value);
-		JSONElementT(time_t _value);
+		JSONElementT(zapata::mstime_t _value);
 		JSONElementT(int _value);
 		JSONElementT(size_t _value);
 #ifdef __LP64__
@@ -347,7 +352,7 @@ namespace zapata {
 		long long intr();
 		double dbl();
 		bool bln();
-		time_t date();
+		zapata::mstime_t date();
 		double number();
 
 		JSONElementT& operator<<(const char* _in);

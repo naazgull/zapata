@@ -40,25 +40,35 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+#define assertz_close(x,y,z,c) if (! (x)) { _conn.done(); throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+
 namespace zapata {
 
-	void frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out);
-	void frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out);
+	namespace mongodb {
 
-	void tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out);
-	void tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out);
+		void frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out);
+		void frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out);
 
-	void get_query(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _query, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
-	void get_collection(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void get_store(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void get_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void put_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void patch_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void delete_document(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void insert_colletion(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
-	void insert_store(mongo::ScopedDbConnection& _conn, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _out);
+		void tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out);
+		void tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out);
+		void tosetcommand(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix = "");
+		void tosetcommand(zapata::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
 
-	float valid_mongo_version();
+		void get_query(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _query, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
+		zapata::JSONPtr get_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr patch_from_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_from_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr get_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr patch_from_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_from_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr get_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr replace_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr patch_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr create_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _payload);
+
+		float valid_mongo_version();
+	}
 }
 
 extern "C" int zapata_mongodb();

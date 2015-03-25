@@ -1,5 +1,7 @@
 /* include/zapata/config.h.in.  Generated from configure.ac by autoheader.  */
 
+#pragma once
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -81,3 +83,6 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Machine hostname to be used in the log messages */
+#undef __HOST__

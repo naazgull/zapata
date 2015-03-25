@@ -53,14 +53,24 @@ int main(int argc, char* argv[]) {
 
 	string _line;
 	while(std::getline(std::cin, _line)) {
-		zapata::JSONPtr _json = zapata::fromstr(_line);
-		if ((int) _json["level"] > _level) {
+		zapata::trim(_line);
+		if (_line.find("{") != 0) {
 			continue;
 		}
-		string _time;
-		zapata::tostr(_time, (long) ((double) _json["timestamp"]), "%FT%T");
-		std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | pid(" << (string) _json["pid"] << ") | \033[4;32m" << (((string) _json["user_id"]) + string(" @ ") + ((string) _json["host"])) << "\033[0m | " << ((int) _json["level"] == 1 || (int) _json["level"] == 2 ? (string) _json["full_message"] : (string) _json["short_message"]) << endl << flush;
+		try {
+			zapata::JSONPtr _json = zapata::fromstr(_line);
+			if ((int) _json["level"] > _level) {
+				continue;
+			}
+			string _time;
+			zapata::tostr(_time, (long) ((double) _json["timestamp"]), "%FT%T");
+			string _cmd((string) _json["exec"]);
+			_cmd.assign(_cmd.substr(_cmd.rfind("/") + 1));
+			std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | \033[4;32m" << (((string) _json["user_id"]) + string(" @ ") + ((string) _json["host"])) << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
+		}
+		catch (...) {}
 	}
 	return 0;
+
 }
 

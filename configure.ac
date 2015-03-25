@@ -10,6 +10,9 @@ AC_ARG_ENABLE(mongodb, [  --enable-mongodb	Turn on MongoDB support],
 	[ AC_DEFINE(HAVE_MONGO_DB, 1, "Turn on MongoDB support") ]
 )
 
+AC_SUBST([HOSTNAME],[$(hostname)])
+AC_DEFINE_UNQUOTED([__HOST__], ["$HOSTNAME"], [Machine hostname to be used in the log messages])
+
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
 AC_HAVE_LIBRARY(pthread)

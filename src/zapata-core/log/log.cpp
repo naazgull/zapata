@@ -27,8 +27,6 @@ SOFTWARE.
 #include <zapata/text/convert.h>
 #include <sys/time.h>
 
-const char* __HOST__ = "localhost";
-
 namespace zapata {
 	short int log_lvl = 0;
 	ostream* log_fd = nullptr;
@@ -61,7 +59,7 @@ void zapata::log(string _user_id, string _text, zapata::LogLevel _level, string 
 	zapata::replace(_text, "\n", "\\n");
 	zapata::replace(_text, "\"", "\\\"");
 
-	string _log("{\"version\": \"1.1\",\"host\":\"");
+	string _log("{\"version\":\"1.1\",\"host\":\"");
 	_log.insert(_log.length(), _host);
 	_log.insert(_log.length(), "\",\"source\":\"");
 	_log.insert(_log.length(), _host);
@@ -79,13 +77,17 @@ void zapata::log(string _user_id, string _text, zapata::LogLevel _level, string 
 	zapata::tostr(_log, (int) (_tp.tv_usec / 1000));
 	_log.insert(_log.length(), ",\"level\":");
 	zapata::tostr(_log, (int) _level);
-	_log.insert(_log.length(), ",\"user_id\": \"");
+	_log.insert(_log.length(), ",\"user_id\":\"");
 	_log.insert(_log.length(), _user_id);
 	_log.insert(_log.length(), "\",\"pid\":");
 	zapata::tostr(_log, zapata::log_pid);
-	_log.insert(_log.length(), ",\"exec\": \"");
+	_log.insert(_log.length(), ",\"exec\":\"");
 	_log.insert(_log.length(), * zapata::log_pname);
-	_log.insert(_log.length(), "\" }");
+	_log.insert(_log.length(), "\",\"file\":\"");
+	_log.insert(_log.length(), _file);
+	_log.insert(_log.length(), "\",\"line\":");
+	zapata::tostr(_log, _line);
+	_log.insert(_log.length(), "}");
 
 	(* zapata::log_fd) << _log << endl << flush;
 }

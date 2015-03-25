@@ -160,7 +160,7 @@ zapata::JSONElementT::JSONElementT(bool _value) : __parent( nullptr ) {
 	this->__target.__boolean = _value;
 }
 
-zapata::JSONElementT::JSONElementT(time_t _value) : __parent( nullptr ) {
+zapata::JSONElementT::JSONElementT(zapata::mstime_t _value) : __parent( nullptr ) {
 	this->type( zapata::JSDate);
 	this->__target.__date = _value;
 }
@@ -334,13 +334,19 @@ bool zapata::JSONElementT::bln() {
 	return this->__target.__boolean;
 }
 
-time_t zapata::JSONElementT::date() {
+zapata::mstime_t zapata::JSONElementT::date() {
 	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, "this element is not of type JSDate", 0, 0);
 	if (this->__target.__type == zapata::JSString) {
 		time_t _n = 0;
+		int _ms = 0;
 		string _s(this->__target.__string.get()->data());
-		zapata::fromstr(_s, &_n, "%Y-%m-%dT%H-%M-%S.000Z");
-		return _n;
+		size_t _idx = _s.rfind(".");
+		string _mss(_s.substr(_idx + 1));
+		_mss.assign(_mss.substr(0, _mss.length() - 1));
+		_s.assign(_s.substr(0, _idx));
+		zapata::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
+		zapata::fromstr(_mss, &_ms);
+		return _n * 1000 + _ms;
 	}
 	return this->__target.__date;
 }
@@ -522,7 +528,10 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 		}
 		case zapata::JSDate : {
 			string _date;
-			zapata::tostr(_date, this->__target.__date, "%Y-%m-%dT%H:%M:%S.000Z");
+			zapata::tostr(_date, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			_date.insert(_date.length(), ".");
+			zapata::tostr(_date, (size_t) this->__target.__date % 1000);
+			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
 		}
@@ -546,7 +555,7 @@ void zapata::JSONElementT::stringify(string& _out) {
 			zapata::replace(_str, "\r", "\\\b");
 			zapata::replace(_str, "\t", "\\\t");
 			_out.insert(_out.length(), "\"");
-			_out.insert(_out.length(), this->str());
+			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -568,7 +577,10 @@ void zapata::JSONElementT::stringify(string& _out) {
 		}
 		case zapata::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zapata::tostr(_out, this->__target.__date, "%Y-%m-%dT%H-%M-%S.000Z");
+			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			_out.insert(_out.length(), ".");
+			zapata::tostr(_out, (size_t) this->__target.__date % 1000);
+			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -612,7 +624,10 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 		}
 		case zapata::JSDate : {
 			string _date;
-			zapata::tostr(_date, this->__target.__date, "%Y-%m-%dT%H:%M:%S.000Z");
+			zapata::tostr(_date, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			_date.insert(_date.length(), ".");
+			zapata::tostr(_date, (size_t) this->__target.__date % 1000);
+			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
 		}
@@ -639,7 +654,7 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			zapata::replace(_str, "\r", "\\\b");
 			zapata::replace(_str, "\t", "\\\t");
 			_out.insert(_out.length(), "\"");
-			_out.insert(_out.length(), this->str());
+			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -661,7 +676,10 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 		}
 		case zapata::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zapata::tostr(_out, this->__target.__date, "%Y-%m-%dT%H-%M-%S.000Z");
+			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			_out.insert(_out.length(), ".");
+			zapata::tostr(_out, (size_t) this->__target.__date % 1000);
+			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -829,7 +847,7 @@ void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
 		_i.second->prettify(_out, _n_tabs + 1);
 	}
 	_out.insert(_out.length(), "\n");
-	_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+	_out.insert(_out.length(), string(_n_tabs, '\t'));
 	_out.insert(_out.length(), "}");
 }
 
@@ -1046,7 +1064,10 @@ zapata::JSONPtr::operator string() {
 			break;
 		}
 		case zapata::JSDate : {
-			zapata::tostr(_out, this->get()->date(), "%Y-%m-%dT%H-%M-%S.000Z");
+			zapata::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
+			_out.insert(_out.length(), ".");
+			zapata::tostr(_out, (size_t) this->get()->date() % 1000);
+			_out.insert(_out.length(), "Z");
 			break;
 		}
 	}
@@ -1092,10 +1113,10 @@ zapata::JSONPtr::operator int() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return this->get()->obj()->size();;
+			return this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return this->get()->arr()->size();;
+			return this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			int _n = 0;
@@ -1128,10 +1149,10 @@ zapata::JSONPtr::operator long() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return this->get()->obj()->size();;
+			return this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return this->get()->arr()->size();;
+			return this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			long _n = 0;
@@ -1164,10 +1185,10 @@ zapata::JSONPtr::operator long long() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return this->get()->obj()->size();;
+			return this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return this->get()->arr()->size();;
+			return this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			long long _n = 0;
@@ -1201,10 +1222,10 @@ zapata::JSONPtr::operator unsigned int() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return this->get()->obj()->size();;
+			return this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return this->get()->arr()->size();;
+			return this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			unsigned int _n = 0;
@@ -1238,10 +1259,10 @@ zapata::JSONPtr::operator size_t() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return this->get()->obj()->size();;
+			return this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return this->get()->arr()->size();;
+			return this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			size_t _n = 0;
@@ -1274,10 +1295,10 @@ zapata::JSONPtr::operator double() {
 	}
 	switch(this->get()->type()) {
 		case zapata::JSObject : {
-			return (double) this->get()->obj()->size();;
+			return (double) this->get()->obj()->size();
 		}
 		case zapata::JSArray : {
-			return (double) this->get()->arr()->size();;
+			return (double) this->get()->arr()->size();
 		}
 		case zapata::JSString : {
 			double _n = 0;
@@ -1299,6 +1320,45 @@ zapata::JSONPtr::operator double() {
 		}
 		case zapata::JSDate : {
 			return (double) this->get()->date();
+		}
+	}
+	return 0;
+}
+
+zapata::JSONPtr::operator zapata::mstime_t() {
+	if (this->get() == nullptr) {
+		return 0;
+	}
+	switch(this->get()->type()) {
+		case zapata::JSObject : {
+			struct timeval _tp;
+			gettimeofday(& _tp, nullptr);
+			return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
+		}
+		case zapata::JSArray : {
+			struct timeval _tp;
+			gettimeofday(& _tp, nullptr);
+			return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
+		}
+		case zapata::JSString : {
+			return this->get()->date();
+		}
+		case zapata::JSInteger : {
+			return (zapata::mstime_t) this->get()->intr();
+		}
+		case zapata::JSDouble : {
+			double _intpart;
+			double _fracpart = modf(this->get()->dbl(), &_intpart);
+			return (((long long) _intpart) * 1000) + _fracpart;
+		}
+		case zapata::JSBoolean : {
+			return (zapata::mstime_t) this->get()->bln();
+		}
+		case zapata::JSNil : {
+			return 0;
+		}
+		case zapata::JSDate : {
+			return this->get()->date();
 		}
 	}
 	return 0;
