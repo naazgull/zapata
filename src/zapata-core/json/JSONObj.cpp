@@ -160,7 +160,7 @@ zapata::JSONElementT::JSONElementT(bool _value) : __parent( nullptr ) {
 	this->__target.__boolean = _value;
 }
 
-zapata::JSONElementT::JSONElementT(zapata::mstime_t _value) : __parent( nullptr ) {
+zapata::JSONElementT::JSONElementT(zapata::timestamp_t _value) : __parent( nullptr ) {
 	this->type( zapata::JSDate);
 	this->__target.__date = _value;
 }
@@ -334,7 +334,7 @@ bool zapata::JSONElementT::bln() {
 	return this->__target.__boolean;
 }
 
-zapata::mstime_t zapata::JSONElementT::date() {
+zapata::timestamp_t zapata::JSONElementT::date() {
 	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, "this element is not of type JSDate", 0, 0);
 	if (this->__target.__type == zapata::JSString) {
 		time_t _n = 0;
@@ -530,7 +530,14 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 			string _date;
 			zapata::tostr(_date, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_date.insert(_date.length(), ".");
-			zapata::tostr(_date, (size_t) this->__target.__date % 1000);
+			size_t _remainder = this->__target.__date % 1000;
+			if (_remainder < 100) {
+				_date.insert(_date.length(), "0");
+				if (_remainder < 10) {
+					_date.insert(_date.length(), "0");
+				}
+			}
+			zapata::tostr(_date, _remainder);
 			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
@@ -579,7 +586,14 @@ void zapata::JSONElementT::stringify(string& _out) {
 			_out.insert(_out.length(), "\"");
 			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
-			zapata::tostr(_out, (size_t) this->__target.__date % 1000);
+			size_t _remainder = this->__target.__date % 1000;
+			if (_remainder < 100) {
+				_out.insert(_out.length(), "0");
+				if (_remainder < 10) {
+					_out.insert(_out.length(), "0");
+				}
+			}
+			zapata::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
@@ -626,7 +640,14 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			string _date;
 			zapata::tostr(_date, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_date.insert(_date.length(), ".");
-			zapata::tostr(_date, (size_t) this->__target.__date % 1000);
+			size_t _remainder = this->__target.__date % 1000;
+			if (_remainder < 100) {
+				_date.insert(_date.length(), "0");
+				if (_remainder < 10) {
+					_date.insert(_date.length(), "0");
+				}
+			}
+			zapata::tostr(_date, _remainder);
 			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
@@ -678,7 +699,14 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			_out.insert(_out.length(), "\"");
 			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
-			zapata::tostr(_out, (size_t) this->__target.__date % 1000);
+			size_t _remainder = this->__target.__date % 1000;
+			if (_remainder < 100) {
+				_out.insert(_out.length(), "0");
+				if (_remainder < 10) {
+					_out.insert(_out.length(), "0");
+				}
+			}
+			zapata::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
@@ -1066,7 +1094,14 @@ zapata::JSONPtr::operator string() {
 		case zapata::JSDate : {
 			zapata::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
-			zapata::tostr(_out, (size_t) this->get()->date() % 1000);
+			size_t _remainder = this->get()->date() % 1000;
+			if (_remainder < 100) {
+				_out.insert(_out.length(), "0");
+				if (_remainder < 10) {
+					_out.insert(_out.length(), "0");
+				}
+			}
+			zapata::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			break;
 		}
@@ -1325,7 +1360,7 @@ zapata::JSONPtr::operator double() {
 	return 0;
 }
 
-zapata::JSONPtr::operator zapata::mstime_t() {
+zapata::JSONPtr::operator zapata::timestamp_t() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
@@ -1344,15 +1379,13 @@ zapata::JSONPtr::operator zapata::mstime_t() {
 			return this->get()->date();
 		}
 		case zapata::JSInteger : {
-			return (zapata::mstime_t) this->get()->intr();
+			return (zapata::timestamp_t) this->get()->intr();
 		}
 		case zapata::JSDouble : {
-			double _intpart;
-			double _fracpart = modf(this->get()->dbl(), &_intpart);
-			return (((long long) _intpart) * 1000) + _fracpart;
+			return (zapata::timestamp_t) this->get()->dbl();
 		}
 		case zapata::JSBoolean : {
-			return (zapata::mstime_t) this->get()->bln();
+			return (zapata::timestamp_t) this->get()->bln();
 		}
 		case zapata::JSNil : {
 			return 0;

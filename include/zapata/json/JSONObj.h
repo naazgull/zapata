@@ -47,7 +47,7 @@ using namespace __gnu_cxx;
 
 
 namespace zapata {
-	typedef unsigned long long mstime_t;
+	typedef unsigned long long timestamp_t;
 
 	class JSONElementT;
 	class JSONObj;
@@ -81,7 +81,7 @@ namespace zapata {
 #endif
 		operator size_t();
 		operator double();
-		operator mstime_t();
+		operator timestamp_t();
 		operator JSONObj();
 		operator JSONArr();
 		operator JSONObj&();
@@ -310,7 +310,7 @@ namespace zapata {
 			double __double;
 			bool __boolean;
 			void* __nil;
-			zapata::mstime_t __date;
+			zapata::timestamp_t __date;
 		};
 	} JSONUnion;
 
@@ -326,7 +326,7 @@ namespace zapata {
 		JSONElementT(long long _value);
 		JSONElementT(double _value);
 		JSONElementT(bool _value);
-		JSONElementT(zapata::mstime_t _value);
+		JSONElementT(zapata::timestamp_t _value);
 		JSONElementT(int _value);
 		JSONElementT(size_t _value);
 #ifdef __LP64__
@@ -352,7 +352,7 @@ namespace zapata {
 		long long intr();
 		double dbl();
 		bool bln();
-		zapata::mstime_t date();
+		zapata::timestamp_t date();
 		double number();
 
 		JSONElementT& operator<<(const char* _in);

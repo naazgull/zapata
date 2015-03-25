@@ -549,7 +549,7 @@ zapata::JSONPtr zapata::mongodb::patch_from_collection(zapata::JSONObj& _config,
 	mongo::BSONObjBuilder _bo;
 	zapata::mongodb::tosetcommand(_payload, _bo);
 	mongo::BSONObj _patch = _bo.obj();
-	_conn->update(_collection, _query, BSON( "$set" << _patch) );
+	_conn->update(_collection, _query, BSON( "$set" << _patch), false, true);
 	assertz(_conn->getLastError().length() == 0, string("There has been an error trying to patch the document: ") + _conn->getLastError(), zapata::HTTP412, zapata::ERRGeneric);		
 
 	_conn.done();
