@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #include <zapata/api/RESTPool.h>
 #include <zapata/api/codes_rest.h>
 #include <zapata/api/codes_users.h>
@@ -664,7 +663,212 @@ namespace zapata {
 	}
 
 	namespace groups {
-		
+
+		void collection(zapata::RESTPool& _pool) {	
+			_pool.on("^/groups$",
+			//get
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+
+					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+
+					string _text = (string) _req_body;
+					_rep->status(zapata::HTTP200);
+					_rep->body(_text);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Type", "application/json"); 
+					_rep->header("Content-Length", std::to_string(_text.length()));
+				},
+				no_put,
+			//post
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					string _body = _req->body();
+					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+
+					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+
+					/**
+					 * Put your field validations here, using 'assertz'
+					 *
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 */
+
+					zapata::JSONPtr _req_body = zapata::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
+					string _text = (string) _req_body;
+					_rep->status(zapata::HTTP201);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Location", (string) _req_body["href"]);
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+			//delete
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+
+					string _text = (string) zapata::mongodb::delete_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+			//head
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+
+					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+
+					string _text = (string) _req_body;
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Type", "application/json"); 
+					_rep->header("Content-Length", std::to_string(_text.length()));
+				},
+				no_trace, 
+				no_options, 
+			//patch
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					string _body = _req->body();
+					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+
+					string _content_type = _req->header("Content-Type");
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+
+					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+
+					/**
+					 * Put your field validations here, using 'assertz'
+					 *
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 */
+
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+
+					string _text = (string) zapata::mongodb::patch_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+				no_connect
+			);
+		}
+
+		void document(zapata::RESTPool& _pool) {	
+			_pool.on("^/groups/([^/]+)$",
+			//get
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+
+					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+
+					string _text = (string) _req_body;
+					_rep->status(zapata::HTTP200);
+					_rep->body(_text);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Type", "application/json"); 
+					_rep->header("Content-Length", std::to_string(_text.length()));
+				},
+			//put
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					string _body = _req->body();
+					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+
+					string _content_type = _req->header("Content-Type");
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+
+					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+
+					/**
+					 * Put your field validations here, using 'assertz'
+					 *
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 */
+
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+
+					string _text = (string) zapata::mongodb::replace_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+				no_post,
+			//delete
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+
+					string _text = (string) zapata::mongodb::delete_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+			//head
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+
+					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+
+					string _text = (string) _req_body;
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Type", "application/json"); 
+					_rep->header("Content-Length", std::to_string(_text.length()));
+				},
+				no_trace, 
+				no_options, 
+			//patch
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+					string _body = _req->body();
+					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+
+					string _content_type = _req->header("Content-Type");
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+
+					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+
+					/**
+					 * Put your field validations here, using 'assertz'
+					 *
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 */
+
+					zapata::JSONObj _params;
+					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+
+					string _text = (string) zapata::mongodb::patch_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
+					_rep->status(zapata::HTTP200);
+					_rep->header("Cache-Control", "no-store");
+					_rep->header("Pragma", "no-cache");
+					_rep->header("Content-Length", std::to_string(_text.length()));
+					_rep->header("Content-Type", "application/json"); 
+					_rep->body(_text);
+				},
+				no_connect
+			);
+		}
 	}
 }
 
@@ -675,6 +879,9 @@ extern "C" void populate(zapata::RESTPool& _pool) {
 	zapata::users::connect(_pool);
 	zapata::users::token(_pool);
 	zapata::users::login(_pool);
+
+	zapata::groups::collection(_pool);
+	zapata::groups::document(_pool);
 }
 
 extern "C" int zapata_users() {

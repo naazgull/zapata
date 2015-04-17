@@ -30,3 +30,5 @@ src/zapata-rest-server/zapata-rest-daemon
 */**/config.h.in
 */**/stamp-h1
 deps/
+docs/html/
+docs/latex/
