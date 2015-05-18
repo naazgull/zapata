@@ -202,6 +202,8 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		});
 	}
 
+	assertz(this->configuration()["zapata"]["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
+
 	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];
 	string _text("starting RESTful server on port ");
 	zapata::tostr(_text, _port);
@@ -213,6 +215,30 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		this->__jobs.push_back(_job);
 		(* _job).pool(& this->__pool);
 		(* _job)->start();
+	}
+
+	if (this->configuration()["zapata"]["rest"]["websocket"]["port"]->ok()) {
+		zapata::Job _ws([ this ] (zapata::Job& _self) -> void {
+			unsigned int _ws_port = (unsigned int) this->configuration()["zapata"]["rest"]["websocket"]["port"];
+			zapata::websocketserverstream _sws;
+			string _text("starting RESTful web-socket listener on port ");
+			zapata::tostr(_text, _ws_port);
+			zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
+			_sws.bind(_ws_port);
+
+			for (; true; ) {
+				int _fd_ws = -1;
+				_sws.accept(& _fd_ws);
+				
+				zapata::websocketstream _cws(_fd_ws);
+				_cws.handshake();
+				_cws.unassign();
+				
+				size_t _next = this->next();
+				(* this->__jobs.at(_next)).assign(_fd_ws);
+			}
+		});
+		_ws->start();
 	}
 }
 

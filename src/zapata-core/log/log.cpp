@@ -46,10 +46,6 @@ namespace zapata {
 }
 
 void zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
-	zapata::log("0000000", _text, _level, _host, _line, _file);
-}
-
-void zapata::log(string _user_id, string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
 	if (zapata::log_fd == nullptr) {
 		return;
 	}
@@ -77,9 +73,7 @@ void zapata::log(string _user_id, string _text, zapata::LogLevel _level, string 
 	zapata::tostr(_log, (int) (_tp.tv_usec / 1000));
 	_log.insert(_log.length(), ",\"level\":");
 	zapata::tostr(_log, (int) _level);
-	_log.insert(_log.length(), ",\"user_id\":\"");
-	_log.insert(_log.length(), _user_id);
-	_log.insert(_log.length(), "\",\"pid\":");
+	_log.insert(_log.length(), ",\"pid\":");
 	zapata::tostr(_log, zapata::log_pid);
 	_log.insert(_log.length(), ",\"exec\":\"");
 	_log.insert(_log.length(), * zapata::log_pname);

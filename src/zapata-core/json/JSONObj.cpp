@@ -189,6 +189,36 @@ zapata::JSONType zapata::JSONElementT::type() {
 	return (zapata::JSONType)  this->__target.__type;
 }
 
+string zapata::JSONElementT::demangle() {
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			return "object";
+		}
+		case zapata::JSArray : {
+			return "array";
+		}
+		case zapata::JSString : {
+			return "string";
+		}
+		case zapata::JSInteger : {
+			return "integer";
+		}
+		case zapata::JSDouble : {
+			return "number";
+		}
+		case zapata::JSBoolean : {
+			return "boolean";
+		}
+		case zapata::JSNil : {
+			return "null";
+		}
+		case zapata::JSDate : {
+			return "date";
+		}
+	}
+	return "undefined";
+}
+
 void zapata::JSONElementT::type(JSONType _in) {
 	assertz(_in >= 0, "the type must be a valid value", 0, 0);
 	
@@ -305,37 +335,37 @@ void zapata::JSONElementT::parent(JSONElementT* _parent) {
 }
 
 zapata::JSONObj& zapata::JSONElementT::obj() {
-	assertz(this->__target.__type == zapata::JSObject, "this element is not of type JSObject", 0, 0);
+	assertz(this->__target.__type == zapata::JSObject, string("this element is not of type JSObject: ") + this->stringify(), 0, 0);
 	return this->__target.__object;
 }
 
 zapata::JSONArr& zapata::JSONElementT::arr() {
-	assertz(this->__target.__type == zapata::JSArray, "this element is not of type JSArray", 0, 0);
+	assertz(this->__target.__type == zapata::JSArray, string("this element is not of type JSArray: ") + this->stringify(), 0, 0);
 	return this->__target.__array;
 }
 
 string zapata::JSONElementT::str() {
-	assertz(this->__target.__type == zapata::JSString, "this element is not of type JSString", 0, 0);
+	assertz(this->__target.__type == zapata::JSString, string("this element is not of type JSString: ") + this->stringify(), 0, 0);
 	return *(this->__target.__string.get());
 }
 
 long long zapata::JSONElementT::intr() {
-	assertz(this->__target.__type == zapata::JSInteger, "this element is not of type JSInteger", 0, 0);
+	assertz(this->__target.__type == zapata::JSInteger, string("this element is not of type JSInteger: ") + this->stringify(), 0, 0);
 	return this->__target.__integer;
 }
 
 double zapata::JSONElementT::dbl() {
-	assertz(this->__target.__type == zapata::JSDouble, "this element is not of type JSDouble", 0, 0);
+	assertz(this->__target.__type == zapata::JSDouble, string("this element is not of type JSDouble: ") + this->stringify(), 0, 0);
 	return this->__target.__double;
 }
 
 bool zapata::JSONElementT::bln() {
-	assertz(this->__target.__type == zapata::JSBoolean, "this element is not of type JSBoolean", 0, 0);
+	assertz(this->__target.__type == zapata::JSBoolean, string("this element is not of type JSBoolean: ") + this->stringify(), 0, 0);
 	return this->__target.__boolean;
 }
 
 zapata::timestamp_t zapata::JSONElementT::date() {
-	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, "this element is not of type JSDate", 0, 0);
+	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, string("this element is not of type JSDate: ") + this->stringify(), 0, 0);
 	if (this->__target.__type == zapata::JSString) {
 		time_t _n = 0;
 		int _ms = 0;
@@ -352,7 +382,7 @@ zapata::timestamp_t zapata::JSONElementT::date() {
 }
 
 double zapata::JSONElementT::number() {
-	assertz(this->__target.__type == zapata::JSInteger || this->__target.__type == zapata::JSDouble || this->__target.__type == zapata::JSBoolean, "this element is not of type JSInteger, JSDouble or JSBoolean", 0, 0);
+	assertz(this->__target.__type == zapata::JSInteger || this->__target.__type == zapata::JSDouble || this->__target.__type == zapata::JSBoolean, string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
 	switch(this->__target.__type) {
 		case zapata::JSInteger : {
 			return (double) this->__target.__integer;
@@ -370,8 +400,43 @@ double zapata::JSONElementT::number() {
 	return 0;
 }
 
+zapata::JSONPtr zapata::JSONElementT::clone() {
+	switch(this->type()) {
+		case zapata::JSObject : {
+			return this->obj()->clone();
+		}
+		case zapata::JSArray : {
+			return this->arr()->clone();
+		}
+		case zapata::JSString : {
+			std::string _v = this->str();
+			return make_ptr(_v);
+		}
+		case zapata::JSInteger : {
+			int _v = this->intr();
+			return make_ptr(_v);
+		}
+		case zapata::JSDouble : {
+			double _v = this->dbl();
+			return make_ptr(_v);
+		}
+		case zapata::JSBoolean : {
+			bool _v = this->bln();
+			return make_ptr(_v);
+		}
+		case zapata::JSNil : {
+			return zapata::undefined;
+		}
+		case zapata::JSDate : {
+			zapata::timestamp_t _v = this->date();
+			return make_ptr(_v);
+		}
+	}
+	return zapata::undefined;	
+}
+
 zapata::JSONElementT& zapata::JSONElementT::operator<<(const char* _in) {
-	(*this) << string(_in);
+	(* this) << string(_in);
 	return * this;
 }
 
@@ -491,6 +556,49 @@ bool zapata::JSONElementT::operator!=(zapata::JSONPtr& _rhs) {
 	return * this != * _rhs;
 }
 
+
+zapata::JSONPtr zapata::JSONElementT::getPath(std::string _path, std::string _separator) {
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			return this->__target.__object->getPath(_path, _separator);
+		}
+		case zapata::JSArray : {
+			return this->__target.__array->getPath(_path, _separator);
+		}
+		case zapata::JSString :
+		case zapata::JSInteger :
+		case zapata::JSDouble :
+		case zapata::JSBoolean :
+		case zapata::JSNil :
+		case zapata::JSDate : {
+			return zapata::undefined;
+		}
+	}
+	return zapata::undefined;
+}
+
+void zapata::JSONElementT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			return this->__target.__object->setPath(_path, _value, _separator);
+		}
+		case zapata::JSArray : {
+			return this->__target.__array->setPath(_path, _value, _separator);
+		}
+		case zapata::JSString :
+		case zapata::JSInteger :
+		case zapata::JSDouble :
+		case zapata::JSBoolean :
+		case zapata::JSNil :
+		case zapata::JSDate : {
+			return;
+		}
+	}
+	return;
+}
+
 void zapata::JSONElementT::stringify(ostream& _out) {
 	switch(this->__target.__type) {
 		case zapata::JSObject : {
@@ -515,7 +623,7 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 			break;
 		}
 		case zapata::JSDouble : {
-			_out << this->__target.__double << flush;
+			_out << fixed << this->__target.__double << flush;
 			break;
 		}
 		case zapata::JSBoolean : {
@@ -601,6 +709,12 @@ void zapata::JSONElementT::stringify(string& _out) {
 	}
 }
 
+std::string zapata::JSONElementT::stringify() {
+	string _out;
+	this->stringify(_out);
+	return _out;
+}
+
 void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 	switch(this->__target.__type) {
 		case zapata::JSObject : {
@@ -625,7 +739,7 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			break;
 		}
 		case zapata::JSDouble : {
-			_out << this->__target.__double << flush;
+			_out << fixed << this->__target.__double << flush;
 			break;
 		}
 		case zapata::JSBoolean : {
@@ -773,6 +887,104 @@ void zapata::JSONObjT::pop(string _name) {
 	}
 }
 
+zapata::JSONPtr zapata::JSONObjT::getPath(std::string _path, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		return zapata::undefined;
+	}
+	
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			_current = _current[_part];
+		}
+		else {
+			return zapata::undefined;
+		}
+	}
+	return _current;
+}
+
+void zapata::JSONObjT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		this->push(_part);
+		if (_iss.good()) {
+			zapata::JSONObj _new;
+			this->push(new JSONElementT(_new));
+			_current = (* this)[_part];
+		}
+		else {
+			this->push(_value.get());
+		}
+	}
+
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			if (_iss.good()) {
+				_current = _current[_part];
+			}
+			else {
+				_current >> _part;
+				_current << _part << _value;
+			}
+		}
+		else {
+			if (_iss.good()) {
+				zapata::JSONObj _new;
+				_current << _part << _new;
+				_current = _current[_part];
+			}
+			else {
+				_current << _part << _value;
+			}
+		}
+	}
+}
+
+void zapata::JSONObjT::delPath(std::string _path, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		return;
+	}
+
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			if (_iss.good()) {
+				_current = _current[_part];
+			}
+			else {
+				_current >> _part;
+			}
+		}
+		else {
+			return;
+		}
+	}
+}
+
+zapata::JSONPtr zapata::JSONObjT::clone() {
+	zapata::JSONObj _return;
+	for (auto _f : * this) {
+		_return << _f.first << _f.second->clone();
+	}	
+	return make_ptr(_return);
+}
+
 bool zapata::JSONObjT::operator==(zapata::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
@@ -835,12 +1047,12 @@ void zapata::JSONObjT::stringify(string& _out) {
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out.insert(_out.length(), ", ");
+			_out.insert(_out.length(), ",");
 		}
 		_first = false;
 		_out.insert(_out.length(), "\"");
 		_out.insert(_out.length(), _i.first);
-		_out.insert(_out.length(), "\" : ");
+		_out.insert(_out.length(), "\":");
 		_i.second->stringify(_out);
 	}
 	_out.insert(_out.length(), "}");
@@ -851,22 +1063,23 @@ void zapata::JSONObjT::stringify(ostream& _out) {
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out << ", ";
+			_out << ",";
 		}
 		_first = false;
-		_out << "\"" << _i.first << "\" : " << flush;
+		_out << "\"" << _i.first << "\":" << flush;
 		_i.second->stringify(_out);
 	}
 	_out << "}" << flush;
 }
 
 void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
-	_out.insert(_out.length(), "{\n");
+	_out.insert(_out.length(), "{");
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out.insert(_out.length(), ",\n");
+			_out.insert(_out.length(), ",");
 		}
+		_out.insert(_out.length(), "\n");
 		_first = false;
 		_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
 		_out.insert(_out.length(), "\"");
@@ -874,23 +1087,29 @@ void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
 		_out.insert(_out.length(), "\" : ");
 		_i.second->prettify(_out, _n_tabs + 1);
 	}
-	_out.insert(_out.length(), "\n");
-	_out.insert(_out.length(), string(_n_tabs, '\t'));
+	if (!_first) {
+		_out.insert(_out.length(), "\n");
+		_out.insert(_out.length(), string(_n_tabs, '\t'));
+	}
 	_out.insert(_out.length(), "}");
 }
 
 void zapata::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
-	_out << "{\n" << flush;
+	_out << "{" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out << ",\n ";
+			_out << ",";
 		}
+		_out << "\n ";
 		_first = false;
 		_out << string(_n_tabs + 1, '\t') << "\"" << _i.first << "\" : " << flush;
 		_i.second->prettify(_out, _n_tabs + 1);
 	}
-	_out << "\n" << string(_n_tabs, '\t') << "}" << flush;
+	if (!_first) {		
+		_out << "\n" << string(_n_tabs, '\t') << flush;
+	}
+	_out << "}" << flush;
 }
 
 /*JSON ARRAY*/
@@ -929,6 +1148,104 @@ void zapata::JSONArrT::pop(size_t _idx) {
 	assertz(_idx >= 0, "the index of the element you want to remove must be higher then 0", 0, 0);
 	assertz(_idx < this->size(), "the index of the element you want to remove must be lower than the array size", 0, 0);
 	this->erase(this->begin() + _idx);
+}
+
+zapata::JSONPtr zapata::JSONArrT::getPath(std::string _path, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		return zapata::undefined;
+	}
+
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			_current = _current[_part];
+		}
+		else {
+			return zapata::undefined;
+		}
+	}
+	return _current;			
+}
+
+
+void zapata::JSONArrT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		if (_iss.good()) {
+			zapata::JSONArr _new;
+			this->push(new JSONElementT(_new));
+			_current = _current[this->size() - 1];
+		}
+		else {
+			this->push(_value.get());
+		}
+	}
+
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			if (_iss.good()) {
+				_current = _current[_part];
+			}
+			else {
+				_current >> _part;
+				_current << _part << _value;
+			}
+		}
+		else {
+			if (_iss.good()) {
+				zapata::JSONObj _new;
+				_current << _part << _new;
+				_current = _current[_part];
+			}
+			else {
+				_current << _part << _value;
+			}
+		}
+	}
+}
+
+void zapata::JSONArrT::delPath(std::string _path, std::string _separator) {
+	std::istringstream _iss(_path);
+	std::string _part;
+
+	getline(_iss, _part, _separator[0]);
+	zapata::JSONPtr _current = (* this)[_part];
+	if (!_current->ok()) {
+		return;
+	}
+
+	while(_iss.good()) {
+		getline(_iss, _part, _separator[0]);
+		if (_current[_part]->ok()) {
+			if (_iss.good()) {
+				_current = _current[_part];
+			}
+			else {
+				_current >> _part;
+			}
+		}
+		else {
+			return;
+		}
+	}
+}
+
+zapata::JSONPtr zapata::JSONArrT::clone() {
+	zapata::JSONArr _return;
+	for (auto _f : * this) {
+		_return << _f->clone();
+	}	
+	return make_ptr(_return);
 }
 
 bool zapata::JSONArrT::operator==(zapata::JSONArrT& _rhs) {
@@ -989,7 +1306,7 @@ void zapata::JSONArrT::stringify(string& _out) {
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out.insert(_out.length(), ", ");
+			_out.insert(_out.length(), ",");
 		}
 		_first = false;
 		_i->stringify(_out);
@@ -1002,7 +1319,7 @@ void zapata::JSONArrT::stringify(ostream& _out) {
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out << ", ";
+			_out << ",";
 		}
 		_first = false;
 		_i->stringify(_out);
@@ -1011,33 +1328,40 @@ void zapata::JSONArrT::stringify(ostream& _out) {
 }
 
 void zapata::JSONArrT::prettify(string& _out, uint _n_tabs) {
-	_out.insert(_out.length(), "[\n");
+	_out.insert(_out.length(), "[");
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out.insert(_out.length(), ",\n");
+			_out.insert(_out.length(), ",");
 		}
+		_out.insert(_out.length(), "\n");
 		_first = false;
 		_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
 		_i->prettify(_out, _n_tabs + 1);
 	}
-	_out.insert(_out.length(), "\n]");
-	_out.insert(_out.length(), string(_n_tabs + 1, '\t'));
+	if (!_first) {
+		_out.insert(_out.length(), "\n");	
+		_out.insert(_out.length(), string(_n_tabs, '\t'));
+	}
 	_out.insert(_out.length(), "]");
 }
 
 void zapata::JSONArrT::prettify(ostream& _out, uint _n_tabs) {
-	_out << "[\n" << flush;
+	_out << "[" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
 		if (!_first) {
-			_out << ",\n ";
+			_out << ",";
 		}
+		_out << "\n ";
 		_first = false;
 		_out << string(_n_tabs + 1, '\t')<< flush;
 		_i->prettify(_out, _n_tabs + 1);
 	}
-	_out << "\n" << string(_n_tabs, '\t') << "]" << flush;
+	if (!_first) {
+		_out << "\n" << string(_n_tabs, '\t');
+	}
+	_out << "]" << flush;
 }
 
 /*JSON POINTER TO ELEMENT*/
@@ -1398,22 +1722,22 @@ zapata::JSONPtr::operator zapata::timestamp_t() {
 }
 
 zapata::JSONPtr::operator JSONObj() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, "this element is not of type JSObject", 0, 0);
+	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
 	return this->get()->obj();
 }
 
 zapata::JSONPtr::operator JSONArr() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, "this element is not of type JSArray", 0, 0);
+	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
 	return this->get()->arr();
 }
 
 zapata::JSONPtr::operator JSONObj&() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, "this element is not of type JSObject", 0, 0);
+	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
 	return this->get()->obj();
 }
 
 zapata::JSONPtr::operator JSONArr&() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, "this element is not of type JSArray", 0, 0);
+	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
 	return this->get()->arr();
 }
 

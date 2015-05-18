@@ -92,19 +92,7 @@ namespace zapata {
 		}
 
 		virtual bool __good() {
-			char _buf;
-			
-			int _opts = fcntl(this->__sock, F_GETFL);
-			_opts = _opts | O_NONBLOCK;
-			fcntl(this->__sock, F_SETFL, _opts);
-
-			int _err = ::recv(this->__sock, &_buf, 1, MSG_PEEK);
-			bool _ret = errno == EAGAIN || errno == EWOULDBLOCK || _err > 0;
-
-			_opts = _opts & ~O_NONBLOCK;
-			fcntl(this->__sock, F_SETFL, _opts);
-
-			return _ret;
+			return this->__sock != 0 && this->__sslstream != nullptr && this->__context != nullptr;
 		}
 
 	protected:
@@ -114,8 +102,16 @@ namespace zapata {
 				return __traits_type::eof();
 			}
 			int num = __buf_type::pptr() - __buf_type::pbase();
-			if (SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), num * char_size) != num)
+			if (SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), num * char_size) != num) {
+				SSL_free(this->__sslstream);
+				SSL_CTX_free(this->__context);
+				::shutdown(this->__sock, SHUT_RDWR);
+				::close(this->__sock);
+				this->__sock = 0;
+				this->__sslstream = nullptr;
+				this->__context = nullptr;
 				return __traits_type::eof();
+			}
 			__buf_type::pbump(-num);
 			return num;
 		}
@@ -150,49 +146,13 @@ namespace zapata {
 
 			int num;
 			if ((num = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) <= 0) {
-				cout << "could not read from SSL: " << flush;
-				int _err = SSL_get_error(this->__sslstream, num);
-				switch(_err) {
-					case SSL_ERROR_ZERO_RETURN : {
-						cout << "SSL_ERROR_ZERO_RETURN" << endl << flush;
-						break;
-					}
-					case SSL_ERROR_WANT_READ : {
-						cout << "SSL_ERROR_WANT_READ" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_WANT_WRITE : {
-						cout << "SSL_ERROR_WANT_WRITE" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_WANT_CONNECT : {
-						cout << "SSL_ERROR_WANT_CONNECT" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_WANT_ACCEPT : {
-						cout << "SSL_ERROR_WANT_ACCEPT" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_WANT_X509_LOOKUP : {
-						cout << "SSL_ERROR_WANT_X509_LOOKUP" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_SYSCALL : {
-						cout << "SSL_ERROR_SYSCALL" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-					case SSL_ERROR_SSL : {
-						cout << "SSL_ERROR_SSL" << endl << flush;
-						cout << ERR_error_string(ERR_peek_last_error(), nullptr) << endl << flush;
-						break;
-					}
-				}
+				SSL_free(this->__sslstream);
+				SSL_CTX_free(this->__context);
+				::shutdown(this->__sock, SHUT_RDWR);
+				::close(this->__sock);
+				this->__sock = 0;
+				this->__sslstream = nullptr;
+				this->__context = nullptr;
 				return __traits_type::eof();
 			}
 
@@ -233,6 +193,7 @@ namespace zapata {
 
 		void close() {
 			if (__buf.get_socket() != 0) {
+				::shutdown(__buf.get_socket(), SHUT_RDWR);
 				::close(__buf.get_socket());
 			}
 			__stream_type::clear();
@@ -258,14 +219,18 @@ namespace zapata {
 			int _sd = socket(AF_INET, SOCK_STREAM, 0);
 			sockaddr_in _sin;
 			hostent *_he = gethostbyname(_host.c_str());
-
+			if (_he == nullptr) {
+				return false;
+			}
+			
 			std::copy(reinterpret_cast<char*>(_he->h_addr), reinterpret_cast<char*>(_he->h_addr) + _he->h_length, reinterpret_cast<char*>(&_sin.sin_addr.s_addr));
 			_sin.sin_family = AF_INET;
 			_sin.sin_port = htons(_port);
 
-			if (connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
+			if (::connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 				__stream_type::setstate(std::ios::failbit);
 				__buf.set_socket(0);
+				return false;
 			}
 			else {
 				SSL_library_init();
@@ -280,7 +245,7 @@ namespace zapata {
 					this->assign(_sd, _context);
 				}
 			}
-			return * this;
+			return true;
 		}
 	};
 
@@ -328,6 +293,7 @@ namespace zapata {
 			EVP_cleanup();
 			SSL_CTX_free(this->__context);
 			if (__buf.get_socket() != 0) {
+				::shutdown(__buf.get_socket(), SHUT_RDWR);
 				::close(__buf.get_socket());
 			}
 			__stream_type::clear();
@@ -377,15 +343,16 @@ namespace zapata {
 			this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
 			if (this->__sockfd < 0) {
 				__stream_type::setstate(std::ios::failbit);
-				throw zapata::ClosedException("Could not create server socket");
+				return false;
 			}
 
 			int _opt = 1;
 			if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &_opt, sizeof(_opt)) == SO_ERROR) {
+				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = -1;
 				__stream_type::setstate(std::ios::failbit);
-				throw zapata::ClosedException("Could not bind to the provided port");
+				return false;
 			}
 
 			struct sockaddr_in _serv_addr;
@@ -394,11 +361,12 @@ namespace zapata {
 			_serv_addr.sin_addr.s_addr = INADDR_ANY;
 			_serv_addr.sin_port = htons(_port);
 			if (::bind(this->__sockfd, (struct sockaddr *) &_serv_addr, sizeof(_serv_addr)) < 0) {
+				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = -1;
 				__buf.set_context(0);
 				__stream_type::setstate(std::ios::failbit);
-				throw zapata::ClosedException("Could not bind to the provided port");
+				return false;
 			}
 			::listen(this->__sockfd, 100);
 			__buf.set_socket(this->__sockfd);
@@ -412,7 +380,7 @@ namespace zapata {
 				int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
 
 				if (_newsockfd < 0) {
-					throw zapata::ClosedException("Could not accept client socket");
+					return false;
 				}
 
 				struct linger _so_linger;
@@ -432,7 +400,7 @@ namespace zapata {
 				int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
 
 				if (_newsockfd < 0) {
-					throw zapata::ClosedException("Could not accept client socket");
+					return false;
 				}
 
 				struct linger _so_linger;

@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 			zapata::tostr(_time, (long) ((double) _json["timestamp"]), "%FT%T");
 			string _cmd((string) _json["exec"]);
 			_cmd.assign(_cmd.substr(_cmd.rfind("/") + 1));
-			std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | \033[4;32m" << (((string) _json["user_id"]) + string(" @ ") + ((string) _json["host"])) << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
+			std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | \033[4;32m" << (string("@") + ((string) _json["host"])) << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
 		}
 		catch (...) {}
 	}
