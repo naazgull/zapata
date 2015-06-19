@@ -55,17 +55,17 @@ namespace zapata {
 		void tosetcommand(zapata::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
 
 		void get_query(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _query, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
-		zapata::JSONPtr get_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr patch_from_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
-		zapata::JSONPtr delete_from_collection(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr get_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr patch_from_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
-		zapata::JSONPtr delete_from_store(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr get_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr replace_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
-		zapata::JSONPtr patch_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
-		zapata::JSONPtr delete_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _params);
-		zapata::JSONPtr create_document(zapata::JSONObj& _options, string _mongo_collection, zapata::JSONObj& _payload);
+		zapata::JSONPtr get_collection(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr patch_from_collection(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_from_collection(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr get_store(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr patch_from_store(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_from_store(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr get_document(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr replace_document(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr patch_document(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload);
+		zapata::JSONPtr delete_document(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _params);
+		zapata::JSONPtr create_document(zapata::JSONPtr& _config,  string _mongo_collection, zapata::JSONObj& _payload);
 
 		float valid_mongo_version();
 	}

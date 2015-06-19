@@ -29,7 +29,6 @@ SOFTWARE.
 bool zapata::ws::handshake(zapata::socketstream& _s) {
 	string _key;
 	string _line;
-	short _end = 0;
 	do {
 		getline(_s, _line);
 		zapata::trim(_line);
@@ -95,7 +94,7 @@ bool zapata::ws::read(zapata::socketstream& _s, string& _out, int* _op_code) {
 	}
 
 	if (_mask) {
-		for (int _i = 0; _i < _masked.length(); _i++) {
+		for (size_t _i = 0; _i < _masked.length(); _i++) {
 			_out.push_back(_masked[_i] ^ _masking[_i % 4]);
 		}
 	}

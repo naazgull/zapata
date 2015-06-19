@@ -29,6 +29,7 @@ SOFTWARE.
 #include <regex.h>
 #include <string>
 #include <map>
+#include <memory>
 
 using namespace std;
 #if !defined __APPLE__
@@ -59,30 +60,29 @@ namespace zapata {
 
 	class RESTPool;
 
-	typedef std::function<void (zapata::HTTPReq&, zapata::HTTPRep&, zapata::JSONObj&, zapata::RESTPool&)> RESTHandler;
+	typedef std::shared_ptr<zapata::RESTPool> RESTPoolPtr;
+	typedef std::function<void (zapata::HTTPReq&, zapata::HTTPRep&, zapata::JSONPtr, zapata::RESTPoolPtr&)> RESTHandler;
 	typedef RESTHandler RESTCallback;
 	typedef vector<pair<regex_t*, vector<zapata::RESTHandler> > > RESTHandlerStack;
 
 	class RESTPool {
 		public:
-			RESTPool();
+			RESTPool(zapata::JSONObj& _options);
 			virtual ~RESTPool();
 
-			JSONObj& configuration();
-			void configuration(JSONObj* _conf);
+			zapata::JSONObj& options();
 
-			void on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
+			void on(std::vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
 			void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler);
 			void on(string _regex, zapata::RESTHandler _handlers[9]);
 			void on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect);
 
-			void trigger(HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
-			void trigger(string _url, HTTPReq& _req, HTTPRep& _rep, bool _is_ssl = false);
-			void trigger(string _url, HTTPMethod _method, HTTPRep& _rep, bool _is_ssl = false);
+			void trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			void trigger(std::string _url, zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			void trigger(std::string _url, zapata::HTTPMethod _method, zapata::HTTPRep& _rep, bool _is_ssl = false);
 
 		private:
-			JSONObj* __configuration;
-
+			zapata::JSONObj __options;
 			zapata::RESTHandler __default_get;
 			zapata::RESTHandler __default_put;
 			zapata::RESTHandler __default_post;
@@ -92,11 +92,13 @@ namespace zapata {
 			zapata::RESTHandler __default_options;
 			zapata::RESTHandler __default_patch;
 			zapata::RESTHandler __default_connect;
+			zapata::RESTHandlerStack __resources;
+			zapata::RESTPoolPtr __self;
 
-			RESTHandlerStack __resources;
-
-			void init(HTTPRep& _rep);
-			void process(HTTPReq& _req, HTTPRep& _rep);
+			void init(zapata::HTTPRep& _rep);
+			void init(zapata::HTTPReq& _req);
+			void resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
+			void process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep);
 	};
 
 }

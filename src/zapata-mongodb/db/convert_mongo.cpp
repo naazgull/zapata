@@ -478,7 +478,7 @@ void zapata::mongodb::get_query(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _q
 	}
 }
 
-zapata::JSONPtr zapata::mongodb::get_collection(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::get_collection(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -525,7 +525,7 @@ zapata::JSONPtr zapata::mongodb::get_collection(zapata::JSONObj& _config, string
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::patch_from_collection(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
+zapata::JSONPtr zapata::mongodb::patch_from_collection(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -557,7 +557,7 @@ zapata::JSONPtr zapata::mongodb::patch_from_collection(zapata::JSONObj& _config,
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::delete_from_collection(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::delete_from_collection(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -586,19 +586,19 @@ zapata::JSONPtr zapata::mongodb::delete_from_collection(zapata::JSONObj& _config
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::get_store(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::get_store(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	return zapata::mongodb::get_collection(_config,  _mongo_collection, _params);
 }
 
-zapata::JSONPtr zapata::mongodb::patch_from_store(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
+zapata::JSONPtr zapata::mongodb::patch_from_store(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
 	return zapata::mongodb::patch_from_collection(_config, _mongo_collection, _params, _payload);
 }
 
-zapata::JSONPtr zapata::mongodb::delete_from_store(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::delete_from_store(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	return zapata::mongodb::delete_from_collection(_config, _mongo_collection, _params);
 }
 
-zapata::JSONPtr zapata::mongodb::get_document(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::get_document(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -629,7 +629,7 @@ zapata::JSONPtr zapata::mongodb::get_document(zapata::JSONObj& _config, string _
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::replace_document(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
+zapata::JSONPtr zapata::mongodb::replace_document(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -669,7 +669,7 @@ zapata::JSONPtr zapata::mongodb::replace_document(zapata::JSONObj& _config, stri
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::patch_document(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
+zapata::JSONPtr zapata::mongodb::patch_document(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params, zapata::JSONObj& _payload) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -710,7 +710,7 @@ zapata::JSONPtr zapata::mongodb::patch_document(zapata::JSONObj& _config, string
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::delete_document(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _params) {
+zapata::JSONPtr zapata::mongodb::delete_document(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _params) {
 	zapata::JSONObj _out;
 
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
@@ -748,7 +748,7 @@ zapata::JSONPtr zapata::mongodb::delete_document(zapata::JSONObj& _config, strin
 	return zapata::JSONPtr(make_element(_out));
 }
 
-zapata::JSONPtr zapata::mongodb::create_document(zapata::JSONObj& _config, string _mongo_collection, zapata::JSONObj& _payload) {
+zapata::JSONPtr zapata::mongodb::create_document(zapata::JSONPtr& _config, string _mongo_collection, zapata::JSONObj& _payload) {
 	mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
 	if (_config["zapata"]["mongodb"]["user"]->ok()) {
 		_conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) _config["zapata"]["mongodb"]["user"] << "pwd" << (string) _config["zapata"]["mongodb"]["passwd"] << "db" << (string) _config["zapata"]["mongodb"]["db"]));

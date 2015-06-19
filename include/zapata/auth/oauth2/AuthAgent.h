@@ -24,9 +24,13 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/stream/SocketStreams.h>
-#include <zapata/thread/RESTJob.h>
-#include <zapata/api/RESTPool.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string>
+#include <functional>
+#include <memory>
+#include <zapata/auth/AuthAgent.h>
+#include <zapata/http/HTTPObj.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -34,33 +38,14 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zapata {
-
-	class RESTServer {
+	namespace oauth2 {
+		class AuthAgent : public zapata::AuthAgent {
 		public:
-			RESTServer(zapata::JSONObj& _options);
-			virtual ~RESTServer();
-	
-			virtual void start();
-			virtual void wait();
-			virtual void notify();
+			AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options);
+			virtual ~AuthAgent();
 
-			zapata::JSONObj& options();
-			size_t max();
-			size_t next();
-			void max(size_t _max);
+			virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) final;
 
-			zapata::RESTPoolPtr pool();
-
-		private:
-			zapata::serversocketstream __ss;
-			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTPoolPtr __pool;
-			bool __initialized;
-			
-		protected:
-			zapata::JSONObj __options;
-			size_t __next;
-			size_t __max_idx;
-	};
-
+		};
+	}
 }

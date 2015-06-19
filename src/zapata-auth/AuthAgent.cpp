@@ -21,46 +21,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <zapata/auth/AuthAgent.h>
 
-#pragma once
+zapata::AuthAgentPtr::AuthAgentPtr(zapata::AuthAgent * _target) : std::shared_ptr<zapata::AuthAgent>(_target) {
+}
 
-#include <zapata/stream/SocketStreams.h>
-#include <zapata/thread/RESTJob.h>
-#include <zapata/api/RESTPool.h>
+zapata::AuthAgentPtr::~AuthAgentPtr(){
+}
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+zapata::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options) : __callback( _callback ), __options( _options ) {
+}
 
-namespace zapata {
+zapata::AuthAgent::~AuthAgent(){
+}
 
-	class RESTServer {
-		public:
-			RESTServer(zapata::JSONObj& _options);
-			virtual ~RESTServer();
-	
-			virtual void start();
-			virtual void wait();
-			virtual void notify();
+zapata::AuthAgentCallback& zapata::AuthAgent::callback() {
+	return this->__callback;
+}
 
-			zapata::JSONObj& options();
-			size_t max();
-			size_t next();
-			void max(size_t _max);
-
-			zapata::RESTPoolPtr pool();
-
-		private:
-			zapata::serversocketstream __ss;
-			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTPoolPtr __pool;
-			bool __initialized;
-			
-		protected:
-			zapata::JSONObj __options;
-			size_t __next;
-			size_t __max_idx;
-	};
-
+zapata::JSONPtr& zapata::AuthAgent::options() {
+	return this->__options;
 }

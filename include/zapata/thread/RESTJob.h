@@ -39,23 +39,22 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	class RESTJob: public Job {
+	class RESTJob: public zapata::Job {
 		public:
-			RESTJob(string _key_file_path);
+			RESTJob(zapata::JSONObj& _options);
 			virtual ~RESTJob();
 
 			virtual void assign(int _cs_fd);
-			zapata::JSONObj& configuration();
+			zapata::JSONObj& options();
 
-			RESTPool& pool();
-			void pool(RESTPool* _pool);
+			zapata::RESTPoolPtr pool();
+			void pool(zapata::RESTPoolPtr _pool);
 			void log(zapata::HTTPReq&, zapata::HTTPRep&);
 
 		private:
 			int __epoll_fd;
-			struct epoll_event* __events;
-			RESTPool* __pool;
-			JSONObj __configuration;
+			zapata::RESTPoolPtr __pool;
+			zapata::JSONObj __options;
 	};
 
 }

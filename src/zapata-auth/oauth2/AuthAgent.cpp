@@ -21,46 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <zapata/auth/oauth2/AuthAgent.h>
 
-#pragma once
+zapata::oauth2::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options) : zapata::AuthAgent( _callback, _options ) {
+}
 
-#include <zapata/stream/SocketStreams.h>
-#include <zapata/thread/RESTJob.h>
-#include <zapata/api/RESTPool.h>
+zapata::oauth2::AuthAgent::~AuthAgent(){
+}
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
-namespace zapata {
-
-	class RESTServer {
-		public:
-			RESTServer(zapata::JSONObj& _options);
-			virtual ~RESTServer();
-	
-			virtual void start();
-			virtual void wait();
-			virtual void notify();
-
-			zapata::JSONObj& options();
-			size_t max();
-			size_t next();
-			void max(size_t _max);
-
-			zapata::RESTPoolPtr pool();
-
-		private:
-			zapata::serversocketstream __ss;
-			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTPoolPtr __pool;
-			bool __initialized;
-			
-		protected:
-			zapata::JSONObj __options;
-			size_t __next;
-			size_t __max_idx;
-	};
-
+zapata::JSONPtr zapata::oauth2::AuthAgent::authenticate(zapata::JSONPtr _credentials) {
+	zapata::HTTPReq _req;
+	//_req->url(this->token_url());
+	return zapata::undefined;
 }

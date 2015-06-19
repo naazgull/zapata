@@ -48,6 +48,7 @@ AC_CONFIG_FILES(Makefile
                 src/zapata-mongodb/Makefile
                 src/zapata-net/Makefile
                 src/zapata-rest/Makefile
+                src/zapata-auth/Makefile
                 src/zapata-users/Makefile
                 src/zapata-rest-server/Makefile)
 AC_OUTPUT

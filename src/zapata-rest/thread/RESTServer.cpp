@@ -37,37 +37,30 @@ SOFTWARE.
 #include <vector>
 #include <zapata/api/codes_rest.h>
 
-zapata::RESTServer::RESTServer(string _config_file) {
-	ifstream _key_file;
-	_key_file.open(_config_file.data());
-	this->__conf_file.assign(_config_file);
-	this->__configuration = zapata::fromfile(_key_file);
+zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::RESTPool(_options)), __options(_options) {
+	this->__next = -1;
+	this->__initialized = false;
 
-	this->__n_jobs = 0;
-	this->__next = 0;
-
-	if (!!this->configuration()["zapata"]["core"]["max_jobs"] && ((int) this->configuration()["zapata"]["core"]["max_jobs"]) != -1) {
-		this->max((size_t) this->configuration()["zapata"]["core"]["max_jobs"]);
+	if (!!this->options()["zapata"]["core"]["max_jobs"] && ((int) this->options()["zapata"]["core"]["max_jobs"]) != -1) {
+		this->max((size_t) this->options()["zapata"]["core"]["max_jobs"]);
 	}
 	else {
 		this->max(1);
 	}
 
-	if (!this->configuration()["zapata"]["core"]["max_connections_per_job"]->ok() || ((int) this->configuration()["zapata"]["core"]["max_connections_per_job"]) <= 0) {
-		((zapata::JSONObj&) this->configuration()["zapata"]["core"]) << "max_connections_per_job" << 1024;
+	if (!this->options()["zapata"]["core"]["max_connections_per_job"]->ok() || ((int) this->options()["zapata"]["core"]["max_connections_per_job"]) <= 0) {
+		((zapata::JSONObj&) this->options()["zapata"]["core"]) << "max_connections_per_job" << 1024;
 	}
 
-	if (!!this->configuration()["zapata"]["core"]["log"]["level"]) {
-		zapata::log_lvl = (int) this->configuration()["zapata"]["core"]["log"]["level"];
+	if (!!this->options()["zapata"]["core"]["log"]["level"]) {
+		zapata::log_lvl = (int) this->options()["zapata"]["core"]["log"]["level"];
 	}
-	if (!!this->configuration()["zapata"]["core"]["log"]["file"]) {
+	if (!!this->options()["zapata"]["core"]["log"]["file"]) {
 		zapata::log_fd = new ofstream();
-		((ofstream*) zapata::log_fd)->open(((string) this->configuration()["zapata"]["core"]["log"]["file"]).data());
+		((ofstream*) zapata::log_fd)->open(((string) this->options()["zapata"]["core"]["log"]["file"]).data());
 	}
 
-	this->__pool.configuration(& this->__configuration);
-
-	for (auto _i : * this->__configuration) {
+	for (auto _i : * this->__options) {
 		string _key = _i.first;
 		JSONElement _value = _i.second;
 		if (_key != "zapata") {
@@ -82,20 +75,20 @@ zapata::RESTServer::RESTServer(string _config_file) {
 					zapata::log(string(dlerror()), zapata::error, __HOST__, __LINE__, __FILE__);
 				}
 				else {
-					void (*_populate)(RESTPool&);
-					_populate = (void (*)(RESTPool&)) dlsym(hndl, "populate");
+					void (*_populate)(zapata::RESTPoolPtr&);
+					_populate = (void (*)(zapata::RESTPoolPtr&)) dlsym(hndl, "populate");
 					_populate(this->__pool);
 				}
 			}
 		}
 	}
 
-	if (!!this->configuration()["zapata"]["rest"]["uploads"]["upload_controller"]) {
+	if (!!this->options()["zapata"]["rest"]["uploads"]["upload_controller"]) {
 		/*
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__pool.on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		this->__pool->on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -173,7 +166,7 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__pool.on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		this->__pool->on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -202,24 +195,17 @@ zapata::RESTServer::RESTServer(string _config_file) {
 		});
 	}
 
-	assertz(this->configuration()["zapata"]["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
+	assertz(this->options()["zapata"]["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
 
-	unsigned int _port =  (unsigned int) this->configuration()["zapata"]["rest"]["port"];
+	unsigned int _port =  (unsigned int) this->options()["zapata"]["rest"]["port"];
 	string _text("starting RESTful server on port ");
 	zapata::tostr(_text, _port);
 	zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
 	this->__ss.bind(_port);
 
-	for (int i = 0; i != this->max(); i++) {
-		zapata::RESTJob * _job = new RESTJob(_config_file);
-		this->__jobs.push_back(_job);
-		(* _job).pool(& this->__pool);
-		(* _job)->start();
-	}
-
-	if (this->configuration()["zapata"]["rest"]["websocket"]["port"]->ok()) {
+	if (this->options()["zapata"]["rest"]["websocket"]["port"]->ok()) {
 		zapata::Job _ws([ this ] (zapata::Job& _self) -> void {
-			unsigned int _ws_port = (unsigned int) this->configuration()["zapata"]["rest"]["websocket"]["port"];
+			unsigned int _ws_port = (unsigned int) this->options()["zapata"]["rest"]["websocket"]["port"];
 			zapata::websocketserverstream _sws;
 			string _text("starting RESTful web-socket listener on port ");
 			zapata::tostr(_text, _ws_port);
@@ -248,7 +234,6 @@ zapata::RESTServer::~RESTServer(){
 void zapata::RESTServer::wait() {
 	int _cs_fd = -1;
 	this->__ss.accept(&_cs_fd);
-
 	size_t _next = this->next();
 	(* this->__jobs.at(_next)).assign(_cs_fd);
 }
@@ -256,9 +241,6 @@ void zapata::RESTServer::wait() {
 void zapata::RESTServer::start() {
 	try {
 		for (; true; ) {
-			if (this->max() != 0 && this->__next == this->max()) {
-				this->__next = 0;
-			}
 			this->wait();
 		}
 	}
@@ -267,12 +249,12 @@ void zapata::RESTServer::start() {
 	}
 }
 
-zapata::RESTPool& zapata::RESTServer::pool() {
+zapata::RESTPoolPtr zapata::RESTServer::pool() {
 	return this->__pool;
 }
 
-zapata::JSONObj& zapata::RESTServer::configuration() {
-	return this->__configuration;
+zapata::JSONObj& zapata::RESTServer::options() {
+	return this->__options;
 }
 
 void zapata::RESTServer::notify() {
@@ -284,7 +266,17 @@ size_t zapata::RESTServer::max() {
 }
 
 size_t zapata::RESTServer::next() {
-	return this->__next++;
+	if (this->__next == this->max() - 1) {
+		this->__initialized = true;
+		this->__next = -1;
+	}
+	if (!this->__initialized) {
+		zapata::RESTJob * _job = new RESTJob(this->__options);
+		this->__jobs.push_back(_job);
+		(* _job).pool(this->__pool);
+		(* _job)->start();
+	}
+	return ++this->__next;
 }
 
 void zapata::RESTServer::max(size_t _max) {

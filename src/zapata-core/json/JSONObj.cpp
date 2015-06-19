@@ -382,7 +382,7 @@ zapata::timestamp_t zapata::JSONElementT::date() {
 }
 
 double zapata::JSONElementT::number() {
-	assertz(this->__target.__type == zapata::JSInteger || this->__target.__type == zapata::JSDouble || this->__target.__type == zapata::JSBoolean, string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSInteger || this->__target.__type == zapata::JSDouble || this->__target.__type == zapata::JSBoolean, string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
 	switch(this->__target.__type) {
 		case zapata::JSInteger : {
 			return (double) this->__target.__integer;
@@ -392,6 +392,9 @@ double zapata::JSONElementT::number() {
 		}
 		case zapata::JSBoolean : {
 			return (double) this->__target.__boolean;
+		}
+		case zapata::JSDate : {
+			return (double) this->__target.__date;
 		}
 		default : {
 			return 0;
@@ -482,33 +485,42 @@ zapata::JSONElementT& zapata::JSONElementT::operator<<(JSONElementT* _in) {
 
 bool zapata::JSONElementT::operator==(zapata::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
-	if (this->__target.__type !=  _in.type()) {
-		return false;
-	}
 	switch(this->__target.__type) {
 		case zapata::JSObject : {
+			if (this->__target.__type != _in.type()) {
+				return false;
+			}
 			return *(this->__target.__object) == *(_in.obj());
 		}
 		case zapata::JSArray : {
+			if (this->__target.__type != _in.type()) {
+				return false;
+			}
 			return *(this->__target.__array) == *(_in.arr());
 		}
 		case zapata::JSString : {
+			if (this->__target.__type != _in.type()) {
+				return false;
+			}
 			return *(this->__target.__string.get()) == _in.str();
 		}
 		case zapata::JSInteger : {
-			return this->__target.__integer == _in.intr();
+			return this->__target.__integer == _in.number();
 		}
 		case zapata::JSDouble : {
-			return this->__target.__double == _in.dbl();
+			return this->__target.__double == _in.number();
 		}
 		case zapata::JSBoolean : {
-			return this->__target.__boolean == _in.bln();
+			return this->__target.__boolean == _in.number();
 		}
 		case zapata::JSNil : {
+			if (this->__target.__type != _in.type()) {
+				return false;
+			}
 			return true;
 		}
 		case zapata::JSDate : {
-			return this->__target.__date == _in.date();
+			return this->__target.__date == _in.number();
 		}
 	}
 	return false;
@@ -612,9 +624,9 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 		case zapata::JSString : {
 			string _str(this->str());
 			zapata::replace(_str, "\"", "\\\"");
-			zapata::replace(_str, "\n", "\\\n");
-			zapata::replace(_str, "\r", "\\\b");
-			zapata::replace(_str, "\t", "\\\t");
+			zapata::replace(_str, "\n", "\\n");
+			zapata::replace(_str, "\r", "\\b");
+			zapata::replace(_str, "\t", "\\t");
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
@@ -666,9 +678,9 @@ void zapata::JSONElementT::stringify(string& _out) {
 		case zapata::JSString : {
 			string _str(this->str());
 			zapata::replace(_str, "\"", "\\\"");
-			zapata::replace(_str, "\n", "\\\n");
-			zapata::replace(_str, "\r", "\\\b");
-			zapata::replace(_str, "\t", "\\\t");
+			zapata::replace(_str, "\n", "\\n");
+			zapata::replace(_str, "\r", "\\b");
+			zapata::replace(_str, "\t", "\\t");
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
@@ -728,9 +740,9 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 		case zapata::JSString : {
 			string _str(this->str());
 			zapata::replace(_str, "\"", "\\\"");
-			zapata::replace(_str, "\n", "\\\n");
-			zapata::replace(_str, "\r", "\\\b");
-			zapata::replace(_str, "\t", "\\\t");
+			zapata::replace(_str, "\n", "\\n");
+			zapata::replace(_str, "\r", "\\b");
+			zapata::replace(_str, "\t", "\\t");
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
@@ -785,9 +797,9 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 		case zapata::JSString : {
 			string _str(this->str());
 			zapata::replace(_str, "\"", "\\\"");
-			zapata::replace(_str, "\n", "\\\n");
-			zapata::replace(_str, "\r", "\\\b");
-			zapata::replace(_str, "\t", "\\\t");
+			zapata::replace(_str, "\n", "\\n");
+			zapata::replace(_str, "\r", "\\b");
+			zapata::replace(_str, "\t", "\\t");
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
@@ -1433,6 +1445,58 @@ zapata::JSONPtr::operator string() {
 	return _out;
 }
 
+zapata::JSONPtr::operator zapata::pretty() {
+	if (this->get() == nullptr) {
+		return zapata::pretty("");
+	}
+	string _out;
+	switch(this->get()->type()) {
+		case zapata::JSObject : {
+			this->get()->obj()->prettify(_out);
+			break;
+		}
+		case zapata::JSArray : {
+			this->get()->arr()->prettify(_out);
+			break;
+		}
+		case zapata::JSString : {
+			_out.assign(this->get()->str().data());
+			break;
+		}
+		case zapata::JSInteger : {
+			zapata::tostr(_out, this->get()->intr());
+			break;
+		}
+		case zapata::JSDouble : {
+			zapata::tostr(_out, this->get()->dbl());
+			break;
+		}
+		case zapata::JSBoolean : {
+			zapata::tostr(_out, this->get()->bln());
+			break;
+		}
+		case zapata::JSNil : {
+			_out.assign("");
+			break;
+		}
+		case zapata::JSDate : {
+			zapata::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
+			_out.insert(_out.length(), ".");
+			size_t _remainder = this->get()->date() % 1000;
+			if (_remainder < 100) {
+				_out.insert(_out.length(), "0");
+				if (_remainder < 10) {
+					_out.insert(_out.length(), "0");
+				}
+			}
+			zapata::tostr(_out, _remainder);
+			_out.insert(_out.length(), "Z");
+			break;
+		}
+	}
+	return zapata::pretty(_out);
+}
+
 zapata::JSONPtr::operator bool() {
 	if (this->get() == nullptr) {
 		return false;
@@ -1778,6 +1842,16 @@ zapata::JSONObj::operator string() {
 	return _out;
 }
 
+
+zapata::JSONObj::operator zapata::pretty() {
+	if (this->get() == nullptr) {
+		return "";
+	}
+	string _out;
+	(* this)->prettify(_out);
+	return _out;
+}
+
 zapata::JSONObj& zapata::JSONObj::operator<<(string _in) {
 	(* this)->push(_in);
 	return * this;
@@ -1807,6 +1881,15 @@ zapata::JSONArr::operator string() {
 	}
 	string _out;
 	(* this)->stringify(_out);
+	return _out;
+}
+
+zapata::JSONArr::operator zapata::pretty() {
+	if (this->get() == nullptr) {
+		return "";
+	}
+	string _out;
+	(* this)->prettify(_out);
 	return _out;
 }
 

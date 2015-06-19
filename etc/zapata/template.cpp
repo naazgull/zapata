@@ -36,7 +36,7 @@ namespace ${project_name} {
 		void collection(zapata::RESTPool& _pool) {	
 			_pool.on("^/${collection_name}$",
 			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
 
@@ -52,7 +52,7 @@ namespace ${project_name} {
 				},
 				no_put,
 			//post
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -75,7 +75,7 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
 
@@ -88,7 +88,7 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
 
@@ -104,7 +104,7 @@ namespace ${project_name} {
 				no_trace, 
 				no_options, 
 			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -137,7 +137,7 @@ namespace ${project_name} {
 		void document(zapata::RESTPool& _pool) {	
 			_pool.on("^/${collection_name}/([^/]+)$",
 			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
 
@@ -152,7 +152,7 @@ namespace ${project_name} {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
 			//put
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -180,7 +180,7 @@ namespace ${project_name} {
 				},
 				no_post,
 			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
 
@@ -193,7 +193,7 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					zapata::JSONObj _params;
 					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
 
@@ -209,7 +209,7 @@ namespace ${project_name} {
 				no_trace, 
 				no_options, 
 			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 

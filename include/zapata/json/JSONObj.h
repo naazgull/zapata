@@ -58,6 +58,23 @@ namespace zapata {
 	class JSONObj;
 	class JSONArr;
 
+	class pretty : public std::string {
+	public: 
+		inline pretty(std::string _rhs) : std::string(_rhs) {
+		};
+		inline pretty(const char * _rhs) : std::string(_rhs) {
+		};
+		template <typename T>
+		inline pretty(T _rhs) : std::string() {
+			_rhs->prettify(* this);
+		};
+
+		friend ostream& operator<<(ostream& _out, zapata::pretty& _in) {
+			_out << string(_in.data());
+			return _out;
+		};				
+	};
+
 	/**
 	 * \brief Smart shared pointer to a zapata::JSONElementT object.
 	 */
@@ -172,6 +189,14 @@ namespace zapata {
 		 * @return the std::textual representation of *this* instance JSON typed object
 		 */
 		operator string();
+
+		/**
+		 * \brief Casting operator to a pretty printed std::string class. **All** JSON types are castable to an std::string.
+		 *
+		 * @return the pretty printed textual representation of *this* instance JSON typed object
+		 */
+		operator zapata::pretty();
+
 		/**
 		 * \brief Casting operator for the *bool* basic type. **All** JSON types as castable to a *bool* value: 
 		 * 
@@ -890,6 +915,12 @@ namespace zapata {
 		 */
 		operator string();
 
+		/**
+		 * \brief Casting operator to a pretty printed std::string class. **All** JSON types are castable to an std::string.
+		 *
+		 * @return the pretty printed textual representation of *this* instance JSON typed object
+		 */
+		operator zapata::pretty();
 
 		/**
 		 * \brief Operator '==' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
@@ -947,6 +978,13 @@ namespace zapata {
 		JSONArrT::iterator end();
 
 		operator string();
+
+		/**
+		 * \brief Casting operator to a pretty printed std::string class. **All** JSON types are castable to an std::string.
+		 *
+		 * @return the pretty printed textual representation of *this* instance JSON typed object
+		 */
+		operator zapata::pretty();
 
 		template <typename T>
 		bool operator==(T _rhs) {

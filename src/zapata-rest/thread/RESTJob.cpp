@@ -28,36 +28,33 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
-	std::ifstream _key_file;
-	_key_file.open(_key_file_path.data());
-	this->__configuration = zapata::fromfile(_key_file);
-
-	size_t _max = this->__configuration["zapata"]["core"]["max_descriptors_per_job"]->ok() ? (size_t) this->__configuration["zapata"]["core"]["max_descriptors_per_job"] : 64;
-	this->__events = new epoll_event_t[ _max ];
+zapata::RESTJob::RESTJob(zapata::JSONObj& _options) : Job(), __options(_options) {
+	size_t _max = 1024;
 	this->__epoll_fd = epoll_create1 (0);
 
 	(* this)->loop([ this, _max ] (Job& _job) -> void {
-		bool _debug = !!this->configuration()["zapata"]["rest"]["debug"];
-	
+		struct epoll_event _events[_max];
 		for (; true; ) {
-			int _rv = epoll_wait(this->__epoll_fd, this->__events, _max, -1);
+			int _rv = epoll_wait(this->__epoll_fd, _events, _max, -1);
 			if (_rv > 0) {
 				for (int _idx = 0; _idx != _rv; _idx++) {
-					if ((this->__events[_idx].events & EPOLLERR) || (this->__events[_idx].events & EPOLLHUP) || (!(this->__events[_idx].events & EPOLLIN))) {
-						::close(this->__events[_idx].data.fd);
+					if ((_events[_idx].events & EPOLLERR) || (_events[_idx].events & EPOLLRDHUP) || (_events[_idx].events & EPOLLHUP) || (!(_events[_idx].events & EPOLLIN))) {
+						epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
+						close(_events[_idx].data.fd);
 					}
 					else {
-						zapata::socketstream _cs(this->__events[_idx].data.fd);
+						zapata::socketstream _cs(_events[_idx].data.fd);
 						
 						if (!_cs.is_open()) {
-							::close(this->__events[_idx].data.fd);
+							epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
+							close(_events[_idx].data.fd);
 						}
 						else {
 							zapata::HTTPRep _rep;
 							zapata::HTTPReq _req;
 							try  {
 								_cs >> _req;
+								cout << _req << endl << flush;
 								this->__pool->trigger(_req, _rep);
 
 								string _origin = _req->header("Origin");
@@ -74,7 +71,8 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 									_cs << flush;
 								}
 								else {
-									::close(this->__events[_idx].data.fd);
+									epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
+									close(_events[_idx].data.fd);
 								}
 							}
 							catch(zapata::SyntaxErrorException& e) {
@@ -106,11 +104,13 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 									_rep->stringify(_cs);
 									_cs << flush;
 								}
-								::close(this->__events[_idx].data.fd);
+								epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
+								close(_events[_idx].data.fd);
 							}
 							catch(zapata::ClosedException& e) {
 								zapata::log(e.what(), zapata::error, __HOST__, __LINE__, __FILE__);
-								::close(this->__events[_idx].data.fd);
+								epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
+								close(_events[_idx].data.fd);
 							}
 
 							_cs.unassign();
@@ -123,30 +123,27 @@ zapata::RESTJob::RESTJob(string _key_file_path) : Job() {
 }
 
 zapata::RESTJob::~RESTJob() {
-	delete [] this->__events;
 }
 
 void zapata::RESTJob::assign(int _cs_fd) {
 	pthread_mutex_lock((* this)->__mtx);
-
 	epoll_event_t _event;
 	_event.data.fd = _cs_fd;
-	_event.events = EPOLLIN;
-	epoll_ctl (this->__epoll_fd, EPOLL_CTL_ADD, _cs_fd, & _event);
-
+	_event.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP;
+	epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, _cs_fd, & _event);
 	pthread_mutex_unlock((* this)->__mtx);
 }
 
-zapata::RESTPool& zapata::RESTJob::pool() {
-	return * this->__pool;
+zapata::RESTPoolPtr zapata::RESTJob::pool() {
+	return this->__pool;
 }
 
-void zapata::RESTJob::pool(zapata::RESTPool * _pool) {
+void zapata::RESTJob::pool(zapata::RESTPoolPtr _pool) {
 	this->__pool = _pool;
 }
 
-zapata::JSONObj& zapata::RESTJob::configuration() {
-	return this->__configuration;
+zapata::JSONObj& zapata::RESTJob::options() {
+	return this->__options;
 }
 
 void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {

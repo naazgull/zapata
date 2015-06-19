@@ -8,17 +8,17 @@
 	{
 		_pool.on("^/name$",
 		                    //--- GET ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- PUT ---//
 		                    NULL,
 		                    //--- POST ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- DELETE ---//
 		                    NULL,
 		                    //--- HEAD ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool _pool) -> void {
 		                    },
 		                    //--- TRACE ---//
 		                    NULL,
@@ -40,25 +40,25 @@
 	{
 		_pool.on("^/name/([^/]+)$",
 		                    //--- GET ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- PUT ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- POST ---//
 		                    NULL,
 		                    //--- DELETE ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- HEAD ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool _pool) -> void {
 		                    },
 		                    //--- TRACE ---//
 		                    NULL,
 		                    //--- OPTIONS ---//
 		                    NULL,
 		                    //--- PATCH ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- CONNECT ---//
 		                    NULL,
@@ -74,24 +74,24 @@
 	{
 		_pool.on("^/name$",
 		                    //--- GET ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- PUT ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- POST ---//
 		                    NULL,
 		                    //--- DELETE ---//
 		                    NULL,
 		                    //--- HEAD ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool _pool) -> void {
 		                    },
 		                    //--- TRACE ---//
 		                    NULL,
 		                    //--- OPTIONS ---//
 		                    NULL,
 		                    //--- PATCH ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- CONNECT ---//
 		                    NULL,
@@ -111,7 +111,7 @@
 		                    //--- PUT ---//
 		                    NULL,
 		                    //--- POST ---//
-		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONObj& _config, zapata::RESTPool& _pool) -> void {
+		                    [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTPool& _pool) -> void {
 		                    },
 		                    //--- DELETE ---//
 		                    NULL,

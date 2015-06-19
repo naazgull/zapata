@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	zapata::log_fd = &cout;
+	zapata::log_fd = & cout;
 	zapata::log_pid = ::getpid();
 	zapata::log_pname = new string(argv[0]);
 	zapata::log_lvl = 8;
@@ -70,8 +70,23 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	zapata::JSONObj _options;
+	{
+		ifstream _in;
+		_in.open(_conf_file);
+		if (!_in.is_open()) {
+		zapata::log("a configuration file must be provided", zapata::error, __HOST__, __LINE__, __FILE__);
+			return -1;
+		}
+
+		zapata::JSONPtr _ptr;
+		_in >> _ptr;
+		//zapata::commons::env(_ptr);
+		_options = (zapata::JSONObj&) _ptr;
+	}
+
 	try {
-		zapata::RESTServer _server(_conf_file);
+		zapata::RESTServer _server(_options);
 		_server.start();
 	}
 	catch (zapata::AssertionException& _e) {

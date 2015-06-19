@@ -24,9 +24,13 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/stream/SocketStreams.h>
-#include <zapata/thread/RESTJob.h>
-#include <zapata/api/RESTPool.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string>
+#include <functional>
+#include <memory>
+#include <zapata/base/assert.h>
+#include <zapata/core.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -34,33 +38,28 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zapata {
-
-	class RESTServer {
-		public:
-			RESTServer(zapata::JSONObj& _options);
-			virtual ~RESTServer();
+	class AuthAgent;
+	class AuthAgentPtr;
+	typedef std::function< void (zapata::JSONPtr& _auth_data, zapata::AuthAgentPtr&) > AuthAgentCallback;
 	
-			virtual void start();
-			virtual void wait();
-			virtual void notify();
+	class AuthAgentPtr : public std::shared_ptr<zapata::AuthAgent> {
+	public:
+		AuthAgentPtr(zapata::AuthAgent * _target);
+		virtual ~AuthAgentPtr();
+	};
 
-			zapata::JSONObj& options();
-			size_t max();
-			size_t next();
-			void max(size_t _max);
+	class AuthAgent {
+	public:
+		AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options);
+		virtual ~AuthAgent();
 
-			zapata::RESTPoolPtr pool();
+		virtual zapata::AuthAgentCallback& callback() final;
+		virtual zapata::JSONPtr& options() final;
+		virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) = 0;
 
-		private:
-			zapata::serversocketstream __ss;
-			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTPoolPtr __pool;
-			bool __initialized;
-			
-		protected:
-			zapata::JSONObj __options;
-			size_t __next;
-			size_t __max_idx;
+	private:
+		zapata::AuthAgentCallback __callback;
+		zapata::JSONPtr __options;
 	};
 
 }
