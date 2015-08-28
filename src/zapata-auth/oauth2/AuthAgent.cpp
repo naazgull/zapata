@@ -29,8 +29,22 @@ zapata::oauth2::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata
 zapata::oauth2::AuthAgent::~AuthAgent(){
 }
 
+std::string zapata::oauth2::AuthAgent::code_url() {
+
+}
+
+std::string zapata::oauth2::AuthAgent::token_url() {
+
+}
+
+std::string zapata::oauth2::AuthAgent::refresh_token_url() {
+	
+}
+
 zapata::JSONPtr zapata::oauth2::AuthAgent::authenticate(zapata::JSONPtr _credentials) {
 	zapata::HTTPReq _req;
+	//_req->url(this->code_url());
 	//_req->url(this->token_url());
+	//_req->url(this->refresh_token_url());
 	return zapata::undefined;
 }

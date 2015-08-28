@@ -55,6 +55,11 @@ namespace zapata {
 
 		virtual zapata::AuthAgentCallback& callback() final;
 		virtual zapata::JSONPtr& options() final;
+
+		virtual std::string code_url() = 0;
+		virtual std::string token_url() = 0;
+		virtual std::string refresh_token_url() = 0;
+
 		virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) = 0;
 
 	private:
