@@ -31,6 +31,30 @@ SOFTWARE.
 #include <unistd.h>
 #include <sys/sendfile.h>
 
+int zapata::ls(string dir, std::vector<string>& result, bool recursive) {
+	DIR *dp;
+	struct dirent *dirp;
+	if ((dp = opendir(dir.c_str())) == NULL) {
+		return errno;
+	}
+
+	while ((dirp = readdir(dp)) != NULL) {
+		string cname = string(dirp->d_name);
+		if (cname.find('.') != 0) {
+			cname.insert(0, "/");
+			cname.insert(0, dir);
+			result.push_back(cname);
+			if (recursive) {
+				zapata::ls(cname, result, true);
+			}
+
+		}
+	}
+
+	closedir(dp);
+	return 0;
+}
+
 bool zapata::mkdir_recursive(string _name, mode_t _mode) {
 	istringstream _iss(_name);
 	string _line;

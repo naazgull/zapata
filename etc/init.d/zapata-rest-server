@@ -1,6 +1,7 @@
 #! /bin/bash
 
-daemon=/usr/bin/zapata-rest-daemon
+bin_dir=@PREFIX@/bin
+daemon=$bin_dir/bin/zapata-rest-daemon
 cnf_dir=/etc/zapata/backend-enabled
 run_dir=/var/run
 
@@ -30,7 +31,9 @@ case "$1" in
 					fi
 				fi
 
+
 				echo -n "* initializing '$backend_name': "
+				[ -f /etc/default/$backend_name.rc ] && source /etc/default/$backend_name.rcx
 				start-stop-daemon --start -b --oknodo --quiet --make-pidfile --pidfile $cur_pid_file --exec $daemon -- -c $cnf_file
 				echo "done."
 			fi

@@ -28,6 +28,7 @@ SOFTWARE.
 
 // $insert class.h
 #include <zapata/parsers/JSONTokenizer.h>
+#include <zapata/exceptions/SyntaxErrorException.h>
 
 // $insert namespace-open
 namespace zapata
@@ -35,7 +36,8 @@ namespace zapata
 
 inline void JSONTokenizer::error(char const *msg)
 {
-    std::cerr << msg << '\n';
+    //std::cerr << msg << '\n';
+   throw zapata::SyntaxErrorException(string(msg));
 }
 
 // $insert lex

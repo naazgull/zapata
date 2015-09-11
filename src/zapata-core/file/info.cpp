@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 #include <zapata/file/manip.h>
+#include <zapata/json/JSONObj.h>
+
 
 #include <magic.h>
 #include <iostream>
@@ -881,4 +883,96 @@ zapata::MIMEType zapata::get_mime(string _in) {
 bool zapata::path_exists(string _in) {
 	struct stat  _buffer;
 	return ( stat(_in.data(), &_buffer) == 0);
+}
+
+void zapata::dirs(std::string _dir, zapata::JSONPtr& _options) {
+	std::vector<std::string> _files;
+	zapata::ls(_dir, _files, false);
+	for (auto _file : _files) {
+		try {
+			zapata::JSONPtr _conf;
+			std::ifstream _ifs;
+			_ifs.open(_file.data());
+			_ifs >> _conf;
+			_ifs.close();
+
+			for (auto _new_field : _conf->obj()) {
+				if (!_options[_new_field.first]->ok()) {
+					_options << _new_field.first << _new_field.second;
+				}
+			}
+		}
+		catch(zapata::SyntaxErrorException& _e) {}
+	}
+}
+
+void zapata::env(zapata::JSONObj& _options) {
+	zapata::JSONPtr _ptr = zapata::make_ptr(_options);
+	zapata::env(_ptr);
+}
+
+void zapata::env(zapata::JSONPtr& _options) {
+	switch (_options->type()) {
+		case zapata::JSObject: {
+			std::vector<std::string> _to_remove;
+			for (auto _a : _options->obj()) {
+				try {
+					zapata::env(_a.second);
+				}
+				catch(zapata::AssertionException& _e) {
+					_to_remove.push_back(_a.first);
+				}
+			}
+			for (auto _s : _to_remove) {
+				_options >> _s;
+			}
+			break;
+		}
+		case zapata::JSArray: {
+			std::vector<size_t> _to_remove;
+			size_t _i = 0;
+			for (auto _a : _options->arr()) {
+				try {
+					zapata::env(_a);
+				}
+				catch(zapata::AssertionException& _e) {
+					_to_remove.push_back(_i);
+				}
+				_i++;
+			}
+			for (auto _i : _to_remove) {
+				_options >> _i;
+			}
+			break;
+		}
+		case zapata::JSString: {
+			string _field(_options->str());
+			size_t _idx = -2;
+			while ((_idx = _field.find("${", _idx + 2)) != string::npos) {
+				size_t _ridx = _field.find("}", _idx);
+				if (_ridx == string::npos) {
+					break;
+				}
+
+				string _var = _field.substr(_idx + 2, _ridx - _idx - 2);
+				char * _valuec = std::getenv(_var.data());
+				string _value;
+				if (_valuec != nullptr) {
+					_value.assign(_valuec);
+				}
+				assertz(_value.length() != 0, "no environment variable with that name", 0, 0);
+				_field.replace(_idx, _ridx - _idx + 1, _value);
+				_options << _field;
+			}
+			break;
+		}
+		case zapata::JSBoolean:
+		case zapata::JSDate:
+		case zapata::JSInteger:
+		case zapata::JSDouble:
+		case zapata::JSNil: 
+		default: {
+			break;
+		}
+	}
 }

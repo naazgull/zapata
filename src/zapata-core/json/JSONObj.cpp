@@ -611,6 +611,26 @@ void zapata::JSONElementT::setPath(std::string _path, zapata::JSONPtr _value, st
 	return;
 }
 
+void zapata::JSONElementT::delPath(std::string _path, std::string _separator) {
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+	switch(this->__target.__type) {
+		case zapata::JSObject : {
+			this->__target.__object->delPath(_path, _separator);
+		}
+		case zapata::JSArray : {
+			this->__target.__array->delPath(_path, _separator);
+		}
+		case zapata::JSString :
+		case zapata::JSInteger :
+		case zapata::JSDouble :
+		case zapata::JSBoolean :
+		case zapata::JSNil :
+		case zapata::JSDate : {
+			return;
+		}
+	}
+}
+
 void zapata::JSONElementT::stringify(ostream& _out) {
 	switch(this->__target.__type) {
 		case zapata::JSObject : {

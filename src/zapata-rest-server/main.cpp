@@ -81,7 +81,8 @@ int main(int argc, char* argv[]) {
 
 		zapata::JSONPtr _ptr;
 		_in >> _ptr;
-		//zapata::commons::env(_ptr);
+		zapata::dirs("/etc/zapata/conf.d/", _ptr);
+		zapata::env(_ptr);
 		_options = (zapata::JSONObj&) _ptr;
 	}
 

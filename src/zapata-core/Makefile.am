@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libzapata-core.la
 
-libzapata_core_la_LIBADD = -lpthread
+libzapata_core_la_LIBADD = -lpthread -lmagic
 libzapata_core_la_LDFLAGS = -version-info 0:9:0
 libzapata_core_la_CPPFLAGS = -std=c++11 -I../../include
 

@@ -756,8 +756,9 @@ try
     if (d_acceptedTokens__ >= d_requiredTokens__)// only generate an error-
     {                                           // message if enough tokens 
         ++d_nErrors__;                          // were accepted. Otherwise
-        error("Syntax error");                  // simply skip input
-
+        std::string _str("Syntax error at line ");
+        zapata::tostr(_str, d_scanner.lineNr());
+        error(_str.data());                  // simply skip input
     }
 
 

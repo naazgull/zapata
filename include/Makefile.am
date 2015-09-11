@@ -73,12 +73,13 @@ etc_zapata_DATA = ../etc/zapata/zapata.conf
 etc_zapata_backend_availabledir = /etc/zapata/backend-available
 etc_zapata_backend_available_DATA = ../etc/zapata/backend-available/default.conf
 
-usr_sbindir = /usr/sbin
+usr_sbindir = $(prefix)/sbin
 usr_sbin_DATA = ../usr/sbin/zapata-rest-observer
 
 install-data-hook:
 	chmod +x /etc/init.d/zapata-rest-server
-	chmod +x /usr/sbin/zapata-rest-observer
+	chmod +x $(prefix)/sbin/zapata-rest-observer
+	sed -i "s#@PREFIX@#$(prefix)#g" /etc/init.d/zapata-rest-server
 	mkdir -p /etc/zapata/backend-enabled/
 	mkdir -p /etc/zapata/conf.d/
 	mkdir -p /var/log/zapata/

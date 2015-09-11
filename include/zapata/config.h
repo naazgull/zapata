@@ -15,9 +15,6 @@
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
-/* Define to 1 if you have the `kqueue' library (-lkqueue). */
-/* #undef HAVE_LIBKQUEUE */
-
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
 
@@ -34,7 +31,7 @@
 #define HAVE_MEMORY_H 1
 
 /* "Turn on MongoDB support" */
-/* #undef HAVE_MONGO_DB */
+#define HAVE_MONGO_DB 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -89,4 +86,4 @@
 #define VERSION "0.0.8"
 
 /* Machine hostname to be used in the log messages */
-#define __HOST__ "zapata"
+#define __HOST__ "chomsky"

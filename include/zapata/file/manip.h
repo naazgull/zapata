@@ -27,6 +27,9 @@ SOFTWARE.
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string>
+#include <vector>
+#include <zapata/json/JSONObj.h>
+#include <zapata/exceptions/SyntaxErrorException.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -453,6 +456,7 @@ namespace zapata {
 		text_x_script_zsh
 	};
 
+	int ls(string dir, std::vector<string>& result, bool recursive);
 	bool mkdir_recursive(string _name, mode_t _mode);
 
 	bool copy_path(string _from, string _to);
@@ -464,4 +468,10 @@ namespace zapata {
 
 	zapata::MIMEType get_mime(string _in);
 	bool path_exists(string _in);
+
+	void dirs(std::string _dir, zapata::JSONPtr& _options);
+	void env(zapata::JSONObj& _options);
+	void env(zapata::JSONPtr& _options);
+
+
 }

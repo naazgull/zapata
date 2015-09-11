@@ -146,7 +146,7 @@ namespace zapata {
 	namespace users {
 
 		void collection(zapata::RESTPoolPtr& _pool) {
-			_pool->on("^/users$",
+			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					zapata::JSONObj _params;
@@ -250,11 +250,12 @@ namespace zapata {
 					_rep->body(_text);
 				},
 				no_connect
-			);
+			};
+			_pool->on("^/users$", _handler_set);
 		}
 
 		void document(zapata::RESTPoolPtr& _pool) {
-			_pool->on("^/users/([^/]+)$",
+			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					zapata::JSONObj _params;
@@ -354,7 +355,8 @@ namespace zapata {
 					_rep->body(_text);
 				},
 				no_connect
-			);
+			};
+			_pool->on("^/users/([^/]+)$", _handler_set);
 		}
 
 		void collect(zapata::RESTPoolPtr& _pool) {
@@ -475,7 +477,7 @@ namespace zapata {
 		}
 
 		void token(zapata::RESTPoolPtr& _pool) {
-			_pool->on("^/auth/token",
+			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					string _grant_type(_req->param("grant_type"));
@@ -584,7 +586,8 @@ namespace zapata {
 				no_options, 
 				no_patch, 
 				no_connect
-			);			
+			};
+			_pool->on("^/auth/token", _handler_set);			
 		}
 
 		void login(zapata::RESTPoolPtr& _pool) {
@@ -665,7 +668,7 @@ namespace zapata {
 	namespace groups {
 
 		void collection(zapata::RESTPoolPtr& _pool) {	
-			_pool->on("^/groups$",
+			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					zapata::JSONObj _params;
@@ -762,11 +765,12 @@ namespace zapata {
 					_rep->body(_text);
 				},
 				no_connect
-			);
+			};
+			_pool->on("^/groups$", _handler_set);
 		}
 
 		void document(zapata::RESTPoolPtr& _pool) {	
-			_pool->on("^/groups/([^/]+)$",
+			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					zapata::JSONObj _params;
@@ -867,7 +871,8 @@ namespace zapata {
 					_rep->body(_text);
 				},
 				no_connect
-			);
+			};
+			_pool->on("^/groups/([^/]+)$", _handler_set);
 		}
 	}
 }
