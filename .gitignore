@@ -32,3 +32,4 @@ src/zapata-rest-server/zapata-rest-daemon
 deps/
 docs/html/
 docs/latex/
+src/zapata-core/zat
