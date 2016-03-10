@@ -45,6 +45,8 @@ nobase_include_HEADERS = \
 ./zapata/net.h \
 ./zapata/mail/manip.h \
 ./zapata/auth/AuthAgent.h \
+./zapata/auth/hawk/AuthAgent.h \
+./zapata/auth/oauth2/AuthAgent.h \
 ./zapata/api/RESTPool.h \
 ./zapata/api/codes_users.h \
 ./zapata/api/codes_rest.h \
