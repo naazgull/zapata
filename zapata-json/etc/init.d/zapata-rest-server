@@ -1,0 +1,61 @@
+#! /bin/bash
+
+bin_dir=@PREFIX@/bin
+daemon=$bin_dir/bin/zapata-rest-daemon
+cnf_dir=/etc/zapata/backend-enabled
+run_dir=/var/run
+
+pushd $cnf_dir &> /dev/null
+case "$1" in
+	start)
+		echo "starting zapata-rest-server:"
+
+		for cnf_file in *.conf
+		do
+			if [ -f $cnf_file ]
+			then
+				backend_name=${cnf_file%%.conf}
+				cur_pid_file="$run_dir/zapata.$backend_name.pid"
+				cnf_file="$cnf_dir/$cnf_file"
+
+				if [ -f $cur_pid_file ]
+				then
+					cur_pid=$(<"$cur_pid_file")
+					pid_run=$(ps -p $cur_pid | grep $cur_pid | awk '{ print $1 }')
+					if [ -z $pid_run ]
+					then
+						rm -rf $cur_pid_file
+					else
+						echo "'$backend_name' already running, stop before starting"
+						continue
+					fi
+				fi
+
+
+				echo -n "* initializing '$backend_name': "
+				[ -f /etc/default/$backend_name.rc ] && source /etc/default/$backend_name.rcx
+				start-stop-daemon --start -b --oknodo --quiet --make-pidfile --pidfile $cur_pid_file --exec $daemon -- -c $cnf_file
+				echo "done."
+			fi
+		done
+	;;
+	stop)
+		echo "stoping zapata-rest-server:"
+
+		for cnf_file in *.conf
+		do
+			if [ -f $cnf_file ]
+			then
+				backend_name=${cnf_file%%.conf}
+				cur_pid_file="$run_dir/zapata.$backend_name.pid"				
+				echo -n "* terminating '$backend_name': "
+				start-stop-daemon --stop --oknodo --quiet --pidfile $cur_pid_file
+				echo "done."
+			fi
+		done
+	;;
+esac
+popd &> /dev/null
+
+echo "success."
+exit 0

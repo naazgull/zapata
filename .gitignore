@@ -20,7 +20,6 @@ depcomp
 install-sh
 ltmain.sh
 missing
-src/zapata-rest-server/zapata-rest-daemon
 *.deps
 *.dirstamp
 */**/Makefile
@@ -30,7 +29,4 @@ src/zapata-rest-server/zapata-rest-daemon
 */**/config.h.in
 */**/stamp-h1
 deps/
-docs/html/
-docs/latex/
-src/zapata-core/zat
-zapata*.tar.gz
+*/zapata*.tar.gz
