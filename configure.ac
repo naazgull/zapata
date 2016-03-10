@@ -42,13 +42,16 @@ dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile
-                include/Makefile
-                src/zapata-core/Makefile
-                src/zapata-http/Makefile
-                src/zapata-mongodb/Makefile
-                src/zapata-net/Makefile
-                src/zapata-rest/Makefile
-                src/zapata-auth/Makefile
-                src/zapata-users/Makefile
-                src/zapata-rest-server/Makefile)
+        debian/Makefile
+        etc/Makefile
+        include/Makefile
+        src/zapata-core/Makefile
+        src/zapata-http/Makefile
+        src/zapata-mongodb/Makefile
+        src/zapata-net/Makefile
+        src/zapata-rest/Makefile
+        src/zapata-auth/Makefile
+        src/zapata-users/Makefile
+        src/zapata-rest-server/Makefile)
+
 AC_OUTPUT
