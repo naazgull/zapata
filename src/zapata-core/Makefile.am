@@ -1,8 +1,8 @@
 lib_LTLIBRARIES = libzapata-core.la
 
 libzapata_core_la_LIBADD = -lpthread -lmagic
-libzapata_core_la_LDFLAGS = -version-info 0:9:0
-libzapata_core_la_CPPFLAGS = -std=c++11 -I../../include
+libzapata_core_la_LDFLAGS = -version-info 9:1:9
+libzapata_core_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 libzapata_core_la_SOURCES = \
 ./base/assert.cpp \
@@ -38,7 +38,7 @@ bin_PROGRAMS = zat
 
 zat_LDADD = -lpthread -lzapata-core
 zat_LDFLAGS= 
-zat_CPPFLAGS = -std=c++11 -Wall -I../../include
+zat_CPPFLAGS = -O3 -std=c++11 -Wall -I../../include
 
 zat_SOURCES = \
 ./log/zat.cpp

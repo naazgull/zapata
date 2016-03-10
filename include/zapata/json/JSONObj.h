@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -119,6 +119,42 @@ namespace zapata {
 		 */
 		template <typename T>
 		bool operator!=(T _rhs);
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<(T _rhs);
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>(T _rhs);
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<=(T _rhs);
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>=(T _rhs);
 		/**
 		 * \brief Operator '<<' override form injecting values into *this* instance object. This is a convenience wrapper method for the zapata::JSONObjT or zapata::JSONArrT **push** methods.
 		 * 
@@ -317,6 +353,9 @@ namespace zapata {
 		 */
 		operator JSONArr&();
 
+		template <typename T>
+		JSONPtr operator+(T _in);
+
 		/**
 		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zapata::JSONPtr object.
 		 */
@@ -340,16 +379,6 @@ namespace zapata {
 	 */
 	extern JSONPtr undefined;
 	extern JSONPtr nilptr;
-
-	template <typename T>	
-	zapata::JSONElementT * make_element(T& _e) {
-		return new zapata::JSONElementT(_e);
-	}
-
-	template <typename T>	
-	zapata::JSONPtr make_ptr(T& _e) {
-		return zapata::JSONPtr(new zapata::JSONElementT(_e));
-	}
 
 	/**
 	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zapata::JSONPtr key-value pairs.
@@ -553,6 +582,98 @@ namespace zapata {
 		template <typename T>
 		bool operator!=(T _in) {
 			return true;
+		};
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<(JSONObjT& _in);
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<(JSONObj& _in);
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>(JSONObjT& _in);
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>(JSONObj& _in);
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>=(JSONObjT& _in);
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>=(JSONObj& _in);
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>=(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<=(JSONObjT& _in);
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<=(JSONObj& _in);
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<=(T _in) {
+			return false;
 		};
 
 		/**
@@ -811,6 +932,98 @@ namespace zapata {
 		bool operator!=(T _in) {
 			return true;
 		};
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<(JSONArrT& _in);
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<(JSONArr& _in);
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>(JSONArrT& _in);
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>(JSONArr& _in);
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<=(JSONArrT& _in);
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator<=(JSONArr& _in);
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<=(T _in) {
+			return false;
+		};
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>=(JSONArrT& _in);
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		bool operator>=(JSONArr& _in);
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>=(T _in) {
+			return false;
+		};
 
 		/**
 		 * \brief Operator '[]' override for accessing attributes or array elements of *this* array instance.
@@ -944,6 +1157,50 @@ namespace zapata {
 		bool operator!=(T _rhs) {
 			return *(this->get()) != _rhs;
 		};
+		/**
+		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<(T _rhs) {
+			return *(this->get()) < _rhs;
+		};
+		/**
+		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>(T _rhs) {
+			return *(this->get()) > _rhs;
+		};
+		/**
+		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator<=(T _rhs) {
+			return *(this->get()) <= _rhs;
+		};
+		/**
+		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
+		 *
+		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 *
+		 * @return **true** if the objects are equal, **false** otherwise
+		 */
+		template <typename T>
+		bool operator>=(T _rhs) {
+			return *(this->get()) >= _rhs;
+		};
 		JSONObj& operator<<(string _in);
 		JSONObj& operator<<(const char* _in);
 		template <typename T>
@@ -993,6 +1250,22 @@ namespace zapata {
 		template <typename T>
 		bool operator!=(T _rhs) {
 			return *(this->get()) != _rhs;
+		};
+		template <typename T>
+		bool operator<(T _rhs) {
+			return *(this->get()) < _rhs;
+		};
+		template <typename T>
+		bool operator>(T _rhs) {
+			return *(this->get()) > _rhs;
+		};
+		template <typename T>
+		bool operator<=(T _rhs) {
+			return *(this->get()) <= _rhs;
+		};
+		template <typename T>
+		bool operator>=(T _rhs) {
+			return *(this->get()) >= _rhs;
 		};
 		template <typename T>
 		JSONArr& operator<<(T _in) {
@@ -1173,6 +1446,37 @@ namespace zapata {
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
 		};
+		bool operator<(JSONElementT& _in);
+		bool operator<(JSONPtr& _rhs);
+		template <typename T>
+		bool operator<(T _in) {
+			JSONElementT _rhs(_in);
+			return (* this) < _rhs;
+		};
+		bool operator>(JSONElementT& _in);
+		bool operator>(JSONPtr& _rhs);
+		template <typename T>
+		bool operator>(T _in) {
+			JSONElementT _rhs(_in);
+			return (* this) > _rhs;
+		};
+		bool operator<=(JSONElementT& _in);
+		bool operator<=(JSONPtr& _rhs);
+		template <typename T>
+		bool operator<=(T _in) {
+			JSONElementT _rhs(_in);
+			return (* this) <= _rhs;
+		};
+		bool operator>=(JSONElementT& _in);
+		bool operator>=(JSONPtr& _rhs);
+		template <typename T>
+		bool operator>=(T _in) {
+			JSONElementT _rhs(_in);
+			return (* this) >= _rhs;
+		};
+
+		JSONPtr operator+(zapata::JSONPtr _rhs);
+		JSONPtr operator+(zapata::JSONElementT& _rhs);
 
 		friend ostream& operator<<(ostream& _out, JSONElementT _in) {
 			_in.stringify(_out);
@@ -1182,6 +1486,8 @@ namespace zapata {
 		zapata::JSONPtr getPath(std::string _path, std::string _separator = ".");
 		void setPath(std::string _path, zapata::JSONPtr _value, std::string _separator = ".");
 		void delPath(std::string _path, std::string _separator = ".");
+
+		virtual void inspect(zapata::JSONPtr _pattern, std::function< void (zapata::JSONElementT * , std::string, zapata::JSONElementT *, zapata::JSONPtr) > _callback, std::string _key = "", zapata::JSONElementT * _parent = nullptr);
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
@@ -1197,6 +1503,19 @@ namespace zapata {
 		void init();
 	};
 
+	template <typename T>	
+	zapata::JSONElementT * make_element(T& _e) {
+		return new zapata::JSONElementT(_e);
+	}
+
+	template <typename T>	
+	zapata::JSONPtr make_ptr(T _v) {
+		T _e(_v);
+		return zapata::JSONPtr(new zapata::JSONElementT(_e));
+	}
+
+	zapata::JSONPtr make_obj();
+	zapata::JSONPtr make_arr();
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -1207,6 +1526,22 @@ bool zapata::JSONPtr::operator==(T _rhs) {
 template <typename T>
 bool zapata::JSONPtr::operator!=(T _rhs){
 	return *(this->get()) != _rhs;
+};
+template <typename T>
+bool zapata::JSONPtr::operator<(T _rhs) {
+	return *(this->get()) < _rhs;
+};
+template <typename T>
+bool zapata::JSONPtr::operator>(T _rhs) {
+	return *(this->get()) > _rhs;
+};
+template <typename T>
+bool zapata::JSONPtr::operator<=(T _rhs) {
+	return *(this->get()) <= _rhs;
+};
+template <typename T>
+bool zapata::JSONPtr::operator>=(T _rhs) {
+	return *(this->get()) >= _rhs;
 };
 template <typename T>
 zapata::JSONPtr& zapata::JSONPtr::operator<<(T _in) {
@@ -1221,5 +1556,9 @@ zapata::JSONPtr& zapata::JSONPtr::operator>>(T _in) {
 template <typename T>
 zapata::JSONPtr& zapata::JSONPtr::operator[](T _idx) {
 	return (*(this->get()))[_idx];
+};
+template <typename T>
+zapata::JSONPtr zapata::JSONPtr::operator+(T _rhs) {
+	return *(this->get()) + _rhs;
 };
 #endif

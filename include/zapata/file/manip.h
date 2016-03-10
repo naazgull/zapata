@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <string>
 #include <vector>
+#include <regex.h>
 #include <zapata/json/JSONObj.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
@@ -473,5 +474,7 @@ namespace zapata {
 	void env(zapata::JSONObj& _options);
 	void env(zapata::JSONPtr& _options);
 
+	int globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive);
+	int glob(string& dir, vector<string>& result, string pattern, bool recursive);
 
 }

@@ -60,26 +60,3 @@ nobase_include_HEADERS = \
 ./zapata/json/JSONObj.h \
 ./zapata/unconfig.h \
 ./zapata/config.h
-
-etc_initdir = /etc/init.d
-etc_init_DATA = ../etc/init.d/zapata-rest-server
-
-etc_logrotatedir = /etc/logrotate.d
-etc_logrotate_DATA = ../etc/logrotate.d/zapata-rest-server
-
-etc_zapatadir = /etc/zapata
-etc_zapata_DATA = ../etc/zapata/zapata.conf
-
-etc_zapata_backend_availabledir = /etc/zapata/backend-available
-etc_zapata_backend_available_DATA = ../etc/zapata/backend-available/default.conf
-
-usr_sbindir = $(prefix)/sbin
-usr_sbin_DATA = ../usr/sbin/zapata-rest-observer
-
-install-data-hook:
-	chmod +x /etc/init.d/zapata-rest-server
-	chmod +x $(prefix)/sbin/zapata-rest-observer
-	sed -i "s#@PREFIX@#$(prefix)#g" /etc/init.d/zapata-rest-server
-	mkdir -p /etc/zapata/backend-enabled/
-	mkdir -p /etc/zapata/conf.d/
-	mkdir -p /var/log/zapata/

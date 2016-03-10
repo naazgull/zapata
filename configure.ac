@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata, 0.0.8, pedro.figueiredo@gmail.com)
+AC_INIT(zapata, 0.9.1-1, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -28,7 +28,7 @@ AH_TOP([#include <zapata/unconfig.h>])
 AC_CONFIG_HEADERS([include/zapata/config.h])
 
 dnl Initialize automake
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([subdir-objects tar-pax])
 
 dnl this allows us specify individual liking flags for each target
 AC_PROG_CXX

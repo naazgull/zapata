@@ -62,13 +62,13 @@
 #define PACKAGE "zapata"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "pedro.figueiredo@gmail.com"
+#define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "zapata"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata 0.0.8"
+#define PACKAGE_STRING "zapata 0.9.1-1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata"
@@ -77,13 +77,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.0.8"
+#define PACKAGE_VERSION "0.9.1-1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.0.8"
+#define VERSION "0.9.1-1"
 
 /* Machine hostname to be used in the log messages */
 #define __HOST__ "chomsky"

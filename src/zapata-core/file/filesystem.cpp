@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 Pedro (n@zgul) Figueiredo <pedro.figueiredo@gmail.com>
+Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -140,4 +140,41 @@ bool zapata::dump_path(string _in, wstring& _content) {
 	_ofs.flush();
 	_ofs.close();
 	return true;
+}
+
+int zapata::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
+	DIR *dp;
+	struct dirent *dirp;
+	vector<string> torecurse;
+
+	if ((dp = opendir(dir.c_str())) == NULL) {
+		return errno;
+	}
+	while ((dirp = readdir(dp)) != NULL) {
+		string cname = string(dirp->d_name);
+		if (cname.find('.') != 0) {
+			cname.insert(0, "/");
+			cname.insert(0, dir.data());
+			if (recursive && dirp->d_type == 4 && cname != dir) {
+				torecurse.push_back(cname);
+			}
+			if (regexec(&pattern, dirp->d_name, (size_t) (0), NULL, 0) == 0) {
+				result.insert(result.begin(), cname);
+			}
+
+		}
+	}
+	closedir(dp);
+
+	for (vector<string>::iterator i = torecurse.begin(); i != torecurse.end(); i++) {
+		zapata::globRegexp(*i, result, pattern, true);
+	}
+
+	return 0;
+}
+
+int zapata::glob(string& dir, vector<string>& result, string pattern, bool recursive) {
+	regex_t regexp;
+	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
+	return zapata::globRegexp(dir, result, regexp, recursive);
 }
