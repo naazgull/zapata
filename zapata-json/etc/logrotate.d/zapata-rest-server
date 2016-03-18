@@ -1,9 +1,0 @@
-/var/log/zapata/*.log {
-	daily
-	missingok
-	rotate 5
-	compress
-	delaycompress
-	notifempty
-	copytruncate
-}

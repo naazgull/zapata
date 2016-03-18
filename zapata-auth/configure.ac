@@ -6,13 +6,6 @@ AC_INIT(zapata, 0.9.1-1, n@zgul <naazgull@dfz.pt>)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 
-AC_ARG_ENABLE(mongodb, [  --enable-mongodb	Turn on MongoDB support],
-	[ AC_DEFINE(HAVE_MONGO_DB, 1, "Turn on MongoDB support") ]
-)
-
-AC_SUBST([HOSTNAME],[$(hostname)])
-AC_DEFINE_UNQUOTED([__HOST__], ["$HOSTNAME"], [Machine hostname to be used in the log messages])
-
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
 AC_HAVE_LIBRARY(pthread)

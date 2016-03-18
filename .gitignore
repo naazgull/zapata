@@ -29,4 +29,4 @@ missing
 */**/config.h.in
 */**/stamp-h1
 deps/
-*/zapata*.tar.gz
+*/zapata-*.tar.gz

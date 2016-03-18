@@ -29,7 +29,6 @@ SOFTWARE.
 #include <string>
 #include <vector>
 #include <regex.h>
-#include <zapata/json/JSONObj.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 using namespace std;

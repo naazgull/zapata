@@ -84,5 +84,4 @@
 /* Version number of package */
 #undef VERSION
 
-/* Machine hostname to be used in the log messages */
-#undef __HOST__
+

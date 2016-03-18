@@ -74,6 +74,7 @@ zapata::RESTPool::RESTPool(zapata::JSONObj& _options) : __options( _options ), _
 
 zapata::RESTPool::~RESTPool() {
 	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
+		regfree(_i->first);
 		delete _i->first;
 	}
 }

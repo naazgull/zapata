@@ -36,7 +36,7 @@ SOFTWARE.
 #include <sstream>
 #include <cmath>
 #include <sys/time.h>
-#include <zapata/config.h>
+#include <zapata/json/config.h>
 #include <zapata/base/assert.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>

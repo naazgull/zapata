@@ -176,5 +176,7 @@ int zapata::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bo
 int zapata::glob(string& dir, vector<string>& result, string pattern, bool recursive) {
 	regex_t regexp;
 	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
-	return zapata::globRegexp(dir, result, regexp, recursive);
+	int _return = zapata::globRegexp(dir, result, regexp, recursive);
+	regfree(& regexp);
+	return _return;
 }

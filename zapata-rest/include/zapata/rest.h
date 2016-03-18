@@ -24,14 +24,17 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/thread/RESTJob.h>
-#include <zapata/thread/RESTServer.h>
-
-#include <zapata/api/RESTPool.h>
-#include <zapata/api/codes_rest.h>
-#include <zapata/api/codes_users.h>
-
-#include <zapata/http/requester.h>
-#include <zapata/http/params.h>
+#include <zapata/rest/codes_rest.h>
+#include <zapata/rest/config.h>
+#include <zapata/rest/Job.h>
+#include <zapata/rest/RESTJob.h>
+#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTServer.h>
+#include <zapata/rest/SocketStreams.h>
+#include <zapata/rest/SSLSocketStreams.h>
+#include <zapata/rest/TimerJob.h>
+#include <zapata/rest/WebSocket.h>
+#include <zapata/rest/requester.h>
+#include <zapata/rest/params.h>
 
 extern "C" int zapata_rest();

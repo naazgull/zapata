@@ -24,10 +24,19 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/http/HTTPObj.h>
-
-#include <zapata/parsers/http.h>
-
 #include <zapata/exceptions/NoHeaderNameException.h>
+
+#include <zapata/http/config.h>
+#include <zapata/http/http.h>
+#include <zapata/http/HTTPinc.h>
+#include <zapata/http/HTTPLexer.h>
+#include <zapata/http/HTTPLexerbase.h>
+#include <zapata/http/HTTPLexerimpl.h>
+#include <zapata/http/HTTPObj.h>
+#include <zapata/http/HTTPParser.h>
+#include <zapata/http/HTTPTokenizer.h>
+#include <zapata/http/HTTPTokenizerbase.h>
+#include <zapata/http/HTTPTokenizerimpl.h>
+#include <zapata/http/HTTPTokenizerLexer.h>
 
 extern "C" int zapata_http();
