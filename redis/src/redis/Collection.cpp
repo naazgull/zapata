@@ -31,7 +31,7 @@ zapata::redis::CollectionPtr::~CollectionPtr() {
 }
 
 zapata::redis::Collection::Collection(zapata::JSONObj& _options) : __options( _options) {
-
+	this->connect((string) _options["redis"]["host"], (uint) _options["redis"]["port"]);
 }
 
 zapata::redis::Collection::~Collection() {
@@ -57,7 +57,7 @@ void zapata::redis::Collection::connect(string _host, uint _port) {
 	bool _success = true;
 	short _retry = 0;
 	do {
-		_success = ((this->__redis = redisConnect(this->__host.data(), this->__port)) != nullptr);
+		_success = ((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr);
 		_retry++;
 		if (!_success) {
 			sleep(1);		
@@ -65,18 +65,18 @@ void zapata::redis::Collection::connect(string _host, uint _port) {
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), muzzley::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
 		exit(-10);
 	}
 };
 
 void zapata::redis::Collection::reconnect() {
-	redisFree(this->__redis);
+	redisFree(this->__conn);
 	bool _success = true;
 	short _retry = 0;
 	do {
 		sleep(1);
-		_success = ((this->__redis = redisConnect(this->__host.data(), this->__port)) != nullptr);
+		_success = ((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr);
 		_retry++;
 	}
 	while(!_success && _retry != 10);
@@ -85,124 +85,234 @@ void zapata::redis::Collection::reconnect() {
 std::string zapata::redis::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
 
-	std::string _full_collection(_collection);
-	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	_document << "id" << _uuid.string();
 	_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
 
-	mongo::BSONObjBuilder _mongo_document;
-	zapata::redis::tomongo(_document, _mongo_document);
-	this->__conn->insert(_full_collection, _mongo_document.obj());
+	redisReply* _reply = nullptr;
+	bool _success = true;
+	short _retry = 0;
+	do {
+		pthread_mutex_lock(this->__mtx);
+		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["_id"]->str().data(), ((string) _document).data());
+		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		pthread_mutex_unlock(this->__mtx);
+		if (!_success) {
+			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			this->reconnect();
+		}
+		_retry++;
+	}
+	while(!_success && _retry != 10);
+	if(!_success) {
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		exit(-10);
+	}
+	freeReplyObject(_reply);	
 
 	return _document["id"]->str();
 }
 
-int zapata::redis::Collection::update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document) {	
+int zapata::redis::Collection::update(std::string _collection, std::string _url, zapata::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
-	assertz(_pattern->ok() && _pattern->type() == zapata::JSObject, "'_pattern' must be of type JSObject", 412, 0);
 
-	std::string _full_collection(_collection);
-	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	size_t _page_size = 0;
-	size_t _page_start_index = 0;
-	mongo::BSONObjBuilder _query_b;
-	mongo::BSONObjBuilder _order_b;
-	zapata::redis::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
-	mongo::Query _filter(_query_b.done());
+	zapata::JSONPtr _record = this->get(_collection, _url);
+	zapata::JSONPtr _new_record = _record + _document;
 
-	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
+	redisReply* _reply = nullptr;
+	bool _success = true;
+	short _retry = 0;
+	do {
+		pthread_mutex_lock(this->__mtx);
+		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((string) _new_record).data());
+		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		pthread_mutex_unlock(this->__mtx);
+		if (!_success) {
+			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			this->reconnect();
+		}
+		_retry++;
+	}
+	while(!_success && _retry != 10);
+	if(!_success) {
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		exit(-10);
+	}
+	freeReplyObject(_reply);	
 
-	_document = zapata::make_ptr(JSON("$set" << _document));
-	mongo::BSONObjBuilder _mongo_document;
-	zapata::redis::tomongo(_document, _mongo_document);
-	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
-
-	return _size;
+	return 1;
 }
 
-int zapata::redis::Collection::unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document) {
+int zapata::redis::Collection::unset(std::string _collection, std::string _url, zapata::JSONPtr _document) {
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
-	assertz(_pattern->ok() && _pattern->type() == zapata::JSObject, "'_pattern' must be of type JSObject", 412, 0);
 
-	std::string _full_collection(_collection);
-	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	size_t _page_size = 0;
-	size_t _page_start_index = 0;
-	mongo::BSONObjBuilder _query_b;
-	mongo::BSONObjBuilder _order_b;
-	zapata::redis::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
-	mongo::Query _filter(_query_b.done());
+	zapata::JSONPtr _record = this->get(_collection, _url);
+	zapata::JSONPtr _new_record = _record->clone();
+	for (auto _attribute : _document->obj()) {
+		_new_record >> _attribute.first;
+	}
 
-	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
+	redisReply* _reply = nullptr;
+	bool _success = true;
+	short _retry = 0;
+	do {
+		pthread_mutex_lock(this->__mtx);
+		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((string) _new_record).data());
+		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		pthread_mutex_unlock(this->__mtx);
+		if (!_success) {
+			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			this->reconnect();
+		}
+		_retry++;
+	}
+	while(!_success && _retry != 10);
+	if(!_success) {
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		exit(-10);
+	}
+	freeReplyObject(_reply);
 
-	_document = zapata::make_ptr(JSON("$unset" << _document));
-	mongo::BSONObjBuilder _mongo_document;
-	zapata::redis::tomongo(_document, _mongo_document);
-	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
-
-	return _size;
+	return 1;
 }
 
-int zapata::redis::Collection::remove(std::string _collection, zapata::JSONPtr _pattern) {
-	assertz(_pattern->ok() && _pattern->type() == zapata::JSObject, "'_pattern' must be of type JSObject", 412, 0);
+int zapata::redis::Collection::remove(std::string _collection, std::string _url) {	
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	std::string _full_collection(_collection);
-	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	string _command("HDEL %s %s");
+	redisReply* _reply = nullptr;
+	bool _success = true;
+	short _retry = 0;
+	do {
+		pthread_mutex_lock(this->__mtx);
+		redisAppendCommand(this->__conn, _command.data(), _key.data(), _url.data());
+		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		pthread_mutex_unlock(this->__mtx);
+		if (!_success) {
+			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			this->reconnect();
+		}
+		_retry++;
+	}
+	while(!_success && _retry != 10);
+	if(!_success) {
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		exit(-10);
+	}
+	freeReplyObject(_reply);
 
-	size_t _page_size = 0;
-	size_t _page_start_index = 0;
-	mongo::BSONObjBuilder _query_b;
-	mongo::BSONObjBuilder _order_b;
-	zapata::redis::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
-	mongo::Query _filter(_query_b.done());
+	return 1;
+}
 
-	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
-	this->__conn->remove(_full_collection, _filter);
+zapata::JSONPtr zapata::redis::Collection::get(std::string _collection, std::string _url) {	
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	return _size;
+	string _command("HGET %s %s");
+	redisReply* _reply = nullptr;
+	bool _success = true;
+	short _retry = 0;
+	do {
+		pthread_mutex_lock(this->__mtx);
+		redisAppendCommand(this->__conn, _command.data(), _key.data(), _url.data());
+		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
+		pthread_mutex_unlock(this->__mtx);
+		if (!_success) {
+			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			this->reconnect();
+		}
+		_retry++;
+	}
+	while(!_success && _retry != 10);
+	if(!_success) {
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		exit(-10);
+	}
+	
+	int _type = _reply->type;
+	switch(_type) {
+		case REDIS_REPLY_STATUS:
+		case REDIS_REPLY_ERROR: {
+			std::string _status_text(_reply->str, _reply->len);
+			freeReplyObject(_reply);
+			assertz(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_STRING, string("Redis server replied with an error/status: ") + _status_text, 0, 0); 
+		}
+		case REDIS_REPLY_INTEGER: {
+			freeReplyObject(_reply);
+			assertz(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_STRING, string("Redis server replied something else: REDIS_REPLY_INTEGER"), 0, 0); 			
+		}
+		case REDIS_REPLY_ARRAY: {
+			freeReplyObject(_reply);
+			assertz(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_STRING, string("Redis server replied something else: REDIS_REPLY_ARRAY"), 0, 0); 
+		}
+		case REDIS_REPLY_NIL: {
+			freeReplyObject(_reply);
+			return zapata::undefined;
+		}
+		case REDIS_REPLY_STRING: {
+			string _data(_reply->str, _reply->len);
+			try {
+				zapata::JSONPtr _return = zapata::fromstr(_data);
+				freeReplyObject(_reply);
+				return _return;
+			}
+			catch(zapata::SyntaxErrorException& _e) {
+				assertz(_reply != nullptr, string("something went wrong with the Redis server, got non JSON value:\n") + _data, 0, 0);
+			}
+		}
+		default : {
+			zlog("\nnone of the above", zapata::notice);
+			break;
+		}
+	}
+
+	freeReplyObject(_reply);
+	return zapata::undefined;
 }
 
 zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata::JSONPtr _pattern) {
-	zapata::JSONArr _return;
+	std::string _key(_collection);
+	_key.insert(0, "|");
+	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	std::string _full_collection(_collection);
-	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
-
-	assertz(_full_collection.length() != 0, "'_full_collection' parameter must not be empty", 0, 0);
-	assertz(_regexp.length() != 0, "'_regexp' parameter must not be empty", 0, 0);
-	string _command("HSCAN %s %i MATCH %s");
+	string _command("HSCAN %s %i");
 	int _cursor = 0;
 	redisReply* _reply = nullptr;
-	muzzley::JSONObj _return;
-	size_t _size = 0;
+	zapata::JSONPtr _return = zapata::make_arr();
 
 	do {
 		bool _success = true;
 		short _retry = 0;
 		do {
 			pthread_mutex_lock(this->__mtx);
-			redisAppendCommand(this->__redis, _command.data(), _full_collection.data(), _cursor, _regexp.data());
-			_success = (redisGetReply(this->__redis, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
+			redisAppendCommand(this->__conn, _command.data(), _key.data(), _cursor);
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
 			pthread_mutex_unlock(this->__mtx);
 			if (!_success) {
-				mzlog("disconnected from Redis server, going to reconnect...", muzzley::warning);
+				zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
 				this->reconnect();
 			}
 			_retry++;
 		}
 		while(!_success && _retry != 10);
 		if(!_success) {
-			mzlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), muzzley::emergency);
+			zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
 			exit(-10);
 		}
 		
@@ -237,9 +347,18 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 			case REDIS_REPLY_ARRAY: {
 				_cursor = std::stoi(string(_reply->element[0]->str, _reply->element[0]->len));
 				for (size_t _i = 0; _i < _reply->element[1]->elements; _i += 2) {
-					std::string _full_collection(_reply->element[1]->element[_i]->str, _reply->element[1]->element[_i]->len);
 					std::string _json(_reply->element[1]->element[_i + 1]->str, _reply->element[1]->element[_i + 1]->len);
-					_return << _full_collection << muzzley::fromstr(_json);
+					zapata::JSONPtr _record = zapata::fromstr(_json);
+					bool _match = true;
+					for (auto _o : _pattern->obj()) {
+						if (_record[_o.first] != _o.second) {
+							_match = false;
+							break;
+						}
+					}
+					if (_match) {
+						_return << _record;
+					}
 				}
 				freeReplyObject(_reply);
 				break;
@@ -247,18 +366,18 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 			default : {
 				_cursor = 0;
 				freeReplyObject(_reply);
-				mzlog("\nnone of the above", muzzley::notice);
+				zlog("\nnone of the above", zapata::notice);
 				break;
 			}
 		}
 	}
 	while (_cursor != 0);
 
-	if (_return->size() == 0) {
+	if (_return->arr()->size() == 0) {
 		return zapata::undefined;
 	}
 	return zapata::make_ptr(JSON(
-		"size" << _size <<
+		"size" << _return->arr()->size() <<
 		"elements" << _return
 	));
 }

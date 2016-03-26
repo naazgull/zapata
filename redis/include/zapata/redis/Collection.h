@@ -1,31 +1,30 @@
 /*
+The MIT License (MIT)
 
-   ██████████╗
-  ████████████╗    ███╗   ███╗██╗   ██╗████████╗████████╗██╗      ██████╗██╗   ██╗
- ████  █  █  ██╗   ████╗ ████║██║   ██║     ██╔╝     ██╔╝██║     ██╔════╝██║   ██║
-████  █  █  ████╗  ██╔████╔██║██║   ██║   ██╔═╝    ██╔═╝ ██║     ████╗   ╚██████╔╝
- ██  █  █  ████╔╝  ██║╚██╔╝██║██║   ██║ ██╔═╝    ██╔═╝   ██║     ██╔═╝    ╚═██╔═╝
-  ████████████╔╝   ██║ ╚═╝ ██║╚██████╔╝████████╗████████╗╚██████╗╚██████╗   ██║
-   ██████████╔╝    ╚═╝     ╚═╝ ╚═════╝ ╚═══════╝╚═══════╝ ╚═════╝ ╚═════╝   ╚═╝
-    ╚════════╝
+Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
 
-Copyright (c) 2014, Muzzley
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Permission to use, copy, modify, and/or distribute this software for 
-any purpose with or without fee is hereby granted, provided that the 
-above copyright notice and this permission notice appear in all 
-copies.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL 
-WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED 
-WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE 
-AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL 
-DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR 
-PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER 
-TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR 
-PERFORMANCE OF THIS SOFTWARE.*/
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #pragma once
 
+#include <zapata/json.h>
 #include <hiredis/hiredis.h>
 #include <ossp/uuid++.hh>
 
@@ -45,10 +44,14 @@ namespace zapata {
 
 			virtual zapata::JSONObj& options();
 
+			void connect(string _host, uint _port);
+			void reconnect();
+
 			virtual std::string insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
-			virtual int update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _record);
-			virtual int unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document);
-			virtual int remove(std::string _collection, zapata::JSONPtr _pattern);
+			virtual int update(std::string _collection, std::string _url, zapata::JSONPtr _record);
+			virtual int unset(std::string _collection, std::string _url, zapata::JSONPtr _document);
+			virtual int remove(std::string _collection, std::string _url);
+			virtual zapata::JSONPtr get(std::string _collection, std::string _url);
 			virtual zapata::JSONPtr query(std::string _collection, zapata::JSONPtr _pattern);
 
 		private:
@@ -56,6 +59,8 @@ namespace zapata {
 			pthread_mutex_t* __mtx;
 			pthread_mutexattr_t* __attr;
 			redisContext* __conn;
+			std::string __host;
+			uint __port;
 		};
 
 		class CollectionPtr : public std::shared_ptr<zapata::redis::Collection> {

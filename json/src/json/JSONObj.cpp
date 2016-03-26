@@ -1638,6 +1638,12 @@ void zapata::JSONArrT::pop(size_t _idx) {
 	this->erase(this->begin() + _idx);
 }
 
+void zapata::JSONArrT::sort() {
+	std::sort(this->begin(), this->end(), [] (zapata::JSONPtr _lhs, zapata::JSONPtr _rhs) -> bool {
+		return _lhs < _rhs;
+	});
+}
+
 void zapata::JSONArrT::sort(std::function< bool (zapata::JSONPtr, zapata::JSONPtr) > _comparator) {
 	std::sort(this->begin(), this->end(), _comparator);
 }

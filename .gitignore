@@ -30,3 +30,4 @@ missing
 */**/stamp-h1
 deps/
 */zapata-*.tar.gz
+rest/src/rest/zapata-rest-daemon

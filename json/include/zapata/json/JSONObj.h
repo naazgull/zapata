@@ -817,6 +817,7 @@ namespace zapata {
 		 */
 		virtual void pop(string _idx);
 
+		virtual void sort();
 		virtual void sort(std::function< bool (zapata::JSONPtr, zapata::JSONPtr) > _comparator);
 
 		/**

@@ -24,5 +24,6 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/json.h>
 #include <zapata/redis/config.h>
 #include <zapata/redis/Collection.h>

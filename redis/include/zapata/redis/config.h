@@ -9,31 +9,17 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the `boost_filesystem' library
-   (-lboost_filesystem). */
-#define HAVE_LIBBOOST_FILESYSTEM 1
-
-/* Define to 1 if you have the `boost_program_options' library
-   (-lboost_program_options). */
-#define HAVE_LIBBOOST_PROGRAM_OPTIONS 1
-
-/* Define to 1 if you have the `boost_system' library (-lboost_system). */
-#define HAVE_LIBBOOST_SYSTEM 1
-
-/* Define to 1 if you have the `boost_thread' library (-lboost_thread). */
-#define HAVE_LIBBOOST_THREAD 1
-
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
+/* Define to 1 if you have the `hiredis' library (-lhiredis). */
+#define HAVE_LIBHIREDIS 1
+
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
-
-/* Define to 1 if you have the `mongoclient' library (-lmongoclient). */
-#define HAVE_LIBMONGOCLIENT 1
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
 #define HAVE_LIBOSSP_UUID__ 1
