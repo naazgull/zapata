@@ -72,9 +72,9 @@ zapata::RESTPool::RESTPool(zapata::JSONObj& _options) : __options( _options ), _
 }
 
 zapata::RESTPool::~RESTPool() {
-	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
-		regfree(_i->first);
-		delete _i->first;
+	for (auto _i : this->__resources) {
+		regfree(_i.first);
+		delete _i.first;
 	}
 }
 
@@ -89,11 +89,11 @@ void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zap
 
 	std::vector<zapata::RESTHandler> _handlers;
 
-	_handlers.push_back( this->__default_get);
+	_handlers.push_back(this->__default_get);
 	_handlers.push_back(this->__default_put);
 	_handlers.push_back(this->__default_post);
-	_handlers.push_back( this->__default_delete);
-	_handlers.push_back( this->__default_head);
+	_handlers.push_back(this->__default_delete);
+	_handlers.push_back(this->__default_head);
 	_handlers.push_back(this->__default_trace);
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back(this->__default_patch);
@@ -145,25 +145,6 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9]) {
 	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
 }
 
-/*void zapata::RESTPool::on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect) {
-	regex_t* _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
-
-	vector<zapata::RESTHandler> _handlers;
-	_handlers.push_back(_get == nullptr ?  this->__default_get : _get);
-	_handlers.push_back(_put == nullptr ?  this->__default_put : _put);
-	_handlers.push_back(_post == nullptr ?  this->__default_post : _post);
-	_handlers.push_back(_delete == nullptr ?  this->__default_delete : _delete);
-	_handlers.push_back(_head == nullptr ?  this->__default_head : _head);
-	_handlers.push_back(this->__default_trace);
-	_handlers.push_back(this->__default_options);
-	_handlers.push_back(_patch == nullptr ?  this->__default_patch : _patch);
-	_handlers.push_back(_connect == nullptr ?  this->__default_connect : _connect);
-
-	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
-}*/
-
 void zapata::RESTPool::trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
@@ -200,6 +181,18 @@ void zapata::RESTPool::trigger(string _url, zapata::HTTPMethod _method, zapata::
 	zapata::HTTPReq _req;
 	_req->method(_method);
 	this->trigger(_url, _req, _rep, _is_ssl);
+}
+
+void zapata::RESTPool::add_kb(std::string _name, zapata::KBPtr _kb) {
+	this->__kb.insert(make_pair(_name, _kb));
+}
+
+zapata::KBPtr zapata::RESTPool::get_kb(std::string _name) {
+	auto _found = this->__kb.find(_name);
+	if (_found == this->__kb.end()) {
+		return zapata::KBPtr(nullptr);
+	}
+	return _found->second;
 }
 
 void zapata::RESTPool::init(zapata::HTTPRep& _rep) {
@@ -287,10 +280,10 @@ void zapata::RESTPool::resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request
 void zapata::RESTPool::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	this->init(_rep);
 	
-	for (zapata::RESTHandlerStack::iterator _i = this->__resources.begin(); _i != this->__resources.end(); _i++) {
-		if (regexec(_i->first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
+	for (auto _i : this->__resources) {
+		if (regexec(_i.first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				_i->second[_req->method()](_req, _rep, make_ptr(this->__options), this->__self);
+				_i.second[_req->method()](_req, _rep, make_ptr(this->__options), this->__self);
 			}
 			catch (zapata::AssertionException& _e) {
 				if (_e.status() > 399) {

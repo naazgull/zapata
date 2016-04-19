@@ -24,6 +24,9 @@ SOFTWARE.
 
 #include <zapata/redis/Collection.h>
 
+zapata::redis::CollectionPtr::CollectionPtr(zapata::redis::Collection * _target) : std::shared_ptr<zapata::redis::Collection>(_target) {
+}
+
 zapata::redis::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::shared_ptr<zapata::redis::Collection>(new zapata::redis::Collection(_options)) {
 }
 
@@ -44,6 +47,10 @@ zapata::redis::Collection::~Collection() {
 
 zapata::JSONObj& zapata::redis::Collection::options() {
 	return this->__options;
+}
+
+std::string zapata::redis::Collection::name() {
+	return string("redis://") + ((string) this->__options["redis"]["host"]) + string(":") + ((string) this->__options["redis"]["port"]) + string("/") + ((string) this->__options["redis"]["db"]);
 }
 
 void zapata::redis::Collection::connect(string _host, uint _port) {
@@ -82,7 +89,7 @@ void zapata::redis::Collection::reconnect() {
 	while(!_success && _retry != 10);
 }
 
-std::string zapata::redis::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
+zapata::JSONPtr zapata::redis::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
@@ -93,6 +100,7 @@ std::string zapata::redis::Collection::insert(std::string _collection, std::stri
 	_uuid.make(UUID_MAKE_V1);
 	_document << "id" << _uuid.string();
 	_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
+	_document << "href" << _document["id"];
 
 	redisReply* _reply = nullptr;
 	bool _success = true;
@@ -115,7 +123,7 @@ std::string zapata::redis::Collection::insert(std::string _collection, std::stri
 	}
 	freeReplyObject(_reply);	
 
-	return _document["id"]->str();
+	return _document;
 }
 
 int zapata::redis::Collection::update(std::string _collection, std::string _url, zapata::JSONPtr _document) {	

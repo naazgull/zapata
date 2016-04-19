@@ -58,7 +58,6 @@ namespace zapata {
 		debug = 7
 	};
 
-	void log(string _text, zapata::LogLevel _level, string _host, int _line, string _file);
-	void log(string _user_id, string _text, zapata::LogLevel _level, string _host, int _line, string _file);
+	int log(string _text, zapata::LogLevel _level, string _host, int _line, string _file);
 	std::string log_hostname();
 }

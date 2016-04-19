@@ -35,14 +35,15 @@ namespace zapata {
 
 	namespace mongodb {
 
-		class Collection {
+		class Collection : public zapata::KB {
 		public:
-			explicit Collection(zapata::JSONObj& _options);
+			Collection(zapata::JSONObj& _options);
 			virtual ~Collection();
 
 			virtual zapata::JSONObj& options();
+			virtual std::string name();
 
-			virtual std::string insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
+			virtual zapata::JSONPtr insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
 			virtual int update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _record);
 			virtual int unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document);
 			virtual int remove(std::string _collection, zapata::JSONPtr _pattern);
@@ -60,7 +61,8 @@ namespace zapata {
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 explicit CollectionPtr(zapata::JSONObj& _options);
+			 CollectionPtr(zapata::mongodb::Collection * _target);
+			 CollectionPtr(zapata::JSONObj& _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

@@ -112,7 +112,7 @@ void zapata::HTTPReqT::stringify(string& _out) {
 	}
 	_out.insert(_out.length(), " HTTP/1.1");
 	_out.insert(_out.length(),  CRLF);
-	bool _first = true;
+
 	for (auto h : this->__headers) {
 		_out.insert(_out.length(), h.first);
 		_out.insert(_out.length(), ": ");
@@ -123,7 +123,7 @@ void zapata::HTTPReqT::stringify(string& _out) {
 	_out.insert(_out.length(), this->__body);
 }
 
-zapata::HTTPReq::HTTPReq()  : shared_ptr<HTTPReqT>(make_shared<HTTPReqT>()) {
+zapata::HTTPReq::HTTPReq()  : shared_ptr<HTTPReqT>(new HTTPReqT()) {
 }
 
 zapata::HTTPReq::HTTPReq(HTTPReqT* _target) : shared_ptr<HTTPReqT>(_target) {

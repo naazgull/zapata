@@ -61,6 +61,7 @@ namespace zapata {
 	class RESTPool;
 
 	typedef std::shared_ptr<zapata::RESTPool> RESTPoolPtr;
+	typedef std::shared_ptr<zapata::KB> KBPtr;
 	typedef std::function<void (zapata::HTTPReq&, zapata::HTTPRep&, zapata::JSONPtr, zapata::RESTPoolPtr&)> RESTHandler;
 	typedef RESTHandler RESTCallback;
 	typedef vector<pair<regex_t*, vector<zapata::RESTHandler> > > RESTHandlerStack;
@@ -70,16 +71,18 @@ namespace zapata {
 			RESTPool(zapata::JSONObj& _options);
 			virtual ~RESTPool();
 
-			zapata::JSONObj& options();
+			virtual zapata::JSONObj& options();
 
-			void on(std::vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
-			void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler);
-			void on(string _regex, zapata::RESTHandler _handlers[9]);
-			//void on(string _regex, zapata::RESTHandler _get, zapata::RESTHandler _put, zapata::RESTHandler _post, zapata::RESTHandler _delete, zapata::RESTHandler _head, zapata::RESTHandler _trace, zapata::RESTHandler _options, zapata::RESTHandler _patch, zapata::RESTHandler _connect);
+			virtual void on(std::vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
+			virtual void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler);
+			virtual void on(string _regex, zapata::RESTHandler _handlers[9]);
 
-			void trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
-			void trigger(std::string _url, zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
-			void trigger(std::string _url, zapata::HTTPMethod _method, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			virtual void trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			virtual void trigger(std::string _url, zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			virtual void trigger(std::string _url, zapata::HTTPMethod _method, zapata::HTTPRep& _rep, bool _is_ssl = false);
+
+			virtual void add_kb(std::string _name, zapata::KBPtr _kb);
+			virtual zapata::KBPtr get_kb(std::string _name);
 
 		private:
 			zapata::JSONObj __options;
@@ -94,6 +97,7 @@ namespace zapata {
 			zapata::RESTHandler __default_connect;
 			zapata::RESTHandlerStack __resources;
 			zapata::RESTPoolPtr __self;
+			std::map<std::string, zapata::KBPtr> __kb;
 
 			void init(zapata::HTTPRep& _rep);
 			void init(zapata::HTTPReq& _req);

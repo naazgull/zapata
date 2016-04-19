@@ -41,30 +41,30 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 	this->__next = -1;
 	this->__initialized = false;
 
-	if (!!this->options()["zapata"]["core"]["max_jobs"] && ((int) this->options()["zapata"]["core"]["max_jobs"]) != -1) {
-		this->max((size_t) this->options()["zapata"]["core"]["max_jobs"]);
+	if (!!this->options()["max_jobs"] && ((int) this->options()["max_jobs"]) != -1) {
+		this->max((size_t) this->options()["max_jobs"]);
 	}
 	else {
 		this->max(1);
 	}
 
-	if (!this->options()["zapata"]["core"]["max_connections_per_job"]->ok() || ((int) this->options()["zapata"]["core"]["max_connections_per_job"]) <= 0) {
-		((zapata::JSONObj&) this->options()["zapata"]["core"]) << "max_connections_per_job" << 1024;
+	if (!this->options()["max_connections_per_job"]->ok() || ((int) this->options()["max_connections_per_job"]) <= 0) {
+		((zapata::JSONObj&) this->options()) << "max_connections_per_job" << 1024;
 	}
 
-	if (!!this->options()["zapata"]["core"]["log"]["level"]) {
-		zapata::log_lvl = (int) this->options()["zapata"]["core"]["log"]["level"];
+	if (!!this->options()["log"]["level"]) {
+		zapata::log_lvl = (int) this->options()["log"]["level"];
 	}
-	if (!!this->options()["zapata"]["core"]["log"]["file"]) {
+	if (!!this->options()["log"]["file"]) {
 		zapata::log_fd = new ofstream();
-		((ofstream*) zapata::log_fd)->open(((string) this->options()["zapata"]["core"]["log"]["file"]).data());
+		((ofstream*) zapata::log_fd)->open(((string) this->options()["log"]["file"]).data());
 	}
 
-	for (auto _i : * this->__options) {
-		string _key = _i.first;
-		JSONElement _value = _i.second;
-		if (_key != "zapata") {
-			
+	if (this->__options["modules"]->ok()) {
+		for (auto _i : this->__options["modules"]->obj()) {
+			string _key = _i.first;
+			JSONElement _value = _i.second;
+
 			string _lib_file("lib");
 			_lib_file.append((string) _value["lib"]);
 			_lib_file.append(".so");
@@ -82,8 +82,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 			}
 		}
 	}
-
-	if (!!this->options()["zapata"]["rest"]["uploads"]["upload_controller"]) {
+	if (!!this->options()["rest"]["uploads"]["upload_controller"]) {
 		/*
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
@@ -99,7 +98,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 			assertz(!!_params["uploaded_file"], "The 'uploaded_file' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
 
 			string _from((string) _params["uploaded_file"]);
-			string _to((string) _config["zapata"]["rest"]["uploads"]["upload_path"]);
+			string _to((string) _config["rest"]["uploads"]["upload_path"]);
 			zapata::normalize_path(_to, true);
 
 			string _originalname(_req->header("X-Original-Filename"));
@@ -153,7 +152,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 				assertz(zapata::copy_path((string ) _params["uploaded_file"], _path), "There was an error copying the temporary file to the 'upload_path' directory.", zapata::HTTP500, zapata::ERRFilePermissions);
 			}
 
-			string _location((string) _config["zapata"]["rest"]["uploads"]["upload_url"]);
+			string _location((string) _config["rest"]["uploads"]["upload_url"]);
 			zapata::normalize_path(_location, true);
 			_location.insert(_location.length(), _name);
 
@@ -177,8 +176,8 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 			assertz(!!_params["file_url"], "The 'file_url' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
 
 			string _url((string) _params["file_url"]);
-			string _url_root(_config["zapata"]["rest"]["uploads"]["upload_url"]);
-			string _path_root(_config["zapata"]["rest"]["uploads"]["upload_path"]);
+			string _url_root(_config["rest"]["uploads"]["upload_url"]);
+			string _path_root(_config["rest"]["uploads"]["upload_path"]);
 
 			zapata::replace(_url, _url_root, _path_root);
 
@@ -195,17 +194,17 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		});
 	}
 
-	assertz(this->options()["zapata"]["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
+	assertz(this->options()["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
 
-	unsigned int _port =  (unsigned int) this->options()["zapata"]["rest"]["port"];
+	unsigned int _port =  (unsigned int) this->options()["rest"]["port"];
 	string _text("starting RESTful server on port ");
 	zapata::tostr(_text, _port);
 	zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
 	this->__ss.bind(_port);
 
-	if (this->options()["zapata"]["rest"]["websocket"]["port"]->ok()) {
+	if (this->options()["rest"]["websocket"]["port"]->ok()) {
 		zapata::Job _ws([ this ] (zapata::Job& _self) -> void {
-			unsigned int _ws_port = (unsigned int) this->options()["zapata"]["rest"]["websocket"]["port"];
+			unsigned int _ws_port = (unsigned int) this->options()["rest"]["websocket"]["port"];
 			zapata::websocketserverstream _sws;
 			string _text("starting RESTful web-socket listener on port ");
 			zapata::tostr(_text, _ws_port);

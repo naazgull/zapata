@@ -24,15 +24,18 @@ SOFTWARE.
 
 #include <zapata/mongodb/Collection.h>
 
+zapata::mongodb::CollectionPtr::CollectionPtr(zapata::mongodb::Collection * _target) : std::shared_ptr<zapata::mongodb::Collection>(_target) {
+}
+
 zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::shared_ptr<zapata::mongodb::Collection>(new zapata::mongodb::Collection(_options)) {
 }
 
 zapata::mongodb::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongo"]["host"]) {
-	if (this->__options["mongo"]["user"]->ok()) {
-		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongo"]["user"] << "pwd" << (string) this->__options["mongo"]["passwd"] << "db" << (string) this->__options["mongo"]["db"]));
+zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["host"]) {
+	if (this->__options["mongodb"]["user"]->ok()) {
+		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
 	this->__conn->setWriteConcern((mongo::WriteConcern) 2);
 
@@ -46,23 +49,28 @@ zapata::JSONObj& zapata::mongodb::Collection::options() {
 	return this->__options;
 }
 
-std::string zapata::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
+std::string zapata::mongodb::Collection::name() {
+	return string("mongodb://") + ((string) this->__options["mongodb"]["host"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
+}
+
+zapata::JSONPtr zapata::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
 
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	_document << "id" << _uuid.string();
 	_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
+	_document << "href" << _document["_id"];
 
 	mongo::BSONObjBuilder _mongo_document;
 	zapata::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->insert(_full_collection, _mongo_document.obj());
 
-	return _document["id"]->str();
+	return _document;
 }
 
 int zapata::mongodb::Collection::update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document) {	
@@ -71,7 +79,7 @@ int zapata::mongodb::Collection::update(std::string _collection, zapata::JSONPtr
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -96,7 +104,7 @@ int zapata::mongodb::Collection::unset(std::string _collection, zapata::JSONPtr 
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -120,7 +128,7 @@ int zapata::mongodb::Collection::remove(std::string _collection, zapata::JSONPtr
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -140,7 +148,7 @@ zapata::JSONPtr zapata::mongodb::Collection::query(std::string _collection, zapa
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongo"]["db"]);
+	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;

@@ -29,109 +29,17 @@ SOFTWARE.
 
 namespace zapata {
 
-	namespace auth {
-
-		bool authenticate(string _id, string _secret, string& _out_code, zapata::JSONObj& _config) {
-			mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
-			string _collection((string) _config["zapata"]["mongodb"]["db"]);
-			_collection.insert(_collection.length(), "." + ((string) _config["users"]["mongodb"]["collection"]));
-
-			std::unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
-			bool _exists = _ptr->more();
-			_conn.done();
-
-			if (_exists) {
-				zapata::generate_hash(_out_code);
-			}
-
-			return _exists;
-		}
-
-		bool usrtoken(string _id, string _secret, string _code, zapata::JSONObj& _out, zapata::JSONObj& _config) {
-			string _out_token;
-			string _cur_date;
-			zapata::tostr(_cur_date, time(nullptr));
-			_out_token.insert(_out_token.length(), _cur_date);
-			_out_token.insert(_out_token.length(), "|");
-			_out_token.insert(_out_token.length(), _id);
-			_out_token.insert(_out_token.length(), "|");
-
-			mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
-			string _collection((string) _config["zapata"]["mongodb"]["db"]);
-			_collection.insert(_collection.length(), "." + ((string) _config["users"]["mongodb"]["collection"]));
-
-			std::unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
-			if(_ptr->more()) {
-				mongo::BSONObj _bo = _ptr->next();
-				zapata::mongodb::frommongo(_bo, _out);
-				_out_token.insert(_out_token.length(), _bo.getStringField("scopes"));
-				_out_token.insert(_out_token.length(), "|");
-				_out_token.insert(_out_token.length(), _bo.getStringField("_id"));
-				_out_token.insert(_out_token.length(), "|");
-				string _expiration;
-				zapata::tostr(_expiration, time(nullptr) + 3600 * 24 * 60);
-				_out_token.insert(_out_token.length(), _expiration);
-			}
-			_conn.done();
-
-			string _enc_token;
-			zapata::encrypt(_enc_token, _out_token, (string) _config["zapata"]["auth"]["signing_key"]);
-
-			_out >> "password" >> "confirmation_password";
-			_out << "access_token" << _enc_token;
-
-			return true;
-		}
-
-		bool apptoken(string _id, string _secret, string _code, zapata::JSONObj& _out, zapata::JSONObj& _config) {
-			string _out_token;
-			string _cur_date;
-			zapata::tostr(_cur_date, time(nullptr));
-			_out_token.insert(_out_token.length(), _cur_date);
-			_out_token.insert(_out_token.length(), "|");
-			_out_token.insert(_out_token.length(), _id);
-			_out_token.insert(_out_token.length(), "|");
-
-			mongo::ScopedDbConnection _conn((string) _config["zapata"]["mongodb"]["address"]);
-			string _collection((string) _config["zapata"]["mongodb"]["db"]);
-			_collection.insert(_collection.length(), _config["users"]["mongodb"]["collection"]);
-
-			std::unique_ptr<mongo::DBClientCursor> _ptr = _conn->query(_collection, QUERY("id" << _id << "password" << _secret));
-			if(_ptr->more()) {
-				mongo::BSONObj _bo = _ptr->next();
-				zapata::mongodb::frommongo(_bo, _out);
-				_out_token.insert(_out_token.length(), _bo.getStringField("scopes"));
-				_out_token.insert(_out_token.length(), "|");
-				_out_token.insert(_out_token.length(), _bo.getStringField("_id"));
-				_out_token.insert(_out_token.length(), "|");
-				string _expiration;
-				zapata::tostr(_expiration, time(nullptr) + 3600 * 24 * 60);
-				_out_token.insert(_out_token.length(), _expiration);
-			}
-			_conn.done();
-
-			string _enc_token;
-			zapata::encrypt(_enc_token, _out_token, (string) _config["zapata"]["auth"]["signing_key"]);
-
-			_out >> "password" >> "confirmation_password";
-			_out << "access_token" << _enc_token;
-
-			return true;
-		}
-	}
-
 	namespace users {
 
 		void collection(zapata::RESTPoolPtr& _pool) {
 			zapata::RESTHandler _handler_set[9] = {
-			//get
+				//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
+					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
+					zapata::JSONPtr _payload = _mongo->query("users", _params);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
-
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
@@ -140,7 +48,7 @@ namespace zapata {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
 				no_put,
-			//post
+				//post
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
@@ -148,14 +56,14 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 					if (!_record["id"]->ok() && _record["email"]->ok()) {
 						_record << "id" << (string) _record["email"];
 					}
 					if (!_record["email"]->ok() && _record["id"]->ok()) {
 						string _email((string) _record["id"]);
 						_email.insert(_email.length(), "@");
-						_email.insert(_email.length(), (string) _config["zapata"] ["rest"]["bind_address"]);
+						_email.insert(_email.length(), (string) _config["rest"]["bind_address"]);
 						_record << "email" << _email;
 					}
 
@@ -166,37 +74,25 @@ namespace zapata {
 					assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 					assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
-					string _text = (string) _req_body;
+					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
+					zapata::JSONPtr _payload = _mongo->insert("users", _req->url(), _record);
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP201);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
-					_rep->header("Location", (string) _req_body["href"]);
+					_rep->header("Location", (string) _payload["href"]);
 					_rep->header("Content-Length", std::to_string(_text.length()));
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//delete
+				no_delete,
+				//head
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
+					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
+					zapata::JSONPtr _payload = _mongo->query("users", _params);
 
-					string _text = (string) zapata::mongodb::delete_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
-					_rep->status(zapata::HTTP200);
-					_rep->header("Cache-Control", "no-store");
-					_rep->header("Pragma", "no-cache");
-					_rep->header("Content-Length", std::to_string(_text.length()));
-					_rep->header("Content-Type", "application/json"); 
-					_rep->body(_text);
-				},
-			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
-
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
-
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
@@ -205,27 +101,7 @@ namespace zapata {
 				},
 				no_trace,
 				no_options, 
-			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
-
-					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
-
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
-
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
-
-					string _text = (string) zapata::mongodb::patch_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
-					_rep->status(zapata::HTTP200);
-					_rep->header("Cache-Control", "no-store");
-					_rep->header("Pragma", "no-cache");
-					_rep->header("Content-Length", std::to_string(_text.length()));
-					_rep->header("Content-Type", "application/json"); 
-					_rep->body(_text);
-				},
+				no_patch,
 				no_connect
 			};
 			_pool->on("^/users$", _handler_set);
@@ -235,12 +111,11 @@ namespace zapata {
 			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
+					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
+					zapata::JSONPtr _payload = _mongo->query("users", _params);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
-
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
@@ -256,7 +131,7 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
 					assertz(_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
@@ -265,8 +140,7 @@ namespace zapata {
 					assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 					assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::replace_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
 					_rep->status(zapata::HTTP200);
@@ -280,8 +154,7 @@ namespace zapata {
 				no_post,
 			//delete
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::delete_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 					_rep->status(zapata::HTTP200);
@@ -293,19 +166,19 @@ namespace zapata {
 				},
 			//head
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-				no_trace, no_options, 
+				no_trace, 
+				no_options, 
 			//patch
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 					string _body = _req->body();
@@ -314,14 +187,13 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					assertz(!_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
 					assertz((!_record["password"]->ok() && !_record["confirmation_password"]->ok()) || (_record["password"]->ok() && _record["confirmation_password"]->ok()), "The 'confirmation_password' field is mandatory when the field 'password' is provided", zapata::HTTP412, zapata::ERRConfirmationMandatory);
 					assertz(((string) _record["confirmation_password"]) == ((string) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::patch_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
 					_rep->status(zapata::HTTP200);
@@ -350,15 +222,15 @@ namespace zapata {
 				string _redirect_uri(_state.substr(_idx + 2));
 				string _client_code(_state.substr(0, _idx));
 
-				assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
+				assertz(_config["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _client_config(_config["auth"]["clients"][_client_code]);
 
 				string _client_id(_client_config["client_id"]);
 				string _client_secret(_client_config["client_secret"]);
 				string _type(_client_config["type"]);
 
-				assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
+				assertz(_config["auth"]["endpoints"][_type]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _endpoint_config(_config["auth"]["endpoints"][_type]);
 
 				string _auth_endpoint(_endpoint_config["token"]);
 				if (_auth_endpoint.find("?") != string::npos) {
@@ -407,15 +279,15 @@ namespace zapata {
 				string _client_code(_req->param("client_code"));
 				string _redirect_uri(_req->param("redirect_uri"));
 
-				assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
+				assertz(_config["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _client_config(_config["auth"]["clients"][_client_code]);
 
 				string _client_id(_client_config["client_id"]);
 				string _client_secret(_client_config["client_secret"]);
 				string _type(_client_config["type"]);
 
-				assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
+				assertz(_config["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _endpoint_config(_config["auth"]["endpoints"][_type]);
 
 				string _auth_endpoint(_endpoint_config["authorization"]);
 				if (_auth_endpoint.find("?") != string::npos) {
@@ -434,7 +306,7 @@ namespace zapata {
 				_auth_endpoint.insert(_auth_endpoint.length(), "&grant_type=");
 				_auth_endpoint.insert(_auth_endpoint.length(), _grant_type);
 
-				string _self_uri(_config["zapata"]["rest"]["rest"]["bind_url"]);
+				string _self_uri(_config["rest"]["rest"]["bind_url"]);
 				_self_uri.insert(_self_uri.length(), "/auth/collect");
 				zapata::url::encode(_self_uri);
 				_auth_endpoint.insert(_auth_endpoint.length(), "&redirect_uri=");
@@ -590,12 +462,12 @@ namespace zapata {
 				assertz(_params["client_code"]->ok(), "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 				string _client_code(_params["client_code"]);
-				assertz(_config["zapata"]["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _client_config(_config["zapata"]["auth"]["clients"][_client_code]);
+				assertz(_config["auth"]["clients"][_client_code]->ok(), "No such 'client_code' found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _client_config(_config["auth"]["clients"][_client_code]);
 
 				string _type(_client_config["type"]);
-				assertz(_config["zapata"]["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
-				zapata::JSONObj _endpoint_config(_config["zapata"]["auth"]["endpoints"][_type]);
+				assertz(_config["auth"]["endpoints"][_type]->ok(), "No such endpoint type found in the configuration file", zapata::HTTP404, zapata::ERRConfigParameterNotFound);
+				zapata::JSONObj _endpoint_config(_config["auth"]["endpoints"][_type]);
 
 				string _code;
 				if (zapata::auth::authenticate((string) _params["id"], (string) _params["secret"], _code, _config)) {
@@ -619,7 +491,7 @@ namespace zapata {
 						_token_body << "grant_type" << "user_code" << "client_id" << (string) _params["id"] << "client_secret" << (string) _params["secret"] << "code" << _code;
 						zapata::tostr(_token_body_s, _token_body);
 
-						//_redirect.insert(0, _config["zapata"]["rest"]["bind_url"]);
+						//_redirect.insert(0, _config["rest"]["bind_url"]);
 
 						zapata::HTTPReq _token_req;
 						_token_req->header("Content-Type", "application/json"); 
@@ -648,12 +520,11 @@ namespace zapata {
 			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					zapata::JSONPtr _payload = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
@@ -667,7 +538,7 @@ namespace zapata {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
@@ -675,20 +546,19 @@ namespace zapata {
 					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
 					 */
 
-					zapata::JSONPtr _req_body = zapata::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
-					string _text = (string) _req_body;
+					zapata::JSONPtr _payload = zapata::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP201);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
-					_rep->header("Location", (string) _req_body["href"]);
+					_rep->header("Location", (string) _payload["href"]);
 					_rep->header("Content-Length", std::to_string(_text.length()));
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
 			//delete
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
 					string _text = (string) zapata::mongodb::delete_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 					_rep->status(zapata::HTTP200);
@@ -700,12 +570,11 @@ namespace zapata {
 				},
 			//head
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					zapata::JSONPtr _payload = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
@@ -722,7 +591,7 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
@@ -730,8 +599,7 @@ namespace zapata {
 					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
 					string _text = (string) zapata::mongodb::patch_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
 					_rep->status(zapata::HTTP200);
@@ -750,12 +618,11 @@ namespace zapata {
 			zapata::RESTHandler _handler_set[9] = {
 			//get
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
@@ -771,7 +638,7 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
@@ -779,8 +646,7 @@ namespace zapata {
 					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::replace_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
 					_rep->status(zapata::HTTP200);
@@ -793,8 +659,7 @@ namespace zapata {
 				no_post,
 			//delete
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::delete_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 					_rep->status(zapata::HTTP200);
@@ -806,12 +671,11 @@ namespace zapata {
 				},
 			//head
 				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
+					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
 
-					string _text = (string) _req_body;
+					string _text = (string) _payload;
 					_rep->status(zapata::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
@@ -828,7 +692,7 @@ namespace zapata {
 					string _content_type = _req->header("Content-Type");
 					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zapata::JSONPtr _record = zapata::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
@@ -836,8 +700,7 @@ namespace zapata {
 					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::patch_document(_config, (string) _config["users"]["mongodb"]["collection"], _params, _record);
 					_rep->status(zapata::HTTP200);
@@ -855,6 +718,9 @@ namespace zapata {
 }
 
 extern "C" void populate(zapata::RESTPoolPtr& _pool) {
+	zapata::KBPtr _kb(new zapata::mongodb::Collection(_pool->options()["users"]->obj()));
+	_pool->add_kb("mongodb.users", _kb);
+
 	zapata::users::collection(_pool);
 	zapata::users::document(_pool);
 	zapata::users::collect(_pool);

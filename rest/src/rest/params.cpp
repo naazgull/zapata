@@ -26,7 +26,9 @@ SOFTWARE.
 
 #define __SPECIAL_PARAMS string("orderBy pageSize pageStartIndex fields embed ")
 
-void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RESTfulType _resource_type, bool _regexp) {
+zapata::JSONPtr zapata::fromparams(zapata::HTTPReq& _in, zapata::RESTfulType _resource_type, bool _regexp) {
+	zapata::JSONPtr _out = zapata::make_obj();
+
 	if (_resource_type != zapata::RESTfulResource) {
 		switch(_resource_type) {
 			case zapata::RESTfulDocument : {
@@ -57,4 +59,5 @@ void zapata::fromparams(zapata::HTTPReq& _in, zapata::JSONObj& _out, zapata::RES
 		}
 		_out << _i.first << _value;
 	}
+	return _out;
 }

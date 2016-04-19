@@ -41,4 +41,9 @@ namespace zapata {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
 	};
 
+	class KB {
+	public:
+		virtual std::string name() = 0;
+	};
+
 }

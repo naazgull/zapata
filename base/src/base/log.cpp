@@ -48,9 +48,9 @@ namespace zapata {
 	};
 }
 
-void zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
+int zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
 	if (zapata::log_fd == nullptr) {
-		return;
+		return - 1;
 	}
 	struct timeval _tp;
 	gettimeofday(& _tp, nullptr);
@@ -87,6 +87,7 @@ void zapata::log(string _text, zapata::LogLevel _level, string _host, int _line,
 	_log.insert(_log.length(), "}");
 
 	(* zapata::log_fd) << _log << endl << flush;
+	return 0;
 }
 
 std::string zapata::log_hostname() {
