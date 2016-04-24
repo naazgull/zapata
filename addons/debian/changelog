@@ -1,0 +1,11 @@
+zapata-addons (0.9.1-1) trusty; urgency=medium
+
+  * Clean up and refactoring
+
+ -- n@zgul <naazgull@dfz.pt>  Tue, 08 Mar 2016 13:06:51 +0000
+
+zapata-addons (0.0.8-1) trusty; urgency=medium
+
+  * Initial release.
+
+ -- n@zgul <naazgull@dfz.pt>  Mon, 09 Nov 2013 14:06:51 +0000
