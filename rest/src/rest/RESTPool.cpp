@@ -82,30 +82,6 @@ zapata::JSONObj& zapata::RESTPool::options() {
 	return this->__options;
 }
 
-void zapata::RESTPool::on(vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler) {
-	regex_t * _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
-
-	std::vector<zapata::RESTHandler> _handlers;
-
-	_handlers.push_back(this->__default_get);
-	_handlers.push_back(this->__default_put);
-	_handlers.push_back(this->__default_post);
-	_handlers.push_back(this->__default_delete);
-	_handlers.push_back(this->__default_head);
-	_handlers.push_back(this->__default_trace);
-	_handlers.push_back(this->__default_options);
-	_handlers.push_back(this->__default_patch);
-	_handlers.push_back(this->__default_connect);
-
-	for (size_t _i = 0; _i != _events.size(); _i++) {
-		_handlers[_events[_i]] = _handler;
-	}
-
-	this->__resources.push_back(pair<regex_t *, std::vector<zapata::RESTHandler> >(_url_pattern, _handlers));
-}
-
 void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
@@ -145,7 +121,7 @@ void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9]) {
 	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
 }
 
-void zapata::RESTPool::trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl) {
+zapata::JSONPtr zapata::RESTPool::trigger(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload, bool _is_ssl) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
 	size_t _port_idx = string::npos;
@@ -157,30 +133,11 @@ void zapata::RESTPool::trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, boo
 	if (_host.length() == 0 || _uri.find(_bind_url) != string::npos) {
 		zapata::replace(_uri, _bind_url, "");
 		_req->url(_uri);
-		this->process(_req, _rep);
+		return this->process(_req, _rep);
 	}
 	else if ((_host.find("127.0.0") != string::npos || _host.find("localhost") != string::npos) && _port == (string) this->options()["zapata"]["rest"]["port"]) {
-		this->process(_req, _rep);
+		return this->process(_req, _rep);
 	}
-	else {
-		zapata::send(_req, _rep, _is_ssl);
-	}
-}
-
-void zapata::RESTPool::trigger(string _url, zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl) {
-	size_t _b = _url.find("://") + 3;
-	size_t _e = _url.find("/", _b);
-	string _domain(_url.substr(_b, _e - _b));
-	string _path(_url.substr(_e));
-	_req->header("Host", _domain);
-	_req->url(_path);
-	this->trigger(_req, _rep, _is_ssl);
-}
-
-void zapata::RESTPool::trigger(string _url, zapata::HTTPMethod _method, zapata::HTTPRep& _rep, bool _is_ssl) {
-	zapata::HTTPReq _req;
-	_req->method(_method);
-	this->trigger(_url, _req, _rep, _is_ssl);
 }
 
 void zapata::RESTPool::add_kb(std::string _name, zapata::KBPtr _kb) {
@@ -283,7 +240,17 @@ void zapata::RESTPool::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	for (auto _i : this->__resources) {
 		if (regexec(_i.first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				_i.second[_req->method()](_req, _rep, make_ptr(this->__options), this->__self);
+				std::istringstream _iss;
+				_iss.str(_req->body());
+				zapata::JSONPtr _payload;
+				try {
+					_iss >> _payload;
+				}
+				catch (...) {}
+				zapata::JSONPtr _result = _i.second[_req->method()](_req->method(), _req->url(), _payload, make_ptr(this->__options), this->__self);
+				if (_result->ok()) {
+					_return << _result;
+				}
 			}
 			catch (zapata::AssertionException& _e) {
 				if (_e.status() > 399) {
@@ -298,18 +265,14 @@ void zapata::RESTPool::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 					string _length;
 					zapata::tostr(_length, _text.length());
 					_rep->header("Content-Length", _length);
-
 					_rep->body(_text);
 				}
-
 				_rep->status((zapata::HTTPStatus) _e.status());
-
 				string _origin = _req->header("Origin");
 				if (_origin.length() != 0) {
 					_rep->header("Access-Control-Allow-Origin", _origin);
 					_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 				}
-
 			}
 		}
 	}

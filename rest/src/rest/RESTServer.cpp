@@ -76,7 +76,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 				}
 				else {
 					void (*_populate)(zapata::RESTPoolPtr&);
-					_populate = (void (*)(zapata::RESTPoolPtr&)) dlsym(hndl, "populate");
+					_populate = (void (*)(zapata::RESTPoolPtr&)) dlsym(hndl, "restify");
 					_populate(this->__pool);
 				}
 			}
@@ -87,7 +87,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__pool->on(zapata::HTTPPost, "^/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+		this->__pool->on(zapata::HTTPPost, "^/api/1.0/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -165,7 +165,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__pool->on(zapata::HTTPPost, "^/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+		this->__pool->on(zapata::HTTPPost, "^/api/1.0/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 

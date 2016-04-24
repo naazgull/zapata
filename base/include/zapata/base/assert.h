@@ -24,6 +24,7 @@ SOFTWARE.
 
 #pragma once
 
+#include <memory>
 #include <zapata/exceptions/AssertionException.h>
 
 /**
@@ -45,5 +46,5 @@ namespace zapata {
 	public:
 		virtual std::string name() = 0;
 	};
-
+	typedef std::shared_ptr<zapata::KB> KBPtr;
 }

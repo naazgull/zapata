@@ -61,25 +61,21 @@ namespace zapata {
 	class RESTPool;
 
 	typedef std::shared_ptr<zapata::RESTPool> RESTPoolPtr;
-	typedef std::shared_ptr<zapata::KB> KBPtr;
-	typedef std::function<void (zapata::HTTPReq&, zapata::HTTPRep&, zapata::JSONPtr, zapata::RESTPoolPtr&)> RESTHandler;
+	typedef std::function<zapata::JSONPtr (zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr, zapata::RESTPoolPtr&)> RESTHandler;
 	typedef RESTHandler RESTCallback;
 	typedef vector<pair<regex_t*, vector<zapata::RESTHandler> > > RESTHandlerStack;
 
 	class RESTPool {
 		public:
-			RESTPool(zapata::JSONObj& _options);
+			explicit RESTPool(zapata::JSONObj& _options);
 			virtual ~RESTPool();
 
 			virtual zapata::JSONObj& options();
 
-			virtual void on(std::vector<zapata::HTTPMethod> _events, string _regex, zapata::RESTHandler _handler);
-			virtual void on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler);
+			virtual void on(zapata::HTTPMethod _method, string _regex, zapata::RESTHandler _handler);
 			virtual void on(string _regex, zapata::RESTHandler _handlers[9]);
 
-			virtual void trigger(zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
-			virtual void trigger(std::string _url, zapata::HTTPReq& _req, zapata::HTTPRep& _rep, bool _is_ssl = false);
-			virtual void trigger(std::string _url, zapata::HTTPMethod _method, zapata::HTTPRep& _rep, bool _is_ssl = false);
+			virtual zapata::JSONPtr trigger(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload, bool _is_ssl = false);
 
 			virtual void add_kb(std::string _name, zapata::KBPtr _kb);
 			virtual zapata::KBPtr get_kb(std::string _name);
@@ -102,7 +98,7 @@ namespace zapata {
 			void init(zapata::HTTPRep& _rep);
 			void init(zapata::HTTPReq& _req);
 			void resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
-			void process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep);
+			zapata::JSONPtr process(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload);
 	};
 
 }

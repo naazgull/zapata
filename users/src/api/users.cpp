@@ -717,7 +717,7 @@ namespace zapata {
 	}
 }
 
-extern "C" void populate(zapata::RESTPoolPtr& _pool) {
+extern "C" void restify(zapata::RESTPoolPtr& _pool) {
 	zapata::KBPtr _kb(new zapata::mongodb::Collection(_pool->options()["users"]->obj()));
 	_pool->add_kb("mongodb.users", _kb);
 

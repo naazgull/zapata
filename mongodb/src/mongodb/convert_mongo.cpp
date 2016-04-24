@@ -27,7 +27,7 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^")
+#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^")
 
 void zapata::mongodb::frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
@@ -468,6 +468,24 @@ void zapata::mongodb::get_query(zapata::JSONPtr _in, mongo::BSONObjBuilder&  _qu
 						else {
 							_queryr.append(key, BSON(comp << i));
 						}
+					}
+					else if (options == "j") {
+						istringstream iss(expression);
+						zapata::JSONPtr _json;
+						try {
+							iss >> _json;
+							if (_json->type() == zapata::JSObject) {
+								mongo::BSONObjBuilder _mongo_json;
+								zapata::tomongo(_json, _mongo_json);
+								_queryr.append(key, BSON(comp << _mongo_json.obj()));
+							}
+							else if (_json->type() == zapata::JSArray) {
+								mongo::BSONArrayBuilder _mongo_json;
+								zapata::tomongo(_json, _mongo_json);
+								_queryr.append(key, BSON(comp << _mongo_json.arr()));
+							}
+						}
+						catch(std::exception& _e) {}
 					}
 					continue;
 				}
