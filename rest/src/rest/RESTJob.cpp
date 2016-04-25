@@ -77,7 +77,7 @@ zapata::RESTJob::RESTJob(zapata::JSONObj& _options) : Job(), __options(_options)
 								}
 							}
 							catch(zapata::SyntaxErrorException& e) {
-								zapata::log(e.what(), zapata::error, __HOST__, __LINE__, __FILE__);
+								zlog(e.what(), zapata::error);
 
 								zapata::JSONObj _body;
 								_body
@@ -109,7 +109,7 @@ zapata::RESTJob::RESTJob(zapata::JSONObj& _options) : Job(), __options(_options)
 								close(_events[_idx].data.fd);
 							}
 							catch(zapata::ClosedException& e) {
-								zapata::log(e.what(), zapata::error, __HOST__, __LINE__, __FILE__);
+								zlog(e.what(), zapata::error);
 								epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _events[_idx].data.fd, nullptr);
 								close(_events[_idx].data.fd);
 							}
@@ -166,5 +166,5 @@ void zapata::RESTJob::log(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	}
 	_text.insert(_text.length(), " <-> ");
 	_text.insert(_text.length(), zapata::status_names[_rep->status()]);
-	zapata::log(_text, zapata::info, __HOST__, __LINE__, __FILE__);
+	zlog(_text, zapata::info);
 }

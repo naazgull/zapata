@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 	zapata::log_lvl = 8;
 
 	if (_conf_file == nullptr) {
-		zapata::log("a configuration file must be provided", zapata::error, __HOST__, __LINE__, __FILE__);
+		zlog("a configuration file must be provided", zapata::error);
 		return -1;
 	}
 
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 		ifstream _in;
 		_in.open(_conf_file);
 		if (!_in.is_open()) {
-		zapata::log("a configuration file must be provided", zapata::error, __HOST__, __LINE__, __FILE__);
+			zlog("a configuration file must be provided", zapata::error);
 			return -1;
 		}
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 		_server.start();
 	}
 	catch (zapata::AssertionException& _e) {
-		zapata::log(_e.what() + string("\n") + _e.description(), zapata::error, __HOST__, __LINE__, __FILE__);
+		zlog(_e.what() + string("\n") + _e.description(), zapata::error);
 	}
 
 	if (_keep_alive) {

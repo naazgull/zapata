@@ -1,4 +1,42 @@
 /*
+                                           __i|vIvvvls=_,                                           
+                                         _nnnvvvvvvvvv}"'                                           
+                                         =nvnnvnnvnnvn;                                             
+                                         -"""*{voonnonoSon.                                         
+                       ... .. --~ --` `-`.::~. ._.-""*2ooos                                         
+                  .=saaawwmmmmWWBWWWmmmmwwaa,;. ._..,. "{X2;                                        
+             _awwWWmmmmmmm##mmmmmmmmmBmm####BWmwa. -_; . )SS,                                       
+          .amBm####mmmmmmmmmmmmmmmmmmmmmmm#m##m###a   "`  {Xo                                       
+        _w#########################################(  -,  )XZc                                      
+      _Jm##Z#Z#Z#Z#Z#UUUUUZ#Z#Z#Z#Z#Z#Z#Z#Z#Z#Z#Z#ZL  .,   {ZU,                                     
+     _mZ#ZZZZZZUZZUZZZZZZZZUZZUZZZZZZZZZZZZZZZZZZZZm,  .=   )#h.                                    
+    _mXXZXZZZZZZZZZXZZZZZZZZZZXZZZZZZZZZZZZZZZZZZZZXX,   -   -4L                                    
+   .dXXXXZXXZXXXXXXXZXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX,   -`   "`                                   
+   )SSXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXs,   -.                                      
+   oS2S2SS2SS2XSSS2X2SS2SS2S2S2S2S2SS2S2S2S2S2S2S2S2S2SSSs,   -.,                                   
+  :X2S2222222222o222So22222222SoSoSo2222222222222222o22o2S2o,.   `.                       _s_r      
+  )n2oo222222222222o2o222o222o2o2oo22o2o2o22o2o2oo2o2o2o2oo2X2s,.   -       __s__s_s_aaoXXXX7       
+  )voooooooooooooooooooooooooooooooooooooooooooooooooooooooonoo2os,.         -"!Y1XSXX2Y*!"`        
+  :nnonoonnnnnnnnnnnnnnnnnnnnnnnogmpnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoos,.                             
+   1nnvnnvnnnvnnvnnvnnvnnvnnvnnvdQQQpvnvnnvnvnvnvnvnvnvvvvvvnvvvnvnvnnni=_%________,=___,.          
+   =vvvvvvvvvvvvvvvvvvvvvvvvvvvvmQQQWguvvvvvnvnwwwggggmQQQQQmmgwvvvvvvvvnnvvnnnvnnnnnv"~            
+    <vvvvvvvvvvvvvvvvvvvvvvvvvomQQQQQQQQQQQQQQQQWQQQQQQQWWWWQQQQQgr~^^^^^^^^^^^^^--                 
+     +vlIIlIlllIllIowwywymmQWQQQQQQ$QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQw                                
+      -<IlllIlIlqmQQQQQWQQQQQQQQQQQ-QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQm,                              
+        -+vllllqWWQQQQQQQQQQQQQQQQE )WQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQm,                             
+           -^+imWQQQQQQQQQQQQQQQQQ'  "$QQQQQQQQQQQQQQQQQQQQQQQQQQQQWQQm                             
+               QQQQQQQQQQQQQQQQWD'     ??WWWWWWWWWWW#BBUHVTTTVHQWQQQQQQL                            
+               QQQP???????!!""~                                 -9WQQQQQ,                           
+               QQ[                                                -$QQQQL                           
+               WW.                                                 -QWQQQ/                          
+                                                                    -^^""~                          
+
+ s_a_s_s_a_s_%   _ssaaas,,     _s_a_a __aaaaa,,    __aaaas,,      ,s_dQs__s_,    __aaaaa,,.         
+:QP?????9mQWT!  QQT!"!!??Qg  . "???QQdT??????9WQc 3QD?!"!??$Q,  . ???$QT????'   ]Q@?!"!??9Qc  .     
+-"'_aawV?"` _a,_wwYYT??TYQW;-Qr   .QQ.        _QW ww2T?T?T?$Wf $k    jQ(     <a swZY?T?T?9QE ]Q     
+_yQQQwwawwawyQ(]WmwaaawwY4QgyW'   .QW9AmywwwwmB?'-WWwaaawwZTWQwmf    "WQwwawyW! 9QgaaawwpTWQwmP     
+-~------------   -^^^^-    ~-  __saWQs__%=--       -~^^^-    --        -~^^~-     ~^"^~    -~`     
+
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
@@ -72,7 +110,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
-					zapata::log(string(dlerror()), zapata::error, __HOST__, __LINE__, __FILE__);
+					zlog(string(dlerror()), zapata::error);
 				}
 				else {
 					void (*_populate)(zapata::RESTPoolPtr&);
@@ -199,16 +237,16 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 	unsigned int _port =  (unsigned int) this->options()["rest"]["port"];
 	string _text("starting RESTful server on port ");
 	zapata::tostr(_text, _port);
-	zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
+	zlog(_text, zapata::notice);
 	this->__ss.bind(_port);
 
 	if (this->options()["rest"]["websocket"]["port"]->ok()) {
-		zapata::Job _ws([ this ] (zapata::Job& _self) -> void {
+		zapata::Job _ws([ & ] (zapata::Job& _self) -> void {
 			unsigned int _ws_port = (unsigned int) this->options()["rest"]["websocket"]["port"];
 			zapata::websocketserverstream _sws;
 			string _text("starting RESTful web-socket listener on port ");
 			zapata::tostr(_text, _ws_port);
-			zapata::log(_text, zapata::notice, __HOST__, __LINE__, __FILE__);
+			zlog(_text, zapata::notice);
 			_sws.bind(_ws_port);
 
 			for (; true; ) {
@@ -297,6 +335,11 @@ void zapata::dirs(std::string _dir, zapata::JSONPtr& _options) {
 				if (!_options[_new_field.first]->ok()) {
 					_options << _new_field.first << _new_field.second;
 				}
+				else {
+					zapata::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
+					_options >> _new_field.first
+					_options << _new_field.first << _merged;
+				}
 			}
 		}
 		catch(zapata::SyntaxErrorException& _e) {}
@@ -309,67 +352,14 @@ void zapata::env(zapata::JSONObj& _options) {
 }
 
 void zapata::env(zapata::JSONPtr& _options) {
-	switch (_options->type()) {
-		case zapata::JSObject: {
-			std::vector<std::string> _to_remove;
-			for (auto _a : _options->obj()) {
-				try {
-					zapata::env(_a.second);
-				}
-				catch(zapata::AssertionException& _e) {
-					_to_remove.push_back(_a.first);
-				}
-			}
-			for (auto _s : _to_remove) {
-				_options >> _s;
-			}
-			break;
+	_options->inspect(zapata::make_ptr(JSON( "$regexp" << "\\$\\{([^}]+)\\}" )), [ & ] (zapata::JSONElementT * _element, std::string _key, zapata::JSONElementT * _parent, zapata::JSONPtr _pattern) -> void {
+		string _var = _key.substr(2, _key.length() - 3);
+		char * _valuec = std::getenv(_var.data());
+		string _value;
+		if (_valuec != nullptr) {
+			_value.assign(_valuec);
 		}
-		case zapata::JSArray: {
-			std::vector<size_t> _to_remove;
-			size_t _i = 0;
-			for (auto _a : _options->arr()) {
-				try {
-					zapata::env(_a);
-				}
-				catch(zapata::AssertionException& _e) {
-					_to_remove.push_back(_i);
-				}
-				_i++;
-			}
-			for (auto _i : _to_remove) {
-				_options >> _i;
-			}
-			break;
-		}
-		case zapata::JSString: {
-			string _field(_options->str());
-			size_t _idx = -2;
-			while ((_idx = _field.find("${", _idx + 2)) != string::npos) {
-				size_t _ridx = _field.find("}", _idx);
-				if (_ridx == string::npos) {
-					break;
-				}
-
-				string _var = _field.substr(_idx + 2, _ridx - _idx - 2);
-				char * _valuec = std::getenv(_var.data());
-				string _value;
-				if (_valuec != nullptr) {
-					_value.assign(_valuec);
-				}
-				assertz(_value.length() != 0, "no environment variable with that name", 0, 0);
-				_field.replace(_idx, _ridx - _idx + 1, _value);
-				_options << _field;
-			}
-			break;
-		}
-		case zapata::JSBoolean:
-		case zapata::JSDate:
-		case zapata::JSInteger:
-		case zapata::JSDouble:
-		case zapata::JSNil: 
-		default: {
-			break;
-		}
-	}
+		assertz(_value.length() != 0, "no environment variable with that name", 0, 0);
+		(* _parent) << _key << _value;
+	});
 }
