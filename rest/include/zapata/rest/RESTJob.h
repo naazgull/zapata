@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/rest/Job.h>
-#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTEmitter.h>
 #include <vector>
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -47,13 +47,13 @@ namespace zapata {
 			virtual void assign(int _cs_fd);
 			zapata::JSONObj& options();
 
-			zapata::RESTPoolPtr pool();
-			void pool(zapata::RESTPoolPtr _pool);
+			zapata::RESTEmitterPtr pool();
+			void pool(zapata::RESTEmitterPtr _pool);
 			void log(zapata::HTTPReq&, zapata::HTTPRep&);
 
 		private:
 			int __epoll_fd;
-			zapata::RESTPoolPtr __pool;
+			zapata::RESTEmitterPtr __pool;
 			zapata::JSONObj __options;
 	};
 

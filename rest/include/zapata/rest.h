@@ -28,7 +28,7 @@ SOFTWARE.
 #include <zapata/rest/config.h>
 #include <zapata/rest/Job.h>
 #include <zapata/rest/RESTJob.h>
-#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/RESTServer.h>
 #include <zapata/rest/SocketStreams.h>
 #include <zapata/rest/SSLSocketStreams.h>

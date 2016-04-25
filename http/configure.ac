@@ -15,6 +15,7 @@ AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
 
 AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
+AC_CHECK_LIB([zapata-json], [zapata_json], [], [AC_MSG_ERROR([zapata-json not found])])
 
 AC_CANONICAL_SYSTEM
 

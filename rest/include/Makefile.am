@@ -4,7 +4,7 @@ nobase_include_HEADERS = \
 ./zapata/rest/config.h \
 ./zapata/rest/Job.h \
 ./zapata/rest/RESTJob.h \
-./zapata/rest/RESTPool.h \
+./zapata/rest/RESTEmitter.h \
 ./zapata/rest/RESTServer.h \
 ./zapata/rest/SocketStreams.h \
 ./zapata/rest/SSLSocketStreams.h \

@@ -135,11 +135,11 @@ void zapata::RESTJob::assign(int _cs_fd) {
 	pthread_mutex_unlock((* this)->__mtx);
 }
 
-zapata::RESTPoolPtr zapata::RESTJob::pool() {
+zapata::RESTEmitterPtr zapata::RESTJob::pool() {
 	return this->__pool;
 }
 
-void zapata::RESTJob::pool(zapata::RESTPoolPtr _pool) {
+void zapata::RESTJob::pool(zapata::RESTEmitterPtr _pool) {
 	this->__pool = _pool;
 }
 

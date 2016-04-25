@@ -29,17 +29,17 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
-zapata::HTTPReqT::HTTPReqT() : __method(zapata::HTTPGet) {
+zapata::HTTPReqT::HTTPReqT() : __method(zapata::ev::Get) {
 }
 
 zapata::HTTPReqT::~HTTPReqT() {
 }
 
-zapata::HTTPMethod zapata::HTTPReqT::method() {
+zapata::ev::Performative zapata::HTTPReqT::method() {
 	return this->__method;
 }
 
-void zapata::HTTPReqT::method(zapata::HTTPMethod _method) {
+void zapata::HTTPReqT::method(zapata::ev::Performative _method) {
 	this->__method = _method;
 }
 

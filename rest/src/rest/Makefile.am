@@ -9,7 +9,7 @@ libzapata_rest_la_SOURCES = \
 ./params.cpp \
 ./requester.cpp \
 ./RESTJob.cpp \
-./RESTPool.cpp \
+./RESTEmitter.cpp \
 ./RESTServer.cpp \
 ./SocketStreams.cpp \
 ./SSLSocketStreams.cpp \

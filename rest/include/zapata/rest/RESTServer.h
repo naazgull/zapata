@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <zapata/rest/SocketStreams.h>
 #include <zapata/rest/RESTJob.h>
-#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTEmitter.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -49,12 +49,11 @@ namespace zapata {
 			size_t next();
 			void max(size_t _max);
 
-			zapata::RESTPoolPtr pool();
+			zapata::RESTEmitterPtr emitter();
 
 		private:
-			zapata::serversocketstream __ss;
 			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTPoolPtr __pool;
+			zapata::RESTEmitterPtr __emitter;
 			bool __initialized;
 			
 		protected:

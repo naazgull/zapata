@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <zapata/http/HTTPObj.h>
 #include <zapata/json/JSONObj.h>
-#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTEmitter.h>
 
 using namespace std;
 #if !defined __APPLE__

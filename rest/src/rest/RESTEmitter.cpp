@@ -22,36 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/rest/RESTPool.h>
+#include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/requester.h>
 
-zapata::RESTPool::RESTPool(zapata::JSONObj& _options) : __options( _options ), __self(this) {
-	this->__default_get = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : __options( _options ), __self(this) {
+	this->__default_get = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
-	this->__default_put = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_put = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
-	this->__default_post = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_post = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
-	this->__default_delete = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_delete = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
-	this->__default_head = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_head = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
-	this->__default_trace = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-		_rep->status(zapata::HTTP200);
-
-		string _body;
-		zapata::tostr(_body, _req);
-		_rep->body(_body);
-		string _length;
-		zapata::tostr(_length,  _body.length());
-		_rep->header("Content-Length", _length);
-	};
-	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP200);
 
 		string _origin = _req->header("Origin");
@@ -63,65 +53,54 @@ zapata::RESTPool::RESTPool(zapata::JSONObj& _options) : __options( _options ), _
 			_rep->header("Access-Control-Max-Age", "1728000");
 		}
 	};
-	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
-	};
-	this->__default_connect = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 		_rep->status(zapata::HTTP405);
 	};
 }
 
-zapata::RESTPool::~RESTPool() {
+zapata::RESTEmitter::~RESTEmitter() {
 	for (auto _i : this->__resources) {
 		regfree(_i.first);
 		delete _i.first;
 	}
 }
 
-zapata::JSONObj& zapata::RESTPool::options() {
-	return this->__options;
-}
-
-void zapata::RESTPool::on(zapata::HTTPMethod _event, string _regex, zapata::RESTHandler _handler) {
+void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex,  zapata::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	std::vector<zapata::RESTHandler> _handlers;
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPGet? this->__default_get : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPut ? this->__default_put : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPost ? this->__default_post : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPDelete ? this->__default_delete : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPHead ? this->__default_head : _handler));
-	_handlers.push_back(this->__default_trace);
+	std::vector< zapata::ev::Handler> _handlers;
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Get? this->__default_get : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Put ? this->__default_put : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Post ? this->__default_post : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Delete ? this->__default_delete : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Head ? this->__default_head : _handler));
 	_handlers.push_back(this->__default_options);
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPPatch ? this->__default_patch : _handler));
-	_handlers.push_back((_handler == nullptr || _event != zapata::HTTPConnect ? this->__default_connect : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Patch ? this->__default_patch : _handler));
 
-	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
+	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
 
 }
 
-void zapata::RESTPool::on(string _regex, zapata::RESTHandler _handler_set[9]) {
+void zapata::RESTEmitter::on(string _regex,  zapata::ev::Handler _handler_set[7]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector<zapata::RESTHandler> _handlers;
-	_handlers.push_back(_handler_set[zapata::HTTPGet] == nullptr ?  this->__default_get : _handler_set[zapata::HTTPGet]);
-	_handlers.push_back(_handler_set[zapata::HTTPPut] == nullptr ?  this->__default_put : _handler_set[zapata::HTTPPut]);
-	_handlers.push_back(_handler_set[zapata::HTTPPost] == nullptr ?  this->__default_post : _handler_set[zapata::HTTPPost]);
-	_handlers.push_back(_handler_set[zapata::HTTPDelete] == nullptr ?  this->__default_delete : _handler_set[zapata::HTTPDelete]);
-	_handlers.push_back(_handler_set[zapata::HTTPHead] == nullptr ?  this->__default_head : _handler_set[zapata::HTTPHead]);
-	_handlers.push_back(this->__default_trace);
+	vector< zapata::ev::Handler> _handlers;
+	_handlers.push_back(_handler_set[zapata::ev::Get] == nullptr ?  this->__default_get : _handler_set[zapata::ev::Get]);
+	_handlers.push_back(_handler_set[zapata::ev::Put] == nullptr ?  this->__default_put : _handler_set[zapata::ev::Put]);
+	_handlers.push_back(_handler_set[zapata::ev::Post] == nullptr ?  this->__default_post : _handler_set[zapata::ev::Post]);
+	_handlers.push_back(_handler_set[zapata::ev::Delete] == nullptr ?  this->__default_delete : _handler_set[zapata::ev::Delete]);
+	_handlers.push_back(_handler_set[zapata::ev::Head] == nullptr ?  this->__default_head : _handler_set[zapata::ev::Head]);
 	_handlers.push_back(this->__default_options);
-	_handlers.push_back(_handler_set[zapata::HTTPPatch] == nullptr ?  this->__default_patch : _handler_set[zapata::HTTPPatch]);
-	_handlers.push_back(_handler_set[zapata::HTTPConnect] == nullptr ?  this->__default_connect : _handler_set[zapata::HTTPConnect]);
+	_handlers.push_back(_handler_set[zapata::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zapata::ev::Patch]);
 
-	this->__resources.push_back(pair<regex_t*, vector<zapata::RESTHandler> >(_url_pattern, _handlers));
+	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
 }
 
-zapata::JSONPtr zapata::RESTPool::trigger(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload, bool _is_ssl) {
+zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _payload) {
 	string _host(_req->header("Host"));
 	string _uri(_req->url());
 	size_t _port_idx = string::npos;
@@ -140,19 +119,7 @@ zapata::JSONPtr zapata::RESTPool::trigger(zapata::HTTPMethod _method, std::strin
 	}
 }
 
-void zapata::RESTPool::add_kb(std::string _name, zapata::KBPtr _kb) {
-	this->__kb.insert(make_pair(_name, _kb));
-}
-
-zapata::KBPtr zapata::RESTPool::get_kb(std::string _name) {
-	auto _found = this->__kb.find(_name);
-	if (_found == this->__kb.end()) {
-		return zapata::KBPtr(nullptr);
-	}
-	return _found->second;
-}
-
-void zapata::RESTPool::init(zapata::HTTPRep& _rep) {
+void zapata::RESTEmitter::init(zapata::HTTPRep& _rep) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -171,7 +138,7 @@ void zapata::RESTPool::init(zapata::HTTPRep& _rep) {
 	_rep->header("Expires", string(_buffer_expires));
 }
 
-void zapata::RESTPool::init(zapata::HTTPReq& _req) {
+void zapata::RESTEmitter::init(zapata::HTTPReq& _req) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -181,7 +148,7 @@ void zapata::RESTPool::init(zapata::HTTPReq& _req) {
 	char _buffer_expires[80];
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	_req->method(zapata::HTTPGet);
+	_req->method(zapata::ev::Get);
 	_req->header("Host", "localhost");
 	_req->header("Accept", "application/json");
 	_req->header("Accept-Charset", "utf-8");
@@ -191,7 +158,7 @@ void zapata::RESTPool::init(zapata::HTTPReq& _req) {
 	_req->header("User-Agent", "zapata RESTful server");
 }
 
-void zapata::RESTPool::resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request) {
+void zapata::RESTEmitter::resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request) {
 	if (_request->param("fields").length()) {
 
 	}
@@ -234,7 +201,7 @@ void zapata::RESTPool::resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request
 	}
 }
 
-void zapata::RESTPool::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
+void zapata::RESTEmitter::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
 	this->init(_rep);
 	
 	for (auto _i : this->__resources) {

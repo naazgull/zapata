@@ -31,118 +31,88 @@ namespace zapata {
 	string nil_header = "";
 
 	const char* method_names[] = {
-	                    "GET",
-	                    "PUT",
-	                    "POST",
-	                    "DELETE",
-	                    "HEAD",
-	                    "TRACE",
-	                    "OPTIONS",
-	                    "PATCH",
-	                    "CONNECT"
+		"GET",
+		"PUT",
+		"POST",
+		"DELETE",
+		"HEAD",
+		"TRACE",
+		"OPTIONS",
+		"PATCH",
+		"CONNECT"
 	};
 
 	const char* status_names[] = { nullptr,
 		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "100 Continue ",
-	                    "101 Switching Protocols ",
-	                    "102 Processing ",
-	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "200 OK ",
-	                    "201 Created ",
-	                    "202 Accepted ",
-	                    "203 Non-Authoritative Information ",
-	                    "204 No Content ",
-	                    "205 Reset Content ",
-	                    "206 Partial Content ",
-	                    "207 Multi-Status ",
-	                    "208 Already Reported ",
-	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "226 IM Used ",
-	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "300 Multiple Choices ",
-	                    "301 Moved Permanently ",
-	                    "302 Found ",
-	                    "303 See Other ",
-	                    "304 Not Modified ",
-	                    "305 Use Proxy ",
-	                    "306 (Unused) ",
-	                    "307 Temporary Redirect ",
-	                    "308 Permanent Redirect ",
-	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "400 Bad Request ",
-	                    "401 Unauthorized ",
-	                    "402 Payment Required ",
-	                    "403 Forbidden ",
-	                    "404 Not Found ",
-	                    "405 Method Not Allowed ",
-	                    "406 Not Acceptable ",
-	                    "407 Proxy Authentication Required ",
-	                    "408 Request Timeout ",
-	                    "409 Conflict ",
-	                    "410 Gone ",
-	                    "411 Length Required ",
-	                    "412 Precondition Failed ",
-	                    "413 Payload Too Large ",
-	                    "414 URI Too Long ",
-	                    "415 Unsupported Media Type ",
-	                    "416 Requested Range Not Satisfiable ",
-	                    "417 Expectation Failed ",
-	                    nullptr, nullptr, nullptr, nullptr,
-	                    "422 Unprocessable Entity ",
-	                    "423 Locked ",
-	                    "424 Failed Dependency ",
-	                    "425 Unassigned ",
-	                    "426 Upgrade Required ",
-	                    "427 Unassigned ",
-	                    "428 Precondition Required ",
-	                    "429 Too Many Requests ",
-	                    "430 Unassigned ",
-	                    "431 Request Header Fields Too Large ",
-	                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-	                    "500 Internal Server Error ",
-	                    "501 Not Implemented ",
-	                    "502 Bad Gateway ",
-	                    "503 Service Unavailable ",
-	                    "504 Gateway Timeout ",
-	                    "505 HTTP Version Not Supported ",
-	                    "506 Variant Also Negotiates (Experimental) ",
-	                    "507 Insufficient Storage ",
-	                    "508 Loop Detected ",
-	                    "509 Unassigned ",
-	                    "510 Not Extended ",
-	                    "511 Network Authentication Required ",
+		"100 Continue ",
+		"101 Switching Protocols ",
+		"102 Processing ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"200 OK ",
+		"201 Created ",
+		"202 Accepted ",
+		"203 Non-Authoritative Information ",
+		"204 No Content ",
+		"205 Reset Content ",
+		"206 Partial Content ",
+		"207 Multi-Status ",
+		"208 Already Reported ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"226 IM Used ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"300 Multiple Choices ",
+		"301 Moved Permanently ",
+		"302 Found ",
+		"303 See Other ",
+		"304 Not Modified ",
+		"305 Use Proxy ",
+		"306 (Unused) ",
+		"307 Temporary Redirect ",
+		"308 Permanent Redirect ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"400 Bad Request ",
+		"401 Unauthorized ",
+		"402 Payment Required ",
+		"403 Forbidden ",
+		"404 Not Found ",
+		"405 Method Not Allowed ",
+		"406 Not Acceptable ",
+		"407 Proxy Authentication Required ",
+		"408 Request Timeout ",
+		"409 Conflict ",
+		"410 Gone ",
+		"411 Length Required ",
+		"412 Precondition Failed ",
+		"413 Payload Too Large ",
+		"414 URI Too Long ",
+		"415 Unsupported Media Type ",
+		"416 Requested Range Not Satisfiable ",
+		"417 Expectation Failed ",
+		nullptr, nullptr, nullptr, nullptr,
+		"422 Unprocessable Entity ",
+		"423 Locked ",
+		"424 Failed Dependency ",
+		"425 Unassigned ",
+		"426 Upgrade Required ",
+		"427 Unassigned ",
+		"428 Precondition Required ",
+		"429 Too Many Requests ",
+		"430 Unassigned ",
+		"431 Request Header Fields Too Large ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"500 Internal Server Error ",
+		"501 Not Implemented ",
+		"502 Bad Gateway ",
+		"503 Service Unavailable ",
+		"504 Gateway Timeout ",
+		"505 HTTP Version Not Supported ",
+		"506 Variant Also Negotiates (Experimental) ",
+		"507 Insufficient Storage ",
+		"508 Loop Detected ",
+		"509 Unassigned ",
+		"510 Not Extended ",
+		"511 Network Authentication Required ",
 	};
-}
-
-void zapata::fromstr(string& _in, HTTPMethod* _out) {
-	if (_in == string("GET")) {
-		*_out = zapata::HTTPGet;
-	}
-	if (_in == string("PUT")) {
-		*_out = zapata::HTTPPut;
-	}
-	if (_in == string("POST")) {
-		*_out = zapata::HTTPPost;
-	}
-	if (_in == string("DELETE")) {
-		*_out = zapata::HTTPDelete;
-	}
-	if (_in == string("HEAD")) {
-		*_out = zapata::HTTPHead;
-	}
-	if (_in == string("TRACE")) {
-		*_out = zapata::HTTPTrace;
-	}
-	if (_in == string("OPTIONS")) {
-		*_out = zapata::HTTPOptions;
-	}
-	if (_in == string("PATCH")) {
-		*_out = zapata::HTTPPatch;
-	}
-	if (_in == string("CONNECT")) {
-		*_out = zapata::HTTPConnect;
-	}
 }
 
 void zapata::init(HTTPReq& _req) {
@@ -166,7 +136,7 @@ void zapata::init(HTTPReq& _req) {
 		_req->url(_path);
 	}
 
-	_req->method(zapata::HTTPGet);
+	_req->method(zapata::ev::Get);
 	_req->header("User-Agent", "zapata rest-ful server");
 	_req->header("Cache-Control", "max-age=3600");
 	_req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");

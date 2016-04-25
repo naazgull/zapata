@@ -30,6 +30,7 @@ SOFTWARE.
 #include <vector>
 #include <map>
 #include <memory>
+#include <zapata/base/assert.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 
@@ -51,18 +52,6 @@ namespace zapata {
 	enum HTTPType {
 		HTTPRequest,
 		HTTPReply
-	};
-
-	enum HTTPMethod {
-		HTTPGet = 0,
-		HTTPPut = 1,
-		HTTPPost = 2,
-		HTTPDelete = 3,
-		HTTPHead = 4,
-		HTTPTrace = 5,
-		HTTPOptions = 6,
-		HTTPPatch = 7,
-		HTTPConnect = 8
 	};
 
 	enum HTTPStatus {
@@ -158,15 +147,13 @@ namespace zapata {
 		virtual ~HTTPPtr();	
 	};
 
-	void fromstr(string& _in, HTTPMethod* _out);
-
 	class HTTPReqT: public HTTPObj {
 	public:
 		HTTPReqT();
 		virtual ~HTTPReqT();
 
-		HTTPMethod method();
-		void method(HTTPMethod);
+		zapata::ev::Performative method();
+		void method(zapata::ev::Performative);
 		string& url();
 		void url(string);
 		string& query();
@@ -183,7 +170,7 @@ namespace zapata {
 	private:
 		string __url;
 		string __query;
-		HTTPMethod __method;
+		zapata::ev::Performative __method;
 		ParameterMap __params;
 	};
 

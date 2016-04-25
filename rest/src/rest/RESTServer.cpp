@@ -76,9 +76,11 @@ SOFTWARE.
 #include <vector>
 #include <zapata/rest/codes_rest.h>
 
-zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::RESTPool(_options)), __options(_options) {
+zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapata::RESTEmitter(_options)), __options(_options) {
 	this->__next = -1;
 	this->__initialized = false;
+
+	assertz(this->options()["0mq"]->ok() && this->options()["0mq"]["host"]->ok() && this->options()["0mq"]["port"]->ok(), "0mq settings (host, port) must be provided in the configuration file", 500, 0);
 
 	if (!!this->options()["max_jobs"] && ((int) this->options()["max_jobs"]) != -1) {
 		this->max((size_t) this->options()["max_jobs"]);
@@ -114,9 +116,9 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 					zlog(string(dlerror()), zapata::error);
 				}
 				else {
-					void (*_populate)(zapata::RESTPoolPtr&);
-					_populate = (void (*)(zapata::RESTPoolPtr&)) dlsym(hndl, "restify");
-					_populate(this->__pool);
+					void (*_populate)(zapata::RESTEmitterPtr&);
+					_populate = (void (*)(zapata::RESTEmitterPtr&)) dlsym(hndl, "restify");
+					_populate(this->__emitter);
 				}
 			}
 		}
@@ -126,7 +128,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__pool->on(zapata::HTTPPost, "^/api/1.0/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _emitter) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -204,7 +206,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__pool->on(zapata::HTTPPost, "^/api/1.0/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _emitter) -> void {
 			string _body = _req->body();
 			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -233,37 +235,43 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __pool( new zapata::
 		});
 	}
 
-	assertz(this->options()["rest"]["port"]->ok(), "an HTTP listening port must be provided in the configuration file", 500, 0);
-
-	unsigned int _port =  (unsigned int) this->options()["rest"]["port"];
-	string _text("starting RESTful server on port ");
-	zapata::tostr(_text, _port);
-	zlog(_text, zapata::notice);
-	this->__ss.bind(_port);
-
-	if (this->options()["rest"]["websocket"]["port"]->ok()) {
-		zapata::Job _ws([ & ] (zapata::Job& _self) -> void {
-			unsigned int _ws_port = (unsigned int) this->options()["rest"]["websocket"]["port"];
-			zapata::websocketserverstream _sws;
-			string _text("starting RESTful web-socket listener on port ");
-			zapata::tostr(_text, _ws_port);
-			zlog(_text, zapata::notice);
-			_sws.bind(_ws_port);
+	if (this->options()["http"]->ok() && this->options()["http"]["host"]->ok() && this->options()["http"]["port"]->ok()) {
+		zapata::Job _http([ & ] (zapata::Job& _self) -> void {
+			zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->options()["http"]["port"]), zapata::notice);
+			zapata::socketserverstream _ss;
+			_ss.bind((uint) this->options()["http"]["port"]);
 
 			for (; true; ) {
-				int _fd_ws = -1;
-				_sws.accept(& _fd_ws);
-				
-				zapata::websocketstream _cws(_fd_ws);
-				_cws.handshake();
-				_cws.unassign();
-				
+				int _fd = -1;
+				_ss.accept(& _fd);				
 				size_t _next = this->next();
-				(* this->__jobs.at(_next)).assign(_fd_ws);
+				(* this->__jobs.at(_next)).assign(_fd);
 			}
 		});
-		_ws->start();
+		_http->start();
 	}
+
+	if (this->options()["websocket"]->ok() && this->options()["websocket"]["host"]->ok() && this->options()["websocket"]["port"]->ok()) {
+		zapata::Job _websocket([ & ] (zapata::Job& _self) -> void {
+			zlog(string("starting WEBSOCKET listener on port ") + std::to_string((uint) this->options()["websocket"]["port"]), zapata::notice);
+			zapata::websocketserverstream _ss;
+			_ss.bind((uint) this->options()["websocket"]["port"]);
+
+			for (; true; ) {
+				int _fd = -1;
+				_ss.accept(& _fd);
+				
+				zapata::websocketstream _cs(_fd);
+				_cs.handshake();
+				_cs.unassign();
+				
+				size_t _next = this->next();
+				(* this->__jobs.at(_next)).assign(_fd);
+			}
+		});
+		_websocket->start();
+	}
+
 }
 
 zapata::RESTServer::~RESTServer(){
@@ -287,8 +295,8 @@ void zapata::RESTServer::start() {
 	}
 }
 
-zapata::RESTPoolPtr zapata::RESTServer::pool() {
-	return this->__pool;
+zapata::RESTEmitterPtr zapata::RESTServer::emitter() {
+	return this->__emitter;
 }
 
 zapata::JSONObj& zapata::RESTServer::options() {
@@ -311,7 +319,7 @@ size_t zapata::RESTServer::next() {
 	if (!this->__initialized) {
 		zapata::RESTJob * _job = new RESTJob(this->__options);
 		this->__jobs.push_back(_job);
-		(* _job).pool(this->__pool);
+		(* _job).emitter(this->__emitter);
 		(* _job)->start();
 	}
 	return ++this->__next;

@@ -24,7 +24,9 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/base.h>
 #include <zapata/json.h>
+#include <zapata/events.h>
 #include <regex.h>
 #include <string>
 #include <map>
@@ -40,30 +42,22 @@ namespace zapata {
 	class Addons;
 
 	typedef std::shared_ptr<zapata::Addons> AddonsPtr;
-	typedef std::function<zapata::JSONPtr (zapata::AddonsPtr&)> AddonHandler;
-	typedef AddonHandler AddonCallback;
-	typedef vector<pair<regex_t*, zapata::AddonHandler> > AddonHandlerStack;
+	typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > AddonHandlerStack;
 
-	class Addons {
+	class Addons : public zapata::EventEmitter {
 		public:
 			explicit Addons(zapata::JSONObj& _options);
 			virtual ~Addons();
 
-			virtual zapata::JSONObj& options();
+			virtual void on(string _regex,  zapata::ev::Handler _handler);
+			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
+			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
 
-			virtual void on(string _regex, zapata::AddonHandler _handler);
-			virtual zapata::JSONPtr trigger(std::string _regex, zapata::JSONPtr _payload = zapata::undefined);
-
-			virtual void add_kb(std::string _name, zapata::KBPtr _kb);
-			virtual zapata::KBPtr get_kb(std::string _name);
+			virtual zapata::JSONPtr trigger(std::string _resource, zapata::JSONPtr _payload);
+			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
 
 		private:
-			zapata::JSONObj __options;
 			zapata::AddonHandlerStack __resources;
-			zapata::AddonsPtr __self;
-			std::map<std::string, zapata::KBPtr> __kb;
-
-			zapata::JSONPtr process(std::string _regex, zapata::JSONPtr _payload);
 	};
 
 }

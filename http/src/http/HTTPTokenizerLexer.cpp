@@ -50,7 +50,7 @@ void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
 	this->__root_type = _in_type;
 	switch (_in_type) {
 		case zapata::HTTPRequest : {
-			zapata::HTTPMethod _m;
+			zapata::ev::Performative _m;
 			string _ms(this->matched());
 			zapata::fromstr(_ms, &_m);
 			this->__root_req->method(_m);

@@ -58,48 +58,37 @@ namespace zapata {
 		RESTfulController = 4
 	};
 
-	class RESTPool;
+	class RESTEmitter;
 
-	typedef std::shared_ptr<zapata::RESTPool> RESTPoolPtr;
-	typedef std::function<zapata::JSONPtr (zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr, zapata::RESTPoolPtr&)> RESTHandler;
-	typedef RESTHandler RESTCallback;
-	typedef vector<pair<regex_t*, vector<zapata::RESTHandler> > > RESTHandlerStack;
+	typedef std::shared_ptr<zapata::RESTEmitter> RESTEmitterPtr;
+	typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > RESTHandlerStack;
 
-	class RESTPool {
+	class RESTEmitter {
 		public:
-			explicit RESTPool(zapata::JSONObj& _options);
-			virtual ~RESTPool();
+			explicit RESTEmitter(zapata::JSONObj& _options);
+			virtual ~RESTEmitter();
 
-			virtual zapata::JSONObj& options();
+			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
+			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
 
-			virtual void on(zapata::HTTPMethod _method, string _regex, zapata::RESTHandler _handler);
-			virtual void on(string _regex, zapata::RESTHandler _handlers[9]);
-
-			virtual zapata::JSONPtr trigger(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload, bool _is_ssl = false);
-
-			virtual void add_kb(std::string _name, zapata::KBPtr _kb);
-			virtual zapata::KBPtr get_kb(std::string _name);
+			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
 
 		private:
 			zapata::JSONObj __options;
-			zapata::RESTHandler __default_get;
-			zapata::RESTHandler __default_put;
-			zapata::RESTHandler __default_post;
-			zapata::RESTHandler __default_delete;
-			zapata::RESTHandler __default_head;
-			zapata::RESTHandler __default_trace;
-			zapata::RESTHandler __default_options;
-			zapata::RESTHandler __default_patch;
-			zapata::RESTHandler __default_connect;
-			zapata::RESTHandlerStack __resources;
-			zapata::RESTPoolPtr __self;
-			std::map<std::string, zapata::KBPtr> __kb;
+			zapata::ev::Handler __default_get;
+			zapata::ev::Handler __default_put;
+			zapata::ev::Handler __default_post;
+			zapata::ev::Handler __default_delete;
+			zapata::ev::Handler __default_head;
+			zapata::ev::Handler __default_options;
+			zapata::ev::Handler __default_patch;
+			zapata::ev::HandlerStack __resources;
 
 			void init(zapata::HTTPRep& _rep);
 			void init(zapata::HTTPReq& _req);
 			void resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
-			zapata::JSONPtr process(zapata::HTTPMethod _method, std::string _url, zapata::JSONPtr _payload);
-	};
+			zapata::JSONPtr process(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _payload);
+		};
 
 }
 

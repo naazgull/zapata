@@ -18,7 +18,14 @@ AC_HAVE_LIBRARY(boost_system)
 AC_HAVE_LIBRARY(boost_program_options)
 AC_HAVE_LIBRARY(boost_thread)
 AC_HAVE_LIBRARY(boost_filesystem)
+AC_HAVE_LIBRARY(zmq)
 AC_HAVE_LIBRARY(ossp-uuid++)
+
+AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
+AC_CHECK_LIB([zapata-json], [zapata_json], [], [AC_MSG_ERROR([zapata-json not found])])
+AC_CHECK_LIB([zapata-0mq], [zapata_0mq], [], [AC_MSG_ERROR([zapata-0mq not found])])
+AC_CHECK_LIB([zapata-http], [zapata_http], [], [AC_MSG_ERROR([zapata-http not found])])
+AC_CHECK_LIB([zapata-rest], [zapata_rest], [], [AC_MSG_ERROR([zapata-rest not found])])
 
 AC_CANONICAL_SYSTEM
 

@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include <zapata/api/RESTPool.h>
+#include <zapata/api/RESTEmitter.h>
 #include <zapata/api/codes_rest.h>
 #include <zapata/api/codes_users.h>
 #include <zapata/http/requester.h>
@@ -42,10 +42,10 @@ SOFTWARE.
 namespace zapata {
 
 	namespace auth {
-		void register(zapata::RESTPool& _pool, zapata::AuthAgent * _auth_agent) {
-			vector<zapata::HTTPMethod> _ets = { zapata::HTTPGet, zapata::HTTPPost };
+		void register(zapata::RESTEmitter& _pool, zapata::AuthAgent * _auth_agent) {
+			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
 			_pool->on(_ets, "^/oauth/connect$",
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTPoolPtr& _pool) -> void {
+				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -85,7 +85,7 @@ namespace zapata {
 	}
 }
 
-extern "C" void populate(zapata::RESTPoolPtr& _pool) {
+extern "C" void populate(zapata::RESTEmitterPtr& _pool) {
 	zapata::auth::register(_pool);
 }
 

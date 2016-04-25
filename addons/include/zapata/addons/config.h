@@ -18,6 +18,9 @@
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
 
+/* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
+#define HAVE_LIBOSSP_UUID__ 1
+
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #define HAVE_LIBPTHREAD 1
 
@@ -26,6 +29,15 @@
 
 /* Define to 1 if you have the `z' library (-lz). */
 #define HAVE_LIBZ 1
+
+/* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
+#define HAVE_LIBZAPATA_BASE 1
+
+/* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
+#define HAVE_LIBZAPATA_EVENTS 1
+
+/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
+#define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

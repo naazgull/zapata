@@ -20,6 +20,9 @@ AC_HAVE_LIBRARY(boost_thread)
 AC_HAVE_LIBRARY(boost_filesystem)
 AC_HAVE_LIBRARY(ossp-uuid++)
 
+AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
+AC_CHECK_LIB([zapata-json], [zapata_json], [], [AC_MSG_ERROR([zapata-json not found])])
+
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
