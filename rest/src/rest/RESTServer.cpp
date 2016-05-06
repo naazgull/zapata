@@ -76,22 +76,9 @@ SOFTWARE.
 #include <vector>
 #include <zapata/rest/codes_rest.h>
 
-zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapata::RESTEmitter(_options)), __options(_options) {
-	this->__next = -1;
-	this->__initialized = false;
+zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapata::RESTEmitter(_options)), __poll(new zapata::ZMQPoll(_options, __emitter)), __options(_options) {
 
-	assertz(this->options()["0mq"]->ok() && this->options()["0mq"]["host"]->ok() && this->options()["0mq"]["port"]->ok(), "0mq settings (host, port) must be provided in the configuration file", 500, 0);
-
-	if (!!this->options()["max_jobs"] && ((int) this->options()["max_jobs"]) != -1) {
-		this->max((size_t) this->options()["max_jobs"]);
-	}
-	else {
-		this->max(1);
-	}
-
-	if (!this->options()["max_connections_per_job"]->ok() || ((int) this->options()["max_connections_per_job"]) <= 0) {
-		((zapata::JSONObj&) this->options()) << "max_connections_per_job" << 1024;
-	}
+	assertz(this->options()["zmq"]->ok() && this->options()["zmq"]["host"]->ok() && this->options()["zmq"]["port"]->ok(), "zmq settings (host, port) must be provided in the configuration file", 500, 0);
 
 	if (!!this->options()["log"]["level"]) {
 		zapata::log_lvl = (int) this->options()["log"]["level"];
@@ -116,8 +103,8 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 					zlog(string(dlerror()), zapata::error);
 				}
 				else {
-					void (*_populate)(zapata::RESTEmitterPtr&);
-					_populate = (void (*)(zapata::RESTEmitterPtr&)) dlsym(hndl, "restify");
+					void (*_populate)(zapata::EventEmitterPtr&);
+					_populate = (void (*)(zapata::EventEmitterPtr&)) dlsym(hndl, "restify");
 					_populate(this->__emitter);
 				}
 			}
@@ -128,124 +115,31 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/upload$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _emitter) -> void {
-			string _body = _req->body();
-			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
-
-			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
-
-			zapata::JSONObj& _params = zapata::fromstr(_body);
-
-			assertz(!!_params["uploaded_file"], "The 'uploaded_file' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
-
-			string _from((string) _params["uploaded_file"]);
-			string _to((string) _config["rest"]["uploads"]["upload_path"]);
-			zapata::normalize_path(_to, true);
-
-			string _originalname(_req->header("X-Original-Filename"));
-			string _path;
-			string _name;
-			string _mime;
-			do {
-				string _dir(_to);
-				_path.assign("");
-				zapata::generate_hash(_path);
-				_dir.insert(_dir.length(), _path);
-				zapata::mkdir_recursive(_dir, 0777);
-				_path.insert(_path.length(), "/");
-
-				if (_originalname.length() != 0) {
-					_path.insert(_path.length(), _originalname);
-
-					_mime.assign(_req->header("X-Original-Mimetype"));
-					if (_mime.length() != 0) {
-						_mime.assign(_mime.substr(0, _mime.find(";")));
-					}
-				}
-				else {
-					zapata::MIMEType _m = zapata::get_mime((string) _params["uploaded_file"]);
-					_path.insert(_path.length(), "_uploaded");
-					_path.insert(_path.length(), zapata::mimetype_extensions[_m]);
-
-					_mime.assign(zapata::mimetype_names[_m]);
-				}
-
-				_name.assign(_path);
-				_path.insert(0, _to);
-			}
-			while (zapata::path_exists(_path));
-
-			string _encoding(_req->header("X-Content-Transfer-Encoding"));
-			transform(_encoding.begin(), _encoding.end(), _encoding.begin(), ::toupper);
-			if (_encoding == "BASE64") {
-				fstream _ifs;
-				_ifs.open(_from.data());
-				fstream _ofs;
-				_ofs.open(_path.data());
-
-				zapata::base64::decode(_ifs, _ofs);
-
-				_ifs.close();
-				_ofs.flush();
-				_ofs.close();
-			}
-			else {
-				assertz(zapata::copy_path((string ) _params["uploaded_file"], _path), "There was an error copying the temporary file to the 'upload_path' directory.", zapata::HTTP500, zapata::ERRFilePermissions);
-			}
-
-			string _location((string) _config["rest"]["uploads"]["upload_url"]);
-			zapata::normalize_path(_location, true);
-			_location.insert(_location.length(), _name);
-
-			_rep->status(zapata::HTTP201);
-			_rep->header("X-File-Mimetype", _mime);
-			_rep->header("Location", _location);
+		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/upload$", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
+			return zapata::undefined;
 		});
 
 		/*
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/remove$", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _emitter) -> void {
-			string _body = _req->body();
-			assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
-
-			assertz(_req->header("Content-Type").find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
-
-			zapata::JSONObj& _params = zapata::fromstr(_body);
-
-			assertz(!!_params["file_url"], "The 'file_url' parameter must be provided.", zapata::HTTP412, zapata::ERRRequiredField);
-
-			string _url((string) _params["file_url"]);
-			string _url_root(_config["rest"]["uploads"]["upload_url"]);
-			string _path_root(_config["rest"]["uploads"]["upload_path"]);
-
-			zapata::replace(_url, _url_root, _path_root);
-
-			assertz(zapata::path_exists(_url), "Couldn't find the designated file", zapata::HTTP404, zapata::ERRFileNotFound);
-
-			_url.assign(_url.substr(0, _url.rfind("/")));
-
-			string _cmd("rm -rf ");
-			_cmd.insert(_cmd.length(), _url);
-			_cmd.insert(_cmd.length(), " > /dev/null");
-			assertz(system(_cmd.data()) == 0, "There was an error removing the uploaded file.", zapata::HTTP500, zapata::ERRFilePermissions);
-
-			_rep->status(zapata::HTTP200);
+		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/remove$", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
+			return zapata::undefined;
 		});
 	}
 
 	if (this->options()["http"]->ok() && this->options()["http"]["host"]->ok() && this->options()["http"]["port"]->ok()) {
 		zapata::Job _http([ & ] (zapata::Job& _self) -> void {
 			zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->options()["http"]["port"]), zapata::notice);
-			zapata::socketserverstream _ss;
+			zapata::serversocketstream _ss;
 			_ss.bind((uint) this->options()["http"]["port"]);
 
 			for (; true; ) {
 				int _fd = -1;
 				_ss.accept(& _fd);				
-				size_t _next = this->next();
-				(* this->__jobs.at(_next)).assign(_fd);
+
+				zapata::socketstream _cs(_fd);
+				_cs.close();
 			}
 		});
 		_http->start();
@@ -264,9 +158,6 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 				zapata::websocketstream _cs(_fd);
 				_cs.handshake();
 				_cs.unassign();
-				
-				size_t _next = this->next();
-				(* this->__jobs.at(_next)).assign(_fd);
 			}
 		});
 		_websocket->start();
@@ -277,56 +168,21 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 zapata::RESTServer::~RESTServer(){
 }
 
-void zapata::RESTServer::wait() {
-	int _cs_fd = -1;
-	this->__ss.accept(&_cs_fd);
-	size_t _next = this->next();
-	(* this->__jobs.at(_next)).assign(_cs_fd);
-}
-
 void zapata::RESTServer::start() {
 	try {
-		for (; true; ) {
-			this->wait();
-		}
+		this->__poll->loop();
 	}
 	catch (zapata::InterruptedException& e) {
 		return;
 	}
 }
 
-zapata::RESTEmitterPtr zapata::RESTServer::emitter() {
+zapata::EventEmitterPtr zapata::RESTServer::emitter() {
 	return this->__emitter;
 }
 
 zapata::JSONObj& zapata::RESTServer::options() {
 	return this->__options;
-}
-
-void zapata::RESTServer::notify() {
-
-}
-
-size_t zapata::RESTServer::max() {
-	return this->__max_idx;
-}
-
-size_t zapata::RESTServer::next() {
-	if (this->__next == this->max() - 1) {
-		this->__initialized = true;
-		this->__next = -1;
-	}
-	if (!this->__initialized) {
-		zapata::RESTJob * _job = new RESTJob(this->__options);
-		this->__jobs.push_back(_job);
-		(* _job).emitter(this->__emitter);
-		(* _job)->start();
-	}
-	return ++this->__next;
-}
-
-void zapata::RESTServer::max(size_t _max) {
-	this->__max_idx = _max;
 }
 
 void zapata::dirs(std::string _dir, zapata::JSONPtr& _options) {
@@ -346,7 +202,7 @@ void zapata::dirs(std::string _dir, zapata::JSONPtr& _options) {
 				}
 				else {
 					zapata::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
-					_options >> _new_field.first
+					_options >> _new_field.first;
 					_options << _new_field.first << _merged;
 				}
 			}

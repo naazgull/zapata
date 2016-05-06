@@ -42,7 +42,6 @@ namespace zapata {
 	class Addons;
 
 	typedef std::shared_ptr<zapata::Addons> AddonsPtr;
-	typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > AddonHandlerStack;
 
 	class Addons : public zapata::EventEmitter {
 		public:
@@ -57,7 +56,7 @@ namespace zapata {
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
 
 		private:
-			zapata::AddonHandlerStack __resources;
+			zapata::ev::HandlerStack __resources;
 	};
 
 }

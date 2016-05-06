@@ -27,11 +27,11 @@ SOFTWARE.
 #include <zapata/base.h>
 #include <zapata/json.h>
 #include <zapata/events.h>
-#include <zapata/0mq/0mqClient.h>
 #include <regex.h>
 #include <string>
 #include <map>
 #include <memory>
+#include <zmq.hpp>
 
 using namespace std;
 #if !defined __APPLE__
@@ -41,7 +41,9 @@ using namespace __gnu_cxx;
 namespace zapata {
 
 	class ZMQPoll;
+	class ZMQ;
 
+	typedef std::shared_ptr<zapata::ZMQ> ZMQPtr;
 	typedef std::shared_ptr<zapata::ZMQPoll> ZMQPollPtr;
 
 	class ZMQPoll {
@@ -51,9 +53,11 @@ namespace zapata {
 
 			virtual zapata::JSONObj& options();
 			virtual zapata::EventEmitterPtr emitter();
+			virtual zapata::ZMQPollPtr self() final;
 
-			virtual void repoll();
+			virtual void poll(zapata::ZMQPtr _socket);
 			virtual void loop();
+			virtual zapata::ZMQPtr borrow(short _type, std::string _connection);
 
 		private:
 			zapata::JSONObj __options;
@@ -67,7 +71,67 @@ namespace zapata {
 			pthread_mutex_t* __mtx;
 			pthread_mutexattr_t* __attr;
 			zapata::EventEmitterPtr __emitter;
+			zapata::ZMQPollPtr __self;
+
+			virtual void repoll() final;
 	};
+
+	class ZMQ {
+		public:
+			explicit ZMQ(zapata::JSONObj& _options);
+			explicit ZMQ(std::string _obj_path, zapata::JSONObj& _options);
+			explicit ZMQ(std::string _connection);
+			virtual ~ZMQ();
+
+			virtual zapata::JSONObj& options() final;
+			virtual zmq::context_t& context() final;
+			virtual std::string& connection() final;
+			virtual zapata::ZMQPtr self() final;
+
+			virtual zapata::JSONPtr recv() final;
+			virtual void send(zapata::JSONPtr _envelope) final;
+			
+			virtual zmq::socket_t& socket() = 0;
+			virtual short int type() = 0;
+			virtual void listen(zapata::ZMQPollPtr _poll) = 0;
+
+		private:
+			zapata::JSONObj __options;
+			zmq::context_t __context;
+			std::string __connection;
+			zapata::ZMQPtr __self;
+	};
+
+	class ZMQReq : public zapata::ZMQ {
+		public:
+			explicit ZMQReq(zapata::JSONObj& _options);
+			explicit ZMQReq(std::string _obj_path, zapata::JSONObj& _options);
+			explicit ZMQReq(std::string _connection);
+			virtual ~ZMQReq();
+			
+			virtual zmq::socket_t& socket();
+			virtual short int type();
+			virtual void listen(zapata::ZMQPollPtr _poll);
+
+		private:
+			zmq::socket_t * __socket;
+	};
+
+	class ZMQRep : public zapata::ZMQ {
+		public:
+			explicit ZMQRep(zapata::JSONObj& _options);
+			explicit ZMQRep(std::string _obj_path, zapata::JSONObj& _options);
+			explicit ZMQRep(std::string _connection);
+			virtual ~ZMQRep();
+			
+			virtual zmq::socket_t& socket();
+			virtual short int type();
+			virtual void listen(zapata::ZMQPollPtr _poll);
+
+		private:
+			zmq::socket_t * __socket;
+	};
+
 
 }
 

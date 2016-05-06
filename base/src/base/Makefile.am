@@ -7,6 +7,7 @@ libzapata_base_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 libzapata_base_la_SOURCES = \
 ./ascii.cpp \
 ./assert.cpp \
+./Job.cpp \
 ./AssertionException.cpp \
 ./base64.cpp \
 ./CastException.cpp \

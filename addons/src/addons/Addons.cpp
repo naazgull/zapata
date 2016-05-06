@@ -89,7 +89,8 @@ zapata::JSONPtr zapata::Addons::trigger(zapata::ev::Performative _method, std::s
 			}
 			catch (zapata::AssertionException& _e) {
 				return zapata::make_ptr(JSON(
-					"error" <<  true
+					"status" << _e.status()
+					<< "error" <<  true
 					<< "assertion_failed" << _e.description()
 					<< "message" << _e.what()
 					<< "code" << _e.code()

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-0mq, 0.9.1-1, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-zmq, 0.9.1-1, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -23,8 +23,8 @@ AC_CHECK_LIB([zapata-events], [zapata_events], [], [AC_MSG_ERROR([zapata-events 
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/0mq/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/0mq/config.h])
+AH_TOP([#include <zapata/zmq/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/zmq/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])
@@ -43,6 +43,6 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile
-        src/0mq/Makefile)
+        src/zmq/Makefile)
 
 AC_OUTPUT

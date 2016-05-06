@@ -23,26 +23,25 @@ SOFTWARE.
 */
 
 #include <zapata/rest/RESTEmitter.h>
-#include <zapata/rest/requester.h>
 
-zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : __options( _options ), __self(this) {
-	this->__default_get = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : zapata::EventEmitter( _options ) {
+	this->__default_get = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_put = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+	this->__default_put = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_post = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+	this->__default_post = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_delete = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+	this->__default_delete = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_head = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+	this->__default_head = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_options = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP200);
+	this->__default_options = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		/*_rep->status(zapata::HTTP200);
 
 		string _origin = _req->header("Origin");
 		if (_origin.length() != 0) {
@@ -51,21 +50,18 @@ zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : __options( _option
 			_rep->header("Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS);
 			_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
 			_rep->header("Access-Control-Max-Age", "1728000");
-		}
+		}*/
+		return zapata::undefined;
 	};
-	this->__default_patch = [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-		_rep->status(zapata::HTTP405);
+	this->__default_patch = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
 }
 
 zapata::RESTEmitter::~RESTEmitter() {
-	for (auto _i : this->__resources) {
-		regfree(_i.first);
-		delete _i.first;
-	}
 }
 
-void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex,  zapata::ev::Handler _handler) {
+void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex, zapata::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -83,7 +79,7 @@ void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex,  za
 
 }
 
-void zapata::RESTEmitter::on(string _regex,  zapata::ev::Handler _handler_set[7]) {
+void zapata::RESTEmitter::on(string _regex, zapata::ev::Handler _handler_set[7]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -101,21 +97,25 @@ void zapata::RESTEmitter::on(string _regex,  zapata::ev::Handler _handler_set[7]
 }
 
 zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _payload) {
-	string _host(_req->header("Host"));
-	string _uri(_req->url());
-	size_t _port_idx = string::npos;
-	string _port((_port_idx = _host.find(":")) != string::npos ? _host.substr(_port_idx + 1) : "");
-	_uri.insert(0, _host);
-	_uri.insert(0, _is_ssl ? "https://" : "http://");
-	string _bind_url((string) this->options()["zapata"]["rest"]["bind_url"]);
-
-	if (_host.length() == 0 || _uri.find(_bind_url) != string::npos) {
-		zapata::replace(_uri, _bind_url, "");
-		_req->url(_uri);
-		return this->process(_req, _rep);
-	}
-	else if ((_host.find("127.0.0") != string::npos || _host.find("localhost") != string::npos) && _port == (string) this->options()["zapata"]["rest"]["port"]) {
-		return this->process(_req, _rep);
+	zapata::JSONPtr _return = zapata::make_arr();
+	for (auto _i : this->__resources) {
+		if (regexec(_i.first, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+			try {
+				zapata::JSONPtr _result = _i.second[_method](_method, _url, _payload, this->self());
+				if (_result->ok()) {
+					_return << _result;
+				}
+			}
+			catch (zapata::AssertionException& _e) {
+				_return << JSON(
+					"status" << _e.status()
+					<< "error" <<  true
+					<< "assertion_failed" << _e.description()
+					<< "message" << _e.what()
+					<< "code" << _e.code()
+				);
+			}
+		}
 	}
 }
 
@@ -158,93 +158,12 @@ void zapata::RESTEmitter::init(zapata::HTTPReq& _req) {
 	_req->header("User-Agent", "zapata RESTful server");
 }
 
-void zapata::RESTEmitter::resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request) {
+void zapata::RESTEmitter::restify(zapata::JSONPtr _body, zapata::HTTPReq& _request) {
 	if (_request->param("fields").length()) {
 
 	}
 	std::string _embed = _request->param("embed");
 	if (_embed.length()) {
-		zapata::JSONPtr _links = _body["links"];
-		std::string _link;
-		std::istringstream _iss;
-		_iss.str(_embed);
-		while (_iss.good()) {
-			std::getline(_iss, _link, ',');
-
-			std::string _rep_embed;
-			size_t _idx = _link.find(".");
-			if (_idx != std::string::npos) {
-				_link.assign(_link.substr(0, _idx));
-				_rep_embed.assign(_link.substr(_idx + 1));
-			}
-
-			if (_links[_link]->ok()) {
-				zapata::HTTPReq _req;
-				zapata::HTTPRep _rep;
-				this->init(_req);
-				_req->url(_links[_link]->str());
-
-				if (_rep_embed.length() != 0) {
-					_req->param("embed", _rep_embed);
-				}
-
-				this->process(_req, _rep);
-				if (_rep->body().length() != 0) {
-					zapata::JSONPtr _embed_body;
-					std::istringstream _bss;
-					_bss.str(_rep->body());
-					_bss >> _embed_body;
-					_body << _link << _embed_body;
-				}
-			}
-		}
-	}
-}
-
-void zapata::RESTEmitter::process(zapata::HTTPReq& _req, zapata::HTTPRep& _rep) {
-	this->init(_rep);
-	
-	for (auto _i : this->__resources) {
-		if (regexec(_i.first, _req->url().c_str(), (size_t) (0), nullptr, 0) == 0) {
-			try {
-				std::istringstream _iss;
-				_iss.str(_req->body());
-				zapata::JSONPtr _payload;
-				try {
-					_iss >> _payload;
-				}
-				catch (...) {}
-				zapata::JSONPtr _result = _i.second[_req->method()](_req->method(), _req->url(), _payload, make_ptr(this->__options), this->__self);
-				if (_result->ok()) {
-					_return << _result;
-				}
-			}
-			catch (zapata::AssertionException& _e) {
-				if (_e.status() > 399) {
-					string _text;
-					zapata::tostr(_text, JSON(
-						"error" <<  true
-						<< "assertion_failed" << _e.description()
-						<< "message" << _e.what()
-						<< "code" << _e.code()
-					));
-					_rep->header("Content-Type", "application/json");
-					string _length;
-					zapata::tostr(_length, _text.length());
-					_rep->header("Content-Length", _length);
-					_rep->body(_text);
-				}
-				_rep->status((zapata::HTTPStatus) _e.status());
-				string _origin = _req->header("Origin");
-				if (_origin.length() != 0) {
-					_rep->header("Access-Control-Allow-Origin", _origin);
-					_rep->header("Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS);
-				}
-			}
-		}
-	}
-	if (_rep->header("Content-Length").length() == 0) {
-		_rep->header("Content-Length", "0");
 	}
 }
 

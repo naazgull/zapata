@@ -31,86 +31,32 @@ namespace zapata {
 
 	namespace users {
 
-		void collection(zapata::RESTEmitterPtr& _pool) {
+		void collection(zapata::EventEmitterPtr& _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
-					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
-					zapata::JSONPtr _payload = _mongo->query("users", _params);
-
-					string _text = (string) _payload;
-					_rep->status(zapata::HTTP200);
-					_rep->body(_text);
-					_rep->header("Cache-Control", "no-store");
-					_rep->header("Pragma", "no-cache");
-					_rep->header("Content-Type", "application/json"); 
-					_rep->header("Content-Length", std::to_string(_text.length()));
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+					return zapata::make_ptr(JSON(
+						"performative" << 200
+					));
 				},
 				no_put,
 				//post
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
-
-					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
-
-					zapata::JSONPtr _record = zapata::fromstr(_body);
-					if (!_record["id"]->ok() && _record["email"]->ok()) {
-						_record << "id" << (string) _record["email"];
-					}
-					if (!_record["email"]->ok() && _record["id"]->ok()) {
-						string _email((string) _record["id"]);
-						_email.insert(_email.length(), "@");
-						_email.insert(_email.length(), (string) _config["rest"]["bind_address"]);
-						_record << "email" << _email;
-					}
-
-					assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
-					assertz(_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
-					assertz(_record["email"]->ok(), "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
-					assertz(_record["password"]->ok(), "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
-					assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
-					assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
-
-					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
-					zapata::JSONPtr _payload = _mongo->insert("users", _req->url(), _record);
-					string _text = (string) _payload;
-					_rep->status(zapata::HTTP201);
-					_rep->header("Cache-Control", "no-store");
-					_rep->header("Pragma", "no-cache");
-					_rep->header("Location", (string) _payload["href"]);
-					_rep->header("Content-Length", std::to_string(_text.length()));
-					_rep->header("Content-Type", "application/json"); 
-					_rep->body(_text);
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				},
 				no_delete,
 				//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
-					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
-					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
-					zapata::JSONPtr _payload = _mongo->query("users", _params);
-
-					string _text = (string) _payload;
-					_rep->status(zapata::HTTP200);
-					_rep->header("Cache-Control", "no-store");
-					_rep->header("Pragma", "no-cache");
-					_rep->header("Content-Type", "application/json"); 
-					_rep->header("Content-Length", std::to_string(_text.length()));
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				},
-				no_trace,
 				no_options, 
-				no_patch,
-				no_connect
+				no_patch
 			};
 			_pool->on("^/users$", _handler_set);
 		}
 
-		void document(zapata::RESTEmitterPtr& _pool) {
+		void document(zapata::EventEmitterPtr& _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
-			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//get
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 					zapata::mongodb::CollectionPtr _mongo((zapata::mongodb::Collection *) _pool->get_kb("mongodb.users").get());
 					zapata::JSONPtr _payload = _mongo->query("users", _params);
@@ -123,8 +69,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-			//put
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//put
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -150,10 +96,10 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//post
+				//post
 				no_post,
-			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//delete
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::delete_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -164,8 +110,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//head
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -177,10 +123,9 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-				no_trace, 
 				no_options, 
-			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//patch
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -202,15 +147,14 @@ namespace zapata {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
-				},
-				no_connect
+				}
 			};
 			_pool->on("^/users/([^/]+)$", _handler_set);
 		}
 
-		void collect(zapata::RESTEmitterPtr& _pool) {
+		void collect(zapata::EventEmitterPtr& _pool) {
 			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
-			_pool->on(_ets, "^/auth/collect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+			_pool->on(_ets, "^/auth/collect", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				assertz(_req->param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 				assertz(_req->param("state").length() != 0, "Parameter 'state' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
@@ -270,9 +214,9 @@ namespace zapata {
 			});
 		}
 	
-		void connect(zapata::RESTEmitterPtr& _pool) {
+		void connect(zapata::EventEmitterPtr& _pool) {
 			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
-			_pool->on(_ets, "^/auth/connect", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+			_pool->on(_ets, "^/auth/connect", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				assertz(_req->param("client_code").length() != 0, "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 
 				string _grant_type("code");
@@ -325,10 +269,10 @@ namespace zapata {
 			});			
 		}
 
-		void token(zapata::RESTEmitterPtr& _pool) {
+		void token(zapata::EventEmitterPtr& _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
-			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//get
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _grant_type(_req->param("grant_type"));
 					assertz(_req->param("grant_type").length() != 0, "Parameter 'grant_type' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
 					assertz(_req->param("client_id").length() != 0, "Parameter 'client_id' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
@@ -370,8 +314,8 @@ namespace zapata {
 					}
 				},
 				no_put,
-			//post
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//post
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -431,7 +375,6 @@ namespace zapata {
 				},
 				no_delete, 
 				no_head, 
-				no_trace, 
 				no_options, 
 				no_patch, 
 				no_connect
@@ -439,8 +382,8 @@ namespace zapata {
 			_pool->on("^/auth/token", _handler_set);			
 		}
 
-		void login(zapata::RESTEmitterPtr& _pool) {
-			_pool->on(zapata::ev::Post, "^/auth/login", [] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+		void login(zapata::EventEmitterPtr& _pool) {
+			_pool->on(zapata::ev::Post, "^/auth/login", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				string _body = _req->body();			
 				assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -491,7 +434,7 @@ namespace zapata {
 						_token_body << "grant_type" << "user_code" << "client_id" << (string) _params["id"] << "client_secret" << (string) _params["secret"] << "code" << _code;
 						zapata::tostr(_token_body_s, _token_body);
 
-						//_redirect.insert(0, _config["rest"]["bind_url"]);
+							//_redirect.insert(0, _config["rest"]["bind_url"]);
 
 						zapata::HTTPReq _token_req;
 						_token_req->header("Content-Type", "application/json"); 
@@ -516,10 +459,10 @@ namespace zapata {
 
 	namespace groups {
 
-		void collection(zapata::RESTEmitterPtr& _pool) {	
+		void collection(zapata::EventEmitterPtr& _pool) {	
 			 zapata::ev::Handler _handler_set[7] = {
-			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//get
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
 					zapata::JSONPtr _payload = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -533,8 +476,8 @@ namespace zapata {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
 				no_put,
-			//post
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//post
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -556,8 +499,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//delete
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
 					string _text = (string) zapata::mongodb::delete_from_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -568,8 +511,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//head
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulCollection, true);
 
 					zapata::JSONPtr _payload = zapata::mongodb::get_collection(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -581,10 +524,9 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-				no_trace, 
 				no_options, 
-			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//patch
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -608,16 +550,15 @@ namespace zapata {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
-				},
-				no_connect
+				}
 			};
 			_pool->on("^/groups$", _handler_set);
 		}
 
-		void document(zapata::RESTEmitterPtr& _pool) {	
+		void document(zapata::EventEmitterPtr& _pool) {	
 			 zapata::ev::Handler _handler_set[7] = {
-			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//get
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -630,8 +571,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-			//put
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//put
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -657,8 +598,8 @@ namespace zapata {
 					_rep->body(_text);
 				},
 				no_post,
-			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//delete
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					string _text = (string) zapata::mongodb::delete_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -669,8 +610,8 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
 				},
-			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//head
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					zapata::JSONPtr _params = zapata::fromparams(_req, zapata::RESTfulDocument);
 
 					zapata::JSONPtr _payload = zapata::mongodb::get_document(_config, (string) _config["users"]["mongodb"]["collection"], _params);
@@ -682,10 +623,9 @@ namespace zapata {
 					_rep->header("Content-Type", "application/json"); 
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
-				no_trace, 
 				no_options, 
-			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				//patch
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -709,15 +649,14 @@ namespace zapata {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 					_rep->header("Content-Type", "application/json"); 
 					_rep->body(_text);
-				},
-				no_connect
+				}
 			};
 			_pool->on("^/groups/([^/]+)$", _handler_set);
 		}
 	}
 }
 
-extern "C" void restify(zapata::RESTEmitterPtr& _pool) {
+extern "C" void restify(zapata::EventEmitterPtr& _pool) {
 	zapata::KBPtr _kb(new zapata::mongodb::Collection(_pool->options()["users"]->obj()));
 	_pool->add_kb("mongodb.users", _kb);
 

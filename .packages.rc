@@ -1,0 +1,13 @@
+export packages=(
+       base
+       json
+       events
+       http
+       addons
+       zmq
+       rest
+#       auth
+       mongodb
+       redis
+       users
+)

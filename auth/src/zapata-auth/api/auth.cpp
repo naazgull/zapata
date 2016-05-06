@@ -45,7 +45,7 @@ namespace zapata {
 		void register(zapata::RESTEmitter& _pool, zapata::AuthAgent * _auth_agent) {
 			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
 			_pool->on(_ets, "^/oauth/connect$",
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr _config, zapata::RESTEmitterPtr& _pool) -> void {
+				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> void {
 					string _body = _req->body();
 					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
 
@@ -85,7 +85,7 @@ namespace zapata {
 	}
 }
 
-extern "C" void populate(zapata::RESTEmitterPtr& _pool) {
+extern "C" void populate(zapata::EventEmitterPtr& _pool) {
 	zapata::auth::register(_pool);
 }
 

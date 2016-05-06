@@ -1,98 +1,97 @@
-/* include/zapata/0mq/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/0mq/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/zmq/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/0mq/unconfig.h>
+#pragma once
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+#undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#define HAVE_INTTYPES_H 1
+#undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-#define HAVE_LIBCRYPTO 1
+#undef HAVE_LIBCRYPTO
 
 /* Define to 1 if you have the `dl' library (-ldl). */
-#define HAVE_LIBDL 1
+#undef HAVE_LIBDL
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
-#define HAVE_LIBMAGIC 1
+#undef HAVE_LIBMAGIC
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-#define HAVE_LIBOSSP_UUID__ 1
+#undef HAVE_LIBOSSP_UUID__
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
-#define HAVE_LIBPTHREAD 1
+#undef HAVE_LIBPTHREAD
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
-#define HAVE_LIBSSL 1
+#undef HAVE_LIBSSL
 
 /* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_LIBZ 1
+#undef HAVE_LIBZ
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+#undef HAVE_LIBZAPATA_BASE
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+#undef HAVE_LIBZAPATA_EVENTS
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+#undef HAVE_LIBZAPATA_JSON
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
-#define HAVE_LIBZMQ 1
+#undef HAVE_LIBZMQ
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+#undef HAVE_MEMORY_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
+#undef HAVE_STDINT_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
+#undef HAVE_STDLIB_H
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H 1
+#undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H 1
+#undef HAVE_STRING_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+#undef HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+#undef HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
+#undef HAVE_UNISTD_H
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
-#define LT_OBJDIR ".libs/"
+#undef LT_OBJDIR
 
 /* Name of package */
-#define PACKAGE "zapata-0mq"
+#undef PACKAGE
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
+#undef PACKAGE_BUGREPORT
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-0mq"
+#undef PACKAGE_NAME
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-0mq 0.9.1-1"
+#undef PACKAGE_STRING
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-0mq"
+#undef PACKAGE_TARNAME
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL ""
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.1-1"
+#undef PACKAGE_VERSION
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+#undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.9.1-1"
+#undef VERSION

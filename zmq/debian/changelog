@@ -1,4 +1,4 @@
-zapata-0mq (0.9.1-1) trusty; urgency=medium
+zapata-zmq (0.9.1-1) trusty; urgency=medium
 
   * Clean up and refactoring
 

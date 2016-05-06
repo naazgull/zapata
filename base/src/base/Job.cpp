@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/rest/Job.h>
+#include <zapata/base/Job.h>
 #include <fstream>
 
 zapata::Job::Job() : shared_ptr<zapata::JobRef>(new JobRef()) {

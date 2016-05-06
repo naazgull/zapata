@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <zapata/http.h>
 #include <zapata/json.h>
+#include <zapata/events.h>
 #include <regex.h>
 #include <string>
 #include <map>
@@ -58,12 +59,7 @@ namespace zapata {
 		RESTfulController = 4
 	};
 
-	class RESTEmitter;
-
-	typedef std::shared_ptr<zapata::RESTEmitter> RESTEmitterPtr;
-	typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > RESTHandlerStack;
-
-	class RESTEmitter {
+	class RESTEmitter : public zapata::EventEmitter {
 		public:
 			explicit RESTEmitter(zapata::JSONObj& _options);
 			virtual ~RESTEmitter();
@@ -86,8 +82,7 @@ namespace zapata {
 
 			void init(zapata::HTTPRep& _rep);
 			void init(zapata::HTTPReq& _req);
-			void resttify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
-			zapata::JSONPtr process(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _payload);
+			void restify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
 		};
 
 }

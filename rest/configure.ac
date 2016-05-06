@@ -19,7 +19,6 @@ AC_HAVE_LIBRARY(ossp-uuid++)
 AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
 AC_CHECK_LIB([zapata-json], [zapata_json], [], [AC_MSG_ERROR([zapata-json not found])])
 AC_CHECK_LIB([zapata-events], [zapata_events], [], [AC_MSG_ERROR([zapata-events not found])])
-AC_CHECK_LIB([zapata-0mq], [zapata_0mq], [], [AC_MSG_ERROR([zapata-0mq not found])])
 AC_CHECK_LIB([zapata-http], [zapata_http], [], [AC_MSG_ERROR([zapata-http not found])])
 
 AC_CANONICAL_SYSTEM

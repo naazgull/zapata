@@ -24,8 +24,9 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/events.h>
+#include <zapata/zmq.h>
 #include <zapata/rest/SocketStreams.h>
-#include <zapata/rest/RESTJob.h>
 #include <zapata/rest/RESTEmitter.h>
 
 using namespace std;
@@ -41,25 +42,15 @@ namespace zapata {
 			virtual ~RESTServer();
 	
 			virtual void start();
-			virtual void wait();
-			virtual void notify();
 
 			zapata::JSONObj& options();
-			size_t max();
-			size_t next();
-			void max(size_t _max);
-
-			zapata::RESTEmitterPtr emitter();
+			zapata::ZMQPollPtr poll();
+			zapata::EventEmitterPtr emitter();
 
 		private:
-			std::vector< zapata::RESTJob * > __jobs;
-			zapata::RESTEmitterPtr __emitter;
-			bool __initialized;
-			
-		protected:
+			zapata::EventEmitterPtr __emitter;
+			zapata::ZMQPollPtr __poll;
 			zapata::JSONObj __options;
-			size_t __next;
-			size_t __max_idx;
 	};
 
 	void dirs(std::string _dir, zapata::JSONPtr& _options);

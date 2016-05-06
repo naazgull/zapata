@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/0mq/0mqPoll.h>
+#include <zapata/zmq/ZMQPolling.h>
 
-zapata::ZMQPoll::ZMQPoll(zapata::JSONObj& _options, zapata::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter) {
+zapata::ZMQPoll::ZMQPoll(zapata::JSONObj& _options, zapata::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
 	this->__internal = new zmq::socket_t * [2];
 
 	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
@@ -57,7 +57,7 @@ zapata::ZMQPoll::~ZMQPoll() {
 	delete this->__mtx;
 	delete this->__attr;
 
-	zlog(string("0mq poll clean up"), zapata::notice);
+	zlog(string("zmq poll clean up"), zapata::notice);
 }
 
 zapata::JSONObj& zapata::ZMQPoll::options() {
@@ -66,6 +66,15 @@ zapata::JSONObj& zapata::ZMQPoll::options() {
 
 zapata::EventEmitterPtr zapata::ZMQPoll::emitter() {
 	return this->__emitter;
+}
+
+zapata::ZMQPollPtr zapata::ZMQPoll::self() {
+	return this->__self;
+}
+
+void zapata::ZMQPoll::poll(zapata::ZMQPtr _socket) {
+	this->__sockets.push_back(_socket);
+	this->repoll();
 }
 
 void zapata::ZMQPoll::repoll() {
@@ -112,12 +121,16 @@ void zapata::ZMQPoll::loop() {
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
 					zapata::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
-					std::string _pstr(_envelope["performative"]->str());
-					zapata::ev::Performative _performative;
-					zapata::fromstr(_pstr, & _performative);
-					zapata::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope["payload"]);
-					if (_result != zapata::undefined) {
-						this->__sockets[_k - 1]->send(_result);
+					if (_envelope["performative"]->ok()) {
+						std::string _pstr(_envelope["performative"]->str());
+						zapata::ev::Performative _performative = zapata::ev::from_str(_pstr);
+						zapata::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope["payload"]);
+						if (_result != zapata::undefined) {
+							this->__sockets[_k - 1]->send(_result);
+						}
+					}
+					else if (_envelope["headers"]["X-Cid"]->ok()) {
+						this->__emitter->trigger(zapata::ev::AssyncReply, _envelope["headers"]["X-Cid"]->str(), _envelope["payload"]);
 					}
 				}
 			}
@@ -125,7 +138,24 @@ void zapata::ZMQPoll::loop() {
 	}
 }
 
+zapata::ZMQPtr zapata::ZMQPoll::borrow(short _type, std::string _connection) {
+	switch(_type) {
+		case ZMQ_REQ : {
+			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection);
+			_socket->options() = this->__options;
+			_socket->listen(this->__self);
+			return zapata::ZMQPtr(_socket);
+		}
+		case ZMQ_REP : {
+			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection);
+			_socket->options() = this->__options;
+			_socket->listen(this->__self);
+			return zapata::ZMQPtr(_socket);
+		}
+	}
+	return zapata::ZMQPtr(nullptr);
+}
 
-extern "C" int zapata_0mq() {
+extern "C" int zapata_zmq() {
 	return 1;
 }

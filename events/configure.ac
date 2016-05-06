@@ -39,7 +39,6 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile
         debian/Makefile
-        etc/Makefile
         include/Makefile
         src/events/Makefile)
 

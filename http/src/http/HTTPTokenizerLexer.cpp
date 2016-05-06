@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <zapata/events.h>
 #include <zapata/http/config.h>
-
 #include <zapata/http/HTTPTokenizerLexer.h>
 
 zapata::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &_out) :
@@ -50,9 +50,8 @@ void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
 	this->__root_type = _in_type;
 	switch (_in_type) {
 		case zapata::HTTPRequest : {
-			zapata::ev::Performative _m;
 			string _ms(this->matched());
-			zapata::fromstr(_ms, &_m);
+			zapata::ev::Performative _m = zapata::ev::from_str(_ms);
 			this->__root_req->method(_m);
 			break;
 		}
@@ -95,7 +94,7 @@ void zapata::HTTPTokenizerLexer::status() {
 		case zapata::HTTPReply : {
 			int _status = 0;
 			string _statusstr(this->matched());
-			zapata::fromstr(_statusstr, &_status);
+			zapata::fromstr(_statusstr, & _status);
 			this->__root_rep->status((zapata::HTTPStatus) _status);
 			break;
 		}

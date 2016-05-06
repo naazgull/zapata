@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <zapata/base/assert.h>
 #include <zapata/base/config.h>
+#include <zapata/base/Job.h>
 
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>

@@ -45,6 +45,12 @@ namespace zapata {
 	namespace ev {
 		typedef std::function<zapata::JSONPtr (zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr, zapata::EventEmitterPtr)> Handler;
 		typedef Handler Callback;
+		typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > HandlerStack;
+
+		zapata::JSONPtr split(std::string _url, zapata::JSONPtr _orphans);
+		std::string join(zapata::JSONPtr _info, size_t _orphans);
+		std::string to_str(zapata::ev::Performative _performative);
+		zapata::ev::Performative from_str(std::string _performative);
 	}
 
 	class EventEmitter {
@@ -58,8 +64,11 @@ namespace zapata {
 
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler) = 0;
 			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]) = 0;
+			virtual void off(zapata::ev::Performative _method, string _regex) = 0;
+			virtual void off(string _regex) = 0;
 
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload) = 0;
+			virtual zapata::JSONPtr trigger(std::string _resource, zapata::JSONPtr _payload) = 0;
 
 			virtual void add_kb(std::string _name, zapata::KBPtr _kb) final;
 			virtual zapata::KBPtr get_kb(std::string _name) final;
@@ -71,7 +80,8 @@ namespace zapata {
 
 	};
 
-	void fromstr(string& _in, zapata::ev::Performative * _out);
+	zapata::JSONPtr split(std::string _to_split, std::string _separator);
+	std::string join(zapata::JSONPtr _to_join, std::string _separator);
 
 }
 

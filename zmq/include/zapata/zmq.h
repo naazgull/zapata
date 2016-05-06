@@ -24,37 +24,8 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/rest/Job.h>
-#include <zapata/rest/RESTEmitter.h>
-#include <vector>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <zapata/zmq/config.h>
+#include <zmq.hpp>
+#include <zapata/zmq/ZMQPolling.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
-namespace zapata {
-
-	class RESTJob: public zapata::Job {
-		public:
-			RESTJob(zapata::JSONObj& _options);
-			virtual ~RESTJob();
-
-			virtual void assign(int _cs_fd);
-			zapata::JSONObj& options();
-
-			zapata::RESTEmitterPtr pool();
-			void pool(zapata::RESTEmitterPtr _pool);
-			void log(zapata::HTTPReq&, zapata::HTTPRep&);
-
-		private:
-			int __epoll_fd;
-			zapata::RESTEmitterPtr __pool;
-			zapata::JSONObj __options;
-	};
-
-}
+extern "C" int zapata_zmq();

@@ -1,13 +1,13 @@
-Source: zapata-0mq
+Source: zapata-zmq
 Maintainer: n@zgul <naazgull@dfz.pt>
 Section: Development
 Priority: optional
 Standards-Version: 3.9.5
 Build-Depends: debhelper (>= 9), libssl-dev, libzmq3 (>=4.0.5), zapata-base (>=0.9), zapata-json (>=0.9), 
 
-Package: zapata-0mq
+Package: zapata-zmq
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, libzmq3 (>=4.0.5), zapata-base (>=0.9), zapata-json (>=0.9)
-Description: RESTful API's C++ toolkit named after Emiliano Zapata - 0mq support
+Description: RESTful API's C++ toolkit named after Emiliano Zapata - zmq support
  Provides a set of C++ tool libraries for the development of 
- RESTful API's. This package provides 0mq abstraction classes.
+ RESTful API's. This package provides zmq abstraction classes.

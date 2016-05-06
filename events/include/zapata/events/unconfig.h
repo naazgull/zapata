@@ -25,6 +25,12 @@
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
+/* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
+#undef HAVE_LIBZAPATA_BASE
+
+/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
+#undef HAVE_LIBZAPATA_JSON
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 

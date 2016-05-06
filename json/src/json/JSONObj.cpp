@@ -839,6 +839,14 @@ zapata::JSONPtr zapata::JSONElementT::operator+(zapata::JSONPtr _rhs) {
 }
 
 zapata::JSONPtr zapata::JSONElementT::operator+(zapata::JSONElementT& _rhs) {
+	if (this->__target.__type == zapata::JSNil) {
+		zapata::JSONPtr _rrhs = _rhs.clone();
+		return _rrhs;
+	}
+	if (_rhs.__target.__type == zapata::JSNil) {
+		zapata::JSONPtr _lhs = this->clone();
+		return _lhs;
+	}
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	assertz(this->__target.__type == _rhs.__target.__type, "can't add JSON objects of different types", 0, 0);
 	switch(this->__target.__type) {
