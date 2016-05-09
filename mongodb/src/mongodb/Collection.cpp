@@ -33,7 +33,7 @@ zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::
 zapata::mongodb::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["host"]), __broadcast(true) {
+zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["host"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
 	if (this->__options["mongodb"]["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
@@ -57,6 +57,10 @@ bool& zapata::mongodb::Collection::broadcast() {
 	return this->__broadcast;
 }
 
+zapata::EventEmitterPtr zapata::mongodb::Collection::addons() {
+	return this->__addons;
+}
+
 std::string zapata::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
 
@@ -78,7 +82,7 @@ std::string zapata::mongodb::Collection::insert(std::string _collection, std::st
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->call(string("INSERT ") + _collection, _document);
+		this->addons()->trigger(string("INSERT ") + _collection, _document);
 	}
 	return _document["id"]->str();
 }
@@ -110,7 +114,7 @@ int zapata::mongodb::Collection::update(std::string _collection, zapata::JSONPtr
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->call(string("UPDATE ") + _collection, _pattern);
+		this->addons()->trigger(string("UPDATE ") + _collection, _pattern);
 	}
 	return _size;
 }
@@ -142,7 +146,7 @@ int zapata::mongodb::Collection::unset(std::string _collection, zapata::JSONPtr 
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->call(string("UPDATE ") + _collection, _pattern);
+		this->addons()->trigger(string("UPDATE ") + _collection, _pattern);
 	}
 	return _size;
 }
@@ -170,7 +174,7 @@ int zapata::mongodb::Collection::remove(std::string _collection, zapata::JSONPtr
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->call(string("DELETE ") + _collection, _pattern);
+		this->addons()->trigger(string("DELETE ") + _collection, _pattern);
 	}
 	return _size;
 }

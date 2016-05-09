@@ -51,6 +51,8 @@ namespace zapata {
 			virtual void on(string _regex,  zapata::ev::Handler _handler);
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
 			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
+			virtual void off(zapata::ev::Performative _method, string _regex);
+			virtual void off(string _regex);
 
 			virtual zapata::JSONPtr trigger(std::string _resource, zapata::JSONPtr _payload);
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);

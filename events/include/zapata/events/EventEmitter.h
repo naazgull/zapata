@@ -30,6 +30,7 @@ SOFTWARE.
 #include <string>
 #include <map>
 #include <memory>
+#include <ossp/uuid++.hh>
 
 using namespace std;
 #if !defined __APPLE__
@@ -45,12 +46,16 @@ namespace zapata {
 	namespace ev {
 		typedef std::function<zapata::JSONPtr (zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr, zapata::EventEmitterPtr)> Handler;
 		typedef Handler Callback;
-		typedef vector<pair<regex_t*, vector< zapata::ev::Handler> > > HandlerStack;
+		typedef std::vector<pair<regex_t*, vector< zapata::ev::Handler> > > HandlerStack;
+		typedef std::map< std::string, zapata::ev::Handler > ReplyHandlerStack;
 
 		zapata::JSONPtr split(std::string _url, zapata::JSONPtr _orphans);
 		std::string join(zapata::JSONPtr _info, size_t _orphans);
 		std::string to_str(zapata::ev::Performative _performative);
 		zapata::ev::Performative from_str(std::string _performative);
+
+		zapata::JSONPtr init_request();
+		zapata::JSONPtr init_reply(std::string _cid);
 	}
 
 	class EventEmitter {

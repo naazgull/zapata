@@ -134,6 +134,9 @@ std::string zapata::ev::to_str(zapata::ev::Performative _performative) {
 		case zapata::ev::Patch: {
 			return "PATCH";
 		}
+		case zapata::ev::AssyncReply: {
+			return "REPLY";
+		}
 	}
 	return "HEAD";
 }
@@ -160,7 +163,56 @@ zapata::ev::Performative zapata::ev::from_str(std::string _performative) {
 	if (_performative == "PATCH") {
 		return zapata::ev::Patch;
 	}
+	if (_performative == "REPLY") {
+		return zapata::ev::AssyncReply;
+	}
 	return zapata::ev::Head;
+}
+
+zapata::JSONPtr zapata::ev::init_request() {
+	time_t _rawtime = time(nullptr);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+
+	return zapata::make_ptr(JSON(
+		"Host" << "localhost" <<
+		"Accept" << "application/json" <<
+		"Accept-Charset" << "utf-8" <<
+		"Cache-Control" << "no-cache" <<
+		"Date" << string(_buffer_date) <<
+		"Expires" << string(_buffer_expires) <<
+		"User-Agent" << "zapata RESTful server" <<
+		"X-Cid" << _uuid.string()
+	));
+}
+
+zapata::JSONPtr zapata::ev::init_reply(std::string _uuid) {
+	time_t _rawtime = time(nullptr);
+	struct tm _ptm;
+	char _buffer_date[80];
+	localtime_r(&_rawtime, &_ptm);
+	strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	char _buffer_expires[80];
+	_ptm.tm_hour += 1;
+	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+	return zapata::make_ptr(JSON(
+		"Server" << "zapata RESTful server" <<
+		"Cache-Control" << "max-age=3600" <<
+		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
+		"Date" << string(_buffer_date) <<
+		"Expires" << string(_buffer_expires) <<
+		"X-Cid" << _uuid
+	));
 }
 
 extern "C" int zapata_events() {

@@ -476,12 +476,12 @@ void zapata::mongodb::get_query(zapata::JSONPtr _in, mongo::BSONObjBuilder&  _qu
 							iss >> _json;
 							if (_json->type() == zapata::JSObject) {
 								mongo::BSONObjBuilder _mongo_json;
-								zapata::tomongo(_json, _mongo_json);
+								zapata::mongodb::tomongo(_json, _mongo_json);
 								_queryr.append(key, BSON(comp << _mongo_json.obj()));
 							}
 							else if (_json->type() == zapata::JSArray) {
 								mongo::BSONArrayBuilder _mongo_json;
-								zapata::tomongo(_json, _mongo_json);
+								zapata::mongodb::tomongo(_json, _mongo_json);
 								_queryr.append(key, BSON(comp << _mongo_json.arr()));
 							}
 						}

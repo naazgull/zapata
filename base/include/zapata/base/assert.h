@@ -56,7 +56,8 @@ namespace zapata {
 			Delete = 3,
 			Head = 4,
 			Options = 5,
-			Patch = 6
+			Patch = 6,
+			AssyncReply = 7
 		};
 	}
 

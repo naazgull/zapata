@@ -66,8 +66,11 @@ namespace zapata {
 
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
 			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
+			virtual void off(zapata::ev::Performative _method, string _regex);
+			virtual void off(string _regex);
 
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
+			virtual zapata::JSONPtr trigger(std::string _cid, zapata::JSONPtr _payload);
 
 		private:
 			zapata::JSONObj __options;
@@ -79,10 +82,8 @@ namespace zapata {
 			zapata::ev::Handler __default_options;
 			zapata::ev::Handler __default_patch;
 			zapata::ev::HandlerStack __resources;
+			zapata::ev::ReplyHandlerStack __replies;
 
-			void init(zapata::HTTPRep& _rep);
-			void init(zapata::HTTPReq& _req);
-			void restify(zapata::JSONPtr _body, zapata::HTTPReq& _request);
 		};
 
 }

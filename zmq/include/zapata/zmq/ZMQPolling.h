@@ -92,6 +92,8 @@ namespace zapata {
 			virtual void send(zapata::JSONPtr _envelope) final;
 			
 			virtual zmq::socket_t& socket() = 0;
+			virtual zmq::socket_t& in() = 0;
+			virtual zmq::socket_t& out() = 0;
 			virtual short int type() = 0;
 			virtual void listen(zapata::ZMQPollPtr _poll) = 0;
 
@@ -110,6 +112,8 @@ namespace zapata {
 			virtual ~ZMQReq();
 			
 			virtual zmq::socket_t& socket();
+			virtual zmq::socket_t& in();
+			virtual zmq::socket_t& out();
 			virtual short int type();
 			virtual void listen(zapata::ZMQPollPtr _poll);
 
@@ -125,6 +129,8 @@ namespace zapata {
 			virtual ~ZMQRep();
 			
 			virtual zmq::socket_t& socket();
+			virtual zmq::socket_t& in();
+			virtual zmq::socket_t& out();
 			virtual short int type();
 			virtual void listen(zapata::ZMQPollPtr _poll);
 
@@ -132,6 +138,42 @@ namespace zapata {
 			zmq::socket_t * __socket;
 	};
 
+	class ZMQXPubXSub : public zapata::ZMQ {
+		public:
+			explicit ZMQXPubXSub(zapata::JSONObj& _options);
+			explicit ZMQXPubXSub(std::string _obj_path, zapata::JSONObj& _options);
+			explicit ZMQXPubXSub(std::string _connection);
+			virtual ~ZMQXPubXSub();
+			
+			virtual zmq::socket_t& socket();
+			virtual zmq::socket_t& in();
+			virtual zmq::socket_t& out();
+			virtual short int type();
+			virtual void listen(zapata::ZMQPollPtr _poll);
+			virtual void loop();
+
+		private:
+			zmq::socket_t * __socket_sub;
+			zmq::socket_t * __socket_pub;
+	};
+
+	class ZMQPubSub : public zapata::ZMQ {
+		public:
+			explicit ZMQPubSub(zapata::JSONObj& _options);
+			explicit ZMQPubSub(std::string _obj_path, zapata::JSONObj& _options);
+			explicit ZMQPubSub(std::string _connection);
+			virtual ~ZMQPubSub();
+			
+			virtual zmq::socket_t& socket();
+			virtual zmq::socket_t& in();
+			virtual zmq::socket_t& out();
+			virtual short int type();
+			virtual void listen(zapata::ZMQPollPtr _poll);
+
+		private:
+			zmq::socket_t * __socket_sub;
+			zmq::socket_t * __socket_pub;
+	};
 
 }
 

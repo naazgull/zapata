@@ -24,6 +24,7 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/mongodb/convert_mongo.h>
+#include <zapata/addons.h>
 #include <ossp/uuid++.hh>
 
 using namespace std;
@@ -42,8 +43,10 @@ namespace zapata {
 
 			virtual zapata::JSONObj& options();
 			virtual std::string name();
+			virtual bool& broadcast();
+			virtual zapata::EventEmitterPtr addons();
 
-			virtual zapata::JSONPtr insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
+			virtual std::string insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
 			virtual int update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _record);
 			virtual int unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document);
 			virtual int remove(std::string _collection, zapata::JSONPtr _pattern);
@@ -53,6 +56,7 @@ namespace zapata {
 			zapata::JSONObj __options;
 			mongo::ScopedDbConnection __conn;
 			bool __broadcast;
+			zapata::EventEmitterPtr __addons;
 		};
 
 		class CollectionPtr : public std::shared_ptr<zapata::mongodb::Collection> {

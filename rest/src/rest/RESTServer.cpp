@@ -88,8 +88,8 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 		((ofstream*) zapata::log_fd)->open(((string) this->options()["log"]["file"]).data());
 	}
 
-	if (this->__options["modules"]->ok()) {
-		for (auto _i : this->__options["modules"]->obj()) {
+	if (this->__options["rest"]["modules"]->ok()) {
+		for (auto _i : this->__options["rest"]["modules"]->obj()) {
 			string _key = _i.first;
 			JSONElement _value = _i.second;
 
@@ -103,13 +103,14 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 					zlog(string(dlerror()), zapata::error);
 				}
 				else {
-					void (*_populate)(zapata::EventEmitterPtr&);
-					_populate = (void (*)(zapata::EventEmitterPtr&)) dlsym(hndl, "restify");
+					void (*_populate)(zapata::EventEmitterPtr);
+					_populate = (void (*)(zapata::EventEmitterPtr)) dlsym(hndl, "restify");
 					_populate(this->__emitter);
 				}
 			}
 		}
 	}
+
 	if (!!this->options()["rest"]["uploads"]["upload_controller"]) {
 		/*
 		 *  definition of handlers for the file upload controller

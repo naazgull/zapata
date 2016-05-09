@@ -87,7 +87,7 @@ void zapata::ZMQPoll::repoll() {
 			_i++;
 			continue;
 		}
-		this->__poll[_i] = { _socket->socket(), 0, ZMQ_POLLIN, 0 };
+		this->__poll[_i] = { _socket->in(), 0, ZMQ_POLLIN, 0 };
 		_i++;
 	}
 	this->__poll_size = this->__sockets.size() + 1;
@@ -130,7 +130,7 @@ void zapata::ZMQPoll::loop() {
 						}
 					}
 					else if (_envelope["headers"]["X-Cid"]->ok()) {
-						this->__emitter->trigger(zapata::ev::AssyncReply, _envelope["headers"]["X-Cid"]->str(), _envelope["payload"]);
+						this->__emitter->trigger(_envelope["headers"]["X-Cid"]->str(), _envelope["payload"]);
 					}
 				}
 			}
@@ -148,6 +148,20 @@ zapata::ZMQPtr zapata::ZMQPoll::borrow(short _type, std::string _connection) {
 		}
 		case ZMQ_REP : {
 			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection);
+			_socket->options() = this->__options;
+			_socket->listen(this->__self);
+			return zapata::ZMQPtr(_socket);
+		}
+		case ZMQ_XPUB : 
+		case ZMQ_XSUB : {
+			zapata::ZMQXPubXSub * _socket = new zapata::ZMQXPubXSub(_connection);
+			_socket->options() = this->__options;
+			_socket->listen(this->__self);
+			return zapata::ZMQPtr(_socket);
+		}
+		case ZMQ_PUB :
+		case ZMQ_SUB : {
+			zapata::ZMQPubSub * _socket = new zapata::ZMQPubSub(_connection);
 			_socket->options() = this->__options;
 			_socket->listen(this->__self);
 			return zapata::ZMQPtr(_socket);

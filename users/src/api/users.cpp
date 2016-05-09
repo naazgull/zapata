@@ -31,7 +31,7 @@ namespace zapata {
 
 	namespace users {
 
-		void collection(zapata::EventEmitterPtr& _pool) {
+		void collection(zapata::EventEmitterPtr _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
 				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
@@ -53,7 +53,7 @@ namespace zapata {
 			_pool->on("^/users$", _handler_set);
 		}
 
-		void document(zapata::EventEmitterPtr& _pool) {
+		void document(zapata::EventEmitterPtr _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
 				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
@@ -152,7 +152,7 @@ namespace zapata {
 			_pool->on("^/users/([^/]+)$", _handler_set);
 		}
 
-		void collect(zapata::EventEmitterPtr& _pool) {
+		void collect(zapata::EventEmitterPtr _pool) {
 			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
 			_pool->on(_ets, "^/auth/collect", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				assertz(_req->param("code").length() != 0, "Parameter 'code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
@@ -214,7 +214,7 @@ namespace zapata {
 			});
 		}
 	
-		void connect(zapata::EventEmitterPtr& _pool) {
+		void connect(zapata::EventEmitterPtr _pool) {
 			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
 			_pool->on(_ets, "^/auth/connect", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				assertz(_req->param("client_code").length() != 0, "Parameter 'client_code' must be provided", zapata::HTTP412, zapata::ERRRequiredField);
@@ -269,7 +269,7 @@ namespace zapata {
 			});			
 		}
 
-		void token(zapata::EventEmitterPtr& _pool) {
+		void token(zapata::EventEmitterPtr _pool) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
 				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
@@ -382,7 +382,7 @@ namespace zapata {
 			_pool->on("^/auth/token", _handler_set);			
 		}
 
-		void login(zapata::EventEmitterPtr& _pool) {
+		void login(zapata::EventEmitterPtr _pool) {
 			_pool->on(zapata::ev::Post, "^/auth/login", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				string _body = _req->body();			
 				assertz(_body.length() != 0, "Body ENTITY must be provided", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
@@ -459,7 +459,7 @@ namespace zapata {
 
 	namespace groups {
 
-		void collection(zapata::EventEmitterPtr& _pool) {	
+		void collection(zapata::EventEmitterPtr _pool) {	
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
 				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
@@ -555,7 +555,7 @@ namespace zapata {
 			_pool->on("^/groups$", _handler_set);
 		}
 
-		void document(zapata::EventEmitterPtr& _pool) {	
+		void document(zapata::EventEmitterPtr _pool) {	
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
 				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
@@ -656,7 +656,7 @@ namespace zapata {
 	}
 }
 
-extern "C" void restify(zapata::EventEmitterPtr& _pool) {
+extern "C" void restify(zapata::EventEmitterPtr _pool) {
 	zapata::KBPtr _kb(new zapata::mongodb::Collection(_pool->options()["users"]->obj()));
 	_pool->add_kb("mongodb.users", _kb);
 
