@@ -28,7 +28,6 @@ zapata::EventEmitter::EventEmitter() : __self( this ) {
 }
 
 zapata::EventEmitter::EventEmitter(zapata::JSONObj& _options) :  __options( _options), __self( this ) {
-	
 }
 
 zapata::EventEmitter::~EventEmitter() {

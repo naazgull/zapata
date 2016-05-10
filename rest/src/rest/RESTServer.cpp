@@ -77,24 +77,22 @@ SOFTWARE.
 #include <zapata/rest/codes_rest.h>
 
 zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapata::RESTEmitter(_options)), __poll(new zapata::ZMQPoll(_options, __emitter)), __options(_options) {
-
-	assertz(this->options()["zmq"]->ok() && this->options()["zmq"]["host"]->ok() && this->options()["zmq"]["port"]->ok(), "zmq settings (host, port) must be provided in the configuration file", 500, 0);
+	assertz(this->options()["zmq"]->ok() && this->options()["zmq"]["bind"]->ok(), "zmq settings (host, port) must be provided in the configuration file", 500, 0);
 
 	if (!!this->options()["log"]["level"]) {
 		zapata::log_lvl = (int) this->options()["log"]["level"];
 	}
 	if (!!this->options()["log"]["file"]) {
 		zapata::log_fd = new ofstream();
-		((ofstream*) zapata::log_fd)->open(((string) this->options()["log"]["file"]).data());
+		((std::ofstream *) zapata::log_fd)->open(((string) this->options()["log"]["file"]).data());
 	}
 
-	if (this->__options["rest"]["modules"]->ok()) {
-		for (auto _i : this->__options["rest"]["modules"]->obj()) {
-			string _key = _i.first;
-			JSONElement _value = _i.second;
+	this->__poll->borrow(ZMQ_REP, this->options()["zmq"]["bind"]->str());
 
+	if (this->__options["rest"]["modules"]->ok()) {
+		for (auto _i : this->__options["rest"]["modules"]->arr()) {
 			string _lib_file("lib");
-			_lib_file.append((string) _value["lib"]);
+			_lib_file.append((string) _i);
 			_lib_file.append(".so");
 
 			if (_lib_file.length() > 6) {
@@ -116,7 +114,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/upload$", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
+		this->__emitter->on(zapata::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
 			return zapata::undefined;
 		});
 
@@ -124,12 +122,12 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Post, "^/api/1.0/file/remove$", [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
+		this->__emitter->on(zapata::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/([^/]+)$"), [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
 			return zapata::undefined;
 		});
 	}
 
-	if (this->options()["http"]->ok() && this->options()["http"]["host"]->ok() && this->options()["http"]["port"]->ok()) {
+	if (this->options()["http"]->ok() && this->options()["http"]["bind"]->ok() && this->options()["http"]["port"]->ok()) {
 		zapata::Job _http([ & ] (zapata::Job& _self) -> void {
 			zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->options()["http"]["port"]), zapata::notice);
 			zapata::serversocketstream _ss;
@@ -146,7 +144,7 @@ zapata::RESTServer::RESTServer(zapata::JSONObj& _options) : __emitter( new zapat
 		_http->start();
 	}
 
-	if (this->options()["websocket"]->ok() && this->options()["websocket"]["host"]->ok() && this->options()["websocket"]["port"]->ok()) {
+	if (this->options()["websocket"]->ok() && this->options()["websocket"]["bind"]->ok() && this->options()["websocket"]["port"]->ok()) {
 		zapata::Job _websocket([ & ] (zapata::Job& _self) -> void {
 			zlog(string("starting WEBSOCKET listener on port ") + std::to_string((uint) this->options()["websocket"]["port"]), zapata::notice);
 			zapata::websocketserverstream _ss;

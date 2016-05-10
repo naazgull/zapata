@@ -33,7 +33,7 @@ zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::
 zapata::mongodb::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["host"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
+zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
 	if (this->__options["mongodb"]["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
@@ -50,7 +50,7 @@ zapata::JSONObj& zapata::mongodb::Collection::options() {
 }
 
 std::string zapata::mongodb::Collection::name() {
-	return string("mongodb://") + ((string) this->__options["mongodb"]["host"]) + string(":") + ((string) this->__options["mongodb"]["port"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
+	return string("mongodb://") + ((string) this->__options["mongodb"]["bind"]) + string(":") + ((string) this->__options["mongodb"]["port"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
 }
 
 bool& zapata::mongodb::Collection::broadcast() {

@@ -103,6 +103,38 @@
 	}
 }
 <escaped> {
+	n {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		_out.insert(_out.length(), "\n");
+		setMatched(_out);
+		more();
+		begin(StartCondition__::string);
+	}
+	t {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		_out.insert(_out.length(), "\t");
+		setMatched(_out);
+		more();
+		begin(StartCondition__::string);
+	}
+	r {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		_out.insert(_out.length(), "\r");
+		setMatched(_out);
+		more();
+		begin(StartCondition__::string);
+	}
+	f {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		_out.insert(_out.length(), "\f");
+		setMatched(_out);
+		more();
+		begin(StartCondition__::string);
+	}
 	u {
 		std::string _out(matched());
 		_out.erase(_out.length() - 1, 1);
@@ -110,7 +142,15 @@
 		more();
 		begin(StartCondition__::unicode);
 	}
-	[^u] {
+	\\ {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		_out.insert(_out.length(), "\\");
+		setMatched(_out);
+		more();
+		begin(StartCondition__::string);
+	}
+	[^\\ntrfu] {
 		more();
 		begin(StartCondition__::string);
 	}

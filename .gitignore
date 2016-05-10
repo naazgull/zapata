@@ -31,3 +31,4 @@ missing
 deps/
 */zapata-*.tar.gz
 rest/src/rest/zapata-rest-daemon
+json/src/json/zat

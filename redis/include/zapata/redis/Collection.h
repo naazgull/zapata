@@ -39,7 +39,7 @@ namespace zapata {
 
 		class Collection : public zapata::KB {
 		public:
-			explicit Collection(zapata::JSONObj& _options);
+			Collection(zapata::JSONObj& _options);
 			virtual ~Collection();
 
 			virtual zapata::JSONObj& options();

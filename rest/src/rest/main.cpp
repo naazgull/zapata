@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#define DEBUG 1
-
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
@@ -86,27 +84,11 @@ int main(int argc, char* argv[]) {
 	try {
 		zapata::RESTServer _server(_options);
 		_server.start();
+		zlog("exiting", zapata::info);
 	}
 	catch (zapata::AssertionException& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zapata::error);
 	}
-
-	if (_keep_alive) {
-		string _exec_file(argv[0]);
-		string _conf_file(_conf_file);
-		string _cmd("touch /var/run/");
-
-		_exec_file.assign(_exec_file.substr(_exec_file.rfind('/') + 1));
-		_conf_file.assign(_conf_file.substr(_conf_file.rfind('/') + 1));
-		zapata::replace(_conf_file, ".log", ".restart");
-
-		_cmd.insert(_cmd.length(), _exec_file);
-		_cmd.insert(_cmd.length(), ".");
-		_cmd.insert(_cmd.length(), _conf_file);
-
-		if (system(_cmd.data())) {
-		}
-	}
-
+	
 	return 0;
 }

@@ -174,7 +174,6 @@ short int zapata::ZMQReq::type() {
 }
 
 void zapata::ZMQReq::listen(zapata::ZMQPollPtr _poll) {
-	_poll->poll(this->self());
 }
 
 zapata::ZMQRep::ZMQRep(std::string _connection) : zapata::ZMQ( _connection ) {
@@ -205,6 +204,7 @@ short int zapata::ZMQRep::type() {
 }
 
 void zapata::ZMQRep::listen(zapata::ZMQPollPtr _poll) {
+	_poll->poll(this->self());
 }
 
 zapata::ZMQXPubXSub::ZMQXPubXSub(std::string _connection) : zapata::ZMQ( _connection ) {

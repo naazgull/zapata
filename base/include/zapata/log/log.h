@@ -35,7 +35,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define __HOST__ zapata::log_hostname()
+#define __HOST__ string(zapata::log_hostname())
 #define zlog(x,y) (y <= zapata::log_lvl ? zapata::log(x, y, __HOST__, __LINE__, __FILE__) : 0)
 
 namespace zapata {
@@ -43,7 +43,7 @@ namespace zapata {
 	extern ostream* log_fd;
 	extern long log_pid;
 	extern string* log_pname;
-	extern string* log_hname;
+	extern char* log_hname;
 
 	extern const char* log_lvl_names[];
 
@@ -59,5 +59,5 @@ namespace zapata {
 	};
 
 	int log(string _text, zapata::LogLevel _level, string _host, int _line, string _file);
-	std::string log_hostname();
+	char * log_hostname();
 }

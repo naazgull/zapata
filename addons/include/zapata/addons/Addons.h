@@ -45,7 +45,7 @@ namespace zapata {
 
 	class Addons : public zapata::EventEmitter {
 		public:
-			explicit Addons(zapata::JSONObj& _options);
+			Addons(zapata::JSONObj& _options);
 			virtual ~Addons();
 
 			virtual void on(string _regex,  zapata::ev::Handler _handler);

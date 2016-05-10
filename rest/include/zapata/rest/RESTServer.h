@@ -1,4 +1,4 @@
-/*
+/*    
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
@@ -37,20 +37,20 @@ using namespace __gnu_cxx;
 namespace zapata {
 
 	class RESTServer {
-		public:
-			explicit RESTServer(zapata::JSONObj& _options);
-			virtual ~RESTServer();
-	
-			virtual void start();
+	public:
+		RESTServer(zapata::JSONObj& _options);
+		virtual ~RESTServer();
 
-			zapata::JSONObj& options();
-			zapata::ZMQPollPtr poll();
-			zapata::EventEmitterPtr emitter();
+		virtual void start();
 
-		private:
-			zapata::EventEmitterPtr __emitter;
-			zapata::ZMQPollPtr __poll;
-			zapata::JSONObj __options;
+		zapata::JSONObj& options();
+		zapata::ZMQPollPtr poll();
+		zapata::EventEmitterPtr emitter();
+
+	private:
+		zapata::EventEmitterPtr __emitter;
+		zapata::ZMQPollPtr __poll;
+		zapata::JSONObj __options;
 	};
 
 	void dirs(std::string _dir, zapata::JSONPtr& _options);

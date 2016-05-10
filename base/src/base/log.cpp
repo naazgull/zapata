@@ -34,7 +34,7 @@ namespace zapata {
 	ostream* log_fd = nullptr;
 	long log_pid = 0;
 	string* log_pname = nullptr;
-	string* log_hname = nullptr;
+	char* log_hname = nullptr;
 
 	const char* log_lvl_names[] = {
 		"\033[1;31m\033[4;31memergency\033[0m| ",
@@ -90,17 +90,11 @@ int zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, 
 	return 0;
 }
 
-std::string zapata::log_hostname() {
+char* zapata::log_hostname() {
 	if (zapata::log_hname == nullptr) {
-		size_t _max_length = 512;
-		char _name[_max_length];
-		bzero(_name, _max_length);
-		if (gethostname(_name, _max_length) == 0) {
-			zapata::log_hname = new string(_name, _max_length);
-		}
-		else {
-			zapata::log_hname = new string("localhost");
-		}
+		zapata::log_hname = new char[65];
+		bzero(zapata::log_hname, 65);
+		gethostname(zapata::log_hname, 64);
 	}
-	return * zapata::log_hname;	
+	return zapata::log_hname;
 }

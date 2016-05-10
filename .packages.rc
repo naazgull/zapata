@@ -10,4 +10,5 @@ export packages=(
        mongodb
        redis
        users
+       examples
 )

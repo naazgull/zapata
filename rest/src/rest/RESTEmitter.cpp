@@ -1,4 +1,43 @@
 /*
+                                         ._wwwmQQWQQQmywa,.                                         
+                                       syQQ8TY1vlllll1YT$QQ/                                        
+                                      jQQEvvvvvvvvvvvvngmQQ[                                        
+                                       $QEvnvnvnnnvnnnUQQQQQ,                                       
+                             ._ssaaaaaamQmwgwqoonnnonnnnnnQQ6                                       
+                    ._aaaZ$WmQmmwmwmmmdgm#WhmUQ@VWQggpno2odQQL                                      
+               .sayWQQW#WBWmBmmmmBBmmmWBBWmWWmQmWS$ETWQmpoS$QQ,                                     
+            _awW#mmmmmmmmmmmmBmWmmmBmmmmmmmmmmmBWWWmZ4WWQmS2QWm                                     
+          .jm##mmmmmmmmmmmmmmmm##mmmmmmmmmmmmmmm##WWQWwmQQZXdQQL                                    
+      _aw#m#######################################ZWQQwVQQmXZ#QQ/                                   
+    .wW#Z#Z##Z#Z#Z#Z#UU#Z##Z#UZ#Z#Z#Z#Z#Z#Z#Z#Z#ZUZ#QQ@VQQQmZZQQm                                   
+   _QWZZ#ZZZZZZ#ZZZ#ZZZZZZZZZZUZZZUZZZZZZZZZZZZZZZUZQWQ@oQQQm##WQc                                  
+  <QWZZZZXZZZZZZXZZZXZZZZZZZZZZXZZZXZZZZZZZZZZZZZZZXZQWQQoQQQQm#QQ,                                 
+ _QQXXXXXXZXXZXXXZXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX$QQQmdQQQQWQ6                                 
+ mQ#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXSdWWQmm#WQQQQc                           awaa,
+)QQXSSSSSSS2X2SSS2SS2SS2SS2SS2SS2SS2SS2S2S2S2S2S2S2S22S22dWQQQg#$WQQQwaa.                  ._amQWWQQ
+jQBo2222222222So2222222222222222222222222222222222222222SooXUQQQQyBQWQWWQQQwaaaaaaaaaaawmQWHBmQQQQQE
+mQ#o222o2o2222o222o222o222o22o22o2o2o2o2o2o2o2o2o2o2o2oooo2onoXUWQQWmWQQQQQQBHUBUUUUUUXSS2SSqQQQQQW'
+QQEooooooooooooooooooooooooooooooooooooooooooooooooooooooooooonnnXVWQQQQQQQQQQmmqXXXXSXXmmmQWQQQQQ^ 
+WQmnnnonononnnnnnnnnnnnnnnnnnnnnogmpnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnvXVQWQQQQQQQWQQQQQQQQWWWWQQQQ@'  
+3QQvnnvnnvnnvnnvnnvnnvnnvnnvnnvndQQQpvnvnnvnnvnnvnvnvnvvnvnvvnvvvnvvvvvXYVVHUHHBHHVHHVVVHWQQQQQY    
+)WQpvvvvvvvvvvvvvvvvvvvvvvvvvvvvmQQQWguvvvvvvnnuwyggggmQQWQQmmgwvvvvvvvIvvvIIvIvIIvIIvqmQQQQQY`     
+ 4QQplvvvvvvvvvvvvvvvvvvvvvvvvomQQQQQQQQQQQQQQQQQQQQQQQQWWWWQWQQQmgggyyyyyyyyyyyymmQQQQQQQD!        
+  $QWpiIIlIlIlIlIlIowwywymmQWQQQQQQ$QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQWQQQQQWQWQQWQQWQQQ@T??`          
+   4QQgzlllIllllqmQQQQQWQQQQQQQQQQQ-QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ/^"""""""^~-                   
+    "$QQmuIllIlqWWQQQQQQQQQQQQQQQQE )WQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQWm,                             
+      "9QQQmyuumQQQQQQQQQQQQQQQQQQ'  "$QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQm                             
+         "?HWQQQQQQQQQQQQQQQQQQWD'     ??WWWWWWWWWWWBBUHHVTTTV$QWQQQQQQL                            
+              -QQWP???????!!""~                                 -9WQQQQQ,                           
+               QW[                                                -$QQQQL                           
+               $W.                                                 -QWQQQ/                          
+                                                                    -^^^"~                          
+
+     s_a_s_s_a_s_%   _ssaaas,,     _s_a_a __aaaaa,,    __aaaas,,      ,s_dQs__s_,    __aaaaa,,.         
+    :QP?????9mQWT!  QQT!"!!??Qg  . "???QQdT??????9WQc 3QD?!"!??$Q,  . ???$QT????'   ]Q@?!"!??9Qc  .     
+    -"'_aawV?"` _a,_wwYYT??TYQW;-Qr   .QQ.        _QW ww2T?T?T?$Wf $k    jQ(     <a swZY?T?T?9QE ]Q     
+    _yQQQwwawwawyQ(]WmwaaawwY4QgyW'   .QW9AmywwwwmB?'-WWwaaawwZTWQwmf    "WQwwawyW! 9QgaaawwpTWQwmP     
+    -~------------   -^^^^-    ~-  __saWQs__%=--       -~^^^-    --        -~^^~-     ~^"^~    -~`     
+
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>

@@ -11,3 +11,12 @@ libzapata_json_la_SOURCES = \
 ./JSONParser.cpp \
 ./JSONTokenizer.cpp \
 ./JSONTokenizerLexer.cpp
+
+bin_PROGRAMS = zat
+
+zat_LDADD = -lpthread -lzapata-base -lzapata-json
+zat_LDFLAGS= 
+zat_CPPFLAGS = -std=c++11 -Wall -I../../include
+
+zat_SOURCES = \
+zat.cpp

@@ -34,7 +34,7 @@ zapata::redis::CollectionPtr::~CollectionPtr() {
 }
 
 zapata::redis::Collection::Collection(zapata::JSONObj& _options) : __options( _options) {
-	this->connect((string) _options["redis"]["host"], (uint) _options["redis"]["port"]);
+	this->connect((string) _options["redis"]["bind"], (uint) _options["redis"]["port"]);
 }
 
 zapata::redis::Collection::~Collection() {
@@ -50,7 +50,7 @@ zapata::JSONObj& zapata::redis::Collection::options() {
 }
 
 std::string zapata::redis::Collection::name() {
-	return string("redis://") + ((string) this->__options["redis"]["host"]) + string(":") + ((string) this->__options["redis"]["port"]) + string("/") + ((string) this->__options["redis"]["db"]);
+	return string("redis://") + ((string) this->__options["redis"]["bind"]) + string(":") + ((string) this->__options["redis"]["port"]) + string("/") + ((string) this->__options["redis"]["db"]);
 }
 
 void zapata::redis::Collection::connect(string _host, uint _port) {

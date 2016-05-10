@@ -38,7 +38,7 @@ namespace zapata {
 
 		class Collection : public zapata::KB {
 		public:
-			explicit Collection(zapata::JSONObj& _options);
+			Collection(zapata::JSONObj& _options);
 			virtual ~Collection();
 
 			virtual zapata::JSONObj& options();
@@ -66,8 +66,8 @@ namespace zapata {
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 explicit CollectionPtr(zapata::mongodb::Collection * _target);
-			 explicit CollectionPtr(zapata::JSONObj& _options);
+			 CollectionPtr(zapata::mongodb::Collection * _target);
+			 CollectionPtr(zapata::JSONObj& _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

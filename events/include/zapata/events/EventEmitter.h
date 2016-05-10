@@ -41,6 +41,7 @@ namespace zapata {
 
 	class EventEmitter;
 
+	typedef std::weak_ptr<zapata::EventEmitter> EventEmitterWPtr;
 	typedef std::shared_ptr<zapata::EventEmitter> EventEmitterPtr;
 
 	namespace ev {
@@ -61,7 +62,7 @@ namespace zapata {
 	class EventEmitter {
 		public:
 			EventEmitter();
-			explicit EventEmitter(zapata::JSONObj& _options);
+			EventEmitter(zapata::JSONObj& _options);
 			virtual ~EventEmitter();
 
 			virtual zapata::JSONObj& options();
