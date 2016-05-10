@@ -32,3 +32,4 @@ deps/
 */zapata-*.tar.gz
 rest/src/rest/zapata-rest-daemon
 json/src/json/zat
+examples/src/clients/zapata-client
