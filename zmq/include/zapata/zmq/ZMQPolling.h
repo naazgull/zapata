@@ -96,8 +96,9 @@ namespace zapata {
 			virtual std::string& connection() final;
 			virtual zapata::ZMQPtr self() final;
 
-			virtual zapata::JSONPtr recv() final;
-			virtual void send(zapata::JSONPtr _envelope) final;
+			virtual zapata::JSONPtr recv();
+			virtual zapata::JSONPtr send(zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload);
+			virtual zapata::JSONPtr send(zapata::JSONPtr _envelope);
 			
 			virtual zmq::socket_t& socket() = 0;
 			virtual zmq::socket_t& in() = 0;
@@ -119,6 +120,8 @@ namespace zapata {
 			ZMQReq(std::string _connection);
 			virtual ~ZMQReq();
 			
+			virtual zapata::JSONPtr send(zapata::JSONPtr _envelope);
+
 			virtual zmq::socket_t& socket();
 			virtual zmq::socket_t& in();
 			virtual zmq::socket_t& out();

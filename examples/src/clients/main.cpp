@@ -79,14 +79,10 @@ int main(int argc, char* argv[]) {
 	try {
 		zapata::ZMQPollPtr _poll(_options);
 		zapata::ZMQPtr _client = _poll->borrow(ZMQ_REQ, "tcp://localhost:9999");
-		_client->send(zapata::make_ptr(JSON(
-			"performative" << zapata::ev::Get <<
-			"resource" << "/api/0.9/users" <<
-			"payload" << JSON(
-				"name" << "m/@gmail.com/i"
-			)
+		zapata::JSONPtr _result = _client->send(zapata::ev::Get, "/api/0.9/users", zapata::make_ptr(JSON(
+			"name" << "m/@gmail.com/i"
 		)));
-		_poll->loop();
+		zlog((zapata::pretty) _result, zapata::info);
 	}
 	catch (zapata::AssertionException& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zapata::error);

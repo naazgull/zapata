@@ -153,17 +153,18 @@ void zapata::ZMQPoll::loop() {
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
 					zapata::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
-					zlog((zapata::pretty) _envelope, zapata::debug);
 					if (_envelope["performative"]->ok()) {
-						std::string _pstr(_envelope["performative"]->str());
-						zapata::ev::Performative _performative = zapata::ev::from_str(_pstr);
-						zapata::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope["payload"]);
-						if (_result != zapata::undefined) {
-							this->__sockets[_k - 1]->send(_result);
+						zapata::ev::Performative _performative = (zapata::ev::Performative) ((int) _envelope["performative"]);
+						zapata::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+						if (_result->ok()) {
+							try {
+								this->__sockets[_k - 1]->send(_result);
+							}
+							catch(zapata::AssertionException& _e) {}
 						}
 					}
 					else if (_envelope["headers"]["X-Cid"]->ok()) {
-						this->__emitter->trigger(_envelope["headers"]["X-Cid"]->str(), _envelope["payload"]);
+						this->__emitter->trigger(_envelope["headers"]["X-Cid"]->str(), _envelope);
 					}
 				}
 			}

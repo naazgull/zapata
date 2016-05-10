@@ -111,9 +111,21 @@ zapata::JSONPtr zapata::ZMQ::recv() {
 	}
 }
 
-void zapata::ZMQ::send(zapata::JSONPtr _envelope) {
-	assertz((_envelope["performative"]->ok() || _envelope["status"]->ok()) && (_envelope["resource"]->ok() || _envelope["status"]->ok()) && _envelope["payload"]->ok(), "'performative', 'resource' and 'payload' attributes are required", 412, 0);
+zapata::JSONPtr zapata::ZMQ::send(zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload) {
+	return this->send(zapata::make_ptr(JSON(
+		"performative" << _performative <<
+		"resource" << _resource <<
+		"payload" << _payload
+	)));
+}
+
+zapata::JSONPtr zapata::ZMQ::send(zapata::JSONPtr _envelope) {
+	assertz((_envelope["performative"]->ok() || _envelope["status"]->ok()) && (_envelope["resource"]->ok() || _envelope["status"]->ok()), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zapata::JSObject, "'headers' must be of type JSON object", 412, 0);
+
+	if (!_envelope["payload"]->ok()) {
+		_envelope << "payload" << zapata::make_obj();
+	}
 
 	if (_envelope["performative"]->ok()) {
 		_envelope << "headers" << (zapata::ev::init_request() + _envelope["headers"]);
@@ -144,6 +156,7 @@ void zapata::ZMQ::send(zapata::JSONPtr _envelope) {
 	zmq::message_t _request(_payload_str.size());
 	memcpy ((void *) _request.data(), _payload_str.data(), _payload_str.size());
 	this->out().send(_request);
+	return zapata::undefined;
 }
 
 zapata::ZMQReq::ZMQReq(std::string _connection) : zapata::ZMQ( _connection ) {
@@ -171,6 +184,11 @@ zmq::socket_t& zapata::ZMQReq::out() {
 
 short int zapata::ZMQReq::type() {
 	return ZMQ_REQ;
+}
+
+zapata::JSONPtr zapata::ZMQReq::send(zapata::JSONPtr _envelope) {
+	zapata::ZMQ::send(_envelope);
+	return this->recv();
 }
 
 void zapata::ZMQReq::listen(zapata::ZMQPollPtr _poll) {

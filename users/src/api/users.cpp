@@ -73,21 +73,21 @@ namespace zapata {
 		void collection(zapata::EventEmitterPtr _events) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_put,
 				//post
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_delete,
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
@@ -101,13 +101,13 @@ namespace zapata {
 		void document(zapata::EventEmitterPtr _events) {
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//put
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
@@ -115,20 +115,20 @@ namespace zapata {
 				//post
 				no_post,
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
@@ -138,7 +138,7 @@ namespace zapata {
 		}
 
 		void login(zapata::EventEmitterPtr _events) {
-			_events->on(zapata::ev::Post, "^/auth/login", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+			_events->on(zapata::ev::Post, "^/auth/login", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 				return zapata::make_ptr(JSON(
 					"status" << 204
 				));
@@ -151,33 +151,33 @@ namespace zapata {
 		void collection(zapata::EventEmitterPtr _events) {	
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_put,
 				//post
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
@@ -189,33 +189,33 @@ namespace zapata {
 		void document(zapata::EventEmitterPtr _events) {	
 			 zapata::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//put
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_post,
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 					return zapata::make_ptr(JSON(
 						"status" << 204
 					));

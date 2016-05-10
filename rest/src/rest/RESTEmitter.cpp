@@ -64,33 +64,33 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 
 zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : zapata::EventEmitter( _options ) {
-	this->__default_get = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_get = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_put = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_put = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_post = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_post = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_delete = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_delete = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_head = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_head = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_options = [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-		if (_payload["headers"]["Origin"]->ok()) {
+	this->__default_options = [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		if (_envelope["headers"]["Origin"]->ok()) {
 			return zapata::make_ptr(JSON(
 				"status" << 413 <<
-				"headers" << zapata::ev::init_reply(((string) _payload["headers"]["X-Cid"]))
+				"headers" << zapata::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
 			));
 		}
-		string _origin = _payload["headers"]["Origin"];
+		string _origin = _envelope["headers"]["Origin"];
 		return zapata::make_ptr(JSON(
 			"status" << 200 <<
-			"headers" << (zapata::ev::init_reply(((string) _payload["headers"]["X-Cid"])) + zapata::make_ptr(JSON(
-				"Access-Control-Allow-Origin" << _payload["headers"]["Origin"] <<
+			"headers" << (zapata::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zapata::make_ptr(JSON(
+				"Access-Control-Allow-Origin" << _envelope["headers"]["Origin"] <<
 				"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
 				"Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS <<
 				"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS <<
@@ -98,7 +98,7 @@ zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : zapata::EventEmitt
 			)))
 		));
 	};
-	this->__default_patch = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+	this->__default_patch = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
 }
@@ -121,6 +121,7 @@ void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex, zap
 	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Patch ? this->__default_patch : _handler));
 
 	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
+	zlog(string("registered handlers for ") + _regex, zapata::info);
 
 }
 
@@ -139,6 +140,7 @@ void zapata::RESTEmitter::on(string _regex, zapata::ev::Handler _handler_set[7])
 	_handlers.push_back(_handler_set[zapata::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zapata::ev::Patch]);
 
 	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
+	zlog(string("registered handlers for ") + _regex, zapata::info);
 }
 
 void zapata::RESTEmitter::off(zapata::ev::Performative _event, std::string _regex) {
@@ -147,6 +149,7 @@ void zapata::RESTEmitter::off(zapata::ev::Performative _event, std::string _rege
 			this->__resources[_i].second[_event] = nullptr;
 		}
 	}
+	zlog(string("unregistered handlers for ") + _regex, zapata::info);
 }
 
 void zapata::RESTEmitter::off(std::string _regex) {
@@ -161,23 +164,27 @@ void zapata::RESTEmitter::off(std::string _regex) {
 	if (_found != this->__replies.end()) {
 		this->__replies.erase(_found);
 	}
+	zlog(string("unregistered handlers for ") + _regex, zapata::info);
 }
 
-zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _payload) {
+zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _envelope) {
+	zlog(string("IN  | <- \033[33;40m") + zapata::ev::to_str(_method) + string("\033[0m ") + _url, zapata::notice);
 	zapata::JSONPtr _return;
 	for (auto _i : this->__resources) {
 		if (regexec(_i.first, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				zapata::JSONPtr _result = _i.second[_method](_method, _url, _payload, this->self());
-				if (_result->ok()) {
-					_result << "headers" << (zapata::ev::init_reply(_payload["headers"]["X-Cid"]->str()) + _result["headers"]);
-					_return = _result;
+				if (_i.second[_method] != nullptr) {
+					zapata::JSONPtr _result = _i.second[_method](_method, _url, _envelope, this->self());
+					if (_result->ok()) {
+						_result << "headers" << (zapata::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) + _result["headers"]);
+						_return = _result;
+					}
 				}
 			}
 			catch (zapata::AssertionException& _e) {
 				_return = zapata::make_ptr(zapata::make_ptr(JSON(
 					"status" << _e.status() <<
-					"headers" << zapata::ev::init_reply(_payload["headers"]["X-Cid"]->str()) <<
+					"headers" << zapata::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
 					"payload" << JSON(
 						"error" <<  true
 						<< "assertion_failed" << _e.description()
@@ -187,15 +194,19 @@ zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, s
 				)));
 				break;
 			}
+			catch(std::exception& _e) {
+				zlog(string("unhandled exception: ") + _e.what(), zapata::emergency);
+			}
 		}
 	}
+	zlog(string("OUT | -> \033[") + (((int) _return["status"]) > 299 ? "31" : "32") + string(";40m") + std::to_string((int) _return["status"]) + string("\033[0m ") + (((int) _return["status"]) > 299 ? ((string) _return["payload"]) : string("")), zapata::info);	
 	return _return;
 }
 
-zapata::JSONPtr zapata::RESTEmitter::trigger(std::string _cid, zapata::JSONPtr _payload) {
+zapata::JSONPtr zapata::RESTEmitter::trigger(std::string _cid, zapata::JSONPtr _envelope) {
 	zapata::ev::ReplyHandlerStack::iterator _found = this->__replies.find(_cid);
 	if (_found != this->__replies.end()) {
-		return _found->second(zapata::ev::AssyncReply, _cid, _payload, this->self());
+		return _found->second(zapata::ev::AssyncReply, _cid, _envelope, this->self());
 	}
 	return zapata::undefined;
 }
