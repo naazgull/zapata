@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/addons/Addons.h>
 #include <dlfcn.h>
 
-zapata::Addons::Addons(zapata::JSONObj& _options) : zapata::EventEmitter( _options ) {
+zapata::Addons::Addons(zapata::JSONPtr _options) : zapata::EventEmitter( _options ) {
 	if (_options["addons"]["modules"]->ok()) {
 		for (auto _i : _options["addons"]["modules"]->obj()) {
 			string _key = _i.first;

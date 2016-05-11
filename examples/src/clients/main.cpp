@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	zapata::JSONObj _options;
+	zapata::JSONPtr _ptr;
 	{
 		ifstream _in;
 		_in.open(_conf_file);
@@ -69,20 +69,22 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 
-		zapata::JSONPtr _ptr;
 		_in >> _ptr;
 		zapata::dirs("/etc/zapata/conf.d/", _ptr);
 		zapata::env(_ptr);
-		_options = (zapata::JSONObj&) _ptr;
 	}
 
 	try {
-		zapata::ZMQPollPtr _poll(_options);
-		zapata::ZMQPtr _client = _poll->borrow(ZMQ_REQ, "tcp://localhost:9999");
-		zapata::JSONPtr _result = _client->send(zapata::ev::Get, "/api/0.9/users", zapata::make_ptr(JSON(
+		zapata::RESTClientPtr _api(_ptr);
+		zapata::ZMQPtr _client = _api->borrow(ZMQ_PUB, "tcp://localhost:9998,9999");
+		_api->emitter()->on(zapata::ev::AssyncReply, "/api/0.9/users", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+			zlog((zapata::pretty) _envelope, zapata::debug);
+			return zapata::undefined;
+		});
+		_client->send(zapata::ev::Get, "/api/0.9/users", zapata::make_ptr(JSON(
 			"name" << "m/@gmail.com/i"
 		)));
-		zlog((zapata::pretty) _result, zapata::info);
+		_api->start();
 	}
 	catch (zapata::AssertionException& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zapata::error);

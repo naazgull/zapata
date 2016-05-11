@@ -39,10 +39,10 @@ namespace zapata {
 
 		class Collection : public zapata::KB {
 		public:
-			Collection(zapata::JSONObj& _options);
+			Collection(zapata::JSONPtr _options);
 			virtual ~Collection();
 
-			virtual zapata::JSONObj& options();
+			virtual zapata::JSONPtr options();
 			virtual std::string name();
 
 			virtual void connect(string _host, uint _port);
@@ -56,7 +56,7 @@ namespace zapata {
 			virtual zapata::JSONPtr query(std::string _collection, zapata::JSONPtr _pattern);
 
 		private:
-			zapata::JSONObj __options;
+			zapata::JSONPtr __options;
 			pthread_mutex_t* __mtx;
 			pthread_mutexattr_t* __attr;
 			redisContext* __conn;
@@ -72,7 +72,7 @@ namespace zapata {
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
 			 CollectionPtr(zapata::redis::Collection * _target);
-			 CollectionPtr(zapata::JSONObj& _options);
+			 CollectionPtr(zapata::JSONPtr _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

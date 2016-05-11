@@ -227,8 +227,8 @@ namespace zapata {
 }
 
 extern "C" void restify(zapata::EventEmitterPtr _events) {
-	zapata::KBPtr _kb(new zapata::mongodb::Collection(_events->options()["users"]->obj()));
-	_events->add_kb("mongodb.users", _kb);
+//	zapata::KBPtr _kb(new zapata::mongodb::Collection(_events->options()["users"]));
+//	_events->add_kb("mongodb.users", _kb);
 
 	zapata::users::collection(_events);
 	zapata::users::document(_events);

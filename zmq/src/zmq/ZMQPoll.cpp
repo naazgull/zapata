@@ -24,10 +24,10 @@ SOFTWARE.
 
 #include <zapata/zmq/ZMQPolling.h>
 
-zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONObj& _options, zapata::EventEmitterPtr _emiter) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options, _emiter)) {
+zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONPtr _options, zapata::EventEmitterPtr _emiter) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options, _emiter)) {
 }
 
-zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONObj& _options) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options)) {
+zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options)) {
 }
 
 zapata::ZMQPollPtr::ZMQPollPtr(zapata::ZMQPoll * _ptr) : std::shared_ptr<zapata::ZMQPoll>(_ptr) {
@@ -36,7 +36,7 @@ zapata::ZMQPollPtr::ZMQPollPtr(zapata::ZMQPoll * _ptr) : std::shared_ptr<zapata:
 zapata::ZMQPollPtr::~ZMQPollPtr() {
 }
 
-zapata::ZMQPoll::ZMQPoll(zapata::JSONObj& _options, zapata::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
+zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options, zapata::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
 	this->__internal = new zmq::socket_t * [2];
 
 	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
@@ -56,7 +56,7 @@ zapata::ZMQPoll::ZMQPoll(zapata::JSONObj& _options, zapata::EventEmitterPtr _emi
 	pthread_mutex_init(this->__mtx, this->__attr);	
 }
 
-zapata::ZMQPoll::ZMQPoll(zapata::JSONObj& _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
+zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
 	this->__internal = new zmq::socket_t * [2];
 
 	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
@@ -92,7 +92,7 @@ zapata::ZMQPoll::~ZMQPoll() {
 	zlog(string("zmq poll clean up"), zapata::notice);
 }
 
-zapata::JSONObj& zapata::ZMQPoll::options() {
+zapata::JSONPtr zapata::ZMQPoll::options() {
 	return this->__options;
 }
 
@@ -106,7 +106,22 @@ zapata::ZMQPollPtr zapata::ZMQPoll::self() {
 
 void zapata::ZMQPoll::poll(zapata::ZMQPtr _socket) {
 	this->__sockets.push_back(_socket);
-	this->repoll();
+
+	if (this->__id != 0 && this->__id != pthread_self()) {
+		zmq::message_t _signal(6);
+		memcpy ((void *) _signal.data(), "SIGNAL", 6);
+		this->__internal[1]->send(_signal);
+		zmq::message_t _reply;
+		try {
+			this->__internal[1]->recv(& _reply);
+		}
+		catch(zmq::error_t& e) {
+			zlog("got a zmq::error_t, signaling polling", zapata::error);
+		}
+	}
+	else {
+		this->repoll();
+	}
 }
 
 void zapata::ZMQPoll::repoll() {
@@ -175,28 +190,24 @@ void zapata::ZMQPoll::loop() {
 zapata::ZMQPtr zapata::ZMQPoll::borrow(short _type, std::string _connection) {
 	switch(_type) {
 		case ZMQ_REQ : {
-			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection);
-			_socket->options() = this->__options;
+			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection, this->__options);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_REP : {
-			zapata::ZMQRep * _socket = new zapata::ZMQRep(_connection);
-			_socket->options() = this->__options;
+			zapata::ZMQRep * _socket = new zapata::ZMQRep(_connection, this->__options);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_XPUB : 
 		case ZMQ_XSUB : {
-			zapata::ZMQXPubXSub * _socket = new zapata::ZMQXPubXSub(_connection);
-			_socket->options() = this->__options;
+			zapata::ZMQXPubXSub * _socket = new zapata::ZMQXPubXSub(_connection, this->__options);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_PUB :
 		case ZMQ_SUB : {
-			zapata::ZMQPubSub * _socket = new zapata::ZMQPubSub(_connection);
-			_socket->options() = this->__options;
+			zapata::ZMQPubSub * _socket = new zapata::ZMQPubSub(_connection, this->__options);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}

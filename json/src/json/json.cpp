@@ -24,49 +24,6 @@ SOFTWARE.
 
 #include <zapata/json/json.h>
 
-zapata::JSONPtr zapata::fromstr(string& _in) {
-	istringstream _ss;
-	_ss.str(_in);
-	zapata::JSONParser _p;
-	JSONPtr _root;
-	_p.switchRoots(_root);
-	_p.switchStreams(_ss);
-	_p.parse();
-	return _root;
-}
-
-zapata::JSONPtr zapata::fromfile(ifstream& _in) {
-	JSONPtr _root;
-	if (_in.is_open()) {
-		zapata::JSONParser _p;
-		_p.switchRoots(_root);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-	return _root;
-}
-
-zapata::JSONPtr zapata::fromstream(istream& _in) {
-	JSONPtr _root;
-	zapata::JSONParser _p;
-	_p.switchRoots(_root);
-	_p.switchStreams(_in);
-	_p.parse();
-	return _root;
-}
-
-void zapata::tostr(string& _out, JSONElement& _in)  {
-	_in->stringify(_out);
-}
-
-void zapata::tostr(string& _out, JSONObj& _in)  {
-	_in->stringify(_out);
-}
-
-void zapata::tostr(string& _out, JSONArr& _in)  {
-	_in->stringify(_out);
-}
-
 extern "C" int zapata_json() {
 	return 1;
 }

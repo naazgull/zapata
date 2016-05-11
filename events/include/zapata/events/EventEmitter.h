@@ -62,14 +62,14 @@ namespace zapata {
 	class EventEmitter {
 		public:
 			EventEmitter();
-			EventEmitter(zapata::JSONObj& _options);
+			EventEmitter(zapata::JSONPtr _options);
 			virtual ~EventEmitter();
 
-			virtual zapata::JSONObj& options();
+			virtual zapata::JSONPtr options();
 			virtual zapata::EventEmitterPtr self();
 
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler) = 0;
-			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]) = 0;
+			virtual void on(string _regex,  zapata::ev::Handler _handlers[7]) = 0;
 			virtual void off(zapata::ev::Performative _method, string _regex) = 0;
 			virtual void off(string _regex) = 0;
 
@@ -80,7 +80,7 @@ namespace zapata {
 			virtual zapata::KBPtr get_kb(std::string _name) final;
 
 		private:
-			zapata::JSONObj __options;
+			zapata::JSONPtr __options;
 			zapata::EventEmitterPtr __self;
 			std::map<std::string, zapata::KBPtr> __kb;
 

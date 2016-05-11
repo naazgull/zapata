@@ -100,11 +100,11 @@ namespace zapata {
 
 	class RESTEmitter : public zapata::EventEmitter {
 		public:
-			RESTEmitter(zapata::JSONObj& _options);
+			RESTEmitter(zapata::JSONPtr _options);
 			virtual ~RESTEmitter();
 
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
-			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
+			virtual void on(string _regex,  zapata::ev::Handler _handlers[7]);
 			virtual void off(zapata::ev::Performative _method, string _regex);
 			virtual void off(string _regex);
 
@@ -112,7 +112,7 @@ namespace zapata {
 			virtual zapata::JSONPtr trigger(std::string _cid, zapata::JSONPtr _payload);
 
 		private:
-			zapata::JSONObj __options;
+			zapata::JSONPtr __options;
 			zapata::ev::Handler __default_get;
 			zapata::ev::Handler __default_put;
 			zapata::ev::Handler __default_post;

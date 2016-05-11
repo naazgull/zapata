@@ -40,16 +40,11 @@ using namespace __gnu_cxx;
 int main(int argc, char* argv[]) {
 	char _c;
 	char* _conf_file = nullptr;
-	bool _keep_alive = false;
 
 	while ((_c = getopt(argc, argv, "kc:")) != -1) {
 		switch (_c) {
 			case 'c': {
 				_conf_file = optarg;
-				break;
-			}
-			case 'k': {
-				_keep_alive = true;
 				break;
 			}
 		}
@@ -65,7 +60,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	zapata::JSONObj _options;
+	zapata::JSONPtr _ptr;
 	{
 		ifstream _in;
 		_in.open(_conf_file);
@@ -74,16 +69,14 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 
-		zapata::JSONPtr _ptr;
 		_in >> _ptr;
 		zapata::dirs("/etc/zapata/conf.d/", _ptr);
 		zapata::env(_ptr);
-		_options = (zapata::JSONObj&) _ptr;
 	}
 
 	try {
-		zapata::RESTServer _server(_options);
-		_server.start();
+		zapata::RESTServerPtr _server(_ptr);
+		_server->start();
 		zlog("exiting", zapata::info);
 	}
 	catch (zapata::AssertionException& _e) {

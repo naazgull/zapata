@@ -45,12 +45,12 @@ namespace zapata {
 
 	class Addons : public zapata::EventEmitter {
 		public:
-			Addons(zapata::JSONObj& _options);
+			Addons(zapata::JSONPtr _options);
 			virtual ~Addons();
 
 			virtual void on(string _regex,  zapata::ev::Handler _handler);
 			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
-			virtual void on(string _regex,  zapata::ev::Handler _handlers[9]);
+			virtual void on(string _regex,  zapata::ev::Handler _handlers[7]);
 			virtual void off(zapata::ev::Performative _method, string _regex);
 			virtual void off(string _regex);
 

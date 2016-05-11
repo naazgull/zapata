@@ -36,25 +36,63 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
+	class RESTServer;
+	class RESTClient;
+
+	class RESTServerPtr : public std::shared_ptr<zapata::RESTServer> {
+		public:
+			RESTServerPtr(zapata::JSONPtr _options);
+			RESTServerPtr(zapata::RESTServer * _ptr);
+			virtual ~RESTServerPtr();
+	};
+
+	class RESTClientPtr : public std::shared_ptr<zapata::RESTClient> {
+		public:
+			RESTClientPtr(zapata::JSONPtr _options);
+			RESTClientPtr(zapata::RESTClient * _ptr);
+			virtual ~RESTClientPtr();
+	};
+
 	class RESTServer {
 	public:
-		RESTServer(zapata::JSONObj& _options);
+		RESTServer(zapata::JSONPtr _options);
 		virtual ~RESTServer();
 
 		virtual void start();
 
-		zapata::JSONObj& options();
-		zapata::ZMQPollPtr poll();
-		zapata::EventEmitterPtr emitter();
+		virtual zapata::JSONPtr options();
+		virtual zapata::ZMQPollPtr poll();
+		virtual zapata::EventEmitterPtr emitter();
 
 	private:
 		zapata::EventEmitterPtr __emitter;
 		zapata::ZMQPollPtr __poll;
-		zapata::JSONObj __options;
+		zapata::JSONPtr __options;
+		std::string __type;
+		zapata::ZMQPtr __assync;
 	};
 
+	class RESTClient {
+	public:
+		RESTClient(zapata::JSONPtr _options);
+		virtual ~RESTClient();
+
+		virtual void start();
+
+		virtual zapata::JSONPtr options();
+		virtual zapata::ZMQPollPtr poll();
+		virtual zapata::EventEmitterPtr emitter();
+
+		virtual zapata::ZMQPtr borrow(short _type, std::string _connection);
+
+	private:
+		zapata::EventEmitterPtr __emitter;
+		zapata::ZMQPollPtr __poll;
+		zapata::JSONPtr __options;
+	};
+
+
 	void dirs(std::string _dir, zapata::JSONPtr& _options);
-	void env(zapata::JSONObj& _options);
-	void env(zapata::JSONPtr& _options);
+	void env(zapata::JSONPtr _options);
 
 }

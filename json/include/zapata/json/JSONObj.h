@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 #pragma once
 
 #define JSON(z) ((zapata::JSONObj()) << z)
@@ -68,11 +67,10 @@ namespace zapata {
 		inline pretty(T _rhs) : std::string() {
 			_rhs->prettify(* this);
 		};
-
 		friend ostream& operator<<(ostream& _out, zapata::pretty& _in) {
 			_out << string(_in.data());
 			return _out;
-		};				
+		};
 	};
 
 	/**
@@ -1366,6 +1364,11 @@ namespace zapata {
 		virtual bool nil();
 
 		virtual void assign(JSONElementT& _rhs);
+		template <typename T>
+		inline void assign(T _in) {
+			zapata::JSONElementT _rhs(_in);
+			this->assign(_rhs);
+		}
 
 		JSONElementT* parent();
 		void parent(JSONElementT* _parent);
@@ -1495,7 +1498,7 @@ namespace zapata {
 		void setPath(std::string _path, zapata::JSONPtr _value, std::string _separator = ".");
 		void delPath(std::string _path, std::string _separator = ".");
 
-		virtual void inspect(zapata::JSONPtr _pattern, std::function< void (zapata::JSONElementT * , std::string, zapata::JSONElementT *, zapata::JSONPtr) > _callback, std::string _key = "", zapata::JSONElementT * _parent = nullptr);
+		virtual void inspect(zapata::JSONPtr _pattern, std::function< void (std::string , std::string, zapata::JSONElementT&) > _callback, zapata::JSONElementT * _parent = nullptr, std::string _key = "", std::string _parent_path = "");
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
@@ -1509,6 +1512,80 @@ namespace zapata {
 		JSONElementT* __parent;
 
 		void init();
+	};
+
+	class json : public std::string {
+	public: 
+		inline json() : std::string() {
+		};
+		inline json(std::string _rhs) : std::string(_rhs) {
+		};
+		inline json(const char * _rhs) : std::string(_rhs) {
+		};
+		inline json(zapata::pretty _rhs) : std::string(_rhs.data()) {
+		};
+		template <typename T>
+		inline json(T _rhs) : std::string() {
+			_rhs->stringify(* this);
+		};
+		friend ostream& operator<<(ostream& _out, zapata::json& _in) {
+			_out << string(_in.data());
+			return _out;
+		};
+		friend istream& operator>>(istream& _in, zapata::json& _out) {
+			_out.clear();
+			char _c;
+
+			size_t _n_seps = 0;
+			bool _commas = false;
+			bool _escaped = false;
+			do {
+				_in >> _c;
+				if (!_escaped) {
+					switch (_c) {
+						case '"' : {
+							_commas = !_commas;
+							break;
+						}
+						case '\\' : {
+							_escaped = true;
+							break;
+						}
+						case '{':
+						case '[' : {
+							if (!_commas) {
+								_n_seps++;
+							}
+							break;
+						}
+						case '}':
+						case ']' : {
+							if (!_commas) {
+								_n_seps--;
+							}
+							break;
+						}					
+					}
+				}
+				else {
+					_escaped = false;
+				}
+				_out.push_back(_c);
+			}
+			while(_in.good() && _n_seps != 0);
+
+			if (_n_seps != 0) {
+				_out.clear();
+			}
+			return _in;
+		};
+		inline operator zapata::JSONPtr() {
+			zapata::JSONPtr _result;
+			std::istringstream _iss;
+			_iss.str(* this);
+			_iss >> _result;
+			return _result;
+		};
 	};
 
 	template <typename T>	

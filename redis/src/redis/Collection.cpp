@@ -27,13 +27,13 @@ SOFTWARE.
 zapata::redis::CollectionPtr::CollectionPtr(zapata::redis::Collection * _target) : std::shared_ptr<zapata::redis::Collection>(_target) {
 }
 
-zapata::redis::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::shared_ptr<zapata::redis::Collection>(new zapata::redis::Collection(_options)) {
+zapata::redis::CollectionPtr::CollectionPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::redis::Collection>(new zapata::redis::Collection(_options)) {
 }
 
 zapata::redis::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::redis::Collection::Collection(zapata::JSONObj& _options) : __options( _options) {
+zapata::redis::Collection::Collection(zapata::JSONPtr _options) : __options( _options) {
 	this->connect((string) _options["redis"]["bind"], (uint) _options["redis"]["port"]);
 }
 
@@ -45,7 +45,7 @@ zapata::redis::Collection::~Collection() {
 	delete this->__attr;
 }
 
-zapata::JSONObj& zapata::redis::Collection::options() {
+zapata::JSONPtr zapata::redis::Collection::options() {
 	return this->__options;
 }
 

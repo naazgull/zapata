@@ -26,6 +26,9 @@ do
 	config)
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
 	    ;;
+	debug)
+	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    ;;
     esac
     if [[ $? != 0 ]]
     then

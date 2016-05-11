@@ -27,13 +27,13 @@ SOFTWARE.
 zapata::EventEmitter::EventEmitter() : __self( this ) {
 }
 
-zapata::EventEmitter::EventEmitter(zapata::JSONObj& _options) :  __options( _options), __self( this ) {
+zapata::EventEmitter::EventEmitter(zapata::JSONPtr _options) :  __options( _options), __self( this ) {
 }
 
 zapata::EventEmitter::~EventEmitter() {
 }
 
-zapata::JSONObj& zapata::EventEmitter::options() {
+zapata::JSONPtr zapata::EventEmitter::options() {
 	return this->__options;
 }
 
@@ -56,14 +56,14 @@ zapata::KBPtr zapata::EventEmitter::get_kb(std::string _name) {
 zapata::JSONPtr zapata::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zapata::JSONArr _ret;
+	zapata::JSONPtr _ret = zapata::make_arr();
 	while(_iss.good()) {
 		getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
 			_ret << _part;
 		}
 	}
-	return make_ptr(_ret);
+	return _ret;
 }
 
 std::string zapata::join(zapata::JSONPtr _to_join, std::string _separator) {

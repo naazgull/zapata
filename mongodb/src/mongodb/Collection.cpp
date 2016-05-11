@@ -27,13 +27,13 @@ SOFTWARE.
 zapata::mongodb::CollectionPtr::CollectionPtr(zapata::mongodb::Collection * _target) : std::shared_ptr<zapata::mongodb::Collection>(_target) {
 }
 
-zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONObj& _options) : std::shared_ptr<zapata::mongodb::Collection>(new zapata::mongodb::Collection(_options)) {
+zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::mongodb::Collection>(new zapata::mongodb::Collection(_options)) {
 }
 
 zapata::mongodb::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::mongodb::Collection::Collection(zapata::JSONObj& _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
+zapata::mongodb::Collection::Collection(zapata::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
 	if (this->__options["mongodb"]["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
@@ -45,7 +45,7 @@ zapata::mongodb::Collection::~Collection() {
 	this->__conn.done();
 }
 
-zapata::JSONObj& zapata::mongodb::Collection::options() {
+zapata::JSONPtr zapata::mongodb::Collection::options() {
 	return this->__options;
 }
 

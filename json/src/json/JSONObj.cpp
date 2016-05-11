@@ -953,32 +953,32 @@ void zapata::JSONElementT::delPath(std::string _path, std::string _separator) {
 	}
 }
 
-void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void (zapata::JSONElementT *, std::string, zapata::JSONElementT *, zapata::JSONPtr) > _callback, std::string _key, zapata::JSONElementT * _parent) {
+void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void (std::string, std::string, zapata::JSONElementT&) > _callback, zapata::JSONElementT * _parent, std::string _key, std::string _parent_path) {
 	switch(this->type()) {
 		case zapata::JSObject: {
 			for (auto _o : this->obj()) {
 				if (_pattern->type() == zapata::JSObject && _pattern[_o.first]->ok()) {
-					_o.second->inspect(_pattern[_o.first], _callback, _o.first, this);
+					_o.second->inspect(_pattern[_o.first], _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 					continue;
 				}
-				_o.second->inspect(_pattern, _callback, _o.first, this);
+				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 			}
 			break;
 		}
 		case zapata::JSArray: {
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
-				this->arr()[_i]->inspect(_pattern, _callback, std::to_string(_i), this);
+				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 			}
 			break;
 		}
 		default: {
 			if (_pattern["$regexp"]->ok()) {
 				::regex_t * _rgx = new ::regex_t();
-				if (regcomp(_rgx, ((string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+				if (regcomp(_rgx, ((string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
 					std::string _exp;
 					this->stringify(_exp);
 					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
-						_callback(this, _key, _parent, _pattern);
+						_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
 					}
 				}
 				regfree(_rgx);
@@ -986,7 +986,7 @@ void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void
 			}
 			else {
 				if (* this == _pattern) {
-					_callback(this, _key, _parent, _pattern);
+					_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
 				}
 			}
 			break;

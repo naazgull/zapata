@@ -63,7 +63,7 @@ SOFTWARE.
 
 #include <zapata/rest/RESTEmitter.h>
 
-zapata::RESTEmitter::RESTEmitter(zapata::JSONObj& _options) : zapata::EventEmitter( _options ) {
+zapata::RESTEmitter::RESTEmitter(zapata::JSONPtr _options) : zapata::EventEmitter( _options ) {
 	this->__default_get = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};

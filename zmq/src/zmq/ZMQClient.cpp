@@ -24,13 +24,13 @@ SOFTWARE.
 
 #include <zapata/zmq/ZMQPolling.h>
 
-zapata::ZMQ::ZMQ(std::string _connection) : __context( 1), __connection(_connection), __self(this) {
+zapata::ZMQ::ZMQ(std::string _connection, zapata::JSONPtr _options) : __options( _options ), __context(1), __connection(_connection.data()), __self(this) {
 }
 
 zapata::ZMQ::~ZMQ() {
 }
 
-zapata::JSONObj& zapata::ZMQ::options() {
+zapata::JSONPtr zapata::ZMQ::options() {
 	return this->__options;
 }
 
@@ -82,10 +82,8 @@ zapata::JSONPtr zapata::ZMQ::recv() {
 	}
 
 	zapata::JSONPtr _payload;
-	std::istringstream _iss;
-	_iss.str(_body);
 	try {
-		_iss >> _payload;
+		_payload = zapata::json(_body);
 	}
 	catch(zapata::SyntaxErrorException& _e) {
 		_payload = zapata::undefined;
@@ -159,10 +157,10 @@ zapata::JSONPtr zapata::ZMQ::send(zapata::JSONPtr _envelope) {
 	return zapata::undefined;
 }
 
-zapata::ZMQReq::ZMQReq(std::string _connection) : zapata::ZMQ( _connection ) {
-	this->connection() = _connection;
+zapata::ZMQReq::ZMQReq(std::string _connection, zapata::JSONPtr _options) : zapata::ZMQ( _connection, _options ) {
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
 	this->__socket->connect(this->connection().data());
+	zlog(string("connecting REQ socket on ") + this->connection(), zapata::notice);
 }
 
 zapata::ZMQReq::~ZMQReq() {
@@ -194,10 +192,10 @@ zapata::JSONPtr zapata::ZMQReq::send(zapata::JSONPtr _envelope) {
 void zapata::ZMQReq::listen(zapata::ZMQPollPtr _poll) {
 }
 
-zapata::ZMQRep::ZMQRep(std::string _connection) : zapata::ZMQ( _connection ) {
-	this->connection() = _connection;
+zapata::ZMQRep::ZMQRep(std::string _connection, zapata::JSONPtr _options) : zapata::ZMQ( _connection, _options ) {
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REP);
 	this->__socket->bind(this->connection().data());
+	zlog(string("binding REP socket on ") + this->connection(), zapata::notice);
 }
 
 zapata::ZMQRep::~ZMQRep() {
@@ -225,12 +223,15 @@ void zapata::ZMQRep::listen(zapata::ZMQPollPtr _poll) {
 	_poll->poll(this->self());
 }
 
-zapata::ZMQXPubXSub::ZMQXPubXSub(std::string _connection) : zapata::ZMQ( _connection ) {
-	this->connection() = _connection;
+zapata::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zapata::JSONPtr _options) : zapata::ZMQ( _connection, _options ) {
+	std::string _suffix(_connection.substr(_connection.rfind(":") + 1));
+	std::string _connection1(string("tcp://*:") + _suffix.substr(0, _suffix.find(",")));
+	std::string _connection2(string("tcp://*:") + _suffix.substr(_suffix.find(",") + 1));
 	this->__socket_sub = new zmq::socket_t(this->context(), ZMQ_XSUB);
-	this->__socket_sub->bind(this->connection().data());
+	this->__socket_sub->bind(_connection1.data());
 	this->__socket_pub = new zmq::socket_t(this->context(), ZMQ_XPUB);
-	this->__socket_pub->bind(this->connection().data());
+	this->__socket_pub->bind(_connection2.data());
+	zlog(string("binding XPUB/XSUB socket on ") + this->connection(), zapata::notice);
 }
 
 zapata::ZMQXPubXSub::~ZMQXPubXSub() {
@@ -254,6 +255,7 @@ zmq::socket_t& zapata::ZMQXPubXSub::out() {
 
 void zapata::ZMQXPubXSub::loop() {
 	try {
+		zlog("going to proxy PUB/SUB...", zapata::notice);
 		zmq::proxy(* this->__socket_pub, * this->__socket_sub, nullptr);
 	}
 	catch(zmq::error_t& _e) {
@@ -268,12 +270,16 @@ short int zapata::ZMQXPubXSub::type() {
 void zapata::ZMQXPubXSub::listen(zapata::ZMQPollPtr _poll) {
 }
 
-zapata::ZMQPubSub::ZMQPubSub(std::string _connection) : zapata::ZMQ( _connection ) {
-	this->connection() = _connection;
+zapata::ZMQPubSub::ZMQPubSub(std::string _connection, zapata::JSONPtr _options) : zapata::ZMQ( _connection, _options ) {
+	std::string _prefix(_connection.substr(0, _connection.rfind(":")));
+	std::string _suffix(_connection.substr(_connection.rfind(":") + 1));
+	std::string _connection1(_prefix + string(":") + _suffix.substr(0, _suffix.find(",")));
+	std::string _connection2(_prefix + string(":") + _suffix.substr(_suffix.find(",") + 1));
 	this->__socket_sub = new zmq::socket_t(this->context(), ZMQ_SUB);
-	this->__socket_sub->bind(this->connection().data());
+	this->__socket_sub->connect(_connection2.data());
 	this->__socket_pub = new zmq::socket_t(this->context(), ZMQ_PUB);
-	this->__socket_pub->bind(this->connection().data());
+	this->__socket_pub->connect(_connection1.data());
+	zlog(string("connecting PUB/SUB socket on ") + this->connection(), zapata::notice);
 }
 
 zapata::ZMQPubSub::~ZMQPubSub() {
@@ -297,6 +303,15 @@ zmq::socket_t& zapata::ZMQPubSub::out() {
 
 short int zapata::ZMQPubSub::type() {
 	return ZMQ_PUB;
+}
+
+zapata::JSONPtr zapata::ZMQPubSub::send(zapata::JSONPtr _envelope) {
+	return zapata::ZMQ::send(_envelope);
+	/*this->emitter()->on(zapata::ev::AssyncReply, "/api/0.9/users", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		zlog((zapata::pretty) _envelope, zapata::debug);
+		return zapata::undefined;
+	});
+	return this->recv();*/
 }
 
 void zapata::ZMQPubSub::listen(zapata::ZMQPollPtr _poll) {

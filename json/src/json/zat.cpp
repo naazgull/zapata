@@ -66,8 +66,10 @@ int main(int argc, char* argv[]) {
 			if ((int) _json["level"] > _level) {
 				continue;
 			}
-			string _time;
-			zapata::tostr(_time, (long) ((double) _json["timestamp"]), "%FT%T");
+			double _intpart;
+			double _fracpart = modf((double) _json["timestamp"], & _intpart);
+			zapata::timestamp_t _ts = (_intpart * 1000) + (_fracpart * 1000);
+			string _time = (string) (JSON( "ts" << _ts))["ts"];
 			string _cmd((string) _json["exec"]);
 			_cmd.assign(_cmd.substr(_cmd.rfind("/") + 1));
 			std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
