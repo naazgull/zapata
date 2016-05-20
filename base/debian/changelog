@@ -1,3 +1,15 @@
+zapata-base (0.9.1-3) trusty; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Sat, 21 May 2016 00:40:57 +0100
+
+zapata-base (0.9.1-2) trusty; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Sat, 21 May 2016 00:39:58 +0100
+
 zapata-base (0.9.1-1) trusty; urgency=medium
 
   * Clean up and refactoring
