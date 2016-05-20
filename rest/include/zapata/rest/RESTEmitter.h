@@ -109,7 +109,6 @@ namespace zapata {
 			virtual void off(string _regex);
 
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
-			virtual zapata::JSONPtr trigger(std::string _cid, zapata::JSONPtr _payload);
 
 		private:
 			zapata::JSONPtr __options;
@@ -120,6 +119,7 @@ namespace zapata {
 			zapata::ev::Handler __default_head;
 			zapata::ev::Handler __default_options;
 			zapata::ev::Handler __default_patch;
+			zapata::ev::Handler __default_assync_reply;
 			zapata::ev::HandlerStack __resources;
 			zapata::ev::ReplyHandlerStack __replies;
 

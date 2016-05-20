@@ -27,10 +27,14 @@ SOFTWARE.
 #include <time.h>
 #include <sys/time.h>
 
-void zapata::tostr(string& s, int i){
-	char oss[512];
-	sprintf(oss,"%i", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, int i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
+}
+
+void zapata::tostr(std::string& s, bool b){
+	s.insert(s.length(), b ? "true" : "false");
 }
 
 void zapata::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) {
@@ -40,54 +44,50 @@ void zapata::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&))
 }
 
 #ifdef __LP64__
-void zapata::tostr(string& s, unsigned int i){
-	char oss[512];
-	sprintf(oss,"%u", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, unsigned int i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 #endif
 
-void zapata::tostr(string& s, size_t i){
-	char oss[512];
-#ifdef __LP64__
-	sprintf(oss,"%lu", i);
-#else
-	sprintf(oss,"%u", i);
-#endif
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, size_t i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, long i){
-	char oss[512];
-	sprintf(oss,"%ld", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, long i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, long long i){
-	char oss[512];
-	sprintf(oss,"%lld", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, long long i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, float i){
-	char oss[512];
-	sprintf(oss,"%f", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, float i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, double i){
-	char oss[512];
-	sprintf(oss,"%lf", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, double i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, char i){
-	char oss[512];
-	sprintf(oss,"%c", i);
-	s.insert(s.length(), oss);
+void zapata::tostr(std::string& s, char i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(string& s, time_t i, const char* f){
+void zapata::tostr(std::string& s, time_t i, const char* f){
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
@@ -96,49 +96,136 @@ void zapata::tostr(string& s, time_t i, const char* f){
 	s.insert(s.length(), _buffer_date);
 }
 
-void zapata::fromstr(string& s, int* i){
-	sscanf(s.data(),"%i", i);
+std::string zapata::tostr(int i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(bool b){
+	return b ? "true" : "false";
+}
+
+std::string zapata::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) {
+	char oss[512];
+	sprintf(oss,"%x", i);
+	return string(oss);
 }
 
 #ifdef __LP64__
-void zapata::fromstr(string& s, unsigned int* i){
-	sscanf(s.data(),"%u", i);
+std::string zapata::tostr(unsigned int i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
 }
 #endif
 
-void zapata::fromstr(string& s, size_t* i){
+std::string zapata::tostr(size_t i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(long i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(long long i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(float i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(double i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(char i){
+	std::ostringstream _oss;
+	_oss << i << flush;
+	return _oss.str();
+}
+
+std::string zapata::tostr(time_t i, const char* f){
+	struct tm _ptm;
+	char _buffer_date[80];
+	bzero(_buffer_date, 80);
+	localtime_r(&i, &_ptm);
+	strftime(_buffer_date, 80, f, &_ptm);
+	return string(_buffer_date);
+}
+
+void zapata::fromstr(std::string s, int* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
+}
+
 #ifdef __LP64__
-	sscanf(s.data(),"%lu", i);
+void zapata::fromstr(std::string s, unsigned int* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
+}
+#endif
+
+void zapata::fromstr(std::string s, size_t* i){
+#ifdef __LP64__
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 #else
-	sscanf(s.data(),"%u", i);
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 #endif
 }
 
-void zapata::fromstr(string& s, long* i){
-	sscanf(s.data(),"%ld", i);
+void zapata::fromstr(std::string s, long* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 }
 
-void zapata::fromstr(string& s, long long* i){
-	sscanf(s.data(),"%lld", i);
+void zapata::fromstr(std::string s, long long* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 }
 
-void zapata::fromstr(string& s, float* i){
-	sscanf(s.data(),"%f", i);
+void zapata::fromstr(std::string s, float* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 }
 
-void zapata::fromstr(string& s, double* i){
-	sscanf(s.data(),"%lf", i);
+void zapata::fromstr(std::string s, double* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 }
 
-void zapata::fromstr(string& s, char* i){
-	sscanf(s.data(),"%c", i);
+void zapata::fromstr(std::string s, char* i){
+	std::istringstream _in;
+	_in.str(s);
+	_in >> (* i);
 }
 
-void zapata::fromstr(string& s, bool* i){
+void zapata::fromstr(std::string s, bool* i){
 	*i = s == string("true");
 }
 
-void zapata::fromstr(string& s, time_t* i, const char* f){
+void zapata::fromstr(std::string s, time_t* i, const char* f){
 	struct tm tm[1] = { { 0 } };
 	strptime(s.data(), f, tm);
 	if (string(f).find("%Z") == string::npos) {
@@ -158,8 +245,8 @@ time_t zapata::timezone_offset() {
 	time_t t;
 	tm *ptr;
 	int day;
-	ulong num[2];
-	t = time(nullptr);
+	unsigned long num[2];
+	t = time(NULL);
 	ptr = gmtime(&t); // Standard UTC time
 	// Get difference in seconds
 	num[0] = (ptr->tm_hour * 3600) + (ptr->tm_min * 60);

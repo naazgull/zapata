@@ -81,15 +81,15 @@ zapata::RESTEmitter::RESTEmitter(zapata::JSONPtr _options) : zapata::EventEmitte
 	};
 	this->__default_options = [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		if (_envelope["headers"]["Origin"]->ok()) {
-			return zapata::make_ptr(JSON(
+			return zapata::mkptr(JSON(
 				"status" << 413 <<
 				"headers" << zapata::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
 			));
 		}
 		string _origin = _envelope["headers"]["Origin"];
-		return zapata::make_ptr(JSON(
+		return zapata::mkptr(JSON(
 			"status" << 200 <<
-			"headers" << (zapata::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zapata::make_ptr(JSON(
+			"headers" << (zapata::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zapata::mkptr(JSON(
 				"Access-Control-Allow-Origin" << _envelope["headers"]["Origin"] <<
 				"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
 				"Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS <<
@@ -100,6 +100,9 @@ zapata::RESTEmitter::RESTEmitter(zapata::JSONPtr _options) : zapata::EventEmitte
 	};
 	this->__default_patch = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
+	};
+	this->__default_assync_reply = [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		return zapata::undefined;
 	};
 }
 
@@ -119,6 +122,7 @@ void zapata::RESTEmitter::on(zapata::ev::Performative _event, string _regex, zap
 	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Head ? this->__default_head : _handler));
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Patch ? this->__default_patch : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zapata::ev::Reply ? this->__default_assync_reply : _handler));
 
 	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
 	zlog(string("registered handlers for ") + _regex, zapata::info);
@@ -138,6 +142,7 @@ void zapata::RESTEmitter::on(string _regex, zapata::ev::Handler _handler_set[7])
 	_handlers.push_back(_handler_set[zapata::ev::Head] == nullptr ?  this->__default_head : _handler_set[zapata::ev::Head]);
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back(_handler_set[zapata::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zapata::ev::Patch]);
+	_handlers.push_back(this->__default_assync_reply);
 
 	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
 	zlog(string("registered handlers for ") + _regex, zapata::info);
@@ -168,7 +173,6 @@ void zapata::RESTEmitter::off(std::string _regex) {
 }
 
 zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, std::string _url, zapata::JSONPtr _envelope) {
-	zlog(string("IN  | <- \033[33;40m") + zapata::ev::to_str(_method) + string("\033[0m ") + _url, zapata::notice);
 	zapata::JSONPtr _return;
 	for (auto _i : this->__resources) {
 		if (regexec(_i.first, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
@@ -176,13 +180,16 @@ zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, s
 				if (_i.second[_method] != nullptr) {
 					zapata::JSONPtr _result = _i.second[_method](_method, _url, _envelope, this->self());
 					if (_result->ok()) {
-						_result << "headers" << (zapata::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) + _result["headers"]);
+						_result << 
+							"performative" << zapata::ev::Reply <<
+							"headers" << (zapata::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) + _result["headers"]);
 						_return = _result;
 					}
 				}
 			}
 			catch (zapata::AssertionException& _e) {
-				_return = zapata::make_ptr(zapata::make_ptr(JSON(
+				_return = zapata::mkptr(zapata::mkptr(JSON(
+					"performative" << zapata::ev::Reply <<
 					"status" << _e.status() <<
 					"headers" << zapata::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
 					"payload" << JSON(
@@ -199,16 +206,7 @@ zapata::JSONPtr zapata::RESTEmitter::trigger(zapata::ev::Performative _method, s
 			}
 		}
 	}
-	zlog(string("OUT | -> \033[") + (((int) _return["status"]) > 299 ? "31" : "32") + string(";40m") + std::to_string((int) _return["status"]) + string("\033[0m ") + (((int) _return["status"]) > 299 ? ((string) _return["payload"]) : string("")), zapata::info);	
 	return _return;
-}
-
-zapata::JSONPtr zapata::RESTEmitter::trigger(std::string _cid, zapata::JSONPtr _envelope) {
-	zapata::ev::ReplyHandlerStack::iterator _found = this->__replies.find(_cid);
-	if (_found != this->__replies.end()) {
-		return _found->second(zapata::ev::AssyncReply, _cid, _envelope, this->self());
-	}
-	return zapata::undefined;
 }
 
 extern "C" int zapata_rest() {

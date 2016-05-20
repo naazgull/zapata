@@ -302,7 +302,7 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 	string _command("HSCAN %s %i");
 	int _cursor = 0;
 	redisReply* _reply = nullptr;
-	zapata::JSONPtr _return = zapata::make_arr();
+	zapata::JSONPtr _return = zapata::mkarr();
 
 	do {
 		bool _success = true;
@@ -384,7 +384,7 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 	if (_return->arr()->size() == 0) {
 		return zapata::undefined;
 	}
-	return zapata::make_ptr(JSON(
+	return zapata::mkptr(JSON(
 		"size" << _return->arr()->size() <<
 		"elements" << _return
 	));

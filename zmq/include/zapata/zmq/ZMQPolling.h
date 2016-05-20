@@ -40,6 +40,8 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
+	short str2type(std::string _type);
+	
 	class ZMQPoll;
 	class ZMQ;
 
@@ -65,7 +67,11 @@ namespace zapata {
 
 			virtual void poll(zapata::ZMQPtr _socket);
 			virtual void loop();
-			virtual zapata::ZMQPtr borrow(short _type, std::string _connection);
+			virtual zapata::ZMQPtr bind(short _type, std::string _connection);
+
+		protected:
+			virtual void lock();
+			virtual void unlock();
 
 		private:
 			zapata::JSONPtr __options;
@@ -76,8 +82,8 @@ namespace zapata {
 			::pthread_t __id;
 			zmq::pollitem_t * __poll;
 			size_t __poll_size;
-			pthread_mutex_t* __mtx;
-			pthread_mutexattr_t* __attr;
+			pthread_mutex_t* __pt_mtx;
+			pthread_mutexattr_t* __pt_attr;
 			zapata::EventEmitterPtr __emitter;
 			zapata::ZMQPollPtr __self;
 
@@ -86,15 +92,16 @@ namespace zapata {
 
 	class ZMQ {
 		public:
-			ZMQ(zapata::JSONPtr _options);
-			ZMQ(std::string _obj_path, zapata::JSONPtr _options);
-			ZMQ(std::string _connection);
+			ZMQ(zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQ(std::string _obj_path, zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQ(std::string _connection, zapata::EventEmitterPtr _emitter);
 			virtual ~ZMQ();
 
-			virtual zapata::JSONPtr options() final;
-			virtual zmq::context_t& context() final;
-			virtual std::string& connection() final;
-			virtual zapata::ZMQPtr self() final;
+			virtual zapata::JSONPtr options();
+			virtual zmq::context_t& context();
+			virtual std::string& connection();
+			virtual zapata::ZMQPtr self();
+			virtual zapata::EventEmitterPtr emitter();
 
 			virtual zapata::JSONPtr recv();
 			virtual zapata::JSONPtr send(zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload);
@@ -106,18 +113,25 @@ namespace zapata {
 			virtual short int type() = 0;
 			virtual void listen(zapata::ZMQPollPtr _poll) = 0;
 
+		protected:
+			virtual void lock();
+			virtual void unlock();
+
 		private:
 			zapata::JSONPtr __options;
 			zmq::context_t __context;
 			std::string __connection;
 			zapata::ZMQPtr __self;
+			zapata::EventEmitterPtr __emitter;
+			pthread_mutex_t* __pt_mtx;
+			pthread_mutexattr_t* __pt_attr;
 	};
 
 	class ZMQReq : public zapata::ZMQ {
 		public:
-			ZMQReq(zapata::JSONPtr _options);
-			ZMQReq(std::string _obj_path, zapata::JSONPtr _options);
-			ZMQReq(std::string _connection);
+			ZMQReq(zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQReq(std::string _obj_path, zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQReq(std::string _connection, zapata::EventEmitterPtr _emitter);
 			virtual ~ZMQReq();
 			
 			virtual zapata::JSONPtr send(zapata::JSONPtr _envelope);
@@ -134,9 +148,9 @@ namespace zapata {
 
 	class ZMQRep : public zapata::ZMQ {
 		public:
-			ZMQRep(zapata::JSONPtr _options);
-			ZMQRep(std::string _obj_path, zapata::JSONPtr _options);
-			ZMQRep(std::string _connection);
+			ZMQRep(zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQRep(std::string _obj_path, zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQRep(std::string _connection, zapata::EventEmitterPtr _emitter);
 			virtual ~ZMQRep();
 			
 			virtual zmq::socket_t& socket();
@@ -151,9 +165,9 @@ namespace zapata {
 
 	class ZMQXPubXSub : public zapata::ZMQ {
 		public:
-			ZMQXPubXSub(zapata::JSONPtr _options);
-			ZMQXPubXSub(std::string _obj_path, zapata::JSONPtr _options);
-			ZMQXPubXSub(std::string _connection);
+			ZMQXPubXSub(zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQXPubXSub(std::string _obj_path, zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQXPubXSub(std::string _connection, zapata::EventEmitterPtr _emitter);
 			virtual ~ZMQXPubXSub();
 			
 			virtual zmq::socket_t& socket();
@@ -170,11 +184,12 @@ namespace zapata {
 
 	class ZMQPubSub : public zapata::ZMQ {
 		public:
-			ZMQPubSub(zapata::JSONPtr _options);
-			ZMQPubSub(std::string _obj_path, zapata::JSONPtr _options);
-			ZMQPubSub(std::string _connection);
+			ZMQPubSub(zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQPubSub(std::string _obj_path, zapata::JSONPtr _options, zapata::EventEmitterPtr _emitter);
+			ZMQPubSub(std::string _connection, zapata::EventEmitterPtr _emitter);
 			virtual ~ZMQPubSub();
 			
+			virtual zapata::JSONPtr recv();
 			virtual zapata::JSONPtr send(zapata::JSONPtr _envelope);
 
 			virtual zmq::socket_t& socket();

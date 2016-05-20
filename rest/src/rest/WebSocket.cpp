@@ -43,11 +43,11 @@ bool zapata::ws::handshake(zapata::socketstream& _s) {
 	zapata::base64::encode(_key);
 
 	_s << 
-	"HTTP/1.1 101 Switching Protocols" << CRLF <<
-	"Upgrade: websocket" << CRLF << 
-	"Connection: Upgrade" << CRLF <<
-	"Sec-WebSocket-Accept: " << _key << CRLF <<
-	CRLF << flush;
+		"HTTP/1.1 101 Switching Protocols" << CRLF <<
+		"Upgrade: websocket" << CRLF << 
+		"Connection: Upgrade" << CRLF <<
+		"Sec-WebSocket-Accept: " << _key << CRLF <<
+		CRLF << flush;
 	return true;
 }
 

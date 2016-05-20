@@ -39,12 +39,17 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	char _c;
+	short _log_level = -1;
 	char* _conf_file = nullptr;
 
-	while ((_c = getopt(argc, argv, "kc:")) != -1) {
+	while ((_c = getopt(argc, argv, "l:c:")) != -1) {
 		switch (_c) {
 			case 'c': {
 				_conf_file = optarg;
+				break;
+			}
+			case 'l': {
+				_log_level = std::stoi(optarg);
 				break;
 			}
 		}
@@ -53,7 +58,7 @@ int main(int argc, char* argv[]) {
 	zapata::log_fd = & cout;
 	zapata::log_pid = ::getpid();
 	zapata::log_pname = new string(argv[0]);
-	zapata::log_lvl = 8;
+	zapata::log_lvl = _log_level;
 
 	if (_conf_file == nullptr) {
 		zlog("a configuration file must be provided", zapata::error);

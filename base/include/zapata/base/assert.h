@@ -57,7 +57,7 @@ namespace zapata {
 			Head = 4,
 			Options = 5,
 			Patch = 6,
-			AssyncReply = 7
+			Reply = 7
 		};
 	}
 

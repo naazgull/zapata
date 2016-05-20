@@ -70,6 +70,9 @@ namespace zapata {
 		zapata::JSONPtr __options;
 		std::string __type;
 		zapata::ZMQPtr __assync;
+
+		zapata::JSONPtr http2zmq(zapata::HTTPReq& _request);
+		zapata::HTTPRep zmq2http(zapata::JSONPtr& _out);
 	};
 
 	class RESTClient {
@@ -83,7 +86,8 @@ namespace zapata {
 		virtual zapata::ZMQPollPtr poll();
 		virtual zapata::EventEmitterPtr emitter();
 
-		virtual zapata::ZMQPtr borrow(short _type, std::string _connection);
+		virtual zapata::ZMQPtr bind(short _type, std::string _connection);
+		virtual zapata::ZMQPtr bind(std::string _object_path);
 
 	private:
 		zapata::EventEmitterPtr __emitter;
@@ -92,7 +96,8 @@ namespace zapata {
 	};
 
 
-	void dirs(std::string _dir, zapata::JSONPtr& _options);
+	void dirs(std::string _dir, zapata::JSONPtr _options);
+	void dirs(zapata::JSONPtr _options);
 	void env(zapata::JSONPtr _options);
 
 }

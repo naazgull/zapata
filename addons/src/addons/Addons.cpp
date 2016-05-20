@@ -118,7 +118,7 @@ zapata::JSONPtr zapata::Addons::trigger(std::string _regex, zapata::JSONPtr _pay
 }
 
 zapata::JSONPtr zapata::Addons::trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload) {
-	zapata::JSONPtr _return = zapata::make_arr();
+	zapata::JSONPtr _return = zapata::mkarr();
 
 	for (auto _i : this->__resources) {
 		if (regexec(_i.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {
@@ -129,7 +129,7 @@ zapata::JSONPtr zapata::Addons::trigger(zapata::ev::Performative _method, std::s
 				}
 			}
 			catch (zapata::AssertionException& _e) {
-				return zapata::make_ptr(JSON(
+				return zapata::mkptr(JSON(
 					"status" << _e.status()
 					<< "error" <<  true
 					<< "assertion_failed" << _e.description()

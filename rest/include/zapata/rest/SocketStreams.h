@@ -31,6 +31,7 @@ SOFTWARE.
 #include <iostream>
 #include <istream>
 #include <ostream>
+#include <memory>
 #include <strings.h>
 #include <unistd.h>
 #include <errno.h>
@@ -239,6 +240,9 @@ namespace zapata {
 	typedef basic_socketstream<char> socketstream;
 	typedef basic_socketstream<wchar_t> wsocketstream;
 
+	typedef std::shared_ptr< zapata::socketstream > socketstream_ptr;
+	typedef std::shared_ptr< zapata::wsocketstream > wscoketstream_ptr;
+
 	template<typename Char>
 	class basic_serversocketstream : public std::basic_iostream<Char> {
 	public:
@@ -364,6 +368,9 @@ namespace zapata {
 
 	typedef basic_serversocketstream<char> serversocketstream;
 	typedef basic_serversocketstream<wchar_t> wserversocketstream;
+
+	typedef std::shared_ptr< zapata::serversocketstream > serversocketstream_ptr;
+	typedef std::shared_ptr< zapata::wserversocketstream > wserversocketstream_ptr;
 
 	#define CRLF "\r\n"
 

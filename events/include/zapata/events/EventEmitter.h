@@ -56,7 +56,7 @@ namespace zapata {
 		zapata::ev::Performative from_str(std::string _performative);
 
 		zapata::JSONPtr init_request();
-		zapata::JSONPtr init_reply(std::string _cid);
+		zapata::JSONPtr init_reply(std::string _cid = "");
 	}
 
 	class EventEmitter {
@@ -74,7 +74,6 @@ namespace zapata {
 			virtual void off(string _regex) = 0;
 
 			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload) = 0;
-			virtual zapata::JSONPtr trigger(std::string _resource, zapata::JSONPtr _payload) = 0;
 
 			virtual void add_kb(std::string _name, zapata::KBPtr _kb) final;
 			virtual zapata::KBPtr get_kb(std::string _name) final;

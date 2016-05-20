@@ -75,10 +75,8 @@ void zapata::generate_key(string& _out) {
 	code3[0] = charset[rand() % charset.length()];
 	code3[1] = charset[rand() % charset.length()];
 
-	string _ts;
-	zapata::tostr(_ts, time(nullptr), "%y%m%d");
-	string _usec;
-	zapata::tostr(_usec, _tv.tv_usec);
+	string _ts = zapata::tostr(time(nullptr), "%y%m%d");
+	string _usec = zapata::tostr(_tv.tv_usec);
 
 	_out.insert(_out.length(), code3);
 	_out.insert(_out.length(), _ts);

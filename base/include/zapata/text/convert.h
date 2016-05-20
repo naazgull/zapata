@@ -49,31 +49,46 @@ using namespace __gnu_cxx;
 
 namespace zapata {
 
-	void tostr(string& s, int i);
+	void tostr(std::string& s, int i);
+	void tostr(std::string& s, bool i);
 	void tostr(std::string&, int, std::ios_base& (&)(std::ios_base&));
 #ifdef __LP64__
-	void tostr(string& s, unsigned int i);
+	void tostr(std::string& s, unsigned int i);
 #endif
-	void tostr(string& s, size_t i);
-	void tostr(string& s, long i);
-	void tostr(string& s, long long i);
-	void tostr(string& s, float i);
-	void tostr(string& s, double i);
-	void tostr(string& s, char i);
-	void tostr(string& s, time_t i, const char* f);
+	void tostr(std::string& s, size_t i);
+	void tostr(std::string& s, long i);
+	void tostr(std::string& s, long long i);
+	void tostr(std::string& s, float i);
+	void tostr(std::string& s, double i);
+	void tostr(std::string& s, char i);
+	void tostr(std::string& s, time_t i, const char* f);
 
-	void fromstr(string& s, int* i);
+	std::string tostr(int i);
+	std::string tostr(bool i);
+	std::string tostr(int, std::ios_base& (&)(std::ios_base&));
 #ifdef __LP64__
-	void fromstr(string& s, unsigned int* i);
+	std::string tostr(unsigned int i);
 #endif
-	void fromstr(string& s, size_t* i);
-	void fromstr(string& s, long* i);
-	void fromstr(string& s, long long* i);
-	void fromstr(string& s, float* i);
-	void fromstr(string& s, double* i);
-	void fromstr(string& s, char* i);
-	void fromstr(string& s, bool* i);
-	void fromstr(string& s, time_t* i, const char* f);
+	std::string tostr(size_t i);
+	std::string tostr(long i);
+	std::string tostr(long long i);
+	std::string tostr(float i);
+	std::string tostr(double i);
+	std::string tostr(char i);
+	std::string tostr(time_t i, const char* f);
+
+	void fromstr(std::string s, int* i);
+#ifdef __LP64__
+	void fromstr(std::string s, unsigned int* i);
+#endif
+	void fromstr(std::string s, size_t* i);
+	void fromstr(std::string s, long* i);
+	void fromstr(std::string s, long long* i);
+	void fromstr(std::string s, float* i);
+	void fromstr(std::string s, double* i);
+	void fromstr(std::string s, char* i);
+	void fromstr(std::string s, bool* i);
+	void fromstr(std::string s, time_t* i, const char* f);
 
 	const char encodeCharacterTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	const char decodeCharacterTable[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };

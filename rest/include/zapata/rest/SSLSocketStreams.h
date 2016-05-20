@@ -34,6 +34,7 @@ SOFTWARE.
 #include <strings.h>
 #include <unistd.h>
 #include <errno.h>
+#include <memory>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <zapata/exceptions/ClosedException.h>
@@ -252,6 +253,9 @@ namespace zapata {
 	typedef basic_sslsocketstream<char> sslsocketstream;
 	typedef basic_sslsocketstream<wchar_t> wsslsocketstream;
 
+	typedef std::shared_ptr< zapata::sslsocketstream > sslsocketstream_ptr;
+	typedef std::shared_ptr< zapata::wsslsocketstream > wsslscoketstream_ptr;
+
 	template<typename Char>
 	class basic_serversslsocketstream : public std::basic_iostream<Char> {
 	public:
@@ -416,5 +420,8 @@ namespace zapata {
 
 	typedef basic_serversslsocketstream<char> serversslsocketstream;
 	typedef basic_serversslsocketstream<wchar_t> wserversslsocketstream;
+
+	typedef std::shared_ptr< zapata::serversslsocketstream > serversslsocketstream_ptr;
+	typedef std::shared_ptr< zapata::wserversslsocketstream > wserversslsocketstream_ptr;
 
 }

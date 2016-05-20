@@ -56,7 +56,7 @@ zapata::KBPtr zapata::EventEmitter::get_kb(std::string _name) {
 zapata::JSONPtr zapata::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zapata::JSONPtr _ret = zapata::make_arr();
+	zapata::JSONPtr _ret = zapata::mkarr();
 	while(_iss.good()) {
 		getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
@@ -92,7 +92,7 @@ zapata::JSONPtr zapata::ev::split(std::string _url, zapata::JSONPtr _orphans) {
 		_ret << (string) _splited[_idx] << (string) _splited[_idx + 1];
 		_idx++;
 	}
-	return make_ptr(_ret);
+	return mkptr(_ret);
 }
 
 std::string zapata::ev::join(zapata::JSONPtr _info, size_t _orphans) {
@@ -133,7 +133,7 @@ std::string zapata::ev::to_str(zapata::ev::Performative _performative) {
 		case zapata::ev::Patch: {
 			return "PATCH";
 		}
-		case zapata::ev::AssyncReply: {
+		case zapata::ev::Reply: {
 			return "REPLY";
 		}
 	}
@@ -163,7 +163,7 @@ zapata::ev::Performative zapata::ev::from_str(std::string _performative) {
 		return zapata::ev::Patch;
 	}
 	if (_performative == "REPLY") {
-		return zapata::ev::AssyncReply;
+		return zapata::ev::Reply;
 	}
 	return zapata::ev::Head;
 }
@@ -181,7 +181,7 @@ zapata::JSONPtr zapata::ev::init_request() {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 
-	return zapata::make_ptr(JSON(
+	return zapata::mkptr(JSON(
 		"Host" << "localhost" <<
 		"Accept" << "application/json" <<
 		"Accept-Charset" << "utf-8" <<
@@ -204,14 +204,17 @@ zapata::JSONPtr zapata::ev::init_reply(std::string _uuid) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	return zapata::make_ptr(JSON(
+	zapata::JSONPtr _return = zapata::mkptr(JSON(
 		"Server" << "zapata RESTful server" <<
 		"Cache-Control" << "max-age=3600" <<
 		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
 		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires) <<
-		"X-Cid" << _uuid
+		"Expires" << string(_buffer_expires)
 	));
+	if (_uuid != "") {
+		_return << "X-Cid" << _uuid;
+	}
+	return _return;
 }
 
 extern "C" int zapata_events() {

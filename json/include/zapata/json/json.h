@@ -39,8 +39,78 @@ namespace zapata {
 	JSONPtr fromstr(string& _in);
 	JSONPtr fromstream(istream& _in);
 
-	void tostr(string& _out, JSONElement& _in) ;
-	void tostr(string& _out, JSONObj& _in) ;
-	void tostr(string& _out, JSONArr& _in) ;
+	void tostr(string& _out, JSONElement& _in);
+	void tostr(string& _out, JSONObj& _in);
+	void tostr(string& _out, JSONArr& _in);
 
+	class csv : public std::string {
+	public: 
+		inline csv() : std::string() {
+		};
+		inline csv(std::string _rhs) : std::string(_rhs) {
+		};
+		inline csv(const char * _rhs) : std::string(_rhs) {
+		};
+		friend ostream& operator<<(ostream& _out, zapata::csv& _in) {
+			_out << string(_in.data());
+			return _out;
+		};
+		friend istream& operator>>(istream& _in, zapata::csv& _out) {
+			_out.clear();
+			std::getline(_in, _out, '\n');
+			zapata::trim(_out);
+			return _in;
+		};
+		inline operator zapata::JSONPtr() {
+			zapata::JSONPtr _result = zapata::mkarr();
+			std::istringstream _iss;
+			_iss.str(* this);
+
+			char _c = '\0';
+			bool _commas = false;
+			bool _escaped = false;
+			std::string _value;
+			do {
+				_iss >> _c;
+				switch (_c) {
+					case '\0' : {
+						break;
+					}
+					case '"' : {
+						if (_escaped) {
+							_escaped = false;
+							_value.push_back(_c);
+						}
+						else {
+							_commas = !_commas;
+						}
+						break;
+					}
+					case '\\' : {
+						_escaped = true;
+						break;
+					}
+					case ',' : {
+						if (!_commas) {
+							_result << _value;
+							_value.clear();
+						}
+						else {
+							_value.push_back(_c);
+						}
+						break;
+					}
+					default : {
+						_value.push_back(_c);
+						break;
+					}
+				}
+				_c = '\0';
+			}
+			while(_iss.good());
+			_result << _value;
+
+			return _result;
+		};
+	};
 }

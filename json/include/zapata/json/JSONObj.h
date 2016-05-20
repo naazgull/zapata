@@ -381,7 +381,7 @@ namespace zapata {
 	/**
 	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zapata::JSONPtr key-value pairs.
 	 */
-	class JSONObjT : public map< string, JSONPtr > {
+	class JSONObjT : public std::map< string, JSONPtr > {
 	public: 
 		/**
 		 * \brief Creates a new JSONObjT instance.
@@ -1534,13 +1534,17 @@ namespace zapata {
 		};
 		friend istream& operator>>(istream& _in, zapata::json& _out) {
 			_out.clear();
-			char _c;
+			char _c = '\0';
 
 			size_t _n_seps = 0;
 			bool _commas = false;
 			bool _escaped = false;
 			do {
 				_in >> _c;
+				if (_c == '\0') {
+					break;
+				}
+
 				if (!_escaped) {
 					switch (_c) {
 						case '"' : {
@@ -1571,6 +1575,7 @@ namespace zapata {
 					_escaped = false;
 				}
 				_out.push_back(_c);
+				_c = '\0';
 			}
 			while(_in.good() && _n_seps != 0);
 
@@ -1589,18 +1594,18 @@ namespace zapata {
 	};
 
 	template <typename T>	
-	zapata::JSONElementT * make_element(T& _e) {
+	zapata::JSONElementT * mkelem(T& _e) {
 		return new zapata::JSONElementT(_e);
 	}
 
 	template <typename T>	
-	zapata::JSONPtr make_ptr(T _v) {
+	zapata::JSONPtr mkptr(T _v) {
 		T _e(_v);
 		return zapata::JSONPtr(new zapata::JSONElementT(_e));
 	}
 
-	zapata::JSONPtr make_obj();
-	zapata::JSONPtr make_arr();
+	zapata::JSONPtr mkobj();
+	zapata::JSONPtr mkarr();
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
