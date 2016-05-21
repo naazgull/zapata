@@ -23,22 +23,22 @@ SOFTWARE.
 */
 #include <zapata/auth/AuthAgent.h>
 
-zapata::AuthAgentPtr::AuthAgentPtr(zapata::AuthAgent * _target) : std::shared_ptr<zapata::AuthAgent>(_target) {
+zpt::AuthAgentPtr::AuthAgentPtr(zpt::AuthAgent * _target) : std::shared_ptr<zpt::AuthAgent>(_target) {
 }
 
-zapata::AuthAgentPtr::~AuthAgentPtr(){
+zpt::AuthAgentPtr::~AuthAgentPtr(){
 }
 
-zapata::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options) : __callback( _callback ), __options( _options ) {
+zpt::AuthAgent::AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options) : __callback( _callback ), __options( _options ) {
 }
 
-zapata::AuthAgent::~AuthAgent(){
+zpt::AuthAgent::~AuthAgent(){
 }
 
-zapata::AuthAgentCallback& zapata::AuthAgent::callback() {
+zpt::AuthAgentCallback& zpt::AuthAgent::callback() {
 	return this->__callback;
 }
 
-zapata::JSONPtr& zapata::AuthAgent::options() {
+zpt::JSONPtr& zpt::AuthAgent::options() {
 	return this->__options;
 }

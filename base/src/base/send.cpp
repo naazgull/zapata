@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <zapata/mail/manip.h>
 
-bool zapata::sendmail(string _to, string _from, string _subject, string _message, string _replyto) {
+bool zpt::sendmail(string _to, string _from, string _subject, string _message, string _replyto) {
 	bool _retval = false;
 	FILE *_mailpipe = popen("/usr/sbin/sendmail -t", "w");
 	if (_mailpipe != nullptr) {

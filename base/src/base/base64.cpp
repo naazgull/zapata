@@ -30,7 +30,7 @@ SOFTWARE.
 using namespace std;
 using namespace __gnu_cxx;
 
-void zapata::base64::encode(string& _out) {
+void zpt::base64::encode(string& _out) {
 	istringstream in;
 	char buff1[3];
 	char buff2[4];
@@ -65,7 +65,7 @@ void zapata::base64::encode(string& _out) {
 	}
 }
 
-void zapata::base64::decode(string& _out) {
+void zpt::base64::decode(string& _out) {
 	istringstream in;
 	ostringstream out;
 	char buff1[4];
@@ -103,7 +103,7 @@ void zapata::base64::decode(string& _out) {
 	}
 }
 
-void zapata::base64::encode(istream& _in, ostream& _out) {
+void zpt::base64::encode(istream& _in, ostream& _out) {
 	char buff1[3];
 	char buff2[4];
 	uint8_t i = 0, j;
@@ -134,7 +134,7 @@ void zapata::base64::encode(istream& _in, ostream& _out) {
 	}
 }
 
-void zapata::base64::decode(istream& _in, ostream& _out) {
+void zpt::base64::decode(istream& _in, ostream& _out) {
 	char buff1[4];
 	char buff2[4];
 	uint8_t i = 0, j;
@@ -167,7 +167,7 @@ void zapata::base64::decode(istream& _in, ostream& _out) {
 	}
 }
 
-void zapata::base64::url_encode(string& _out) {
+void zpt::base64::url_encode(string& _out) {
 	istringstream in;
 	ostringstream out;
 	char buff1[4];
@@ -204,7 +204,7 @@ void zapata::base64::url_encode(string& _out) {
 	_out.assign(out.str());
 }
 
-void zapata::base64::url_decode(string& _out) {
+void zpt::base64::url_decode(string& _out) {
 	istringstream in;
 	ostringstream out;
 	char buff1[4];

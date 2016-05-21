@@ -27,7 +27,7 @@ SOFTWARE.
 #include <magic.h>
 #include <iostream>
 
-namespace zapata {
+namespace zpt {
 
 	#define _MIMETYPE_LEN 412
 	const char* mimetype_names[] = {
@@ -861,7 +861,7 @@ namespace zapata {
 	};
 }
 
-zapata::MIMEType zapata::get_mime(string _in) {
+zpt::MIMEType zpt::get_mime(string _in) {
 	magic_t myt = magic_open(MAGIC_CONTINUE | MAGIC_ERROR | MAGIC_MIME);
 	magic_load(myt, nullptr);
 
@@ -870,15 +870,15 @@ zapata::MIMEType zapata::get_mime(string _in) {
 	magic_close(myt);
 
 	for (size_t _i = 0; _i != _MIMETYPE_LEN; _i++) {
-		if (_mime == string(zapata::mimetype_names[_i])) {
-			return (zapata::MIMEType) _i;
+		if (_mime == string(zpt::mimetype_names[_i])) {
+			return (zpt::MIMEType) _i;
 		}
 	}
 
-	return zapata::application_octet_stream;
+	return zpt::application_octet_stream;
 }
 
-bool zapata::path_exists(string _in) {
+bool zpt::path_exists(string _in) {
 	struct stat  _buffer;
 	return ( stat(_in.data(), &_buffer) == 0);
 }

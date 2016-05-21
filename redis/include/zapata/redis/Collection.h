@@ -33,30 +33,30 @@ SOFTWARE.
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	namespace redis {
 
-		class Collection : public zapata::KB {
+		class Collection : public zpt::KB {
 		public:
-			Collection(zapata::JSONPtr _options);
+			Collection(zpt::JSONPtr _options);
 			virtual ~Collection();
 
-			virtual zapata::JSONPtr options();
+			virtual zpt::JSONPtr options();
 			virtual std::string name();
 
 			virtual void connect(string _host, uint _port);
 			virtual void reconnect();
 
-			virtual zapata::JSONPtr insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
-			virtual int update(std::string _collection, std::string _url, zapata::JSONPtr _record);
-			virtual int unset(std::string _collection, std::string _url, zapata::JSONPtr _document);
+			virtual zpt::JSONPtr insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
+			virtual int update(std::string _collection, std::string _url, zpt::JSONPtr _record);
+			virtual int unset(std::string _collection, std::string _url, zpt::JSONPtr _document);
 			virtual int remove(std::string _collection, std::string _url);
-			virtual zapata::JSONPtr get(std::string _collection, std::string _url);
-			virtual zapata::JSONPtr query(std::string _collection, zapata::JSONPtr _pattern);
+			virtual zpt::JSONPtr get(std::string _collection, std::string _url);
+			virtual zpt::JSONPtr query(std::string _collection, zpt::JSONPtr _pattern);
 
 		private:
-			zapata::JSONPtr __options;
+			zpt::JSONPtr __options;
 			pthread_mutex_t* __mtx;
 			pthread_mutexattr_t* __attr;
 			redisContext* __conn;
@@ -64,15 +64,15 @@ namespace zapata {
 			uint __port;
 		};
 
-		class CollectionPtr : public std::shared_ptr<zapata::redis::Collection> {
+		class CollectionPtr : public std::shared_ptr<zpt::redis::Collection> {
 		public:
 			/**
 			 * @brief Creates an std::shared_ptr to an Self instance.
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 CollectionPtr(zapata::redis::Collection * _target);
-			 CollectionPtr(zapata::JSONPtr _options);
+			 CollectionPtr(zpt::redis::Collection * _target);
+			 CollectionPtr(zpt::JSONPtr _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

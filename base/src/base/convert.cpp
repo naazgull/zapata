@@ -27,67 +27,67 @@ SOFTWARE.
 #include <time.h>
 #include <sys/time.h>
 
-void zapata::tostr(std::string& s, int i){
+void zpt::tostr(std::string& s, int i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, bool b){
+void zpt::tostr(std::string& s, bool b){
 	s.insert(s.length(), b ? "true" : "false");
 }
 
-void zapata::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) {
+void zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) {
 	char oss[512];
 	sprintf(oss,"%x", i);
 	s.insert(s.length(), oss);
 }
 
 #ifdef __LP64__
-void zapata::tostr(std::string& s, unsigned int i){
+void zpt::tostr(std::string& s, unsigned int i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 #endif
 
-void zapata::tostr(std::string& s, size_t i){
+void zpt::tostr(std::string& s, size_t i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, long i){
+void zpt::tostr(std::string& s, long i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, long long i){
+void zpt::tostr(std::string& s, long long i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, float i){
+void zpt::tostr(std::string& s, float i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, double i){
+void zpt::tostr(std::string& s, double i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, char i){
+void zpt::tostr(std::string& s, char i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zapata::tostr(std::string& s, time_t i, const char* f){
+void zpt::tostr(std::string& s, time_t i, const char* f){
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
@@ -96,67 +96,67 @@ void zapata::tostr(std::string& s, time_t i, const char* f){
 	s.insert(s.length(), _buffer_date);
 }
 
-std::string zapata::tostr(int i){
+std::string zpt::tostr(int i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(bool b){
+std::string zpt::tostr(bool b){
 	return b ? "true" : "false";
 }
 
-std::string zapata::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) {
+std::string zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) {
 	char oss[512];
 	sprintf(oss,"%x", i);
 	return string(oss);
 }
 
 #ifdef __LP64__
-std::string zapata::tostr(unsigned int i){
+std::string zpt::tostr(unsigned int i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 #endif
 
-std::string zapata::tostr(size_t i){
+std::string zpt::tostr(size_t i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(long i){
+std::string zpt::tostr(long i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(long long i){
+std::string zpt::tostr(long long i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(float i){
+std::string zpt::tostr(float i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(double i){
+std::string zpt::tostr(double i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(char i){
+std::string zpt::tostr(char i){
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zapata::tostr(time_t i, const char* f){
+std::string zpt::tostr(time_t i, const char* f){
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
@@ -165,21 +165,21 @@ std::string zapata::tostr(time_t i, const char* f){
 	return string(_buffer_date);
 }
 
-void zapata::fromstr(std::string s, int* i){
+void zpt::fromstr(std::string s, int* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
 #ifdef __LP64__
-void zapata::fromstr(std::string s, unsigned int* i){
+void zpt::fromstr(std::string s, unsigned int* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 #endif
 
-void zapata::fromstr(std::string s, size_t* i){
+void zpt::fromstr(std::string s, size_t* i){
 #ifdef __LP64__
 	std::istringstream _in;
 	_in.str(s);
@@ -191,41 +191,41 @@ void zapata::fromstr(std::string s, size_t* i){
 #endif
 }
 
-void zapata::fromstr(std::string s, long* i){
+void zpt::fromstr(std::string s, long* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zapata::fromstr(std::string s, long long* i){
+void zpt::fromstr(std::string s, long long* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zapata::fromstr(std::string s, float* i){
+void zpt::fromstr(std::string s, float* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zapata::fromstr(std::string s, double* i){
+void zpt::fromstr(std::string s, double* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zapata::fromstr(std::string s, char* i){
+void zpt::fromstr(std::string s, char* i){
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zapata::fromstr(std::string s, bool* i){
+void zpt::fromstr(std::string s, bool* i){
 	*i = s == string("true");
 }
 
-void zapata::fromstr(std::string s, time_t* i, const char* f){
+void zpt::fromstr(std::string s, time_t* i, const char* f){
 	struct tm tm[1] = { { 0 } };
 	strptime(s.data(), f, tm);
 	if (string(f).find("%Z") == string::npos) {
@@ -235,13 +235,13 @@ void zapata::fromstr(std::string s, time_t* i, const char* f){
 		gettimeofday(&tv, &_current_tz);
 
 		tm->tm_isdst = _current_tz.tz_dsttime;
-		tm->tm_gmtoff = zapata::timezone_offset();
+		tm->tm_gmtoff = zpt::timezone_offset();
 		tm->tm_zone =_current_tz.tz_dsttime == 0 ? tzname[0] : tzname[1];
 	} 
 	*i = mktime(tm);
 }
 
-time_t zapata::timezone_offset() {
+time_t zpt::timezone_offset() {
 	time_t t;
 	tm *ptr;
 	int day;

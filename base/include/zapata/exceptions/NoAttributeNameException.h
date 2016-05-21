@@ -32,7 +32,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	class NoAttributeNameException: public std::exception {
 		private:

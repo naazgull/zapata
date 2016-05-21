@@ -40,21 +40,21 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define assertz_close(x,y,z,c) if (! (x)) { _conn.done(); throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+#define assertz_close(x,y,z,c) if (! (x)) { _conn.done(); throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
-namespace zapata {
+namespace zpt {
 
 	namespace mongodb {
 
-		void frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out);
-		void frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out);
+		void frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out);
+		void frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out);
 
-		void tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out);
-		void tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out);
-		void tosetcommand(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix = "");
-		void tosetcommand(zapata::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
+		void tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out);
+		void tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder&  _out);
+		void tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix = "");
+		void tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
 
-		void get_query(zapata::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
+		void get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
 
 		float valid_mongo_version();
 	}

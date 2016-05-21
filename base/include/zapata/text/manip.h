@@ -38,7 +38,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	void ltrim(std::string &_in_out);
 	void rtrim(std::string &_in_out);

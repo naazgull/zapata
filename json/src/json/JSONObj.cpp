@@ -28,199 +28,199 @@ SOFTWARE.
 #include <zapata/json/JSONParser.h>
 #include <regex.h>
 
-namespace zapata {
+namespace zpt {
 	JSONPtr undefined;
 	JSONPtr nilptr = undefined;
 }
 
-zapata::JSONElementT::JSONElementT() : __parent( nullptr ) {
-	this->type(zapata::JSNil);
+zpt::JSONElementT::JSONElementT() : __parent( nullptr ) {
+	this->type(zpt::JSNil);
 	this->__target.__nil = nullptr;
 }
 
-zapata::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr ) {
+zpt::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr ) {
 	this->type( _element.type());
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (_element.obj().get() != nullptr) {
 				this->__target.__object = _element.obj();
 			}
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (_element.arr().get() != nullptr) {
 				this->__target.__array = _element.arr();
 			}
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			this->__target.__string = make_shared<string>(string(_element.str().data()));
 			break;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			this->__target.__integer = _element.intr();
 			break;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			this->__target.__double = _element.dbl();
 			break;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			this->__target.__boolean = _element.bln();
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			this->__target.__nil = nullptr;
 			break;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			this->__target.__date = _element.date();
 			break;
 		}
 	}
 }
 
-zapata::JSONElementT::JSONElementT(JSONPtr& _value) {
+zpt::JSONElementT::JSONElementT(JSONPtr& _value) {
 	this->type(_value->type());
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (_value->obj().get() != nullptr) {
 				this->__target.__object = _value->obj();
 			}
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (_value->arr().get() != nullptr) {
 				this->__target.__array = _value->arr();
 			}
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			this->__target.__string = make_shared<string>(string(_value->str().data()));
 			break;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			this->__target.__integer = _value->intr();
 			break;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			this->__target.__double = _value->dbl();
 			break;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			this->__target.__boolean = _value->bln();
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			this->__target.__nil = nullptr;
 			break;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			this->__target.__date = _value->date();
 			break;
 		}
 	}
 }
 
-zapata::JSONElementT::JSONElementT(JSONObj& _value) : __parent( nullptr ) {
-	this->type( zapata::JSObject);
+zpt::JSONElementT::JSONElementT(JSONObj& _value) : __parent( nullptr ) {
+	this->type( zpt::JSObject);
 	if (_value.get() != nullptr) {
 		this->__target.__object = _value;
 	}
 }
 
-zapata::JSONElementT::JSONElementT(JSONArr& _value) : __parent( nullptr ) {
-	this->type( zapata::JSArray);
+zpt::JSONElementT::JSONElementT(JSONArr& _value) : __parent( nullptr ) {
+	this->type( zpt::JSArray);
 	if (_value.get() != nullptr) {
 		this->__target.__array = _value;
 	}
 }
 
-zapata::JSONElementT::JSONElementT(string _value) : __parent( nullptr ) {
-	this->type( zapata::JSString);
+zpt::JSONElementT::JSONElementT(string _value) : __parent( nullptr ) {
+	this->type( zpt::JSString);
 	this->__target.__string = make_shared<string>(string(_value.data()));
 }
 
-zapata::JSONElementT::JSONElementT(const char* _value) : __parent( nullptr ) {
-	this->type( zapata::JSString);
+zpt::JSONElementT::JSONElementT(const char* _value) : __parent( nullptr ) {
+	this->type( zpt::JSString);
 	this->__target.__string = make_shared<string>(string(_value));
 }
 
-zapata::JSONElementT::JSONElementT(long long _value) : __parent( nullptr ) {
-	this->type( zapata::JSInteger);
+zpt::JSONElementT::JSONElementT(long long _value) : __parent( nullptr ) {
+	this->type( zpt::JSInteger);
 	this->__target.__integer = _value;
 }
 
-zapata::JSONElementT::JSONElementT(double _value) : __parent( nullptr ) {
-	this->type( zapata::JSDouble);
+zpt::JSONElementT::JSONElementT(double _value) : __parent( nullptr ) {
+	this->type( zpt::JSDouble);
 	this->__target.__double = _value;
 }
 
-zapata::JSONElementT::JSONElementT(bool _value) : __parent( nullptr ) {
-	this->type( zapata::JSBoolean);
+zpt::JSONElementT::JSONElementT(bool _value) : __parent( nullptr ) {
+	this->type( zpt::JSBoolean);
 	this->__target.__boolean = _value;
 }
 
-zapata::JSONElementT::JSONElementT(zapata::timestamp_t _value) : __parent( nullptr ) {
-	this->type( zapata::JSDate);
+zpt::JSONElementT::JSONElementT(zpt::timestamp_t _value) : __parent( nullptr ) {
+	this->type( zpt::JSDate);
 	this->__target.__date = _value;
 }
 
-zapata::JSONElementT::JSONElementT(int _value) : __parent( nullptr ) {
-	this->type( zapata::JSInteger);
+zpt::JSONElementT::JSONElementT(int _value) : __parent( nullptr ) {
+	this->type( zpt::JSInteger);
 	this->__target.__integer = _value;
 }
 
-zapata::JSONElementT::JSONElementT(size_t _value) : __parent( nullptr ) {
-	this->type( zapata::JSInteger);
+zpt::JSONElementT::JSONElementT(size_t _value) : __parent( nullptr ) {
+	this->type( zpt::JSInteger);
 	this->__target.__integer = _value;
 }
 
 #ifdef __LP64__
-zapata::JSONElementT::JSONElementT(unsigned int _value) : __parent( nullptr ) {
-	this->type( zapata::JSInteger);
+zpt::JSONElementT::JSONElementT(unsigned int _value) : __parent( nullptr ) {
+	this->type( zpt::JSInteger);
 	this->__target.__integer = _value;
 }
 #endif
 
-zapata::JSONElementT::~JSONElementT() {
+zpt::JSONElementT::~JSONElementT() {
 }
 
-zapata::JSONType zapata::JSONElementT::type() {
-	return (zapata::JSONType)  this->__target.__type;
+zpt::JSONType zpt::JSONElementT::type() {
+	return (zpt::JSONType)  this->__target.__type;
 }
 
-string zapata::JSONElementT::demangle() {
+string zpt::JSONElementT::demangle() {
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return "object";
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return "array";
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			return "string";
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return "integer";
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return "number";
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return "boolean";
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return "null";
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return "date";
 		}
 	}
 	return "null";
 }
 
-void zapata::JSONElementT::type(JSONType _in) {
+void zpt::JSONElementT::type(JSONType _in) {
 	assertz(_in >= 0, "the type must be a valid value", 0, 0);
 	
 	if (_in == this->__target.__type) {
@@ -228,19 +228,19 @@ void zapata::JSONElementT::type(JSONType _in) {
 	}
 
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__object.get() != nullptr) {
 				this->__target.__object.~JSONObj();
 			}
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__array.get() != nullptr) {
 				this->__target.__array.~JSONArr();
 			}
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__string.get() != nullptr) {
 				this->__target.__string.~JSONStr();
 			}
@@ -251,15 +251,15 @@ void zapata::JSONElementT::type(JSONType _in) {
 		}
 	}
 	switch(_in) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			new(& this->__target.__object) JSONObj();
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			new(& this->__target.__array) JSONArr();
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			new(& this->__target.__string) JSONStr();
 			break;
 		}
@@ -271,26 +271,26 @@ void zapata::JSONElementT::type(JSONType _in) {
 	this->__target.__type = _in;
 }
 
-zapata::JSONUnion& zapata::JSONElementT::value() {
+zpt::JSONUnion& zpt::JSONElementT::value() {
 	return this->__target;
 }
 
-bool zapata::JSONElementT::ok() {
-	return this->__target.__type != zapata::JSNil;
+bool zpt::JSONElementT::ok() {
+	return this->__target.__type != zpt::JSNil;
 }
 
-bool zapata::JSONElementT::empty() {
-	return this->__target.__type == zapata::JSNil;
+bool zpt::JSONElementT::empty() {
+	return this->__target.__type == zpt::JSNil;
 }
 
-bool zapata::JSONElementT::nil() {
-	return this->__target.__type == zapata::JSNil;
+bool zpt::JSONElementT::nil() {
+	return this->__target.__type == zpt::JSNil;
 }
 
-void zapata::JSONElementT::assign(JSONElementT& _rhs) {
+void zpt::JSONElementT::assign(JSONElementT& _rhs) {
 	this->type( _rhs.type());
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__object.get() != nullptr) {
 				this->__target.__object.~JSONObj();
 			}
@@ -299,7 +299,7 @@ void zapata::JSONElementT::assign(JSONElementT& _rhs) {
 			}
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__array.get() != nullptr) {
 				this->__target.__array.~JSONArr();
 			}
@@ -308,77 +308,77 @@ void zapata::JSONElementT::assign(JSONElementT& _rhs) {
 			}
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__string.get() != nullptr) {
 				this->__target.__string.~JSONStr();
 			}
 			this->__target.__string = make_shared<string>(string(_rhs.str().data()));
 			break;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			this->__target.__integer = _rhs.intr();
 			break;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			this->__target.__double = _rhs.dbl();
 			break;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			this->__target.__boolean = _rhs.bln();
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			this->__target.__nil = nullptr;
 			break;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			this->__target.__date = _rhs.date();
 			break;
 		}
 	}
 }
 
-zapata::JSONElementT * zapata::JSONElementT::parent() {
+zpt::JSONElementT * zpt::JSONElementT::parent() {
 	return this->__parent;
 }
 
-void zapata::JSONElementT::parent(JSONElementT* _parent) {
+void zpt::JSONElementT::parent(JSONElementT* _parent) {
 	this->__parent = _parent;
 }
 
-zapata::JSONObj& zapata::JSONElementT::obj() {
-	assertz(this->__target.__type == zapata::JSObject, string("this element is not of type JSObject: ") + this->stringify(), 0, 0);
+zpt::JSONObj& zpt::JSONElementT::obj() {
+	assertz(this->__target.__type == zpt::JSObject, string("this element is not of type JSObject: ") + this->stringify(), 0, 0);
 	return this->__target.__object;
 }
 
-zapata::JSONArr& zapata::JSONElementT::arr() {
-	assertz(this->__target.__type == zapata::JSArray, string("this element is not of type JSArray: ") + this->stringify(), 0, 0);
+zpt::JSONArr& zpt::JSONElementT::arr() {
+	assertz(this->__target.__type == zpt::JSArray, string("this element is not of type JSArray: ") + this->stringify(), 0, 0);
 	return this->__target.__array;
 }
 
-string zapata::JSONElementT::str() {
-	assertz(this->__target.__type == zapata::JSString, string("this element is not of type JSString: ") + this->stringify(), 0, 0);
+string zpt::JSONElementT::str() {
+	assertz(this->__target.__type == zpt::JSString, string("this element is not of type JSString: ") + this->stringify(), 0, 0);
 	return *(this->__target.__string.get());
 }
 
-long long zapata::JSONElementT::intr() {
-	assertz(this->__target.__type == zapata::JSInteger, string("this element is not of type JSInteger: ") + this->stringify(), 0, 0);
+long long zpt::JSONElementT::intr() {
+	assertz(this->__target.__type == zpt::JSInteger, string("this element is not of type JSInteger: ") + this->stringify(), 0, 0);
 	return this->__target.__integer;
 }
 
-double zapata::JSONElementT::dbl() {
-	assertz(this->__target.__type == zapata::JSDouble, string("this element is not of type JSDouble: ") + this->stringify(), 0, 0);
+double zpt::JSONElementT::dbl() {
+	assertz(this->__target.__type == zpt::JSDouble, string("this element is not of type JSDouble: ") + this->stringify(), 0, 0);
 	return this->__target.__double;
 }
 
-bool zapata::JSONElementT::bln() {
-	assertz(this->__target.__type == zapata::JSBoolean, string("this element is not of type JSBoolean: ") + this->stringify(), 0, 0);
+bool zpt::JSONElementT::bln() {
+	assertz(this->__target.__type == zpt::JSBoolean, string("this element is not of type JSBoolean: ") + this->stringify(), 0, 0);
 	return this->__target.__boolean;
 }
 
-zapata::timestamp_t zapata::JSONElementT::date() {
-	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSString, string("this element is not of type JSDate: ") + this->stringify(), 0, 0);
-	if (this->__target.__type == zapata::JSString) {
+zpt::timestamp_t zpt::JSONElementT::date() {
+	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString, string("this element is not of type JSDate: ") + this->stringify(), 0, 0);
+	if (this->__target.__type == zpt::JSString) {
 		time_t _n = 0;
 		int _ms = 0;
 		string _s(this->__target.__string.get()->data());
@@ -386,26 +386,26 @@ zapata::timestamp_t zapata::JSONElementT::date() {
 		string _mss(_s.substr(_idx + 1));
 		_mss.assign(_mss.substr(0, _mss.length() - 1));
 		_s.assign(_s.substr(0, _idx));
-		zapata::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
-		zapata::fromstr(_mss, &_ms);
+		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
+		zpt::fromstr(_mss, &_ms);
 		return _n * 1000 + _ms;
 	}
 	return this->__target.__date;
 }
 
-double zapata::JSONElementT::number() {
-	assertz(this->__target.__type == zapata::JSDate || this->__target.__type == zapata::JSInteger || this->__target.__type == zapata::JSDouble || this->__target.__type == zapata::JSBoolean, string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
+double zpt::JSONElementT::number() {
+	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger || this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean, string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (double) this->__target.__integer;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return this->__target.__double;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (double) this->__target.__boolean;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (double) this->__target.__date;
 		}
 		default : {
@@ -415,139 +415,139 @@ double zapata::JSONElementT::number() {
 	return 0;
 }
 
-zapata::JSONPtr zapata::JSONElementT::clone() {
+zpt::JSONPtr zpt::JSONElementT::clone() {
 	switch(this->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->obj()->clone();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->arr()->clone();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			std::string _v = this->str();
-			return zapata::mkptr(_v);
+			return zpt::mkptr(_v);
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			int _v = this->intr();
-			return zapata::mkptr(_v);
+			return zpt::mkptr(_v);
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			double _v = this->dbl();
-			return zapata::mkptr(_v);
+			return zpt::mkptr(_v);
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			bool _v = this->bln();
-			return zapata::mkptr(_v);
+			return zpt::mkptr(_v);
 		}
-		case zapata::JSNil : {
-			return zapata::undefined;
+		case zpt::JSNil : {
+			return zpt::undefined;
 		}
-		case zapata::JSDate : {
-			zapata::timestamp_t _v = this->date();
-			return zapata::mkptr(_v);
+		case zpt::JSDate : {
+			zpt::timestamp_t _v = this->date();
+			return zpt::mkptr(_v);
 		}
 	}
-	return zapata::undefined;	
+	return zpt::undefined;	
 }
 
-zapata::JSONElementT& zapata::JSONElementT::operator<<(const char* _in) {
+zpt::JSONElementT& zpt::JSONElementT::operator<<(const char* _in) {
 	(* this) << string(_in);
 	return * this;
 }
 
-zapata::JSONElementT& zapata::JSONElementT::operator<<(string _in) {
+zpt::JSONElementT& zpt::JSONElementT::operator<<(string _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->push(_in);
 			break;
 		}
-		case zapata::JSArray : {
-			this->__target.__array->push(new zapata::JSONElementT(string(_in)));
+		case zpt::JSArray : {
+			this->__target.__array->push(new zpt::JSONElementT(string(_in)));
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			this->__target.__string.get()->assign(_in);
 			break;
 		}
 		default : {
-			assertz(this->__target.__type == zapata::JSObject || this->__target.__type == zapata::JSArray || this->__target.__type == zapata::JSString, "the type must be a JSObject, JSArray or JSString in order to push a string", 0, 0);
+			assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray || this->__target.__type == zpt::JSString, "the type must be a JSObject, JSArray or JSString in order to push a string", 0, 0);
 			break;
 		}
 	}
 	return * this;
 }
 
-zapata::JSONElementT& zapata::JSONElementT::operator<<(JSONElementT* _in) {
+zpt::JSONElementT& zpt::JSONElementT::operator<<(JSONElementT* _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
-	if (this->__target.__type == _in->type() && _in->type() != zapata::JSObject && _in->type() != zapata::JSArray) {
+	if (this->__target.__type == _in->type() && _in->type() != zpt::JSObject && _in->type() != zpt::JSArray) {
 		this->assign(* _in);
 		return * this;
 	}
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->push(_in);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->push(_in);
 			break;
 		}
 		default : {
-			assertz(this->__target.__type == zapata::JSObject || this->__target.__type == zapata::JSArray, "the type must be a JSObject, JSArray or the same type of the target, in order to push JSONElementT*", 0, 0);
+			assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray, "the type must be a JSObject, JSArray or the same type of the target, in order to push JSONElementT*", 0, 0);
 			break;
 		}
 	}
 	return * this;
 }
 
-bool zapata::JSONElementT::operator==(zapata::JSONElementT& _in) {
+bool zpt::JSONElementT::operator==(zpt::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__object) == *(_in.obj());
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__array) == *(_in.arr());
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__string.get()) == _in.str();
 		}
-		case zapata::JSInteger : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSInteger : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__integer == _in.number();
 		}
-		case zapata::JSDouble : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDouble : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__double == _in.number();
 		}
-		case zapata::JSBoolean : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSBoolean : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__boolean == _in.number();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return true;
 		}
-		case zapata::JSDate : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDate : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__date == _in.number();
@@ -556,95 +556,95 @@ bool zapata::JSONElementT::operator==(zapata::JSONElementT& _in) {
 	return false;
 }
 
-bool zapata::JSONElementT::operator==(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator==(zpt::JSONPtr& _rhs) {
 	return * this == * _rhs;
 }
 
-bool zapata::JSONElementT::operator!=(JSONElementT& _in) {
+bool zpt::JSONElementT::operator!=(JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	if (this->__target.__type != _in.type()) {
 		return true;
 	}
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->__target.__object != _in.obj();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->__target.__array != _in.arr();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			return *(this->__target.__string.get()) != _in.str();
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return this->__target.__integer != _in.intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return this->__target.__double != _in.dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return this->__target.__boolean != _in.bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return true;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return this->__target.__date != _in.date();
 		}
 	}
 	return false;
 }
 
-bool zapata::JSONElementT::operator!=(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator!=(zpt::JSONPtr& _rhs) {
 	return * this != * _rhs;
 }
 
-bool zapata::JSONElementT::operator<(zapata::JSONElementT& _in) {
+bool zpt::JSONElementT::operator<(zpt::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__object) < *(_in.obj());
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__array) < *(_in.arr());
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__string.get()) < _in.str();
 		}
-		case zapata::JSInteger : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSInteger : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__integer < _in.number();
 		}
-		case zapata::JSDouble : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDouble : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__double < _in.number();
 		}
-		case zapata::JSBoolean : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSBoolean : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__boolean < _in.number();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return true;
 		}
-		case zapata::JSDate : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDate : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__date < _in.number();
@@ -653,57 +653,57 @@ bool zapata::JSONElementT::operator<(zapata::JSONElementT& _in) {
 	return false;
 }
 
-bool zapata::JSONElementT::operator<(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator<(zpt::JSONPtr& _rhs) {
 	return * this < * _rhs;
 }
 
-bool zapata::JSONElementT::operator>(zapata::JSONElementT& _in) {
+bool zpt::JSONElementT::operator>(zpt::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__object) > *(_in.obj());
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__array) > *(_in.arr());
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__string.get()) > _in.str();
 		}
-		case zapata::JSInteger : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSInteger : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__integer > _in.number();
 		}
-		case zapata::JSDouble : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDouble : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__double > _in.number();
 		}
-		case zapata::JSBoolean : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSBoolean : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__boolean > _in.number();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return true;
 		}
-		case zapata::JSDate : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDate : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__date > _in.number();
@@ -712,57 +712,57 @@ bool zapata::JSONElementT::operator>(zapata::JSONElementT& _in) {
 	return false;
 }
 
-bool zapata::JSONElementT::operator>(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator>(zpt::JSONPtr& _rhs) {
 	return * this > * _rhs;
 }
 
-bool zapata::JSONElementT::operator<=(zapata::JSONElementT& _in) {
+bool zpt::JSONElementT::operator<=(zpt::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__object) <= *(_in.obj());
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__array) <= *(_in.arr());
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__string.get()) <= _in.str();
 		}
-		case zapata::JSInteger : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSInteger : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__integer <= _in.number();
 		}
-		case zapata::JSDouble : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDouble : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__double <= _in.number();
 		}
-		case zapata::JSBoolean : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSBoolean : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__boolean <= _in.number();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return true;
 		}
-		case zapata::JSDate : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDate : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__date <= _in.number();
@@ -771,57 +771,57 @@ bool zapata::JSONElementT::operator<=(zapata::JSONElementT& _in) {
 	return false;
 }
 
-bool zapata::JSONElementT::operator<=(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator<=(zpt::JSONPtr& _rhs) {
 	return * this <= * _rhs;
 }
 
-bool zapata::JSONElementT::operator>=(zapata::JSONElementT& _in) {
+bool zpt::JSONElementT::operator>=(zpt::JSONElementT& _in) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__object) >= *(_in.obj());
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__array) >= *(_in.arr());
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return *(this->__target.__string.get()) >= _in.str();
 		}
-		case zapata::JSInteger : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSInteger : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__integer >= _in.number();
 		}
-		case zapata::JSDouble : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDouble : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__double >= _in.number();
 		}
-		case zapata::JSBoolean : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSBoolean : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__boolean >= _in.number();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			if (this->__target.__type != _in.type()) {
 				return false;
 			}
 			return true;
 		}
-		case zapata::JSDate : {
-			if (_in.type() != zapata::JSDate && _in.type() != zapata::JSInteger && _in.type() != zapata::JSDouble && _in.type() != zapata::JSBoolean) {
+		case zpt::JSDate : {
+			if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
 				return false;
 			}
 			return this->__target.__date >= _in.number();
@@ -830,134 +830,134 @@ bool zapata::JSONElementT::operator>=(zapata::JSONElementT& _in) {
 	return false;
 }
 
-bool zapata::JSONElementT::operator>=(zapata::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator>=(zpt::JSONPtr& _rhs) {
 	return * this >= * _rhs;
 }
 
-zapata::JSONPtr zapata::JSONElementT::operator+(zapata::JSONPtr _rhs) {
+zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONPtr _rhs) {
 	return (* this) + (* _rhs);
 }
 
-zapata::JSONPtr zapata::JSONElementT::operator+(zapata::JSONElementT& _rhs) {
-	if (this->__target.__type == zapata::JSNil) {
-		zapata::JSONPtr _rrhs = _rhs.clone();
+zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) {
+	if (this->__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _rrhs = _rhs.clone();
 		return _rrhs;
 	}
-	if (_rhs.__target.__type == zapata::JSNil) {
-		zapata::JSONPtr _lhs = this->clone();
+	if (_rhs.__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _lhs = this->clone();
 		return _lhs;
 	}
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	assertz(this->__target.__type == _rhs.__target.__type, "can't add JSON objects of different types", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
-			zapata::JSONPtr _lhs = this->clone();
+		case zpt::JSObject : {
+			zpt::JSONPtr _lhs = this->clone();
 			for (auto _e : _rhs.obj()) {
 				_lhs << _e.first  << _e.second;
 			}
 			return _lhs;
 		}
-		case zapata::JSArray : {
-			zapata::JSONPtr _lhs = this->clone();
+		case zpt::JSArray : {
+			zpt::JSONPtr _lhs = this->clone();
 			for (auto _e : _rhs.arr()) {
 				_lhs << _e;
 			}
 			return _lhs;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			std::string _lhs((*(this->__target.__string.get())) + _rhs.str());
-			return zapata::mkptr(_lhs);
+			return zpt::mkptr(_lhs);
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			int _lhs = this->__target.__integer + _rhs.intr();
-			return zapata::mkptr(_lhs);
+			return zpt::mkptr(_lhs);
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			double _lhs = this->__target.__double + _rhs.dbl();
-			return zapata::mkptr(_lhs);
+			return zpt::mkptr(_lhs);
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			bool _lhs = this->__target.__boolean || _rhs.bln();
-			return zapata::mkptr(_lhs);
+			return zpt::mkptr(_lhs);
 		}
-		case zapata::JSNil : {
-			return zapata::undefined;
+		case zpt::JSNil : {
+			return zpt::undefined;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			int _lhs = this->__target.__date + _rhs.number();
-			return zapata::mkptr((zapata::timestamp_t) _lhs);
+			return zpt::mkptr((zpt::timestamp_t) _lhs);
 		}
 	}
-	return zapata::undefined;
+	return zpt::undefined;
 }
 
-zapata::JSONPtr zapata::JSONElementT::getPath(std::string _path, std::string _separator) {
+zpt::JSONPtr zpt::JSONElementT::getPath(std::string _path, std::string _separator) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->__target.__object->getPath(_path, _separator);
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->__target.__array->getPath(_path, _separator);
 		}
-		case zapata::JSString :
-		case zapata::JSInteger :
-		case zapata::JSDouble :
-		case zapata::JSBoolean :
-		case zapata::JSNil :
-		case zapata::JSDate : {
-			return zapata::undefined;
+		case zpt::JSString :
+		case zpt::JSInteger :
+		case zpt::JSDouble :
+		case zpt::JSBoolean :
+		case zpt::JSNil :
+		case zpt::JSDate : {
+			return zpt::undefined;
 		}
 	}
-	return zapata::undefined;
+	return zpt::undefined;
 }
 
-void zapata::JSONElementT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+void zpt::JSONElementT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->__target.__object->setPath(_path, _value, _separator);
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->__target.__array->setPath(_path, _value, _separator);
 		}
-		case zapata::JSString :
-		case zapata::JSInteger :
-		case zapata::JSDouble :
-		case zapata::JSBoolean :
-		case zapata::JSNil :
-		case zapata::JSDate : {
+		case zpt::JSString :
+		case zpt::JSInteger :
+		case zpt::JSDouble :
+		case zpt::JSBoolean :
+		case zpt::JSNil :
+		case zpt::JSDate : {
 			return;
 		}
 	}
 	return;
 }
 
-void zapata::JSONElementT::delPath(std::string _path, std::string _separator) {
+void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->delPath(_path, _separator);
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->delPath(_path, _separator);
 		}
-		case zapata::JSString :
-		case zapata::JSInteger :
-		case zapata::JSDouble :
-		case zapata::JSBoolean :
-		case zapata::JSNil :
-		case zapata::JSDate : {
+		case zpt::JSString :
+		case zpt::JSInteger :
+		case zpt::JSDouble :
+		case zpt::JSBoolean :
+		case zpt::JSNil :
+		case zpt::JSDate : {
 			return;
 		}
 	}
 }
 
-void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void (std::string, std::string, zapata::JSONElementT&) > _callback, zapata::JSONElementT * _parent, std::string _key, std::string _parent_path) {
+void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std::string, std::string, zpt::JSONElementT&) > _callback, zpt::JSONElementT * _parent, std::string _key, std::string _parent_path) {
 	switch(this->type()) {
-		case zapata::JSObject: {
+		case zpt::JSObject: {
 			for (auto _o : this->obj()) {
-				if (_pattern->type() == zapata::JSObject && _pattern[_o.first]->ok()) {
+				if (_pattern->type() == zpt::JSObject && _pattern[_o.first]->ok()) {
 					_o.second->inspect(_pattern[_o.first], _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 					continue;
 				}
@@ -965,7 +965,7 @@ void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void
 			}
 			break;
 		}
-		case zapata::JSArray: {
+		case zpt::JSArray: {
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 			}
@@ -994,17 +994,17 @@ void zapata::JSONElementT::inspect(zapata::JSONPtr _pattern, std::function< void
 	}	
 }
 
-void zapata::JSONElementT::stringify(ostream& _out) {
+void zpt::JSONElementT::stringify(ostream& _out) {
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->stringify(_out);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->stringify(_out);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			string _str(this->str());
 			std::ostringstream _ss;
 			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
@@ -1023,24 +1023,24 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			_out << this->__target.__integer << flush;
 			break;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			_out << this->__target.__double << flush;
 			break;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			_out << (this->__target.__boolean ? "true" : "false") << flush;
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out <<  "null" << flush;
 			break;
 		}
-		case zapata::JSDate : {
-			string _date = zapata::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+		case zpt::JSDate : {
+			string _date = zpt::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_date.insert(_date.length(), ".");
 			size_t _remainder = this->__target.__date % 1000;
 			if (_remainder < 100) {
@@ -1049,7 +1049,7 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 					_date.insert(_date.length(), "0");
 				}
 			}
-			zapata::tostr(_date, _remainder);
+			zpt::tostr(_date, _remainder);
 			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
@@ -1057,17 +1057,17 @@ void zapata::JSONElementT::stringify(ostream& _out) {
 	}
 }
 
-void zapata::JSONElementT::stringify(string& _out) {
+void zpt::JSONElementT::stringify(string& _out) {
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->stringify(_out);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->stringify(_out);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			string _str(this->str());
 			std::ostringstream _ss;
 			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
@@ -1088,25 +1088,25 @@ void zapata::JSONElementT::stringify(string& _out) {
 			_out.insert(_out.length(), "\"");
 			break;
 		}
-		case zapata::JSInteger : {
-			zapata::tostr(_out, this->__target.__integer);
+		case zpt::JSInteger : {
+			zpt::tostr(_out, this->__target.__integer);
 			break;
 		}
-		case zapata::JSDouble : {
-			zapata::tostr(_out, this->__target.__double);
+		case zpt::JSDouble : {
+			zpt::tostr(_out, this->__target.__double);
 			break;
 		}
-		case zapata::JSBoolean : {
-			zapata::tostr(_out, this->__target.__boolean);
+		case zpt::JSBoolean : {
+			zpt::tostr(_out, this->__target.__boolean);
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out.insert(_out.length(), "null");
 			break;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			zpt::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
 			size_t _remainder = this->__target.__date % 1000;
 			if (_remainder < 100) {
@@ -1115,7 +1115,7 @@ void zapata::JSONElementT::stringify(string& _out) {
 					_out.insert(_out.length(), "0");
 				}
 			}
-			zapata::tostr(_out, _remainder);
+			zpt::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
@@ -1123,23 +1123,23 @@ void zapata::JSONElementT::stringify(string& _out) {
 	}
 }
 
-std::string zapata::JSONElementT::stringify() {
+std::string zpt::JSONElementT::stringify() {
 	string _out;
 	this->stringify(_out);
 	return _out;
 }
 
-void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
+void zpt::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->prettify(_out, _n_tabs);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->prettify(_out, _n_tabs);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			string _str(this->str());
 			std::ostringstream _ss;
 			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
@@ -1158,24 +1158,24 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			_out << this->__target.__integer << flush;
 			break;
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			_out << this->__target.__double << flush;
 			break;
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			_out << (this->__target.__boolean ? "true" : "false") << flush;
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out <<  "null" << flush;
 			break;
 		}
-		case zapata::JSDate : {
-			string _date = zapata::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+		case zpt::JSDate : {
+			string _date = zpt::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_date.insert(_date.length(), ".");
 			size_t _remainder = this->__target.__date % 1000;
 			if (_remainder < 100) {
@@ -1184,7 +1184,7 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 					_date.insert(_date.length(), "0");
 				}
 			}
-			zapata::tostr(_date, _remainder);
+			zpt::tostr(_date, _remainder);
 			_date.insert(_date.length(), "Z");
 			_out << "\"" << _date << "\"" << flush;
 			break;
@@ -1195,17 +1195,17 @@ void zapata::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 	}
 }
 
-void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
+void zpt::JSONElementT::prettify(string& _out, uint _n_tabs) {
 	switch(this->__target.__type) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->__target.__object->prettify(_out, _n_tabs);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->__target.__array->prettify(_out, _n_tabs);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			string _str(this->str());
 			std::ostringstream _ss;
 			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
@@ -1226,25 +1226,25 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			_out.insert(_out.length(), "\"");
 			break;
 		}
-		case zapata::JSInteger : {
-			zapata::tostr(_out, this->__target.__integer);
+		case zpt::JSInteger : {
+			zpt::tostr(_out, this->__target.__integer);
 			break;
 		}
-		case zapata::JSDouble : {
-			zapata::tostr(_out, this->__target.__double);
+		case zpt::JSDouble : {
+			zpt::tostr(_out, this->__target.__double);
 			break;
 		}
-		case zapata::JSBoolean : {
-			zapata::tostr(_out, this->__target.__boolean);
+		case zpt::JSBoolean : {
+			zpt::tostr(_out, this->__target.__boolean);
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out.insert(_out.length(), "null");
 			break;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zapata::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
+			zpt::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
 			size_t _remainder = this->__target.__date % 1000;
 			if (_remainder < 100) {
@@ -1253,7 +1253,7 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 					_out.insert(_out.length(), "0");
 				}
 			}
-			zapata::tostr(_out, _remainder);
+			zpt::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			_out.insert(_out.length(), "\"");
 			break;
@@ -1265,13 +1265,13 @@ void zapata::JSONElementT::prettify(string& _out, uint _n_tabs) {
 }
 
 /*JSON OBJECT*/
-zapata::JSONObjT::JSONObjT() {
+zpt::JSONObjT::JSONObjT() {
 }
 
-zapata::JSONObjT::~JSONObjT(){
+zpt::JSONObjT::~JSONObjT(){
 }
 
-void zapata::JSONObjT::push(string _name) {
+void zpt::JSONObjT::push(string _name) {
 	if (this->__name.length() == 0) {
 		this->__name.assign(_name.data());
 	}
@@ -1282,48 +1282,48 @@ void zapata::JSONObjT::push(string _name) {
 	}
 }
 
-void zapata::JSONObjT::push(JSONElementT& _value) {
+void zpt::JSONObjT::push(JSONElementT& _value) {
 	assertz(this->__name.length() != 0, "you must pass a field name first", 0, 0);
 	this->pop(this->__name);
 	this->insert(pair<string, JSONPtr>(this->__name, JSONPtr(new JSONElementT(_value))));
 	this->__name.clear();
 }
 
-void zapata::JSONObjT::push(JSONElementT* _value) {
+void zpt::JSONObjT::push(JSONElementT* _value) {
 	assertz(this->__name.length() != 0, "you must pass a field name first", 0, 0);
 	this->pop(this->__name);
 	this->insert(pair<string, JSONPtr>(this->__name, JSONPtr(_value)));
 	this->__name.clear();
 }
 
-void zapata::JSONObjT::pop(int _name) {
-	this->pop(zapata::tostr(_name));
+void zpt::JSONObjT::pop(int _name) {
+	this->pop(zpt::tostr(_name));
 }
 
-void zapata::JSONObjT::pop(size_t _name) {
-	this->pop(zapata::tostr(_name));
+void zpt::JSONObjT::pop(size_t _name) {
+	this->pop(zpt::tostr(_name));
 }
 
-void zapata::JSONObjT::pop(const char* _name) {
+void zpt::JSONObjT::pop(const char* _name) {
 	this->pop(string(_name));
 }
 
-void zapata::JSONObjT::pop(string _name) {
+void zpt::JSONObjT::pop(string _name) {
 	auto _found = this->find(_name);
 	if (_found != this->end()) {
 		this->erase(_found);
 	}
 }
 
-zapata::JSONPtr zapata::JSONObjT::getPath(std::string _path, std::string _separator) {
+zpt::JSONPtr zpt::JSONObjT::getPath(std::string _path, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 	std::string _remainder;
 
 	getline(_iss, _part, _separator[0]);
 	getline(_iss, _remainder);
-	zapata::trim(_remainder);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::trim(_remainder);
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_part == "*" && _remainder.length() != 0) {
 			for (auto _a : (* this)) {
@@ -1333,7 +1333,7 @@ zapata::JSONPtr zapata::JSONObjT::getPath(std::string _path, std::string _separa
 				}
 			}
 		}
-		return zapata::undefined;
+		return zpt::undefined;
 	}
 
 	if (_remainder.length() == 0) {
@@ -1342,15 +1342,15 @@ zapata::JSONPtr zapata::JSONObjT::getPath(std::string _path, std::string _separa
 	return _current->getPath(_remainder, _separator);
 }
 
-void zapata::JSONObjT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+void zpt::JSONObjT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 
 	getline(_iss, _part, _separator[0]);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_iss.good()) {
-			zapata::JSONObj _new;
+			zpt::JSONObj _new;
 			_current = mkptr(_new);
 			this->insert(pair<string, JSONPtr>(string(_part.data()), _current));
 			_current->setPath(_path.substr(_part.length() + 1), _value, _separator);
@@ -1370,12 +1370,12 @@ void zapata::JSONObjT::setPath(std::string _path, zapata::JSONPtr _value, std::s
 	}
 }
 
-void zapata::JSONObjT::delPath(std::string _path, std::string _separator) {
+void zpt::JSONObjT::delPath(std::string _path, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 
 	getline(_iss, _part, _separator[0]);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		return;
 	}
@@ -1396,15 +1396,15 @@ void zapata::JSONObjT::delPath(std::string _path, std::string _separator) {
 	}
 }
 
-zapata::JSONPtr zapata::JSONObjT::clone() {
-	zapata::JSONObj _return;
+zpt::JSONPtr zpt::JSONObjT::clone() {
+	zpt::JSONObj _return;
 	for (auto _f : * this) {
 		_return << _f.first << _f.second->clone();
 	}	
-	return zapata::mkptr(_return);
+	return zpt::mkptr(_return);
 }
 
-bool zapata::JSONObjT::operator==(zapata::JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator==(zpt::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1418,11 +1418,11 @@ bool zapata::JSONObjT::operator==(zapata::JSONObjT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONObjT::operator==(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator==(zpt::JSONObj& _rhs) {
 	return * this == * _rhs;
 }
 
-bool zapata::JSONObjT::operator!=(JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator!=(JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1435,11 +1435,11 @@ bool zapata::JSONObjT::operator!=(JSONObjT& _rhs) {
 	return false;
 }
 
-bool zapata::JSONObjT::operator!=(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator!=(zpt::JSONObj& _rhs) {
 	return * this != * _rhs;
 }
 
-bool zapata::JSONObjT::operator<(zapata::JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator<(zpt::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1453,11 +1453,11 @@ bool zapata::JSONObjT::operator<(zapata::JSONObjT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONObjT::operator<(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator<(zpt::JSONObj& _rhs) {
 	return * this < * _rhs;
 }
 
-bool zapata::JSONObjT::operator>(zapata::JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator>(zpt::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1471,11 +1471,11 @@ bool zapata::JSONObjT::operator>(zapata::JSONObjT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONObjT::operator>(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator>(zpt::JSONObj& _rhs) {
 	return * this > * _rhs;
 }
 
-bool zapata::JSONObjT::operator<=(zapata::JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator<=(zpt::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1489,11 +1489,11 @@ bool zapata::JSONObjT::operator<=(zapata::JSONObjT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONObjT::operator<=(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator<=(zpt::JSONObj& _rhs) {
 	return * this <= * _rhs;
 }
 
-bool zapata::JSONObjT::operator>=(zapata::JSONObjT& _rhs) {
+bool zpt::JSONObjT::operator>=(zpt::JSONObjT& _rhs) {
 	for (auto _f : * this) {
 		auto _found = _rhs.find(_f.first);
 		if (_found == _rhs.end()) {
@@ -1507,31 +1507,31 @@ bool zapata::JSONObjT::operator>=(zapata::JSONObjT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONObjT::operator>=(zapata::JSONObj& _rhs) {
+bool zpt::JSONObjT::operator>=(zpt::JSONObj& _rhs) {
 	return * this >= * _rhs;
 }
 
-zapata::JSONPtr& zapata::JSONObjT::operator[](int _idx) {
+zpt::JSONPtr& zpt::JSONObjT::operator[](int _idx) {
 	return (* this)[(size_t) _idx];
 }
 
-zapata::JSONPtr& zapata::JSONObjT::operator[](size_t _idx) {
-	return (* this)[zapata::tostr(_idx)];
+zpt::JSONPtr& zpt::JSONObjT::operator[](size_t _idx) {
+	return (* this)[zpt::tostr(_idx)];
 }
 
-zapata::JSONPtr& zapata::JSONObjT::operator[](const char* _idx) {
+zpt::JSONPtr& zpt::JSONObjT::operator[](const char* _idx) {
 	return (* this)[string(_idx)];
 }
 
-zapata::JSONPtr& zapata::JSONObjT::operator[](string _idx) {
+zpt::JSONPtr& zpt::JSONObjT::operator[](string _idx) {
 	auto _found = this->find(_idx);
 	if (_found != this->end()) {
 		return _found->second;
 	}
-	return zapata::undefined;
+	return zpt::undefined;
 }
 
-void zapata::JSONObjT::stringify(string& _out) {
+void zpt::JSONObjT::stringify(string& _out) {
 	_out.insert(_out.length(), "{");
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1547,7 +1547,7 @@ void zapata::JSONObjT::stringify(string& _out) {
 	_out.insert(_out.length(), "}");
 }
 
-void zapata::JSONObjT::stringify(ostream& _out) {
+void zpt::JSONObjT::stringify(ostream& _out) {
 	_out << "{" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1561,7 +1561,7 @@ void zapata::JSONObjT::stringify(ostream& _out) {
 	_out << "}" << flush;
 }
 
-void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
+void zpt::JSONObjT::prettify(string& _out, uint _n_tabs) {
 	_out.insert(_out.length(), "{");
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1583,7 +1583,7 @@ void zapata::JSONObjT::prettify(string& _out, uint _n_tabs) {
 	_out.insert(_out.length(), "}");
 }
 
-void zapata::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
+void zpt::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
 	_out << "{" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1602,61 +1602,61 @@ void zapata::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
 }
 
 /*JSON ARRAY*/
-zapata::JSONArrT::JSONArrT() {
+zpt::JSONArrT::JSONArrT() {
 }
 
-zapata::JSONArrT::~JSONArrT(){
+zpt::JSONArrT::~JSONArrT(){
 }
 
-void zapata::JSONArrT::push(JSONElementT& _value) {
+void zpt::JSONArrT::push(JSONElementT& _value) {
 	this->push_back(JSONPtr(new JSONElementT(_value)));
 }
 
-void zapata::JSONArrT::push(JSONElementT* _value) {
+void zpt::JSONArrT::push(JSONElementT* _value) {
 	this->push_back(JSONPtr(_value));
 }
 
-void zapata::JSONArrT::pop(int _idx) {
+void zpt::JSONArrT::pop(int _idx) {
 	this->pop((size_t) _idx);
 }
 
-void zapata::JSONArrT::pop(const char* _idx) {
+void zpt::JSONArrT::pop(const char* _idx) {
 	this->pop(string(_idx));
 }
 
-void zapata::JSONArrT::pop(string _idx) {
+void zpt::JSONArrT::pop(string _idx) {
 	size_t _i = 0;
-	zapata::fromstr(_idx, &_i);
+	zpt::fromstr(_idx, &_i);
 
 	assertz(_i < this->size(), "the index of the element you want to remove must be lower than the array size", 0, 0);
 	this->erase(this->begin() + _i);
 }
 
-void zapata::JSONArrT::pop(size_t _idx) {
+void zpt::JSONArrT::pop(size_t _idx) {
 	assertz(_idx >= 0, "the index of the element you want to remove must be higher then 0", 0, 0);
 	assertz(_idx < this->size(), "the index of the element you want to remove must be lower than the array size", 0, 0);
 	this->erase(this->begin() + _idx);
 }
 
-void zapata::JSONArrT::sort() {
-	std::sort(this->begin(), this->end(), [] (zapata::JSONPtr _lhs, zapata::JSONPtr _rhs) -> bool {
+void zpt::JSONArrT::sort() {
+	std::sort(this->begin(), this->end(), [] (zpt::JSONPtr _lhs, zpt::JSONPtr _rhs) -> bool {
 		return _lhs < _rhs;
 	});
 }
 
-void zapata::JSONArrT::sort(std::function< bool (zapata::JSONPtr, zapata::JSONPtr) > _comparator) {
+void zpt::JSONArrT::sort(std::function< bool (zpt::JSONPtr, zpt::JSONPtr) > _comparator) {
 	std::sort(this->begin(), this->end(), _comparator);
 }
 
-zapata::JSONPtr zapata::JSONArrT::getPath(std::string _path, std::string _separator) {
+zpt::JSONPtr zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 	std::string _remainder;
 
 	getline(_iss, _part, _separator[0]);
 	getline(_iss, _remainder);
-	zapata::trim(_remainder);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::trim(_remainder);
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_part == "*" && _remainder.length() != 0) {
 			for (auto _a : (* this)) {
@@ -1666,7 +1666,7 @@ zapata::JSONPtr zapata::JSONArrT::getPath(std::string _path, std::string _separa
 				}
 			}
 		}
-		return zapata::undefined;
+		return zpt::undefined;
 	}
 
 	if (_remainder.length() == 0) {
@@ -1675,15 +1675,15 @@ zapata::JSONPtr zapata::JSONArrT::getPath(std::string _path, std::string _separa
 	return _current->getPath(_remainder, _separator);
 }
 
-void zapata::JSONArrT::setPath(std::string _path, zapata::JSONPtr _value, std::string _separator) {
+void zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 
 	getline(_iss, _part, _separator[0]);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_iss.good()) {
-			zapata::JSONObj _new;
+			zpt::JSONObj _new;
 			_current = mkptr(_new);
 			this->push_back(_current);
 			_current->setPath(_path.substr(_part.length() + 1), _value, _separator);
@@ -1703,12 +1703,12 @@ void zapata::JSONArrT::setPath(std::string _path, zapata::JSONPtr _value, std::s
 	}
 }
 
-void zapata::JSONArrT::delPath(std::string _path, std::string _separator) {
+void zpt::JSONArrT::delPath(std::string _path, std::string _separator) {
 	std::istringstream _iss(_path);
 	std::string _part;
 
 	getline(_iss, _part, _separator[0]);
-	zapata::JSONPtr _current = (* this)[_part];
+	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		return;
 	}
@@ -1729,15 +1729,15 @@ void zapata::JSONArrT::delPath(std::string _path, std::string _separator) {
 	}
 }
 
-zapata::JSONPtr zapata::JSONArrT::clone() {
-	zapata::JSONArr _return;
+zpt::JSONPtr zpt::JSONArrT::clone() {
+	zpt::JSONArr _return;
 	for (auto _f : * this) {
 		_return << _f->clone();
 	}	
-	return zapata::mkptr(_return);
+	return zpt::mkptr(_return);
 }
 
-bool zapata::JSONArrT::operator==(zapata::JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator==(zpt::JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f]  == _rhs[_f]) {
 			continue;
@@ -1747,11 +1747,11 @@ bool zapata::JSONArrT::operator==(zapata::JSONArrT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONArrT::operator==(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator==(zpt::JSONArr& _rhs) {
 	return * this == * _rhs;
 }
 
-bool zapata::JSONArrT::operator!=(JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator!=(JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f]  != _rhs[_f]) {
 			return true;
@@ -1760,11 +1760,11 @@ bool zapata::JSONArrT::operator!=(JSONArrT& _rhs) {
 	return false;
 }
 
-bool zapata::JSONArrT::operator!=(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator!=(zpt::JSONArr& _rhs) {
 	return * this != * _rhs;
 }
 
-bool zapata::JSONArrT::operator<(zapata::JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator<(zpt::JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f] < _rhs[_f]) {
 			continue;
@@ -1774,11 +1774,11 @@ bool zapata::JSONArrT::operator<(zapata::JSONArrT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONArrT::operator<(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator<(zpt::JSONArr& _rhs) {
 	return * this < * _rhs;
 }
 
-bool zapata::JSONArrT::operator>(zapata::JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator>(zpt::JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f]  > _rhs[_f]) {
 			continue;
@@ -1788,11 +1788,11 @@ bool zapata::JSONArrT::operator>(zapata::JSONArrT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONArrT::operator>(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator>(zpt::JSONArr& _rhs) {
 	return * this > * _rhs;
 }
 
-bool zapata::JSONArrT::operator<=(zapata::JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator<=(zpt::JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f]  <= _rhs[_f]) {
 			continue;
@@ -1802,11 +1802,11 @@ bool zapata::JSONArrT::operator<=(zapata::JSONArrT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONArrT::operator<=(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator<=(zpt::JSONArr& _rhs) {
 	return * this <= * _rhs;
 }
 
-bool zapata::JSONArrT::operator>=(zapata::JSONArrT& _rhs) {
+bool zpt::JSONArrT::operator>=(zpt::JSONArrT& _rhs) {
 	for (size_t _f  = 0; _f != this->size(); _f++) {
 		if ((* this)[_f]  >= _rhs[_f]) {
 			continue;
@@ -1816,37 +1816,37 @@ bool zapata::JSONArrT::operator>=(zapata::JSONArrT& _rhs) {
 	return true;
 }
 
-bool zapata::JSONArrT::operator>=(zapata::JSONArr& _rhs) {
+bool zpt::JSONArrT::operator>=(zpt::JSONArr& _rhs) {
 	return * this >= * _rhs;
 }
 
-zapata::JSONPtr& zapata::JSONArrT::operator[](int _idx) {
+zpt::JSONPtr& zpt::JSONArrT::operator[](int _idx) {
 	return (* this)[(size_t) _idx];
 }
 
-zapata::JSONPtr& zapata::JSONArrT::operator[](size_t _idx) {
+zpt::JSONPtr& zpt::JSONArrT::operator[](size_t _idx) {
 	if (_idx < 0 ||_idx >= this->size()) {
-		return zapata::undefined;
+		return zpt::undefined;
 	}
 	return this->at(_idx);
 }
 
-zapata::JSONPtr& zapata::JSONArrT::operator[](const char* _idx) {
+zpt::JSONPtr& zpt::JSONArrT::operator[](const char* _idx) {
 	return (* this)[string(_idx)];
 }
 
-zapata::JSONPtr& zapata::JSONArrT::operator[](string _idx) {
+zpt::JSONPtr& zpt::JSONArrT::operator[](string _idx) {
 	long _i = -1;
-	zapata::fromstr(_idx, & _i);
+	zpt::fromstr(_idx, & _i);
 
 	if (_i < 0 ||_i >= (long) this->size()) {
-		return zapata::undefined;
+		return zpt::undefined;
 	}
 
 	return this->at((size_t) _i);
 }
 
-void zapata::JSONArrT::stringify(string& _out) {
+void zpt::JSONArrT::stringify(string& _out) {
 	_out.insert(_out.length(), "[");
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1859,7 +1859,7 @@ void zapata::JSONArrT::stringify(string& _out) {
 	_out.insert(_out.length(), "]");
 }
 
-void zapata::JSONArrT::stringify(ostream& _out) {
+void zpt::JSONArrT::stringify(ostream& _out) {
 	_out << "[" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1872,7 +1872,7 @@ void zapata::JSONArrT::stringify(ostream& _out) {
 	_out << "]" << flush;
 }
 
-void zapata::JSONArrT::prettify(string& _out, uint _n_tabs) {
+void zpt::JSONArrT::prettify(string& _out, uint _n_tabs) {
 	_out.insert(_out.length(), "[");
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1891,7 +1891,7 @@ void zapata::JSONArrT::prettify(string& _out, uint _n_tabs) {
 	_out.insert(_out.length(), "]");
 }
 
-void zapata::JSONArrT::prettify(ostream& _out, uint _n_tabs) {
+void zpt::JSONArrT::prettify(ostream& _out, uint _n_tabs) {
 	_out << "[" << flush;
 	bool _first = true;
 	for (auto _i : * this) {
@@ -1910,58 +1910,58 @@ void zapata::JSONArrT::prettify(ostream& _out, uint _n_tabs) {
 }
 
 /*JSON POINTER TO ELEMENT*/
-zapata::JSONPtr::JSONPtr()  : shared_ptr<JSONElementT>(make_shared<JSONElementT>()) {
+zpt::JSONPtr::JSONPtr()  : shared_ptr<JSONElementT>(make_shared<JSONElementT>()) {
 }
 
-zapata::JSONPtr::JSONPtr(JSONElementT* _target) : shared_ptr<JSONElementT>(_target) {
+zpt::JSONPtr::JSONPtr(JSONElementT* _target) : shared_ptr<JSONElementT>(_target) {
 }
 
-zapata::JSONPtr::~JSONPtr(){
+zpt::JSONPtr::~JSONPtr(){
 }
 
-zapata::JSONElementT& zapata::JSONPtr::value() {
+zpt::JSONElementT& zpt::JSONPtr::value() {
 	if (this->get() == nullptr) {
-		return *(zapata::undefined.get());
+		return *(zpt::undefined.get());
 	}
 	return *(this->get());
 }
 
-zapata::JSONPtr::operator string() {
+zpt::JSONPtr::operator string() {
 	if (this->get() == nullptr) {
 		return "";
 	}
 	string _out;
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->get()->obj()->stringify(_out);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->get()->arr()->stringify(_out);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			_out.assign(this->get()->str().data());
 			break;
 		}
-		case zapata::JSInteger : {
-			zapata::tostr(_out, this->get()->intr());
+		case zpt::JSInteger : {
+			zpt::tostr(_out, this->get()->intr());
 			break;
 		}
-		case zapata::JSDouble : {
-			zapata::tostr(_out, this->get()->dbl());
+		case zpt::JSDouble : {
+			zpt::tostr(_out, this->get()->dbl());
 			break;
 		}
-		case zapata::JSBoolean : {
-			zapata::tostr(_out, this->get()->bln());
+		case zpt::JSBoolean : {
+			zpt::tostr(_out, this->get()->bln());
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out.assign("");
 			break;
 		}
-		case zapata::JSDate : {
-			zapata::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
+		case zpt::JSDate : {
+			zpt::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
 			size_t _remainder = this->get()->date() % 1000;
 			if (_remainder < 100) {
@@ -1970,7 +1970,7 @@ zapata::JSONPtr::operator string() {
 					_out.insert(_out.length(), "0");
 				}
 			}
-			zapata::tostr(_out, _remainder);
+			zpt::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			break;
 		}
@@ -1978,42 +1978,42 @@ zapata::JSONPtr::operator string() {
 	return _out;
 }
 
-zapata::JSONPtr::operator zapata::pretty() {
+zpt::JSONPtr::operator zpt::pretty() {
 	if (this->get() == nullptr) {
-		return zapata::pretty("");
+		return zpt::pretty("");
 	}
 	string _out;
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			this->get()->obj()->prettify(_out);
 			break;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			this->get()->arr()->prettify(_out);
 			break;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			_out.assign(this->get()->str().data());
 			break;
 		}
-		case zapata::JSInteger : {
-			zapata::tostr(_out, this->get()->intr());
+		case zpt::JSInteger : {
+			zpt::tostr(_out, this->get()->intr());
 			break;
 		}
-		case zapata::JSDouble : {
-			zapata::tostr(_out, this->get()->dbl());
+		case zpt::JSDouble : {
+			zpt::tostr(_out, this->get()->dbl());
 			break;
 		}
-		case zapata::JSBoolean : {
-			zapata::tostr(_out, this->get()->bln());
+		case zpt::JSBoolean : {
+			zpt::tostr(_out, this->get()->bln());
 			break;
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			_out.assign("");
 			break;
 		}
-		case zapata::JSDate : {
-			zapata::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
+		case zpt::JSDate : {
+			zpt::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
 			_out.insert(_out.length(), ".");
 			size_t _remainder = this->get()->date() % 1000;
 			if (_remainder < 100) {
@@ -2022,149 +2022,149 @@ zapata::JSONPtr::operator zapata::pretty() {
 					_out.insert(_out.length(), "0");
 				}
 			}
-			zapata::tostr(_out, _remainder);
+			zpt::tostr(_out, _remainder);
 			_out.insert(_out.length(), "Z");
 			break;
 		}
 	}
-	return zapata::pretty(_out);
+	return zpt::pretty(_out);
 }
 
-zapata::JSONPtr::operator bool() {
+zpt::JSONPtr::operator bool() {
 	if (this->get() == nullptr) {
 		return false;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return true;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return true;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			return this->get()->str().length() != 0;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (bool) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (bool) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return false;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (bool) this->get()->date();
 		}
 	}
 	return false;
 }
 
-zapata::JSONPtr::operator int() {
+zpt::JSONPtr::operator int() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			int _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (int) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (int) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (int) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (int) this->get()->date();
 		}
 	}
 	return 0;
 }
 
-zapata::JSONPtr::operator long() {
+zpt::JSONPtr::operator long() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			long _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (long) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (long) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (long) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (long) this->get()->date();
 		}
 	}
 	return 0;
 }
 
-zapata::JSONPtr::operator long long() {
+zpt::JSONPtr::operator long long() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			long long _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (long long) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (long long) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (long long) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (long long) this->get()->date();
 		}
 	}
@@ -2172,36 +2172,36 @@ zapata::JSONPtr::operator long long() {
 }
 
 #ifdef __LP64__
-zapata::JSONPtr::operator unsigned int() {
+zpt::JSONPtr::operator unsigned int() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			unsigned int _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (unsigned int) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (unsigned int) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (unsigned int) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (unsigned int) this->get()->date();
 		}
 	}
@@ -2209,164 +2209,164 @@ zapata::JSONPtr::operator unsigned int() {
 }
 #endif
 
-zapata::JSONPtr::operator size_t() {
+zpt::JSONPtr::operator size_t() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			size_t _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (size_t) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (size_t) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (size_t) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (size_t) this->get()->date();
 		}
 	}
 	return 0;
 }
 
-zapata::JSONPtr::operator double() {
+zpt::JSONPtr::operator double() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			return (double) this->get()->obj()->size();
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			return (double) this->get()->arr()->size();
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			double _n = 0;
 			string _s(this->get()->str().data());
-			zapata::fromstr(_s, &_n);
+			zpt::fromstr(_s, &_n);
 			return _n;
 		}
-		case zapata::JSInteger : {
+		case zpt::JSInteger : {
 			return (double) this->get()->intr();
 		}
-		case zapata::JSDouble : {
+		case zpt::JSDouble : {
 			return (double) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
+		case zpt::JSBoolean : {
 			return (double) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return (double) this->get()->date();
 		}
 	}
 	return 0;
 }
 
-zapata::JSONPtr::operator zapata::timestamp_t() {
+zpt::JSONPtr::operator zpt::timestamp_t() {
 	if (this->get() == nullptr) {
 		return 0;
 	}
 	switch(this->get()->type()) {
-		case zapata::JSObject : {
+		case zpt::JSObject : {
 			struct timeval _tp;
 			gettimeofday(& _tp, nullptr);
 			return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
 		}
-		case zapata::JSArray : {
+		case zpt::JSArray : {
 			struct timeval _tp;
 			gettimeofday(& _tp, nullptr);
 			return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
 		}
-		case zapata::JSString : {
+		case zpt::JSString : {
 			return this->get()->date();
 		}
-		case zapata::JSInteger : {
-			return (zapata::timestamp_t) this->get()->intr();
+		case zpt::JSInteger : {
+			return (zpt::timestamp_t) this->get()->intr();
 		}
-		case zapata::JSDouble : {
-			return (zapata::timestamp_t) this->get()->dbl();
+		case zpt::JSDouble : {
+			return (zpt::timestamp_t) this->get()->dbl();
 		}
-		case zapata::JSBoolean : {
-			return (zapata::timestamp_t) this->get()->bln();
+		case zpt::JSBoolean : {
+			return (zpt::timestamp_t) this->get()->bln();
 		}
-		case zapata::JSNil : {
+		case zpt::JSNil : {
 			return 0;
 		}
-		case zapata::JSDate : {
+		case zpt::JSDate : {
 			return this->get()->date();
 		}
 	}
 	return 0;
 }
 
-zapata::JSONPtr::operator JSONObj() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
+zpt::JSONPtr::operator JSONObj() {
+	assertz(this->get() != nullptr && this->get()->type() == zpt::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
 	return this->get()->obj();
 }
 
-zapata::JSONPtr::operator JSONArr() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
+zpt::JSONPtr::operator JSONArr() {
+	assertz(this->get() != nullptr && this->get()->type() == zpt::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
 	return this->get()->arr();
 }
 
-zapata::JSONPtr::operator JSONObj&() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
+zpt::JSONPtr::operator JSONObj&() {
+	assertz(this->get() != nullptr && this->get()->type() == zpt::JSObject, string("this element is not of type JSObject: ") + ((string) * this), 0, 0);
 	return this->get()->obj();
 }
 
-zapata::JSONPtr::operator JSONArr&() {
-	assertz(this->get() != nullptr && this->get()->type() == zapata::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
+zpt::JSONPtr::operator JSONArr&() {
+	assertz(this->get() != nullptr && this->get()->type() == zpt::JSArray, string("this element is not of type JSArray: ") + ((string) * this), 0, 0);
 	return this->get()->arr();
 }
 
-void zapata::JSONPtr::parse(istream& _in) {
-	zapata::JSONParser _p;
+void zpt::JSONPtr::parse(istream& _in) {
+	zpt::JSONParser _p;
 	_p.switchRoots(* this);
 	_p.switchStreams(_in);
 	_p.parse();
 }
 
 /*JSON POINTER TO OBJECT*/
-zapata::JSONObj::JSONObj() : shared_ptr<JSONObjT>(make_shared<JSONObjT>(JSONObjT())) {
+zpt::JSONObj::JSONObj() : shared_ptr<JSONObjT>(make_shared<JSONObjT>(JSONObjT())) {
 }
 
-zapata::JSONObj::JSONObj(JSONObj& _rhs)  : shared_ptr<JSONObjT>(_rhs) {
+zpt::JSONObj::JSONObj(JSONObj& _rhs)  : shared_ptr<JSONObjT>(_rhs) {
 }
 
-zapata::JSONObj::JSONObj(JSONObjT* _target) : shared_ptr<JSONObjT>(_target) {
+zpt::JSONObj::JSONObj(JSONObjT* _target) : shared_ptr<JSONObjT>(_target) {
 }
 
-zapata::JSONObj::~JSONObj(){
+zpt::JSONObj::~JSONObj(){
 }
 
-zapata::JSONObjT::iterator zapata::JSONObj::begin() {
+zpt::JSONObjT::iterator zpt::JSONObj::begin() {
 	return (* this)->begin();
 }
 
-zapata::JSONObjT::iterator zapata::JSONObj::end() {
+zpt::JSONObjT::iterator zpt::JSONObj::end() {
 	return (* this)->end();
 }
 
-zapata::JSONObj::operator string() {
+zpt::JSONObj::operator string() {
 	if (this->get() == nullptr) {
 		return "";
 	}
@@ -2376,7 +2376,7 @@ zapata::JSONObj::operator string() {
 }
 
 
-zapata::JSONObj::operator zapata::pretty() {
+zpt::JSONObj::operator zpt::pretty() {
 	if (this->get() == nullptr) {
 		return "";
 	}
@@ -2385,35 +2385,35 @@ zapata::JSONObj::operator zapata::pretty() {
 	return _out;
 }
 
-zapata::JSONObj& zapata::JSONObj::operator<<(string _in) {
+zpt::JSONObj& zpt::JSONObj::operator<<(string _in) {
 	(* this)->push(_in);
 	return * this;
 }
 
-zapata::JSONObj& zapata::JSONObj::operator<<(const char* _in) {
+zpt::JSONObj& zpt::JSONObj::operator<<(const char* _in) {
 	(* this)->push(_in);
 	return * this;
 }
 
-zapata::JSONObj& zapata::JSONObj::operator<<(JSONElementT& _in) {
+zpt::JSONObj& zpt::JSONObj::operator<<(JSONElementT& _in) {
 	(* this)->push(_in);
 	return * this;
 }
 
 /*JSON POINTER TO ARRAY*/
-zapata::JSONArr::JSONArr() : shared_ptr<JSONArrT>(make_shared<JSONArrT>(JSONArrT())) {
+zpt::JSONArr::JSONArr() : shared_ptr<JSONArrT>(make_shared<JSONArrT>(JSONArrT())) {
 }
 
-zapata::JSONArr::JSONArr(JSONArr& _rhs)  : shared_ptr<JSONArrT>(_rhs){
+zpt::JSONArr::JSONArr(JSONArr& _rhs)  : shared_ptr<JSONArrT>(_rhs){
 }
 
-zapata::JSONArr::JSONArr(JSONArrT* _target) : shared_ptr<JSONArrT>(_target) {
+zpt::JSONArr::JSONArr(JSONArrT* _target) : shared_ptr<JSONArrT>(_target) {
 }
 
-zapata::JSONArr::~JSONArr(){
+zpt::JSONArr::~JSONArr(){
 }
 
-zapata::JSONArr::operator string() {
+zpt::JSONArr::operator string() {
 	if (this->get() == nullptr) {
 		return "";
 	}
@@ -2422,7 +2422,7 @@ zapata::JSONArr::operator string() {
 	return _out;
 }
 
-zapata::JSONArr::operator zapata::pretty() {
+zpt::JSONArr::operator zpt::pretty() {
 	if (this->get() == nullptr) {
 		return "";
 	}
@@ -2431,25 +2431,25 @@ zapata::JSONArr::operator zapata::pretty() {
 	return _out;
 }
 
-zapata::JSONArrT::iterator zapata::JSONArr::begin() {
+zpt::JSONArrT::iterator zpt::JSONArr::begin() {
 	return (* this)->begin();
 }
 
-zapata::JSONArrT::iterator zapata::JSONArr::end() {
+zpt::JSONArrT::iterator zpt::JSONArr::end() {
 	return (* this)->end();
 }
 
-zapata::JSONArr& zapata::JSONArr::operator<<(JSONElementT& _in) {
+zpt::JSONArr& zpt::JSONArr::operator<<(JSONElementT& _in) {
 	(* this)->push(_in);
 	return * this;
 }
 
-zapata::JSONPtr zapata::mkobj() {
-	zapata::JSONObj _empty;
-	return zapata::JSONPtr(new zapata::JSONElementT(_empty));
+zpt::JSONPtr zpt::mkobj() {
+	zpt::JSONObj _empty;
+	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
 }
 
-zapata::JSONPtr zapata::mkarr() {
-	zapata::JSONArr _empty;
-	return zapata::JSONPtr(new zapata::JSONElementT(_empty));
+zpt::JSONPtr zpt::mkarr() {
+	zpt::JSONArr _empty;
+	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
 }

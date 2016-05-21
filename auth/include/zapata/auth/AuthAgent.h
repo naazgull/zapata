@@ -37,34 +37,34 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 	class AuthAgent;
 	class AuthAgentPtr;
-	typedef std::function< void (zapata::JSONPtr& _auth_data, zapata::AuthAgentPtr&) > AuthAgentCallback;
+	typedef std::function< void (zpt::JSONPtr& _auth_data, zpt::AuthAgentPtr&) > AuthAgentCallback;
 	
-	class AuthAgentPtr : public std::shared_ptr<zapata::AuthAgent> {
+	class AuthAgentPtr : public std::shared_ptr<zpt::AuthAgent> {
 	public:
-		AuthAgentPtr(zapata::AuthAgent * _target);
+		AuthAgentPtr(zpt::AuthAgent * _target);
 		virtual ~AuthAgentPtr();
 	};
 
 	class AuthAgent {
 	public:
-		AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options);
+		AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options);
 		virtual ~AuthAgent();
 
-		virtual zapata::AuthAgentCallback& callback() final;
-		virtual zapata::JSONPtr& options() final;
+		virtual zpt::AuthAgentCallback& callback() final;
+		virtual zpt::JSONPtr& options() final;
 
 		virtual std::string code_url() = 0;
 		virtual std::string token_url() = 0;
 		virtual std::string refresh_token_url() = 0;
 
-		virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) = 0;
+		virtual zpt::JSONPtr authenticate(zpt::JSONPtr _credentials) = 0;
 
 	private:
-		zapata::AuthAgentCallback __callback;
-		zapata::JSONPtr __options;
+		zpt::AuthAgentCallback __callback;
+		zpt::JSONPtr __options;
 	};
 
 }

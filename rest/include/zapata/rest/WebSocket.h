@@ -30,12 +30,12 @@ SOFTWARE.
 #define CRLF "\r\n"
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	namespace ws {
-		bool handshake(zapata::socketstream& _s);
-		bool read(zapata::socketstream& _s, string& _out, int* _op_code);
-		bool write(zapata::socketstream& _s, string _in);
+		bool handshake(zpt::socketstream& _s);
+		bool read(zpt::socketstream& _s, string& _out, int* _op_code);
+		bool write(zpt::socketstream& _s, string _in);
 	}
 
 }

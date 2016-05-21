@@ -24,18 +24,18 @@ SOFTWARE.
 
 #include <zapata/json/JSONParser.h>
 
-zapata::JSONParser::JSONParser(std::istream &_in, std::ostream &_out) {
+zpt::JSONParser::JSONParser(std::istream &_in, std::ostream &_out) {
 	this->d_scanner.switchStreams(_in, _out);
 }
 
-zapata::JSONParser::~JSONParser() {
+zpt::JSONParser::~JSONParser() {
 }
 
-void zapata::JSONParser::switchRoots(JSONPtr& _root) {
+void zpt::JSONParser::switchRoots(JSONPtr& _root) {
 	this->d_scanner.switchRoots(_root);
 }
 
-void zapata::JSONParser::switchStreams(std::istream &_in, std::ostream &_out) {
+void zpt::JSONParser::switchStreams(std::istream &_in, std::ostream &_out) {
 	this->d_scanner.switchStreams(_in, _out);
 }
 

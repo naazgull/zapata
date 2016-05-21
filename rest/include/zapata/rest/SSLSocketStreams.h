@@ -44,7 +44,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	template<typename Char>
 	class basic_sslsocketbuf : public std::basic_streambuf<Char> {
@@ -253,8 +253,8 @@ namespace zapata {
 	typedef basic_sslsocketstream<char> sslsocketstream;
 	typedef basic_sslsocketstream<wchar_t> wsslsocketstream;
 
-	typedef std::shared_ptr< zapata::sslsocketstream > sslsocketstream_ptr;
-	typedef std::shared_ptr< zapata::wsslsocketstream > wsslscoketstream_ptr;
+	typedef std::shared_ptr< zpt::sslsocketstream > sslsocketstream_ptr;
+	typedef std::shared_ptr< zpt::wsslsocketstream > wsslscoketstream_ptr;
 
 	template<typename Char>
 	class basic_serversslsocketstream : public std::basic_iostream<Char> {
@@ -421,7 +421,7 @@ namespace zapata {
 	typedef basic_serversslsocketstream<char> serversslsocketstream;
 	typedef basic_serversslsocketstream<wchar_t> wserversslsocketstream;
 
-	typedef std::shared_ptr< zapata::serversslsocketstream > serversslsocketstream_ptr;
-	typedef std::shared_ptr< zapata::wserversslsocketstream > wserversslsocketstream_ptr;
+	typedef std::shared_ptr< zpt::serversslsocketstream > serversslsocketstream_ptr;
+	typedef std::shared_ptr< zpt::wserversslsocketstream > wserversslsocketstream_ptr;
 
 }

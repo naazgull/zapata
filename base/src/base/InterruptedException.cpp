@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include <zapata/exceptions/InterruptedException.h>
 
-zapata::InterruptedException::InterruptedException(string _in) : __what(_in){
+zpt::InterruptedException::InterruptedException(string _in) : __what(_in){
 }
 
-zapata::InterruptedException::~InterruptedException() throw() {
+zpt::InterruptedException::~InterruptedException() throw() {
 }
 
-const char* zapata::InterruptedException::what() {
+const char* zpt::InterruptedException::what() {
 	return this->__what.data();
 }

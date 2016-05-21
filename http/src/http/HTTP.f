@@ -26,7 +26,7 @@ string	d_chunked;
 %class-name = "HTTPLexer"
 %lex-source = "HTTPLexer.cpp"
 
-%namespace = "zapata"
+%namespace = "zpt"
 
 //%debug
 %no-lines
@@ -219,7 +219,7 @@ string	d_chunked;
 	}
 	([^:\n\r]+) {
 		std::string _s(matched());
-		zapata::fromstr(_s, &d_content_length);
+		zpt::fromstr(_s, &d_content_length);
 		begin(StartCondition__::headers);
 		return 263;
 	}
@@ -323,7 +323,7 @@ string	d_chunked;
 		}
 		else if (matched().length() - 2 == (size_t) d_chunked_length) {
 			d_chunked.insert(d_chunked.length(), matched());
-			zapata::trim(d_chunked);
+			zpt::trim(d_chunked);
 			setMatched("");
 			d_chunked_length = -1;
 		}

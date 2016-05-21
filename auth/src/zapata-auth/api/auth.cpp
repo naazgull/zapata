@@ -39,20 +39,20 @@ SOFTWARE.
 #include <ctime>
 #include <memory>
 
-namespace zapata {
+namespace zpt {
 
 	namespace auth {
-		void register(zapata::RESTEmitter& _pool, zapata::AuthAgent * _auth_agent) {
-			vector<zapata::ev::Performative> _ets = { zapata::ev::Get, zapata::ev::Post };
+		void register(zpt::RESTEmitter& _pool, zpt::AuthAgent * _auth_agent) {
+			vector<zpt::ev::Performative> _ets = { zpt::ev::Get, zpt::ev::Post };
 			_pool->on(_ets, "^/oauth/connect$",
-				[] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _events) -> void {
+				[] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload, zpt::EventEmitterPtr _events) -> void {
 					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+					assertz(_body.length() != 0, "Body entity must be provided.", zpt::HTTP412, zpt::ERRBodyEntityMustBeProvided);
 
 					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zpt::HTTP406, zpt::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zpt::JSONObj _record = (zpt::JSONObj&) zpt::fromstr(_body);
 					if (!_record["id"]->ok() && _record["email"]->ok()) {
 						_record << "id" << (string) _record["email"];
 					}
@@ -63,16 +63,16 @@ namespace zapata {
 						_record << "email" << _email;
 					}
 
-					assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zapata::HTTP412, zapata::ERRNameMandatory);
-					assertz(_record["id"]->ok(), "The 'id' field is mandatory", zapata::HTTP412, zapata::ERRIDMandatory);
-					assertz(_record["email"]->ok(), "The 'email' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
-					assertz(_record["password"]->ok(), "The 'password' field is mandatory", zapata::HTTP412, zapata::ERRPasswordMandatory);
-					assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zapata::HTTP412, zapata::ERRConfirmationMandatory);
-					assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zapata::HTTP412, zapata::ERRPasswordConfirmationDontMatch);
+					assertz(_record["fullname"]->ok(), "The 'name' field is mandatory", zpt::HTTP412, zpt::ERRNameMandatory);
+					assertz(_record["id"]->ok(), "The 'id' field is mandatory", zpt::HTTP412, zpt::ERRIDMandatory);
+					assertz(_record["email"]->ok(), "The 'email' field is mandatory", zpt::HTTP412, zpt::ERREmailMandatory);
+					assertz(_record["password"]->ok(), "The 'password' field is mandatory", zpt::HTTP412, zpt::ERRPasswordMandatory);
+					assertz(_record["confirmation_password"]->ok(), "The 'confirmation_password' field is mandatory", zpt::HTTP412, zpt::ERRConfirmationMandatory);
+					assertz(((string ) _record["confirmation_password"]) == ((string ) _record["password"]), "The 'password' and 'confirmation_password' fields don't match", zpt::HTTP412, zpt::ERRPasswordConfirmationDontMatch);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
+					zpt::JSONPtr _req_body = zpt::mongodb::create_document(_config, (string) _config["users"]["mongodb"]["collection"], _record);
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP201);
+					_rep->status(zpt::HTTP201);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Location", (string) _req_body["href"]);
@@ -85,8 +85,8 @@ namespace zapata {
 	}
 }
 
-extern "C" void populate(zapata::EventEmitterPtr& _pool) {
-	zapata::auth::register(_pool);
+extern "C" void populate(zpt::EventEmitterPtr& _pool) {
+	zpt::auth::register(_pool);
 }
 
 extern "C" int zapata_auth() {

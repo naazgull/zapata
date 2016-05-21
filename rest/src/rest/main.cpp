@@ -55,37 +55,37 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	zapata::log_fd = & cout;
-	zapata::log_pid = ::getpid();
-	zapata::log_pname = new string(argv[0]);
-	zapata::log_lvl = _log_level;
+	zpt::log_fd = & cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+	zpt::log_lvl = _log_level;
 
 	if (_conf_file == nullptr) {
-		zlog("a configuration file must be provided", zapata::error);
+		zlog("a configuration file must be provided", zpt::error);
 		return -1;
 	}
 
-	zapata::JSONPtr _ptr;
+	zpt::JSONPtr _ptr;
 	{
 		ifstream _in;
 		_in.open(_conf_file);
 		if (!_in.is_open()) {
-			zlog("a configuration file must be provided", zapata::error);
+			zlog("a configuration file must be provided", zpt::error);
 			return -1;
 		}
 
 		_in >> _ptr;
-		zapata::dirs("/etc/zapata/conf.d/", _ptr);
-		zapata::env(_ptr);
+		zpt::dirs("/etc/zapata/conf.d/", _ptr);
+		zpt::env(_ptr);
 	}
 
 	try {
-		zapata::RESTServerPtr _server(_ptr);
+		zpt::RESTServerPtr _server(_ptr);
 		_server->start();
-		zlog("exiting", zapata::info);
+		zlog("exiting", zpt::info);
 	}
-	catch (zapata::AssertionException& _e) {
-		zlog(_e.what() + string("\n") + _e.description(), zapata::error);
+	catch (zpt::AssertionException& _e) {
+		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
 	}
 	
 	return 0;

@@ -29,7 +29,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <strings.h>
 
-namespace zapata {
+namespace zpt {
 	short int log_lvl = 0;
 	ostream* log_fd = nullptr;
 	long log_pid = 0;
@@ -48,15 +48,15 @@ namespace zapata {
 	};
 }
 
-int zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, string _file) {
-	if (zapata::log_fd == nullptr) {
+int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string _file) {
+	if (zpt::log_fd == nullptr) {
 		return - 1;
 	}
 	struct timeval _tp;
 	gettimeofday(& _tp, nullptr);
 
-	zapata::replace(_text, "\n", "\\n");
-	zapata::replace(_text, "\"", "\\\"");
+	zpt::replace(_text, "\n", "\\n");
+	zpt::replace(_text, "\"", "\\\"");
 
 	string _log("{\"version\":\"1.1\",\"host\":\"");
 	_log.insert(_log.length(), _host);
@@ -67,34 +67,34 @@ int zapata::log(string _text, zapata::LogLevel _level, string _host, int _line, 
 	_log.insert(_log.length(), "\",\"full_message\":\"");
 	_log.insert(_log.length(), _file);
 	_log.insert(_log.length(), ":");
-	zapata::tostr(_log, _line);
+	zpt::tostr(_log, _line);
 	_log.insert(_log.length(), " | ");
 	_log.insert(_log.length(), _text);
 	_log.insert(_log.length(), "\",\"timestamp\":");
-	zapata::tostr(_log, _tp.tv_sec);
+	zpt::tostr(_log, _tp.tv_sec);
 	_log.insert(_log.length(), ".");
-	zapata::tostr(_log, (int) (_tp.tv_usec / 1000));
+	zpt::tostr(_log, (int) (_tp.tv_usec / 1000));
 	_log.insert(_log.length(), ",\"level\":");
-	zapata::tostr(_log, (int) _level);
+	zpt::tostr(_log, (int) _level);
 	_log.insert(_log.length(), ",\"pid\":");
-	zapata::tostr(_log, zapata::log_pid);
+	zpt::tostr(_log, zpt::log_pid);
 	_log.insert(_log.length(), ",\"exec\":\"");
-	_log.insert(_log.length(), * zapata::log_pname);
+	_log.insert(_log.length(), * zpt::log_pname);
 	_log.insert(_log.length(), "\",\"file\":\"");
 	_log.insert(_log.length(), _file);
 	_log.insert(_log.length(), "\",\"line\":");
-	zapata::tostr(_log, _line);
+	zpt::tostr(_log, _line);
 	_log.insert(_log.length(), "}");
 
-	(* zapata::log_fd) << _log << endl << flush;
+	(* zpt::log_fd) << _log << endl << flush;
 	return 0;
 }
 
-char* zapata::log_hostname() {
-	if (zapata::log_hname == nullptr) {
-		zapata::log_hname = new char[65];
-		bzero(zapata::log_hname, 65);
-		gethostname(zapata::log_hname, 64);
+char* zpt::log_hostname() {
+	if (zpt::log_hname == nullptr) {
+		zpt::log_hname = new char[65];
+		bzero(zpt::log_hname, 65);
+		gethostname(zpt::log_hname, 64);
 	}
-	return zapata::log_hname;
+	return zpt::log_hname;
 }

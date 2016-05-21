@@ -44,7 +44,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	namespace html {
 		void entities_encode(wstring s, ostream& out, bool quote = true, bool tags = false);

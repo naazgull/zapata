@@ -36,7 +36,7 @@ using namespace __gnu_cxx;
 #define BOM8B 0xBB
 #define BOM8C 0xBF
 
-char* zapata::utf8::wstring_to_utf8(wstring ws) {
+char* zpt::utf8::wstring_to_utf8(wstring ws) {
 	string dest;
 	dest.clear();
 	for (size_t i = 0; i < ws.size(); i++) {
@@ -68,7 +68,7 @@ char* zapata::utf8::wstring_to_utf8(wstring ws) {
 	return c;
 }
 
-wchar_t* zapata::utf8::utf8_to_wstring(string s) {
+wchar_t* zpt::utf8::utf8_to_wstring(string s) {
 	long b = 0, c = 0;
 	const char* string = s.data();
 
@@ -104,7 +104,7 @@ wchar_t* zapata::utf8::utf8_to_wstring(string s) {
 	return res;
 }
 
-int zapata::utf8::length(string s) {
+int zpt::utf8::length(string s) {
 	int size = 0;
 	for (size_t i = 0; i != s.length(); i++) {
 		if (((wchar_t) s[i]) < 0x80) {
@@ -120,7 +120,7 @@ int zapata::utf8::length(string s) {
 	return size;
 }
 
-void zapata::utf8::encode(wstring s, string& _out, bool quote) {
+void zpt::utf8::encode(wstring s, string& _out, bool quote) {
 	ostringstream oss;
 
 	for (size_t i = 0; i != s.length(); i++) {
@@ -159,7 +159,7 @@ void zapata::utf8::encode(wstring s, string& _out, bool quote) {
 	_out.assign(oss.str().data(), oss.str().length());
 }
 
-void zapata::utf8::encode(string& _out, bool quote) {
+void zpt::utf8::encode(string& _out, bool quote) {
 	long b = 0, c = 0;
 	const char* string = _out.data();
 
@@ -195,12 +195,12 @@ void zapata::utf8::encode(string& _out, bool quote) {
 
 	wstring ws;
 	ws.assign(res, c + 1);
-	zapata::utf8::encode(ws, _out, quote);
+	zpt::utf8::encode(ws, _out, quote);
 	delete[] res;
 
 }
 
-void zapata::utf8::decode(string& _out) {
+void zpt::utf8::decode(string& _out) {
 	wostringstream oss;
 	for (size_t i = 0; i != _out.length(); i++) {
 		if (_out[i] == '\\' && _out[i + 1] == 'u') {
@@ -217,7 +217,7 @@ void zapata::utf8::decode(string& _out) {
 	}
 	oss << flush;
 
-	char* c = zapata::utf8::wstring_to_utf8(oss.str());
+	char* c = zpt::utf8::wstring_to_utf8(oss.str());
 	string os(c);
 	_out.assign(c);
 

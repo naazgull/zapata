@@ -13,8 +13,7 @@ AC_HAVE_LIBRARY(magic)
 AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
-
-AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
+AC_HAVE_LIBRARY(zapata-base)
 
 AC_CANONICAL_SYSTEM
 

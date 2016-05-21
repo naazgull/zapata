@@ -32,7 +32,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <sys/sendfile.h>
 
-int zapata::ls(string dir, std::vector<string>& result, bool recursive) {
+int zpt::ls(string dir, std::vector<string>& result, bool recursive) {
 	DIR *dp;
 	struct dirent *dirp;
 	if ((dp = opendir(dir.c_str())) == NULL) {
@@ -46,7 +46,7 @@ int zapata::ls(string dir, std::vector<string>& result, bool recursive) {
 			cname.insert(0, dir);
 			result.push_back(cname);
 			if (recursive) {
-				zapata::ls(cname, result, true);
+				zpt::ls(cname, result, true);
 			}
 
 		}
@@ -56,7 +56,7 @@ int zapata::ls(string dir, std::vector<string>& result, bool recursive) {
 	return 0;
 }
 
-bool zapata::mkdir_recursive(string _name, mode_t _mode) {
+bool zpt::mkdir_recursive(string _name, mode_t _mode) {
 	istringstream _iss(_name);
 	string _line;
 	int _count = 0;
@@ -75,7 +75,7 @@ bool zapata::mkdir_recursive(string _name, mode_t _mode) {
 	return _count != 0;
 }
 
-bool zapata::copy_path(string _from, string _to) {
+bool zpt::copy_path(string _from, string _to) {
 	int _read_fd;
 	int _write_fd;
 	struct stat _stat_buf;
@@ -93,14 +93,14 @@ bool zapata::copy_path(string _from, string _to) {
 	return _error != -1;
 }
 
-bool zapata::move_path(string _from, string _to) {
-	if (zapata::copy_path(_from, _to)) {
+bool zpt::move_path(string _from, string _to) {
+	if (zpt::copy_path(_from, _to)) {
 		return std::remove(_from.c_str()) != 0;
 	}
 	return false;
 }
 
-bool zapata::load_path(string _in, string& _out) {
+bool zpt::load_path(string _in, string& _out) {
 	ifstream _ifs;
 	_ifs.open(_in.data());
 
@@ -112,7 +112,7 @@ bool zapata::load_path(string _in, string& _out) {
 	return false;
 }
 
-bool zapata::load_path(string _in, wstring& _out) {
+bool zpt::load_path(string _in, wstring& _out) {
 	wifstream _ifs;
 	_ifs.open(_in.data());
 
@@ -125,7 +125,7 @@ bool zapata::load_path(string _in, wstring& _out) {
 }
 
 
-bool zapata::dump_path(string _in, string& _content) {
+bool zpt::dump_path(string _in, string& _content) {
 	ofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
@@ -134,7 +134,7 @@ bool zapata::dump_path(string _in, string& _content) {
 	return true;
 }
 
-bool zapata::dump_path(string _in, wstring& _content) {
+bool zpt::dump_path(string _in, wstring& _content) {
 	wofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
@@ -143,7 +143,7 @@ bool zapata::dump_path(string _in, wstring& _content) {
 	return true;
 }
 
-int zapata::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
+int zpt::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
 	DIR *dp;
 	struct dirent *dirp;
 	vector<string> torecurse;
@@ -168,16 +168,16 @@ int zapata::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bo
 	closedir(dp);
 
 	for (auto i : torecurse) {
-		zapata::globRegexp(i, result, pattern, true);
+		zpt::globRegexp(i, result, pattern, true);
 	}
 
 	return 0;
 }
 
-int zapata::glob(string& dir, vector<string>& result, string pattern, bool recursive) {
+int zpt::glob(string& dir, vector<string>& result, string pattern, bool recursive) {
 	regex_t regexp;
 	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
-	int _return = zapata::globRegexp(dir, result, regexp, recursive);
+	int _return = zpt::globRegexp(dir, result, regexp, recursive);
 	regfree(& regexp);	
 	return _return;
 }

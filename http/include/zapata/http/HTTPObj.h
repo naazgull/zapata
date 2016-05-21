@@ -43,7 +43,7 @@ using namespace __gnu_cxx;
 #define CRLF "\r\n"
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	extern string nil_header;
 	extern const char* method_names[];
@@ -152,8 +152,8 @@ namespace zapata {
 		HTTPReqT();
 		virtual ~HTTPReqT();
 
-		zapata::ev::Performative method();
-		void method(zapata::ev::Performative);
+		zpt::ev::Performative method();
+		void method(zpt::ev::Performative);
 		string& url();
 		void url(string);
 		string& query();
@@ -170,7 +170,7 @@ namespace zapata {
 	private:
 		string __url;
 		string __query;
-		zapata::ev::Performative __method;
+		zpt::ev::Performative __method;
 		ParameterMap __params;
 	};
 

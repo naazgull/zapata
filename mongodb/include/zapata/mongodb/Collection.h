@@ -32,42 +32,42 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	namespace mongodb {
 
-		class Collection : public zapata::KB {
+		class Collection : public zpt::KB {
 		public:
-			Collection(zapata::JSONPtr _options);
+			Collection(zpt::JSONPtr _options);
 			virtual ~Collection();
 
-			virtual zapata::JSONPtr options();
+			virtual zpt::JSONPtr options();
 			virtual std::string name();
 			virtual bool& broadcast();
-			virtual zapata::EventEmitterPtr addons();
+			virtual zpt::EventEmitterPtr addons();
 
-			virtual std::string insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _record);
-			virtual int update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _record);
-			virtual int unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document);
-			virtual int remove(std::string _collection, zapata::JSONPtr _pattern);
-			virtual zapata::JSONPtr query(std::string _collection, zapata::JSONPtr _pattern);
+			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
+			virtual int update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _record);
+			virtual int unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document);
+			virtual int remove(std::string _collection, zpt::JSONPtr _pattern);
+			virtual zpt::JSONPtr query(std::string _collection, zpt::JSONPtr _pattern);
 
 		private:
-			zapata::JSONPtr __options;
+			zpt::JSONPtr __options;
 			mongo::ScopedDbConnection __conn;
 			bool __broadcast;
-			zapata::EventEmitterPtr __addons;
+			zpt::EventEmitterPtr __addons;
 		};
 
-		class CollectionPtr : public std::shared_ptr<zapata::mongodb::Collection> {
+		class CollectionPtr : public std::shared_ptr<zpt::mongodb::Collection> {
 		public:
 			/**
 			 * @brief Creates an std::shared_ptr to an Self instance.
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 CollectionPtr(zapata::mongodb::Collection * _target);
-			 CollectionPtr(zapata::JSONPtr _options);
+			 CollectionPtr(zpt::mongodb::Collection * _target);
+			 CollectionPtr(zpt::JSONPtr _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

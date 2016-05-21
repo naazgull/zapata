@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 		switch (_c) {
 			case 'l': {
 				string _l(optarg);
-				zapata::fromstr(_l, & _level);
+				zpt::fromstr(_l, & _level);
 				break;
 			}
 		}
@@ -54,12 +54,12 @@ int main(int argc, char* argv[]) {
 	std::istringstream _iss;
 	string _line;
 	while(std::getline(std::cin, _line)) {
-		zapata::trim(_line);
+		zpt::trim(_line);
 		if (_line.find("{") != 0) {
 			continue;
 		}
 		try {
-			zapata::JSONPtr _json;
+			zpt::JSONPtr _json;
 			_iss.str(_line);
 			_iss >> _json;
 
@@ -68,11 +68,11 @@ int main(int argc, char* argv[]) {
 			}
 			double _intpart;
 			double _fracpart = modf((double) _json["timestamp"], & _intpart);
-			zapata::timestamp_t _ts = (_intpart * 1000) + (_fracpart * 1000);
+			zpt::timestamp_t _ts = (_intpart * 1000) + (_fracpart * 1000);
 			string _time = (string) (JSON( "ts" << _ts))["ts"];
 			string _cmd((string) _json["exec"]);
 			_cmd.assign(_cmd.substr(_cmd.rfind("/") + 1));
-			std::cout << zapata::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
+			std::cout << zpt::log_lvl_names[(int) _json["level"]] << "\033[1;37m" << _time << "\033[0m | " << (string) _json["short_message"] << " | \033[1;30m" << _cmd << ":" << (string) _json["pid"] << " " << (string) _json["file"] << ":" << (string) _json["line"] << "\033[0m" << endl << flush;
 		}
 		catch (...) {}
 	}

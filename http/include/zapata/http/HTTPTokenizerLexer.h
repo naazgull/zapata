@@ -29,7 +29,7 @@ SOFTWARE.
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPLexer.h>
 
-namespace zapata {
+namespace zpt {
 
 	class HTTPTokenizerLexer: public HTTPLexer {
 	public:
@@ -40,7 +40,7 @@ namespace zapata {
 		void switchRoots(HTTPRep& _root);
 		void justLeave();
 
-		void init(zapata::HTTPType _in_type);
+		void init(zpt::HTTPType _in_type);
 		void body();
 		void url();
 		void status();

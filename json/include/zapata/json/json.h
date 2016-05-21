@@ -33,7 +33,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	JSONPtr fromfile(ifstream& _in);
 	JSONPtr fromstr(string& _in);
@@ -51,18 +51,18 @@ namespace zapata {
 		};
 		inline csv(const char * _rhs) : std::string(_rhs) {
 		};
-		friend ostream& operator<<(ostream& _out, zapata::csv& _in) {
+		friend ostream& operator<<(ostream& _out, zpt::csv& _in) {
 			_out << string(_in.data());
 			return _out;
 		};
-		friend istream& operator>>(istream& _in, zapata::csv& _out) {
+		friend istream& operator>>(istream& _in, zpt::csv& _out) {
 			_out.clear();
 			std::getline(_in, _out, '\n');
-			zapata::trim(_out);
+			zpt::trim(_out);
 			return _in;
 		};
-		inline operator zapata::JSONPtr() {
-			zapata::JSONPtr _result = zapata::mkarr();
+		inline operator zpt::JSONPtr() {
+			zpt::JSONPtr _result = zpt::mkarr();
 			std::istringstream _iss;
 			_iss.str(* this);
 

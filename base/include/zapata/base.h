@@ -46,5 +46,3 @@ SOFTWARE.
 #include <zapata/file/manip.h>
 
 #include <zapata/mail/manip.h>
-
-extern "C" int zapata_base();

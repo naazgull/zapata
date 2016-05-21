@@ -5,8 +5,8 @@ libzapata_base_la_LDFLAGS = -version-info 9:1:9
 libzapata_base_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 libzapata_base_la_SOURCES = \
-./ascii.cpp \
 ./assert.cpp \
+./ascii.cpp \
 ./Job.cpp \
 ./AssertionException.cpp \
 ./base64.cpp \

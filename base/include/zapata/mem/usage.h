@@ -34,7 +34,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 	template<typename T>
 	struct is_pointer { static const bool value = false; };
 

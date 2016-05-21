@@ -23,12 +23,12 @@ SOFTWARE.
 */
 #include <zapata/auth/hawk/AuthAgent.h>
 
-zapata::hawk::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options) : zapata::AuthAgent( _callback, _options ) {
+zpt::hawk::AuthAgent::AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options) : zpt::AuthAgent( _callback, _options ) {
 }
 
-zapata::hawk::AuthAgent::~AuthAgent(){
+zpt::hawk::AuthAgent::~AuthAgent(){
 }
 
-zapata::JSONPtr zapata::hawk::AuthAgent::authenticate(zapata::JSONPtr _credentials) {
+zpt::JSONPtr zpt::hawk::AuthAgent::authenticate(zpt::JSONPtr _credentials) {
 
 }

@@ -36,7 +36,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	extern const char* mimetype_names[];
 	extern const char* mimetype_extensions[];
@@ -466,7 +466,7 @@ namespace zapata {
 	bool dump_path(string _in, string& _content);
 	bool dump_path(string _in, wstring& _content);
 
-	zapata::MIMEType get_mime(string _in);
+	zpt::MIMEType get_mime(string _in);
 	bool path_exists(string _in);
 
 	int globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive);

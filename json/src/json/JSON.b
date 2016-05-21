@@ -1,4 +1,4 @@
-%namespace zapata
+%namespace zpt
 
 %baseclass-preinclude JSONinc.h
 %baseclass-header JSONTokenizerbase.h
@@ -23,34 +23,34 @@
 exp :
 	object
 	{
-		d_scanner.result(zapata::JSObject);
+		d_scanner.result(zpt::JSObject);
 	}
 |
 	array
 	{
-		d_scanner.result(zapata::JSArray);
+		d_scanner.result(zpt::JSArray);
 	}
 ;
 
 object :
 	LCB
 	{
-		d_scanner.init(zapata::JSObject);
+		d_scanner.init(zpt::JSObject);
 	}
 	opt_pairlist RCB
 	{
-		d_scanner.finish(zapata::JSObject);
+		d_scanner.finish(zpt::JSObject);
 	}
 ;
 
 array :
 	LB
 	{
-		d_scanner.init(zapata::JSArray);
+		d_scanner.init(zpt::JSArray);
 	}
 	opt_valuelist RB
 	{
-		d_scanner.finish(zapata::JSArray);
+		d_scanner.finish(zpt::JSArray);
 	}
 ;
 
@@ -65,7 +65,7 @@ opt_pairlist :
 pairlist :
 	STRING
 	{
-		d_scanner.init(zapata::JSObject, d_scanner.matched());
+		d_scanner.init(zpt::JSObject, d_scanner.matched());
 	}
 	COLON value
 	{
@@ -74,7 +74,7 @@ pairlist :
 |
 	pairlist COMMA STRING
 	{
-		d_scanner.init(zapata::JSObject, d_scanner.matched());
+		d_scanner.init(zpt::JSObject, d_scanner.matched());
 	}
 	COLON value
 	{
@@ -121,7 +121,7 @@ value :
 	{
 		bool _out;
 		string _in(d_scanner.matched());
-		zapata::fromstr(_in, &_out);
+		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
 |
@@ -129,7 +129,7 @@ value :
 	{
 		long long _out;
 		string _in(d_scanner.matched());
-		zapata::fromstr(_in, &_out);
+		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
 |
@@ -137,7 +137,7 @@ value :
 	{
 		double _out;
 		string _in(d_scanner.matched());
-		zapata::fromstr(_in, &_out);
+		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
 |

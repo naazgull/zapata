@@ -27,7 +27,7 @@ SOFTWARE.
 #include <iostream>
 #include <zapata/exceptions/CastException.h>
 
-namespace zapata {
+namespace zpt {
 	string nil_header = "";
 
 	const char* method_names[] = {
@@ -115,7 +115,7 @@ namespace zapata {
 	};
 }
 
-void zapata::init(HTTPReq& _req) {
+void zpt::init(HTTPReq& _req) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -136,7 +136,7 @@ void zapata::init(HTTPReq& _req) {
 		_req->url(_path);
 	}
 
-	_req->method(zapata::ev::Get);
+	_req->method(zpt::ev::Get);
 	_req->header("User-Agent", "zapata rest-ful server");
 	_req->header("Cache-Control", "max-age=3600");
 	_req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
@@ -144,7 +144,7 @@ void zapata::init(HTTPReq& _req) {
 
 }
 
-void zapata::init(HTTPRep& _rep) {
+void zpt::init(HTTPRep& _rep) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -155,7 +155,7 @@ void zapata::init(HTTPRep& _rep) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	_rep->status(zapata::HTTP404);
+	_rep->status(zpt::HTTP404);
 	_rep->header("User-Agent", "zapata rest-ful server");
 	_rep->header("Cache-Control", "max-age=3600");
 	_rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
@@ -164,36 +164,36 @@ void zapata::init(HTTPRep& _rep) {
 
 }
 
-zapata::HTTPPtr::HTTPPtr()  : shared_ptr<HTTPObj>(make_shared<HTTPObj>()) {
+zpt::HTTPPtr::HTTPPtr()  : shared_ptr<HTTPObj>(make_shared<HTTPObj>()) {
 }
 
-zapata::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {
+zpt::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {
 }
 
-zapata::HTTPPtr::~HTTPPtr(){
+zpt::HTTPPtr::~HTTPPtr(){
 }
 
-zapata::HTTPObj::HTTPObj() {
+zpt::HTTPObj::HTTPObj() {
 }
 
-zapata::HTTPObj::~HTTPObj() {
+zpt::HTTPObj::~HTTPObj() {
 }
 
-string& zapata::HTTPObj::body() {
+string& zpt::HTTPObj::body() {
 	return this->__body;
 }
 
-void zapata::HTTPObj::body(string _body) {
+void zpt::HTTPObj::body(string _body) {
 	this->__body.assign(_body.data());
 }
 
-zapata::HeaderMap& zapata::HTTPObj::headers() {
+zpt::HeaderMap& zpt::HTTPObj::headers() {
 	return this->__headers;
 }
 
-string zapata::HTTPObj::header(const char* _idx) {
+string zpt::HTTPObj::header(const char* _idx) {
 	string _name(_idx);
-	zapata::prettify_header_name(_name);
+	zpt::prettify_header_name(_name);
 	auto _found = this->__headers.find(_name);
 	if (_found != this->__headers.end()) {
 		return _found->second;
@@ -201,21 +201,21 @@ string zapata::HTTPObj::header(const char* _idx) {
 	return "";
 }
 
-void zapata::HTTPObj::header(const char* _name, const char* _value) {
+void zpt::HTTPObj::header(const char* _name, const char* _value) {
 	string _n(_name);
-	zapata::prettify_header_name(_n);
+	zpt::prettify_header_name(_n);
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
-void zapata::HTTPObj::header(const char* _name, string _value) {
+void zpt::HTTPObj::header(const char* _name, string _value) {
 	string _n(_name);
-	zapata::prettify_header_name(_n);
+	zpt::prettify_header_name(_n);
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
-void zapata::HTTPObj::header(string _name, string _value) {
+void zpt::HTTPObj::header(string _name, string _value) {
 	string _n(_name);
-	zapata::prettify_header_name(_n);
+	zpt::prettify_header_name(_n);
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 

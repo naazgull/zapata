@@ -24,19 +24,19 @@ SOFTWARE.
 
 #include <zapata/zmq/ZMQPolling.h>
 
-zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONPtr _options, zapata::EventEmitterPtr _emiter) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options, _emiter)) {
+zpt::ZMQPollPtr::ZMQPollPtr(zpt::JSONPtr _options, zpt::EventEmitterPtr _emiter) : std::shared_ptr<zpt::ZMQPoll>(new zpt::ZMQPoll(_options, _emiter)) {
 }
 
-zapata::ZMQPollPtr::ZMQPollPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::ZMQPoll>(new zapata::ZMQPoll(_options)) {
+zpt::ZMQPollPtr::ZMQPollPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::ZMQPoll>(new zpt::ZMQPoll(_options)) {
 }
 
-zapata::ZMQPollPtr::ZMQPollPtr(zapata::ZMQPoll * _ptr) : std::shared_ptr<zapata::ZMQPoll>(_ptr) {
+zpt::ZMQPollPtr::ZMQPollPtr(zpt::ZMQPoll * _ptr) : std::shared_ptr<zpt::ZMQPoll>(_ptr) {
 }
 
-zapata::ZMQPollPtr::~ZMQPollPtr() {
+zpt::ZMQPollPtr::~ZMQPollPtr() {
 }
 
-zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options, zapata::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
+zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options, zpt::EventEmitterPtr _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
 	this->__internal = new zmq::socket_t * [2];
 
 	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
@@ -56,7 +56,7 @@ zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options, zapata::EventEmitterPtr _emit
 	pthread_mutex_init(this->__pt_mtx, this->__pt_attr);	
 }
 
-zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
+zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
 	this->__internal = new zmq::socket_t * [2];
 
 	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
@@ -76,7 +76,7 @@ zapata::ZMQPoll::ZMQPoll(zapata::JSONPtr _options) : __options( _options), __con
 	pthread_mutex_init(this->__pt_mtx, this->__pt_attr);	
 }
 
-zapata::ZMQPoll::~ZMQPoll() {
+zpt::ZMQPoll::~ZMQPoll() {
 	this->__internal[0]->close();
 	this->__internal[1]->close();
 	delete this->__internal[0];
@@ -89,30 +89,30 @@ zapata::ZMQPoll::~ZMQPoll() {
 	delete this->__pt_mtx;
 	delete this->__pt_attr;
 
-	zlog(string("zmq poll clean up"), zapata::notice);
+	zlog(string("zmq poll clean up"), zpt::notice);
 }
 
-zapata::JSONPtr zapata::ZMQPoll::options() {
+zpt::JSONPtr zpt::ZMQPoll::options() {
 	return this->__options;
 }
 
-zapata::EventEmitterPtr zapata::ZMQPoll::emitter() {
+zpt::EventEmitterPtr zpt::ZMQPoll::emitter() {
 	return this->__emitter;
 }
 
-zapata::ZMQPollPtr zapata::ZMQPoll::self() {
+zpt::ZMQPollPtr zpt::ZMQPoll::self() {
 	return this->__self;
 }
 
-void zapata::ZMQPoll::lock() {
+void zpt::ZMQPoll::lock() {
 	pthread_mutex_lock(this->__pt_mtx);
 }
 
-void zapata::ZMQPoll::unlock() {
+void zpt::ZMQPoll::unlock() {
 	pthread_mutex_unlock(this->__pt_mtx);	
 }
 
-void zapata::ZMQPoll::poll(zapata::ZMQPtr _socket) {
+void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 	this->__sockets.push_back(_socket);
 
 	if (this->__id != 0 && this->__id != pthread_self()) {
@@ -124,7 +124,7 @@ void zapata::ZMQPoll::poll(zapata::ZMQPtr _socket) {
 			this->__internal[1]->recv(& _reply);
 		}
 		catch(zmq::error_t& e) {
-			zlog("got a zmq::error_t, signaling polling", zapata::error);
+			zlog("got a zmq::error_t, signaling polling", zpt::error);
 		}
 	}
 	else {
@@ -132,8 +132,8 @@ void zapata::ZMQPoll::poll(zapata::ZMQPtr _socket) {
 	}
 }
 
-void zapata::ZMQPoll::repoll() {
-	zlog(string("scanning poll"), zapata::notice);
+void zpt::ZMQPoll::repoll() {
+	zlog(string("scanning poll"), zpt::notice);
 	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 
 	size_t _i = 1;
@@ -149,7 +149,7 @@ void zapata::ZMQPoll::repoll() {
 	this->__poll_size = this->__sockets.size() + 1;
 }
 
-void zapata::ZMQPoll::loop() {
+void zpt::ZMQPoll::loop() {
 	this->__id = pthread_self();
 
 	for(; true; ) {
@@ -157,7 +157,7 @@ void zapata::ZMQPoll::loop() {
 			zmq::poll(this->__poll, this->__poll_size, -1);
 		}
 		catch(zmq::error_t& _e) {
-			zlog(string("while polling sockets: ") + _e.what(), zapata::error);
+			zlog(string("while polling sockets: ") + _e.what(), zpt::error);
 		}
 
 		if (this->__poll[0].revents & ZMQ_POLLIN) {
@@ -176,18 +176,18 @@ void zapata::ZMQPoll::loop() {
 		else {
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
-					zapata::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
-					zapata::ev::Performative _performative = (zapata::ev::Performative) ((int) _envelope["performative"]);
-					zapata::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+					zpt::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
+					zpt::ev::Performative _performative = (zpt::ev::Performative) ((int) _envelope["performative"]);
+					zpt::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
 					if (_result->ok()) {
 						try {
 							_result << 
 								"channel" << _envelope["headers"]["X-Cid"] <<
-								"performative" << zapata::ev::Reply <<
+								"performative" << zpt::ev::Reply <<
 								"resource" << _envelope["resource"];
 							this->__sockets[_k - 1]->send(_result);
 						}
-						catch(zapata::AssertionException& _e) {}
+						catch(zpt::AssertionException& _e) {}
 					}
 				}
 			}
@@ -195,32 +195,32 @@ void zapata::ZMQPoll::loop() {
 	}
 }
 
-zapata::ZMQPtr zapata::ZMQPoll::bind(short _type, std::string _connection) {
+zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 	switch(_type) {
 		case ZMQ_REQ : {
-			zapata::ZMQReq * _socket = new zapata::ZMQReq(_connection, this->__options, this->__emitter);
+			zpt::ZMQReq * _socket = new zpt::ZMQReq(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_REP : {
-			zapata::ZMQRep * _socket = new zapata::ZMQRep(_connection, this->__options, this->__emitter);
+			zpt::ZMQRep * _socket = new zpt::ZMQRep(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_XPUB : 
 		case ZMQ_XSUB : {
-			zapata::ZMQXPubXSub * _socket = new zapata::ZMQXPubXSub(_connection, this->__options, this->__emitter);
+			zpt::ZMQXPubXSub * _socket = new zpt::ZMQXPubXSub(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_PUB :
 		case ZMQ_SUB : {
-			zapata::ZMQPubSub * _socket = new zapata::ZMQPubSub(_connection, this->__options, this->__emitter);
+			zpt::ZMQPubSub * _socket = new zpt::ZMQPubSub(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 	}
-	return zapata::ZMQPtr(nullptr);
+	return zpt::ZMQPtr(nullptr);
 }
 
 extern "C" int zapata_zmq() {

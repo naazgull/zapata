@@ -55,50 +55,50 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	zapata::log_fd = & cout;
-	zapata::log_pid = ::getpid();
-	zapata::log_pname = new string(argv[0]);
-	zapata::log_lvl = _log_level;
+	zpt::log_fd = & cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+	zpt::log_lvl = _log_level;
 
 	if (_conf_file == nullptr) {
-		zlog("a configuration file must be provided", zapata::error);
+		zlog("a configuration file must be provided", zpt::error);
 		return -1;
 	}
 
-	zapata::JSONPtr _ptr;
+	zpt::JSONPtr _ptr;
 	{
 		ifstream _in;
 		_in.open(_conf_file);
 		if (!_in.is_open()) {
-			zlog("a configuration file must be provided", zapata::error);
+			zlog("a configuration file must be provided", zpt::error);
 			return -1;
 		}
 
 		_in >> _ptr;
-		zapata::dirs("/etc/zapata/conf.d/", _ptr);
-		zapata::env(_ptr);
+		zpt::dirs("/etc/zapata/conf.d/", _ptr);
+		zpt::env(_ptr);
 	}
 
 	try {
-		zapata::RESTClientPtr _api(_ptr);
+		zpt::RESTClientPtr _api(_ptr);
 		size_t _max = 50100;
 		size_t * _n = new size_t();
-		_api->emitter()->on(zapata::ev::Reply, "/api/0.9/users", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
+		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users", [ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
 			(* _n)++;
-			zlog(std::to_string(* _n), zapata::debug);
+			zlog(std::to_string(* _n), zpt::debug);
 			if ((* _n) == (_max - 100)) {
 				cout << "PROCESSED " << (* _n) << " MESSAGES" << endl << flush;
 				exit(0);
 			}
-			return zapata::undefined;
+			return zpt::undefined;
 		});
-		zapata::ZMQPtr _client = _api->bind("zmq");
-		zapata::JSONPtr _message = zapata::mkptr(JSON(
+		zpt::ZMQPtr _client = _api->bind("zmq");
+		zpt::JSONPtr _message = zpt::mkptr(JSON(
 			"name" << "m/@gmail.com/i"
 		));
-		zapata::Job _sender([ & ] (zapata::Job& _job) -> void {
+		zpt::Job _sender([ & ] (zpt::Job& _job) -> void {
 			for (size_t _k = 0; _k != _max; _k++) {
-				_client->send(zapata::ev::Get, "/api/0.9/users", _message);
+				_client->send(zpt::ev::Get, "/api/0.9/users", _message);
 			}
 			if (_ptr["zmq"]["type"]->str() == "req/rep") {
 				cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
 		_sender->start();
 		_api->start();
 	}
-	catch (zapata::AssertionException& _e) {
-		zlog(_e.what() + string("\n") + _e.description(), zapata::error);
+	catch (zpt::AssertionException& _e) {
+		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
 	}
 	
 	return 0;

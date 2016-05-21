@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include <zapata/exceptions/NoAttributeNameException.h>
 
-zapata::NoAttributeNameException::NoAttributeNameException(string _in) : __what(_in){
+zpt::NoAttributeNameException::NoAttributeNameException(string _in) : __what(_in){
 }
 
-zapata::NoAttributeNameException::~NoAttributeNameException() throw() {
+zpt::NoAttributeNameException::~NoAttributeNameException() throw() {
 }
 
-const char* zapata::NoAttributeNameException::what() {
+const char* zpt::NoAttributeNameException::what() {
 	return this->__what.data();
 }

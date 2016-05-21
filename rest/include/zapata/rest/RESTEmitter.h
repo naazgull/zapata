@@ -88,7 +88,7 @@ using namespace __gnu_cxx;
 #define no_patch nullptr
 #define no_connect nullptr
 
-namespace zapata {
+namespace zpt {
 
 	enum RESTfulType {
 		RESTfulResource = 0,
@@ -98,30 +98,30 @@ namespace zapata {
 		RESTfulController = 4
 	};
 
-	class RESTEmitter : public zapata::EventEmitter {
+	class RESTEmitter : public zpt::EventEmitter {
 		public:
-			RESTEmitter(zapata::JSONPtr _options);
+			RESTEmitter(zpt::JSONPtr _options);
 			virtual ~RESTEmitter();
 
-			virtual void on(zapata::ev::Performative _method, string _regex,  zapata::ev::Handler _handler);
-			virtual void on(string _regex,  zapata::ev::Handler _handlers[7]);
-			virtual void off(zapata::ev::Performative _method, string _regex);
+			virtual void on(zpt::ev::Performative _method, string _regex,  zpt::ev::Handler _handler);
+			virtual void on(string _regex,  zpt::ev::Handler _handlers[7]);
+			virtual void off(zpt::ev::Performative _method, string _regex);
 			virtual void off(string _regex);
 
-			virtual zapata::JSONPtr trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload);
+			virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
 
 		private:
-			zapata::JSONPtr __options;
-			zapata::ev::Handler __default_get;
-			zapata::ev::Handler __default_put;
-			zapata::ev::Handler __default_post;
-			zapata::ev::Handler __default_delete;
-			zapata::ev::Handler __default_head;
-			zapata::ev::Handler __default_options;
-			zapata::ev::Handler __default_patch;
-			zapata::ev::Handler __default_assync_reply;
-			zapata::ev::HandlerStack __resources;
-			zapata::ev::ReplyHandlerStack __replies;
+			zpt::JSONPtr __options;
+			zpt::ev::Handler __default_get;
+			zpt::ev::Handler __default_put;
+			zpt::ev::Handler __default_post;
+			zpt::ev::Handler __default_delete;
+			zpt::ev::Handler __default_head;
+			zpt::ev::Handler __default_options;
+			zpt::ev::Handler __default_patch;
+			zpt::ev::Handler __default_assync_reply;
+			zpt::ev::HandlerStack __resources;
+			zpt::ev::ReplyHandlerStack __replies;
 
 		};
 

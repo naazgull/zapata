@@ -33,17 +33,17 @@ namespace ${project_name} {
 
 	namespace ${collection_name} {
 
-		void collection(zapata::RESTEmitter& _pool) {	
+		void collection(zpt::RESTEmitter& _pool) {	
 			_pool.on("^/${collection_name}$",
 			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulCollection, true);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, ${mongo_collection_name}, _params);
+					zpt::JSONPtr _req_body = zpt::mongodb::get_collection(_config, ${mongo_collection_name}, _params);
 
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP200);
+					_rep->status(zpt::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
@@ -52,21 +52,21 @@ namespace ${project_name} {
 				},
 				no_put,
 			//post
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
 					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+					assertz(_body.length() != 0, "Body entity must be provided.", zpt::HTTP412, zpt::ERRBodyEntityMustBeProvided);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zpt::JSONObj _record = (zpt::JSONObj&) zpt::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
 					 *
-					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zpt::HTTP412, zpt::ERREmailMandatory);
 					 */
 
-					zapata::JSONPtr _req_body = zapata::mongodb::create_document(_config, ${mongo_collection_name}, _record);
+					zpt::JSONPtr _req_body = zpt::mongodb::create_document(_config, ${mongo_collection_name}, _record);
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP201);
+					_rep->status(zpt::HTTP201);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Location", (string) _req_body["href"]);
@@ -75,12 +75,12 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulCollection, true);
 
-					string _text = (string) zapata::mongodb::delete_from_collection(_config, ${mongo_collection_name}, _params);
-					_rep->status(zapata::HTTP200);
+					string _text = (string) zpt::mongodb::delete_from_collection(_config, ${mongo_collection_name}, _params);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Length", std::to_string(_text.length()));
@@ -88,14 +88,14 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulCollection, true);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_collection(_config, ${mongo_collection_name}, _params);
+					zpt::JSONPtr _req_body = zpt::mongodb::get_collection(_config, ${mongo_collection_name}, _params);
 
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP200);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Type", "application/json"); 
@@ -104,26 +104,26 @@ namespace ${project_name} {
 				no_trace, 
 				no_options, 
 			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
 					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+					assertz(_body.length() != 0, "Body entity must be provided.", zpt::HTTP412, zpt::ERRBodyEntityMustBeProvided);
 
 					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zpt::HTTP406, zpt::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zpt::JSONObj _record = (zpt::JSONObj&) zpt::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
 					 *
-					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zpt::HTTP412, zpt::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulCollection, true);
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulCollection, true);
 
-					string _text = (string) zapata::mongodb::patch_from_collection(_config, ${mongo_collection_name}, _params, _record);
-					_rep->status(zapata::HTTP200);
+					string _text = (string) zpt::mongodb::patch_from_collection(_config, ${mongo_collection_name}, _params, _record);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Length", std::to_string(_text.length()));
@@ -134,17 +134,17 @@ namespace ${project_name} {
 			);
 		}
 
-		void document(zapata::RESTEmitter& _pool) {	
+		void document(zpt::RESTEmitter& _pool) {	
 			_pool.on("^/${collection_name}/([^/]+)$",
 			//get
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulDocument);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, ${mongo_collection_name}, _params);
+					zpt::JSONPtr _req_body = zpt::mongodb::get_document(_config, ${mongo_collection_name}, _params);
 
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP200);
+					_rep->status(zpt::HTTP200);
 					_rep->body(_text);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
@@ -152,26 +152,26 @@ namespace ${project_name} {
 					_rep->header("Content-Length", std::to_string(_text.length()));
 				},
 			//put
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
 					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+					assertz(_body.length() != 0, "Body entity must be provided.", zpt::HTTP412, zpt::ERRBodyEntityMustBeProvided);
 
 					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zpt::HTTP406, zpt::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zpt::JSONObj _record = (zpt::JSONObj&) zpt::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
 					 *
-					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zpt::HTTP412, zpt::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulDocument);
 
-					string _text = (string) zapata::mongodb::replace_document(_config, ${mongo_collection_name}, _params, _record);
-					_rep->status(zapata::HTTP200);
+					string _text = (string) zpt::mongodb::replace_document(_config, ${mongo_collection_name}, _params, _record);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Length", std::to_string(_text.length()));
@@ -180,12 +180,12 @@ namespace ${project_name} {
 				},
 				no_post,
 			//delete
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulDocument);
 
-					string _text = (string) zapata::mongodb::delete_document(_config, ${mongo_collection_name}, _params);
-					_rep->status(zapata::HTTP200);
+					string _text = (string) zpt::mongodb::delete_document(_config, ${mongo_collection_name}, _params);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Length", std::to_string(_text.length()));
@@ -193,14 +193,14 @@ namespace ${project_name} {
 					_rep->body(_text);
 				},
 			//head
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulDocument);
 
-					zapata::JSONPtr _req_body = zapata::mongodb::get_document(_config, ${mongo_collection_name}, _params);
+					zpt::JSONPtr _req_body = zpt::mongodb::get_document(_config, ${mongo_collection_name}, _params);
 
 					string _text = (string) _req_body;
-					_rep->status(zapata::HTTP200);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Type", "application/json"); 
@@ -209,26 +209,26 @@ namespace ${project_name} {
 				no_trace, 
 				no_options, 
 			//patch
-				[] (zapata::HTTPReq& _req, zapata::HTTPRep& _rep, zapata::JSONPtr& _options, zapata::RESTEmitter& _pool) -> void {
+				[] (zpt::HTTPReq& _req, zpt::HTTPRep& _rep, zpt::JSONPtr& _options, zpt::RESTEmitter& _pool) -> void {
 					string _body = _req->body();
-					assertz(_body.length() != 0, "Body entity must be provided.", zapata::HTTP412, zapata::ERRBodyEntityMustBeProvided);
+					assertz(_body.length() != 0, "Body entity must be provided.", zpt::HTTP412, zpt::ERRBodyEntityMustBeProvided);
 
 					string _content_type = _req->header("Content-Type");
-					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zapata::HTTP406, zapata::ERRBodyEntityWrongContentType);
+					assertz(_content_type.find("application/json") != string::npos, "Body entity must be 'application/json'", zpt::HTTP406, zpt::ERRBodyEntityWrongContentType);
 
-					zapata::JSONObj _record = (zapata::JSONObj&) zapata::fromstr(_body);
+					zpt::JSONObj _record = (zpt::JSONObj&) zpt::fromstr(_body);
 
 					/**
 					 * Put your field validations here, using 'assertz'
 					 *
-					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zapata::HTTP412, zapata::ERREmailMandatory);
+					 * assertz(_record[${field}]->ok(), "The '${field}' field is mandatory", zpt::HTTP412, zpt::ERREmailMandatory);
 					 */
 
-					zapata::JSONObj _params;
-					zapata::fromparams(_req, _params, zapata::RESTfulDocument);
+					zpt::JSONObj _params;
+					zpt::fromparams(_req, _params, zpt::RESTfulDocument);
 
-					string _text = (string) zapata::mongodb::patch_document(_config, ${mongo_collection_name}, _params, _record);
-					_rep->status(zapata::HTTP200);
+					string _text = (string) zpt::mongodb::patch_document(_config, ${mongo_collection_name}, _params, _record);
+					_rep->status(zpt::HTTP200);
 					_rep->header("Cache-Control", "no-store");
 					_rep->header("Pragma", "no-cache");
 					_rep->header("Content-Length", std::to_string(_text.length()));

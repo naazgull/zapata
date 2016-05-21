@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-namespace zapata {
+namespace zpt {
 	// start at 1000
 	enum ErrorCodeUsers {
 		ERRNameMandatory = 1000,

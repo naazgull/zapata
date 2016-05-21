@@ -24,16 +24,16 @@ SOFTWARE.
 
 #include <zapata/mongodb/Collection.h>
 
-zapata::mongodb::CollectionPtr::CollectionPtr(zapata::mongodb::Collection * _target) : std::shared_ptr<zapata::mongodb::Collection>(_target) {
+zpt::mongodb::CollectionPtr::CollectionPtr(zpt::mongodb::Collection * _target) : std::shared_ptr<zpt::mongodb::Collection>(_target) {
 }
 
-zapata::mongodb::CollectionPtr::CollectionPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::mongodb::Collection>(new zapata::mongodb::Collection(_options)) {
+zpt::mongodb::CollectionPtr::CollectionPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::mongodb::Collection>(new zpt::mongodb::Collection(_options)) {
 }
 
-zapata::mongodb::CollectionPtr::~CollectionPtr() {
+zpt::mongodb::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::mongodb::Collection::Collection(zapata::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zapata::Addons(_options)) {
+zpt::mongodb::Collection::Collection(zpt::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
 	if (this->__options["mongodb"]["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
@@ -41,28 +41,28 @@ zapata::mongodb::Collection::Collection(zapata::JSONPtr _options) : __options( _
 
 }
 
-zapata::mongodb::Collection::~Collection() {
+zpt::mongodb::Collection::~Collection() {
 	this->__conn.done();
 }
 
-zapata::JSONPtr zapata::mongodb::Collection::options() {
+zpt::JSONPtr zpt::mongodb::Collection::options() {
 	return this->__options;
 }
 
-std::string zapata::mongodb::Collection::name() {
+std::string zpt::mongodb::Collection::name() {
 	return string("mongodb://") + ((string) this->__options["mongodb"]["bind"]) + string(":") + ((string) this->__options["mongodb"]["port"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
 }
 
-bool& zapata::mongodb::Collection::broadcast() {
+bool& zpt::mongodb::Collection::broadcast() {
 	return this->__broadcast;
 }
 
-zapata::EventEmitterPtr zapata::mongodb::Collection::addons() {
+zpt::EventEmitterPtr zpt::mongodb::Collection::addons() {
 	return this->__addons;
 }
 
-std::string zapata::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+std::string zpt::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
@@ -77,20 +77,20 @@ std::string zapata::mongodb::Collection::insert(std::string _collection, std::st
 	_document << "href" << _document["_id"];
 
 	mongo::BSONObjBuilder _mongo_document;
-	zapata::mongodb::tomongo(_document, _mongo_document);
+	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->insert(_full_collection, _mongo_document.obj());
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->trigger(zapata::ev::Post, string("INSERT ") + _collection, _document);
+		this->addons()->trigger(zpt::ev::Post, string("INSERT ") + _collection, _document);
 	}
 	return _document["id"]->str();
 }
 
-int zapata::mongodb::Collection::update(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document) {	
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+int zpt::mongodb::Collection::update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
-		_pattern = zapata::mkobj();
+		_pattern = zpt::mkobj();
 	}
 
 	std::string _full_collection(_collection);
@@ -101,28 +101,28 @@ int zapata::mongodb::Collection::update(std::string _collection, zapata::JSONPtr
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
+	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
 	mongo::Query _filter(_query_b.done());
 
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zapata::mkptr(JSON("$set" << _document));
+	_document = zpt::mkptr(JSON("$set" << _document));
 	mongo::BSONObjBuilder _mongo_document;
-	zapata::mongodb::tomongo(_document, _mongo_document);
+	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->trigger(zapata::ev::Post, string("UPDATE ") + _collection, _pattern);
+		this->addons()->trigger(zpt::ev::Post, string("UPDATE ") + _collection, _pattern);
 	}
 	return _size;
 }
 
-int zapata::mongodb::Collection::unset(std::string _collection, zapata::JSONPtr _pattern, zapata::JSONPtr _document) {
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+int zpt::mongodb::Collection::unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
-		_pattern = zapata::mkobj();
+		_pattern = zpt::mkobj();
 	}
 
 	std::string _full_collection(_collection);
@@ -133,27 +133,27 @@ int zapata::mongodb::Collection::unset(std::string _collection, zapata::JSONPtr 
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
+	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
 	mongo::Query _filter(_query_b.done());
 
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zapata::mkptr(JSON("$unset" << _document));
+	_document = zpt::mkptr(JSON("$unset" << _document));
 	mongo::BSONObjBuilder _mongo_document;
-	zapata::mongodb::tomongo(_document, _mongo_document);
+	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->trigger(zapata::ev::Post, string("UPDATE ") + _collection, _pattern);
+		this->addons()->trigger(zpt::ev::Post, string("UPDATE ") + _collection, _pattern);
 	}
 	return _size;
 }
 
-int zapata::mongodb::Collection::remove(std::string _collection, zapata::JSONPtr _pattern) {
+int zpt::mongodb::Collection::remove(std::string _collection, zpt::JSONPtr _pattern) {
 	if (!_pattern->ok()) {
-		_pattern = zapata::mkobj();
+		_pattern = zpt::mkobj();
 	}
 
 	std::string _full_collection(_collection);
@@ -164,7 +164,7 @@ int zapata::mongodb::Collection::remove(std::string _collection, zapata::JSONPtr
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
+	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
 	mongo::Query _filter(_query_b.done());
 
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
@@ -174,17 +174,17 @@ int zapata::mongodb::Collection::remove(std::string _collection, zapata::JSONPtr
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
 	if (this->__broadcast) {
-		this->addons()->trigger(zapata::ev::Post, string("DELETE ") + _collection, _pattern);
+		this->addons()->trigger(zpt::ev::Post, string("DELETE ") + _collection, _pattern);
 	}
 	return _size;
 }
 
-zapata::JSONPtr zapata::mongodb::Collection::query(std::string _collection, zapata::JSONPtr _pattern) {
+zpt::JSONPtr zpt::mongodb::Collection::query(std::string _collection, zpt::JSONPtr _pattern) {
 	if (!_pattern->ok()) {
-		_pattern = zapata::mkobj();
+		_pattern = zpt::mkobj();
 	}
 
-	zapata::JSONArr _return;
+	zpt::JSONArr _return;
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
@@ -194,7 +194,7 @@ zapata::JSONPtr zapata::mongodb::Collection::query(std::string _collection, zapa
 	size_t _page_start_index = 0;
 	mongo::BSONObjBuilder _query_b;
 	mongo::BSONObjBuilder _order_b;
-	zapata::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
+	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
 
 	mongo::Query _query(_query_b.done());
 	unsigned long _size = this->__conn->count(_full_collection, _query.obj, (int) mongo::QueryOption_SlaveOk);
@@ -208,15 +208,15 @@ zapata::JSONPtr zapata::mongodb::Collection::query(std::string _collection, zapa
 
 	while(_result->more()) {
 		mongo::BSONObj _record = _result->next();
-		zapata::JSONObj _obj;
-		zapata::mongodb::frommongo(_record, _obj);
+		zpt::JSONObj _obj;
+		zpt::mongodb::frommongo(_record, _obj);
 		_return << _obj;
 	}
 
 	if (_return->size() == 0) {
-		return zapata::undefined;
+		return zpt::undefined;
 	}
-	return zapata::mkptr(JSON(
+	return zpt::mkptr(JSON(
 		"size" << _size <<
 		"elements" << _return
 	));

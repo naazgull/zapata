@@ -33,7 +33,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::html::entities_encode(wstring s, ostream& out, bool quote, bool tags) {
+void zpt::html::entities_encode(wstring s, ostream& out, bool quote, bool tags) {
 	ostringstream oss;
 	for (size_t i = 0; i != s.length(); i++) {
 		if (((unsigned char) s[i]) > 127) {
@@ -59,16 +59,16 @@ void zapata::html::entities_encode(wstring s, ostream& out, bool quote, bool tag
 	out << oss.str();
 }
 
-void zapata::html::entities_encode(string& _out, bool quote, bool tags) {
-	wchar_t* wc = zapata::utf8::utf8_to_wstring(_out);
+void zpt::html::entities_encode(string& _out, bool quote, bool tags) {
+	wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
 	ostringstream out;
-	zapata::html::entities_encode(ws, out, quote, tags);
+	zpt::html::entities_encode(ws, out, quote, tags);
 	delete[] wc;
 	_out.assign(out.str());
 }
 
-void zapata::html::entities_decode(string& _out) {
+void zpt::html::entities_decode(string& _out) {
 	wostringstream oss;
 	for (size_t i = 0; i != _out.length(); i++) {
 		if (_out[i] == '&' && _out[i + 1] == '#') {
@@ -89,14 +89,14 @@ void zapata::html::entities_decode(string& _out) {
 	}
 	oss << flush;
 
-	char* c = zapata::utf8::wstring_to_utf8(oss.str());
+	char* c = zpt::utf8::wstring_to_utf8(oss.str());
 	string os(c);
 	_out.assign(os);
 
 	delete[] c;
 }
 
-void zapata::html::content_boundary(string& _in, string& _out) {
+void zpt::html::content_boundary(string& _in, string& _out) {
 	size_t _idx = _in.find("boundary=");
 	if (_idx != string::npos) {
 		_out.assign(_in.substr(_idx + 9));

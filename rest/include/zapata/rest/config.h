@@ -42,6 +42,9 @@
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
 #define HAVE_LIBZAPATA_JSON 1
 
+/* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
+#define HAVE_LIBZAPATA_ZMQ 1
+
 /* Define to 1 if you have the `zmq' library (-lzmq). */
 #define HAVE_LIBZMQ 1
 
@@ -82,7 +85,7 @@
 #define PACKAGE_NAME "zapata-rest"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-rest 0.9.1-1"
+#define PACKAGE_STRING "zapata-rest 0.9.1-2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-rest"
@@ -91,10 +94,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.1-1"
+#define PACKAGE_VERSION "0.9.1-2"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.1-1"
+#define VERSION "0.9.1-2"

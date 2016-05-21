@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-namespace zapata {
+namespace zpt {
 	// start at 0
 	enum ErrorCodeRest {
 		ERRGeneric = 0,

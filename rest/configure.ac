@@ -15,11 +15,11 @@ AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
 AC_HAVE_LIBRARY(zmq)
 AC_HAVE_LIBRARY(ossp-uuid++)
-
-AC_CHECK_LIB([zapata-base], [zapata_base], [], [AC_MSG_ERROR([zapata-base not found])])
-AC_CHECK_LIB([zapata-json], [zapata_json], [], [AC_MSG_ERROR([zapata-json not found])])
-AC_CHECK_LIB([zapata-events], [zapata_events], [], [AC_MSG_ERROR([zapata-events not found])])
-AC_CHECK_LIB([zapata-http], [zapata_http], [], [AC_MSG_ERROR([zapata-http not found])])
+AC_HAVE_LIBRARY(zapata-base)
+AC_HAVE_LIBRARY(zapata-json)
+AC_HAVE_LIBRARY(zapata-events)
+AC_HAVE_LIBRARY(zapata-zmq)
+AC_HAVE_LIBRARY(zapata-http)
 
 AC_CANONICAL_SYSTEM
 

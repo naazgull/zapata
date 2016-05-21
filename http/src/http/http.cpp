@@ -24,29 +24,29 @@ SOFTWARE.
 #include <zapata/http/config.h>
 #include <zapata/http/http.h>
 
-zapata::HTTPReq& zapata::fromhttpstr(string& _in, zapata::HTTPReq& _out) {
+zpt::HTTPReq& zpt::fromhttpstr(string& _in, zpt::HTTPReq& _out) {
 	istringstream _ss;
 	_ss.str(_in);
-	zapata::HTTPParser _p;
+	zpt::HTTPParser _p;
 	_p.switchRoots(_out);
 	_p.switchStreams(_ss);
 	_p.parse();
 	return _out;
 }
 
-zapata::HTTPRep& zapata::fromhttpstr(string& _in, zapata::HTTPRep& _out) {
+zpt::HTTPRep& zpt::fromhttpstr(string& _in, zpt::HTTPRep& _out) {
 	istringstream _ss;
 	_ss.str(_in);
-	zapata::HTTPParser _p;
+	zpt::HTTPParser _p;
 	_p.switchRoots(_out);
 	_p.switchStreams(_ss);
 	_p.parse();
 	return _out;
 }
 
-zapata::HTTPReq& zapata::fromhttpfile(ifstream& _in, zapata::HTTPReq& _out) {
+zpt::HTTPReq& zpt::fromhttpfile(ifstream& _in, zpt::HTTPReq& _out) {
 	if (_in.is_open()) {
-		zapata::HTTPParser _p;
+		zpt::HTTPParser _p;
 		_p.switchRoots(_out);
 		_p.switchStreams(_in);
 		_p.parse();
@@ -54,9 +54,9 @@ zapata::HTTPReq& zapata::fromhttpfile(ifstream& _in, zapata::HTTPReq& _out) {
 	return _out;
 }
 
-zapata::HTTPRep& zapata::fromhttpfile(ifstream& _in, zapata::HTTPRep& _out) {
+zpt::HTTPRep& zpt::fromhttpfile(ifstream& _in, zpt::HTTPRep& _out) {
 	if (_in.is_open()) {
-		zapata::HTTPParser _p;
+		zpt::HTTPParser _p;
 		_p.switchRoots(_out);
 		_p.switchStreams(_in);
 		_p.parse();
@@ -64,36 +64,36 @@ zapata::HTTPRep& zapata::fromhttpfile(ifstream& _in, zapata::HTTPRep& _out) {
 	return _out;
 }
 
-zapata::HTTPReq& zapata::fromhttpstream(istream& _in, zapata::HTTPReq& _out) {
-	zapata::HTTPParser _p;
+zpt::HTTPReq& zpt::fromhttpstream(istream& _in, zpt::HTTPReq& _out) {
+	zpt::HTTPParser _p;
 	_p.switchRoots(_out);
 	_p.switchStreams(_in);
 	_p.parse();
 	return _out;
 }
 
-zapata::HTTPRep& zapata::fromhttpstream(istream& _in, zapata::HTTPRep& _out) {
-	zapata::HTTPParser _p;
+zpt::HTTPRep& zpt::fromhttpstream(istream& _in, zpt::HTTPRep& _out) {
+	zpt::HTTPParser _p;
 	_p.switchRoots(_out);
 	_p.switchStreams(_in);
 	_p.parse();
 	return _out;
 }
 
-void zapata::tostr(string& _out, HTTPRep& _in)  {
+void zpt::tostr(string& _out, HTTPRep& _in)  {
 	_in->stringify(_out);
 }
 
-void zapata::tostr(string& _out, HTTPReq& _in)  {
+void zpt::tostr(string& _out, HTTPReq& _in)  {
 	_in->stringify(_out);
 }
 
-void zapata::tostr(ostream& _out, HTTPRep& _in)  {
+void zpt::tostr(ostream& _out, HTTPRep& _in)  {
 	_in->stringify(_out);
 	_out << flush;
 }
 
-void zapata::tostr(ostream& _out, HTTPReq& _in)  {
+void zpt::tostr(ostream& _out, HTTPReq& _in)  {
 	_in->stringify(_out);
 	_out << flush;
 }

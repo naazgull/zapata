@@ -23,9 +23,9 @@ SOFTWARE.
 */
 #pragma once
 
-#define JSON(z) ((zapata::JSONObj()) << z)
-#define JSON_ARRAY(z) ((zapata::JSONArr()) << z)
-#define JSON_NIL zapata::undefined;
+#define JSON(z) ((zpt::JSONObj()) << z)
+#define JSON_ARRAY(z) ((zpt::JSONArr()) << z)
+#define JSON_NIL zpt::undefined;
 
 #include <string>
 #include <memory>
@@ -46,7 +46,7 @@ using namespace __gnu_cxx;
 #endif
 
 
-namespace zapata {
+namespace zpt {
 
 	/**
 	 * \brief Type definition for representing a millisecond based timestamp.
@@ -67,14 +67,14 @@ namespace zapata {
 		inline pretty(T _rhs) : std::string() {
 			_rhs->prettify(* this);
 		};
-		friend ostream& operator<<(ostream& _out, zapata::pretty& _in) {
+		friend ostream& operator<<(ostream& _out, zpt::pretty& _in) {
 			_out << string(_in.data());
 			return _out;
 		};
 	};
 
 	/**
-	 * \brief Smart shared pointer to a zapata::JSONElementT object.
+	 * \brief Smart shared pointer to a zpt::JSONElementT object.
 	 */
 	class JSONPtr : public shared_ptr<JSONElementT> {
 	public:
@@ -102,7 +102,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '==' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -111,7 +111,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '!=' override for comparing *this* instance with other JSON typed argument.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are different, **false** otherwise
 		 */
@@ -120,7 +120,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -129,7 +129,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -138,7 +138,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -147,44 +147,44 @@ namespace zapata {
 		/**
 		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
 		template <typename T>
 		bool operator>=(T _rhs);
 		/**
-		 * \brief Operator '<<' override form injecting values into *this* instance object. This is a convenience wrapper method for the zapata::JSONObjT or zapata::JSONArrT **push** methods.
+		 * \brief Operator '<<' override form injecting values into *this* instance object. This is a convenience wrapper method for the zpt::JSONObjT or zpt::JSONArrT **push** methods.
 		 * 
 		 * According to *this* object type, behaviors differ:
 		 *
 		 * to add attributes to your object:
 		 * 
-		 *     zapata::JSONObj _o;
+		 *     zpt::JSONObj _o;
 		 *     _o << "name" << "Mr zapata";
 		 *     _o << "serial" << 123;
 		 *     _o << "sorting_field" << "name";
 		 * 
 		 * or
 		 * 
-		 *     zapata::JSONObj _o;
+		 *     zpt::JSONObj _o;
 		 *     _o << 
 		 *       "name" << "Mr zapata" <<
 		 *       "serial" << 123 <<
 		 *       "sorting_field" << "name";
 		 *     // this one is more JSON like
 		 *
-		 * (when *this* object is a zapata::JSONObj and *T* is std::string, it will either be injected as an attribute name or as an attribute value, depending on whether or not you've already injected an attribute name)
+		 * (when *this* object is a zpt::JSONObj and *T* is std::string, it will either be injected as an attribute name or as an attribute value, depending on whether or not you've already injected an attribute name)
 		 * 
-		 * to add a JSON array, use the *zapata::JSONArr* class:
+		 * to add a JSON array, use the *zpt::JSONArr* class:
 		 * 
-		 *     zapata::JSONArr _a;
+		 *     zpt::JSONArr _a;
 		 *     _a << 123 << 345 << 67 << 78;
 		 * 
-		 *     zapata::JSONArr _b;
+		 *     zpt::JSONArr _b;
 		 *     _b << "lions" << 345 << "horses" << 78;
 		 * 
-		 *     zapata::JSONObj _o;
+		 *     zpt::JSONObj _o;
 		 *     _o << 
 		 *       "name" << "Mr zapata" <<
 		 *       "serial" << 123 <<
@@ -192,19 +192,19 @@ namespace zapata {
 		 *       "numbers" << _a <<
 		 *       "animal_numbers" << _b;
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 */
 		template <typename T>
 		JSONPtr& operator<<(T _in);
 		/**
-		 * \brief Operator '>>' override for removing attributes or array elements from *this* object instance. This is a convenience wrapper method for the zapata::JSONObjT or zapata::JSONArrT **pop** methods.
+		 * \brief Operator '>>' override for removing attributes or array elements from *this* object instance. This is a convenience wrapper method for the zpt::JSONObjT or zpt::JSONArrT **pop** methods.
 		 *
 		 * Allowed types for *T* are: std::string, const char*, int, size_t,.
 		 */
 		template <typename T>
 		JSONPtr& operator>>(T _in);
 		/**
-		 * \brief Operator '[]' override for accessing attributes or array elements of *this* object instance. This is a convenience wrapper method for the zapata::JSONObjT or zapata::JSONArrT '[]' operators.
+		 * \brief Operator '[]' override for accessing attributes or array elements of *this* object instance. This is a convenience wrapper method for the zpt::JSONObjT or zpt::JSONArrT '[]' operators.
 		 *
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
@@ -212,7 +212,7 @@ namespace zapata {
 		 * 
 		 * Allowed types for *T* are: std::string, const char*, size_t.
 		 *
-		 * @return            the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return            the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		template <typename T>
 		JSONPtr& operator[](T _idx);
@@ -229,7 +229,7 @@ namespace zapata {
 		 *
 		 * @return the pretty printed textual representation of *this* instance JSON typed object
 		 */
-		operator zapata::pretty();
+		operator zpt::pretty();
 
 		/**
 		 * \brief Casting operator for the *bool* basic type. **All** JSON types as castable to a *bool* value: 
@@ -315,39 +315,39 @@ namespace zapata {
 		 */
 		operator double();
 		/**
-		 * \brief Casting operator for the *zapata::timestamp_t* basic type. **All** JSON types as castable to a *zapata::timestamp_t* value: 
+		 * \brief Casting operator for the *zpt::timestamp_t* basic type. **All** JSON types as castable to a *zpt::timestamp_t* value: 
 		 * 
-		 * - anything numerical is truncated to *zapata::timestamp_t*
-		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *zapata::timestamp_t*, zero is returned if unsuccessful
-		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *zapata::timestamp_t*
-		 * - if *this* object instance is a JSON array, the number of elements is returned, truncated to *zapata::timestamp_t*
-		 * - if *this* object instance is a JSON date, the number of milliseconds since *epoch* is returned, truncated to *zapata::timestamp_t*
+		 * - anything numerical is truncated to *zpt::timestamp_t*
+		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *zpt::timestamp_t*, zero is returned if unsuccessful
+		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *zpt::timestamp_t*
+		 * - if *this* object instance is a JSON array, the number of elements is returned, truncated to *zpt::timestamp_t*
+		 * - if *this* object instance is a JSON date, the number of milliseconds since *epoch* is returned, truncated to *zpt::timestamp_t*
 		 *
-		 * @return the *zapata::timestamp_t* representation of *this* instance JSON typed object
+		 * @return the *zpt::timestamp_t* representation of *this* instance JSON typed object
 		 */
 		operator timestamp_t();
 		/**
-		 * \brief Casting operator for *zapata::JSONObj* class. If *this* instance object is not of type zapata::JSONType::JSObject or zapata::JSONType::JSNil, a zapata::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
 		 *
-		 * @return the *zapata::JSONObj* representation of *this* instance JSON typed object
+		 * @return the *zpt::JSONObj* representation of *this* instance JSON typed object
 		 */
 		operator JSONObj();
 		/**
-		 * \brief Casting operator for *zapata::JSONArr* class. If *this* instance object is not of type zapata::JSONType::JSArray or zapata::JSONType::JSNil, a zapata::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
 		 *
-		 * @return the *zapata::JSONArr* representation of *this* instance JSON typed object
+		 * @return the *zpt::JSONArr* representation of *this* instance JSON typed object
 		 */
 		operator JSONArr();
 		/**
-		 * \brief Casting operator for *zapata::JSONObj* class. If *this* instance object is not of type zapata::JSONType::JSObject or zapata::JSONType::JSNil, a zapata::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
 		 *
-		 * @return the *zapata::JSONObj* representation of *this* instance JSON typed object
+		 * @return the *zpt::JSONObj* representation of *this* instance JSON typed object
 		 */
 		operator JSONObj&();
 		/**
-		 * \brief Casting operator for *zapata::JSONArr* class. If *this* instance object is not of type zapata::JSONType::JSArray or zapata::JSONType::JSNil, a zapata::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
 		 *
-		 * @return the *zapata::JSONArr* representation of *this* instance JSON typed object
+		 * @return the *zpt::JSONArr* representation of *this* instance JSON typed object
 		 */
 		operator JSONArr&();
 
@@ -355,7 +355,7 @@ namespace zapata {
 		JSONPtr operator+(T _in);
 
 		/**
-		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zapata::JSONPtr object.
+		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zpt::JSONPtr object.
 		 */
 		friend istream& operator>>(istream& _in, JSONPtr& _out) {
 			_out.parse(_in);
@@ -371,7 +371,7 @@ namespace zapata {
 	 *
 	 * Example:
 	 * 
-	 *     if (my_json_object["some_attribute"] == zapata::undefined) {
+	 *     if (my_json_object["some_attribute"] == zpt::undefined) {
 	 *         ...
 	 *     } 
 	 */
@@ -379,7 +379,7 @@ namespace zapata {
 	extern JSONPtr nilptr;
 
 	/**
-	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zapata::JSONPtr key-value pairs.
+	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zpt::JSONPtr key-value pairs.
 	 */
 	class JSONObjT : public std::map< string, JSONPtr > {
 	public: 
@@ -388,7 +388,7 @@ namespace zapata {
 		 */		
 		JSONObjT();
 		/**
-		 * \brief Destroys the current JSONObjT instance, freeing all allocated memory. It will free the objects pointed by each zapata::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
+		 * \brief Destroys the current JSONObjT instance, freeing all allocated memory. It will free the objects pointed by each zpt::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
 		 */
 		virtual ~JSONObjT();
 
@@ -429,13 +429,13 @@ namespace zapata {
 		 */
 		virtual void push(string _name);
 		/**
-		 * \brief Write-access method that inserts a zapata::JSONElementT object into *this* object map. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map. 
 		 *
 		 * @param _value [description]
 		 */
 		virtual void push(JSONElementT& _value);
 		/**
-		 * \brief Write-access method that inserts a zapata::JSONElementT object into *this* object map. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map. 
 		 *
 		 * @param _value [description]
 		 */
@@ -471,58 +471,58 @@ namespace zapata {
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
 		 * @param  _path      the object path to search for
 		 * @param  _separator the object path separator
 		 *
-		 * @return            the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return            the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
-		zapata::JSONPtr getPath(std::string _path, std::string _separator = ".");
+		zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
 
 		/**
 		 * \brief Write-access method for adding a child element represented by the *path* object path and with *value* value.
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
 		 * @param _path      the object path to search for
 		 * @param _value     the value to be assigned to the child element
 		 * @param _separator the object path separator
 		 */
-		void setPath(std::string _path, zapata::JSONPtr _value, std::string _separator = ".");
+		void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
 
 		/**
 		 * \brief Write-access method for removing a child element represented by the *path* object path.
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
 		 * @param  _path      the object path to search for
 		 * @param  _separator the object path separator
@@ -530,7 +530,7 @@ namespace zapata {
 		void delPath(std::string _path, std::string _separator = ".");
 
 		/**
-		 * @brief Creates a full copy of the JSON representation stored in *this* *zapata::JSONObjT*
+		 * @brief Creates a full copy of the JSON representation stored in *this* *zpt::JSONObjT*
 		 * @return a pointer to the copy of the underlying JSON representation
 		 */
 		JSONPtr clone();
@@ -550,7 +550,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '==' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -573,7 +573,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '!=' override for comparing *this* instance with other JSON typed argument.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are different, **false** otherwise
 		 */
@@ -596,7 +596,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -619,7 +619,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -642,7 +642,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -665,7 +665,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -683,7 +683,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](int _idx);
 		/**
@@ -695,7 +695,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](size_t _idx);
 		/**
@@ -707,7 +707,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](const char* _idx);
 		/**
@@ -719,7 +719,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](string _idx);
 
@@ -736,7 +736,7 @@ namespace zapata {
 	};
 
 	/**
-	 * \brief Class that represents the *array* JSON type. It inherits from the std::vector class and is composed of zapata::JSONPtr elements.
+	 * \brief Class that represents the *array* JSON type. It inherits from the std::vector class and is composed of zpt::JSONPtr elements.
 	 */
 	class JSONArrT : public vector<JSONPtr > {
 	public: 
@@ -745,7 +745,7 @@ namespace zapata {
 		 */		
 		JSONArrT();
 		/**
-		 * \brief Destroys the current JSONArrT instance, freeing all allocated memory. It will free the objects pointed by each zapata::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
+		 * \brief Destroys the current JSONArrT instance, freeing all allocated memory. It will free the objects pointed by each zpt::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
 		 */
 		virtual ~JSONArrT();
 
@@ -778,13 +778,13 @@ namespace zapata {
 		virtual void prettify(ostream& _out, uint _n_tabs = 0);
 
 		/**
-		 * \brief Write-access method that inserts a zapata::JSONElementT object into *this* array vector. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector. 
 		 *
 		 * @param _value [description]
 		 */
 		virtual void push(JSONElementT& _value);
 		/**
-		 * \brief Write-access method that inserts a zapata::JSONElementT object into *this* array vector. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector. 
 		 *
 		 * @param _value [description]
 		 */
@@ -816,65 +816,65 @@ namespace zapata {
 		virtual void pop(string _idx);
 
 		virtual void sort();
-		virtual void sort(std::function< bool (zapata::JSONPtr, zapata::JSONPtr) > _comparator);
+		virtual void sort(std::function< bool (zpt::JSONPtr, zpt::JSONPtr) > _comparator);
 
 		/**
 		 * \brief Read-access method for retrieving a child element represented by the *path* object path.
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_array[1]["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_array[1]["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_array->getPath("1.some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_array->getPath("1.some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_array->getPath("1/some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_array->getPath("1/some_array/0/first_field/name", "/");
 		 *
 		 * @param  _path      the object path to search for
 		 * @param  _separator the object path separator
 		 *
-		 * @return            the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return            the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
-		zapata::JSONPtr getPath(std::string _path, std::string _separator = ".");
+		zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
 
 		/**
 		 * \brief Write-access method for adding a child element represented by the *path* object path and with *value* value.
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
 		 * @param _path      the object path to search for
 		 * @param _value     the value to be assigned to the child element
 		 * @param _separator the object path separator
 		 */
-		void setPath(std::string _path, zapata::JSONPtr _value, std::string _separator = ".");
+		void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
 
 		/**
 		 * \brief Write-access method for removing a child element represented by the *path* object path.
 		 *
 		 * An object path is sequence of child object identifiers, separated by a given character. For instance, the following code
 		 *
-		 *     zapata::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
+		 *     zpt::JSONPtr child = my_json_object["some_array"][0]["first_field"]["name"];
 		 *
 		 * is analogue to
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
 		 * or 
 		 *
-		 *     zapata::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
+		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
 		 * @param  _path      the object path to search for
 		 * @param  _separator the object path separator
@@ -882,7 +882,7 @@ namespace zapata {
 		void delPath(std::string _path, std::string _separator = ".");
 
 		/**
-		 * @brief Creates a full copy of the JSON representation stored in *this* *zapata::JSONArrT*
+		 * @brief Creates a full copy of the JSON representation stored in *this* *zpt::JSONArrT*
 		 * @return a pointer to the copy of the underlying JSON representation
 		 */
 		JSONPtr clone();
@@ -902,7 +902,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '==' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -925,7 +925,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '!=' override for comparing *this* instance with other JSON typed argument.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are different, **false** otherwise
 		 */
@@ -948,7 +948,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -971,7 +971,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -994,7 +994,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1017,7 +1017,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1035,7 +1035,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](int _idx);
 		/**
@@ -1047,7 +1047,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](size_t _idx);
 		/**
@@ -1059,7 +1059,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](const char* _idx);
 		/**
@@ -1071,7 +1071,7 @@ namespace zapata {
 		 * 
 		 * @param  _idx the child object identifier
 		 *
-		 * @return  the pointer to the child object if it exists or zapata::undefined otherwise
+		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
 		 */
 		JSONPtr& operator[](string _idx);
 
@@ -1086,7 +1086,7 @@ namespace zapata {
 	};	
 
 	/**
-	 * \brief Smart shared pointer to a zapata::JSONObjT object.
+	 * \brief Smart shared pointer to a zpt::JSONObjT object.
 	 */
 	class JSONObj : public shared_ptr<JSONObjT> {
 	public:
@@ -1123,7 +1123,7 @@ namespace zapata {
 		JSONObjT::iterator end();
 
 		/**
-		 * \brief Cast operation for the std::string class. This is a convenience wrapper operator for zapata::JSONObjT::stringify method.
+		 * \brief Cast operation for the std::string class. This is a convenience wrapper operator for zpt::JSONObjT::stringify method.
 		 *
 		 * @return the textual representation of *this* object instance
 		 */
@@ -1134,12 +1134,12 @@ namespace zapata {
 		 *
 		 * @return the pretty printed textual representation of *this* instance JSON typed object
 		 */
-		operator zapata::pretty();
+		operator zpt::pretty();
 
 		/**
 		 * \brief Operator '==' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1150,7 +1150,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '!=' override for comparing *this* instance with other JSON typed argument.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are different, **false** otherwise
 		 */
@@ -1161,7 +1161,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1172,7 +1172,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1183,7 +1183,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '<=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1194,7 +1194,7 @@ namespace zapata {
 		/**
 		 * \brief Operator '>=' override for comparing *this* instance with other JSON typed argument. Type conversion between JSON type is attempted in order to determine the objects equality.
 		 *
-		 * Allowed types for *T* are: zapata::JSONElementT, zapata::JSONPtr, zapata::JSONObj, zapata::JSONArr, std::string, const char*, long long, double, bool, zapata::timestamp_t, int, size_t.
+		 * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj, zpt::JSONArr, std::string, const char*, long long, double, bool, zpt::timestamp_t, int, size_t.
 		 *
 		 * @return **true** if the objects are equal, **false** otherwise
 		 */
@@ -1243,7 +1243,7 @@ namespace zapata {
 		 *
 		 * @return the pretty printed textual representation of *this* instance JSON typed object
 		 */
-		operator zapata::pretty();
+		operator zpt::pretty();
 
 		template <typename T>
 		bool operator==(T _rhs) {
@@ -1297,13 +1297,13 @@ namespace zapata {
 		JSONStruct() : __type(JSNil) { };
 		~JSONStruct() { 
 			switch(__type) {
-				case zapata::JSObject : {
+				case zpt::JSObject : {
 					__object.~JSONObj();
 					break;
-				} case zapata::JSArray : {
+				} case zpt::JSArray : {
 					__array.~JSONArr();
 					break;
-				} case zapata::JSString : {
+				} case zpt::JSString : {
 					__string.~JSONStr();
 					break;
 				} default : {
@@ -1329,7 +1329,7 @@ namespace zapata {
 			double __double;
 			bool __boolean;
 			void* __nil;
-			zapata::timestamp_t __date;
+			zpt::timestamp_t __date;
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 		};
 #endif
@@ -1347,7 +1347,7 @@ namespace zapata {
 		JSONElementT(long long _value);
 		JSONElementT(double _value);
 		JSONElementT(bool _value);
-		JSONElementT(zapata::timestamp_t _value);
+		JSONElementT(zpt::timestamp_t _value);
 		JSONElementT(int _value);
 		JSONElementT(size_t _value);
 #ifdef __LP64__
@@ -1366,7 +1366,7 @@ namespace zapata {
 		virtual void assign(JSONElementT& _rhs);
 		template <typename T>
 		inline void assign(T _in) {
-			zapata::JSONElementT _rhs(_in);
+			zpt::JSONElementT _rhs(_in);
 			this->assign(_rhs);
 		}
 
@@ -1374,7 +1374,7 @@ namespace zapata {
 		void parent(JSONElementT* _parent);
 
 		/**
-		 * @brief Creates a full copy of the JSON representation pointed by this *zapata::JSONPtr*
+		 * @brief Creates a full copy of the JSON representation pointed by this *zpt::JSONPtr*
 		 * @return a pointer to the copy of the underlying JSON representation
 		 */
 		JSONPtr clone();
@@ -1385,7 +1385,7 @@ namespace zapata {
 		long long intr();
 		double dbl();
 		bool bln();
-		zapata::timestamp_t date();
+		zpt::timestamp_t date();
 		double number();
 
 		JSONElementT& operator<<(const char* _in);
@@ -1395,19 +1395,19 @@ namespace zapata {
 		JSONElementT& operator<<(T _in){
 			assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
 			JSONElementT _e(_in);
-			if (this->__target.__type == _e.type() && _e.type() != zapata::JSObject && _e.type() != zapata::JSArray) {
+			if (this->__target.__type == _e.type() && _e.type() != zpt::JSObject && _e.type() != zpt::JSArray) {
 				this->assign(_e);
 				return * this;
 			} switch(this->__target.__type) {
-				case zapata::JSObject : {
+				case zpt::JSObject : {
 					this->__target.__object->push(new JSONElementT(_in));
 					break;
-				} case zapata::JSArray : {
+				} case zpt::JSArray : {
 					this->__target.__array->push(new JSONElementT(_in));
 					break;
 				}
 				default : {
-					assertz(this->__target.__type == zapata::JSObject || this->__target.__type == zapata::JSArray, "the type must be a JSObject, JSArray or the same type of the target, in order to push JSONElementT*", 0, 0);
+					assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray, "the type must be a JSObject, JSArray or the same type of the target, in order to push JSONElementT*", 0, 0);
 					break;
 				}
 			}
@@ -1416,11 +1416,11 @@ namespace zapata {
 		template <typename T>
 		JSONElementT& operator>>(T _in){
 			switch(this->__target.__type) {
-				case zapata::JSObject : {
+				case zpt::JSObject : {
 					this->__target.__object >> _in;
 					break;
 				}
-				case zapata::JSArray : {
+				case zpt::JSArray : {
 					this->__target.__array >> _in;
 					break;
 				}
@@ -1432,13 +1432,13 @@ namespace zapata {
 		};
 		template <typename T>
 		JSONPtr& operator[](T _idx) {
-			if (this->__target.__type == zapata::JSObject) {
+			if (this->__target.__type == zpt::JSObject) {
 				return this->__target.__object [_idx];
 			}
-			else if (this->__target.__type == zapata::JSArray) {
+			else if (this->__target.__type == zpt::JSArray) {
 				return this->__target.__array [_idx];
 			}
-			return zapata::undefined;
+			return zpt::undefined;
 		};
 		bool operator==(JSONElementT& _in);
 		bool operator==(JSONPtr& _rhs);
@@ -1452,7 +1452,7 @@ namespace zapata {
 		template <typename T>
 		bool operator!=(T _in) {
 			if (_in == nullptr) {
-				return this->__target.__type == zapata::JSNil; 
+				return this->__target.__type == zpt::JSNil; 
 			}
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
@@ -1486,19 +1486,19 @@ namespace zapata {
 			return (* this) >= _rhs;
 		};
 
-		JSONPtr operator+(zapata::JSONPtr _rhs);
-		JSONPtr operator+(zapata::JSONElementT& _rhs);
+		JSONPtr operator+(zpt::JSONPtr _rhs);
+		JSONPtr operator+(zpt::JSONElementT& _rhs);
 
 		friend ostream& operator<<(ostream& _out, JSONElementT _in) {
 			_in.stringify(_out);
 			return _out;
 		};
 
-		zapata::JSONPtr getPath(std::string _path, std::string _separator = ".");
-		void setPath(std::string _path, zapata::JSONPtr _value, std::string _separator = ".");
+		zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
+		void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
 		void delPath(std::string _path, std::string _separator = ".");
 
-		virtual void inspect(zapata::JSONPtr _pattern, std::function< void (std::string , std::string, zapata::JSONElementT&) > _callback, zapata::JSONElementT * _parent = nullptr, std::string _key = "", std::string _parent_path = "");
+		virtual void inspect(zpt::JSONPtr _pattern, std::function< void (std::string , std::string, zpt::JSONElementT&) > _callback, zpt::JSONElementT * _parent = nullptr, std::string _key = "", std::string _parent_path = "");
 
 		virtual void stringify(string& _out);
 		virtual void stringify(ostream& _out);
@@ -1522,17 +1522,17 @@ namespace zapata {
 		};
 		inline json(const char * _rhs) : std::string(_rhs) {
 		};
-		inline json(zapata::pretty _rhs) : std::string(_rhs.data()) {
+		inline json(zpt::pretty _rhs) : std::string(_rhs.data()) {
 		};
 		template <typename T>
 		inline json(T _rhs) : std::string() {
 			_rhs->stringify(* this);
 		};
-		friend ostream& operator<<(ostream& _out, zapata::json& _in) {
+		friend ostream& operator<<(ostream& _out, zpt::json& _in) {
 			_out << string(_in.data());
 			return _out;
 		};
-		friend istream& operator>>(istream& _in, zapata::json& _out) {
+		friend istream& operator>>(istream& _in, zpt::json& _out) {
 			_out.clear();
 			char _c = '\0';
 
@@ -1584,8 +1584,8 @@ namespace zapata {
 			}
 			return _in;
 		};
-		inline operator zapata::JSONPtr() {
-			zapata::JSONPtr _result;
+		inline operator zpt::JSONPtr() {
+			zpt::JSONPtr _result;
 			std::istringstream _iss;
 			_iss.str(* this);
 			_iss >> _result;
@@ -1594,61 +1594,61 @@ namespace zapata {
 	};
 
 	template <typename T>	
-	zapata::JSONElementT * mkelem(T& _e) {
-		return new zapata::JSONElementT(_e);
+	zpt::JSONElementT * mkelem(T& _e) {
+		return new zpt::JSONElementT(_e);
 	}
 
 	template <typename T>	
-	zapata::JSONPtr mkptr(T _v) {
+	zpt::JSONPtr mkptr(T _v) {
 		T _e(_v);
-		return zapata::JSONPtr(new zapata::JSONElementT(_e));
+		return zpt::JSONPtr(new zpt::JSONElementT(_e));
 	}
 
-	zapata::JSONPtr mkobj();
-	zapata::JSONPtr mkarr();
+	zpt::JSONPtr mkobj();
+	zpt::JSONPtr mkarr();
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template <typename T>
-bool zapata::JSONPtr::operator==(T _rhs) {
+bool zpt::JSONPtr::operator==(T _rhs) {
 	return *(this->get()) == _rhs;
 };
 template <typename T>
-bool zapata::JSONPtr::operator!=(T _rhs){
+bool zpt::JSONPtr::operator!=(T _rhs){
 	return *(this->get()) != _rhs;
 };
 template <typename T>
-bool zapata::JSONPtr::operator<(T _rhs) {
+bool zpt::JSONPtr::operator<(T _rhs) {
 	return *(this->get()) < _rhs;
 };
 template <typename T>
-bool zapata::JSONPtr::operator>(T _rhs) {
+bool zpt::JSONPtr::operator>(T _rhs) {
 	return *(this->get()) > _rhs;
 };
 template <typename T>
-bool zapata::JSONPtr::operator<=(T _rhs) {
+bool zpt::JSONPtr::operator<=(T _rhs) {
 	return *(this->get()) <= _rhs;
 };
 template <typename T>
-bool zapata::JSONPtr::operator>=(T _rhs) {
+bool zpt::JSONPtr::operator>=(T _rhs) {
 	return *(this->get()) >= _rhs;
 };
 template <typename T>
-zapata::JSONPtr& zapata::JSONPtr::operator<<(T _in) {
+zpt::JSONPtr& zpt::JSONPtr::operator<<(T _in) {
 	*(this->get()) << _in;
 	return * this;
 };
 template <typename T>
-zapata::JSONPtr& zapata::JSONPtr::operator>>(T _in) {
+zpt::JSONPtr& zpt::JSONPtr::operator>>(T _in) {
 	*(this->get()) >> _in;
 	return * this;
 };
 template <typename T>
-zapata::JSONPtr& zapata::JSONPtr::operator[](T _idx) {
+zpt::JSONPtr& zpt::JSONPtr::operator[](T _idx) {
 	return (*(this->get()))[_idx];
 };
 template <typename T>
-zapata::JSONPtr zapata::JSONPtr::operator+(T _rhs) {
+zpt::JSONPtr zpt::JSONPtr::operator+(T _rhs) {
 	return *(this->get()) + _rhs;
 };
 #endif

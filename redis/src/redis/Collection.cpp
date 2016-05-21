@@ -24,20 +24,20 @@ SOFTWARE.
 
 #include <zapata/redis/Collection.h>
 
-zapata::redis::CollectionPtr::CollectionPtr(zapata::redis::Collection * _target) : std::shared_ptr<zapata::redis::Collection>(_target) {
+zpt::redis::CollectionPtr::CollectionPtr(zpt::redis::Collection * _target) : std::shared_ptr<zpt::redis::Collection>(_target) {
 }
 
-zapata::redis::CollectionPtr::CollectionPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::redis::Collection>(new zapata::redis::Collection(_options)) {
+zpt::redis::CollectionPtr::CollectionPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::redis::Collection>(new zpt::redis::Collection(_options)) {
 }
 
-zapata::redis::CollectionPtr::~CollectionPtr() {
+zpt::redis::CollectionPtr::~CollectionPtr() {
 }
 
-zapata::redis::Collection::Collection(zapata::JSONPtr _options) : __options( _options) {
+zpt::redis::Collection::Collection(zpt::JSONPtr _options) : __options( _options) {
 	this->connect((string) _options["redis"]["bind"], (uint) _options["redis"]["port"]);
 }
 
-zapata::redis::Collection::~Collection() {
+zpt::redis::Collection::~Collection() {
 	redisFree(this->__conn);
 	pthread_mutexattr_destroy(this->__attr);
 	pthread_mutex_destroy(this->__mtx);
@@ -45,15 +45,15 @@ zapata::redis::Collection::~Collection() {
 	delete this->__attr;
 }
 
-zapata::JSONPtr zapata::redis::Collection::options() {
+zpt::JSONPtr zpt::redis::Collection::options() {
 	return this->__options;
 }
 
-std::string zapata::redis::Collection::name() {
+std::string zpt::redis::Collection::name() {
 	return string("redis://") + ((string) this->__options["redis"]["bind"]) + string(":") + ((string) this->__options["redis"]["port"]) + string("/") + ((string) this->__options["redis"]["db"]);
 }
 
-void zapata::redis::Collection::connect(string _host, uint _port) {
+void zpt::redis::Collection::connect(string _host, uint _port) {
 	this->__mtx = new pthread_mutex_t();
 	this->__attr = new pthread_mutexattr_t();
 	pthread_mutexattr_init(this->__attr);
@@ -72,12 +72,12 @@ void zapata::redis::Collection::connect(string _host, uint _port) {
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 };
 
-void zapata::redis::Collection::reconnect() {
+void zpt::redis::Collection::reconnect() {
 	redisFree(this->__conn);
 	bool _success = true;
 	short _retry = 0;
@@ -89,8 +89,8 @@ void zapata::redis::Collection::reconnect() {
 	while(!_success && _retry != 10);
 }
 
-zapata::JSONPtr zapata::redis::Collection::insert(std::string _collection, std::string _id_prefix, zapata::JSONPtr _document) {	
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+zpt::JSONPtr zpt::redis::Collection::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
 	_key.insert(0, "|");
@@ -111,14 +111,14 @@ zapata::JSONPtr zapata::redis::Collection::insert(std::string _collection, std::
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		pthread_mutex_unlock(this->__mtx);
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
 		}
 		_retry++;
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 	freeReplyObject(_reply);	
@@ -126,15 +126,15 @@ zapata::JSONPtr zapata::redis::Collection::insert(std::string _collection, std::
 	return _document;
 }
 
-int zapata::redis::Collection::update(std::string _collection, std::string _url, zapata::JSONPtr _document) {	
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+int zpt::redis::Collection::update(std::string _collection, std::string _url, zpt::JSONPtr _document) {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
 	_key.insert(0, "|");
 	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	zapata::JSONPtr _record = this->get(_collection, _url);
-	zapata::JSONPtr _new_record = _record + _document;
+	zpt::JSONPtr _record = this->get(_collection, _url);
+	zpt::JSONPtr _new_record = _record + _document;
 
 	redisReply* _reply = nullptr;
 	bool _success = true;
@@ -145,14 +145,14 @@ int zapata::redis::Collection::update(std::string _collection, std::string _url,
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		pthread_mutex_unlock(this->__mtx);
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
 		}
 		_retry++;
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 	freeReplyObject(_reply);	
@@ -160,15 +160,15 @@ int zapata::redis::Collection::update(std::string _collection, std::string _url,
 	return 1;
 }
 
-int zapata::redis::Collection::unset(std::string _collection, std::string _url, zapata::JSONPtr _document) {
-	assertz(_document->ok() && _document->type() == zapata::JSObject, "'_document' must be of type JSObject", 412, 0);
+int zpt::redis::Collection::unset(std::string _collection, std::string _url, zpt::JSONPtr _document) {
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
 	_key.insert(0, "|");
 	_key.insert(0, (string) this->__options["redis"]["db"]);
 
-	zapata::JSONPtr _record = this->get(_collection, _url);
-	zapata::JSONPtr _new_record = _record->clone();
+	zpt::JSONPtr _record = this->get(_collection, _url);
+	zpt::JSONPtr _new_record = _record->clone();
 	for (auto _attribute : _document->obj()) {
 		_new_record >> _attribute.first;
 	}
@@ -182,14 +182,14 @@ int zapata::redis::Collection::unset(std::string _collection, std::string _url, 
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		pthread_mutex_unlock(this->__mtx);
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
 		}
 		_retry++;
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 	freeReplyObject(_reply);
@@ -197,7 +197,7 @@ int zapata::redis::Collection::unset(std::string _collection, std::string _url, 
 	return 1;
 }
 
-int zapata::redis::Collection::remove(std::string _collection, std::string _url) {	
+int zpt::redis::Collection::remove(std::string _collection, std::string _url) {	
 	std::string _key(_collection);
 	_key.insert(0, "|");
 	_key.insert(0, (string) this->__options["redis"]["db"]);
@@ -212,14 +212,14 @@ int zapata::redis::Collection::remove(std::string _collection, std::string _url)
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		pthread_mutex_unlock(this->__mtx);
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
 		}
 		_retry++;
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 	freeReplyObject(_reply);
@@ -227,7 +227,7 @@ int zapata::redis::Collection::remove(std::string _collection, std::string _url)
 	return 1;
 }
 
-zapata::JSONPtr zapata::redis::Collection::get(std::string _collection, std::string _url) {	
+zpt::JSONPtr zpt::redis::Collection::get(std::string _collection, std::string _url) {	
 	std::string _key(_collection);
 	_key.insert(0, "|");
 	_key.insert(0, (string) this->__options["redis"]["db"]);
@@ -242,14 +242,14 @@ zapata::JSONPtr zapata::redis::Collection::get(std::string _collection, std::str
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
 		pthread_mutex_unlock(this->__mtx);
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
 		}
 		_retry++;
 	}
 	while(!_success && _retry != 10);
 	if(!_success) {
-		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+		zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 		exit(-10);
 	}
 	
@@ -271,30 +271,30 @@ zapata::JSONPtr zapata::redis::Collection::get(std::string _collection, std::str
 		}
 		case REDIS_REPLY_NIL: {
 			freeReplyObject(_reply);
-			return zapata::undefined;
+			return zpt::undefined;
 		}
 		case REDIS_REPLY_STRING: {
 			string _data(_reply->str, _reply->len);
 			try {
-				zapata::JSONPtr _return = zapata::fromstr(_data);
+				zpt::JSONPtr _return = zpt::fromstr(_data);
 				freeReplyObject(_reply);
 				return _return;
 			}
-			catch(zapata::SyntaxErrorException& _e) {
+			catch(zpt::SyntaxErrorException& _e) {
 				assertz(_reply != nullptr, string("something went wrong with the Redis server, got non JSON value:\n") + _data, 0, 0);
 			}
 		}
 		default : {
-			zlog("\nnone of the above", zapata::notice);
+			zlog("\nnone of the above", zpt::notice);
 			break;
 		}
 	}
 
 	freeReplyObject(_reply);
-	return zapata::undefined;
+	return zpt::undefined;
 }
 
-zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata::JSONPtr _pattern) {
+zpt::JSONPtr zpt::redis::Collection::query(std::string _collection, zpt::JSONPtr _pattern) {
 	std::string _key(_collection);
 	_key.insert(0, "|");
 	_key.insert(0, (string) this->__options["redis"]["db"]);
@@ -302,7 +302,7 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 	string _command("HSCAN %s %i");
 	int _cursor = 0;
 	redisReply* _reply = nullptr;
-	zapata::JSONPtr _return = zapata::mkarr();
+	zpt::JSONPtr _return = zpt::mkarr();
 
 	do {
 		bool _success = true;
@@ -313,14 +313,14 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
 			pthread_mutex_unlock(this->__mtx);
 			if (!_success) {
-				zlog("disconnected from Redis server, going to reconnect...", zapata::warning);
+				zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 				this->reconnect();
 			}
 			_retry++;
 		}
 		while(!_success && _retry != 10);
 		if(!_success) {
-			zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zapata::emergency);
+			zlog(string("couldn't connect to ") + this->__host + string(":") + std::to_string(this->__port) + string(", after several attempts.\nEXITING since can't vouche for internal state."), zpt::emergency);
 			exit(-10);
 		}
 		
@@ -356,7 +356,7 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 				_cursor = std::stoi(string(_reply->element[0]->str, _reply->element[0]->len));
 				for (size_t _i = 0; _i < _reply->element[1]->elements; _i += 2) {
 					std::string _json(_reply->element[1]->element[_i + 1]->str, _reply->element[1]->element[_i + 1]->len);
-					zapata::JSONPtr _record = zapata::fromstr(_json);
+					zpt::JSONPtr _record = zpt::fromstr(_json);
 					bool _match = true;
 					for (auto _o : _pattern->obj()) {
 						if (_record[_o.first] != _o.second) {
@@ -374,7 +374,7 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 			default : {
 				_cursor = 0;
 				freeReplyObject(_reply);
-				zlog("\nnone of the above", zapata::notice);
+				zlog("\nnone of the above", zpt::notice);
 				break;
 			}
 		}
@@ -382,9 +382,9 @@ zapata::JSONPtr zapata::redis::Collection::query(std::string _collection, zapata
 	while (_cursor != 0);
 
 	if (_return->arr()->size() == 0) {
-		return zapata::undefined;
+		return zpt::undefined;
 	}
-	return zapata::mkptr(JSON(
+	return zpt::mkptr(JSON(
 		"size" << _return->arr()->size() <<
 		"elements" << _return
 	));

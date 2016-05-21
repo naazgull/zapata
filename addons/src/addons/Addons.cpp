@@ -25,11 +25,11 @@ SOFTWARE.
 #include <zapata/addons/Addons.h>
 #include <dlfcn.h>
 
-zapata::Addons::Addons(zapata::JSONPtr _options) : zapata::EventEmitter( _options ) {
+zpt::Addons::Addons(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
 	if (_options["addons"]["modules"]->ok()) {
 		for (auto _i : _options["addons"]["modules"]->obj()) {
 			string _key = _i.first;
-			zapata::JSONElement _value = _i.second;
+			zpt::JSONElement _value = _i.second;
 
 			string _lib_file("lib");
 			_lib_file.append((string) _value["lib"]);
@@ -38,11 +38,11 @@ zapata::Addons::Addons(zapata::JSONPtr _options) : zapata::EventEmitter( _option
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
-					zlog(string(dlerror()), zapata::error);
+					zlog(string(dlerror()), zpt::error);
 				}
 				else {
-					void (*_populate)(zapata::EventEmitterPtr);
-					_populate = (void (*)(zapata::EventEmitterPtr)) dlsym(hndl, "plug");
+					void (*_populate)(zpt::EventEmitterPtr);
+					_populate = (void (*)(zpt::EventEmitterPtr)) dlsym(hndl, "plug");
 					_populate(this->self());
 				}
 			}
@@ -50,23 +50,23 @@ zapata::Addons::Addons(zapata::JSONPtr _options) : zapata::EventEmitter( _option
 	}
 }
 
-zapata::Addons::~Addons() {
+zpt::Addons::~Addons() {
 	for (auto _i : this->__resources) {
 		regfree(_i.first);
 		delete _i.first;
 	}
 }
 
-void zapata::Addons::on(string _regex, zapata::ev::Handler _handler) {
-	this->on(zapata::ev::Post, _regex, _handler);
+void zpt::Addons::on(string _regex, zpt::ev::Handler _handler) {
+	this->on(zpt::ev::Post, _regex, _handler);
 }
 
-void zapata::Addons::on(zapata::ev::Performative _event, string _regex,  zapata::ev::Handler _handler) {
+void zpt::Addons::on(zpt::ev::Performative _event, string _regex,  zpt::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	std::vector< zapata::ev::Handler> _handlers;
+	std::vector< zpt::ev::Handler> _handlers;
 	_handlers.push_back(nullptr);
 	_handlers.push_back(nullptr);
 	_handlers.push_back(_handler);
@@ -75,27 +75,27 @@ void zapata::Addons::on(zapata::ev::Performative _event, string _regex,  zapata:
 	_handlers.push_back(nullptr);
 	_handlers.push_back(nullptr);
 
-	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
+	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
 }
 
-void zapata::Addons::on(string _regex,  zapata::ev::Handler _handler_set[7]) {
+void zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
 
-	vector< zapata::ev::Handler> _handlers;
-	_handlers.push_back(_handler_set[zapata::ev::Get]);
-	_handlers.push_back(_handler_set[zapata::ev::Put]);
-	_handlers.push_back(_handler_set[zapata::ev::Post]);
-	_handlers.push_back(_handler_set[zapata::ev::Delete]);
-	_handlers.push_back(_handler_set[zapata::ev::Head]);
-	_handlers.push_back(_handler_set[zapata::ev::Options]);
-	_handlers.push_back(_handler_set[zapata::ev::Patch]);
+	vector< zpt::ev::Handler> _handlers;
+	_handlers.push_back(_handler_set[zpt::ev::Get]);
+	_handlers.push_back(_handler_set[zpt::ev::Put]);
+	_handlers.push_back(_handler_set[zpt::ev::Post]);
+	_handlers.push_back(_handler_set[zpt::ev::Delete]);
+	_handlers.push_back(_handler_set[zpt::ev::Head]);
+	_handlers.push_back(_handler_set[zpt::ev::Options]);
+	_handlers.push_back(_handler_set[zpt::ev::Patch]);
 
-	this->__resources.push_back(pair<regex_t*, vector< zapata::ev::Handler> >(_url_pattern, _handlers));
+	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
 }
 
-void zapata::Addons::off(zapata::ev::Performative _event, std::string _regex) {
+void zpt::Addons::off(zpt::ev::Performative _event, std::string _regex) {
 	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
 		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			this->__resources[_i].second[_event] = nullptr;
@@ -103,7 +103,7 @@ void zapata::Addons::off(zapata::ev::Performative _event, std::string _regex) {
 	}
 }
 
-void zapata::Addons::off(std::string _regex) {
+void zpt::Addons::off(std::string _regex) {
 	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
 		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			delete this->__resources[_i].first;
@@ -113,23 +113,23 @@ void zapata::Addons::off(std::string _regex) {
 	}
 }
 
-zapata::JSONPtr zapata::Addons::trigger(std::string _regex, zapata::JSONPtr _payload) {
-	return this->trigger(zapata::ev::Post, _regex, _payload);
+zpt::JSONPtr zpt::Addons::trigger(std::string _regex, zpt::JSONPtr _payload) {
+	return this->trigger(zpt::ev::Post, _regex, _payload);
 }
 
-zapata::JSONPtr zapata::Addons::trigger(zapata::ev::Performative _method, std::string _resource, zapata::JSONPtr _payload) {
-	zapata::JSONPtr _return = zapata::mkarr();
+zpt::JSONPtr zpt::Addons::trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) {
+	zpt::JSONPtr _return = zpt::mkarr();
 
 	for (auto _i : this->__resources) {
 		if (regexec(_i.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				zapata::JSONPtr _result = _i.second[_method](_method, _resource, _payload, this->self());
+				zpt::JSONPtr _result = _i.second[_method](_method, _resource, _payload, this->self());
 				if (_result->ok()) {
 					_return << _result;
 				}
 			}
-			catch (zapata::AssertionException& _e) {
-				return zapata::mkptr(JSON(
+			catch (zpt::AssertionException& _e) {
+				return zpt::mkptr(JSON(
 					"status" << _e.status()
 					<< "error" <<  true
 					<< "assertion_failed" << _e.description()

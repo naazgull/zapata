@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-zapata::SyntaxErrorException::SyntaxErrorException(string _in) : __what(_in){
+zpt::SyntaxErrorException::SyntaxErrorException(string _in) : __what(_in){
 }
 
-zapata::SyntaxErrorException::~SyntaxErrorException() throw() {
+zpt::SyntaxErrorException::~SyntaxErrorException() throw() {
 }
 
-const char* zapata::SyntaxErrorException::what() {
+const char* zpt::SyntaxErrorException::what() {
 	return this->__what.data();
 }

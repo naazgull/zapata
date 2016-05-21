@@ -27,7 +27,7 @@ SOFTWARE.
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
 
-void zapata::process_mem_usage(double& vm_usage, double& resident_set) {
+void zpt::process_mem_usage(double& vm_usage, double& resident_set) {
 	using std::ios_base;
 	using std::ifstream;
 	using std::string;

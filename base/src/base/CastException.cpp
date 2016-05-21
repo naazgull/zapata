@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include <zapata/exceptions/CastException.h>
 
-zapata::CastException::CastException(string _in) : __what(_in){
+zpt::CastException::CastException(string _in) : __what(_in){
 }
 
-zapata::CastException::~CastException() throw() {
+zpt::CastException::~CastException() throw() {
 }
 
-const char* zapata::CastException::what() {
+const char* zpt::CastException::what() {
 	return this->__what.data();
 }

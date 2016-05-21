@@ -32,7 +32,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	class SyntaxErrorException: public std::exception {
 		private:

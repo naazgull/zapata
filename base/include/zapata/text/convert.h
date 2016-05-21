@@ -47,7 +47,7 @@ SOFTWARE.
 using namespace std;
 using namespace __gnu_cxx;
 
-namespace zapata {
+namespace zpt {
 
 	void tostr(std::string& s, int i);
 	void tostr(std::string& s, bool i);

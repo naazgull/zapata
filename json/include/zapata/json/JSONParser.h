@@ -27,7 +27,7 @@ SOFTWARE.
 #include <zapata/json/JSONObj.h>
 #include <zapata/json/JSONTokenizer.h>
 
-namespace zapata {
+namespace zpt {
 
 	class JSONParser: public JSONTokenizer {
 		public:

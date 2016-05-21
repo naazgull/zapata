@@ -33,11 +33,11 @@ SOFTWARE.
  * @param y the error message
  * @param z the HTTP status code to be replied to the invoking HTTP client
  */
-#define assertz(x,y,z,c) if (! (x)) { throw zapata::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+#define assertz(x,y,z,c) if (! (x)) { throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
 typedef struct epoll_event epoll_event_t;
 
-namespace zapata {
+namespace zpt {
 	enum JSONType {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
 	};
@@ -46,7 +46,7 @@ namespace zapata {
 	public:
 		virtual std::string name() = 0;
 	};
-	typedef std::shared_ptr<zapata::KB> KBPtr;
+	typedef std::shared_ptr<zpt::KB> KBPtr;
 
 	namespace ev {
 		enum Performative {
@@ -62,3 +62,5 @@ namespace zapata {
 	}
 
 }
+
+extern "C" int zapata_base();

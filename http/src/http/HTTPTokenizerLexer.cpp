@@ -25,95 +25,95 @@ SOFTWARE.
 #include <zapata/http/config.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
-zapata::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &_out) :
-	zapata::HTTPLexer(_in, _out) {
+zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream &_in, std::ostream &_out) :
+	zpt::HTTPLexer(_in, _out) {
 }
 
-zapata::HTTPTokenizerLexer::~HTTPTokenizerLexer() {
+zpt::HTTPTokenizerLexer::~HTTPTokenizerLexer() {
 }
 
-void zapata::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) {
+void zpt::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) {
 	this->__root_req = _root.get();
 }
 
-void zapata::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) {
+void zpt::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) {
 	this->__root_rep = _root.get();
 }
 
-void zapata::HTTPTokenizerLexer::justLeave() {
+void zpt::HTTPTokenizerLexer::justLeave() {
 	this->leave(-1);
 }
 
-void zapata::HTTPTokenizerLexer::init(zapata::HTTPType _in_type) {
+void zpt::HTTPTokenizerLexer::init(zpt::HTTPType _in_type) {
 	this->d_chunked_body = false;
 	this->d_chunked.clear();
 	this->__root_type = _in_type;
 	switch (_in_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			string _ms(this->matched());
-			zapata::ev::Performative _m = zapata::ev::from_str(_ms);
+			zpt::ev::Performative _m = zpt::ev::from_str(_ms);
 			this->__root_req->method(_m);
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			break;
 		}
 	}
 }
 
-void zapata::HTTPTokenizerLexer::body() {
+void zpt::HTTPTokenizerLexer::body() {
 	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			this->__root_req->body(this->matched());
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			this->__root_rep->body(this->matched());
 			break;
 		}
 	}
 }
 
-void zapata::HTTPTokenizerLexer::url() {
+void zpt::HTTPTokenizerLexer::url() {
 	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			this->__root_req->url(this->matched());
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			break;
 		}
 	}
 }
 
-void zapata::HTTPTokenizerLexer::status() {
+void zpt::HTTPTokenizerLexer::status() {
 	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			int _status = 0;
 			string _statusstr(this->matched());
-			zapata::fromstr(_statusstr, & _status);
-			this->__root_rep->status((zapata::HTTPStatus) _status);
+			zpt::fromstr(_statusstr, & _status);
+			this->__root_rep->status((zpt::HTTPStatus) _status);
 			break;
 		}
 	}
 }
 
-void zapata::HTTPTokenizerLexer::add() {
+void zpt::HTTPTokenizerLexer::add() {
 	string _s(this->matched());
-	zapata::trim(_s);
+	zpt::trim(_s);
 	if (this->__header_name.length() == 0) {
 		this->__header_name.assign(_s);
 		return;
 	}
 	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			this->__root_req->header(this->__header_name, _s);
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			this->__root_rep->header(this->__header_name, _s);
 			break;
 		}
@@ -121,21 +121,21 @@ void zapata::HTTPTokenizerLexer::add() {
 	this->__header_name.clear();
 }
 
-void zapata::HTTPTokenizerLexer::name() {
+void zpt::HTTPTokenizerLexer::name() {
 	string _s(this->matched());
-	zapata::trim(_s);
+	zpt::trim(_s);
 	this->__param_name.assign(_s);			
 }
 
-void zapata::HTTPTokenizerLexer::value() {
+void zpt::HTTPTokenizerLexer::value() {
 	string _s(this->matched());
-	zapata::trim(_s);
+	zpt::trim(_s);
 	switch (this->__root_type) {
-		case zapata::HTTPRequest : {
+		case zpt::HTTPRequest : {
 			this->__root_req->param(this->__param_name, _s);
 			break;
 		}
-		case zapata::HTTPReply : {
+		case zpt::HTTPReply : {
 			break;
 		}
 	}

@@ -24,39 +24,39 @@ SOFTWARE.
 
 #include <zapata/events/EventEmitter.h>
 
-zapata::EventEmitter::EventEmitter() : __self( this ) {
+zpt::EventEmitter::EventEmitter() : __self( this ) {
 }
 
-zapata::EventEmitter::EventEmitter(zapata::JSONPtr _options) :  __options( _options), __self( this ) {
+zpt::EventEmitter::EventEmitter(zpt::JSONPtr _options) :  __options( _options), __self( this ) {
 }
 
-zapata::EventEmitter::~EventEmitter() {
+zpt::EventEmitter::~EventEmitter() {
 }
 
-zapata::JSONPtr zapata::EventEmitter::options() {
+zpt::JSONPtr zpt::EventEmitter::options() {
 	return this->__options;
 }
 
-zapata::EventEmitterPtr zapata::EventEmitter::self() {
+zpt::EventEmitterPtr zpt::EventEmitter::self() {
 	return this->__self;
 }
 
-void zapata::EventEmitter::add_kb(std::string _name, zapata::KBPtr _kb) {
+void zpt::EventEmitter::add_kb(std::string _name, zpt::KBPtr _kb) {
 	this->__kb.insert(make_pair(_name, _kb));
 }
 
-zapata::KBPtr zapata::EventEmitter::get_kb(std::string _name) {
+zpt::KBPtr zpt::EventEmitter::get_kb(std::string _name) {
 	auto _found = this->__kb.find(_name);
 	if (_found == this->__kb.end()) {
-		return zapata::KBPtr(nullptr);
+		return zpt::KBPtr(nullptr);
 	}
 	return _found->second;
 }
 
-zapata::JSONPtr zapata::split(std::string _to_split, std::string _separator) {
+zpt::JSONPtr zpt::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zapata::JSONPtr _ret = zapata::mkarr();
+	zpt::JSONPtr _ret = zpt::mkarr();
 	while(_iss.good()) {
 		getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
@@ -66,8 +66,8 @@ zapata::JSONPtr zapata::split(std::string _to_split, std::string _separator) {
 	return _ret;
 }
 
-std::string zapata::join(zapata::JSONPtr _to_join, std::string _separator) {
-	assertz(_to_join->type() == zapata::JSArray, "JSON to join must be an array", 412, 0);
+std::string zpt::join(zpt::JSONPtr _to_join, std::string _separator) {
+	assertz(_to_join->type() == zpt::JSArray, "JSON to join must be an array", 412, 0);
 	std::string _return;
 	for (auto _a : _to_join->arr()) {
 		if (_return.length() != 0) {
@@ -79,9 +79,9 @@ std::string zapata::join(zapata::JSONPtr _to_join, std::string _separator) {
 }
 
 
-zapata::JSONPtr zapata::ev::split(std::string _url, zapata::JSONPtr _orphans) {
-	zapata::JSONObj _ret;
-	zapata::JSONPtr _splited = zapata::split(_url, "/");
+zpt::JSONPtr zpt::ev::split(std::string _url, zpt::JSONPtr _orphans) {
+	zpt::JSONObj _ret;
+	zpt::JSONPtr _splited = zpt::split(_url, "/");
 
 	size_t _idx = 0;
 	for (auto _label : _orphans->arr()) {
@@ -95,7 +95,7 @@ zapata::JSONPtr zapata::ev::split(std::string _url, zapata::JSONPtr _orphans) {
 	return mkptr(_ret);
 }
 
-std::string zapata::ev::join(zapata::JSONPtr _info, size_t _orphans) {
+std::string zpt::ev::join(zpt::JSONPtr _info, size_t _orphans) {
 	std::string _ret;
 	size_t _idx = 0;
 
@@ -110,65 +110,65 @@ std::string zapata::ev::join(zapata::JSONPtr _info, size_t _orphans) {
 	return _ret;
 }
 
-std::string zapata::ev::to_str(zapata::ev::Performative _performative) {
+std::string zpt::ev::to_str(zpt::ev::Performative _performative) {
 	switch(_performative) {
-		case zapata::ev::Get : {
+		case zpt::ev::Get : {
 			return "GET";
 		}
-		case zapata::ev::Put : {
+		case zpt::ev::Put : {
 			return "PUT";
 		}
-		case zapata::ev::Post : {
+		case zpt::ev::Post : {
 			return "POST";
 		}
-		case zapata::ev::Delete : {
+		case zpt::ev::Delete : {
 			return "DELETE";
 		}
-		case zapata::ev::Head : {
+		case zpt::ev::Head : {
 			return "HEAD";
 		}
-		case zapata::ev::Options : {
+		case zpt::ev::Options : {
 			return "OPTIONS";
 		}
-		case zapata::ev::Patch: {
+		case zpt::ev::Patch: {
 			return "PATCH";
 		}
-		case zapata::ev::Reply: {
+		case zpt::ev::Reply: {
 			return "REPLY";
 		}
 	}
 	return "HEAD";
 }
 
-zapata::ev::Performative zapata::ev::from_str(std::string _performative) {
+zpt::ev::Performative zpt::ev::from_str(std::string _performative) {
 	if (_performative == "GET") {
-		return zapata::ev::Get;
+		return zpt::ev::Get;
 	}
 	if (_performative == "PUT") {
-		return zapata::ev::Put;
+		return zpt::ev::Put;
 	}
 	if (_performative == "POST") {
-		return zapata::ev::Post;
+		return zpt::ev::Post;
 	}
 	if (_performative == "DELETE") {
-		return zapata::ev::Delete;
+		return zpt::ev::Delete;
 	}
 	if (_performative == "HEAD") {
-		return zapata::ev::Head;
+		return zpt::ev::Head;
 	}
 	if (_performative == "OPTIONS") {
-		return zapata::ev::Options;
+		return zpt::ev::Options;
 	}
 	if (_performative == "PATCH") {
-		return zapata::ev::Patch;
+		return zpt::ev::Patch;
 	}
 	if (_performative == "REPLY") {
-		return zapata::ev::Reply;
+		return zpt::ev::Reply;
 	}
-	return zapata::ev::Head;
+	return zpt::ev::Head;
 }
 
-zapata::JSONPtr zapata::ev::init_request() {
+zpt::JSONPtr zpt::ev::init_request() {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -181,7 +181,7 @@ zapata::JSONPtr zapata::ev::init_request() {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 
-	return zapata::mkptr(JSON(
+	return zpt::mkptr(JSON(
 		"Host" << "localhost" <<
 		"Accept" << "application/json" <<
 		"Accept-Charset" << "utf-8" <<
@@ -193,7 +193,7 @@ zapata::JSONPtr zapata::ev::init_request() {
 	));
 }
 
-zapata::JSONPtr zapata::ev::init_reply(std::string _uuid) {
+zpt::JSONPtr zpt::ev::init_reply(std::string _uuid) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -204,7 +204,7 @@ zapata::JSONPtr zapata::ev::init_reply(std::string _uuid) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	zapata::JSONPtr _return = zapata::mkptr(JSON(
+	zpt::JSONPtr _return = zpt::mkptr(JSON(
 		"Server" << "zapata RESTful server" <<
 		"Cache-Control" << "max-age=3600" <<
 		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<

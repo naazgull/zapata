@@ -24,13 +24,13 @@ SOFTWARE.
 
 #include <zapata/exceptions/ClosedException.h>
 
-zapata::ClosedException::ClosedException(string _in) : __what(_in){
+zpt::ClosedException::ClosedException(string _in) : __what(_in){
 }
 
-zapata::ClosedException::~ClosedException() throw() {
+zpt::ClosedException::~ClosedException() throw() {
 }
 
-const char* zapata::ClosedException::what() {
+const char* zpt::ClosedException::what() {
 	return this->__what.data();
 }
 

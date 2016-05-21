@@ -38,7 +38,7 @@ using namespace __gnu_cxx;
 
 typedef int semid_t;
 
-namespace zapata {
+namespace zpt {
 	class JobRef;
 	class Job;
 	typedef std::function< void (Job&) > JobLoopCallback;
@@ -67,7 +67,7 @@ namespace zapata {
 		size_t pending();
 		virtual void start();
 		virtual void exit();
-		virtual void loop(zapata::JobLoopCallback _callback) final;
+		virtual void loop(zpt::JobLoopCallback _callback) final;
 		virtual pthread_t id();
 
 	public:

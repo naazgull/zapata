@@ -1,4 +1,4 @@
-%namespace zapata
+%namespace zpt
 
 %baseclass-preinclude HTTPinc.h
 %baseclass-header HTTPTokenizerbase.h
@@ -26,7 +26,7 @@ exp :
 	METHOD
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zapata::HTTPRequest);
+		d_scanner.init(zpt::HTTPRequest);
 	}
 	SPACE URL
 	{
@@ -48,7 +48,7 @@ exp :
 	VERSION
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zapata::HTTPReply);
+		d_scanner.init(zpt::HTTPReply);
 	}
 	SPACE STATUS
 	{

@@ -34,70 +34,70 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	class RESTServer;
 	class RESTClient;
 
-	class RESTServerPtr : public std::shared_ptr<zapata::RESTServer> {
+	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
 		public:
-			RESTServerPtr(zapata::JSONPtr _options);
-			RESTServerPtr(zapata::RESTServer * _ptr);
+			RESTServerPtr(zpt::JSONPtr _options);
+			RESTServerPtr(zpt::RESTServer * _ptr);
 			virtual ~RESTServerPtr();
 	};
 
-	class RESTClientPtr : public std::shared_ptr<zapata::RESTClient> {
+	class RESTClientPtr : public std::shared_ptr<zpt::RESTClient> {
 		public:
-			RESTClientPtr(zapata::JSONPtr _options);
-			RESTClientPtr(zapata::RESTClient * _ptr);
+			RESTClientPtr(zpt::JSONPtr _options);
+			RESTClientPtr(zpt::RESTClient * _ptr);
 			virtual ~RESTClientPtr();
 	};
 
 	class RESTServer {
 	public:
-		RESTServer(zapata::JSONPtr _options);
+		RESTServer(zpt::JSONPtr _options);
 		virtual ~RESTServer();
 
 		virtual void start();
 
-		virtual zapata::JSONPtr options();
-		virtual zapata::ZMQPollPtr poll();
-		virtual zapata::EventEmitterPtr emitter();
+		virtual zpt::JSONPtr options();
+		virtual zpt::ZMQPollPtr poll();
+		virtual zpt::EventEmitterPtr emitter();
 
 	private:
-		zapata::EventEmitterPtr __emitter;
-		zapata::ZMQPollPtr __poll;
-		zapata::JSONPtr __options;
+		zpt::EventEmitterPtr __emitter;
+		zpt::ZMQPollPtr __poll;
+		zpt::JSONPtr __options;
 		std::string __type;
-		zapata::ZMQPtr __assync;
+		zpt::ZMQPtr __assync;
 
-		zapata::JSONPtr http2zmq(zapata::HTTPReq& _request);
-		zapata::HTTPRep zmq2http(zapata::JSONPtr& _out);
+		zpt::JSONPtr http2zmq(zpt::HTTPReq& _request);
+		zpt::HTTPRep zmq2http(zpt::JSONPtr& _out);
 	};
 
 	class RESTClient {
 	public:
-		RESTClient(zapata::JSONPtr _options);
+		RESTClient(zpt::JSONPtr _options);
 		virtual ~RESTClient();
 
 		virtual void start();
 
-		virtual zapata::JSONPtr options();
-		virtual zapata::ZMQPollPtr poll();
-		virtual zapata::EventEmitterPtr emitter();
+		virtual zpt::JSONPtr options();
+		virtual zpt::ZMQPollPtr poll();
+		virtual zpt::EventEmitterPtr emitter();
 
-		virtual zapata::ZMQPtr bind(short _type, std::string _connection);
-		virtual zapata::ZMQPtr bind(std::string _object_path);
+		virtual zpt::ZMQPtr bind(short _type, std::string _connection);
+		virtual zpt::ZMQPtr bind(std::string _object_path);
 
 	private:
-		zapata::EventEmitterPtr __emitter;
-		zapata::ZMQPollPtr __poll;
-		zapata::JSONPtr __options;
+		zpt::EventEmitterPtr __emitter;
+		zpt::ZMQPollPtr __poll;
+		zpt::JSONPtr __options;
 	};
 
 
-	void dirs(std::string _dir, zapata::JSONPtr _options);
-	void dirs(zapata::JSONPtr _options);
-	void env(zapata::JSONPtr _options);
+	void dirs(std::string _dir, zpt::JSONPtr _options);
+	void dirs(zpt::JSONPtr _options);
+	void env(zpt::JSONPtr _options);
 
 }

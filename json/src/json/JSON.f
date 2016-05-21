@@ -21,7 +21,7 @@
 %class-name = "JSONLexer"
 %lex-source = "JSONLexer.cpp"
 
-%namespace = "zapata"
+%namespace = "zpt"
 
 //%debug
 %no-lines

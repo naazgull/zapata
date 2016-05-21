@@ -23,28 +23,28 @@ SOFTWARE.
 */
 #include <zapata/auth/oauth2/AuthAgent.h>
 
-zapata::oauth2::AuthAgent::AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options) : zapata::AuthAgent( _callback, _options ) {
+zpt::oauth2::AuthAgent::AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options) : zpt::AuthAgent( _callback, _options ) {
 }
 
-zapata::oauth2::AuthAgent::~AuthAgent(){
+zpt::oauth2::AuthAgent::~AuthAgent(){
 }
 
-std::string zapata::oauth2::AuthAgent::code_url() {
-
-}
-
-std::string zapata::oauth2::AuthAgent::token_url() {
+std::string zpt::oauth2::AuthAgent::code_url() {
 
 }
 
-std::string zapata::oauth2::AuthAgent::refresh_token_url() {
+std::string zpt::oauth2::AuthAgent::token_url() {
+
+}
+
+std::string zpt::oauth2::AuthAgent::refresh_token_url() {
 	
 }
 
-zapata::JSONPtr zapata::oauth2::AuthAgent::authenticate(zapata::JSONPtr _credentials) {
-	zapata::HTTPReq _req;
+zpt::JSONPtr zpt::oauth2::AuthAgent::authenticate(zpt::JSONPtr _credentials) {
+	zpt::HTTPReq _req;
 	//_req->url(this->code_url());
 	//_req->url(this->token_url());
 	//_req->url(this->refresh_token_url());
-	return zapata::undefined;
+	return zpt::undefined;
 }

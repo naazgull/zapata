@@ -29,13 +29,13 @@ SOFTWARE.
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPTokenizer.h>
 
-namespace zapata {
+namespace zpt {
 
 	/**
 	 * \brief HTTP parser class, wrapper for the bisonc++ (<http://bisoncpp.sourceforge.net/>) and flexc++ (<http://flexcpp.sourceforge.net/>) generated parsers. 
 	 * 
 	 * The grammar files can be found at <https://github.com/zapata/zapata-client-cpp/blob/master/src/parsers/HTTP.b> and <https://github.com/zapata/zapata-client-cpp/blob/master/src/parsers/HTTP.f>.
-	 * This class should no be used directly but through the zapata::HTTPReq or zapata::HTTPRep **parse** method or ** << ** operator, for your convenience.
+	 * This class should no be used directly but through the zpt::HTTPReq or zpt::HTTPRep **parse** method or ** << ** operator, for your convenience.
 	 */
 	class HTTPParser : public HTTPTokenizer {
 	public:
@@ -43,7 +43,7 @@ namespace zapata {
 		 * \brief Creates a new HTTPRep instance, pointing to a *null* object.
 		 *
 		 * @param _in  the std::istream where the textual representation of the HTTP message is stream for parsing 
-		 * @param _out the std::ostream to where the transformed HTTP message may be outputed. Just for reference, *this* parser will not output a transform byte buffer, instead it will instantiate a zapata::HTTOObj class derivative.
+		 * @param _out the std::ostream to where the transformed HTTP message may be outputed. Just for reference, *this* parser will not output a transform byte buffer, instead it will instantiate a zpt::HTTOObj class derivative.
 		 */
 		HTTPParser(std::istream &_in = std::cin, std::ostream &_out = std::cout);
 		/**
@@ -52,15 +52,15 @@ namespace zapata {
 		virtual ~HTTPParser();
 
 		/**
-		 * \brief Access method for passing in the zapata::HTTPReq object to be populated during parsing
+		 * \brief Access method for passing in the zpt::HTTPReq object to be populated during parsing
 		 *
-		 * @param _root the zapata::HTTPReq object to be populated during parsing
+		 * @param _root the zpt::HTTPReq object to be populated during parsing
 		 */
 		void switchRoots(HTTPReq& _root);
 		/**
-		 * \brief Access method for passing in the zapata::HTTPRep object to be populated during parsing
+		 * \brief Access method for passing in the zpt::HTTPRep object to be populated during parsing
 		 *
-		 * @param _root the zapata::HTTPRep object to be populated during parsing
+		 * @param _root the zpt::HTTPRep object to be populated during parsing
 		 */
 		void switchRoots(HTTPRep& _root);
 		/**

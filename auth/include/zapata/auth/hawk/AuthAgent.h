@@ -36,14 +36,14 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 	namespace hawk {
-		class AuthAgent : public zapata::AuthAgent {
+		class AuthAgent : public zpt::AuthAgent {
 		public:
-			AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options);
+			AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options);
 			virtual ~AuthAgent();
 
-			virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) final;
+			virtual zpt::JSONPtr authenticate(zpt::JSONPtr _credentials) final;
 		};
 	}
 }

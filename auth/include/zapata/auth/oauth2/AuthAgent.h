@@ -37,18 +37,18 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 	namespace oauth2 {
-		class AuthAgent : public zapata::AuthAgent {
+		class AuthAgent : public zpt::AuthAgent {
 		public:
-			AuthAgent(zapata::AuthAgentCallback _callback, zapata::JSONPtr& _options);
+			AuthAgent(zpt::AuthAgentCallback _callback, zpt::JSONPtr& _options);
 			virtual ~AuthAgent();
 
 			virtual std::string code_url();
 			virtual std::string token_url();
 			virtual std::string refresh_token_url();
 
-			virtual zapata::JSONPtr authenticate(zapata::JSONPtr _credentials) final;
+			virtual zpt::JSONPtr authenticate(zpt::JSONPtr _credentials) final;
 
 		};
 	}

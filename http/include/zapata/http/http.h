@@ -35,14 +35,14 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
-	zapata::HTTPReq& fromhttpfile(ifstream& _in, zapata::HTTPReq& _out) ;
-	zapata::HTTPRep& fromhttpfile(ifstream& _in, zapata::HTTPRep& _out) ;
-	zapata::HTTPReq& fromhttpstream(istream& _in, zapata::HTTPReq& _out) ;
-	zapata::HTTPRep& fromhttpstream(istream& _in, zapata::HTTPRep& _out) ;
-	zapata::HTTPReq& fromhttpstr(string& _in, zapata::HTTPReq& _out) ;
-	zapata::HTTPRep& fromhttpstr(string& _in, zapata::HTTPRep& _out) ;
+	zpt::HTTPReq& fromhttpfile(ifstream& _in, zpt::HTTPReq& _out) ;
+	zpt::HTTPRep& fromhttpfile(ifstream& _in, zpt::HTTPRep& _out) ;
+	zpt::HTTPReq& fromhttpstream(istream& _in, zpt::HTTPReq& _out) ;
+	zpt::HTTPRep& fromhttpstream(istream& _in, zpt::HTTPRep& _out) ;
+	zpt::HTTPReq& fromhttpstr(string& _in, zpt::HTTPReq& _out) ;
+	zpt::HTTPRep& fromhttpstr(string& _in, zpt::HTTPRep& _out) ;
 
 	void tostr(string& _out, HTTPReq& _in) ;
 	void tostr(string& _out, HTTPRep& _in) ;

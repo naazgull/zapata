@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include <zapata/exceptions/ParserEOF.h>
 
-zapata::ParserEOF::ParserEOF(string _in) : __what(_in){
+zpt::ParserEOF::ParserEOF(string _in) : __what(_in){
 }
 
-zapata::ParserEOF::~ParserEOF() throw() {
+zpt::ParserEOF::~ParserEOF() throw() {
 }
 
-const char* zapata::ParserEOF::what() {
+const char* zpt::ParserEOF::what() {
 	return this->__what.data();
 }

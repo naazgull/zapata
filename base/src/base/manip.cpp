@@ -39,20 +39,20 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::ltrim(std::string &_in_out) {
+void zpt::ltrim(std::string &_in_out) {
         _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 }
 
-void zapata::rtrim(std::string &_in_out) {
+void zpt::rtrim(std::string &_in_out) {
         _in_out.erase(std::find_if(_in_out.rbegin(), _in_out.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), _in_out.end());
 }
 
-void zapata::trim(std::string &_in_out) {
-        zapata::ltrim(_in_out);
-        zapata::rtrim(_in_out);
+void zpt::trim(std::string &_in_out) {
+        zpt::ltrim(_in_out);
+        zpt::rtrim(_in_out);
 }
 
-void zapata::replace(string& str, string find, string replace) {
+void zpt::replace(string& str, string find, string replace) {
 	if (str.length() == 0) {
 		return;
 	}
@@ -65,7 +65,7 @@ void zapata::replace(string& str, string find, string replace) {
 	}
 }
 
-void zapata::normalize_path(string& _in_out, bool _with_trailing) {
+void zpt::normalize_path(string& _in_out, bool _with_trailing) {
 	if (_with_trailing) {
 		if (_in_out[_in_out.length() - 1] != '/') {
 			_in_out.insert(_in_out.length(), "/");
@@ -79,7 +79,7 @@ void zapata::normalize_path(string& _in_out, bool _with_trailing) {
 }
 
 
-void zapata::cipher(string _in, string _key, string& _out) {
+void zpt::cipher(string _in, string _key, string& _out) {
 	unsigned int _ikey = _key.length(), iIn = _in.length(), x = 0;
 	string _s_encrypted(_in);
 
@@ -92,11 +92,11 @@ void zapata::cipher(string _in, string _key, string& _out) {
 	_out.assign(_s_encrypted);
 }
 
-void zapata::decipher(string _in, string _key, string& _out) {
-	zapata::cipher(_in, _key, _out);
+void zpt::decipher(string _in, string _key, string& _out) {
+	zpt::cipher(_in, _key, _out);
 }
 
-void zapata::encrypt(string& _out, string _in, string _key) {
+void zpt::encrypt(string& _out, string _in, string _key) {
 	Bytef* src = new Bytef[_in.length()];
 	size_t destLen = (size_t) (_in.length() * 1.1 + 12);
 	Bytef* dest = new Bytef[destLen];
@@ -114,11 +114,11 @@ void zapata::encrypt(string& _out, string _in, string _key) {
 	cos << flush;
 
 	string _encrypted;
-	zapata::cipher(cos.str(), _key, _encrypted);
+	zpt::cipher(cos.str(), _key, _encrypted);
 
-	zapata::tostr(_out, _in.length());
+	zpt::tostr(_out, _in.length());
 	_out.insert(_out.length(), ".");
-	zapata::base64::encode(_encrypted);
+	zpt::base64::encode(_encrypted);
 
 	delete[] src;
 	delete[] dest;
@@ -126,20 +126,20 @@ void zapata::encrypt(string& _out, string _in, string _key) {
 	_out.assign(_encrypted);
 }
 
-void zapata::decrypt(string& _out, string _in, string _key) {
+void zpt::decrypt(string& _out, string _in, string _key) {
 	int _idx = _in.find('.');
 	string _length(_in.substr(0, _idx));
 	size_t _size = 0;
-	zapata::fromstr(_length, &_size);
+	zpt::fromstr(_length, &_size);
 	if (_size == 0) {
 		return;
 	}
 
 	string _encrypted = _in.substr(_idx + 1);
-	zapata::base64::decode(_encrypted);
+	zpt::base64::decode(_encrypted);
 
 	string _decrypted;
-	zapata::decipher(_encrypted, _key,  _decrypted);
+	zpt::decipher(_encrypted, _key,  _decrypted);
 
 	Bytef* src = new Bytef[_decrypted.length()];
 	size_t destLen = _size;
@@ -163,7 +163,7 @@ void zapata::decrypt(string& _out, string _in, string _key) {
 	_out.assign(cos.str());
 }
 
-void zapata::prettify_header_name(string& name) {
+void zpt::prettify_header_name(string& name) {
 	std::transform(name.begin(), name.begin() + 1, name.begin(), ::toupper);
 
 	stringstream iss;

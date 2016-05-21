@@ -26,12 +26,12 @@ SOFTWARE.
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 
-bool zapata::ws::handshake(zapata::socketstream& _s) {
+bool zpt::ws::handshake(zpt::socketstream& _s) {
 	string _key;
 	string _line;
 	do {
 		getline(_s, _line);
-		zapata::trim(_line);
+		zpt::trim(_line);
 		if (_line.find("Sec-WebSocket-Key:") != string::npos) {
 			_key.assign(_line.substr(19));
 		}
@@ -39,8 +39,8 @@ bool zapata::ws::handshake(zapata::socketstream& _s) {
 	while (_line != "");
 
 	_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-	_key.assign(zapata::hash::SHA1(_key));
-	zapata::base64::encode(_key);
+	_key.assign(zpt::hash::SHA1(_key));
+	zpt::base64::encode(_key);
 
 	_s << 
 		"HTTP/1.1 101 Switching Protocols" << CRLF <<
@@ -51,7 +51,7 @@ bool zapata::ws::handshake(zapata::socketstream& _s) {
 	return true;
 }
 
-bool zapata::ws::read(zapata::socketstream& _s, string& _out, int* _op_code) {
+bool zpt::ws::read(zpt::socketstream& _s, string& _out, int* _op_code) {
 	unsigned char _hdr;
 	_s >> noskipws >> _hdr;
 
@@ -105,7 +105,7 @@ bool zapata::ws::read(zapata::socketstream& _s, string& _out, int* _op_code) {
 	return _fin;
 }
 
-bool zapata::ws::write(zapata::socketstream& _s, string _in){
+bool zpt::ws::write(zpt::socketstream& _s, string _in){
 	int _len = _in.length();
 
 	_s << (unsigned char) 0x81;

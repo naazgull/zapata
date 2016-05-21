@@ -33,8 +33,8 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zapata::ascii::encode(string& _out, bool quote) {
-	wchar_t* wc = zapata::utf8::utf8_to_wstring(_out);
+void zpt::ascii::encode(string& _out, bool quote) {
+	wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
 
 	for (size_t i = 0; i != iso.length(); i++) {
@@ -54,7 +54,7 @@ void zapata::ascii::encode(string& _out, bool quote) {
 	_out.assign(_oss.str());
 }
 
-void zapata::generate_key(string& _out) {
+void zpt::generate_key(string& _out) {
 	timeval _tv;
 	gettimeofday (&_tv, nullptr);
 
@@ -75,8 +75,8 @@ void zapata::generate_key(string& _out) {
 	code3[0] = charset[rand() % charset.length()];
 	code3[1] = charset[rand() % charset.length()];
 
-	string _ts = zapata::tostr(time(nullptr), "%y%m%d");
-	string _usec = zapata::tostr(_tv.tv_usec);
+	string _ts = zpt::tostr(time(nullptr), "%y%m%d");
+	string _usec = zpt::tostr(_tv.tv_usec);
 
 	_out.insert(_out.length(), code3);
 	_out.insert(_out.length(), _ts);
@@ -85,7 +85,7 @@ void zapata::generate_key(string& _out) {
 	_out.insert(_out.length(), code2);
 }
 
-void zapata::generate_hash(string& _out) {
+void zpt::generate_hash(string& _out) {
 	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	string _randompass;
 	_randompass.resize(45);

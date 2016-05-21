@@ -66,29 +66,29 @@ SOFTWARE.
 #include <ctime>
 #include <memory>
 
-namespace zapata {
+namespace zpt {
 
 	namespace users {
 
-		void collection(zapata::EventEmitterPtr _events) {
-			 zapata::ev::Handler _handler_set[7] = {
+		void collection(zpt::EventEmitterPtr _events) {
+			 zpt::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_put,
 				//post
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_delete,
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
@@ -98,38 +98,38 @@ namespace zapata {
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/users$"), _handler_set);
 		}
 
-		void document(zapata::EventEmitterPtr _events) {
-			 zapata::ev::Handler _handler_set[7] = {
+		void document(zpt::EventEmitterPtr _events) {
+			 zpt::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//put
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//post
 				no_post,
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				}
@@ -137,9 +137,9 @@ namespace zapata {
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/users/([^/]+)$"), _handler_set);
 		}
 
-		void login(zapata::EventEmitterPtr _events) {
-			_events->on(zapata::ev::Post, "^/auth/login", [ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-				return zapata::mkptr(JSON(
+		void login(zpt::EventEmitterPtr _events) {
+			_events->on(zpt::ev::Post, "^/auth/login", [ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+				return zpt::mkptr(JSON(
 				        "status" << 204
 			        ));
 			});
@@ -148,37 +148,37 @@ namespace zapata {
 
 	namespace groups {
 
-		void collection(zapata::EventEmitterPtr _events) {	
-			 zapata::ev::Handler _handler_set[7] = {
+		void collection(zpt::EventEmitterPtr _events) {	
+			 zpt::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_put,
 				//post
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				}
@@ -186,37 +186,37 @@ namespace zapata {
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/groups$"), _handler_set);
 		}
 
-		void document(zapata::EventEmitterPtr _events) {	
-			 zapata::ev::Handler _handler_set[7] = {
+		void document(zpt::EventEmitterPtr _events) {	
+			 zpt::ev::Handler _handler_set[7] = {
 				//get
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//put
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_post,
 				//delete
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				//head
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				},
 				no_options, 
 				//patch
-				[ & ] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _envelope, zapata::EventEmitterPtr _events) -> zapata::JSONPtr {
-					return zapata::mkptr(JSON(
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+					return zpt::mkptr(JSON(
 						"status" << 204
 					));
 				}
@@ -226,16 +226,16 @@ namespace zapata {
 	}
 }
 
-extern "C" void restify(zapata::EventEmitterPtr _events) {
-//	zapata::KBPtr _kb(new zapata::mongodb::Collection(_events->options()["users"]));
+extern "C" void restify(zpt::EventEmitterPtr _events) {
+//	zpt::KBPtr _kb(new zpt::mongodb::Collection(_events->options()["users"]));
 //	_events->add_kb("mongodb.users", _kb);
 
-	zapata::users::collection(_events);
-	zapata::users::document(_events);
-	zapata::users::login(_events);
+	zpt::users::collection(_events);
+	zpt::users::document(_events);
+	zpt::users::login(_events);
 
-	zapata::groups::collection(_events);
-	zapata::groups::document(_events);
+	zpt::groups::collection(_events);
+	zpt::groups::document(_events);
 }
 
 extern "C" int zapata_users() {

@@ -29,7 +29,7 @@ SOFTWARE.
 
 #define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^")
 
-void zapata::mongodb::frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out) {
+void zpt::mongodb::frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
 		mongo::BSONElement _it = _i.next();
 		string _key(_it.fieldName());
@@ -59,14 +59,14 @@ void zapata::mongodb::frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out) {
 			}
 			case mongo::Object: {
 				mongo::BSONObj _mobj = _it.Obj();
-				zapata::JSONObj _obj;
-				zapata::mongodb::frommongo(_mobj, _obj);
+				zpt::JSONObj _obj;
+				zpt::mongodb::frommongo(_mobj, _obj);
 				_out << _key << _obj;
 				break;
 			}
 			case mongo::Array: {
-				zapata::JSONArr _arr;
-				zapata::mongodb::frommongo(_it, _arr);
+				zpt::JSONArr _arr;
+				zpt::mongodb::frommongo(_it, _arr);
 				_out << _key << _arr;
 				break;
 			}
@@ -77,7 +77,7 @@ void zapata::mongodb::frommongo(mongo::BSONObj& _in, zapata::JSONObj& _out) {
 	}
 }
 
-void zapata::mongodb::frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out) {
+void zpt::mongodb::frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out) {
 	std::vector<mongo::BSONElement> _obj = _in.Array();
 	for (auto _it : _obj) {
 		switch (_it.type()) {
@@ -105,14 +105,14 @@ void zapata::mongodb::frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out) 
 			}
 			case mongo::Object: {
 				mongo::BSONObj _mobj = _it.Obj();
-				zapata::JSONObj _obj;
-				zapata::mongodb::frommongo(_mobj, _obj);
+				zpt::JSONObj _obj;
+				zpt::mongodb::frommongo(_mobj, _obj);
 				_out <<  _obj;
 				break;
 			}
 			case mongo::Array: {
-				zapata::JSONArr _arr;
-				zapata::mongodb::frommongo(_it, _arr);
+				zpt::JSONArr _arr;
+				zpt::mongodb::frommongo(_it, _arr);
 				_out << _arr;
 				break;
 			}
@@ -123,41 +123,41 @@ void zapata::mongodb::frommongo(mongo::BSONElement& _in, zapata::JSONArr& _out) 
 	}
 }
 
-void zapata::mongodb::tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
+void zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 	for (auto _i : * _in) {
 		string _key = _i.first;
 		JSONElement _value = _i.second;
 
 		switch (_value->type()) {
-			case zapata::JSObject: {
+			case zpt::JSObject: {
 				mongo::BSONObjBuilder _mobj;
-				zapata::mongodb::tomongo(_value->obj(), _mobj);
+				zpt::mongodb::tomongo(_value->obj(), _mobj);
 				_out << _key << _mobj.obj();
 				break;
 			}
-			case zapata::JSArray: {
+			case zpt::JSArray: {
 				mongo::BSONArrayBuilder _mobj;
-				zapata::mongodb::tomongo(_value->arr(), _mobj);
+				zpt::mongodb::tomongo(_value->arr(), _mobj);
 				_out << _key << _mobj.arr();
 				break;
 			}
-			case zapata::JSString: {
+			case zpt::JSString: {
 				_out << _key << (string) _value;
 				break;
 			}
-			case zapata::JSBoolean: {
+			case zpt::JSBoolean: {
 				_out << _key << (bool) _value;
 				break;
 			}
-			case zapata::JSDouble: {
+			case zpt::JSDouble: {
 				_out << _key << (double) _value;
 				break;
 			}
-			case zapata::JSInteger: {
+			case zpt::JSInteger: {
 				_out << _key << (int) _value;
 				break;
 			}
-			case zapata::JSNil: {
+			case zpt::JSNil: {
 				_out.appendNull(_key);
 				break;
 			}
@@ -168,40 +168,40 @@ void zapata::mongodb::tomongo(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out
 	}
 }
 
-void zapata::mongodb::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
+void zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 	for (auto _i : * _in) {
 		JSONPtr _value = _i;
 
 		switch (_value->type()) {
-			case zapata::JSObject: {
+			case zpt::JSObject: {
 				mongo::BSONObjBuilder _mobj;
-				zapata::mongodb::tomongo(_value->obj(), _mobj);
+				zpt::mongodb::tomongo(_value->obj(), _mobj);
 				_out << _mobj.obj();
 				break;
 			}
-			case zapata::JSArray: {
+			case zpt::JSArray: {
 				mongo::BSONArrayBuilder _mobj;
-				zapata::mongodb::tomongo(_value->arr(), _mobj);
+				zpt::mongodb::tomongo(_value->arr(), _mobj);
 				_out << _mobj.arr();
 				break;
 			}
-			case zapata::JSString: {
+			case zpt::JSString: {
 				_out << (string) _value;
 				break;
 			}
-			case zapata::JSBoolean: {
+			case zpt::JSBoolean: {
 				_out << (bool) _value;
 				break;
 			}
-			case zapata::JSDouble: {
+			case zpt::JSDouble: {
 				_out << (double) _value;
 				break;
 			}
-			case zapata::JSInteger: {
+			case zpt::JSInteger: {
 				_out << (int) _value;
 				break;
 			}
-			case zapata::JSNil: {
+			case zpt::JSNil: {
 				_out.appendNull();
 				break;
 			}
@@ -212,37 +212,37 @@ void zapata::mongodb::tomongo(zapata::JSONArr& _in, mongo::BSONArrayBuilder&  _o
 	}
 }
 
-void zapata::mongodb::tosetcommand(zapata::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
 	for (auto _i : * _in) {
 		string _key = _i.first;
 		JSONElement _value = _i.second;
 
 		switch (_value->type()) {
-			case zapata::JSObject: {
-				zapata::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
+			case zpt::JSObject: {
+				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
 				break;
 			}
-			case zapata::JSArray: {
-				zapata::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
+			case zpt::JSArray: {
+				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
 				break;
 			}
-			case zapata::JSString: {
+			case zpt::JSString: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (string) _value;
 				break;
 			}
-			case zapata::JSBoolean: {
+			case zpt::JSBoolean: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (bool) _value;
 				break;
 			}
-			case zapata::JSDouble: {
+			case zpt::JSDouble: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (double) _value;
 				break;
 			}
-			case zapata::JSInteger: {
+			case zpt::JSInteger: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (int) _value;
 				break;
 			}
-			case zapata::JSNil: {
+			case zpt::JSNil: {
 				_out.appendNull((_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
 				break;
 			}
@@ -253,37 +253,37 @@ void zapata::mongodb::tosetcommand(zapata::JSONObj& _in, mongo::BSONObjBuilder& 
 	}
 }
 
-void zapata::mongodb::tosetcommand(zapata::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
 	size_t _idx = 0;
 	for (auto _i : *_in) {
 		JSONPtr _value = _i;
 
 		switch (_value->type()) {
-			case zapata::JSObject: {
-				zapata::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
+			case zpt::JSObject: {
+				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
-			case zapata::JSArray: {
-				zapata::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
+			case zpt::JSArray: {
+				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
-			case zapata::JSString: {
+			case zpt::JSString: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (string) _value;
 				break;
 			}
-			case zapata::JSBoolean: {
+			case zpt::JSBoolean: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (bool) _value;
 				break;
 			}
-			case zapata::JSDouble: {
+			case zpt::JSDouble: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (double) _value;
 				break;
 			}
-			case zapata::JSInteger: {
+			case zpt::JSInteger: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (int) _value;
 				break;
 			}
-			case zapata::JSNil: {
+			case zpt::JSNil: {
 				_out.appendNull((_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
@@ -296,7 +296,7 @@ void zapata::mongodb::tosetcommand(zapata::JSONArr& _in, mongo::BSONObjBuilder& 
 	}
 }
 
-void zapata::mongodb::get_query(zapata::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
+void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
 	if (!_in->ok()) {
 		return;
 	}
@@ -471,17 +471,17 @@ void zapata::mongodb::get_query(zapata::JSONPtr _in, mongo::BSONObjBuilder&  _qu
 					}
 					else if (options == "j") {
 						istringstream iss(expression);
-						zapata::JSONPtr _json;
+						zpt::JSONPtr _json;
 						try {
 							iss >> _json;
-							if (_json->type() == zapata::JSObject) {
+							if (_json->type() == zpt::JSObject) {
 								mongo::BSONObjBuilder _mongo_json;
-								zapata::mongodb::tomongo(_json, _mongo_json);
+								zpt::mongodb::tomongo(_json, _mongo_json);
 								_queryr.append(key, BSON(comp << _mongo_json.obj()));
 							}
-							else if (_json->type() == zapata::JSArray) {
+							else if (_json->type() == zpt::JSArray) {
 								mongo::BSONArrayBuilder _mongo_json;
-								zapata::mongodb::tomongo(_json, _mongo_json);
+								zpt::mongodb::tomongo(_json, _mongo_json);
 								_queryr.append(key, BSON(comp << _mongo_json.arr()));
 							}
 						}

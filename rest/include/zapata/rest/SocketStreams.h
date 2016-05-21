@@ -44,7 +44,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-namespace zapata {
+namespace zpt {
 
 	template<typename Char>
 	class basic_socketbuf : public std::basic_streambuf<Char> {
@@ -240,8 +240,8 @@ namespace zapata {
 	typedef basic_socketstream<char> socketstream;
 	typedef basic_socketstream<wchar_t> wsocketstream;
 
-	typedef std::shared_ptr< zapata::socketstream > socketstream_ptr;
-	typedef std::shared_ptr< zapata::wsocketstream > wscoketstream_ptr;
+	typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
+	typedef std::shared_ptr< zpt::wsocketstream > wscoketstream_ptr;
 
 	template<typename Char>
 	class basic_serversocketstream : public std::basic_iostream<Char> {
@@ -369,8 +369,8 @@ namespace zapata {
 	typedef basic_serversocketstream<char> serversocketstream;
 	typedef basic_serversocketstream<wchar_t> wserversocketstream;
 
-	typedef std::shared_ptr< zapata::serversocketstream > serversocketstream_ptr;
-	typedef std::shared_ptr< zapata::wserversocketstream > wserversocketstream_ptr;
+	typedef std::shared_ptr< zpt::serversocketstream > serversocketstream_ptr;
+	typedef std::shared_ptr< zpt::wserversocketstream > wserversocketstream_ptr;
 
 	#define CRLF "\r\n"
 
@@ -386,7 +386,7 @@ namespace zapata {
 			string _line;
 			do {
 				std::getline((* this), _line);
-				zapata::trim(_line);
+				zpt::trim(_line);
 				string _header(_line);
 				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
 				if (_header.find("sec-websocket-key:") != string::npos) {
@@ -396,8 +396,8 @@ namespace zapata {
 			while (_line != "");
 
 			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-			string _sha1 = zapata::hash::SHA1(_key);
-			zapata::base64::encode(_sha1);
+			string _sha1 = zpt::hash::SHA1(_key);
+			zpt::base64::encode(_sha1);
 			_key.assign(_sha1);
 
 			(* this) << 
@@ -507,7 +507,7 @@ namespace zapata {
 			string _line;
 			do {
 				std::getline((* this), _line);
-				zapata::trim(_line);
+				zpt::trim(_line);
 				string _header(_line);
 				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
 				if (_header.find("sec-websocket-key:") != string::npos) {
@@ -517,8 +517,8 @@ namespace zapata {
 			while (_line != "");
 
 			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-			string _sha1 = zapata::hash::SHA1(_key);
-			zapata::base64::encode(_sha1);
+			string _sha1 = zpt::hash::SHA1(_key);
+			zpt::base64::encode(_sha1);
 			_key.assign(_sha1);
 
 			(* this) << 

@@ -30,5 +30,5 @@ SOFTWARE.
 #include <zapata/http/HTTPTokenizerLexer.h>
 
 #define Scanner public: HTTPTokenizerLexer
-namespace zapata {
+namespace zpt {
 }

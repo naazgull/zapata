@@ -76,27 +76,27 @@ SOFTWARE.
 #include <vector>
 #include <zapata/rest/codes_rest.h>
 
-zapata::RESTServerPtr::RESTServerPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::RESTServer>(new zapata::RESTServer(_options)) {
+zpt::RESTServerPtr::RESTServerPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_options)) {
 }
 
-zapata::RESTServerPtr::RESTServerPtr(zapata::RESTServer * _ptr) : std::shared_ptr<zapata::RESTServer>(_ptr) {
+zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt::RESTServer>(_ptr) {
 }
 
-zapata::RESTServerPtr::~RESTServerPtr() {
+zpt::RESTServerPtr::~RESTServerPtr() {
 }
 
-zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata::RESTEmitter(_options)), __poll(new zapata::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]["bind"]->ok() && this->__options["zmq"]["type"]->ok(), "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 
-	if (zapata::log_lvl == -1 && !!this->__options["log"]["level"]) {
-		zapata::log_lvl = (int) this->__options["log"]["level"];
+	if (zpt::log_lvl == -1 && !!this->__options["log"]["level"]) {
+		zpt::log_lvl = (int) this->__options["log"]["level"];
 	}
-	if (zapata::log_lvl == -1) {
-		zapata::log_lvl = 4;
+	if (zpt::log_lvl == -1) {
+		zpt::log_lvl = 4;
 	}
 	if (!!this->__options["log"]["file"]) {
-		zapata::log_fd = new ofstream();
-		((std::ofstream *) zapata::log_fd)->open(((string) this->__options["log"]["file"]).data());
+		zpt::log_fd = new ofstream();
+		((std::ofstream *) zpt::log_fd)->open(((string) this->__options["log"]["file"]).data());
 	}
 
 	this->__type = this->__options["zmq"]["type"]->str();
@@ -108,7 +108,7 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 		this->__assync = this->__poll->bind(ZMQ_XPUB, this->__options["zmq"]["bind"]->str());
 		
 		std::string _connect(this->__options["zmq"]["bind"]->str());
-		zapata::replace(_connect, "*", "localhost");
+		zpt::replace(_connect, "*", "localhost");
 		this->__poll->bind(ZMQ_PUB, _connect)->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
 	}
 	else if (this->__type == "PUSH/PULL") {
@@ -123,11 +123,11 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
-					zlog(string(dlerror()), zapata::error);
+					zlog(string(dlerror()), zpt::error);
 				}
 				else {
-					void (*_populate)(zapata::EventEmitterPtr);
-					_populate = (void (*)(zapata::EventEmitterPtr)) dlsym(hndl, "restify");
+					void (*_populate)(zpt::EventEmitterPtr);
+					_populate = (void (*)(zpt::EventEmitterPtr)) dlsym(hndl, "restify");
 					_populate(this->__emitter);
 				}
 			}
@@ -139,33 +139,33 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
-			return zapata::undefined;
+		this->__emitter->on(zpt::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload, zpt::EventEmitterPtr _pool) -> zpt::JSONPtr {
+			return zpt::undefined;
 		});
 
 		/*
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zapata::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/([^/]+)$"), [] (zapata::ev::Performative _performative, std::string _resource, zapata::JSONPtr _payload, zapata::EventEmitterPtr _pool) -> zapata::JSONPtr {
-			return zapata::undefined;
+		this->__emitter->on(zpt::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/([^/]+)$"), [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload, zpt::EventEmitterPtr _pool) -> zpt::JSONPtr {
+			return zpt::undefined;
 		});
 	}
 
 	if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok() && this->__options["http"]["port"]->ok()) {
-		zapata::Job _http([ & ] (zapata::Job& _self) -> void {
-			zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zapata::notice);
-			std::map<std::string, zapata::socketstream> _pending;
+		zpt::Job _http([ & ] (zpt::Job& _self) -> void {
+			zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
+			std::map<std::string, zpt::socketstream> _pending;
 
-			zapata::serversocketstream _ss;
+			zpt::serversocketstream _ss;
 			_ss.bind((uint) this->__options["http"]["port"]);
 
 			for (; true; ) {
 				int _fd = -1;
 				_ss.accept(& _fd);
 
-				zapata::socketstream _cs(_fd);
-				zapata::HTTPReq _request;
+				zpt::socketstream _cs(_fd);
+				zpt::HTTPReq _request;
 				_cs >> _request;
 
 				std::string _prefix(_request->url());
@@ -174,13 +174,13 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 					for (auto _endpoint : _api["endpoints"]->arr()) {
 						if (_prefix.find(_endpoint->str()) == 0) {
 							_found = true;
-							short _type = zapata::str2type(_api["type"]->str());
-							zapata::JSONPtr _in = this->http2zmq(_request);
-							zapata::ZMQPtr _client = this->__poll->bind(_type, _api["connect"]->str());
+							short _type = zpt::str2type(_api["type"]->str());
+							zpt::JSONPtr _in = this->http2zmq(_request);
+							zpt::ZMQPtr _client = this->__poll->bind(_type, _api["connect"]->str());
 							switch(_type) {
 								case ZMQ_REQ : {
-									zapata::JSONPtr _out = _client->send(_in);
-									zapata::HTTPRep _reply = this->zmq2http(_out);
+									zpt::JSONPtr _out = _client->send(_in);
+									zpt::HTTPRep _reply = this->zmq2http(_out);
 									_cs << _reply;
 									_cs.close();
 								}
@@ -198,16 +198,16 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 	}
 
 	if (this->__options["websocket"]->ok() && this->__options["websocket"]["bind"]->ok() && this->__options["websocket"]["port"]->ok()) {
-		zapata::Job _websocket([ & ] (zapata::Job& _self) -> void {
-			zlog(string("starting WEBSOCKET listener on port ") + std::to_string((uint) this->__options["websocket"]["port"]), zapata::notice);
-			zapata::websocketserverstream _ss;
+		zpt::Job _websocket([ & ] (zpt::Job& _self) -> void {
+			zlog(string("starting WEBSOCKET listener on port ") + std::to_string((uint) this->__options["websocket"]["port"]), zpt::notice);
+			zpt::websocketserverstream _ss;
 			_ss.bind((uint) this->__options["websocket"]["port"]);
 
 			for (; true; ) {
 				int _fd = -1;
 				_ss.accept(& _fd);
 				
-				zapata::websocketstream _cs(_fd);
+				zpt::websocketstream _cs(_fd);
 				_cs.handshake();
 				_cs.unassign();
 			}
@@ -217,75 +217,75 @@ zapata::RESTServer::RESTServer(zapata::JSONPtr _options) : __emitter( new zapata
 
 }
 
-zapata::RESTServer::~RESTServer(){
+zpt::RESTServer::~RESTServer(){
 }
 
-zapata::ZMQPollPtr zapata::RESTServer::poll() {
+zpt::ZMQPollPtr zpt::RESTServer::poll() {
 	return this->__poll;
 }
 
-zapata::EventEmitterPtr zapata::RESTServer::emitter() {
+zpt::EventEmitterPtr zpt::RESTServer::emitter() {
 	return this->__emitter;
 }
 
-zapata::JSONPtr zapata::RESTServer::options() {
+zpt::JSONPtr zpt::RESTServer::options() {
 	return this->__options;
 }
 
-void zapata::RESTServer::start() {
+void zpt::RESTServer::start() {
 	try {
 		if (this->__type == "PUB/SUB") {
-			zapata::Job _proxy([ & ] (zapata::Job& _job) -> void {
-				((zapata::ZMQXPubXSub *) this->__assync.get())->loop();
+			zpt::Job _proxy([ & ] (zpt::Job& _job) -> void {
+				((zpt::ZMQXPubXSub *) this->__assync.get())->loop();
 			});
 			_proxy->start();
 		}
 		this->__poll->loop();
 	}
-	catch (zapata::InterruptedException& e) {
+	catch (zpt::InterruptedException& e) {
 		return;
 	}
 }
 
-zapata::JSONPtr zapata::RESTServer::http2zmq(zapata::HTTPReq& _request) {
-	zapata::JSONPtr _out;
+zpt::JSONPtr zpt::RESTServer::http2zmq(zpt::HTTPReq& _request) {
+	zpt::JSONPtr _out;
 	return _out;
 }
 
-zapata::HTTPRep zapata::RESTServer::zmq2http(zapata::JSONPtr& _out) {
-	zapata::HTTPRep _return;
+zpt::HTTPRep zpt::RESTServer::zmq2http(zpt::JSONPtr& _out) {
+	zpt::HTTPRep _return;
 	return _return;
 }
 
-zapata::RESTClientPtr::RESTClientPtr(zapata::JSONPtr _options) : std::shared_ptr<zapata::RESTClient>(new zapata::RESTClient(_options)) {
+zpt::RESTClientPtr::RESTClientPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
 }
 
-zapata::RESTClientPtr::RESTClientPtr(zapata::RESTClient * _ptr) : std::shared_ptr<zapata::RESTClient>(_ptr) {
+zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt::RESTClient>(_ptr) {
 }
 
-zapata::RESTClientPtr::~RESTClientPtr() {
+zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
-zapata::RESTClient::RESTClient(zapata::JSONPtr _options) : __emitter( new zapata::RESTEmitter(_options)), __poll(new zapata::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 }
 
-zapata::RESTClient::~RESTClient(){
+zpt::RESTClient::~RESTClient(){
 }
 
-zapata::ZMQPollPtr zapata::RESTClient::poll() {
+zpt::ZMQPollPtr zpt::RESTClient::poll() {
 	return this->__poll;
 }
 
-zapata::EventEmitterPtr zapata::RESTClient::emitter() {
+zpt::EventEmitterPtr zpt::RESTClient::emitter() {
 	return this->__emitter;
 }
 
-zapata::JSONPtr zapata::RESTClient::options() {
+zpt::JSONPtr zpt::RESTClient::options() {
 	return this->__options;
 }
 
-zapata::ZMQPtr zapata::RESTClient::bind(std::string _object_path) {
-	zapata::JSONPtr _zmq_cnf = this->__options->getPath(_object_path);
+zpt::ZMQPtr zpt::RESTClient::bind(std::string _object_path) {
+	zpt::JSONPtr _zmq_cnf = this->__options->getPath(_object_path);
 	short _type = -1;
 	std::string _type_cnf = _zmq_cnf["type"]->str();
 	std::transform(_type_cnf.begin(), _type_cnf.end(), _type_cnf.begin(), ::toupper);
@@ -301,25 +301,25 @@ zapata::ZMQPtr zapata::RESTClient::bind(std::string _object_path) {
 	return this->bind(_type, _zmq_cnf["connect"]->str());
 }
 
-zapata::ZMQPtr zapata::RESTClient::bind(short _type, std::string _connection) {
+zpt::ZMQPtr zpt::RESTClient::bind(short _type, std::string _connection) {
 	return this->__poll->bind(_type, _connection);
 }
 
-void zapata::RESTClient::start() {
+void zpt::RESTClient::start() {
 	try {
 		this->__poll->loop();
 	}
-	catch (zapata::InterruptedException& e) {
+	catch (zpt::InterruptedException& e) {
 		return;
 	}
 }
 
-void zapata::dirs(std::string _dir, zapata::JSONPtr _options) {
+void zpt::dirs(std::string _dir, zpt::JSONPtr _options) {
 	std::vector<std::string> _files;
-	zapata::ls(_dir, _files, false);
+	zpt::ls(_dir, _files, false);
 	for (auto _file : _files) {
 		try {
-			zapata::JSONPtr _conf;
+			zpt::JSONPtr _conf;
 			std::ifstream _ifs;
 			_ifs.open(_file.data());
 			_ifs >> _conf;
@@ -330,35 +330,35 @@ void zapata::dirs(std::string _dir, zapata::JSONPtr _options) {
 					_options << _new_field.first << _new_field.second;
 				}
 				else {
-					zapata::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
+					zpt::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
 					_options >> _new_field.first;
 					_options << _new_field.first << _merged;
 				}
 			}
 		}
-		catch(zapata::SyntaxErrorException& _e) {}
+		catch(zpt::SyntaxErrorException& _e) {}
 	}
 }
 
-void zapata::dirs(zapata::JSONPtr _options) {
-	zapata::dirs("/etc/zapata/conf.d/", _options);
-	zapata::JSONPtr _traversable = _options->clone();
-	_traversable->inspect(zapata::mkptr(JSON( "$regexp" << "(.+)" )), [ & ] (std::string _object_path, std::string _key, zapata::JSONElementT& _parent) -> void {
+void zpt::dirs(zpt::JSONPtr _options) {
+	zpt::dirs("/etc/zapata/conf.d/", _options);
+	zpt::JSONPtr _traversable = _options->clone();
+	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "(.+)" )), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 		if (_key == "$include") {
-			zapata::dirs((string) _options->getPath(_object_path), _options->getPath(_object_path.substr(0, _object_path.rfind("."))));
+			zpt::dirs((string) _options->getPath(_object_path), _options->getPath(_object_path.substr(0, _object_path.rfind("."))));
 		}
 	});
 }
 
-void zapata::env(zapata::JSONPtr _options) {
-	zapata::JSONPtr _traversable = _options->clone();
-	_traversable->inspect(zapata::mkptr(JSON( "$regexp" << "\\$\\{([^}]+)\\}" )), [ & ] (std::string _object_path, std::string _key, zapata::JSONElementT& _parent) -> void {
+void zpt::env(zpt::JSONPtr _options) {
+	zpt::JSONPtr _traversable = _options->clone();
+	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "\\$\\{([^}]+)\\}" )), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 		std::string _var = _options->getPath(_object_path);
 		_var = _var.substr(2, _var.length() - 3);
 		const char * _valuec = std::getenv(_var.data());
 		if (_valuec != nullptr) {
 			std::string _value(_valuec);
-			_options->setPath(_object_path, zapata::mkptr(_value));
+			_options->setPath(_object_path, zpt::mkptr(_value));
 		}
 	});
 }

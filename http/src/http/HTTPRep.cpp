@@ -29,29 +29,29 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 
-zapata::HTTPRepT::HTTPRepT() : __status(zapata::HTTP100) {
+zpt::HTTPRepT::HTTPRepT() : __status(zpt::HTTP100) {
 }
 
-zapata::HTTPRepT::~HTTPRepT() {
+zpt::HTTPRepT::~HTTPRepT() {
 }
 
-zapata::HTTPStatus zapata::HTTPRepT::status() {
+zpt::HTTPStatus zpt::HTTPRepT::status() {
 	return this->__status;
 }
 
-void zapata::HTTPRepT::status(zapata::HTTPStatus _in) {
+void zpt::HTTPRepT::status(zpt::HTTPStatus _in) {
 	this->__status = _in;
 }
 
-void zapata::HTTPRepT::stringify(ostream& _out) {
+void zpt::HTTPRepT::stringify(ostream& _out) {
 	string _ret;
 	this->stringify(_ret);
 	_out << _ret << flush;
 }
 
-void zapata::HTTPRepT::stringify(string& _out) {
+void zpt::HTTPRepT::stringify(string& _out) {
 	_out.insert(_out.length(), "HTTP/1.1 "),
-	_out.insert(_out.length(),  zapata::status_names[this->__status]);
+	_out.insert(_out.length(),  zpt::status_names[this->__status]);
 	_out.insert(_out.length(), CRLF);
 	for (auto i : this->__headers) {
 		_out.insert(_out.length(), i.first);
@@ -63,17 +63,17 @@ void zapata::HTTPRepT::stringify(string& _out) {
 	_out.insert(_out.length(), this->__body);
 }
 
-zapata::HTTPRep::HTTPRep()  : shared_ptr<HTTPRepT>(make_shared<HTTPRepT>()) {
+zpt::HTTPRep::HTTPRep()  : shared_ptr<HTTPRepT>(make_shared<HTTPRepT>()) {
 }
 
-zapata::HTTPRep::HTTPRep(HTTPRepT* _target) : shared_ptr<HTTPRepT>(_target) {
+zpt::HTTPRep::HTTPRep(HTTPRepT* _target) : shared_ptr<HTTPRepT>(_target) {
 }
 
-zapata::HTTPRep::~HTTPRep(){
+zpt::HTTPRep::~HTTPRep(){
 }
 
-void zapata::HTTPRep::parse(istream& _in){
-	zapata::HTTPParser _p;
+void zpt::HTTPRep::parse(istream& _in){
+	zpt::HTTPParser _p;
 	_p.switchRoots(* this);
 	_p.switchStreams(_in);
 	_p.parse();
