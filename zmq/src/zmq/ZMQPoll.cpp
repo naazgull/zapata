@@ -207,17 +207,25 @@ zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
-		case ZMQ_XPUB : 
-		case ZMQ_XSUB : {
+		case ZMQ_XPUB_XSUB : {
 			zpt::ZMQXPubXSub * _socket = new zpt::ZMQXPubXSub(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
-		case ZMQ_PUB :
-		case ZMQ_SUB : {
+		case ZMQ_PUB_SUB : {
 			zpt::ZMQPubSub * _socket = new zpt::ZMQPubSub(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
+		}			
+		case ZMQ_PUB : {
+			/*zpt::ZMQPub * _socket = new zpt::ZMQPub(_connection, this->__options, this->__emitter);
+			_socket->listen(this->__self);
+			return _socket->self();*/
+		}
+		case ZMQ_SUB : {
+			/*zpt::ZMQSub * _socket = new zpt::ZMQSub(_connection, this->__options, this->__emitter);
+			_socket->listen(this->__self);
+			return _socket->self();*/
 		}
 	}
 	return zpt::ZMQPtr(nullptr);

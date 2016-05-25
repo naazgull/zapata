@@ -99,31 +99,31 @@ namespace zpt {
 	};
 
 	class RESTEmitter : public zpt::EventEmitter {
-		public:
-			RESTEmitter(zpt::JSONPtr _options);
-			virtual ~RESTEmitter();
+	public:
+		RESTEmitter(zpt::JSONPtr _options);
+		virtual ~RESTEmitter();
 
-			virtual void on(zpt::ev::Performative _method, string _regex,  zpt::ev::Handler _handler);
-			virtual void on(string _regex,  zpt::ev::Handler _handlers[7]);
-			virtual void off(zpt::ev::Performative _method, string _regex);
-			virtual void off(string _regex);
+		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
+		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
+		virtual void off(zpt::ev::Performative _method, std::string _callback_id);
+		virtual void off(std::string _callback_id);
 
-			virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		
+	private:
+		zpt::JSONPtr __options;
+		zpt::ev::Handler __default_get;
+		zpt::ev::Handler __default_put;
+		zpt::ev::Handler __default_post;
+		zpt::ev::Handler __default_delete;
+		zpt::ev::Handler __default_head;
+		zpt::ev::Handler __default_options;
+		zpt::ev::Handler __default_patch;
+		zpt::ev::Handler __default_assync_reply;
+		zpt::ev::HandlerStack __resources;
+		zpt::ev::ReplyHandlerStack __replies;
 
-		private:
-			zpt::JSONPtr __options;
-			zpt::ev::Handler __default_get;
-			zpt::ev::Handler __default_put;
-			zpt::ev::Handler __default_post;
-			zpt::ev::Handler __default_delete;
-			zpt::ev::Handler __default_head;
-			zpt::ev::Handler __default_options;
-			zpt::ev::Handler __default_patch;
-			zpt::ev::Handler __default_assync_reply;
-			zpt::ev::HandlerStack __resources;
-			zpt::ev::ReplyHandlerStack __replies;
-
-		};
+	};
 
 }
 

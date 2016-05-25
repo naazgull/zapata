@@ -135,6 +135,10 @@ namespace zpt {
 		void header(const char* _name, string _value);
 		void header(string _name, string _value);
 
+		virtual std::string to_string();
+		virtual void stringify(string& _out) = 0;
+		virtual void stringify(ostream& _out) = 0;
+
 	protected:
 		string __body;
 		HeaderMap __headers;
@@ -142,7 +146,6 @@ namespace zpt {
 
 	class HTTPPtr :public shared_ptr< HTTPObj > {
 	public:
-		HTTPPtr();
 		HTTPPtr(HTTPObj* _target);
 		virtual ~HTTPPtr();	
 	};

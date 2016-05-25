@@ -39,7 +39,7 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	char _c;
-	short _log_level = 7;
+	short _log_level = 4;
 	char* _conf_file = nullptr;
 
 	while ((_c = getopt(argc, argv, "l:c:")) != -1) {
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 	zpt::log_fd = & cout;
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = _log_level;
+	zpt::log_lvl = -1;
 
 	if (_conf_file == nullptr) {
 		zlog("a configuration file must be provided", zpt::error);
@@ -75,13 +75,27 @@ int main(int argc, char* argv[]) {
 		}
 
 		_in >> _ptr;
-		zpt::dirs("/etc/zapata/conf.d/", _ptr);
-		zpt::env(_ptr);
+		zpt::conf::dirs(_ptr);
+		zpt::conf::env(_ptr);
 	}
+	
+	if (_ptr["log"]->ok()) {
+		if (_ptr["log"]["file"]->ok()) {
+			zpt::log_fd = new ofstream();
+			string _log_file((string) _ptr["log"]["file"]);
+			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
+		}
+		if (_ptr["log"]["level"]->ok()) {
+			zpt::log_lvl = (int) _ptr["log"]["level"];
+		}
+	}
+	if (zpt::log_lvl == -1) {
+		zpt::log_lvl = _log_level;
+	}			
 
 	try {
 		zpt::RESTClientPtr _api(_ptr);
-		size_t _max = 50100;
+		size_t _max = 10100;
 		size_t * _n = new size_t();
 		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users", [ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
 			(* _n)++;

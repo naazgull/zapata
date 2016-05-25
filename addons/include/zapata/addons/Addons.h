@@ -44,21 +44,21 @@ namespace zpt {
 	typedef std::shared_ptr<zpt::Addons> AddonsPtr;
 
 	class Addons : public zpt::EventEmitter {
-		public:
-			Addons(zpt::JSONPtr _options);
-			virtual ~Addons();
-
-			virtual void on(string _regex,  zpt::ev::Handler _handler);
-			virtual void on(zpt::ev::Performative _method, string _regex,  zpt::ev::Handler _handler);
-			virtual void on(string _regex,  zpt::ev::Handler _handlers[7]);
-			virtual void off(zpt::ev::Performative _method, string _regex);
-			virtual void off(string _regex);
-
-			virtual zpt::JSONPtr trigger(std::string _resource, zpt::JSONPtr _payload);
-			virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
-
-		private:
-			zpt::ev::HandlerStack __resources;
+	public:
+		Addons(zpt::JSONPtr _options);
+		virtual ~Addons();
+		
+		virtual std::string on(string _regex,  zpt::ev::Handler _handler);
+		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
+		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
+		virtual void off(zpt::ev::Performative _method, std::string _callback_id);
+		virtual void off(std::string _callback_id);
+		
+		virtual zpt::JSONPtr trigger(std::string _resource, zpt::JSONPtr _payload);
+		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		
+	private:
+		zpt::ev::HandlerStack __resources;
 	};
 
 }

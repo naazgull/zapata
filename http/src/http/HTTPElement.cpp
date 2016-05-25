@@ -164,9 +164,6 @@ void zpt::init(HTTPRep& _rep) {
 
 }
 
-zpt::HTTPPtr::HTTPPtr()  : shared_ptr<HTTPObj>(make_shared<HTTPObj>()) {
-}
-
 zpt::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {
 }
 
@@ -218,6 +215,13 @@ void zpt::HTTPObj::header(string _name, string _value) {
 	zpt::prettify_header_name(_n);
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
+
+std::string zpt::HTTPObj::to_string() {
+	std::string _return;
+	this->stringify(_return);
+	return _return;
+}
+
 
 extern "C" int zapata_http() {
 	return 1;

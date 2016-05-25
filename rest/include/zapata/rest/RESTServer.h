@@ -64,15 +64,20 @@ namespace zpt {
 		virtual zpt::ZMQPollPtr poll();
 		virtual zpt::EventEmitterPtr emitter();
 
+		virtual bool route_http(zpt::socketstream_ptr _cs, std::map<std::string, zpt::socketstream_ptr>& _pending);
+		virtual bool route_mqtt(std::iostream& _cs);
+
+		
 	private:
 		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __poll;
 		zpt::JSONPtr __options;
 		std::string __type;
 		zpt::ZMQPtr __assync;
+		std::string __assync_http_cid;
 
-		zpt::JSONPtr http2zmq(zpt::HTTPReq& _request);
-		zpt::HTTPRep zmq2http(zpt::JSONPtr& _out);
+		zpt::JSONPtr http2zmq(zpt::HTTPReq _request);
+		zpt::HTTPRep zmq2http(zpt::JSONPtr _out);
 	};
 
 	class RESTClient {
@@ -96,8 +101,13 @@ namespace zpt {
 	};
 
 
-	void dirs(std::string _dir, zpt::JSONPtr _options);
-	void dirs(zpt::JSONPtr _options);
-	void env(zpt::JSONPtr _options);
+	namespace conf {
+		void dirs(std::string _dir, zpt::JSONPtr _options);
+		void dirs(zpt::JSONPtr _options);
+		void env(zpt::JSONPtr _options);
+	}
 
+	namespace rest {
+		zpt::JSONPtr not_found(std::string _resource);
+	}
 }

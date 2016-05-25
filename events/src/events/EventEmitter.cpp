@@ -168,7 +168,7 @@ zpt::ev::Performative zpt::ev::from_str(std::string _performative) {
 	return zpt::ev::Head;
 }
 
-zpt::JSONPtr zpt::ev::init_request() {
+zpt::JSONPtr zpt::ev::init_request(std::string _cid) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -177,20 +177,25 @@ zpt::JSONPtr zpt::ev::init_request() {
 
 	char _buffer_expires[80];
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
-
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-
-	return zpt::mkptr(JSON(
+	
+	zpt::JSONPtr _return = zpt::mkptr(JSON(
 		"Host" << "localhost" <<
 		"Accept" << "application/json" <<
 		"Accept-Charset" << "utf-8" <<
 		"Cache-Control" << "no-cache" <<
 		"Date" << string(_buffer_date) <<
 		"Expires" << string(_buffer_expires) <<
-		"User-Agent" << "zapata RESTful server" <<
-		"X-Cid" << _uuid.string()
+		"User-Agent" << "zapata RESTful server"
 	));
+	if (_cid != "") {
+		_return << "X-Cid" << _cid;
+	}
+	else {
+		uuid _uuid;
+		_uuid.make(UUID_MAKE_V1);
+		_return << "X-Cid" << _uuid.string();
+	}
+	return _return;
 }
 
 zpt::JSONPtr zpt::ev::init_reply(std::string _uuid) {

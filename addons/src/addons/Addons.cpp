@@ -52,16 +52,16 @@ zpt::Addons::Addons(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
 
 zpt::Addons::~Addons() {
 	for (auto _i : this->__resources) {
-		regfree(_i.first);
-		delete _i.first;
+		regfree(_i.second.first);
+		delete _i.second.first;
 	}
 }
 
-void zpt::Addons::on(string _regex, zpt::ev::Handler _handler) {
-	this->on(zpt::ev::Post, _regex, _handler);
+std::string zpt::Addons::on(string _regex, zpt::ev::Handler _handler) {
+	return this->on(zpt::ev::Post, _regex, _handler);
 }
 
-void zpt::Addons::on(zpt::ev::Performative _event, string _regex,  zpt::ev::Handler _handler) {
+std::string zpt::Addons::on(zpt::ev::Performative _event, string _regex,  zpt::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -75,10 +75,13 @@ void zpt::Addons::on(zpt::ev::Performative _event, string _regex,  zpt::ev::Hand
 	_handlers.push_back(nullptr);
 	_handlers.push_back(nullptr);
 
-	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers)));
+	return _uuid.string();
 }
 
-void zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
+std::string zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -92,24 +95,23 @@ void zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
 	_handlers.push_back(_handler_set[zpt::ev::Options]);
 	_handlers.push_back(_handler_set[zpt::ev::Patch]);
 
-	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers)));
+	return _uuid.string();
 }
 
-void zpt::Addons::off(zpt::ev::Performative _event, std::string _regex) {
-	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
-		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
-			this->__resources[_i].second[_event] = nullptr;
-		}
+void zpt::Addons::off(zpt::ev::Performative _event, std::string _callback_id) {
+	auto _found = this->__resources.find(_callback_id);
+	if (_found != this->__resources.end()) {
+		_found->second.second[_event] = nullptr;
 	}
 }
 
-void zpt::Addons::off(std::string _regex) {
-	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
-		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
-			delete this->__resources[_i].first;
-			this->__resources.erase(this->__resources.begin() + _i);
-			_i--;
-		}
+void zpt::Addons::off(std::string _callback_id) {
+	auto _found = this->__resources.find(_callback_id);
+	if (_found != this->__resources.end()) {
+		this->__resources.erase(_callback_id);
 	}
 }
 
@@ -121,9 +123,9 @@ zpt::JSONPtr zpt::Addons::trigger(zpt::ev::Performative _method, std::string _re
 	zpt::JSONPtr _return = zpt::mkarr();
 
 	for (auto _i : this->__resources) {
-		if (regexec(_i.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {
+		if (regexec(_i.second.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				zpt::JSONPtr _result = _i.second[_method](_method, _resource, _payload, this->self());
+				zpt::JSONPtr _result = _i.second.second[_method](_method, _resource, _payload, this->self());
 				if (_result->ok()) {
 					_return << _result;
 				}

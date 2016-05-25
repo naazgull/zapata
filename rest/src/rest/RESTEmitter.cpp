@@ -109,7 +109,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options) : zpt::EventEmitter( _optio
 zpt::RESTEmitter::~RESTEmitter() {
 }
 
-void zpt::RESTEmitter::on(zpt::ev::Performative _event, string _regex, zpt::ev::Handler _handler) {
+std::string zpt::RESTEmitter::on(zpt::ev::Performative _event, std::string _regex, zpt::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -124,12 +124,14 @@ void zpt::RESTEmitter::on(zpt::ev::Performative _event, string _regex, zpt::ev::
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Patch ? this->__default_patch : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Reply ? this->__default_assync_reply : _handler));
 
-	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
 	zlog(string("registered handlers for ") + _regex, zpt::info);
-
+	return _uuid.string();
 }
 
-void zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]) {
+std::string zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -144,41 +146,39 @@ void zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]) {
 	_handlers.push_back(_handler_set[zpt::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zpt::ev::Patch]);
 	_handlers.push_back(this->__default_assync_reply);
 
-	this->__resources.push_back(pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers));
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
 	zlog(string("registered handlers for ") + _regex, zpt::info);
+	return _uuid.string();
 }
 
-void zpt::RESTEmitter::off(zpt::ev::Performative _event, std::string _regex) {
-	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
-		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
-			this->__resources[_i].second[_event] = nullptr;
-		}
+void zpt::RESTEmitter::off(zpt::ev::Performative _event, std::string _callback_id) {
+	auto _found = this->__resources.find(_callback_id);
+	if (_found != this->__resources.end()) {
+		_found->second.second[_event] = nullptr;
 	}
-	zlog(string("unregistered handlers for ") + _regex, zpt::info);
 }
 
-void zpt::RESTEmitter::off(std::string _regex) {
-	for (size_t _i = 0; _i != this->__resources.size(); _i++) {
-		if (regexec(this->__resources[_i].first, _regex.c_str(), (size_t) (0), nullptr, 0) == 0) {
-			delete this->__resources[_i].first;
-			this->__resources.erase(this->__resources.begin() + _i);
-			_i--;
-		}
+void zpt::RESTEmitter::off(std::string _callback_id) {
+	auto _found = this->__resources.find(_callback_id);
+	if (_found != this->__resources.end()) {
+		this->__resources.erase(_callback_id);
 	}
-	zpt::ev::ReplyHandlerStack::iterator _found = this->__replies.find(_regex);
-	if (_found != this->__replies.end()) {
-		this->__replies.erase(_found);
-	}
-	zlog(string("unregistered handlers for ") + _regex, zpt::info);
 }
 
 zpt::JSONPtr zpt::RESTEmitter::trigger(zpt::ev::Performative _method, std::string _url, zpt::JSONPtr _envelope) {
 	zpt::JSONPtr _return;
+	bool _endpoint_found = false;
+	bool _method_found = false;
 	for (auto _i : this->__resources) {
-		if (regexec(_i.first, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+		regex_t* _regexp = _i.second.first;
+		if (regexec(_regexp, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+			_endpoint_found = true;
 			try {
-				if (_i.second[_method] != nullptr) {
-					zpt::JSONPtr _result = _i.second[_method](_method, _url, _envelope, this->self());
+				if (_i.second.second[_method] != nullptr) {
+					_method_found = true;
+					zpt::JSONPtr _result = _i.second.second[_method](_method, _url, _envelope, this->self());
 					if (_result->ok()) {
 						_result << 
 							"performative" << zpt::ev::Reply <<
@@ -188,17 +188,18 @@ zpt::JSONPtr zpt::RESTEmitter::trigger(zpt::ev::Performative _method, std::strin
 				}
 			}
 			catch (zpt::AssertionException& _e) {
-				_return = zpt::mkptr(zpt::mkptr(JSON(
-					"performative" << zpt::ev::Reply <<
-					"status" << _e.status() <<
-					"headers" << zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
-					"payload" << JSON(
-						"error" <<  true
-						<< "assertion_failed" << _e.description()
-						<< "message" << _e.what()
-						<< "code" << _e.code()
+				_return = zpt::mkptr(
+					JSON(
+						"performative" << zpt::ev::Reply <<
+						"status" << _e.status() <<
+						"headers" << zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
+						"payload" << JSON(
+							"text" << _e.what() <<
+							"assertion_failed" << _e.description() <<
+							"code" << _e.code()
+						)
 					)
-				)));
+				);
 				break;
 			}
 			catch(std::exception& _e) {
@@ -206,6 +207,31 @@ zpt::JSONPtr zpt::RESTEmitter::trigger(zpt::ev::Performative _method, std::strin
 			}
 		}
 	}
+	if (!_endpoint_found) {
+		_return = zpt::mkptr(
+			JSON(
+				"performative" << zpt::ev::Reply <<
+				"status" << 404 <<
+				"headers" << zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
+				"payload" << JSON(
+					"text" << "the requrested resource was not found"
+				)
+			)
+		);
+	}
+	else if (!_method_found) {
+		_return = zpt::mkptr(
+			JSON(
+				"performative" << zpt::ev::Reply <<
+				"status" << 405 <<
+				"headers" << zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) <<
+				"payload" << JSON(
+					"text" << "the requrested performative is not allowed to be used with the requested resource"
+				)
+			)
+		);
+	}
+	
 	return _return;
 }
 

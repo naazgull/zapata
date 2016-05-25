@@ -117,13 +117,29 @@ zpt::JSONPtr zpt::ZMQ::recv() {
 
 	zpt::ev::Performative _performative = zpt::ev::from_str(_method);
 	zlog(string("<- | \033[33;40m") + _method + string("\033[0m ") + (_performative == zpt::ev::Reply ? string("\033[") + (((int) _headers["X-Status"]) > 299 ? "31" : "32") + string(";40m") + ((string) _headers["X-Status"]) + string("\033[0m ") : "") + _resource, zpt::info);
-	return zpt::mkptr(JSON(
-		"channel" << _channel <<
-		"performative" << _performative <<
-		"resource" << _resource <<
-		"headers" << _headers <<
-		"payload" << _payload
-	));
+	if (_performative == zpt::ev::Reply) {
+		return zpt::mkptr(
+			JSON(
+				"channel" << _channel <<
+				"performative" << _performative <<
+				"status" << (((int) _headers["X-Status"]) > 99 ? ((int) _headers["X-Status"]) : 501) <<
+				"resource" << _resource <<
+				"headers" << _headers <<
+				"payload" << _payload
+			)
+		);
+	}
+	else {
+		return zpt::mkptr(
+			JSON(
+				"channel" << _channel <<
+				"performative" << _performative <<
+				"resource" << _resource <<
+				"headers" << _headers <<
+				"payload" << _payload
+			)
+		);
+	}
 }
 
 zpt::JSONPtr zpt::ZMQ::send(zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload) {
@@ -181,6 +197,11 @@ zpt::JSONPtr zpt::ZMQ::send(zpt::JSONPtr _envelope) {
 	return zpt::undefined;
 }
 
+void zpt::ZMQ::disconnect() {
+	zlog(string("this object has ") + std::to_string(this->__self.use_count()) + string(" active references"), zpt::debug);
+	this->__self.reset();
+}
+
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
 	this->__socket->connect(_connection.data());
@@ -190,6 +211,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 zpt::ZMQReq::~ZMQReq() {
 	this->__socket->close();
 	delete this->__socket;
+	zlog(string("disconnected from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQReq::socket() {
@@ -225,6 +247,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 zpt::ZMQRep::~ZMQRep() {
 	this->__socket->close();
 	delete this->__socket;
+	zlog(string("unbinding from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQRep::socket() {
@@ -262,6 +285,7 @@ zpt::ZMQXPubXSub::~ZMQXPubXSub() {
 	delete this->__socket_sub;
 	this->__socket_pub->close();
 	delete this->__socket_pub;
+	zlog(string("unbinding from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQXPubXSub::socket() {
@@ -279,7 +303,7 @@ zmq::socket_t& zpt::ZMQXPubXSub::out() {
 void zpt::ZMQXPubXSub::loop() {
 	try {
 		zlog("going to proxy PUB/SUB...", zpt::notice);
-		zmq::proxy(static_cast<void *>(* this->__socket_pub), static_cast<void *>(* this->__socket_sub), nullptr);
+		zmq::proxy(static_cast<void*>(*this->__socket_pub), static_cast<void*>(*this->__socket_sub), nullptr);
 	}
 	catch(zmq::error_t& _e) {
 		zlog(_e.what(), zpt::emergency);
@@ -308,6 +332,7 @@ zpt::ZMQPubSub::~ZMQPubSub() {
 	delete this->__socket_sub;
 	this->__socket_pub->close();
 	delete this->__socket_pub;
+	zlog(string("disconnecting from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQPubSub::socket() {
@@ -328,14 +353,20 @@ short int zpt::ZMQPubSub::type() {
 
 zpt::JSONPtr zpt::ZMQPubSub::send(zpt::JSONPtr _envelope) {
 	if (((int) _envelope["performative"]) != zpt::ev::Reply) {
-		uuid _uuid;
-		_uuid.make(UUID_MAKE_V1);
-		std::string _cid(_uuid.string());
-		if (_envelope["headers"]->ok()) {
-			_envelope["headers"] << "X-Cid" << _cid;
+		std::string _cid;
+		if (_envelope["headers"]["X-Cid"]->ok()) {
+			_cid.assign(_envelope["headers"]["X-Cid"]->str());
 		}
 		else {
-			_envelope << "headers" << JSON( "X-Cid" << _cid );
+			uuid _uuid;
+			_uuid.make(UUID_MAKE_V1);
+			_cid.assign(_uuid.string());
+			if (_envelope["headers"]->ok()) {
+				_envelope["headers"] << "X-Cid" << _cid;
+			}
+			else {
+				_envelope << "headers" << JSON( "X-Cid" << _cid );
+			}
 		}
 		this->lock();
 		{
@@ -367,13 +398,13 @@ void zpt::ZMQPubSub::listen(zpt::ZMQPollPtr _poll) {
 short zpt::str2type(std::string _type) {
 	std::transform(_type.begin(), _type.end(), _type.begin(), ::toupper);
 	if (_type == "REQ/REP"){
-		return ZMQ_REQ;
+		return ZMQ_REQ_REP;
 	}
 	if (_type == "PUB/SUB"){
-		return ZMQ_PUB;
+		return ZMQ_PUB_SUB;
 	}
 	if (_type == "PUSH/PULL"){
-		return ZMQ_PUSH;
+		return ZMQ_PUSH_PULL;
 	}
-	return ZMQ_REQ;
+	return ZMQ_REQ_REP;
 }
