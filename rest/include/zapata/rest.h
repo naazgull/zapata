@@ -28,8 +28,5 @@ SOFTWARE.
 #include <zapata/rest/config.h>
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/RESTServer.h>
-#include <zapata/rest/SocketStreams.h>
-#include <zapata/rest/SSLSocketStreams.h>
-#include <zapata/rest/WebSocket.h>
 
 extern "C" int zapata_rest();

@@ -22,5 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/rest/SSLSocketStreams.h>
+#pragma once
+#include <string>
+#include <zapata/zmq/SocketStreams.h>
 
+#ifndef CRLF
+#define CRLF "\r\n"
+#endif
+
+namespace zpt {
+
+	namespace ws {
+		bool handshake(zpt::socketstream& _s);
+		bool read(zpt::socketstream& _s, string& _out, int* _op_code);
+		bool write(zpt::socketstream& _s, string _in);
+	}
+
+}

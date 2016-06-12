@@ -179,7 +179,6 @@ zpt::JSONPtr zpt::ev::init_request(std::string _cid) {
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 	
 	zpt::JSONPtr _return = zpt::mkptr(JSON(
-		"Host" << "localhost" <<
 		"Accept" << "application/json" <<
 		"Accept-Charset" << "utf-8" <<
 		"Cache-Control" << "no-cache" <<

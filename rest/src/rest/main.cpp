@@ -86,15 +86,16 @@ int main(int argc, char* argv[]) {
 			string _log_file((string) _ptr["log"]["file"]);
 			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
 		}
-		if (_ptr["log"]["level"]->ok()) {
+		if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
 			zpt::log_lvl = (int) _ptr["log"]["level"];
 		}
 	}
 	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = _log_level;
-	}			
+		zpt::log_lvl = 4;
+	}
 
 	try {
+		zlog(std::string("starting 0mq RESTful server for ") + zpt::pretty(_ptr["zmq"]), zpt::alert);
 		zpt::RESTServerPtr _server(_ptr);
 		_server->start();
 		zlog("exiting", zpt::info);

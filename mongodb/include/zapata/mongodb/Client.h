@@ -36,10 +36,10 @@ namespace zpt {
 
 	namespace mongodb {
 
-		class Collection : public zpt::KB {
+		class Client : public zpt::KB {
 		public:
-			Collection(zpt::JSONPtr _options);
-			virtual ~Collection();
+			Client(zpt::JSONPtr _options);
+			virtual ~Client();
 
 			virtual zpt::JSONPtr options();
 			virtual std::string name();
@@ -59,20 +59,20 @@ namespace zpt {
 			zpt::EventEmitterPtr __addons;
 		};
 
-		class CollectionPtr : public std::shared_ptr<zpt::mongodb::Collection> {
+		class ClientPtr : public std::shared_ptr<zpt::mongodb::Client> {
 		public:
 			/**
 			 * @brief Creates an std::shared_ptr to an Self instance.
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 CollectionPtr(zpt::mongodb::Collection * _target);
-			 CollectionPtr(zpt::JSONPtr _options);
+			 ClientPtr(zpt::mongodb::Client * _target);
+			 ClientPtr(zpt::JSONPtr _options);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.
 			 */
-			 virtual ~CollectionPtr();
+			 virtual ~ClientPtr();
 		};
 	}
 }

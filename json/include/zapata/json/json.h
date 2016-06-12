@@ -35,14 +35,6 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	JSONPtr fromfile(ifstream& _in);
-	JSONPtr fromstr(string& _in);
-	JSONPtr fromstream(istream& _in);
-
-	void tostr(string& _out, JSONElement& _in);
-	void tostr(string& _out, JSONObj& _in);
-	void tostr(string& _out, JSONArr& _in);
-
 	class csv : public std::string {
 	public: 
 		inline csv() : std::string() {

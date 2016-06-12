@@ -25,6 +25,8 @@ SOFTWARE.
 
 #define JSON(z) ((zpt::JSONObj()) << z)
 #define JSON_ARRAY(z) ((zpt::JSONArr()) << z)
+#define JOBJ_PTR(z) zpt::mkptr((zpt::JSONObj()) << z)
+#define JARR_PTR(z) zpt::mkptr((zpt::JSONArr()) << z)
 #define JSON_NIL zpt::undefined;
 
 #include <string>
@@ -1498,6 +1500,7 @@ namespace zpt {
 		void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
 		void delPath(std::string _path, std::string _separator = ".");
 
+		virtual zpt::JSONPtr flatten();
 		virtual void inspect(zpt::JSONPtr _pattern, std::function< void (std::string , std::string, zpt::JSONElementT&) > _callback, zpt::JSONElementT * _parent = nullptr, std::string _key = "", std::string _parent_path = "");
 
 		virtual void stringify(string& _out);

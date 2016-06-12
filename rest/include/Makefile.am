@@ -5,7 +5,4 @@ nobase_include_HEADERS = \
 ./zapata/rest/codes_rest.h \
 ./zapata/rest/RESTEmitter.h \
 ./zapata/rest/RESTServer.h \
-./zapata/rest/SocketStreams.h \
-./zapata/rest/SSLSocketStreams.h \
-./zapata/rest/WebSocket.h \
 ./zapata/rest.h

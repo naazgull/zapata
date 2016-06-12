@@ -276,7 +276,7 @@ zpt::JSONPtr zpt::redis::Collection::get(std::string _collection, std::string _u
 		case REDIS_REPLY_STRING: {
 			string _data(_reply->str, _reply->len);
 			try {
-				zpt::JSONPtr _return = zpt::fromstr(_data);
+				zpt::JSONPtr _return = zpt::json(_data);
 				freeReplyObject(_reply);
 				return _return;
 			}
@@ -356,7 +356,7 @@ zpt::JSONPtr zpt::redis::Collection::query(std::string _collection, zpt::JSONPtr
 				_cursor = std::stoi(string(_reply->element[0]->str, _reply->element[0]->len));
 				for (size_t _i = 0; _i < _reply->element[1]->elements; _i += 2) {
 					std::string _json(_reply->element[1]->element[_i + 1]->str, _reply->element[1]->element[_i + 1]->len);
-					zpt::JSONPtr _record = zpt::fromstr(_json);
+					zpt::JSONPtr _record = zpt::json(_json);
 					bool _match = true;
 					for (auto _o : _pattern->obj()) {
 						if (_record[_o.first] != _o.second) {

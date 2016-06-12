@@ -32,12 +32,6 @@ WQmnnnonononnnnnnnnnnnnnnnnnnnnnogmpnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnvXVQWQQQQQQQW
                $W.                                                 -QWQQQ/                          
                                                                     -^^^"~                          
 
-     s_a_s_s_a_s_%   _ssaaas,,     _s_a_a __aaaaa,,    __aaaas,,      ,s_dQs__s_,    __aaaaa,,.         
-    :QP?????9mQWT!  QQT!"!!??Qg  . "???QQdT??????9WQc 3QD?!"!??$Q,  . ???$QT????'   ]Q@?!"!??9Qc  .     
-    -"'_aawV?"` _a,_wwYYT??TYQW;-Qr   .QQ.        _QW ww2T?T?T?$Wf $k    jQ(     <a swZY?T?T?9QE ]Q     
-    _yQQQwwawwawyQ(]WmwaaawwY4QgyW'   .QW9AmywwwwmB?'-WWwaaawwZTWQwmf    "WQwwawyW! 9QgaaawwpTWQwmP     
-    -~------------   -^^^^-    ~-  __saWQs__%=--       -~^^^-    --        -~^^~-     ~^"^~    -~`     
-
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
@@ -74,23 +68,33 @@ namespace zpt {
 			 zpt::ev::Handler _handler_set[7] = {
 				//get
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
-						"status" << 204
-					));
+					return JOBJ_PTR(
+						"status" << 200 <<
+						"payload" << JSON(
+							"size" << 10 <<
+							"elements" << JSON_ARRAY(
+								"a"
+							) <<
+							"links" << JSON(
+								"next" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=20")) << 
+								"prev" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=0"))
+							)
+						)
+					);
 				},
 				no_put,
 				//post
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_delete,
 				//head
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_options, 
 				no_patch
@@ -102,36 +106,36 @@ namespace zpt {
 			 zpt::ev::Handler _handler_set[7] = {
 				//get
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//put
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//post
 				no_post,
 				//delete
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//head
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_options, 
 				//patch
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				}
 			};
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/users/([^/]+)$"), _handler_set);
@@ -152,35 +156,35 @@ namespace zpt {
 			 zpt::ev::Handler _handler_set[7] = {
 				//get
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_put,
 				//post
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//delete
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//head
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_options, 
 				//patch
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				}
 			};
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/groups$"), _handler_set);
@@ -190,35 +194,35 @@ namespace zpt {
 			 zpt::ev::Handler _handler_set[7] = {
 				//get
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//put
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_post,
 				//delete
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				//head
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				},
 				no_options, 
 				//patch
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-					return zpt::mkptr(JSON(
+					return JOBJ_PTR(
 						"status" << 204
-					));
+					);
 				}
 			};
 			_events->on(string("^/api/") + _events->options()["rest"]["version"]->str() + string("/groups/([^/]+)$"), _handler_set);

@@ -24,16 +24,16 @@ SOFTWARE.
 
 #include <zapata/mongodb/Collection.h>
 
-zpt::mongodb::CollectionPtr::CollectionPtr(zpt::mongodb::Collection * _target) : std::shared_ptr<zpt::mongodb::Collection>(_target) {
+zpt::mongodb::ClientPtr::ClientPtr(zpt::mongodb::Client * _target) : std::shared_ptr<zpt::mongodb::Client>(_target) {
 }
 
-zpt::mongodb::CollectionPtr::CollectionPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::mongodb::Collection>(new zpt::mongodb::Collection(_options)) {
+zpt::mongodb::ClientPtr::ClientPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options)) {
 }
 
-zpt::mongodb::CollectionPtr::~CollectionPtr() {
+zpt::mongodb::ClientPtr::~ClientPtr() {
 }
 
-zpt::mongodb::Collection::Collection(zpt::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
+zpt::mongodb::Client::Client(zpt::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
 	if (this->__options["mongodb"]["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
 	}
@@ -41,27 +41,27 @@ zpt::mongodb::Collection::Collection(zpt::JSONPtr _options) : __options( _option
 
 }
 
-zpt::mongodb::Collection::~Collection() {
+zpt::mongodb::Client::~Client() {
 	this->__conn.done();
 }
 
-zpt::JSONPtr zpt::mongodb::Collection::options() {
+zpt::JSONPtr zpt::mongodb::Client::options() {
 	return this->__options;
 }
 
-std::string zpt::mongodb::Collection::name() {
+std::string zpt::mongodb::Client::name() {
 	return string("mongodb://") + ((string) this->__options["mongodb"]["bind"]) + string(":") + ((string) this->__options["mongodb"]["port"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
 }
 
-bool& zpt::mongodb::Collection::broadcast() {
+bool& zpt::mongodb::Client::broadcast() {
 	return this->__broadcast;
 }
 
-zpt::EventEmitterPtr zpt::mongodb::Collection::addons() {
+zpt::EventEmitterPtr zpt::mongodb::Client::addons() {
 	return this->__addons;
 }
 
-std::string zpt::mongodb::Collection::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
+std::string zpt::mongodb::Client::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _full_collection(_collection);
@@ -87,7 +87,7 @@ std::string zpt::mongodb::Collection::insert(std::string _collection, std::strin
 	return _document["id"]->str();
 }
 
-int zpt::mongodb::Collection::update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+int zpt::mongodb::Client::update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -119,7 +119,7 @@ int zpt::mongodb::Collection::update(std::string _collection, zpt::JSONPtr _patt
 	return _size;
 }
 
-int zpt::mongodb::Collection::unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {
+int zpt::mongodb::Client::unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -151,7 +151,7 @@ int zpt::mongodb::Collection::unset(std::string _collection, zpt::JSONPtr _patte
 	return _size;
 }
 
-int zpt::mongodb::Collection::remove(std::string _collection, zpt::JSONPtr _pattern) {
+int zpt::mongodb::Client::remove(std::string _collection, zpt::JSONPtr _pattern) {
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
 	}
@@ -179,7 +179,7 @@ int zpt::mongodb::Collection::remove(std::string _collection, zpt::JSONPtr _patt
 	return _size;
 }
 
-zpt::JSONPtr zpt::mongodb::Collection::query(std::string _collection, zpt::JSONPtr _pattern) {
+zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _pattern) {
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
 	}

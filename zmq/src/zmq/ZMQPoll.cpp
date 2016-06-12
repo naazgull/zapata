@@ -112,6 +112,10 @@ void zpt::ZMQPoll::unlock() {
 	pthread_mutex_unlock(this->__pt_mtx);	
 }
 
+void zpt::ZMQPoll::unbind() {
+	this->__self.reset();
+}
+
 void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 	this->__sockets.push_back(_socket);
 
@@ -132,21 +136,74 @@ void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 	}
 }
 
-void zpt::ZMQPoll::repoll() {
-	zlog(string("scanning poll"), zpt::notice);
-	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
-
-	size_t _i = 1;
-	for (auto _socket : this->__sockets) {
-		if (_i < this->__poll_size) {
-			_i++;
-			continue;
+void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
+	long _index = 0;
+	for (auto _binded : this->__sockets)  {
+		if (_binded->id() == _socket.id()) {
+			break;
 		}
-		this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
-
-		_i++;
+		_index++;
 	}
-	this->__poll_size = this->__sockets.size() + 1;
+	if (_index == (long) this->__sockets.size()) {
+		return;
+	}
+	zlog(std::string("found index ") + std::to_string(_index) + std::string(" for socket ") + _socket.id(), zpt::debug);
+	
+	if (this->__id != 0 && this->__id != pthread_self()) {
+		zlog(std::string("not in main thread, sending signal"), zpt::info);
+		std::string _message = std::to_string(_index);
+		zmq::message_t _signal(_message.length());
+		memcpy ((void *) _signal.data(), _message.data(), _message.length());
+		this->__internal[1]->send(_signal);
+		zmq::message_t _reply;
+		try {
+			this->__internal[1]->recv(& _reply);
+		}
+		catch(zmq::error_t& e) {
+			zlog("got a zmq::error_t, signaling polling", zpt::error);
+		}
+	}
+	else {
+		this->repoll(_index);
+	}
+}
+
+void zpt::ZMQPoll::repoll(long _index) {
+	zlog(std::string("scanning socket poll"), zpt::notice);
+
+	if (_index == -1) {
+		this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
+		size_t _i = 1;
+		for (auto _socket : this->__sockets) {
+			if (_i < this->__poll_size) {
+				_i++;
+				continue;
+			}
+			this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
+			_i++;
+		}
+	}
+	else {
+		std::string _key(this->__sockets[_index]->connection().data());
+		zpt::replace(_key, "*", ((string) this->__options["host"]));
+		auto _found = this->__by_name.find(_key);
+		if (_found != this->__by_name.end()) {
+			this->__by_name.erase(_found);
+		}
+		this->__sockets.erase(this->__sockets.begin() + _index);
+
+		this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
+		this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
+		
+		size_t _i = 1;
+		for (auto _socket : this->__sockets) {
+			this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
+			_i++;
+		}
+	}
+	
+	this->__poll_size = this->__sockets.size() + 1;	
+	zlog(std::string("polling for ") + std::to_string(this->__poll_size) + std::string(" socket(s)"), zpt::notice);
 }
 
 void zpt::ZMQPoll::loop() {
@@ -174,20 +231,32 @@ void zpt::ZMQPoll::loop() {
 			this->__internal[0]->send(_signal);
 		}
 		else {
+			zlog(std::string("socket vector is now ") + std::to_string(this->__sockets.size()) + std::string(" in length"), zpt::debug);
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
+					zlog(std::string("something to do with index ") + std::to_string(_k), zpt::debug);
 					zpt::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
-					zpt::ev::Performative _performative = (zpt::ev::Performative) ((int) _envelope["performative"]);
-					zpt::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-					if (_result->ok()) {
-						try {
-							_result << 
-								"channel" << _envelope["headers"]["X-Cid"] <<
-								"performative" << zpt::ev::Reply <<
-								"resource" << _envelope["resource"];
-							this->__sockets[_k - 1]->send(_result);
+					if (_envelope->ok()) {
+						zpt::ev::Performative _performative = (zpt::ev::Performative) ((int) _envelope["performative"]);
+						zpt::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+						zlog("finished processing request", zpt::debug);
+						if (_result->ok()) {
+							try {
+								_result << 
+									"channel" << _envelope["headers"]["X-Cid"] <<
+									"performative" << zpt::ev::Reply <<
+									"resource" << _envelope["resource"];
+								this->__sockets[_k - 1]->send(_result);
+							}
+							catch(zpt::AssertionException& _e) {}
 						}
-						catch(zpt::AssertionException& _e) {}
+					}
+					if (this->__sockets[_k - 1]->once()) {
+						zlog("socket to be used just once, unbinding", zpt::debug);
+						this->__sockets[_k - 1]->unbind();
+						this->unpoll(*this->__sockets[_k - 1].get());
+						zlog("finished repolling process", zpt::debug);
+						break;
 					}
 				}
 			}
@@ -197,15 +266,38 @@ void zpt::ZMQPoll::loop() {
 
 zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 	switch(_type) {
+		case ZMQ_ROUTER_DEALER : {
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQRouterDealer * _socket = new zpt::ZMQRouterDealer(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
+		}
 		case ZMQ_REQ : {
 			zpt::ZMQReq * _socket = new zpt::ZMQReq(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}
 		case ZMQ_REP : {
-			zpt::ZMQRep * _socket = new zpt::ZMQRep(_connection, this->__options, this->__emitter);
-			_socket->listen(this->__self);
-			return _socket->self();
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQRep * _socket = new zpt::ZMQRep(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
 		}
 		case ZMQ_XPUB_XSUB : {
 			zpt::ZMQXPubXSub * _socket = new zpt::ZMQXPubXSub(_connection, this->__options, this->__emitter);
@@ -213,19 +305,65 @@ zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 			return _socket->self();
 		}
 		case ZMQ_PUB_SUB : {
-			zpt::ZMQPubSub * _socket = new zpt::ZMQPubSub(_connection, this->__options, this->__emitter);
-			_socket->listen(this->__self);
-			return _socket->self();
-		}			
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQPubSub * _socket = new zpt::ZMQPubSub(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
+		}
 		case ZMQ_PUB : {
-			/*zpt::ZMQPub * _socket = new zpt::ZMQPub(_connection, this->__options, this->__emitter);
-			_socket->listen(this->__self);
-			return _socket->self();*/
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQPub * _socket = new zpt::ZMQPub(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
 		}
 		case ZMQ_SUB : {
-			/*zpt::ZMQSub * _socket = new zpt::ZMQSub(_connection, this->__options, this->__emitter);
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQSub * _socket = new zpt::ZMQSub(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
+		}
+		case ZMQ_PUSH : {
+			std::string _key(_connection.data());
+			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			auto _found = this->__by_name.find(_key);
+			if (_found != this->__by_name.end()) {
+				return _found->second;
+			}
+			else {
+				zpt::ZMQPush * _socket = new zpt::ZMQPush(_connection, this->__options, this->__emitter);
+				_socket->listen(this->__self);
+				this->__by_name.insert(make_pair(_key, _socket->self()));
+				return _socket->self();
+			}
+		}
+		case ZMQ_PULL : {
+			zpt::ZMQPull * _socket = new zpt::ZMQPull(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
-			return _socket->self();*/
+			return _socket->self();
 		}
 	}
 	return zpt::ZMQPtr(nullptr);

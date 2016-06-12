@@ -6,10 +6,7 @@ libzapata_rest_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 libzapata_rest_la_SOURCES = \
 ./RESTEmitter.cpp \
-./RESTServer.cpp \
-./SocketStreams.cpp \
-./SSLSocketStreams.cpp \
-./WebSocket.cpp
+./RESTServer.cpp 
 
 bin_PROGRAMS = zapata-api
 

@@ -953,6 +953,24 @@ void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 	}
 }
 
+zpt::JSONPtr zpt::JSONElementT::flatten() {
+	if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
+		zpt::JSONPtr _return = zpt::mkobj();
+		this->inspect(zpt::mkptr(JSON( "$regexp" << "(.*)" )),
+			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+				zpt::JSONPtr _self = this->getPath(_object_path);
+				if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
+					_return << _object_path << _self;
+				}
+			}
+		);
+		return _return;
+	}
+	else {
+		return this->clone();
+	}
+}
+
 void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std::string, std::string, zpt::JSONElementT&) > _callback, zpt::JSONElementT * _parent, std::string _key, std::string _parent_path) {
 	switch(this->type()) {
 		case zpt::JSObject: {

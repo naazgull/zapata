@@ -459,7 +459,15 @@ void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, 
 							double d = 0;
 							iss >> d;
 							if (!iss.eof()) {
-								_queryr.append(key, BSON(comp << expression));
+								string bexpr(expression.data());
+								std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
+								if (bexpr != "true" && bexpr != "false") {
+									_queryr.append(key, expression);
+									_queryr.append(key, BSON(comp << expression));
+								}
+								else {
+									_queryr.append(key, BSON(comp << (bexpr == "true") ));
+								}
 							}
 							else {
 								_queryr.append(key, BSON(comp << d));
@@ -486,6 +494,14 @@ void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, 
 							}
 						}
 						catch(std::exception& _e) {}
+					}
+					else if (options == "d") {
+						zpt::JSONPtr _json = zpt::mkptr(JSON(
+							"time" << (zpt::timestamp_t) zpt::mkptr(expression)
+						));
+						mongo::BSONObjBuilder _mongo_json;
+						zpt::mongodb::tomongo(_json, _mongo_json);
+						_queryr.append(key, BSON(comp << _mongo_json.obj()["time"]));
 					}
 					continue;
 				}

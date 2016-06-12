@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <zapata/events.h>
 #include <zapata/zmq.h>
-#include <zapata/rest/SocketStreams.h>
+#include <zapata/zmq/SocketStreams.h>
 #include <zapata/rest/RESTEmitter.h>
 
 using namespace std;
@@ -64,7 +64,7 @@ namespace zpt {
 		virtual zpt::ZMQPollPtr poll();
 		virtual zpt::EventEmitterPtr emitter();
 
-		virtual bool route_http(zpt::socketstream_ptr _cs, std::map<std::string, zpt::socketstream_ptr>& _pending);
+		virtual bool route_http(zpt::socketstream_ptr _cs);
 		virtual bool route_mqtt(std::iostream& _cs);
 
 		
@@ -72,12 +72,9 @@ namespace zpt {
 		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __poll;
 		zpt::JSONPtr __options;
-		std::string __type;
-		zpt::ZMQPtr __assync;
-		std::string __assync_http_cid;
+		zpt::ZMQPtr __pub_sub;
+		zpt::ZMQPtr __router_dealer;
 
-		zpt::JSONPtr http2zmq(zpt::HTTPReq _request);
-		zpt::HTTPRep zmq2http(zpt::JSONPtr _out);
 	};
 
 	class RESTClient {
@@ -109,5 +106,33 @@ namespace zpt {
 
 	namespace rest {
 		zpt::JSONPtr not_found(std::string _resource);
+		zpt::JSONPtr accepted(std::string _resource);
+
+		zpt::JSONPtr http2zmq(zpt::HTTPReq _request);
+		zpt::HTTPRep zmq2http(zpt::JSONPtr _out);
 	}
+
+	class ZMQAssyncReq : public zpt::ZMQ {
+	public:
+		ZMQAssyncReq(zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter);
+		ZMQAssyncReq(std::string _obj_path, zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter);
+		ZMQAssyncReq(std::string _connection, zpt::EventEmitterPtr _emitter);
+		virtual ~ZMQAssyncReq();
+		
+		virtual zpt::JSONPtr recv();
+		virtual zpt::JSONPtr send(zpt::JSONPtr _envelope);
+
+		virtual void relay_for(zpt::socketstream_ptr _socket);
+
+		virtual zmq::socket_t& socket();
+		virtual zmq::socket_t& in();
+		virtual zmq::socket_t& out();
+		virtual short int type();
+		virtual bool once();
+		virtual void listen(zpt::ZMQPollPtr _poll);
+		
+	private:
+		zmq::socket_t * __socket;
+		zpt::socketstream_ptr __relayed_socket;
+	};
 }

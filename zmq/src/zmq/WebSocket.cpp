@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/rest/WebSocket.h>
+#include <zapata/zmq/WebSocket.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 
