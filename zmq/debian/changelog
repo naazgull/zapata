@@ -1,3 +1,9 @@
+zapata-zmq (0.9.1-3) trusty; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Sun, 12 Jun 2016 16:04:31 +0100
+
 zapata-zmq (0.9.1-2) trusty; urgency=medium
 
   * Version bump
