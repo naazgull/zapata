@@ -26,4 +26,4 @@ SOFTWARE.
 
 #include <zapata/mongodb/config.h>
 #include <zapata/mongodb/convert_mongo.h>
-#include <zapata/mongodb/Collection.h>
+#include <zapata/mongodb/Client.h>

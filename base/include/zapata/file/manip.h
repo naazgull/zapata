@@ -470,6 +470,6 @@ namespace zpt {
 	bool path_exists(string _in);
 
 	int globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive);
-	int glob(string& dir, vector<string>& result, string pattern, bool recursive);
+	int glob(string dir, vector<string>& result, string pattern, bool recursive);
 
 }

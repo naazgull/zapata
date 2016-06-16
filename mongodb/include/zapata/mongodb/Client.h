@@ -38,7 +38,7 @@ namespace zpt {
 
 		class Client : public zpt::KB {
 		public:
-			Client(zpt::JSONPtr _options);
+			Client(zpt::JSONPtr _options, std::string _conf_path);
 			virtual ~Client();
 
 			virtual zpt::JSONPtr options();
@@ -47,13 +47,16 @@ namespace zpt {
 			virtual zpt::EventEmitterPtr addons();
 
 			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
-			virtual int update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _record);
+			virtual int save(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _record);
+			virtual int set(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document);
 			virtual int unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document);
 			virtual int remove(std::string _collection, zpt::JSONPtr _pattern);
 			virtual zpt::JSONPtr query(std::string _collection, zpt::JSONPtr _pattern);
 
 		private:
 			zpt::JSONPtr __options;
+			zpt::JSONPtr __mongodb_conf;
+			std::string __conf_path;
 			mongo::ScopedDbConnection __conn;
 			bool __broadcast;
 			zpt::EventEmitterPtr __addons;
@@ -67,7 +70,7 @@ namespace zpt {
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
 			 ClientPtr(zpt::mongodb::Client * _target);
-			 ClientPtr(zpt::JSONPtr _options);
+			 ClientPtr(zpt::JSONPtr _options, std::string _conf_path);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

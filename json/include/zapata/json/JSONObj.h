@@ -25,8 +25,8 @@ SOFTWARE.
 
 #define JSON(z) ((zpt::JSONObj()) << z)
 #define JSON_ARRAY(z) ((zpt::JSONArr()) << z)
-#define JOBJ_PTR(z) zpt::mkptr((zpt::JSONObj()) << z)
-#define JARR_PTR(z) zpt::mkptr((zpt::JSONArr()) << z)
+#define JPTR(z) zpt::mkptr((zpt::JSONObj()) << z)
+#define JPTR_ARRAY(z) zpt::mkptr((zpt::JSONArr()) << z)
 #define JSON_NIL zpt::undefined;
 
 #include <string>

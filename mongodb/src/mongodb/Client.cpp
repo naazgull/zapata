@@ -22,20 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/mongodb/Collection.h>
+#include <zapata/mongodb/Client.h>
 
 zpt::mongodb::ClientPtr::ClientPtr(zpt::mongodb::Client * _target) : std::shared_ptr<zpt::mongodb::Client>(_target) {
 }
 
-zpt::mongodb::ClientPtr::ClientPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options)) {
+zpt::mongodb::ClientPtr::ClientPtr(zpt::JSONPtr _options, std::string _conf_path) : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options, _conf_path)) {
 }
 
 zpt::mongodb::ClientPtr::~ClientPtr() {
 }
 
-zpt::mongodb::Client::Client(zpt::JSONPtr _options) : __options( _options), __conn((string) _options["mongodb"]["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
-	if (this->__options["mongodb"]["user"]->ok()) {
-		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__options["mongodb"]["user"] << "pwd" << (string) this->__options["mongodb"]["passwd"] << "db" << (string) this->__options["mongodb"]["db"]));
+zpt::mongodb::Client::Client(zpt::JSONPtr _options, std::string _conf_path) : __options( _options), __mongodb_conf(_options->getPath(_conf_path)), __conf_path(_conf_path), __conn((string) __mongodb_conf["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
+	if (this->__mongodb_conf["user"]->ok()) {
+		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__mongodb_conf["user"] << "pwd" << (string) this->__mongodb_conf["passwd"] << "db" << (string) this->__mongodb_conf["db"]));
 	}
 	this->__conn->setWriteConcern((mongo::WriteConcern) 2);
 
@@ -50,7 +50,7 @@ zpt::JSONPtr zpt::mongodb::Client::options() {
 }
 
 std::string zpt::mongodb::Client::name() {
-	return string("mongodb://") + ((string) this->__options["mongodb"]["bind"]) + string(":") + ((string) this->__options["mongodb"]["port"]) + string("/") + ((string) this->__options["mongodb"]["db"]);
+	return string("mongodb://") + ((string) this->__mongodb_conf["bind"]) + string(":") + ((string) this->__mongodb_conf["port"]) + string("/") + ((string) this->__mongodb_conf["db"]);
 }
 
 bool& zpt::mongodb::Client::broadcast() {
@@ -66,7 +66,7 @@ std::string zpt::mongodb::Client::insert(std::string _collection, std::string _i
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
 
 	if (!_document["id"]->ok()) {
 		uuid _uuid;
@@ -81,13 +81,13 @@ std::string zpt::mongodb::Client::insert(std::string _collection, std::string _i
 	this->__conn->insert(_full_collection, _mongo_document.obj());
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	if (this->__broadcast) {
+	if (this->__broadcast && this->addons().get() != nullptr) {
 		this->addons()->trigger(zpt::ev::Post, string("INSERT ") + _collection, _document);
 	}
 	return _document["id"]->str();
 }
 
-int zpt::mongodb::Client::update(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+int zpt::mongodb::Client::save(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -95,7 +95,38 @@ int zpt::mongodb::Client::update(std::string _collection, zpt::JSONPtr _pattern,
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
+
+	size_t _page_size = 0;
+	size_t _page_start_index = 0;
+	mongo::BSONObjBuilder _query_b;
+	mongo::BSONObjBuilder _order_b;
+	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
+	mongo::Query _filter(_query_b.done());
+
+	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
+	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
+
+	mongo::BSONObjBuilder _mongo_document;
+	zpt::mongodb::tomongo(_document, _mongo_document);
+	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, false);
+	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
+
+	if (this->__broadcast) {
+		this->addons()->trigger(zpt::ev::Post, string("UPDATE ") + _collection, _pattern);
+	}
+	return _size;
+}
+
+int zpt::mongodb::Client::set(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	if (!_pattern->ok()) {
+		_pattern = zpt::mkobj();
+	}
+
+	std::string _full_collection(_collection);
+	_full_collection.insert(0, ".");
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -127,7 +158,7 @@ int zpt::mongodb::Client::unset(std::string _collection, zpt::JSONPtr _pattern, 
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -158,7 +189,7 @@ int zpt::mongodb::Client::remove(std::string _collection, zpt::JSONPtr _pattern)
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -188,7 +219,7 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
-	_full_collection.insert(0, (string) this->__options["mongodb"]["db"]);
+	_full_collection.insert(0, (string) this->__mongodb_conf["db"]);
 
 	size_t _page_size = 0;
 	size_t _page_start_index = 0;
@@ -218,6 +249,6 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 	}
 	return zpt::mkptr(JSON(
 		"size" << _size <<
-		"elements" << _return
+		"elements" << _return 
 	));
 }

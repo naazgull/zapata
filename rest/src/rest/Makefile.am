@@ -8,7 +8,7 @@ libzapata_rest_la_SOURCES = \
 ./RESTEmitter.cpp \
 ./RESTServer.cpp 
 
-bin_PROGRAMS = zapata-api
+bin_PROGRAMS = zapata-api zclient
 
 zapata_api_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest
 zapata_api_LDFLAGS =  -L../rest/.libs
@@ -16,3 +16,10 @@ zapata_api_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 zapata_api_SOURCES = \
 ./main.cpp
+
+zclient_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest
+zclient_LDFLAGS =  -L../rest/.libs
+zclient_CPPFLAGS = -O3 -std=c++11 -I../../include
+
+zclient_SOURCES = \
+./zclient.cpp

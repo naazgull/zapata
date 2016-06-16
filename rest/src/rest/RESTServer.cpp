@@ -32,12 +32,6 @@ WQmnnnonononnnnnnnnnnnnnnnnnnnnnogmpnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnvXVQWQQQQQQQW
                $W.                                                 -QWQQQ/                          
                                                                     -^^^"~                          
 
-     s_a_s_s_a_s_%   _ssaaas,,     _s_a_a __aaaaa,,    __aaaas,,      ,s_dQs__s_,    __aaaaa,,.         
-    :QP?????9mQWT!  QQT!"!!??Qg  . "???QQdT??????9WQc 3QD?!"!??$Q,  . ???$QT????'   ]Q@?!"!??9Qc  .     
-    -"'_aawV?"` _a,_wwYYT??TYQW;-Qr   .QQ.        _QW ww2T?T?T?$Wf $k    jQ(     <a swZY?T?T?9QE ]Q     
-    _yQQQwwawwawyQ(]WmwaaawwY4QgyW'   .QW9AmywwwwmB?'-WWwaaawwZTWQwmf    "WQwwawyW! 9QgaaawwpTWQwmP     
-    -~------------   -^^^^-    ~-  __saWQs__%=--       -~^^^-    --        -~^^~-     ~^"^~    -~`     
-
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
@@ -360,16 +354,19 @@ void zpt::RESTClient::start() {
 
 void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 	std::vector<std::string> _files;
-	zpt::ls(_dir, _files, false);
+	zpt::glob(_dir, _files, "(.*)\\.conf", false);
 	for (auto _file : _files) {
 		zpt::JSONPtr _conf;
 		std::ifstream _ifs;
 		_ifs.open(_file.data());
-		_ifs >> _conf;
 		try {
-			_ifs.close();
+			_ifs >> _conf;
 		}
-		catch(zpt::SyntaxErrorException& _e) {}
+		catch(zpt::SyntaxErrorException& _e) {
+		}
+		_ifs.close();
+
+		assertz(_conf->ok(), std::string("Syntax error parsing file '") + _file + std::string("'"), 500, 0);
 
 		for (auto _new_field : _conf->obj()) {
 			if (!_options[_new_field.first]->ok()) {
@@ -385,11 +382,11 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 }
 
 void zpt::conf::dirs(zpt::JSONPtr _options) {
-	zpt::conf::dirs("/etc/zapata/conf.d/", _options);
+	zpt::conf::dirs("/etc/zapata/conf.d", _options);
 	zpt::JSONPtr _traversable = _options->clone();
 	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "(.+)" )), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 		if (_key == "$include") {
-			zpt::JSONPtr _object = _options->getPath(_object_path.substr(0, _object_path.rfind(".")));
+			zpt::JSONPtr _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
 			zpt::conf::dirs((string) _options->getPath(_object_path), _object);
 			_object >> "$include";
 			
@@ -545,9 +542,6 @@ zpt::JSONPtr zpt::ZMQAssyncReq::recv() {
 	}
 	zpt::HTTPRep _reply = zpt::rest::zmq2http(_envelope);
 	(* this->__relayed_socket) << _reply << flush;
-	/*std::ostringstream _oss;
-	_oss << _reply << flush;
-	zlog(_oss.str(), zpt::debug);*/
 	return zpt::undefined;
 }
 

@@ -35,3 +35,4 @@ json/src/json/zat
 examples/src/clients/zapata-client
 rest/src/rest/zapata-api
 .emacs.desktop*
+rest/src/rest/zclient

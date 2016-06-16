@@ -77,19 +77,22 @@ zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options) : __options( _options), __context(1
 }
 
 zpt::ZMQPoll::~ZMQPoll() {
-	this->__internal[0]->close();
-	this->__internal[1]->close();
-	delete this->__internal[0];
-	delete this->__internal[1];
- 	delete [] this->__internal;
- 	free(this->__poll);
+	if (this->__internal != nullptr) {
+		this->__internal[0]->close();
+		this->__internal[1]->close();
+		delete this->__internal[0];
+		delete this->__internal[1];
+		delete [] this->__internal;
+		this->__internal = nullptr;
+		free(this->__poll);
+		
+		pthread_mutexattr_destroy(this->__pt_attr);
+		pthread_mutex_destroy(this->__pt_mtx);
+		delete this->__pt_mtx;
+		delete this->__pt_attr;
 
-	pthread_mutexattr_destroy(this->__pt_attr);
-	pthread_mutex_destroy(this->__pt_mtx);
-	delete this->__pt_mtx;
-	delete this->__pt_attr;
-
-	zlog(string("zmq poll clean up"), zpt::notice);
+		zlog(string("zmq poll clean up"), zpt::notice);
+	}
 }
 
 zpt::JSONPtr zpt::ZMQPoll::options() {

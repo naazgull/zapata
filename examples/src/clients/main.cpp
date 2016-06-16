@@ -97,28 +97,32 @@ int main(int argc, char* argv[]) {
 		zpt::RESTClientPtr _api(_ptr);
 		size_t _max = 10100;
 		size_t * _n = new size_t();
-		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users", [ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-			(* _n)++;
-			zlog(std::to_string(* _n), zpt::debug);
-			if ((* _n) == (_max - 100)) {
-				cout << "PROCESSED " << (* _n) << " MESSAGES" << endl << flush;
+		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users",
+			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+				(* _n)++;
+				zlog(std::to_string(* _n), zpt::debug);
+				if ((* _n) == (_max - 100)) {
+					cout << "PROCESSED " << (* _n) << " MESSAGES" << endl << flush;
 				exit(0);
+				}
+				return zpt::undefined;
 			}
-			return zpt::undefined;
-		});
+		);
 		zpt::ZMQPtr _client = _api->bind("zmq");
 		zpt::JSONPtr _message = zpt::mkptr(JSON(
 			"name" << "m/@gmail.com/i"
 		));
-		zpt::Job _sender([ & ] (zpt::Job& _job) -> void {
-			for (size_t _k = 0; _k != _max; _k++) {
-				_client->send(zpt::ev::Get, "/api/0.9/users", _message);
+		zpt::Job _sender(
+			[ & ] (zpt::Job& _job) -> void {
+				for (size_t _k = 0; _k != _max; _k++) {
+					_client->send(zpt::ev::Get, "/api/0.9/users", _message);
+				}
+				if (_ptr["zmq"]["type"]->str() == "req") {
+					cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;
+					exit(0);				
+				}
 			}
-			if (_ptr["zmq"]["type"]->str() == "req") {
-				cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;
-				exit(0);				
-			}
-		});
+		);
 		_sender->start();
 		_api->start();
 	}

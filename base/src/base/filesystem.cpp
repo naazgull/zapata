@@ -174,7 +174,7 @@ int zpt::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool 
 	return 0;
 }
 
-int zpt::glob(string& dir, vector<string>& result, string pattern, bool recursive) {
+int zpt::glob(string dir, vector<string>& result, string pattern, bool recursive) {
 	regex_t regexp;
 	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
 	int _return = zpt::globRegexp(dir, result, regexp, recursive);

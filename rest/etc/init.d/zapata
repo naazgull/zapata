@@ -1,5 +1,15 @@
 #! /bin/bash
 
+### BEGIN INIT INFO
+# Provides:          zapata
+# Required-Start:    $network $remote_fs $syslog
+# Required-Stop:     $network $remote_fs $syslog
+# Default-Start:
+# Default-Stop:
+# Short-Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support
+# Description:       Provides a set of C++ tool libraries for the development of RESTful API's. This package provides an HTTP server, event listening registering support and multi-threading support.
+### END INIT INFO
+
 bin_dir=@PREFIX@/bin
 daemon=$bin_dir/bin/zapata-rest-daemon
 cnf_dir=/etc/zapata/backend-enabled
