@@ -15,7 +15,6 @@ install:
     - sudo scons --prefix=/usr --sharedclient --use-system-boost --full install-mongoclient
     - cd ..
 before_script: 
-    - autoreconf -vfi
+    - make config
 script: 
-    - ./configure --prefix=/usr && make 
-
+    - make 
