@@ -45,6 +45,6 @@ a) Clone the *zapata* project:
 b) Configure and install all packages:
 
 	$ autoreconf -fi
-	$ ./configure --prefix=/usr
+	$ ./configure --prefix=/usr --sysconf=/etc
 	$ sudo make install-strip
 
