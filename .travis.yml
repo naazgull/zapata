@@ -14,7 +14,5 @@ install:
     - cd mongo-cxx-driver
     - sudo scons --prefix=/usr --sharedclient --use-system-boost --full install-mongoclient
     - cd ..
-before_script: 
-    - make config
 script: 
-    - make 
+    - make config && make
