@@ -30,8 +30,10 @@ SOFTWARE.
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/sendfile.h>
-
+	
 int zpt::ls(string dir, std::vector<string>& result, bool recursive) {
 	DIR *dp;
 	struct dirent *dirp;
@@ -180,4 +182,12 @@ int zpt::glob(string dir, vector<string>& result, string pattern, bool recursive
 	int _return = zpt::globRegexp(dir, result, regexp, recursive);
 	regfree(& regexp);	
 	return _return;
+}
+
+bool zpt::is_dir(std::string _path) {
+	struct stat _s;
+	if( stat(_path.data(), & _s) == 0 ) {
+		return _s.st_mode & S_IFDIR;
+	}
+	return false;
 }

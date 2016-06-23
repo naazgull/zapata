@@ -27,3 +27,12 @@ libzapata_base_la_SOURCES = \
 ./url.cpp \
 ./usage.cpp \
 ./utf8.cpp
+
+bin_PROGRAMS = zoc
+
+zoc_LDADD = -lpthread -lzapata-base
+zoc_LDFLAGS= 
+zoc_CPPFLAGS = -std=c++11 -Wall -I../../include
+
+zoc_SOURCES = \
+zoc.cpp

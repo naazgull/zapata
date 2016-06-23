@@ -60,10 +60,26 @@ SOFTWARE.
 #include <ctime>
 #include <memory>
 
+/*{{
+  # Users API
+  }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	zpt::KBPtr _kb(new zpt::mongodb::Client(_emitter->options(), "mongodb.users"));
 	_emitter->add_kb("mongodb.users", _kb);
-	
+
+	/*{{	  
+	  ## Users collection
+	  ```
+	  /api/{api-version}/users
+	  ```
+	  ### Description
+	  The _Users_ collections holds the set of _User_ documents for the configured **MongoDB** database and collection. 
+	  
+	  ### Allowed methods
+	  - _GET_
+	  - _POST_
+	  - _HEAD_
+	  }}*/ 
 	zpt::ev::Handler _users_collection[7] = {
 		//get
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
@@ -129,7 +145,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	};
 	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/users$"), _users_collection);
 
-	zpt::ev::Handler _users_document[7] = {
+	zpt::ev::Handler _user_document[7] = {
 		//get
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
@@ -206,8 +222,73 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			);
 		}
 	};
-	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/users/([^/]+)$"), _users_document);
+	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/users/([^/]+)$"), _user_document);
 
+	zpt::ev::Handler _user_groups_collection[7] = {
+		//get
+		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			zpt::JSONPtr _list = _db->query("users", _envelope["payload"]);
+			if (!_list->ok()) {
+				return JPTR(
+					"status" << 204
+				);
+			}
+			_list << "links" << JSON(
+				"next" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=20")) <<
+				"prev" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=0"))
+			);
+			return JPTR(
+				"status" << 200 <<
+				"payload" << _list
+			);
+		},
+		no_put,
+		//post
+		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			assertz(
+				_envelope["payload"]->ok() &&
+				_envelope["payload"]["name"]->ok() &&
+				_envelope["payload"]["e-mail"]->ok() &&
+				_envelope["payload"]["password"]->ok(),
+				"required fields: 'name', 'e-mail' and 'password'", 412, 0);
+				
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			std::string _id = _db->insert("users", _resource, _envelope["payload"]);
+			return JPTR(
+				"status" << 200 <<
+				"payload" << JSON(
+					"id" << _id <<
+					"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
+				)
+			);
+		},
+		no_delete,
+		//head
+		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			zpt::JSONPtr _list = _db->query("users", _envelope["payload"]);
+			if (!_list->ok()) {
+				return JPTR(
+					"status" << 204
+				);
+			}
+			_list << "links" << JSON(
+				"next" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=20")) <<
+				"prev" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=0"))
+			);
+			return JPTR(
+				"status" << 200 <<
+				"headers" << JSON(
+					"Content-Length" << ((std::string) _list).length()
+				)
+			);
+		},
+		no_options, 
+		no_patch
+	};
+	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/users/([^/]+)/groups$"), _user_groups_collection);
+	
 	zpt::ev::Handler _login_controller[7] = {
 		no_get,
 		no_put,
@@ -226,70 +307,142 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	zpt::ev::Handler _groups_collection[7] = {
 		//get
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			zpt::JSONPtr _list = _db->query("groups", _envelope["payload"]);
+			if (!_list->ok()) {
+				return JPTR(
+					"status" << 204
+				);
+			}
+			_list << "links" << JSON(
+				"next" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=20")) <<
+				"prev" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=0"))
+			);
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << _list
 			);
 		},
 		no_put,
 		//post
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			assertz(
+				_envelope["payload"]->ok() &&
+				_envelope["payload"]["name"]->ok() &&
+				_envelope["payload"]["code"]->ok() &&
+				_envelope["payload"]["scopes"]->ok(),
+				"required fields: 'name', 'code' and 'scopes'", 412, 0);
+				
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			std::string _id = _db->insert("groups", _resource, _envelope["payload"]);
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << JSON(
+					"id" << _id <<
+					"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
+				)
 			);
 		},
-		//delete
-		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
-			return JPTR(
-				"status" << 204
-			);
-		},
+		no_delete,
 		//head
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			zpt::JSONPtr _list = _db->query("groups", _envelope["payload"]);
+			if (!_list->ok()) {
+				return JPTR(
+					"status" << 204
+				);
+			}
+			_list << "links" << JSON(
+				"next" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=20")) <<
+				"prev" << (_envelope["resource"]->str() + std::string("?page-size=10&page-start-index=0"))
+			);
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"headers" << JSON(
+					"Content-Length" << ((std::string) _list).length()
+				)
 			);
 		},
 		no_options, 
-		//patch
-		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
-			return JPTR(
-				"status" << 204
-			);
-		}
+		no_patch
 	};
 	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/groups$"), _groups_collection);
 
 	zpt::ev::Handler _groups_document[7] = {
 		//get
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			_envelope["payload"] << "_id" << _resource;
+			zpt::JSONPtr _document = _db->query("groups", _envelope["payload"]);
+			if (!_document->ok() || _document["size"] == 0) {
+				return JPTR(
+					"status" << 404
+				);
+			}
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << _document["elements"][0]
 			);
 		},
 		//put
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			assertz(
+				_envelope["payload"]->ok() &&
+				_envelope["payload"]["name"]->ok() &&
+				_envelope["payload"]["code"]->ok() &&
+				_envelope["payload"]["scopes"]->ok(),
+				"required fields: 'name', 'code' and 'scopes'", 412, 0);
+				
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			size_t _size = _db->save("groups", JPTR( "_id" << _resource ), _envelope["payload"]);
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << JSON(
+					"updated" << _size
+				)
 			);
 		},
+		//post
 		no_post,
 		//delete
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			size_t _size = _db->remove("groups", JPTR( "_id" << _resource ));
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << JSON(
+					"removed" << _size
+				)
 			);
 		},
 		//head
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			_envelope["payload"] << "_id" << _resource;
+			zpt::JSONPtr _document = _db->query("groups", _envelope["payload"]);
+			if (!_document->ok() || _document["size"] == 0) {
+				return JPTR(
+					"status" << 404
+				);
+			}
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"headers" << JSON(
+					"Content-Length" << ((std::string) _document["elements"][0]).length()
+				)
 			);
 		},
 		no_options, 
 		//patch
 		[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+			zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+			size_t _size = _db->set("groups", JPTR( "_id" << _resource ), _envelope["payload"]);
 			return JPTR(
-				"status" << 204
+				"status" << 200 <<
+				"payload" << JSON(
+					"updated" << _size
+				)
 			);
 		}
 	};
@@ -297,6 +450,6 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 
 }
 
-extern "C" int zapata_users() {
+extern "C" int zapata_groups() {
 	return 1;
 }

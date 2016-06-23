@@ -354,7 +354,12 @@ void zpt::RESTClient::start() {
 
 void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 	std::vector<std::string> _files;
-	zpt::glob(_dir, _files, "(.*)\\.conf", false);
+	if (zpt::is_dir(_dir)) {
+		zpt::glob(_dir, _files, "(.*)\\.conf", false);
+	}
+	else {
+		_files.push_back(_dir);
+	}
 	for (auto _file : _files) {
 		zpt::JSONPtr _conf;
 		std::ifstream _ifs;

@@ -468,7 +468,8 @@ namespace zpt {
 
 	zpt::MIMEType get_mime(string _in);
 	bool path_exists(string _in);
-
+	bool is_dir(std::string _path);
+	
 	int globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive);
 	int glob(string dir, vector<string>& result, string pattern, bool recursive);
 
