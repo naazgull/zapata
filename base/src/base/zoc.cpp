@@ -71,7 +71,9 @@ int main(int _argc, char* _argv[]) {
 								_state = HEADER;
 							}
 							else if (_line[0] == '-') {
-								cout << endl << flush;
+								if (_state != LIST) {
+									cout << endl << flush;
+								}
 								_state = LIST;
 							}
 							else if (_line[0] == '`') {

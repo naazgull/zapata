@@ -16,7 +16,5 @@ The _Users_ collections holds the set of _User_ documents for the configured **M
 ### Allowed methods
 
 - _GET_
-
 - _POST_
-
 - _HEAD_
