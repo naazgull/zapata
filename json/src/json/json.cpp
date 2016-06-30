@@ -24,6 +24,3 @@ SOFTWARE.
 
 #include <zapata/json/json.h>
 
-extern "C" int zapata_json() {
-	return 1;
-}

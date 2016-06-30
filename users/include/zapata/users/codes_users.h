@@ -37,4 +37,3 @@ namespace zpt {
 	};
 }
 
-extern "C" int zapata_users();

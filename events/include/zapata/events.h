@@ -27,4 +27,3 @@ SOFTWARE.
 #include <zapata/events/config.h>
 #include <zapata/events/EventEmitter.h>
 
-extern "C" int zapata_events();

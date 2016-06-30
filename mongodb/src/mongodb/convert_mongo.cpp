@@ -512,7 +512,3 @@ void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, 
 		_queryr.append(key, value);
 	}
 }
-
-extern "C" int zapata_mongodb() {
-	return 1;
-}

@@ -37,10 +37,10 @@ namespace zpt {
 
 	namespace redis {
 
-		class Collection : public zpt::KB {
+		class Client : public zpt::KB {
 		public:
-			Collection(zpt::JSONPtr _options);
-			virtual ~Collection();
+			Client(zpt::JSONPtr _options, std::string _conf_path);
+			virtual ~Client();
 
 			virtual zpt::JSONPtr options();
 			virtual std::string name();
@@ -53,10 +53,13 @@ namespace zpt {
 			virtual int unset(std::string _collection, std::string _url, zpt::JSONPtr _document);
 			virtual int remove(std::string _collection, std::string _url);
 			virtual zpt::JSONPtr get(std::string _collection, std::string _url);
-			virtual zpt::JSONPtr query(std::string _collection, zpt::JSONPtr _pattern);
+			virtual zpt::JSONPtr query(std::string _collection, std::string _regex);
+			virtual zpt::JSONPtr all(std::string _collection);
 
 		private:
 			zpt::JSONPtr __options;
+			zpt::JSONPtr __redis_conf;
+			std::string __conf_path;
 			pthread_mutex_t* __mtx;
 			pthread_mutexattr_t* __attr;
 			redisContext* __conn;
@@ -64,20 +67,20 @@ namespace zpt {
 			uint __port;
 		};
 
-		class CollectionPtr : public std::shared_ptr<zpt::redis::Collection> {
+		class ClientPtr : public std::shared_ptr<zpt::redis::Client> {
 		public:
 			/**
 			 * @brief Creates an std::shared_ptr to an Self instance.
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 CollectionPtr(zpt::redis::Collection * _target);
-			 CollectionPtr(zpt::JSONPtr _options);
+			ClientPtr(zpt::redis::Client * _target);
+			ClientPtr(zpt::JSONPtr _options, std::string _conf_path);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.
 			 */
-			 virtual ~CollectionPtr();
+			virtual ~ClientPtr();
 		};
 	}
 }

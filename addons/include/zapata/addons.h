@@ -26,4 +26,3 @@ SOFTWARE.
 
 #include <zapata/addons/Addons.h>
 
-extern "C" int zapata_addons();

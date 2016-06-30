@@ -215,7 +215,7 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 		_pattern = zpt::mkobj();
 	}
 
-	zpt::JSONArr _return;
+	zpt::JSONArr _elements;
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
@@ -241,14 +241,21 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 		mongo::BSONObj _record = _result->next();
 		zpt::JSONObj _obj;
 		zpt::mongodb::frommongo(_record, _obj);
-		_return << _obj;
+		_elements << _obj;
 	}
 
-	if (_return->size() == 0) {
+	if (_elements->size() == 0) {
 		return zpt::undefined;
 	}
-	return zpt::mkptr(JSON(
+	zpt::JSONPtr _return = JPTR(
 		"size" << _size <<
-		"elements" << _return 
-	));
+		"elements" << _elements 
+	);
+	if (_page_size != 0) {
+		_return << "links" << JSON(
+			"next" << (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)) <<
+			"prev" << (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
+		);
+	}
+	return _return;
 }

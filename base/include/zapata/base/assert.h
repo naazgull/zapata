@@ -62,5 +62,3 @@ namespace zpt {
 	}
 
 }
-
-extern "C" int zapata_base();

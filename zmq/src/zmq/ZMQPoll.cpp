@@ -372,6 +372,3 @@ zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 	return zpt::ZMQPtr(nullptr);
 }
 
-extern "C" int zapata_zmq() {
-	return 1;
-}

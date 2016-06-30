@@ -220,7 +220,3 @@ zpt::JSONPtr zpt::ev::init_reply(std::string _uuid) {
 	}
 	return _return;
 }
-
-extern "C" int zapata_events() {
-	return 1;
-}

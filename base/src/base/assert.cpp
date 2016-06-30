@@ -24,6 +24,3 @@ SOFTWARE.
 
 #include <zapata/base/assert.h>
 
-extern "C" int zapata_base() {
-	return 1;
-}

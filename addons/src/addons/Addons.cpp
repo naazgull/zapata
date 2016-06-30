@@ -101,6 +101,26 @@ std::string zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
 	return _uuid.string();
 }
 
+std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handler_set) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	vector< zpt::ev::Handler> _handlers;
+	_handlers.push_back(_handler_set[zpt::ev::Get]);
+	_handlers.push_back(_handler_set[zpt::ev::Put]);
+	_handlers.push_back(_handler_set[zpt::ev::Post]);
+	_handlers.push_back(_handler_set[zpt::ev::Delete]);
+	_handlers.push_back(_handler_set[zpt::ev::Head]);
+	_handlers.push_back(_handler_set[zpt::ev::Options]);
+	_handlers.push_back(_handler_set[zpt::ev::Patch]);
+
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers)));
+	return _uuid.string();
+}
+
 void zpt::Addons::off(zpt::ev::Performative _event, std::string _callback_id) {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
@@ -144,6 +164,3 @@ zpt::JSONPtr zpt::Addons::trigger(zpt::ev::Performative _method, std::string _re
 	return _return;
 }
 
-extern "C" int zapata_addons() {
-	return 1;
-}

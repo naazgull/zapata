@@ -62,6 +62,7 @@ SOFTWARE.
 */
 
 #include <zapata/rest/RESTEmitter.h>
+#include <map>
 
 zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
 	this->__default_get = [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
@@ -153,6 +154,29 @@ std::string zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]
 	return _uuid.string();
 }
 
+std::string zpt::RESTEmitter::on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handler_set) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	std::map< zpt::ev::Performative, zpt::ev::Handler >::iterator _found;
+	vector< zpt::ev::Handler> _handlers;
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Get)) == _handler_set.end() ?  this->__default_get : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Put)) == _handler_set.end() ?  this->__default_put : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Post)) == _handler_set.end() ?  this->__default_post : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Delete)) == _handler_set.end() ?  this->__default_delete : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Head)) == _handler_set.end() ?  this->__default_head : _found->second);
+	_handlers.push_back(this->__default_options);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Patch)) == _handler_set.end() ?  this->__default_patch : _found->second);
+	_handlers.push_back(this->__default_assync_reply);
+
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
+	zlog(string("registered handlers for ") + _regex, zpt::info);
+	return _uuid.string();
+}
+
 void zpt::RESTEmitter::off(zpt::ev::Performative _event, std::string _callback_id) {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
@@ -233,8 +257,4 @@ zpt::JSONPtr zpt::RESTEmitter::trigger(zpt::ev::Performative _method, std::strin
 	}
 	
 	return _return;
-}
-
-extern "C" int zapata_rest() {
-	return 1;
 }

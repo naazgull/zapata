@@ -31,4 +31,3 @@ SOFTWARE.
 #include <zapata/zmq/WebSocket.h>
 #include <zapata/zmq/ZMQPolling.h>
 
-extern "C" int zapata_zmq();

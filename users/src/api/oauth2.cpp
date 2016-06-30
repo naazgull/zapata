@@ -32,12 +32,6 @@ WQmnnnonononnnnnnnnnnnnnnnnnnnnnogmpnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnvXVQWQQQQQQQW
                $W.                                                 -QWQQQ/                          
                                                                     -^^^"~                          
 
-     s_a_s_s_a_s_%   _ssaaas,,     _s_a_a __aaaaa,,    __aaaas,,      ,s_dQs__s_,    __aaaaa,,.         
-    :QP?????9mQWT!  QQT!"!!??Qg  . "???QQdT??????9WQc 3QD?!"!??$Q,  . ???$QT????'   ]Q@?!"!??9Qc  .     
-    -"'_aawV?"` _a,_wwYYT??TYQW;-Qr   .QQ.        _QW ww2T?T?T?$Wf $k    jQ(     <a swZY?T?T?9QE ]Q     
-    _yQQQwwawwawyQ(]WmwaaawwY4QgyW'   .QW9AmywwwwmB?'-WWwaaawwZTWQwmf    "WQwwawyW! 9QgaaawwpTWQwmP     
-    -~------------   -^^^^-    ~-  __saWQs__%=--       -~^^^-    --        -~^^~-     ~^"^~    -~`     
-
 The MIT License (MIT)
 
 Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
@@ -60,71 +54,64 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
-#pragma once
-
-#include <zapata/http.h>
-#include <zapata/json.h>
-#include <zapata/events.h>
-#include <regex.h>
-#include <string>
-#include <map>
+#include <zapata/rest.h>
+#include <zapata/redis.h>
+#include <ctime>
 #include <memory>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+/*{{
+  # OAuth2.0 API
+  }}*/ 
+extern "C" void restify(zpt::EventEmitterPtr _emitter) {
+	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.users"));
+	_emitter->add_kb("redis.users", _kb);
 
-#define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
+	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/oauth/authorize$"), {
+		{
+			zpt::ev::Post,
+			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				assertz(
+					_envelope["payload"]->ok() &&
+					_envelope["payload"]["name"]->ok() &&
+					_envelope["payload"]["e-mail"]->ok() &&
+					_envelope["payload"]["password"]->ok(),
+					"required fields: 'name', 'e-mail' and 'password'", 412, 0);
+				
+				zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+				std::string _id = _db->insert("users", _resource, _envelope["payload"]);
+				return JPTR(
+					"status" << 200 <<
+					"payload" << JSON(
+						"id" << _id <<
+						"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
+					)
+				);
+			}
+		}
+	});
 
-#define no_get nullptr
-#define no_put nullptr
-#define no_post nullptr
-#define no_delete nullptr
-#define no_head nullptr
-#define no_trace nullptr
-#define no_options nullptr
-#define no_patch nullptr
-#define no_connect nullptr
-
-namespace zpt {
-
-	enum RESTfulType {
-		RESTfulResource = 0,
-		RESTfulDocument = 1,
-		RESTfulCollection = 2,
-		RESTfulStore = 3,
-		RESTfulController = 4
-	};
-
-	class RESTEmitter : public zpt::EventEmitter {
-	public:
-		RESTEmitter(zpt::JSONPtr _options);
-		virtual ~RESTEmitter();
-
-		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
-		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
-		virtual std::string on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handlers);
-		virtual void off(zpt::ev::Performative _method, std::string _callback_id);
-		virtual void off(std::string _callback_id);
-
-		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
-		
-	private:
-		zpt::JSONPtr __options;
-		zpt::ev::Handler __default_get;
-		zpt::ev::Handler __default_put;
-		zpt::ev::Handler __default_post;
-		zpt::ev::Handler __default_delete;
-		zpt::ev::Handler __default_head;
-		zpt::ev::Handler __default_options;
-		zpt::ev::Handler __default_patch;
-		zpt::ev::Handler __default_assync_reply;
-		zpt::ev::HandlerStack __resources;
-		zpt::ev::ReplyHandlerStack __replies;
-
-	};
+	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/oauth/token$"), {
+		{
+			zpt::ev::Post,
+			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				assertz(
+					_envelope["payload"]->ok() &&
+					_envelope["payload"]["name"]->ok() &&
+					_envelope["payload"]["e-mail"]->ok() &&
+					_envelope["payload"]["password"]->ok(),
+					"required fields: 'name', 'e-mail' and 'password'", 412, 0);
+				
+				zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+				std::string _id = _db->insert("users", _resource, _envelope["payload"]);
+				return JPTR(
+					"status" << 200 <<
+					"payload" << JSON(
+						"id" << _id <<
+						"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
+					)
+				);
+			}
+		}
+	});
 
 }
-

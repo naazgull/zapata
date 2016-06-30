@@ -221,8 +221,3 @@ std::string zpt::HTTPObj::to_string() {
 	this->stringify(_return);
 	return _return;
 }
-
-
-extern "C" int zapata_http() {
-	return 1;
-}

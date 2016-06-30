@@ -34,6 +34,3 @@ const char* zpt::ClosedException::what() {
 	return this->__what.data();
 }
 
-extern "C" int zapata_net() {
-	return 1;
-}

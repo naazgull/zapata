@@ -41,4 +41,3 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/json/JSONParser.h>
 
-extern "C" int zapata_json();

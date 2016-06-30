@@ -26,4 +26,4 @@ SOFTWARE.
 
 #include <zapata/json.h>
 #include <zapata/redis/config.h>
-#include <zapata/redis/Collection.h>
+#include <zapata/redis/Client.h>

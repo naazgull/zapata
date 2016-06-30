@@ -39,4 +39,3 @@ SOFTWARE.
 #include <zapata/http/HTTPTokenizerimpl.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
-extern "C" int zapata_http();

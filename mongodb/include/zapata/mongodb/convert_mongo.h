@@ -59,5 +59,3 @@ namespace zpt {
 		float valid_mongo_version();
 	}
 }
-
-extern "C" int zapata_mongodb();
