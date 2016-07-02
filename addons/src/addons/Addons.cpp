@@ -105,7 +105,7 @@ std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::Performative, zpt
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
-
+	
 	vector< zpt::ev::Handler> _handlers;
 	_handlers.push_back(_handler_set[zpt::ev::Get]);
 	_handlers.push_back(_handler_set[zpt::ev::Put]);
@@ -114,7 +114,7 @@ std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::Performative, zpt
 	_handlers.push_back(_handler_set[zpt::ev::Head]);
 	_handlers.push_back(_handler_set[zpt::ev::Options]);
 	_handlers.push_back(_handler_set[zpt::ev::Patch]);
-
+	
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	this->__resources.insert(make_pair(_uuid.string(), pair<regex_t*, vector< zpt::ev::Handler> >(_url_pattern, _handlers)));

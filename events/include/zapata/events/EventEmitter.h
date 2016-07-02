@@ -75,7 +75,8 @@ namespace zpt {
 		virtual void off(std::string _callback_id) = 0;
 		
 		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) = 0;
-
+		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) = 0;
+		
 		virtual void add_kb(std::string _name, zpt::KBPtr _kb) final;
 		virtual zpt::KBPtr get_kb(std::string _name) final;
 

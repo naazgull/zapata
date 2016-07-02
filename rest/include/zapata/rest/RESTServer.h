@@ -69,8 +69,8 @@ namespace zpt {
 
 		
 	private:
-		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __poll;
+		zpt::EventEmitterPtr __emitter;
 		zpt::JSONPtr __options;
 		zpt::ZMQPtr __pub_sub;
 		zpt::ZMQPtr __router_dealer;
@@ -92,8 +92,8 @@ namespace zpt {
 		virtual zpt::ZMQPtr bind(std::string _object_path);
 
 	private:
-		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __poll;
+		zpt::EventEmitterPtr __emitter;
 		zpt::JSONPtr __options;
 	};
 
@@ -105,9 +105,6 @@ namespace zpt {
 	}
 
 	namespace rest {
-		zpt::JSONPtr not_found(std::string _resource);
-		zpt::JSONPtr accepted(std::string _resource);
-
 		zpt::JSONPtr http2zmq(zpt::HTTPReq _request);
 		zpt::HTTPRep zmq2http(zpt::JSONPtr _out);
 	}

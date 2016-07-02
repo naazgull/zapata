@@ -64,7 +64,7 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 #include <map>
 
-zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
+zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options, zpt::ZMQPollPtr  _poll) : zpt::EventEmitter( _options ), __poll(_poll) {
 	this->__default_get = [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
@@ -258,3 +258,81 @@ zpt::JSONPtr zpt::RESTEmitter::trigger(zpt::ev::Performative _method, std::strin
 	
 	return _return;
 }
+
+zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string _url, zpt::JSONPtr _envelope) {
+	zpt::JSONPtr _in = zpt::ev::init_request() + _envelope;
+	_in <<
+		"channel" << _url <<
+		"performative" << _method <<
+		"resource" << _url;
+	
+	if (this->__options["directory"]->ok()) {
+		for (auto _api : this->__options["directory"]->obj()) {
+			for (auto _endpoint : _api.second["endpoints"]->arr()) {
+				if (_url.find(_endpoint->str()) == 0) {
+					short _type = zpt::str2type(_api.second["type"]->str());
+					switch(_type) {
+						case ZMQ_ROUTER_DEALER :
+						case ZMQ_REQ : {
+							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_REQ, _api.second["connect"]->str());
+							zpt::JSONPtr _out = _client->send(_in);
+							if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
+								_out << "status" << 501;
+							}
+							_client->unbind();
+							return _out;
+						}
+						case ZMQ_PUB_SUB : {
+							std::string _connect = _api.second["connect"]->str();
+							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+							_client->send(_in);
+							_client->unbind();
+							return zpt::rest::accepted(_url);
+						}
+						case ZMQ_PUSH : {
+							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUSH, _api.second["connect"]->str());
+							_client->send(_in);
+							_client->unbind();
+							return zpt::rest::accepted(_url);
+						}
+					}
+				}
+			}
+		}
+	}
+				
+	return zpt::undefined;
+}
+
+zpt::JSONPtr zpt::rest::not_found(std::string _resource) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::mkptr(
+		JSON(
+			"channel" << _uuid.string() <<
+			"performative" << zpt::ev::Reply <<
+			"resource" << _resource <<
+			"status" << 404 <<
+			"payload" << JSON(
+				"text" << "resource not found"
+			)
+		)
+	);
+}
+
+zpt::JSONPtr zpt::rest::accepted(std::string _resource) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::mkptr(
+		JSON(
+			"channel" << _uuid.string() <<
+			"performative" << zpt::ev::Reply <<
+			"resource" << _resource <<
+			"status" << 202 <<
+			"payload" << JSON(
+				"text" << "request was accepted"
+			)
+		)
+	);
+}
+

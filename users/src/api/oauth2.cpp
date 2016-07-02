@@ -66,52 +66,72 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.users"));
 	_emitter->add_kb("redis.users", _kb);
 
-	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/oauth/authorize$"), {
+	/*
+	  4.1.  Authorization Code Grant
+	  4.2.  Implicit Grant
+	  4.3.  Resource Owner Password Credentials Grant
+	  4.4.  Client Credentials Grant
+	*/
+	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth/authorize$"),
 		{
-			zpt::ev::Post,
-			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
-				assertz(
-					_envelope["payload"]->ok() &&
-					_envelope["payload"]["name"]->ok() &&
-					_envelope["payload"]["e-mail"]->ok() &&
-					_envelope["payload"]["password"]->ok(),
-					"required fields: 'name', 'e-mail' and 'password'", 412, 0);
-				
-				zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
-				std::string _id = _db->insert("users", _resource, _envelope["payload"]);
-				return JPTR(
-					"status" << 200 <<
-					"payload" << JSON(
-						"id" << _id <<
-						"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
-					)
-				);
+			{
+				zpt::ev::Post,
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+					assertz(
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["response_type"]->ok(),
+						"required fields: 'response_type'", 412, 0);
+
+					std::string _response_type((std::string) _envelope["payload"]["response_type"]);
+					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+
+					if (_response_type == "code") {
+						assertz(
+							_envelope["payload"]->ok() &&
+							_envelope["payload"]["client_id"]->ok(),
+							"required fields: 'client_id'", 412, 0);
+
+						
+					}
+					else if (_response_type == "implicit") {
+					}
+					
+					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
+					return JPTR(
+						"status" << 200 <<
+						"payload" << JSON(
+							"id" << _id <<
+							"href" << (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
+						)
+					);
+				}
 			}
 		}
-	});
+	);
 
-	_emitter->on(string("^/api/") + _emitter->options()["rest"]["version"]->str() + string("/oauth/token$"), {
+		_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth/token$"),
 		{
-			zpt::ev::Post,
-			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
-				assertz(
-					_envelope["payload"]->ok() &&
-					_envelope["payload"]["name"]->ok() &&
-					_envelope["payload"]["e-mail"]->ok() &&
-					_envelope["payload"]["password"]->ok(),
-					"required fields: 'name', 'e-mail' and 'password'", 412, 0);
+			{
+				zpt::ev::Post,
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+					assertz(
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["e-mail"]->ok() &&
+						_envelope["payload"]["password"]->ok(),
+						"required fields: 'name', 'e-mail' and 'password'", 412, 0);
 				
-				zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
-				std::string _id = _db->insert("users", _resource, _envelope["payload"]);
-				return JPTR(
-					"status" << 200 <<
-					"payload" << JSON(
-						"id" << _id <<
-						"href" << (_resource + (_resource.back() != '/' ? string("/") : string("")) + _id)
-					)
-				);
+					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
+					return JPTR(
+						"status" << 200 <<
+						"payload" << JSON(
+							"id" << _id <<
+							"href" << (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
+						)
+					);
+				}
 			}
 		}
-	});
-
+	);
 }

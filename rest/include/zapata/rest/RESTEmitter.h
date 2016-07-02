@@ -66,6 +66,7 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/json.h>
 #include <zapata/events.h>
+#include <zapata/zmq.h>
 #include <regex.h>
 #include <string>
 #include <map>
@@ -100,7 +101,7 @@ namespace zpt {
 
 	class RESTEmitter : public zpt::EventEmitter {
 	public:
-		RESTEmitter(zpt::JSONPtr _options);
+		RESTEmitter(zpt::JSONPtr _options, zpt::ZMQPollPtr _poll);
 		virtual ~RESTEmitter();
 
 		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
@@ -110,6 +111,7 @@ namespace zpt {
 		virtual void off(std::string _callback_id);
 
 		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
 		
 	private:
 		zpt::JSONPtr __options;
@@ -123,8 +125,14 @@ namespace zpt {
 		zpt::ev::Handler __default_assync_reply;
 		zpt::ev::HandlerStack __resources;
 		zpt::ev::ReplyHandlerStack __replies;
+		zpt::ZMQPollPtr __poll;
 
 	};
+
+	namespace rest {
+		zpt::JSONPtr not_found(std::string _resource);
+		zpt::JSONPtr accepted(std::string _resource);
+	}
 
 }
 

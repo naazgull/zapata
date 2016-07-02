@@ -79,7 +79,7 @@ zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt:
 zpt::RESTServerPtr::~RESTServerPtr() {
 }
 
-zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __poll(new zpt::ZMQPoll(_options, __emitter)), __emitter( new zpt::RESTEmitter(_options, this->__poll)), __options(_options) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 
 	if (zpt::log_lvl == -1 && !!this->__options["log"]["level"]) {
@@ -315,7 +315,7 @@ zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt:
 zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
-zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __poll(new zpt::ZMQPoll(_options, __emitter)), __emitter( new zpt::RESTEmitter(_options, this->__poll)), __options(_options) {
 }
 
 zpt::RESTClient::~RESTClient(){
@@ -410,38 +410,6 @@ void zpt::conf::env(zpt::JSONPtr _options) {
 			_options->setPath(_object_path, zpt::mkptr(_value));
 		}
 	});
-}
-
-zpt::JSONPtr zpt::rest::not_found(std::string _resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	return zpt::mkptr(
-		JSON(
-			"channel" << _uuid.string() <<
-			"performative" << zpt::ev::Reply <<
-			"resource" << _resource <<
-			"status" << 404 <<
-			"payload" << JSON(
-				"text" << "resource not found"
-			)
-		)
-	);
-}
-
-zpt::JSONPtr zpt::rest::accepted(std::string _resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	return zpt::mkptr(
-		JSON(
-			"channel" << _uuid.string() <<
-			"performative" << zpt::ev::Reply <<
-			"resource" << _resource <<
-			"status" << 202 <<
-			"payload" << JSON(
-				"text" << "request was accepted"
-			)
-		)
-	);
 }
 
 zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
