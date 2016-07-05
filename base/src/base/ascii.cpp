@@ -85,6 +85,12 @@ void zpt::generate_key(string& _out) {
 	_out.insert(_out.length(), code2);
 }
 
+std::string zpt::generate_key() {
+	std::string _out;
+	zpt::generate_key(_out);
+	return _out;
+}
+
 void zpt::generate_hash(string& _out) {
 	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	string _randompass;

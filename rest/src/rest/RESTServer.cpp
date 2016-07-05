@@ -79,8 +79,9 @@ zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt:
 zpt::RESTServerPtr::~RESTServerPtr() {
 }
 
-zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __poll(new zpt::ZMQPoll(_options, __emitter)), __emitter( new zpt::RESTEmitter(_options, this->__poll)), __options(_options) {
+zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
+	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 
 	if (zpt::log_lvl == -1 && !!this->__options["log"]["level"]) {
 		zpt::log_lvl = (int) this->__options["log"]["level"];
@@ -98,11 +99,11 @@ zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __poll(new zpt::ZMQPoll(_op
 
 		switch(_type) {
 			case ZMQ_ROUTER_DEALER : {
-				this->__router_dealer = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
+				this->__router_dealer.push_back(this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str()));
 				break;
 			}
 			case ZMQ_PUB_SUB : {
-				this->__pub_sub = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
+				this->__pub_sub.push_back(this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str()));
 				std::string _connect(_definition["bind"]->str());
 				zpt::replace(_connect, "*", ((string) this->__options["host"]));
 				this->__poll->bind(ZMQ_PUB_SUB, _connect)->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
@@ -205,18 +206,19 @@ void zpt::RESTServer::start() {
 			_mqtt->start();
 		}
 
-		if (this->__pub_sub.get() != nullptr) {
+		for (size_t _idx = 0; _idx != this->__pub_sub.size(); _idx++) {
 			zpt::Job _proxy(
-				[ & ] (zpt::Job& _job) -> void {
-					((zpt::ZMQXPubXSub *) this->__pub_sub.get())->loop();
+				[ this, _idx ] (zpt::Job& _job) -> void {
+					((zpt::ZMQXPubXSub *) this->__pub_sub[_idx].get())->loop();
 				}
 			);
 			_proxy->start();
 		}
-		if (this->__router_dealer.get() != nullptr) {
+		for (size_t _idx = 0; _idx != this->__router_dealer.size(); _idx++) {
 			zpt::Job _proxy(
-				[ & ] (zpt::Job& _job) -> void {
-					((zpt::ZMQXPubXSub *) this->__router_dealer.get())->loop();
+				[ this, _idx ] (zpt::Job& _job) -> void {
+					
+					((zpt::ZMQRouterDealer *) this->__router_dealer[_idx].get())->loop();
 				}
 			);
 			_proxy->start();
@@ -315,7 +317,8 @@ zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt:
 zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
-zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __poll(new zpt::ZMQPoll(_options, __emitter)), __emitter( new zpt::RESTEmitter(_options, this->__poll)), __options(_options) {
+zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 }
 
 zpt::RESTClient::~RESTClient(){

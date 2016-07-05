@@ -69,11 +69,11 @@ namespace zpt {
 
 		
 	private:
-		zpt::ZMQPollPtr __poll;
 		zpt::EventEmitterPtr __emitter;
+		zpt::ZMQPollPtr __poll;
 		zpt::JSONPtr __options;
-		zpt::ZMQPtr __pub_sub;
-		zpt::ZMQPtr __router_dealer;
+		std::vector< zpt::ZMQPtr > __pub_sub;
+		std::vector< zpt::ZMQPtr > __router_dealer;
 
 	};
 
@@ -92,8 +92,8 @@ namespace zpt {
 		virtual zpt::ZMQPtr bind(std::string _object_path);
 
 	private:
-		zpt::ZMQPollPtr __poll;
 		zpt::EventEmitterPtr __emitter;
+		zpt::ZMQPollPtr __poll;
 		zpt::JSONPtr __options;
 	};
 

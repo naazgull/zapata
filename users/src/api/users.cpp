@@ -64,6 +64,7 @@ SOFTWARE.
   # Users API
   }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
+	assertz(_emitter->options()["mongodb"]["users"]->ok(), "no 'mongodb.users' object found in provided configuration", 500, 0);
 	zpt::KBPtr _kb(new zpt::mongodb::Client(_emitter->options(), "mongodb.users"));
 	_emitter->add_kb("mongodb.users", _kb);
 

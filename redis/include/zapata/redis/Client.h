@@ -48,8 +48,9 @@ namespace zpt {
 			virtual void connect(string _host, uint _port);
 			virtual void reconnect();
 
-			virtual zpt::JSONPtr insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
-			virtual int update(std::string _collection, std::string _url, zpt::JSONPtr _record);
+			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
+			virtual int save(std::string _collection, std::string _url, zpt::JSONPtr _record);
+			virtual int set(std::string _collection, std::string _url, zpt::JSONPtr _record);
 			virtual int unset(std::string _collection, std::string _url, zpt::JSONPtr _document);
 			virtual int remove(std::string _collection, std::string _url);
 			virtual zpt::JSONPtr get(std::string _collection, std::string _url);

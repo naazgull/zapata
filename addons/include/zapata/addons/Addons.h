@@ -57,6 +57,7 @@ namespace zpt {
 		
 		virtual zpt::JSONPtr trigger(std::string _resource, zpt::JSONPtr _payload);
 		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
 		
 	private:
 		zpt::ev::HandlerStack __resources;

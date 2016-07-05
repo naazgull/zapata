@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libzapata-base.la
 
-libzapata_base_la_LIBADD = -lpthread -lmagic
+libzapata_base_la_LIBADD = -lpthread -lmagic -lossp-uuid++ -lcrypto++ 
 libzapata_base_la_LDFLAGS = -version-info 9:1:9
 libzapata_base_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 

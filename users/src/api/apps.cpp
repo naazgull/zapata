@@ -58,13 +58,15 @@ SOFTWARE.
 #include <zapata/redis.h>
 #include <ctime>
 #include <memory>
+#include <ossp/uuid++.hh>
 
 /*{{
   # Applications API
   }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
-	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.users"));
-	_emitter->add_kb("redis.users", _kb);
+	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
+	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.apps"));
+	_emitter->add_kb("redis.apps", _kb);
 
 	/*{{	  
 	  ## Applications collection
@@ -86,6 +88,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
+					zlog(zpt::pretty(_list), zpt::debug);
 					if (!_list->ok()) {
 						return JPTR(
 							"status" << 204
@@ -106,14 +109,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 						_envelope["payload"]["description"]->ok() &&
 						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
-					
+
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					std::string _id = _db->insert("apps", _resource, _envelope["payload"]);
+					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
+					_db->set("apps", _href, JPTR( "client_id" << _id << "client_secret" << zpt::generate_key() ));
+					
 					return JPTR(
 						"status" << 200 <<
 						"payload" << JSON(
 							"id" << _id <<
-							"href" << (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
+							"href" << _href
 						)
 					);
 				}
@@ -153,7 +159,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					}
 					return JPTR(
 						"status" << 200 <<
-						"payload" << _document["elements"][0]
+						"payload" << _document
 					);
 				}
 			},
@@ -168,7 +174,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->insert("apps", _resource, _envelope["payload"]);
+					size_t _size = _db->save("apps", _resource, _envelope["payload"]);
 					return JPTR(
 						"status" << 200 <<
 						"payload" << JSON(
@@ -212,7 +218,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Patch,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->update("apps", _resource, _envelope["payload"]);
+					size_t _size = _db->set("apps", _resource, _envelope["payload"]);
 					return JPTR(
 						"status" << 200 <<
 						"payload" << JSON(

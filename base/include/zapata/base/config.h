@@ -12,11 +12,17 @@
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
 
+/* Define to 1 if you have the `crypto++' library (-lcrypto++). */
+#define HAVE_LIBCRYPTO__ 1
+
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
+
+/* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
+#define HAVE_LIBOSSP_UUID__ 1
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #define HAVE_LIBPTHREAD 1

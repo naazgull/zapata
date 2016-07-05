@@ -198,6 +198,7 @@ namespace zpt {
 	}
 
 	void generate_key(string& _out);
+	std::string generate_key();
 	void generate_hash(string& _out);
 
 }

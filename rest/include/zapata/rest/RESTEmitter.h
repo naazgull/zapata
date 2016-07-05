@@ -101,7 +101,7 @@ namespace zpt {
 
 	class RESTEmitter : public zpt::EventEmitter {
 	public:
-		RESTEmitter(zpt::JSONPtr _options, zpt::ZMQPollPtr _poll);
+		RESTEmitter(zpt::JSONPtr _options);
 		virtual ~RESTEmitter();
 
 		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
@@ -112,6 +112,8 @@ namespace zpt {
 
 		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
 		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+
+		virtual void poll(zpt::ZMQPollPtr _poll);
 		
 	private:
 		zpt::JSONPtr __options;

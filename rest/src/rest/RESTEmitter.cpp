@@ -64,7 +64,7 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 #include <map>
 
-zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options, zpt::ZMQPollPtr  _poll) : zpt::EventEmitter( _options ), __poll(_poll) {
+zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options) : zpt::EventEmitter( _options ), __poll(nullptr) {
 	this->__default_get = [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
@@ -108,6 +108,10 @@ zpt::RESTEmitter::RESTEmitter(zpt::JSONPtr _options, zpt::ZMQPollPtr  _poll) : z
 }
 
 zpt::RESTEmitter::~RESTEmitter() {
+}
+
+void zpt::RESTEmitter::poll(zpt::ZMQPollPtr _poll) {
+	this->__poll = _poll;
 }
 
 std::string zpt::RESTEmitter::on(zpt::ev::Performative _event, std::string _regex, zpt::ev::Handler _handler) {

@@ -164,3 +164,6 @@ zpt::JSONPtr zpt::Addons::trigger(zpt::ev::Performative _method, std::string _re
 	return _return;
 }
 
+zpt::JSONPtr zpt::Addons::route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) {
+	return zpt::undefined;
+}

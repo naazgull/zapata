@@ -63,8 +63,9 @@ SOFTWARE.
   # OAuth2.0 API
   }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
-	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.users"));
-	_emitter->add_kb("redis.users", _kb);
+	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
+	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
+	_emitter->add_kb("redis.oauth", _kb);
 
 	/*
 	  4.1.  Authorization Code Grant
@@ -72,7 +73,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	  4.3.  Resource Owner Password Credentials Grant
 	  4.4.  Client Credentials Grant
 	*/
-	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth/authorize$"),
+	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth2.0/authorize$"),
 		{
 			{
 				zpt::ev::Post,
@@ -83,7 +84,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 						"required fields: 'response_type'", 412, 0);
 
 					std::string _response_type((std::string) _envelope["payload"]["response_type"]);
-					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 
 					if (_response_type == "code") {
 						assertz(
@@ -91,7 +92,9 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 							_envelope["payload"]["client_id"]->ok(),
 							"required fields: 'client_id'", 412, 0);
 
-						
+						std::string _app_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope["payload"]["client_id"]));
+						zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _app_uri, zpt::undefined);
+						zlog(zpt::pretty(_application), zpt::debug);
 					}
 					else if (_response_type == "implicit") {
 					}
@@ -109,7 +112,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 		}
 	);
 
-		_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth/token$"),
+	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/oauth2.0/token$"),
 		{
 			{
 				zpt::ev::Post,
@@ -121,7 +124,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 						_envelope["payload"]["password"]->ok(),
 						"required fields: 'name', 'e-mail' and 'password'", 412, 0);
 				
-					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.users").get();
+					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
 					return JPTR(
 						"status" << 200 <<

@@ -10,9 +10,6 @@
 # Description:       Provides a set of C++ tool libraries for the development of RESTful API's. This package provides an HTTP server, event listening registering support and multi-threading support.
 ### END INIT INFO
 
-. /lib/init/vars.sh
-. /lib/lsb/init-functions
-
 cwd=${BASH_SOURCE%/*}
 prefix=${cwd%%/etc/init.d}
 
