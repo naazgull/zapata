@@ -65,8 +65,7 @@ SOFTWARE.
   }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
-	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.apps"));
-	_emitter->add_kb("redis.apps", _kb);
+	_emitter->add_kb("redis.apps", zpt::KBPtr(new zpt::redis::Client(_emitter->options(), "redis.apps")));
 
 	/*{{	  
 	  ## Applications collection
@@ -88,7 +87,6 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
-					zlog(zpt::pretty(_list), zpt::debug);
 					if (!_list->ok()) {
 						return JPTR(
 							"status" << 204
@@ -109,6 +107,9 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 						_envelope["payload"]["description"]->ok() &&
 						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
+					assertz(
+						_envelope["payload"]["redirect_domain"]->type() == zpt::JSArray,
+						"invalid field type: 'redirect_domain' must be a list of strings", 400, 0);
 
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					std::string _id = _db->insert("apps", _resource, _envelope["payload"]);

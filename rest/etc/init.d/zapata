@@ -19,7 +19,7 @@ then
 else 
 	bin_dir=$prefix/bin
 fi
-daemon=$bin_dir/zapata-api
+daemon=$bin_dir/zapi
 cnf_dir=/etc/zapata/backend-enabled
 run_dir=/var/run
 name="zapata"

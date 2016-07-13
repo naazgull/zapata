@@ -431,6 +431,9 @@ zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
 			_payload = zpt::mkptr(JSON( "text" << _request->body() ));
 		}
 	}
+	else {
+		_payload = zpt::mkobj();
+	}
 	for (auto _param : _request->params()) {
 		_payload << _param.first << _param.second;
 	}

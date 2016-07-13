@@ -116,7 +116,6 @@ namespace zpt {
 		virtual void poll(zpt::ZMQPollPtr _poll);
 		
 	private:
-		zpt::JSONPtr __options;
 		zpt::ev::Handler __default_get;
 		zpt::ev::Handler __default_put;
 		zpt::ev::Handler __default_post;
@@ -134,6 +133,9 @@ namespace zpt {
 	namespace rest {
 		zpt::JSONPtr not_found(std::string _resource);
 		zpt::JSONPtr accepted(std::string _resource);
+		zpt::JSONPtr no_content(std::string _resource);
+		zpt::JSONPtr temporary_redirect(std::string _resource, std::string _target_resource);
+		zpt::JSONPtr see_other(std::string _resource, std::string _target_resource);
 	}
 
 }

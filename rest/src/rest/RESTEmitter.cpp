@@ -270,8 +270,53 @@ zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string 
 		"performative" << _method <<
 		"resource" << _url;
 	
-	if (this->__options["directory"]->ok()) {
-		for (auto _api : this->__options["directory"]->obj()) {
+	for (auto _i : this->__resources) {
+		regex_t* _regexp = _i.second.first;
+		if (regexec(_regexp, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+			try {
+				if (_i.second.second[_method] != nullptr) {
+					zpt::JSONPtr _out = _i.second.second[_method](_method, _url, _in, this->self());
+					if (_out->ok()) {
+						_out << 
+						"performative" << zpt::ev::Reply <<
+						"headers" << (zpt::ev::init_reply(((std::string) _in["headers"]["X-Cid"])) + _out["headers"]);
+						return _out;
+					}
+				}
+			}
+			catch (zpt::AssertionException& _e) {
+			       return zpt::mkptr(
+					JSON(
+						"performative" << zpt::ev::Reply <<
+						"status" << _e.status() <<
+						"headers" << zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]) <<
+						"payload" << JSON(
+							"text" << _e.what() <<
+							"assertion_failed" << _e.description() <<
+							"code" << _e.code()
+						)
+					)
+				);
+				break;
+			}
+			catch(std::exception& _e) {
+			       return zpt::mkptr(
+					JSON(
+						"performative" << zpt::ev::Reply <<
+						"status" << 500 <<
+						"headers" << zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]) <<
+						"payload" << JSON(
+							"text" << _e.what() <<
+							"code" << 0
+						)
+					)
+				);
+			}
+		}
+	}
+
+	if (this->options()["directory"]->ok()) {
+		for (auto _api : this->options()["directory"]->obj()) {
 			for (auto _endpoint : _api.second["endpoints"]->arr()) {
 				if (_url.find(_endpoint->str()) == 0) {
 					short _type = zpt::str2type(_api.second["type"]->str());
@@ -299,13 +344,14 @@ zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string 
 							_client->unbind();
 							return zpt::rest::accepted(_url);
 						}
+						
 					}
 				}
 			}
 		}
 	}
 				
-	return zpt::undefined;
+	return zpt::rest::not_found(_url);
 }
 
 zpt::JSONPtr zpt::rest::not_found(std::string _resource) {
@@ -340,3 +386,56 @@ zpt::JSONPtr zpt::rest::accepted(std::string _resource) {
 	);
 }
 
+zpt::JSONPtr zpt::rest::no_content(std::string _resource) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::mkptr(
+		JSON(
+			"channel" << _uuid.string() <<
+			"performative" << zpt::ev::Reply <<
+			"resource" << _resource <<
+			"status" << 204 <<
+			"payload" << JSON(
+				"text" << "the required resource produced no content"
+			)
+		)
+	);
+}
+
+zpt::JSONPtr zpt::rest::temporary_redirect(std::string _resource, std::string _target_resource) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::mkptr(
+		JSON(
+			"channel" << _uuid.string() <<
+			"performative" << zpt::ev::Reply <<
+			"resource" << _resource <<
+			"status" << 307 <<
+			"headers" << JSON(
+				"Location" << _target_resource
+			) <<
+			"payload" << JSON(
+				"text" << "temporarily redirecting you to another location"
+			)
+		)
+	);
+}
+
+zpt::JSONPtr zpt::rest::see_other(std::string _resource, std::string _target_resource) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::mkptr(
+		JSON(
+			"channel" << _uuid.string() <<
+			"performative" << zpt::ev::Reply <<
+			"resource" << _resource <<
+			"status" << 303 <<
+			"headers" << JSON(
+				"Location" << _target_resource
+			) <<
+			"payload" << JSON(
+				"text" << "temporarily redirecting you to another location"
+			)
+		)
+	);
+}

@@ -41,9 +41,9 @@ int main(int argc, char* argv[]) {
 	char _c;
 	std::string _host;
 	std::string _port;
-	zpt::ev::Performative _method;
+	zpt::ev::Performative _method = zpt::ev::Get;
 	std::string _url;
-	short _type;
+	short _type = ZMQ_REQ;
 	zpt::JSONPtr _body;
 
 	while ((_c = getopt(argc, argv, "h:p:m:u:t:j:")) != -1) {

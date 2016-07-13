@@ -125,7 +125,7 @@ zpt::JSONPtr zpt::ZMQ::recv() {
 	}
 
 	zpt::ev::Performative _performative = zpt::ev::from_str(_method);
-	zlog(string("<- | \033[33;40m") + _method + string("\033[0m ") + (_performative == zpt::ev::Reply ? string("\033[") + (((int) _headers["X-Status"]) > 299 ? "31" : "32") + string(";40m") + ((string) _headers["X-Status"]) + string("\033[0m ") : "") + _resource, zpt::info);
+	zlog(string("<- | \033[33;40m") + _method + string("\033[0m ") + (_performative == zpt::ev::Reply ? string("\033[") + (((int) _headers["X-Status"]) <= 299 ? "32" : (((int) _headers["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((string) _headers["X-Status"]) + string("\033[0m ") : "") + _resource, zpt::info);
 	if (_performative == zpt::ev::Reply) {
 		return zpt::mkptr(
 			JSON(
@@ -177,7 +177,7 @@ zpt::JSONPtr zpt::ZMQ::send(zpt::JSONPtr _envelope) {
 		_envelope << "payload" << zpt::mkobj();
 	}
 
-	zlog(string("-> | \033[33;40m") + zpt::ev::to_str((zpt::ev::Performative) ((int) _envelope["performative"])) + string("\033[0m ") + (((int) _envelope["performative"]) == zpt::ev::Reply ? string("\033[") + (((int) _envelope["headers"]["X-Status"]) > 299 ? "31" : "32") + string(";40m") + ((string) _envelope["headers"]["X-Status"]) + string("\033[0m ") : "") + ((string) _envelope["resource"]), zpt::info);
+	zlog(string("-> | \033[33;40m") + zpt::ev::to_str((zpt::ev::Performative) ((int) _envelope["performative"])) + string("\033[0m ") + (((int) _envelope["performative"]) == zpt::ev::Reply ? string("\033[") + (((int) _envelope["headers"]["X-Status"]) <= 299 ? "32" : (((int) _envelope["headers"]["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((string) _envelope["headers"]["X-Status"]) + string("\033[0m ") : "") + ((string) _envelope["resource"]), zpt::info);
 	std::vector<std::string> _parts;
 	_parts.push_back((string) _envelope["channel"]);
 	_parts.push_back(zpt::ev::to_str((zpt::ev::Performative) ((int) _envelope["performative"])));

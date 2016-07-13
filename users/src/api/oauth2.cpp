@@ -56,16 +56,114 @@ SOFTWARE.
 */
 #include <zapata/rest.h>
 #include <zapata/redis.h>
+#include <zapata/users.h>
 #include <ctime>
 #include <memory>
+
+zpt::authenticator::OAuth2::OAuth2(zpt::JSONPtr _options) : __options(_options) {
+}
+
+zpt::authenticator::OAuth2::~OAuth2() {
+}
+
+zpt::JSONPtr zpt::authenticator::OAuth2::options() {
+	return this->__options;
+}
+
+std::string zpt::authenticator::OAuth2::name() {
+	return "oauth2.0";
+}
+
+zpt::JSONPtr zpt::authenticator::OAuth2::authorize(zpt::ev::Performative _performative, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(
+		_envelope["payload"]->ok() &&
+		_envelope["payload"]["response_type"]->ok(),
+		"required fields: 'response_type'", 412, 0);
+
+	std::string _response_type((std::string) _envelope["payload"]["response_type"]);
+	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
+
+	if (_response_type == "code") {
+		assertz(
+			_envelope["payload"]->ok() &&
+			_envelope["payload"]["client_id"]->ok() &&
+			_envelope["payload"]["redirect_uri"]->ok(),
+			"required fields: 'client_id' & 'redirect_uri'", 412, 0);
+
+		std::string _app_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope["payload"]["client_id"]));
+		zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _app_uri, zpt::undefined);
+		std::string _redirect_uri(_envelope["payload"]["redirect_uri"]->str());
+		if (_application["status"] == 200) {
+			std::string _token(zpt::generate_key() + zpt::generate_key());
+			std::string _code = _db->insert("codes", std::string("/api/") + this->__options["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope["payload"]["client_id"]) + std::string("/codes"),
+				JPTR(
+					"client_id" << ((std::string) _envelope["payload"]["client_id"]) <<
+					"token" << _token
+				)
+			);
+			return JPTR(
+				"status" << (_performative == zpt::ev::Post ? 303 : 307) <<
+				"headers" << JSON(
+					"Location" << (_redirect_uri + (_redirect_uri.find("?") != string::npos ? std::string("&") : std::string("?")) + std::string("code=") + _code + (_envelope["payload"]["state"]->ok() ? std::string("&state=") + _envelope["payload"]["state"]->str() : std::string("")))
+				)
+			);
+		}
+		else {
+			return JPTR(
+				"status" << (_performative == zpt::ev::Post ? 303 : 307) <<
+				"headers" << JSON(
+					"Location" << (_redirect_uri + (_redirect_uri.find("?") != string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
+				)
+			);
+		}
+	}
+	else if (_response_type == "implicit") {
+		return zpt::undefined;
+	}					
+	assertz(false, "\"response_type\" not valid", 400, 0);
+}
+
+zpt::JSONPtr zpt::authenticator::OAuth2::token(zpt::ev::Performative _performative, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(
+		_envelope["payload"]->ok() &&
+		_envelope["payload"]["client_id"]->ok() &&
+		_envelope["payload"]["client_secret"]->ok() &&
+		_envelope["payload"]["code"]->ok(),
+		"required fields: 'client_id', 'client_secret' & 'code'", 412, 0);
+
+	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
+	std::string _client_id((std::string) _envelope["payload"]["client_id"]);
+	zpt::JSONPtr _code = _db->get("codes", std::string("/api/") + this->__options["rest"]["version"]->str() + std::string("/apps/") + _client_id + std::string("/codes/") + ((std::string) _envelope["payload"]["code"]));
+	assertz(_code->ok(), "invalid parameter: no such code", 404, 0);
+	std::string _client_secret((std::string) _envelope["payload"]["client_secret"]);
+
+	std::string _app_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + _client_id);
+	zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _app_uri, zpt::undefined);
+	assertz(_application["status"] == 200, "invalid resource: no such application", 404, 0);
+	assertz(_application["payload"]["client_secret"]->str() == _client_secret, "invalid parameter: no such client secret", 401, 0);
+	std::string _token(_code["token"]->str());
+	_emitter->route(zpt::ev::Patch, _app_uri,
+		JPTR(
+			"token" << _token
+		)
+	);
+	_application << "id" << _token;
+	_db->insert("tokens", std::string("/api/") + this->__options["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope["payload"]["client_id"]) + std::string("/tokens"), _application);
+	return JPTR(
+		"status" << 200 <<
+		"payload" << JSON(
+			"access_token" << _token
+		)
+	);
+}
 
 /*{{
   # OAuth2.0 API
   }}*/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
-	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
-	zpt::KBPtr _kb(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
-	_emitter->add_kb("redis.oauth", _kb);
+	assertz(_emitter->options()["redis"]["oauth"]->ok(), "no 'redis.oauth' object found in provided configuration", 500, 0);
+	_emitter->add_kb("redis.oauth", zpt::KBPtr(new zpt::redis::Client(_emitter->options(), "redis.oauth")));
+	_emitter->add_kb("authenticator.oauth", zpt::KBPtr(new zpt::authenticator::OAuth2(_emitter->options())));
 
 	/*
 	  4.1.  Authorization Code Grant
@@ -78,37 +176,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			{
 				zpt::ev::Post,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
-					assertz(
-						_envelope["payload"]->ok() &&
-						_envelope["payload"]["response_type"]->ok(),
-						"required fields: 'response_type'", 412, 0);
-
-					std::string _response_type((std::string) _envelope["payload"]["response_type"]);
-					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
-
-					if (_response_type == "code") {
-						assertz(
-							_envelope["payload"]->ok() &&
-							_envelope["payload"]["client_id"]->ok(),
-							"required fields: 'client_id'", 412, 0);
-
-						std::string _app_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope["payload"]["client_id"]));
-						zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _app_uri, zpt::undefined);
-						zlog(zpt::pretty(_application), zpt::debug);
-					}
-					else if (_response_type == "implicit") {
-					}
-					
-					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
-					return JPTR(
-						"status" << 200 <<
-						"payload" << JSON(
-							"id" << _id <<
-							"href" << (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
-						)
-					);
+					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
+					return _oauth->authorize(_performative, _envelope, _emitter);
 				}
-			}
+			},
+			{
+				zpt::ev::Get,
+				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
+					return _oauth->authorize(_performative, _envelope, _emitter);
+				}
+			}			
 		}
 	);
 
