@@ -32,6 +32,7 @@ SOFTWARE.
 #include <map>
 #include <memory>
 #include <zmq.hpp>
+#include <mutex>
 #include <zapata/zmq/SocketStreams.h>
 
 using namespace std;
@@ -78,10 +79,6 @@ namespace zpt {
 		
 		virtual void unbind();
 			
-	protected:
-		virtual void lock();
-		virtual void unlock();
-		
 	private:
 		zpt::JSONPtr __options;
 		std::map< std::string, zpt::ZMQPtr > __by_name;
@@ -91,8 +88,7 @@ namespace zpt {
 		::pthread_t __id;
 		zmq::pollitem_t * __poll;
 		size_t __poll_size;
-		pthread_mutex_t* __pt_mtx;
-		pthread_mutexattr_t* __pt_attr;
+		std::mutex __mtx;
 		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __self;
 		
@@ -126,19 +122,16 @@ namespace zpt {
 		
 		virtual void unbind();
 		
-		virtual void lock();
-		virtual void unlock();
-		
 	private:
 		zpt::JSONPtr __options;
 		zmq::context_t __context;
 		std::string __connection;
 		zpt::ZMQPtr __self;
 		zpt::EventEmitterPtr __emitter;
-		pthread_mutex_t* __pt_mtx;
-		pthread_mutexattr_t* __pt_attr;
 		std::string __id;
 
+	protected:
+		std::mutex __mtx;		
 	};
 
 	class ZMQReq : public zpt::ZMQ {

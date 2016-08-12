@@ -176,54 +176,64 @@ zpt::JSONPtr zpt::RESTServer::options() {
 void zpt::RESTServer::start() {
 	try {
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok() && this->__options["http"]["port"]->ok()) {
-			zpt::Job _http(
-				[ & ] (zpt::Job& _self) -> void {
-					zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
+			std::shared_ptr< std::thread > _http(
+				new std::thread(
+					[ & ] () -> void {
+						zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
 
-					zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
-					_ss->bind((uint) this->__options["http"]["port"]);
+						zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
+						_ss->bind((uint) this->__options["http"]["port"]);
 
-					for (; true; ) {
-						int _fd = -1;
-						_ss->accept(& _fd);
+						for (; true; ) {
+							int _fd = -1;
+							_ss->accept(& _fd);
 				
-						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
-						if (this->route_http(_cs)) {
-							_cs->close();
+							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
+							if (this->route_http(_cs)) {
+								_cs->close();
+							}
 						}
 					}
-				}
+				)
 			);
-			_http->start();
+			this->__threads.push_back(_http);
 		}
 
 		if (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok() && this->__options["mqtt"]["port"]->ok()) {
-			zpt::Job _mqtt(
-				[ & ] (zpt::Job& _self) -> void {
-					zlog(string("starting MQTT listener on port ") + std::to_string((uint) this->__options["mqtt"]["port"]), zpt::notice);
-				}
+			std::shared_ptr< std::thread > _mqtt(
+				new std::thread(
+					[ & ] () -> void {
+						zlog(string("starting MQTT listener on port ") + std::to_string((uint) this->__options["mqtt"]["port"]), zpt::notice);
+					}
+				)
 			);
-			_mqtt->start();
+			this->__threads.push_back(_mqtt);
 		}
 
 		for (size_t _idx = 0; _idx != this->__pub_sub.size(); _idx++) {
-			zpt::Job _proxy(
-				[ this, _idx ] (zpt::Job& _job) -> void {
-					((zpt::ZMQXPubXSub *) this->__pub_sub[_idx].get())->loop();
-				}
+			std::shared_ptr< std::thread > _proxy(
+				new std::thread(
+					[ & ] (size_t _idx) -> void {
+						((zpt::ZMQXPubXSub *) this->__pub_sub[_idx].get())->loop();
+					}, _idx
+				)
 			);
-			_proxy->start();
+			this->__threads.push_back(_proxy);
 		}
 		for (size_t _idx = 0; _idx != this->__router_dealer.size(); _idx++) {
-			zpt::Job _proxy(
-				[ this, _idx ] (zpt::Job& _job) -> void {
-					
-					((zpt::ZMQRouterDealer *) this->__router_dealer[_idx].get())->loop();
-				}
+			std::shared_ptr< std::thread > _proxy(
+				new std::thread(
+					[ & ] (size_t _idx) -> void {
+						((zpt::ZMQRouterDealer *) this->__router_dealer[_idx].get())->loop();
+					}, _idx
+				)
 			);
-			_proxy->start();
+			this->__threads.push_back(_proxy);
 		}
 		this->__poll->loop();
+		for (auto _thread : this->__threads) {
+			_thread->join();
+		}
 	}
 	catch (zpt::InterruptedException& e) {
 		return;

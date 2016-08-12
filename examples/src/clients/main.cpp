@@ -112,8 +112,8 @@ int main(int argc, char* argv[]) {
 		zpt::JSONPtr _message = zpt::mkptr(JSON(
 			"name" << "m/@gmail.com/i"
 		));
-		zpt::Job _sender(
-			[ & ] (zpt::Job& _job) -> void {
+		std::thread _sender(
+			[ & ] () -> void {
 				for (size_t _k = 0; _k != _max; _k++) {
 					_client->send(zpt::ev::Get, "/api/0.9/users", _message);
 				}
@@ -123,8 +123,8 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		);
-		_sender->start();
 		_api->start();
+		_sender.join();
 	}
 	catch (zpt::AssertionException& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);

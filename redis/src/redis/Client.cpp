@@ -42,10 +42,6 @@ zpt::redis::Client::Client(zpt::JSONPtr _options, std::string _conf_path) : __op
 
 zpt::redis::Client::~Client() {
 	redisFree(this->__conn);
-	pthread_mutexattr_destroy(this->__attr);
-	pthread_mutex_destroy(this->__mtx);
-	delete this->__mtx;
-	delete this->__attr;
 }
 
 zpt::JSONPtr zpt::redis::Client::options() {
@@ -58,11 +54,6 @@ std::string zpt::redis::Client::name() {
 
 void zpt::redis::Client::connect(std::string _host, uint _port) {
 	zlog(std::string("connecting to ") + _host + std::string(":") + std::to_string(_port), zpt::debug);
-	this->__mtx = new pthread_mutex_t();
-	this->__attr = new pthread_mutexattr_t();
-	pthread_mutexattr_init(this->__attr);
-	pthread_mutex_init(this->__mtx, this->__attr);
-
 	this->__host.assign(_host.data());
 	this->__port = _port;
 	bool _success = true;
@@ -110,10 +101,11 @@ std::string zpt::redis::Client::insert(std::string _collection, std::string _id_
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["_id"]->str().data(), ((std::string) _document).data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["_id"]->str().data(), ((std::string) _document).data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		}
 		if (!_success) {
 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
@@ -141,10 +133,11 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _document).data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _document).data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		}
 		if (!_success) {
 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
@@ -175,10 +168,11 @@ int zpt::redis::Client::set(std::string _collection, std::string _url, zpt::JSON
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _new_record).data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _new_record).data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		}
 		if (!_success) {
 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
@@ -212,10 +206,11 @@ int zpt::redis::Client::unset(std::string _collection, std::string _url, zpt::JS
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _new_record).data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _url.data(), ((std::string) _new_record).data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		}
 		if (!_success) {
 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
@@ -241,10 +236,11 @@ int zpt::redis::Client::remove(std::string _collection, std::string _url) {
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _url.data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _url.data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
+		}
 		if (!_success) {
 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
 			this->reconnect();
@@ -273,10 +269,11 @@ zpt::JSONPtr zpt::redis::Client::get(std::string _collection, std::string _url) 
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HGET %s %s", _key.data(), _url.data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HGET %s %s", _key.data(), _url.data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
+		}
 		if (!_success) {
 			if (_reply != nullptr) {
 				freeReplyObject(_reply);
@@ -350,10 +347,11 @@ zpt::JSONPtr zpt::redis::Client::query(std::string _collection, std::string _reg
 		bool _success = true;
 		short _retry = 0;
 		do {
-			pthread_mutex_lock(this->__mtx);
-			redisAppendCommand(this->__conn, "HSCAN %s %i MATCH %s", _key.data(), _cursor, _regexp.data());
-			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
-			pthread_mutex_unlock(this->__mtx);
+			{
+				std::lock_guard< std::mutex > _lock(this->__mtx);
+				redisAppendCommand(this->__conn, "HSCAN %s %i MATCH %s", _key.data(), _cursor, _regexp.data());
+				_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
+			}
 			if (!_success) {
 				if (_reply != nullptr) {
 					freeReplyObject(_reply);
@@ -433,10 +431,11 @@ zpt::JSONPtr zpt::redis::Client::all(std::string _collection) {
 	bool _success = true;
 	short _retry = 0;
 	do {
-		pthread_mutex_lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HGETALL %s", _key.data());
-		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
-		pthread_mutex_unlock(this->__mtx);
+		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HGETALL %s", _key.data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
+		}
 		if (!_success) {
 			if (_reply != nullptr) {
 				freeReplyObject(_reply);

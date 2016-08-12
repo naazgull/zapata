@@ -30,17 +30,9 @@ zpt::ZMQ::ZMQ(std::string _connection, zpt::JSONPtr _options, zpt::EventEmitterP
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	this->__id.assign(_uuid.string());
-	this->__pt_mtx = new pthread_mutex_t();
-	this->__pt_attr = new pthread_mutexattr_t();
-	pthread_mutexattr_init(this->__pt_attr);
-	pthread_mutex_init(this->__pt_mtx, this->__pt_attr);
 }
 
 zpt::ZMQ::~ZMQ() {
-	pthread_mutexattr_destroy(this->__pt_attr);
-	pthread_mutex_destroy(this->__pt_mtx);
-	delete this->__pt_mtx;
-	delete this->__pt_attr;
 }
 
 std::string zpt::ZMQ::id() {
@@ -67,21 +59,13 @@ zpt::EventEmitterPtr zpt::ZMQ::emitter() {
 	return this->__emitter;
 }
 
-void zpt::ZMQ::lock() {
-	pthread_mutex_lock(this->__pt_mtx);
-}
-
-void zpt::ZMQ::unlock() {
-	pthread_mutex_unlock(this->__pt_mtx);	
-}
-
 zpt::JSONPtr zpt::ZMQ::recv() {
 	std::vector<std::string> _parts;
 	int _more = 0;
 	size_t _more_size = sizeof(_more);
 
-	this->lock();
 	{
+		std::lock_guard< std::mutex > _lock(this->__mtx);
 		do {
 			zmq::message_t _request;
 			try {
@@ -97,7 +81,6 @@ zpt::JSONPtr zpt::ZMQ::recv() {
 		}
 		while(_more);
 	}
-	this->unlock();
 
 	string _channel(_parts[0]);
 	string _method(_parts[1]);
@@ -188,8 +171,8 @@ zpt::JSONPtr zpt::ZMQ::send(zpt::JSONPtr _envelope) {
 		}
 	}
 
-	this->lock(); 
 	{
+		std::lock_guard< std::mutex > _lock(this->__mtx);
 		for (auto _buffer : _parts) {
 			zmq::message_t _request(_buffer.size());
 			memcpy ((void *) _request.data(), _buffer.data(), _buffer.size());
@@ -201,7 +184,6 @@ zpt::JSONPtr zpt::ZMQ::send(zpt::JSONPtr _envelope) {
 		memcpy ((void *) _request.data(), _payload.data(), _payload.size());
 		this->out().send(_request);
 	} 
-	this->unlock();
 
 	return zpt::undefined;
 }
@@ -220,6 +202,11 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting REQ socket on ") + _connection, zpt::notice);
 	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket->setsockopt(ZMQ_RCVTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQReq::~ZMQReq() {
@@ -266,6 +253,10 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting REP socket on ") + _connection, zpt::notice);
 	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQRep::~ZMQRep() {
@@ -306,6 +297,12 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::JSONPtr _options, zp
 	this->__socket_pub = new zmq::socket_t(this->context(), ZMQ_XPUB);
 	this->__socket_pub->bind(_connection2.data());
 	zlog(string("binding XPUB/XSUB socket on ") + _connection, zpt::notice);
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket_sub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_sub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket_pub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_pub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
@@ -368,6 +365,12 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::JSONPtr _options, zpt::E
 		this->__socket_pub->connect(_connection1.data());
 		zlog(string("connecting PUB/SUB socket on ") + _connection, zpt::notice);
 	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket_sub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_sub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket_pub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_pub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
@@ -415,11 +418,10 @@ zpt::JSONPtr zpt::ZMQPubSub::send(zpt::JSONPtr _envelope) {
 				_envelope << "headers" << JSON( "X-Cid" << _cid );
 			}
 		}
-		this->lock();
 		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
 			this->in().setsockopt(ZMQ_SUBSCRIBE, _cid.data(), _cid.length());
 		}
-		this->unlock();
 	}
 	zpt::ZMQ::send(_envelope);
 	return zpt::undefined;
@@ -429,11 +431,10 @@ zpt::JSONPtr zpt::ZMQPubSub::recv() {
 	zpt::JSONPtr _envelope = zpt::ZMQ::recv();
 	if (((int) _envelope["performative"]) == zpt::ev::Reply) {
 		std::string _cid(_envelope["channel"]->str());
-		this->lock();
 		{
+			std::lock_guard< std::mutex > _lock(this->__mtx);
 			this->in().setsockopt(ZMQ_UNSUBSCRIBE, _cid.data(), _cid.length());
 		}
-		this->unlock();
 	}
 	return _envelope;
 }
@@ -452,6 +453,10 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting PUB socket on ") + _connection, zpt::notice);
 	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQPub::~ZMQPub() {
@@ -497,11 +502,14 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::JSONPtr _options, zpt::EventEm
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting SUB socket on ") + _connection, zpt::notice);
 	}
-	this->lock();
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 	{
+		std::lock_guard< std::mutex > _lock(this->__mtx);
 		this->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
 	}
-	this->unlock();
 }
 
 zpt::ZMQSub::~ZMQSub() {
@@ -547,7 +555,12 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::JSONPtr _options, zpt::Event
 	else {
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting PUSH socket on ") + _connection, zpt::notice);
-}	}
+	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+}
 
 
 zpt::ZMQPush::~ZMQPush() {
@@ -593,6 +606,10 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::JSONPtr _options, zpt::Event
 		this->__socket->connect(_connection.data());
 		zlog(string("connecting PULL socket on ") + _connection, zpt::notice);
 	}
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQPull::~ZMQPull() {
@@ -629,7 +646,7 @@ void zpt::ZMQPull::listen(zpt::ZMQPollPtr _poll) {
 	_poll->poll(this->self());
 }
 
-zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket_router = new zmq::socket_t(this->context(), ZMQ_ROUTER);
@@ -637,6 +654,12 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::JSONPtr _opt
 	this->__socket_dealer = new zmq::socket_t(this->context(), ZMQ_DEALER);
 	this->__socket_dealer->bind(_connection2.data());
 	zlog(string("binding ROUTER/DEALER socket on ") + _connection, zpt::notice);
+	int _max_messages = 1000;
+	int _timeout = 20000;
+	this->__socket_router->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_router->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket_dealer->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
+	this->__socket_dealer->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {

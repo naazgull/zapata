@@ -27,6 +27,7 @@ SOFTWARE.
 #include <zapata/json.h>
 #include <hiredis/hiredis.h>
 #include <ossp/uuid++.hh>
+#include <mutex>
 
  using namespace std;
 #if !defined __APPLE__
@@ -61,8 +62,7 @@ namespace zpt {
 			zpt::JSONPtr __options;
 			zpt::JSONPtr __redis_conf;
 			std::string __conf_path;
-			pthread_mutex_t* __mtx;
-			pthread_mutexattr_t* __attr;
+			std::mutex __mtx;
 			redisContext* __conn;
 			std::string __host;
 			uint __port;

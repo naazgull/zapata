@@ -8,7 +8,6 @@ AC_CONFIG_AUX_DIR([.])
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
-AC_HAVE_LIBRARY(pthread)
 AC_HAVE_LIBRARY(magic)
 AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)

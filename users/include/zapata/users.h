@@ -54,6 +54,8 @@ namespace zpt {
 			
 		private:
 			zpt::JSONPtr __options;
+
+			zpt::JSONPtr generate_token(zpt::JSONPtr _user, std::string _client_id, std::string _client_secret, zpt::EventEmitterPtr _emitter);
 		};
 		
 	}

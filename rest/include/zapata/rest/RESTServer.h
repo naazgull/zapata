@@ -74,6 +74,7 @@ namespace zpt {
 		zpt::JSONPtr __options;
 		std::vector< zpt::ZMQPtr > __pub_sub;
 		std::vector< zpt::ZMQPtr > __router_dealer;
+		std::vector< std::shared_ptr< std::thread > > __threads;
 
 	};
 

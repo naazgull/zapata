@@ -2471,3 +2471,7 @@ zpt::JSONPtr zpt::mkarr() {
 	zpt::JSONArr _empty;
 	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
 }
+
+zpt::JSONPtr zpt::get(std::string _path, zpt::JSONPtr _source) {
+	return _source->getPath(_path);
+}

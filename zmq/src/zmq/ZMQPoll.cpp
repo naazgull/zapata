@@ -49,11 +49,6 @@ zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options, zpt::EventEmitterPtr _emiter) : __o
 	this->__poll_size = this->__sockets.size() + 1;
 	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
-
-	this->__pt_mtx = new pthread_mutex_t();
-	this->__pt_attr = new pthread_mutexattr_t();
-	pthread_mutexattr_init(this->__pt_attr);
-	pthread_mutex_init(this->__pt_mtx, this->__pt_attr);	
 }
 
 zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
@@ -69,11 +64,6 @@ zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options) : __options( _options), __context(1
 	this->__poll_size = this->__sockets.size() + 1;
 	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
-
-	this->__pt_mtx = new pthread_mutex_t();
-	this->__pt_attr = new pthread_mutexattr_t();
-	pthread_mutexattr_init(this->__pt_attr);
-	pthread_mutex_init(this->__pt_mtx, this->__pt_attr);	
 }
 
 zpt::ZMQPoll::~ZMQPoll() {
@@ -86,11 +76,6 @@ zpt::ZMQPoll::~ZMQPoll() {
 		this->__internal = nullptr;
 		free(this->__poll);
 		
-		pthread_mutexattr_destroy(this->__pt_attr);
-		pthread_mutex_destroy(this->__pt_mtx);
-		delete this->__pt_mtx;
-		delete this->__pt_attr;
-
 		zlog(string("zmq poll clean up"), zpt::notice);
 	}
 }
@@ -105,14 +90,6 @@ zpt::EventEmitterPtr zpt::ZMQPoll::emitter() {
 
 zpt::ZMQPollPtr zpt::ZMQPoll::self() {
 	return this->__self;
-}
-
-void zpt::ZMQPoll::lock() {
-	pthread_mutex_lock(this->__pt_mtx);
-}
-
-void zpt::ZMQPoll::unlock() {
-	pthread_mutex_unlock(this->__pt_mtx);	
 }
 
 void zpt::ZMQPoll::unbind() {

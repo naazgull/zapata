@@ -1609,6 +1609,10 @@ namespace zpt {
 
 	zpt::JSONPtr mkobj();
 	zpt::JSONPtr mkarr();
+
+	zpt::JSONPtr get(std::string _path, zpt::JSONPtr _source);
+	template <typename T>
+	zpt::JSONPtr set(std::string _path, T _value, zpt::JSONPtr _target = zpt::undefined);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -1654,4 +1658,16 @@ template <typename T>
 zpt::JSONPtr zpt::JSONPtr::operator+(T _rhs) {
 	return *(this->get()) + _rhs;
 };
+template <typename T>
+zpt::JSONPtr zpt::set(std::string _path, T _value, zpt::JSONPtr _target) {
+	zpt::JSONPtr _return;
+	if (_target->ok()) {
+		_return = _target;
+	}
+	else {
+		_return = zpt::mkobj();
+	}
+	_return->setPath(_path, zpt::mkptr(_value));
+	return _return;
+}
 #endif

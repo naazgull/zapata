@@ -3,7 +3,6 @@ nobase_include_HEADERS = \
 ./zapata/base/assert.h \
 ./zapata/base/config.h \
 ./zapata/base/unconfig.h \
-./zapata/base/Job.h \
 ./zapata/exceptions/AssertionException.h \
 ./zapata/exceptions/CastException.h \
 ./zapata/exceptions/ClosedException.h \
