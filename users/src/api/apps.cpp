@@ -89,12 +89,12 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::JSONPtr _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
 					if (!_list->ok()) {
 						return JPTR(
-							STATUS << 204
+							ZPT_STATUS << 204
 						);
 					}
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << _list
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << _list
 					);
 				}
 			},
@@ -102,23 +102,23 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Post,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					assertz(
-						_envelope[PAYLOAD]->ok() &&
-						_envelope[PAYLOAD]["name"]->ok() &&
-						_envelope[PAYLOAD]["description"]->ok() &&
-						_envelope[PAYLOAD]["redirect_domain"]->ok(),
+						_envelope[ZPT_PAYLOAD]->ok() &&
+						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
+						_envelope[ZPT_PAYLOAD]["description"]->ok() &&
+						_envelope[ZPT_PAYLOAD]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 					assertz(
-						_envelope[PAYLOAD]["redirect_domain"]->type() == zpt::JSArray,
+						_envelope[ZPT_PAYLOAD]["redirect_domain"]->type() == zpt::JSArray,
 						"invalid field type: 'redirect_domain' must be a list of strings", 400, 0);
 
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					std::string _id = _db->insert("apps", _resource, _envelope[PAYLOAD]);
+					std::string _id = _db->insert("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
 					_db->set("apps", _href, JPTR( "client_id" << _id << "client_secret" << zpt::generate_key() ));
 					
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << JSON(
 							"id" << _id <<
 							"href" << _href
 						)
@@ -129,15 +129,15 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Head,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::JSONPtr _list = _db->query("apps", _envelope[PAYLOAD]);
+					zpt::JSONPtr _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
 					if (!_list->ok()) {
 						return JPTR(
-							STATUS << 204
+							ZPT_STATUS << 204
 						);
 					}
 					return JPTR(
-						STATUS << 200 <<
-						HEADERS << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_HEADERS << JSON(
 							"Content-Length" << ((std::string) _list).length()
 						)
 					);
@@ -155,12 +155,12 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::JSONPtr _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
 						return JPTR(
-							STATUS << 404
+							ZPT_STATUS << 404
 						);
 					}
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << _document
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << _document
 					);
 				}
 			},
@@ -168,17 +168,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Put,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					assertz(
-						_envelope[PAYLOAD]->ok() &&
-						_envelope[PAYLOAD]["name"]->ok() &&
-						_envelope[PAYLOAD]["description"]->ok() &&
-						_envelope[PAYLOAD]["redirect_domain"]->ok(),
+						_envelope[ZPT_PAYLOAD]->ok() &&
+						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
+						_envelope[ZPT_PAYLOAD]["description"]->ok() &&
+						_envelope[ZPT_PAYLOAD]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->save("apps", _resource, _envelope[PAYLOAD]);
+					size_t _size = _db->save("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << JSON(
 							"updated" << _size
 						)
 					);
@@ -190,8 +190,8 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->remove("apps", _resource);
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << JSON(
 							"removed" << _size
 						)
 					);
@@ -204,12 +204,12 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::JSONPtr _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
 						return JPTR(
-							STATUS << 404
+							ZPT_STATUS << 404
 						);
 					}
 					return JPTR(
-						STATUS << 200 <<
-						HEADERS << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_HEADERS << JSON(
 							"Content-Length" << ((std::string) _document["elements"][0]).length()
 						)
 					);
@@ -219,10 +219,10 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Patch,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->set("apps", _resource, _envelope[PAYLOAD]);
+					size_t _size = _db->set("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					return JPTR(
-						STATUS << 200 <<
-						PAYLOAD << JSON(
+						ZPT_STATUS << 200 <<
+						ZPT_PAYLOAD << JSON(
 							"updated" << _size
 						)
 					);
