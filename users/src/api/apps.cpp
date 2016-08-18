@@ -61,24 +61,24 @@ SOFTWARE.
 #include <ossp/uuid++.hh>
 
 /***
-  # Applications API
+    # Applications API
 ***/ 
 extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
 	_emitter->add_kb("redis.apps", zpt::KBPtr(new zpt::redis::Client(_emitter->options(), "redis.apps")));
 
 	/***
-	  ## Applications collection
-	  ```
-	  /api/{api-version}/apps
-	  ```
-	  ### Description
-	  The _Applications_ collections holds the set of _Application_ documents for the configured **MongoDB** database and collection. 
-	  
-	  ### Allowed methods
-	  - _GET_
-	  - _POST_
-	  - _HEAD_
+	    ## Applications collection
+	    ```
+	    /api/{api-version}/apps
+	    ```
+	    ### Description
+	    The _Applications_ collections holds the set of _Application_ documents for the configured **MongoDB** database and collection. 
+	    
+	    ### Allowed methods
+	    - _GET_
+	    - _POST_
+	    - _HEAD_
 	***/ 
 	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps$"),
 		{
@@ -230,6 +230,5 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			}
 		}
 	);
-
 }
 

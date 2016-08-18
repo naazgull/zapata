@@ -3,7 +3,8 @@
     // Include this file in the sources of the class JSONTokenizer.
 
 // $insert class.h
-#include "JSONTokenizer.h"
+#include <zapata/json/JSONTokenizer.h>
+#include <zapata/exceptions/SyntaxErrorException.h>
 
 // $insert namespace-open
 namespace zpt
@@ -11,7 +12,8 @@ namespace zpt
 
 inline void JSONTokenizer::error(char const *msg)
 {
-    std::cerr << msg << '\n';
+    //std::cerr << msg << '\n';
+   throw zpt::SyntaxErrorException(string(msg));
 }
 
 // $insert lex

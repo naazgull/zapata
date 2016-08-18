@@ -130,7 +130,9 @@ zpt::JSONPtr zpt::authenticator::OAuth2::authorize(zpt::ev::Performative _perfor
 		if (_application[ZPT_STATUS] == 200) {
 			std::string _code = _db->insert("codes", std::string("/api/") + this->__options["rest"]["version"]->str() + std::string("/apps/") + ((std::string) _envelope[ZPT_PAYLOAD]["client_id"]) + std::string("/codes"),
 				JPTR(
-					"client_id" << ((std::string) _envelope[ZPT_PAYLOAD]["client_id"]) <<
+					"client_id" << _envelope[ZPT_PAYLOAD]["client_id"] <<
+					"scope" << _envelope[ZPT_PAYLOAD]["scope"] <<
+					"application" << _application[ZPT_PAYLOAD] << 
 					"user" << _user[ZPT_PAYLOAD]
 				)
 			);
@@ -159,7 +161,7 @@ zpt::JSONPtr zpt::authenticator::OAuth2::authorize(zpt::ev::Performative _perfor
 			_envelope[ZPT_PAYLOAD]["redirect_uri"]->ok() &&
 			_envelope[ZPT_PAYLOAD]["username"]->ok() &&
 			_envelope[ZPT_PAYLOAD]["password"]->ok(),
-			"required fields: 'client_id', 'client_secret', 'redirect_uri', 'username' & 'password'", 412, 0);
+			"required fields: 'client_id', 'redirect_uri', 'username' & 'password'", 412, 0);
 
 		std::string _user_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/me"));
 		zpt::JSONPtr _user = _emitter->route(zpt::ev::Get, _user_uri,
@@ -172,10 +174,11 @@ zpt::JSONPtr zpt::authenticator::OAuth2::authorize(zpt::ev::Performative _perfor
 		);
 		if (_user->ok() && ((int) _user[ZPT_STATUS]) == 200) {
 			std::string _authorization_url(this->__options["url"]["auth"]["authorization"]->str());
-			zpt::JSONPtr _token = this->generate_token(_user[ZPT_PAYLOAD], _envelope[ZPT_PAYLOAD]["client_id"]->str(), "", _emitter);
+			zpt::JSONPtr _token = this->generate_token(_user[ZPT_PAYLOAD]["_id"], std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + _envelope[ZPT_PAYLOAD]["client_id"]->str(), _envelope[ZPT_PAYLOAD]["client_id"]->str(), "", "me{rwx},users{r}", _response_type, _emitter);
 			return JPTR(
 				ZPT_STATUS << (_performative == zpt::ev::Post ? 303 : 307) <<
 				ZPT_HEADERS << JSON(
+					"Set-Cookie" << (std::string("path=/; ") + _user["id"]->str() + std::string("@") + _token["access_token"]->str()) << 
 					"Location" << (_authorization_url + (_authorization_url.find("?") != string::npos ? "&" : "?") +
 						std::string("access_token=") + _token["access_token"]->str() +
 						std::string("&refresh_token=") + _token["refresh_token"]->str() +
@@ -211,18 +214,19 @@ zpt::JSONPtr zpt::authenticator::OAuth2::token(zpt::ev::Performative _performati
 
 	return JPTR(
 		ZPT_STATUS << 200 <<
-		ZPT_PAYLOAD << this->generate_token(_code["user"], _client_id, _client_secret, _emitter)
+		ZPT_PAYLOAD << this->generate_token(_code["user"]["_id"]->str(), _code["application"]["_id"]->str(), _client_id, _client_secret, "code",  _code["scope"]->str(), _emitter)
 	);
 }
 
-zpt::JSONPtr zpt::authenticator::OAuth2::generate_token(zpt::JSONPtr _user, std::string _client_id, std::string _client_secret, zpt::EventEmitterPtr _emitter) {
+zpt::JSONPtr zpt::authenticator::OAuth2::generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::EventEmitterPtr _emitter) {
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
-	std::string _app_uri(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/") + _client_id);
-	zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _app_uri, zpt::undefined);
+	zpt::JSONPtr _owner = _emitter->route(zpt::ev::Get, _owner_url, zpt::undefined);
+	assertz(_owner[ZPT_STATUS] == 200, "invalid resource: no such resource owner", 404, 0);
+	zpt::JSONPtr _application = _emitter->route(zpt::ev::Get, _application_url, zpt::undefined);
 	assertz(_application[ZPT_STATUS] == 200, "invalid resource: no such application", 404, 0);
 	assertz(_client_secret.length() == 0 || _application[ZPT_PAYLOAD]["client_secret"]->str() == _client_secret, "invalid parameter: no such client secret", 401, 0);
 	
-	std::string _access_token(zpt::generate_key() + zpt::generate_key());
+	std::string _access_token(_owner[ZPT_PAYLOAD]["id"]->str() + std::string("@") + _application[ZPT_PAYLOAD]["id"]->str() + std::string("/") + _scope + std::string("/") + _grant_type + std::string("/") + zpt::generate_key() + zpt::generate_key());
 	std::string _refresh_token(zpt::generate_key() + zpt::generate_key());
 	zpt::timestamp_t _expires = (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + (90L * 24L * 3600L * 1000L);
 	zpt::JSONPtr _token = JPTR(
@@ -230,8 +234,10 @@ zpt::JSONPtr zpt::authenticator::OAuth2::generate_token(zpt::JSONPtr _user, std:
 		"access_token" << _access_token <<
 		"refresh_token" << _refresh_token <<
 		"expires" << _expires <<
+		"scope" << _scope <<
+		"grant_type" << _grant_type <<
 		"application" << _application <<
-		"user" << _user
+		"owner" << _owner
 	);
 	_db->insert("tokens", std::string("/api/") + this->__options["rest"]["version"]->str() + std::string("/oauth2.0/tokens"), _token);
 	return JPTR(

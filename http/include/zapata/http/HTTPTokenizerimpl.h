@@ -14,7 +14,6 @@ inline void HTTPTokenizer::error(char const *msg)
 {
     //std::cerr << msg << '\n';
    throw zpt::SyntaxErrorException(string(msg));
-
 }
 
 // $insert lex

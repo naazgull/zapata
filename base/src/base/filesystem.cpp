@@ -34,7 +34,7 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 	
-int zpt::ls(string dir, std::vector<string>& result, bool recursive) {
+int zpt::ls(std::string dir, std::vector<string>& result, bool recursive) {
 	DIR *dp;
 	struct dirent *dirp;
 	if ((dp = opendir(dir.c_str())) == NULL) {
@@ -42,7 +42,7 @@ int zpt::ls(string dir, std::vector<string>& result, bool recursive) {
 	}
 
 	while ((dirp = readdir(dp)) != NULL) {
-		string cname = string(dirp->d_name);
+		std::string cname = std::string(dirp->d_name);
 		if (cname.find('.') != 0) {
 			cname.insert(0, "/");
 			cname.insert(0, dir);
@@ -58,15 +58,15 @@ int zpt::ls(string dir, std::vector<string>& result, bool recursive) {
 	return 0;
 }
 
-bool zpt::mkdir_recursive(string _name, mode_t _mode) {
+bool zpt::mkdir_recursive(std::string _name, mode_t _mode) {
 	istringstream _iss(_name);
-	string _line;
+	std::string _line;
 	int _count = 0;
 	ostringstream _dname;
 
 	while (_iss.good()) {
 		std::getline(_iss, _line, '/');
-		string cname(_line.data());
+		std::string cname(_line.data());
 		_dname << cname << flush;
 
 		if (mkdir(_dname.str().data(), 0777) == 0) {
@@ -77,7 +77,7 @@ bool zpt::mkdir_recursive(string _name, mode_t _mode) {
 	return _count != 0;
 }
 
-bool zpt::copy_path(string _from, string _to) {
+bool zpt::copy_path(std::string _from, std::string _to) {
 	int _read_fd;
 	int _write_fd;
 	struct stat _stat_buf;
@@ -95,14 +95,14 @@ bool zpt::copy_path(string _from, string _to) {
 	return _error != -1;
 }
 
-bool zpt::move_path(string _from, string _to) {
+bool zpt::move_path(std::string _from, std::string _to) {
 	if (zpt::copy_path(_from, _to)) {
 		return std::remove(_from.c_str()) != 0;
 	}
 	return false;
 }
 
-bool zpt::load_path(string _in, string& _out) {
+bool zpt::load_path(std::string _in, std::string& _out) {
 	ifstream _ifs;
 	_ifs.open(_in.data());
 
@@ -114,7 +114,7 @@ bool zpt::load_path(string _in, string& _out) {
 	return false;
 }
 
-bool zpt::load_path(string _in, wstring& _out) {
+bool zpt::load_path(std::string _in, wstring& _out) {
 	wifstream _ifs;
 	_ifs.open(_in.data());
 
@@ -127,7 +127,7 @@ bool zpt::load_path(string _in, wstring& _out) {
 }
 
 
-bool zpt::dump_path(string _in, string& _content) {
+bool zpt::dump_path(std::string _in, std::string& _content) {
 	ofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
@@ -136,7 +136,7 @@ bool zpt::dump_path(string _in, string& _content) {
 	return true;
 }
 
-bool zpt::dump_path(string _in, wstring& _content) {
+bool zpt::dump_path(std::string _in, wstring& _content) {
 	wofstream _ofs;
 	_ofs.open(_in.data());
 	_ofs << _content << flush;
@@ -145,7 +145,7 @@ bool zpt::dump_path(string _in, wstring& _content) {
 	return true;
 }
 
-int zpt::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
+int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
 	DIR *dp;
 	struct dirent *dirp;
 	vector<string> torecurse;
@@ -154,9 +154,11 @@ int zpt::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool 
 		return errno;
 	}
 	while ((dirp = readdir(dp)) != NULL) {
-		string cname = string(dirp->d_name);
+		std::string cname = std::string(dirp->d_name);
 		if (cname.find('.') != 0) {
-			cname.insert(0, "/");
+			if (dir[dir.length() - 1] != '/') {
+				cname.insert(0, "/");
+			}
 			cname.insert(0, dir.data());
 			if (recursive && dirp->d_type == 4 && cname != dir) {
 				torecurse.push_back(cname);
@@ -176,7 +178,7 @@ int zpt::globRegexp(string& dir, vector<string>& result, regex_t& pattern, bool 
 	return 0;
 }
 
-int zpt::glob(string dir, vector<string>& result, string pattern, bool recursive) {
+int zpt::glob(std::string dir, vector<string>& result, std::string pattern, bool recursive) {
 	regex_t regexp;
 	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
 	int _return = zpt::globRegexp(dir, result, regexp, recursive);

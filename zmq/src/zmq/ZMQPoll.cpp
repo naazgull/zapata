@@ -127,7 +127,6 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 	if (_index == (long) this->__sockets.size()) {
 		return;
 	}
-	zlog(std::string("found index ") + std::to_string(_index) + std::string(" for socket ") + _socket.id(), zpt::debug);
 	
 	if (this->__id != 0 && this->__id != pthread_self()) {
 		zlog(std::string("not in main thread, sending signal"), zpt::info);
@@ -149,8 +148,6 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 }
 
 void zpt::ZMQPoll::repoll(long _index) {
-	zlog(std::string("scanning socket poll"), zpt::notice);
-
 	if (_index == -1) {
 		this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 		size_t _i = 1;
@@ -183,7 +180,6 @@ void zpt::ZMQPoll::repoll(long _index) {
 	}
 	
 	this->__poll_size = this->__sockets.size() + 1;	
-	zlog(std::string("polling for ") + std::to_string(this->__poll_size) + std::string(" socket(s)"), zpt::notice);
 }
 
 void zpt::ZMQPoll::loop() {
@@ -211,15 +207,12 @@ void zpt::ZMQPoll::loop() {
 			this->__internal[0]->send(_signal);
 		}
 		else {
-			zlog(std::string("socket vector is now ") + std::to_string(this->__sockets.size()) + std::string(" in length"), zpt::debug);
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
-					zlog(std::string("something to do with index ") + std::to_string(_k), zpt::debug);
 					zpt::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
 					if (_envelope->ok()) {
 						zpt::ev::Performative _performative = (zpt::ev::Performative) ((int) _envelope["performative"]);
 						zpt::JSONPtr _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-						zlog("finished processing request", zpt::debug);
 						if (_result->ok()) {
 							try {
 								_result << 
@@ -232,10 +225,8 @@ void zpt::ZMQPoll::loop() {
 						}
 					}
 					if (this->__sockets[_k - 1]->once()) {
-						zlog("socket to be used just once, unbinding", zpt::debug);
 						this->__sockets[_k - 1]->unbind();
 						this->unpoll(*this->__sockets[_k - 1].get());
-						zlog("finished repolling process", zpt::debug);
 						break;
 					}
 				}

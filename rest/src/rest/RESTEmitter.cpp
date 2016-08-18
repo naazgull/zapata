@@ -439,3 +439,11 @@ zpt::JSONPtr zpt::rest::see_other(std::string _resource, std::string _target_res
 		)
 	);
 }
+
+zpt::JSONPtr zpt::rest::cookies::unserialize(std::string _cookie_header) {
+	return zpt::undefined;
+}
+
+std::string zpt::rest::cookies::serialize(zpt::JSONPtr _credentials) {
+	return "";
+}

@@ -53,7 +53,6 @@ std::string zpt::redis::Client::name() {
 }
 
 void zpt::redis::Client::connect(std::string _host, uint _port) {
-	zlog(std::string("connecting to ") + _host + std::string(":") + std::to_string(_port), zpt::debug);
 	this->__host.assign(_host.data());
 	this->__port = _port;
 	bool _success = true;

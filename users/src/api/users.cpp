@@ -141,6 +141,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				zpt::ev::Get,
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+					if (_resource == (std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/me"))) {
+						assertz(_envelope[ZPT_HEADERS]["Cookie"]->ok() || _envelope[ZPT_HEADERS]["Authorization"]->ok(), "access to this endpoint must be authenticated", 401, 0);
+						if (_envelope[ZPT_HEADERS]["Cookie"]->ok()) {
+							zpt::JSONPtr _user_token = zpt::rest::cookies::unserialize(_envelope[ZPT_HEADERS]["Cookie"]);
+							assertz(_user_token->ok() && _user_token["user"]->ok() && _user_token["access_token"]->ok(), "Bad cookie", 412, 0);
+							_resource.assign(std::string("/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/") + _user_token["user"]->str());
+						}
+						else if (_envelope[ZPT_HEADERS]["Authorization"]->ok()) {
+						}
+					}
+					
 					_envelope[ZPT_PAYLOAD] << "_id" << _resource;
 					zpt::JSONPtr _document = _db->query("users", _envelope[ZPT_PAYLOAD]);
 					if (!_document->ok() || _document["size"] == 0) {

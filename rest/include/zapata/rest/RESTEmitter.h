@@ -136,6 +136,11 @@ namespace zpt {
 		zpt::JSONPtr no_content(std::string _resource);
 		zpt::JSONPtr temporary_redirect(std::string _resource, std::string _target_resource);
 		zpt::JSONPtr see_other(std::string _resource, std::string _target_resource);
+
+		namespace cookies {
+			zpt::JSONPtr unserialize(std::string _cookie_header);
+			std::string serialize(zpt::JSONPtr _credentials);
+		}
 	}
 
 }

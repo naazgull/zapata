@@ -47,10 +47,10 @@ namespace zpt {
 			AssertionException(string _what,  int _http_code, int _code, string _desc, int _line, string _file);
 			virtual ~AssertionException() throw();
 
-			const char* what();
-			const char* description();
-			int code();
-			int status();
+			virtual const char* what();
+			virtual const char* description();
+			virtual int code();
+			virtual int status();
 	};
 
 }

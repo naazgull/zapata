@@ -27,7 +27,7 @@ SOFTWARE.
 #include <sstream>
 #include <zapata/text/convert.h>
 
-zpt::AssertionException::AssertionException(string _in, int _http_code, int _code, string _desc, int _line, string _file) : __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line), __file(_file){
+zpt::AssertionException::AssertionException(string _in, int _http_code, int _code, string _desc, int _line, string _file) : std::exception(), __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line), __file(_file){
 	zpt::replace(this->__what, "\"", "");
 	zpt::replace(this->__description, "\"", "");
 	this->__description.insert(0, "'");

@@ -381,10 +381,11 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 			_ifs >> _conf;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
+			_conf = zpt::undefined;
 		}
 		_ifs.close();
 
-		assertz(_conf->ok(), std::string("Syntax error parsing file '") + _file + std::string("'"), 500, 0);
+		assertz(_conf->ok(), std::string("syntax error parsing file: ") + _file, 500, 0);
 
 		for (auto _new_field : _conf->obj()) {
 			if (!_options[_new_field.first]->ok()) {
@@ -392,7 +393,6 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 			}
 			else {
 				zpt::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
-				_options >> _new_field.first;
 				_options << _new_field.first << _merged;
 			}
 		}
@@ -483,20 +483,16 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::JSONPtr _options, 
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
 	if (_connection.find("://*") != string::npos) {
 		this->__socket->bind(_connection.data());
-		zlog(string("binding ASSYNC REQ socket on ") + _connection, zpt::notice);
 	}
 	else {
 		this->__socket->connect(_connection.data());
-		zlog(string("connecting ASSYNC REQ socket on ") + _connection, zpt::notice);
 	}
-	zlog(std::string("ASSYNC REQ socket with id ") + this->id(), zpt::debug);
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
 	this->__socket->close();
 	delete this->__socket;
 	this->__relayed_socket->close();
-	zlog(string("releasing ASSYNC REQ from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQAssyncReq::socket() {
