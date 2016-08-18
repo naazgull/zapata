@@ -36,8 +36,8 @@ using namespace __gnu_cxx;
 #define BOM8B 0xBB
 #define BOM8C 0xBF
 
-char* zpt::utf8::wstring_to_utf8(wstring ws) {
-	string dest;
+char* zpt::utf8::wstring_to_utf8(std::wstring ws) {
+	std::string dest;
 	dest.clear();
 	for (size_t i = 0; i < ws.size(); i++) {
 		wchar_t w = ws[i];
@@ -68,22 +68,22 @@ char* zpt::utf8::wstring_to_utf8(wstring ws) {
 	return c;
 }
 
-wchar_t* zpt::utf8::utf8_to_wstring(string s) {
+wchar_t* zpt::utf8::utf8_to_wstring(std::string s) {
 	long b = 0, c = 0;
-	const char* string = s.data();
+	const char* _str = s.data();
 
-	if ((uchar) string[0] == BOM8A && (uchar) string[1] == BOM8B && (uchar) string[2] == BOM8C) {
-		string += 3;
+	if ((uchar) _str[0] == BOM8A && (uchar) _str[1] == BOM8B && (uchar) _str[2] == BOM8C) {
+		_str += 3;
 	}
 
-	for (const char *a = string; *a; a++) {
+	for (const char *a = _str; *a; a++) {
 		if (((uchar) *a) < 128 || (*a & 192) == 192) {
 			c++;
 		}
 	}
 	wchar_t *res = new wchar_t[c + 1];
 	res[c] = 0;
-	for (uchar *a = (uchar*) string; *a; a++) {
+	for (uchar *a = (uchar*) _str; *a; a++) {
 		if (!(*a & 128)) {
 			res[b] = *a;
 		}
@@ -104,7 +104,7 @@ wchar_t* zpt::utf8::utf8_to_wstring(string s) {
 	return res;
 }
 
-int zpt::utf8::length(string s) {
+int zpt::utf8::length(std::string s) {
 	int size = 0;
 	for (size_t i = 0; i != s.length(); i++) {
 		if (((wchar_t) s[i]) < 0x80) {
@@ -120,7 +120,7 @@ int zpt::utf8::length(string s) {
 	return size;
 }
 
-void zpt::utf8::encode(wstring s, string& _out, bool quote) {
+void zpt::utf8::encode(std::wstring s, string& _out, bool quote) {
 	ostringstream oss;
 
 	for (size_t i = 0; i != s.length(); i++) {
@@ -159,22 +159,22 @@ void zpt::utf8::encode(wstring s, string& _out, bool quote) {
 	_out.assign(oss.str().data(), oss.str().length());
 }
 
-void zpt::utf8::encode(string& _out, bool quote) {
+void zpt::utf8::encode(std::string& _out, bool quote) {
 	long b = 0, c = 0;
-	const char* string = _out.data();
+	const char* _str = _out.data();
 
-	if ((uchar) string[0] == BOM8A && (uchar) string[1] == BOM8B && (uchar) string[2] == BOM8C) {
-		string += 3;
+	if ((uchar) _str[0] == BOM8A && (uchar) _str[1] == BOM8B && (uchar) _str[2] == BOM8C) {
+		_str += 3;
 	}
 
-	for (const char *a = string; *a; a++) {
+	for (const char *a = _str; *a; a++) {
 		if (((uchar) *a) < 128 || (*a & 192) == 192) {
 			c++;
 		}
 	}
 	wchar_t *res = new wchar_t[c + 1];
 	res[c] = 0;
-	for (uchar *a = (uchar*) string; *a; a++) {
+	for (uchar *a = (uchar*) _str; *a; a++) {
 		if (!(*a & 128)) {
 			res[b] = *a;
 		}
@@ -197,14 +197,13 @@ void zpt::utf8::encode(string& _out, bool quote) {
 	ws.assign(res, c + 1);
 	zpt::utf8::encode(ws, _out, quote);
 	delete[] res;
-
 }
 
-void zpt::utf8::decode(string& _out) {
+void zpt::utf8::decode(std::string& _out) {
 	wostringstream oss;
 	for (size_t i = 0; i != _out.length(); i++) {
 		if (_out[i] == '\\' && _out[i + 1] == 'u') {
-			stringstream ss;
+			std::stringstream ss;
 			ss << _out[i + 2] << _out[i + 3] << _out[i + 4] << _out[i + 5];
 			int c;
 			ss >> hex >> c;
@@ -218,8 +217,31 @@ void zpt::utf8::decode(string& _out) {
 	oss << flush;
 
 	char* c = zpt::utf8::wstring_to_utf8(oss.str());
-	string os(c);
+	std::string os(c);
 	_out.assign(c);
 
 	delete[] c;
+}
+
+void zpt::unicode::escape(std::string& _out) {
+	std::ostringstream _oss;
+	for (const auto& c : _out) {
+		switch (c) {
+			case '"': _oss << "\\\""; break;
+			case '\\': _oss << "\\\\"; break;
+			case '\b': _oss << "\\b"; break;
+			case '\f': _oss << "\\f"; break;
+			case '\n': _oss << "\\n"; break;
+			case '\r': _oss << "\\r"; break;
+			case '\t': _oss << "\\t"; break;
+			default:
+				if (((uchar) c) > 127) {
+					_oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << (int) ((uchar) c);
+				}
+				else {
+					_oss << c;
+				}
+		}
+	}
+	_out.assign(_oss.str());
 }

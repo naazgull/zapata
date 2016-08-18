@@ -97,6 +97,8 @@ void zpt::ZMQPoll::unbind() {
 }
 
 void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
+	std::unique_lock< std::mutex > _synchronize(this->__mtx);
+	//_synchronize.lock();
 	this->__sockets.push_back(_socket);
 
 	if (this->__id != 0 && this->__id != pthread_self()) {
@@ -114,9 +116,12 @@ void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 	else {
 		this->repoll();
 	}
+	_synchronize.unlock();
 }
 
 void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
+	std::unique_lock< std::mutex > _synchronize(this->__mtx);
+	//_synchronize.lock();
 	long _index = 0;
 	for (auto _binded : this->__sockets)  {
 		if (_binded->id() == _socket.id()) {
@@ -125,6 +130,7 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 		_index++;
 	}
 	if (_index == (long) this->__sockets.size()) {
+		_synchronize.unlock();
 		return;
 	}
 	
@@ -145,6 +151,7 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 	else {
 		this->repoll(_index);
 	}
+	_synchronize.unlock();
 }
 
 void zpt::ZMQPoll::repoll(long _index) {
@@ -236,18 +243,25 @@ void zpt::ZMQPoll::loop() {
 }
 
 zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
+	std::unique_lock< std::mutex > _synchronize(this->__mtx);
+	_synchronize.unlock();
 	switch(_type) {
 		case ZMQ_ROUTER_DEALER : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQRouterDealer * _socket = new zpt::ZMQRouterDealer(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}
@@ -259,14 +273,19 @@ zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 		case ZMQ_REP : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQRep * _socket = new zpt::ZMQRep(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}
@@ -278,56 +297,76 @@ zpt::ZMQPtr zpt::ZMQPoll::bind(short _type, std::string _connection) {
 		case ZMQ_PUB_SUB : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQPubSub * _socket = new zpt::ZMQPubSub(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}
 		case ZMQ_PUB : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQPub * _socket = new zpt::ZMQPub(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}
 		case ZMQ_SUB : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQSub * _socket = new zpt::ZMQSub(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}
 		case ZMQ_PUSH : {
 			std::string _key(_connection.data());
 			zpt::replace(_key, "*", ((string) this->__options["host"]));
+			_synchronize.lock();
 			auto _found = this->__by_name.find(_key);
 			if (_found != this->__by_name.end()) {
+				_synchronize.unlock();
 				return _found->second;
 			}
 			else {
+				_synchronize.unlock();
 				zpt::ZMQPush * _socket = new zpt::ZMQPush(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
+				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
+				_synchronize.unlock();
 				return _socket->self();
 			}
 		}

@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/text/convert.h>
-
+#include <zapata/base/assert.h>
 #include <time.h>
 #include <sys/time.h>
 
@@ -87,13 +87,18 @@ void zpt::tostr(std::string& s, char i){
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, time_t i, const char* f){
+void zpt::tostr(string& s, time_t i, const char* f){
+	std::string _current(zpt::get_tz());
+	setenv("TZ", "UTC", 1);
+	tzset();
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
 	localtime_r(&i, &_ptm);
 	strftime(_buffer_date, 80, f, &_ptm);
 	s.insert(s.length(), _buffer_date);
+	setenv("TZ", _current.data(), 1);
+	tzset();
 }
 
 std::string zpt::tostr(int i){
@@ -225,10 +230,16 @@ void zpt::fromstr(std::string s, bool* i){
 	*i = s == string("true");
 }
 
-void zpt::fromstr(std::string s, time_t* i, const char* f){
+void zpt::fromstr(std::string s, time_t* i, const char* f) {
+	std::string _current(zpt::get_tz());
+	bool _use_utc = (string(f).find("%Z") == string::npos);
+	if (_use_utc) {
+		setenv("TZ", "UTC", 1);
+		tzset();
+	}
 	struct tm tm[1] = { { 0 } };
 	strptime(s.data(), f, tm);
-	if (string(f).find("%Z") == string::npos) {
+	if (!_use_utc) {
 		tzset();
 		struct timeval tv;
 		struct timezone _current_tz = { 0, 0 };
@@ -239,6 +250,10 @@ void zpt::fromstr(std::string s, time_t* i, const char* f){
 		tm->tm_zone =_current_tz.tz_dsttime == 0 ? tzname[0] : tzname[1];
 	} 
 	*i = mktime(tm);
+	if (_use_utc) {
+		setenv("TZ", _current.data(), 1);
+		tzset();
+	}
 }
 
 time_t zpt::timezone_offset() {

@@ -23,4 +23,26 @@ SOFTWARE.
 */
 
 #include <zapata/base/assert.h>
+#include <fstream>
 
+namespace zpt {
+	
+	std::string* tz = nullptr;
+	
+}
+
+std::string zpt::get_tz() {
+	if (zpt::tz == nullptr) {
+		zpt::tz = new string();
+		std::ifstream _tzf;
+		_tzf.open("/etc/timezone");
+		if (_tzf.is_open()) {
+			_tzf >> (*zpt::tz);
+			_tzf.close();
+		}
+		else {
+			zpt::tz->assign("UTC");
+		}
+	}
+	return *zpt::tz;
+}

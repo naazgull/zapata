@@ -47,7 +47,6 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-
 namespace zpt {
 
 	/**
@@ -1594,6 +1593,8 @@ namespace zpt {
 			_iss >> _result;
 			return _result;
 		};
+
+		static void stringify(std::string& _str);
 	};
 
 	template <typename T>	

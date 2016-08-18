@@ -1023,21 +1023,8 @@ void zpt::JSONElementT::stringify(ostream& _out) {
 			break;
 		}
 		case zpt::JSString : {
-			string _str(this->str());
-			std::ostringstream _ss;
-			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
-				switch (* _iter) {
-					case '\\': _ss << "\\\\"; break;
-					case '"': _ss << "\\\""; break;
-					case '\b': _ss << "\\b"; break;
-					case '\f': _ss << "\\f"; break;
-					case '\n': _ss << "\\n"; break;
-					case '\r': _ss << "\\r"; break;
-					case '\t': _ss << "\\t"; break;
-					default: _ss << * _iter; break;
-				}
-			}
-			_str.assign(_ss.str());
+			std::string _str(this->str());
+			zpt::json::stringify(_str);
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
@@ -1086,21 +1073,8 @@ void zpt::JSONElementT::stringify(string& _out) {
 			break;
 		}
 		case zpt::JSString : {
-			string _str(this->str());
-			std::ostringstream _ss;
-			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
-				switch (* _iter) {
-					case '\\': _ss << "\\\\"; break;
-					case '"': _ss << "\\\""; break;
-					case '\b': _ss << "\\b"; break;
-					case '\f': _ss << "\\f"; break;
-					case '\n': _ss << "\\n"; break;
-					case '\r': _ss << "\\r"; break;
-					case '\t': _ss << "\\t"; break;
-					default: _ss << * _iter; break;
-				}
-			}
-			_str.assign(_ss.str());
+			std::string _str(this->str());
+			zpt::json::stringify(_str);
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
@@ -1158,21 +1132,8 @@ void zpt::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			break;
 		}
 		case zpt::JSString : {
-			string _str(this->str());
-			std::ostringstream _ss;
-			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
-				switch (* _iter) {
-					case '\\': _ss << "\\\\"; break;
-					case '"': _ss << "\\\""; break;
-					case '\b': _ss << "\\b"; break;
-					case '\f': _ss << "\\f"; break;
-					case '\n': _ss << "\\n"; break;
-					case '\r': _ss << "\\r"; break;
-					case '\t': _ss << "\\t"; break;
-					default: _ss << * _iter; break;
-				}
-			}
-			_str.assign(_ss.str());
+			std::string _str(this->str());
+			zpt::json::stringify(_str);
 			_out << "\"" << _str << "\"" << flush;
 			break;
 		}
@@ -1224,21 +1185,8 @@ void zpt::JSONElementT::prettify(string& _out, uint _n_tabs) {
 			break;
 		}
 		case zpt::JSString : {
-			string _str(this->str());
-			std::ostringstream _ss;
-			for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
-				switch (* _iter) {
-					case '\\': _ss << "\\\\"; break;
-					case '"': _ss << "\\\""; break;
-					case '\b': _ss << "\\b"; break;
-					case '\f': _ss << "\\f"; break;
-					case '\n': _ss << "\\n"; break;
-					case '\r': _ss << "\\r"; break;
-					case '\t': _ss << "\\t"; break;
-					default: _ss << * _iter; break;
-				}
-			}
-			_str.assign(_ss.str());
+			std::string _str(this->str());
+			zpt::json::stringify(_str);
 			_out.insert(_out.length(), "\"");
 			_out.insert(_out.length(), _str);
 			_out.insert(_out.length(), "\"");
@@ -2470,6 +2418,10 @@ zpt::JSONPtr zpt::mkobj() {
 zpt::JSONPtr zpt::mkarr() {
 	zpt::JSONArr _empty;
 	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
+}
+
+void zpt::json::stringify(std::string& _str) {
+	zpt::unicode::escape(_str);
 }
 
 zpt::JSONPtr zpt::get(std::string _path, zpt::JSONPtr _source) {

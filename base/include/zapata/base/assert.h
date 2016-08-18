@@ -61,4 +61,6 @@ namespace zpt {
 		};
 	}
 
+	extern std::string* tz;
+	std::string get_tz();
 }

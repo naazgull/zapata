@@ -121,6 +121,10 @@ namespace zpt {
 		
 	}
 
+	namespace unicode {
+		void escape(std::string& _out);
+	}
+	
 	namespace url {
 		void encode(wstring s, ostream& out);
 		void encode(string& out);
