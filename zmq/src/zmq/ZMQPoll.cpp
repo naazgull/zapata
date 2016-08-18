@@ -98,8 +98,8 @@ void zpt::ZMQPoll::unbind() {
 
 void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 	std::unique_lock< std::mutex > _synchronize(this->__mtx);
-	//_synchronize.lock();
 	this->__sockets.push_back(_socket);
+	_synchronize.unlock();
 
 	if (this->__id != 0 && this->__id != pthread_self()) {
 		zmq::message_t _signal(6);
@@ -114,14 +114,14 @@ void zpt::ZMQPoll::poll(zpt::ZMQPtr _socket) {
 		}
 	}
 	else {
+		_synchronize.lock();
 		this->repoll();
+		_synchronize.unlock();
 	}
-	_synchronize.unlock();
 }
 
 void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 	std::unique_lock< std::mutex > _synchronize(this->__mtx);
-	//_synchronize.lock();
 	long _index = 0;
 	for (auto _binded : this->__sockets)  {
 		if (_binded->id() == _socket.id()) {
@@ -133,6 +133,7 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 		_synchronize.unlock();
 		return;
 	}
+	_synchronize.unlock();
 	
 	if (this->__id != 0 && this->__id != pthread_self()) {
 		zlog(std::string("not in main thread, sending signal"), zpt::info);
@@ -149,9 +150,40 @@ void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 		}
 	}
 	else {
+		_synchronize.lock();
+		this->repoll(_index);
+		_synchronize.unlock();
+	}
+}
+
+void zpt::ZMQPoll::_unpoll(zpt::ZMQ& _socket) {
+	long _index = 0;
+	for (auto _binded : this->__sockets)  {
+		if (_binded->id() == _socket.id()) {
+			break;
+		}
+		_index++;
+	}
+	if (_index == (long) this->__sockets.size()) {
+		return;
+	}
+	
+	if (this->__id != 0 && this->__id != pthread_self()) {
+		std::string _message = std::to_string(_index);
+		zmq::message_t _signal(_message.length());
+		memcpy ((void *) _signal.data(), _message.data(), _message.length());
+		this->__internal[1]->send(_signal);
+		zmq::message_t _reply;
+		try {
+			this->__internal[1]->recv(& _reply);
+		}
+		catch(zmq::error_t& e) {
+			zlog("got a zmq::error_t, signaling polling", zpt::error);
+		}
+	}
+	else {
 		this->repoll(_index);
 	}
-	_synchronize.unlock();
 }
 
 void zpt::ZMQPoll::repoll(long _index) {
@@ -190,6 +222,8 @@ void zpt::ZMQPoll::repoll(long _index) {
 }
 
 void zpt::ZMQPoll::loop() {
+	std::unique_lock< std::mutex > _synchronize(this->__mtx);
+	_synchronize.unlock();
 	this->__id = pthread_self();
 
 	for(; true; ) {
@@ -214,6 +248,7 @@ void zpt::ZMQPoll::loop() {
 			this->__internal[0]->send(_signal);
 		}
 		else {
+			_synchronize.lock();
 			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
 				if (this->__poll[_k].revents & ZMQ_POLLIN) {
 					zpt::JSONPtr _envelope = this->__sockets[_k - 1]->recv();
@@ -233,11 +268,12 @@ void zpt::ZMQPoll::loop() {
 					}
 					if (this->__sockets[_k - 1]->once()) {
 						this->__sockets[_k - 1]->unbind();
-						this->unpoll(*this->__sockets[_k - 1].get());
+						this->_unpoll(*this->__sockets[_k - 1].get());
 						break;
 					}
 				}
 			}
+			_synchronize.unlock();
 		}
 	}
 }

@@ -257,6 +257,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 					short _type = zpt::str2type(_api.second["type"]->str());
 					zpt::JSONPtr _in = zpt::rest::http2zmq(_request);
 					switch(_type) {
+						case ZMQ_REQ :
 						case ZMQ_ROUTER_DEALER : {
 							zpt::ZMQAssyncReq* _client = new zpt::ZMQAssyncReq(_api.second["connect"]->str(), this->__options, this->__emitter);
 							_client->listen(this->__poll);
@@ -265,7 +266,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 							_return = false;
 							break;
 						}
-						case ZMQ_REQ : {
+						/*case ZMQ_REQ : {
 							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_REQ, _api.second["connect"]->str());
 							zpt::JSONPtr _out = _client->send(_in);
 							if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
@@ -276,7 +277,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 							_return = true;
 							_client->unbind();
 							break;
-						}
+							}*/
 						case ZMQ_PUB_SUB : {
 							std::string _connect = _api.second["connect"]->str();
 							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));

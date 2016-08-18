@@ -92,6 +92,7 @@ namespace zpt {
 		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __self;
 		
+		virtual void _unpoll(zpt::ZMQ& _socket);
 		virtual void repoll(long _index = -1) final;
 	};
 
