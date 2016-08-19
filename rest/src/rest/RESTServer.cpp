@@ -241,6 +241,8 @@ void zpt::RESTServer::start() {
 }
 
 bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
+	zpt::HTTPRep _reply;
+	_reply->status((zpt::HTTPStatus) 200);
 	zpt::HTTPReq _request;
 	(*_cs) >> _request;
 
@@ -266,18 +268,6 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 							_return = false;
 							break;
 						}
-						/*case ZMQ_REQ : {
-							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_REQ, _api.second["connect"]->str());
-							zpt::JSONPtr _out = _client->send(_in);
-							if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
-								_out << "status" << 501;
-							}
-							zpt::HTTPRep _reply = zpt::rest::zmq2http(_out);
-							(* _cs) << _reply << flush;
-							_return = true;
-							_client->unbind();
-							break;
-							}*/
 						case ZMQ_PUB_SUB : {
 							std::string _connect = _api.second["connect"]->str();
 							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
@@ -484,9 +474,11 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::JSONPtr _options, 
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
 	if (_connection.find("://*") != string::npos) {
 		this->__socket->bind(_connection.data());
+		zlog(string("binding assync REQ socket on ") + _connection, zpt::notice);
 	}
 	else {
 		this->__socket->connect(_connection.data());
+		zlog(string("connecting assync REQ socket on ") + _connection, zpt::notice);
 	}
 }
 
@@ -494,6 +486,7 @@ zpt::ZMQAssyncReq::~ZMQAssyncReq() {
 	this->__socket->close();
 	delete this->__socket;
 	this->__relayed_socket->close();
+	zlog(string("releasing assync REQ from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQAssyncReq::socket() {

@@ -47,7 +47,7 @@ zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options, zpt::EventEmitterPtr _emiter) : __o
 	this->__internal[1]->connect(_bind.data());
 
 	this->__poll_size = this->__sockets.size() + 1;
-	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
+	this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
 }
 
@@ -62,7 +62,7 @@ zpt::ZMQPoll::ZMQPoll(zpt::JSONPtr _options) : __options( _options), __context(1
 	this->__internal[1]->connect(_bind.data());
 
 	this->__poll_size = this->__sockets.size() + 1;
-	this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
+	this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
 }
 
@@ -208,9 +208,9 @@ void zpt::ZMQPoll::repoll(long _index) {
 		}
 		this->__sockets.erase(this->__sockets.begin() + _index);
 
-		this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
+		delete this->__poll;
+		this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
 		this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
-		
 		size_t _i = 1;
 		for (auto _socket : this->__sockets) {
 			this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
@@ -235,7 +235,9 @@ void zpt::ZMQPoll::loop() {
 		}
 
 		if (this->__poll[0].revents & ZMQ_POLLIN) {
+			_synchronize.lock();
 			this->repoll();
+			_synchronize.unlock();
 
 			zmq::message_t _reply;
 			try {

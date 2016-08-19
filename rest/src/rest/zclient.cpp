@@ -45,9 +45,14 @@ int main(int argc, char* argv[]) {
 	std::string _url;
 	short _type = ZMQ_REQ;
 	zpt::JSONPtr _body;
+	bool _verbose = false;
 
-	while ((_c = getopt(argc, argv, "h:p:m:u:t:j:")) != -1) {
+	while ((_c = getopt(argc, argv, "vh:p:m:u:t:j:")) != -1) {
 		switch (_c) {
+			case 'v': {
+				_verbose = true;
+				break;
+			}
 			case 'h': {
 				_host.assign(string(optarg));
 				break;
@@ -78,23 +83,27 @@ int main(int argc, char* argv[]) {
 	zpt::log_fd = & cout;
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = 7;
+	zpt::log_lvl = (_verbose ? 7 : 0);
 
 	try {
 		zpt::RESTClientPtr _api(zpt::mkobj());
 
-		zpt::ZMQPtr _client = _api->bind(_type, std::string("tcp://") + _host + std::string(":") + _port);
 		switch(_type) {
 			case ZMQ_REQ: {
+				zpt::ZMQPtr _client = _api->bind(_type, std::string("tcp://") + _host + std::string(":") + _port);
 				zpt::JSONPtr _reply = _client->send(_method, _url, _body);
-				zlog(zpt::pretty(_reply), zpt::info);
+				if (_verbose) {
+					zlog(zpt::pretty(_reply), zpt::info);
+				}
 				exit(0);
 				break;
 			}
 			case ZMQ_PULL: {
 				_api->emitter()->on(zpt::ev::Reply, _url,
 					[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-						zlog(zpt::pretty(_envelope), zpt::info);
+						if (_verbose) {
+							zlog(zpt::pretty(_envelope), zpt::info);
+						}
 						return zpt::undefined;
 					}
 				);
@@ -102,6 +111,7 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 			case ZMQ_PUB: {
+				zpt::ZMQPtr _client = _api->bind(_type, std::string("tcp://") + _host + std::string(":") + _port);
 				_client->send(_method, _url, _body);
 				exit(0);
 				break;
@@ -109,7 +119,9 @@ int main(int argc, char* argv[]) {
 			case ZMQ_SUB: {
 				_api->emitter()->on(zpt::ev::Reply, _url,
 					[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
-						zlog(zpt::pretty(_envelope), zpt::info);
+						if (_verbose) {
+							zlog(zpt::pretty(_envelope), zpt::info);
+						}
 						return zpt::undefined;
 					}
 				);

@@ -25,6 +25,7 @@ SOFTWARE.
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <streambuf>
@@ -33,6 +34,7 @@ SOFTWARE.
 #include <ostream>
 #include <memory>
 #include <strings.h>
+#include <cstring>
 #include <unistd.h>
 #include <errno.h>
 #include <zapata/exceptions/ClosedException.h>
@@ -63,9 +65,13 @@ namespace zpt {
 		__char_type ibuf[SIZE];
 
 		int __sock;
+		struct sockaddr_in __server;
+		string __host;
+		short __port;
+		short __protocol;
 
 	public:
-		basic_socketbuf() : __sock(0) {
+		basic_socketbuf() : __sock(0), __port(-1), __protocol(0) {
 			__buf_type::setp(obuf, obuf + (SIZE - 1));
 			__buf_type::setg(ibuf, ibuf, ibuf);
 		};
@@ -86,6 +92,22 @@ namespace zpt {
 			return this->__sock;
 		}
 
+		struct sockaddr_in& server() {
+			return this->__server;
+		}
+
+		std::string& host() {
+			return this->__host;
+		}
+
+		short& port() {
+			return this->__port;
+		}
+
+		short& protocol() {
+			return this->__protocol;
+		}
+
 		virtual bool __good() {
 			return this->__sock != 0;
 		}
@@ -97,18 +119,39 @@ namespace zpt {
 				return __traits_type::eof();
 			}
 
-			int num = __buf_type::pptr() - __buf_type::pbase();
-			int err = -1;
-			if ((err = ::send(__sock, reinterpret_cast<char*>(obuf), num * char_size, MSG_NOSIGNAL)) != num) {
-				if (err < 0) {
-					::shutdown(this->__sock, SHUT_RDWR);
-					::close(this->__sock);
-					this->__sock = 0;
+			switch(protocol()) {
+				case IPPROTO_IP: {
+					int _num = __buf_type::pptr() - __buf_type::pbase();
+					int _actually_written = -1;
+					if ((_actually_written = ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
+						if (_actually_written < 0) {
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+						}
+						return __traits_type::eof();
+					}
+					__buf_type::pbump(-_actually_written);
+					return _actually_written;
 				}
-				return __traits_type::eof();
+				case IPPROTO_UDP: {
+					int _num = __buf_type::pptr() - __buf_type::pbase();
+					int _actually_written = -1;
+					if ((_actually_written = ::sendto(__sock, reinterpret_cast<char*>(obuf), _num * char_size, 0, (struct sockaddr *) & __server, sizeof(__server))) < 0) {
+						if (_actually_written < 0) {
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+						}
+						return __traits_type::eof();
+					}
+					__buf_type::pbump(-_actually_written);
+					return _actually_written;
+				}
+				default: {
+					return __traits_type::eof();
+				}
 			}
-			__buf_type::pbump(-num);
-			return num;
 		}
 
 		virtual __int_type overflow(__int_type c) {
@@ -212,28 +255,61 @@ namespace zpt {
 			return this->__buf;
 		}
 
-		bool open(const std::string& _host, uint16_t _port) {
+		bool open(const std::string& _host, uint16_t _port, short _protocol = IPPROTO_IP) {
 			this->close();
-			int _sd = socket(AF_INET, SOCK_STREAM, 0);
-			sockaddr_in _sin;
-			hostent *_he = gethostbyname(_host.c_str());
+			__buf.host() = _host;
+			__buf.port() = _port;
+			__buf.protocol() = _protocol;
+			
+			::hostent *_he = gethostbyname(_host.c_str());
 			if (_he == nullptr) {
 				return false;
 			}
 
-			std::copy(reinterpret_cast<char*>(_he->h_addr), reinterpret_cast<char*>(_he->h_addr) + _he->h_length, reinterpret_cast<char*>(&_sin.sin_addr.s_addr));
-			_sin.sin_family = AF_INET;
-			_sin.sin_port = htons(_port);
+			std::copy(reinterpret_cast<char*>(_he->h_addr), reinterpret_cast<char*>(_he->h_addr) + _he->h_length, reinterpret_cast<char*>(& __buf.server().sin_addr.s_addr));
+			__buf.server().sin_family = AF_INET;
+			__buf.server().sin_port = htons(_port);
 
-			if (::connect(_sd, reinterpret_cast<sockaddr*>(& _sin), sizeof(_sin)) < 0) {
-				__stream_type::setstate(std::ios::failbit);
-				__buf.set_socket(0);
-				return false;
+			switch(_protocol) {
+				case IPPROTO_IP: {
+					int _sd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+					if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof(__buf.server())) < 0) {
+						__stream_type::setstate(std::ios::failbit);
+						__buf.set_socket(0);
+						return false;
+					}
+					else {
+						__buf.set_socket(_sd);
+					}
+					return true;
+				}
+				case IPPROTO_UDP: {
+					int _sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+					int _ret = inet_aton(__buf.host().c_str(), & __buf.server().sin_addr);
+					if (_ret == 0) {
+						struct addrinfo _hints, * _result = NULL;
+						std::memset(& _hints, 0, sizeof(_hints));
+						_hints.ai_family = AF_INET;
+						_hints.ai_socktype = SOCK_DGRAM;
+
+						_ret = getaddrinfo(__buf.host().c_str(), NULL, & _hints, & _result);
+						if (_ret) {
+							__stream_type::setstate(std::ios::failbit);
+							__buf.set_socket(0);
+							return false;
+						}
+						struct sockaddr_in* _host_addr = (struct sockaddr_in *) _result->ai_addr;
+						memcpy(& __buf.server().sin_addr, & _host_addr->sin_addr, sizeof(struct in_addr));
+						freeaddrinfo(_result);
+					}
+					__buf.set_socket(_sd);
+					return true;
+				}
+				default: {
+					break;
+				}
 			}
-			else {
-				__buf.set_socket(_sd);
-			}
-			return true;
+			return false;
 		}
 	};
 
@@ -241,7 +317,7 @@ namespace zpt {
 	typedef basic_socketstream<wchar_t> wsocketstream;
 
 	typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
-	typedef std::shared_ptr< zpt::wsocketstream > wscoketstream_ptr;
+	typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
 
 	template<typename Char>
 	class basic_serversocketstream : public std::basic_iostream<Char> {
@@ -621,4 +697,8 @@ namespace zpt {
 			return true;
 		}
 	};	
+
+	typedef std::shared_ptr< zpt::websocketstream > websocketstream_ptr;
+	typedef std::shared_ptr< zpt::websocketserverstream > websocketserverstream_ptr;
+
 }

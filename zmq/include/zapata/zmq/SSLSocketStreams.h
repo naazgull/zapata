@@ -36,8 +36,11 @@ SOFTWARE.
 #include <errno.h>
 #include <memory>
 #include <openssl/ssl.h>
+#include <openssl/tls1.h>
 #include <openssl/err.h>
 #include <zapata/exceptions/ClosedException.h>
+#include <zapata/text/convert.h>
+#include <zapata/text/manip.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -45,6 +48,8 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zpt {
+
+	std::string ssl_error_print(SSL * _ssl, int _ret);
 
 	template<typename Char>
 	class basic_sslsocketbuf : public std::basic_streambuf<Char> {
@@ -102,8 +107,10 @@ namespace zpt {
 			if (!__good()) {
 				return __traits_type::eof();
 			}
-			int num = __buf_type::pptr() - __buf_type::pbase();
-			if (SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), num * char_size) != num) {
+			int _num = __buf_type::pptr() - __buf_type::pbase();
+			int _actually_written = 0;
+			if ((_actually_written = SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
+				cout << zpt::ssl_error_print(this->__sslstream, _actually_written) << endl << flush;
 				SSL_free(this->__sslstream);
 				SSL_CTX_free(this->__context);
 				::shutdown(this->__sock, SHUT_RDWR);
@@ -113,8 +120,8 @@ namespace zpt {
 				this->__context = nullptr;
 				return __traits_type::eof();
 			}
-			__buf_type::pbump(-num);
-			return num;
+			__buf_type::pbump(-_actually_written);
+			return _actually_written;
 		}
 
 		virtual __int_type overflow(__int_type c) {
@@ -146,7 +153,8 @@ namespace zpt {
 			}
 
 			int num;
-			if ((num = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) <= 0) {
+			if ((num = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
+				cout << zpt::ssl_error_print(this->__sslstream, num) << endl << flush;
 				SSL_free(this->__sslstream);
 				SSL_CTX_free(this->__context);
 				::shutdown(this->__sock, SHUT_RDWR);
@@ -237,7 +245,7 @@ namespace zpt {
 				SSL_library_init();
 				OpenSSL_add_all_algorithms();
 				SSL_load_error_strings();
-				SSL_CTX* _context = SSL_CTX_new(SSLv23_client_method());
+				SSL_CTX* _context = SSL_CTX_new(TLSv1_client_method());
 				if (_context == nullptr) {
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
@@ -273,7 +281,7 @@ namespace zpt {
 			SSL_library_init();
 			OpenSSL_add_all_algorithms();
 			SSL_load_error_strings();
-			this->__context = SSL_CTX_new(SSLv23_server_method());
+			this->__context = SSL_CTX_new(SSLv3_server_method());
 			if (this->__context == nullptr) {
 				abort();
 			};
@@ -284,7 +292,7 @@ namespace zpt {
 			SSL_library_init();
 			OpenSSL_add_all_algorithms();
 			SSL_load_error_strings();
-			this->__context = SSL_CTX_new(SSLv23_server_method());
+			this->__context = SSL_CTX_new(SSLv3_server_method());
 			if (this->__context == nullptr) {
 				abort();
 			}
@@ -424,4 +432,257 @@ namespace zpt {
 	typedef std::shared_ptr< zpt::serversslsocketstream > serversslsocketstream_ptr;
 	typedef std::shared_ptr< zpt::wserversslsocketstream > wserversslsocketstream_ptr;
 
+	#define CRLF "\r\n"
+
+	class websocketsslserverstream : public basic_serversslsocketstream<char> {
+	public:
+		websocketsslserverstream() {
+		};
+		virtual ~websocketsslserverstream() {
+		}
+
+		bool handshake() {
+			string _key;
+			string _line;
+			do {
+				std::getline((* this), _line);
+				zpt::trim(_line);
+				string _header(_line);
+				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
+				if (_header.find("sec-websocket-key:") != string::npos) {
+					_key.assign(_line.substr(19));
+				}
+			}
+			while (_line != "");
+
+			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+			string _sha1 = zpt::hash::SHA1(_key);
+			zpt::base64::encode(_sha1);
+			_key.assign(_sha1);
+
+			(* this) << 
+			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
+			"Upgrade: websocket" << CRLF << 
+			"Connection: Upgrade" << CRLF <<
+			"Sec-WebSocket-Accept: " << _key << CRLF <<
+			CRLF << std::flush;
+			return true;
+		}
+
+		bool read(string& _out, int* _op_code) {
+			unsigned char _hdr;
+			(* this) >> noskipws >> _hdr;
+
+			bool _fin = _hdr & 0x80;
+			*_op_code = _hdr & 0x0F;
+			(* this) >> noskipws >> _hdr;
+			bool _mask = _hdr & 0x80;
+			string _masking;
+			string _masked;
+
+			int _len = _hdr & 0x7F;
+			if (_len == 126) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				_len <<= 8;
+				(* this) >> noskipws >> _hdr;
+				_len += (int) _hdr;
+			}
+			else if (_len == 127) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				for (int _i = 0; _i < 7; _i++) {
+					_len <<= 8;
+					(* this) >> noskipws >> _hdr;
+					_len += (int) _hdr;
+				}
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < 4; _i++) {
+					(* this) >> noskipws >> _hdr;
+					_masking.push_back((char) _hdr);
+				}
+			}
+
+
+			for (int _i = 0; _i != _len; _i++) {
+				(* this) >> noskipws >> _hdr;
+				_masked.push_back((char) _hdr);
+			}
+
+			if (_mask) {
+				for (size_t _i = 0; _i < _masked.length(); _i++) {
+					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
+				}
+			}
+			else {
+				_out.assign(_masked);
+			}
+
+			return _fin;
+		}
+
+		bool write(string _in){
+			int _len = _in.length();
+
+			if (!this->is_open()) {
+				return false;
+			}
+			(* this) << (unsigned char) 0x81;
+			if (_len > 65535) {
+				(* this) << (unsigned char) 0x7F;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else if (_len > 125) {
+				(* this) << (unsigned char) 0x7E;
+				(* this) << ((unsigned char) (_len >> 8));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else {
+				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
+			}
+
+			(* this) << _in << std::flush;
+			return true;
+		}
+	};
+
+	class websocketsslstream : public basic_sslsocketstream<char> {
+	public:
+		websocketsslstream(int _socket, SSL_CTX* _ctx) : basic_sslsocketstream<char>(_socket, _ctx) {
+		};
+		virtual ~websocketsslstream() {
+		}
+
+		bool handshake() {
+			string _key;
+			string _line;
+			do {
+				std::getline((* this), _line);
+				zpt::trim(_line);
+				string _header(_line);
+				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
+				if (_header.find("sec-websocket-key:") != string::npos) {
+					_key.assign(_line.substr(19));
+				}
+			}
+			while (_line != "");
+
+			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+			string _sha1 = zpt::hash::SHA1(_key);
+			zpt::base64::encode(_sha1);
+			_key.assign(_sha1);
+
+			(* this) << 
+			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
+			"Upgrade: websocket" << CRLF << 
+			"Connection: Upgrade" << CRLF <<
+			"Sec-WebSocket-Accept: " << _key << CRLF <<
+			CRLF << std::flush;
+			return true;
+		}
+
+		bool read(string& _out, int* _op_code) {
+			unsigned char _hdr;
+			(* this) >> noskipws >> _hdr;
+
+			bool _fin = _hdr & 0x80;
+			*_op_code = _hdr & 0x0F;
+			(* this) >> noskipws >> _hdr;
+			bool _mask = _hdr & 0x80;
+			string _masking;
+			string _masked;
+
+			int _len = _hdr & 0x7F;
+			if (_len == 126) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				_len <<= 8;
+				(* this) >> noskipws >> _hdr;
+				_len += (int) _hdr;
+			}
+			else if (_len == 127) {
+				(* this) >> noskipws >> _hdr;
+				_len = (int) _hdr;
+				for (int _i = 0; _i < 7; _i++) {
+					_len <<= 8;
+					(* this) >> noskipws >> _hdr;
+					_len += (int) _hdr;
+				}
+			}
+
+			if (_mask) {
+				for (int _i = 0; _i < 4; _i++) {
+					(* this) >> noskipws >> _hdr;
+					_masking.push_back((char) _hdr);
+				}
+			}
+
+
+			for (int _i = 0; _i != _len; _i++) {
+				(* this) >> noskipws >> _hdr;
+				_masked.push_back((char) _hdr);
+			}
+
+			if (_mask) {
+				for (size_t _i = 0; _i < _masked.length(); _i++) {
+					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
+				}
+			}
+			else {
+				_out.assign(_masked);
+			}
+
+			return _fin;
+		}
+
+		bool write(string _in, bool _masked = false){
+			int _len = _in.length();
+
+			if (!this->is_open()) {
+				return false;
+			}
+			(* this) << (unsigned char) 0x81;
+			if (_len > 65535) {
+				(* this) << (unsigned char) 0x7F;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << (unsigned char) 0x00;
+				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
+				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else if (_len > 125) {
+				(* this) << (unsigned char) 0x7E;
+				(* this) << ((unsigned char) (_len >> 8));
+				(* this) << ((unsigned char) (_len & 0xFF));
+			}
+			else {
+				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
+			}
+
+			if (_masked) {
+				for (int _i = 0; _i != 4; _i++) {
+					(* this) << (unsigned char) 0x00;
+				}		
+			}
+
+			(* this) << _in << std::flush;
+			return true;
+		}
+	};	
+
+	typedef std::shared_ptr< zpt::websocketsslstream > websocketsslstream_ptr;
+	typedef std::shared_ptr< zpt::websocketsslserverstream > websocketsslserverstream_ptr;
+	
 }
