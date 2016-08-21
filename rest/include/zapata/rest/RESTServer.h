@@ -40,26 +40,27 @@ namespace zpt {
 	class RESTClient;
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
-		public:
-			RESTServerPtr(zpt::JSONPtr _options);
-			RESTServerPtr(zpt::RESTServer * _ptr);
-			virtual ~RESTServerPtr();
+	public:
+		RESTServerPtr(std::string _name, zpt::JSONPtr _options);
+		RESTServerPtr(zpt::RESTServer * _ptr);
+		virtual ~RESTServerPtr();
 	};
 
 	class RESTClientPtr : public std::shared_ptr<zpt::RESTClient> {
-		public:
-			RESTClientPtr(zpt::JSONPtr _options);
-			RESTClientPtr(zpt::RESTClient * _ptr);
-			virtual ~RESTClientPtr();
+	public:
+		RESTClientPtr(zpt::JSONPtr _options);
+		RESTClientPtr(zpt::RESTClient * _ptr);
+		virtual ~RESTClientPtr();
 	};
 
 	class RESTServer {
 	public:
-		RESTServer(zpt::JSONPtr _options);
+		RESTServer(std::string _name, zpt::JSONPtr _options);
 		virtual ~RESTServer();
 
 		virtual void start();
 
+		virtual std::string name();
 		virtual zpt::JSONPtr options();
 		virtual zpt::ZMQPollPtr poll();
 		virtual zpt::EventEmitterPtr emitter();
@@ -69,6 +70,7 @@ namespace zpt {
 
 		
 	private:
+		std::string __name;
 		zpt::EventEmitterPtr __emitter;
 		zpt::ZMQPollPtr __poll;
 		zpt::JSONPtr __options;
@@ -100,6 +102,7 @@ namespace zpt {
 
 
 	namespace conf {
+		void init(std::string _name, zpt::JSONPtr _options);
 		void dirs(std::string _dir, zpt::JSONPtr _options);
 		void dirs(zpt::JSONPtr _options);
 		void env(zpt::JSONPtr _options);

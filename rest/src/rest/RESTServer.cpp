@@ -70,7 +70,7 @@ SOFTWARE.
 #include <vector>
 #include <zapata/rest/codes_rest.h>
 
-zpt::RESTServerPtr::RESTServerPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_options)) {
+zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
 }
 
 zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt::RESTServer>(_ptr) {
@@ -79,7 +79,7 @@ zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt:
 zpt::RESTServerPtr::~RESTServerPtr() {
 }
 
-zpt::RESTServer::RESTServer(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::JSONPtr _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 
@@ -159,6 +159,10 @@ zpt::RESTServer::~RESTServer(){
 	zpt::ZMQPoll* _poll = this->__poll.get();
 	this->__poll.reset();
 	_poll->unbind();
+}
+
+std::string zpt::RESTServer::name() {
+	return this->__name;
 }
 
 zpt::ZMQPollPtr zpt::RESTServer::poll() {
@@ -259,6 +263,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 					short _type = zpt::str2type(_api.second["type"]->str());
 					zpt::JSONPtr _in = zpt::rest::http2zmq(_request);
 					switch(_type) {
+						case ZMQ_REP :
 						case ZMQ_REQ :
 						case ZMQ_ROUTER_DEALER : {
 							zpt::ZMQAssyncReq* _client = new zpt::ZMQAssyncReq(_api.second["connect"]->str(), this->__options, this->__emitter);
@@ -356,10 +361,29 @@ void zpt::RESTClient::start() {
 	}
 }
 
+void zpt::conf::init(std::string _name, zpt::JSONPtr _options) {
+	zpt::conf::dirs(_options);
+	zpt::conf::env(_options);
+	if (_options["log"]->ok()) {
+		if (_options["log"]["file"]->ok()) {
+			zpt::log_fd = new ofstream();
+			string _log_file((string) _options["log"]["file"]);
+			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
+		}
+		if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
+			zpt::log_lvl = (int) _options["log"]["level"];
+		}
+	}
+	if (zpt::log_lvl == -1) {
+		zpt::log_lvl = 4;
+	}
+	zlog(std::string("starting RESTful server instance: ") + _name, zpt::alert);
+}
+
 void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 	std::vector<std::string> _files;
 	if (zpt::is_dir(_dir)) {
-		zpt::glob(_dir, _files, "(.*)\\.conf", false);
+		zpt::glob(_dir, _files, "(.*)\\.conf");
 	}
 	else {
 		_files.push_back(_dir);
@@ -391,16 +415,25 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 }
 
 void zpt::conf::dirs(zpt::JSONPtr _options) {
-	zpt::conf::dirs("/etc/zapata/conf.d", _options);
+	// zpt::conf::dirs("/etc/zapata/conf.d", _options);
 	zpt::JSONPtr _traversable = _options->clone();
-	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "(.+)" )), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-		if (_key == "$include") {
-			zpt::JSONPtr _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
-			zpt::conf::dirs((string) _options->getPath(_object_path), _object);
-			_object >> "$include";
-			
+	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "(.*)" )),
+		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+			if (_key == "$include") {
+				zpt::JSONPtr _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+				zpt::JSONPtr _to_include = _options->getPath(_object_path);
+				if (_to_include->type() == zpt::JSArray) {
+					for (auto _file : _to_include->arr()) {
+						zpt::conf::dirs((std::string) _file, _object);
+					}
+				}
+				else {
+					zpt::conf::dirs((std::string) _to_include, _object);
+				}
+				_object >> "$include";
+			}
 		}
-	});
+	);
 }
 
 void zpt::conf::env(zpt::JSONPtr _options) {

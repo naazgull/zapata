@@ -981,11 +981,45 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				}
 				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
 			}
+			if (_pattern["$regexp"]->ok()) {
+				::regex_t * _rgx = new ::regex_t();
+				if (regcomp(_rgx, ((string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
+					std::string _exp;
+					this->stringify(_exp);
+					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
+						_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
+					}
+				}
+				regfree(_rgx);
+				delete _rgx;
+			}
+			else {
+				if (* this == _pattern) {
+					_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
+				}
+			}
 			break;
 		}
 		case zpt::JSArray: {
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key));
+			}
+			if (_pattern["$regexp"]->ok()) {
+				::regex_t * _rgx = new ::regex_t();
+				if (regcomp(_rgx, ((string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
+					std::string _exp;
+					this->stringify(_exp);
+					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
+						_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
+					}
+				}
+				regfree(_rgx);
+				delete _rgx;
+			}
+			else {
+				if (* this == _pattern) {
+					_callback((_parent_path.length() != 0 ? (_parent_path + string(".") + _key) : _key), _key, * _parent);
+				}
 			}
 			break;
 		}

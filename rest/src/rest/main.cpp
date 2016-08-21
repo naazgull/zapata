@@ -74,30 +74,59 @@ int main(int argc, char* argv[]) {
 				zlog("a configuration file must be provided", zpt::error);
 				return -1;
 			}
-
-			_in >> _ptr;
-			zpt::conf::dirs(_ptr);
-			zpt::conf::env(_ptr);
-		}
-
-		if (_ptr["log"]->ok()) {
-			if (_ptr["log"]["file"]->ok()) {
-				zpt::log_fd = new ofstream();
-				string _log_file((string) _ptr["log"]["file"]);
-				((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
+			try {
+				_in >> _ptr;
 			}
-			if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
-				zpt::log_lvl = (int) _ptr["log"]["level"];
+			catch(zpt::SyntaxErrorException& _e) {
+				std::cout << "syntax error when parsing configuration file: " << _e.what() << endl << flush;
+				exit(-10);
 			}
 		}
-		if (zpt::log_lvl == -1) {
-			zpt::log_lvl = 4;
+
+		zpt::JSONPtr _to_spawn = zpt::mkobj();
+		for (auto _spawn : _ptr->obj()) {
+			if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
+				continue;
+			}
+			_to_spawn << _spawn.first << _spawn.second;
+		}		
+		
+		size_t _spawned = 0;
+		std::string _name;
+		zpt::JSONPtr _options;
+		for (auto _spawn : _to_spawn->obj()) {
+			if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
+				continue;
+			}
+			if (_spawned == _to_spawn->obj()->size() - 1) {
+				_name.assign(_spawn.first);
+				_options = _spawn.second;
+			}
+			else {
+				pid_t _pid = fork();
+				if (_pid == 0) {
+					_name.assign(_spawn.first);
+					_options = _spawn.second;
+					break;
+				}
+				else {
+					_spawned++;
+				}
+			}
 		}
 
-		zlog(std::string("starting 0mq RESTful server for ") + zpt::pretty(_ptr["zmq"]), zpt::alert);
-		zpt::RESTServerPtr _server(_ptr);
+		size_t _n_workers = _options["workers"]->ok() ? (size_t) _options["workers"] : 1;
+		size_t _i = 0;
+		for (; _i != _n_workers - 1; _i++) {
+			pid_t _pid = fork();
+			if (_pid == 0) {
+				break;
+			}
+		}
+		_name += std::string("-") + std::to_string(_i + 1);
+		zpt::conf::init(_name, _options);
+		zpt::RESTServerPtr _server(_name, _options);
 		_server->start();
-		zlog("exiting", zpt::info);
 	}
 	catch (zpt::AssertionException& _e) {
 		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);

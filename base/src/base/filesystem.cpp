@@ -145,7 +145,7 @@ bool zpt::dump_path(std::string _in, wstring& _content) {
 	return true;
 }
 
-int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, bool recursive) {
+int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, short recursion) {
 	DIR *dp;
 	struct dirent *dirp;
 	vector<string> torecurse;
@@ -160,7 +160,7 @@ int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, 
 				cname.insert(0, "/");
 			}
 			cname.insert(0, dir.data());
-			if (recursive && dirp->d_type == 4 && cname != dir) {
+			if (recursion != 0 && dirp->d_type == 4 && cname != dir) {
 				torecurse.push_back(cname);
 			}
 			if (regexec(&pattern, dirp->d_name, (size_t) (0), NULL, 0) == 0) {
@@ -172,16 +172,16 @@ int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, 
 	closedir(dp);
 
 	for (auto i : torecurse) {
-		zpt::globRegexp(i, result, pattern, true);
+		zpt::globRegexp(i, result, pattern, recursion - 1);
 	}
 
 	return 0;
 }
 
-int zpt::glob(std::string dir, vector<string>& result, std::string pattern, bool recursive) {
+int zpt::glob(std::string dir, vector<string>& result, std::string pattern, short recursion) {
 	regex_t regexp;
 	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
-	int _return = zpt::globRegexp(dir, result, regexp, recursive);
+	int _return = zpt::globRegexp(dir, result, regexp, recursion);
 	regfree(& regexp);	
 	return _return;
 }
