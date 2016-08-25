@@ -1,4 +1,6 @@
-export packages=(
+export bulk_wd=$HOME/Develop/zapata
+
+export projects=(
        base
        json
        events
@@ -6,7 +8,6 @@ export packages=(
        addons
        zmq
        rest
-#       auth
        mongodb
        redis
        users

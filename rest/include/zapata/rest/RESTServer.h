@@ -111,6 +111,10 @@ namespace zpt {
 	namespace rest {
 		zpt::JSONPtr http2zmq(zpt::HTTPReq _request);
 		zpt::HTTPRep zmq2http(zpt::JSONPtr _out);
+
+		namespace http {
+			zpt::JSONPtr unserialize(std::string _body);
+		}
 	}
 
 	class ZMQAssyncReq : public zpt::ZMQ {

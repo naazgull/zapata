@@ -29,6 +29,10 @@ SOFTWARE.
 #define JPTR_ARRAY(z) zpt::mkptr((zpt::JSONArr()) << z)
 #define JSON_NIL zpt::undefined;
 
+#define Json zpt::JSONPtr
+#define Jstr (zpt::JSONPtr)zpt::json
+#define Jpretty zpt::pretty
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -87,6 +91,10 @@ namespace zpt {
 		 * \brief Creates a new JSONPtr instance, pointing to the *target* object.
 		 */
 		JSONPtr(JSONElementT* _target);
+		/**
+		 * \brief Creates a new JSONPtr instance, pointing to the *target* object.
+		 */
+		JSONPtr(std::initializer_list<JSONElementT> _init);
 		/**
 		 * \brief Destroys the current JSONPtr instance. It will only free the pointed object if there are no more *shared_ptr* objects pointing to it.
 		 */
@@ -1340,6 +1348,7 @@ namespace zpt {
 	public:
 		JSONElementT();
 		JSONElementT(JSONElementT& _element);
+		JSONElementT(std::initializer_list<JSONElementT> _init);
 		JSONElementT(JSONPtr& _value);
 		JSONElementT(JSONObj& _value);
 		JSONElementT(JSONArr& _value);

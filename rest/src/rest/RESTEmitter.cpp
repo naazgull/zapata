@@ -315,6 +315,8 @@ zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string 
 		}
 	}
 
+	zlog("endpoint not found internally, going to loook in directory", zpt::debug);
+
 	if (this->options()["directory"]->ok()) {
 		for (auto _api : this->options()["directory"]->obj()) {
 			for (auto _endpoint : _api.second["endpoints"]->arr()) {
@@ -322,6 +324,7 @@ zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string 
 					short _type = zpt::str2type(_api.second["type"]->str());
 					switch(_type) {
 						case ZMQ_ROUTER_DEALER :
+						case ZMQ_REP :
 						case ZMQ_REQ : {
 							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_REQ, _api.second["connect"]->str());
 							zpt::JSONPtr _out = _client->send(_in);
@@ -355,6 +358,7 @@ zpt::JSONPtr zpt::RESTEmitter::route(zpt::ev::Performative _method, std::string 
 }
 
 zpt::JSONPtr zpt::rest::not_found(std::string _resource) {
+	zlog(string("-> | \033[31;40m404\033[0m ") + _resource, zpt::info);
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	return zpt::mkptr(

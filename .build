@@ -2,7 +2,7 @@
 
 source .packages.rc
 
-for package in ${packages[@]}
+for package in ${projects[@]}
 do
     pushd $package
     echo && pwd

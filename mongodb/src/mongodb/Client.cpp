@@ -38,7 +38,6 @@ zpt::mongodb::Client::Client(zpt::JSONPtr _options, std::string _conf_path) : __
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__mongodb_conf["user"] << "pwd" << (string) this->__mongodb_conf["passwd"] << "db" << (string) this->__mongodb_conf["db"]));
 	}
 	this->__conn->setWriteConcern((mongo::WriteConcern) 2);
-
 }
 
 zpt::mongodb::Client::~Client() {
@@ -247,9 +246,11 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 	if (_elements->size() == 0) {
 		return zpt::undefined;
 	}
-	zpt::JSONPtr _return = JPTR(
-		"size" << _size <<
-		"elements" << _elements 
+	zpt::JSONPtr _return = Json(
+		{
+			"size", _size, 
+			"elements", _elements
+		}
 	);
 	if (_page_size != 0) {
 		_return << "links" << JSON(

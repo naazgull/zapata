@@ -51,10 +51,12 @@ namespace zpt {
 
 			virtual zpt::JSONPtr authorize(zpt::ev::Performative _performative, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter);
 			virtual zpt::JSONPtr token(zpt::ev::Performative _performative, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter);
+			virtual zpt::JSONPtr validate(std::string _access_token, zpt::EventEmitterPtr _emitter);
 			
 		private:
 			zpt::JSONPtr __options;
 
+			zpt::JSONPtr generate_token(zpt::JSONPtr _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::EventEmitterPtr _emitter);
 			zpt::JSONPtr generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::EventEmitterPtr _emitter);
 		};
 		

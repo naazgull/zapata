@@ -88,13 +88,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
 					if (!_list->ok()) {
-						return JPTR(
-							ZPT_STATUS << 204
+						return Json(
+							{
+								ZPT_STATUS, 204
+							}
 						);
 					}
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << _list
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, _list
+						}
 					);
 				}
 			},
@@ -114,14 +118,16 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					std::string _id = _db->insert("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
-					_db->set("apps", _href, JPTR( "client_id" << _id << "client_secret" << zpt::generate_key() ));
+					_db->set("apps", _href, Json({ "client_id", _id, "client_secret", zpt::generate_key() }));
 					
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << JSON(
-							"id" << _id <<
-							"href" << _href
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, {
+								"id", _id,
+								"href", _href
+							}
+						}
 					);
 				}
 			},
@@ -131,15 +137,19 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
 					if (!_list->ok()) {
-						return JPTR(
-							ZPT_STATUS << 204
+						return Json(
+							{
+								ZPT_STATUS, 204
+							}
 						);
 					}
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_HEADERS << JSON(
-							"Content-Length" << ((std::string) _list).length()
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_HEADERS, {
+								"Content-Length", ((std::string) _list).length()
+							}
+						}
 					);
 				}
 			}
@@ -154,13 +164,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return JPTR(
-							ZPT_STATUS << 404
+						return Json(
+							{
+								ZPT_STATUS, 404
+							}
 						);
 					}
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << _document
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, _document
+						}
 					);
 				}
 			},
@@ -176,11 +190,13 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->save("apps", _resource, _envelope[ZPT_PAYLOAD]);
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << JSON(
-							"updated" << _size
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, {
+								"updated", _size
+							}
+						}
 					);
 				}
 			},
@@ -189,11 +205,13 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->remove("apps", _resource);
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << JSON(
-							"removed" << _size
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, {
+								"removed", _size
+							}
+						}
 					);
 				}
 			},
@@ -203,15 +221,19 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::JSONPtr _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return JPTR(
-							ZPT_STATUS << 404
+						return Json(
+							{
+								ZPT_STATUS, 404
+							}
 						);
 					}
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_HEADERS << JSON(
-							"Content-Length" << ((std::string) _document["elements"][0]).length()
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_HEADERS, {
+								"Content-Length", ((std::string) _document["elements"][0]).length()
+							}
+						}
 					);
 				}
 			},
@@ -220,11 +242,13 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->set("apps", _resource, _envelope[ZPT_PAYLOAD]);
-					return JPTR(
-						ZPT_STATUS << 200 <<
-						ZPT_PAYLOAD << JSON(
-							"updated" << _size
-						)
+					return Json(
+						{
+							ZPT_STATUS, 200,
+							ZPT_PAYLOAD, {
+								"updated", _size
+							}
+						}
 					);
 				}
 			}

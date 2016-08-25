@@ -80,6 +80,114 @@ zpt::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr ) {
 	}
 }
 
+zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __parent( nullptr ) {
+	bool _is_object = (_list.size() % 2 == 0 && _list.begin()->__target.__type == zpt::JSString);
+	if (_is_object) {
+		size_t _idx = 0;
+		size_t* _pidx = &_idx;
+		this->type(zpt::JSObject);
+		std::for_each(_list.begin(), _list.end(),
+			[ & ] (const zpt::JSONElementT& _element) {
+				if ((*_pidx) % 2 == 0) {
+					this->__target.__object->push(std::string(_element.__target.__string->data()));
+				}
+				else {
+					zpt::JSONElementT* _other = new zpt::JSONElementT();
+					_other->type( _element.__target.__type);
+					switch(_other->__target.__type) {
+						case zpt::JSObject : {
+							if (_element.__target.__object.get() != nullptr) {
+								_other->__target.__object = _element.__target.__object;
+							}
+							break;
+						}
+						case zpt::JSArray : {
+							if (_element.__target.__array.get() != nullptr) {
+								_other->__target.__array = _element.__target.__array;
+							}
+							break;
+						}
+						case zpt::JSString : {
+							_other->__target.__string = make_shared<std::string>(std::string(_element.__target.__string->data()));
+							break;
+						}
+						case zpt::JSInteger : {
+							_other->__target.__integer = _element.__target.__integer;
+							break;
+						}
+						case zpt::JSDouble : {
+							_other->__target.__double = _element.__target.__double;
+							break;
+						}
+						case zpt::JSBoolean : {
+							_other->__target.__boolean = _element.__target.__boolean;
+							break;
+						}
+						case zpt::JSNil : {
+							_other->__target.__nil = nullptr;
+							break;
+						}
+						case zpt::JSDate : {
+							_other->__target.__date = _element.__target.__date;
+							break;
+						}
+					}
+					this->__target.__object->push(_other);
+				}
+				(*_pidx)++;
+			}
+		);
+	}
+	else {
+		this->type(zpt::JSArray);
+		std::for_each(_list.begin(), _list.end(),
+			[ & ] (const zpt::JSONElementT& _element) {
+				zpt::JSONElementT* _other = new zpt::JSONElementT();
+				_other->type( _element.__target.__type);
+				switch(_other->__target.__type) {
+					case zpt::JSObject : {
+						if (_element.__target.__object.get() != nullptr) {
+							_other->__target.__object = _element.__target.__object;
+						}
+						break;
+					}
+					case zpt::JSArray : {
+						if (_element.__target.__array.get() != nullptr) {
+							_other->__target.__array = _element.__target.__array;
+						}
+						break;
+					}
+					case zpt::JSString : {
+						_other->__target.__string = make_shared<std::string>(std::string(_element.__target.__string->data()));
+						break;
+					}
+					case zpt::JSInteger : {
+						_other->__target.__integer = _element.__target.__integer;
+						break;
+					}
+					case zpt::JSDouble : {
+						_other->__target.__double = _element.__target.__double;
+						break;
+					}
+					case zpt::JSBoolean : {
+						_other->__target.__boolean = _element.__target.__boolean;
+						break;
+					}
+					case zpt::JSNil : {
+						_other->__target.__nil = nullptr;
+						break;
+					}
+					case zpt::JSDate : {
+						_other->__target.__date = _element.__target.__date;
+						break;
+					}
+				}
+				this->__target.__array->push(_other);
+			}
+		);
+	}
+}
+
 zpt::JSONElementT::JSONElementT(JSONPtr& _value) {
 	this->type(_value->type());
 	switch(this->__target.__type) {
@@ -1914,6 +2022,9 @@ zpt::JSONPtr::JSONPtr()  : shared_ptr<JSONElementT>(make_shared<JSONElementT>())
 }
 
 zpt::JSONPtr::JSONPtr(JSONElementT* _target) : shared_ptr<JSONElementT>(_target) {
+}
+
+zpt::JSONPtr::JSONPtr(std::initializer_list<JSONElementT> _init) : shared_ptr<JSONElementT>(new zpt::JSONElementT(_init)) {
 }
 
 zpt::JSONPtr::~JSONPtr(){

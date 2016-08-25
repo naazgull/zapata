@@ -458,10 +458,17 @@ zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
 	
 	zpt::JSONPtr _payload;
 	if (_request->body() != "") {
-		try {
-			_payload = zpt::json(_request->body());
+		if (_request->header("Content-Type") == "application/x-www-form-urlencoded") {
+			_payload = zpt::rest::http::unserialize(_request->body());
 		}
-		catch(zpt::SyntaxErrorException& _e) {
+		else if (_request->header("Content-Type") == "application/json") {
+			try {
+				_payload = zpt::json(_request->body());
+			}
+			catch(zpt::SyntaxErrorException& _e) {
+			}
+		}
+		else {
 			_payload = zpt::mkptr(JSON( "text" << _request->body() ));
 		}
 	}
@@ -500,6 +507,34 @@ zpt::HTTPRep zpt::rest::zmq2http(zpt::JSONPtr _out) {
 		_return->header("Content-Length", std::to_string(_body.length()));
 	}
 
+	return _return;
+}
+
+zpt::JSONPtr zpt::rest::http::unserialize(std::string _body) {
+	zpt::JSONPtr _return = zpt::mkobj();
+	std::string _name;
+	std::string _collected;
+	for (const auto& _c : _body) {
+		switch(_c) {
+			case '=' : {
+				_name.assign(_collected.data());
+				_collected.assign("");
+				break;
+			}
+			case '&' : {
+				zpt::url::decode(_collected);
+				_return << _name << _collected;
+				_name.assign("");
+				_collected.assign("");
+				break;
+			}
+			default : {
+				_collected.push_back(_c);
+			}
+		}
+	}
+	zpt::url::decode(_collected);
+	_return << _name << _collected;
 	return _return;
 }
 

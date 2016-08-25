@@ -95,17 +95,15 @@ int main(int argc, char* argv[]) {
 		std::string _name;
 		zpt::JSONPtr _options;
 		for (auto _spawn : _to_spawn->obj()) {
-			if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
-				continue;
-			}
 			if (_spawned == _to_spawn->obj()->size() - 1) {
-				_name.assign(_spawn.first);
+				_name.assign(_spawn.first.data());
 				_options = _spawn.second;
 			}
 			else {
+				cout << "FORK" << endl << flush;
 				pid_t _pid = fork();
 				if (_pid == 0) {
-					_name.assign(_spawn.first);
+					_name.assign(_spawn.first.data());
 					_options = _spawn.second;
 					break;
 				}
@@ -115,9 +113,10 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		size_t _n_workers = _options["workers"]->ok() ? (size_t) _options["workers"] : 1;
+		size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 		size_t _i = 0;
 		for (; _i != _n_workers - 1; _i++) {
+			cout << "FORK" << endl << flush;
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				break;

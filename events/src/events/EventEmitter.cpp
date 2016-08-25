@@ -42,7 +42,10 @@ zpt::EventEmitterPtr zpt::EventEmitter::self() {
 }
 
 void zpt::EventEmitter::add_kb(std::string _name, zpt::KBPtr _kb) {
-	this->__kb.insert(make_pair(_name, _kb));
+	auto _found = this->__kb.find(_name);
+	if (_found == this->__kb.end()) {
+		this->__kb.insert(make_pair(_name, _kb));
+	}
 }
 
 zpt::KBPtr zpt::EventEmitter::get_kb(std::string _name) {
