@@ -38,29 +38,29 @@ namespace zpt {
 
 	namespace redis {
 
-		class Client : public zpt::KB {
+		class Client : public zpt::KnowledgeBase {
 		public:
-			Client(zpt::JSONPtr _options, std::string _conf_path);
+			Client(zpt::json _options, std::string _conf_path);
 			virtual ~Client();
 
-			virtual zpt::JSONPtr options();
+			virtual zpt::json options();
 			virtual std::string name();
 
 			virtual void connect(string _host, uint _port);
 			virtual void reconnect();
 
-			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _record);
-			virtual int save(std::string _collection, std::string _url, zpt::JSONPtr _record);
-			virtual int set(std::string _collection, std::string _url, zpt::JSONPtr _record);
-			virtual int unset(std::string _collection, std::string _url, zpt::JSONPtr _document);
+			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::json _record);
+			virtual int save(std::string _collection, std::string _url, zpt::json _record);
+			virtual int set(std::string _collection, std::string _url, zpt::json _record);
+			virtual int unset(std::string _collection, std::string _url, zpt::json _document);
 			virtual int remove(std::string _collection, std::string _url);
-			virtual zpt::JSONPtr get(std::string _collection, std::string _url);
-			virtual zpt::JSONPtr query(std::string _collection, std::string _regex);
-			virtual zpt::JSONPtr all(std::string _collection);
+			virtual zpt::json get(std::string _collection, std::string _url);
+			virtual zpt::json query(std::string _collection, std::string _regex);
+			virtual zpt::json all(std::string _collection);
 
 		private:
-			zpt::JSONPtr __options;
-			zpt::JSONPtr __redis_conf;
+			zpt::json __options;
+			zpt::json __redis_conf;
 			std::string __conf_path;
 			std::mutex __mtx;
 			redisContext* __conn;
@@ -76,7 +76,7 @@ namespace zpt {
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
 			ClientPtr(zpt::redis::Client * _target);
-			ClientPtr(zpt::JSONPtr _options, std::string _conf_path);
+			ClientPtr(zpt::json _options, std::string _conf_path);
 
 			/**
 			 * @brief Destroys the current Self instance, freeing all allocated memory.

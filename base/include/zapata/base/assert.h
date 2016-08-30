@@ -42,14 +42,15 @@ namespace zpt {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
 	};
 
-	class KB {
+	class KnowledgeBase {
 	public:
 		virtual std::string name() = 0;
 	};
-	typedef std::shared_ptr<zpt::KB> KBPtr;
+	typedef std::shared_ptr<zpt::KnowledgeBase> KBPtr;
+	typedef KBPtr kb;
 
 	namespace ev {
-		enum Performative {
+		enum performative {
 			Get = 0,
 			Put = 1,
 			Post = 2,

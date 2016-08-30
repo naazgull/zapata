@@ -155,8 +155,8 @@ namespace zpt {
 		HTTPReqT();
 		virtual ~HTTPReqT();
 
-		zpt::ev::Performative method();
-		void method(zpt::ev::Performative);
+		zpt::ev::performative method();
+		void method(zpt::ev::performative);
 		string& url();
 		void url(string);
 		string& query();
@@ -173,7 +173,7 @@ namespace zpt {
 	private:
 		string __url;
 		string __query;
-		zpt::ev::Performative __method;
+		zpt::ev::performative __method;
 		ParameterMap __params;
 	};
 
@@ -229,6 +229,11 @@ namespace zpt {
 		};
 	};
 
+	namespace http {
+		typedef zpt::HTTPReq req;
+		typedef zpt::HTTPRep rep;
+	}
+	
 	void init(HTTPReq& _out);
 	void init(HTTPRep& _out);
 }

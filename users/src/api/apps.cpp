@@ -63,9 +63,9 @@ SOFTWARE.
 /***
     # Applications API
 ***/ 
-extern "C" void restify(zpt::EventEmitterPtr _emitter) {
+extern "C" void restify(zpt::ev::emitter _emitter) {
 	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
-	_emitter->add_kb("redis.apps", zpt::KBPtr(new zpt::redis::Client(_emitter->options(), "redis.apps")));
+	_emitter->add_kb("redis.apps", zpt::kb(new zpt::redis::Client(_emitter->options(), "redis.apps")));
 
 	/***
 	    ## Applications collection
@@ -84,17 +84,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 		{
 			{
 				zpt::ev::Get,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::JSONPtr _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
+					zpt::json _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
 					if (!_list->ok()) {
-						return Json(
+						return zpt::json(
 							{
 								ZPT_STATUS, 204
 							}
 						);
 					}
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, _list
@@ -104,7 +104,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Post,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
 						_envelope[ZPT_PAYLOAD]->ok() &&
 						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
@@ -118,9 +118,9 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					std::string _id = _db->insert("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
-					_db->set("apps", _href, Json({ "client_id", _id, "client_secret", zpt::generate_key() }));
+					_db->set("apps", _href, zpt::json({ "client_id", _id, "client_secret", zpt::generate_key() }));
 					
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, {
@@ -133,17 +133,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Head,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::JSONPtr _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
 					if (!_list->ok()) {
-						return Json(
+						return zpt::json(
 							{
 								ZPT_STATUS, 204
 							}
 						);
 					}
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_HEADERS, {
@@ -156,21 +156,21 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/([^/]+)$"),
+	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/(.+)$"),
 		{
 			{
 				zpt::ev::Get,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::JSONPtr _document = _db->get("apps", _resource);
+					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return Json(
+						return zpt::json(
 							{
 								ZPT_STATUS, 404
 							}
 						);
 					}
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, _document
@@ -180,7 +180,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Put,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
 						_envelope[ZPT_PAYLOAD]->ok() &&
 						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
@@ -190,7 +190,7 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->save("apps", _resource, _envelope[ZPT_PAYLOAD]);
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, {
@@ -202,10 +202,10 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Delete,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->remove("apps", _resource);
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, {
@@ -217,17 +217,17 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Head,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::JSONPtr _document = _db->get("apps", _resource);
+					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return Json(
+						return zpt::json(
 							{
 								ZPT_STATUS, 404
 							}
 						);
 					}
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_HEADERS, {
@@ -239,10 +239,10 @@ extern "C" void restify(zpt::EventEmitterPtr _emitter) {
 			},
 			{
 				zpt::ev::Patch,
-				[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _emitter) -> zpt::JSONPtr {
+				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->set("apps", _resource, _envelope[ZPT_PAYLOAD]);
-					return Json(
+					return zpt::json(
 						{
 							ZPT_STATUS, 200,
 							ZPT_PAYLOAD, {

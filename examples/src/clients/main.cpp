@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	zpt::JSONPtr _ptr;
+	zpt::json _ptr;
 	{
 		ifstream _in;
 		_in.open(_conf_file);
@@ -94,11 +94,11 @@ int main(int argc, char* argv[]) {
 	}			
 
 	try {
-		zpt::RESTClientPtr _api(_ptr);
+		zpt::rest::client _api(_ptr);
 		size_t _max = 10100;
 		size_t * _n = new size_t();
 		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users",
-			[ & ] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _envelope, zpt::EventEmitterPtr _events) -> zpt::JSONPtr {
+			[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 				(* _n)++;
 				zlog(std::to_string(* _n), zpt::debug);
 				if ((* _n) == (_max - 100)) {
@@ -108,10 +108,8 @@ int main(int argc, char* argv[]) {
 				return zpt::undefined;
 			}
 		);
-		zpt::ZMQPtr _client = _api->bind("zmq");
-		zpt::JSONPtr _message = zpt::mkptr(JSON(
-			"name" << "m/@gmail.com/i"
-		));
+		zpt::socket _client = _api->bind("zmq");
+		zpt::json _message({ "name", "m/@gmail.com/i" });
 		std::thread _sender(
 			[ & ] () -> void {
 				for (size_t _k = 0; _k != _max; _k++) {

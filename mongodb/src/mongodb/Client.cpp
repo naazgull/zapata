@@ -27,13 +27,13 @@ SOFTWARE.
 zpt::mongodb::ClientPtr::ClientPtr(zpt::mongodb::Client * _target) : std::shared_ptr<zpt::mongodb::Client>(_target) {
 }
 
-zpt::mongodb::ClientPtr::ClientPtr(zpt::JSONPtr _options, std::string _conf_path) : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options, _conf_path)) {
+zpt::mongodb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options, _conf_path)) {
 }
 
 zpt::mongodb::ClientPtr::~ClientPtr() {
 }
 
-zpt::mongodb::Client::Client(zpt::JSONPtr _options, std::string _conf_path) : __options( _options), __mongodb_conf(_options->getPath(_conf_path)), __conf_path(_conf_path), __conn((string) __mongodb_conf["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
+zpt::mongodb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __mongodb_conf(_options->getPath(_conf_path)), __conf_path(_conf_path), __conn((string) __mongodb_conf["bind"]), __broadcast(true), __addons(new zpt::Addons(_options)) {
 	if (this->__mongodb_conf["user"]->ok()) {
 		this->__conn->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (string) this->__mongodb_conf["user"] << "pwd" << (string) this->__mongodb_conf["passwd"] << "db" << (string) this->__mongodb_conf["db"]));
 	}
@@ -44,7 +44,7 @@ zpt::mongodb::Client::~Client() {
 	this->__conn.done();
 }
 
-zpt::JSONPtr zpt::mongodb::Client::options() {
+zpt::json zpt::mongodb::Client::options() {
 	return this->__options;
 }
 
@@ -56,11 +56,11 @@ bool& zpt::mongodb::Client::broadcast() {
 	return this->__broadcast;
 }
 
-zpt::EventEmitterPtr zpt::mongodb::Client::addons() {
+zpt::ev::emitter zpt::mongodb::Client::addons() {
 	return this->__addons;
 }
 
-std::string zpt::mongodb::Client::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
+std::string zpt::mongodb::Client::insert(std::string _collection, std::string _id_prefix, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _full_collection(_collection);
@@ -86,7 +86,7 @@ std::string zpt::mongodb::Client::insert(std::string _collection, std::string _i
 	return _document["id"]->str();
 }
 
-int zpt::mongodb::Client::save(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+int zpt::mongodb::Client::save(std::string _collection, zpt::json _pattern, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -117,7 +117,7 @@ int zpt::mongodb::Client::save(std::string _collection, zpt::JSONPtr _pattern, z
 	return _size;
 }
 
-int zpt::mongodb::Client::set(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {	
+int zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -137,7 +137,7 @@ int zpt::mongodb::Client::set(std::string _collection, zpt::JSONPtr _pattern, zp
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zpt::mkptr(JSON("$set" << _document));
+	_document = zpt::json({ "$set", _document });
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
@@ -149,7 +149,7 @@ int zpt::mongodb::Client::set(std::string _collection, zpt::JSONPtr _pattern, zp
 	return _size;
 }
 
-int zpt::mongodb::Client::unset(std::string _collection, zpt::JSONPtr _pattern, zpt::JSONPtr _document) {
+int zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document) {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
@@ -169,7 +169,7 @@ int zpt::mongodb::Client::unset(std::string _collection, zpt::JSONPtr _pattern, 
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zpt::mkptr(JSON("$unset" << _document));
+	_document = zpt::json({ "$unset", _document });
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
@@ -181,7 +181,7 @@ int zpt::mongodb::Client::unset(std::string _collection, zpt::JSONPtr _pattern, 
 	return _size;
 }
 
-int zpt::mongodb::Client::remove(std::string _collection, zpt::JSONPtr _pattern) {
+int zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern) {
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
 	}
@@ -209,7 +209,7 @@ int zpt::mongodb::Client::remove(std::string _collection, zpt::JSONPtr _pattern)
 	return _size;
 }
 
-zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _pattern) {
+zpt::json zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern) {
 	if (!_pattern->ok()) {
 		_pattern = zpt::mkobj();
 	}
@@ -246,16 +246,18 @@ zpt::JSONPtr zpt::mongodb::Client::query(std::string _collection, zpt::JSONPtr _
 	if (_elements->size() == 0) {
 		return zpt::undefined;
 	}
-	zpt::JSONPtr _return = Json(
+	zpt::json _return = zpt::json(
 		{
 			"size", _size, 
 			"elements", _elements
 		}
 	);
 	if (_page_size != 0) {
-		_return << "links" << JSON(
-			"next" << (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)) <<
-			"prev" << (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
+		_return << "links" << zpt::json(
+			{
+				"next", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)),
+				"prev", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
+			}
 		);
 	}
 	return _return;

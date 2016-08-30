@@ -84,7 +84,7 @@ paramslist :
 	{
 		d_scanner.name();
 	}
-	 EQ STRING
+	 EQ paramvalue
 	 {
 		d_scanner.value();
 	 }
@@ -93,11 +93,13 @@ paramslist :
 	 {
 		d_scanner.name();
 	}
-	 EQ STRING
+	 EQ paramvalue
 	 {
 		d_scanner.value();
 	 }
 ;
+
+paramvalue: | STRING;
 
 headers :
 	CR_LF headerslist CR_LF

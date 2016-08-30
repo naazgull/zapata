@@ -188,7 +188,7 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 	}
 }
 
-zpt::JSONElementT::JSONElementT(JSONPtr& _value) {
+zpt::JSONElementT::JSONElementT(JSONPtr _value) {
 	this->type(_value->type());
 	switch(this->__target.__type) {
 		case zpt::JSObject : {
@@ -599,6 +599,31 @@ zpt::JSONElementT& zpt::JSONElementT::operator<<(JSONElementT* _in) {
 		}
 		case zpt::JSArray : {
 			this->__target.__array->push(_in);
+			break;
+		}
+		default : {
+			assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray, "the type must be a JSObject, JSArray or the same type of the target, in order to push JSONElementT*", 0, 0);
+			break;
+		}
+	}
+	return * this;
+}
+
+zpt::JSONElementT& zpt::JSONElementT::operator<<(std::initializer_list<JSONElementT> _list) {
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+	zpt::json _other(_list);
+	switch(this->__target.__type) {
+		case zpt::JSObject : {
+			if (_other->type() == zpt::JSObject) {
+				for (auto _attribute : _other->obj()) {
+					this->__target.__object->push(_attribute.first);
+					this->__target.__object->push(_attribute.second);
+				}
+			}
+			break;
+		}
+		case zpt::JSArray : {
+			this->__target.__array->push(_other.get());
 			break;
 		}
 		default : {
@@ -1064,7 +1089,7 @@ void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 zpt::JSONPtr zpt::JSONElementT::flatten() {
 	if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
 		zpt::JSONPtr _return = zpt::mkobj();
-		this->inspect(zpt::mkptr(JSON( "$regexp" << "(.*)" )),
+		this->inspect(zpt::json({ "$regexp", "(.*)" }),
 			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 				zpt::JSONPtr _self = this->getPath(_object_path);
 				if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
@@ -2555,20 +2580,56 @@ zpt::JSONArr& zpt::JSONArr::operator<<(JSONElementT& _in) {
 	return * this;
 }
 
-zpt::JSONPtr zpt::mkobj() {
+zpt::json zpt::mkobj() {
 	zpt::JSONObj _empty;
-	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
+	return zpt::json(new zpt::JSONElementT(_empty));
 }
 
-zpt::JSONPtr zpt::mkarr() {
+zpt::json zpt::mkarr() {
 	zpt::JSONArr _empty;
-	return zpt::JSONPtr(new zpt::JSONElementT(_empty));
+	return zpt::json(new zpt::JSONElementT(_empty));
 }
 
 void zpt::json::stringify(std::string& _str) {
-	zpt::unicode::escape(_str);
+	zpt::utf8::encode(_str, true);
 }
 
-zpt::JSONPtr zpt::get(std::string _path, zpt::JSONPtr _source) {
+zpt::json zpt::get(std::string _path, zpt::json _source) {
 	return _source->getPath(_path);
+}
+
+zpt::timestamp_t zpt::timestamp(std::string _json_date) {
+	if (_json_date.length() == 0) {
+		return (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+	time_t _n = 0;
+	int _ms = 0;
+	string _s(_json_date.data());
+	size_t _idx = _s.rfind(".");
+	string _mss(_s.substr(_idx + 1));
+	_mss.assign(_mss.substr(0, _mss.length() - 1));
+	_s.assign(_s.substr(0, _idx));
+	zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
+	zpt::fromstr(_mss, &_ms);
+	return _n * 1000 + _ms;
+}
+
+ zpt::timestamp_t zpt::timestamp(zpt::json _json_date) {
+	 return (zpt::timestamp_t) _json_date;
+}
+
+std::string zpt::timestamp(zpt::timestamp_t _timestamp) {
+	std::string _out;
+	zpt::tostr(_out, (size_t) _timestamp / 1000, "%Y-%m-%dT%H:%M:%S");
+	_out.insert(_out.length(), ".");
+	size_t _remainder = _timestamp % 1000;
+	if (_remainder < 100) {
+		_out.insert(_out.length(), "0");
+		if (_remainder < 10) {
+			_out.insert(_out.length(), "0");
+		}
+	}
+	zpt::tostr(_out, _remainder);
+	_out.insert(_out.length(), "Z");
+	return _out;
 }

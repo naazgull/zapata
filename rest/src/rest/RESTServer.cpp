@@ -70,7 +70,7 @@ SOFTWARE.
 #include <vector>
 #include <zapata/rest/codes_rest.h>
 
-zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
+zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::json _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
 }
 
 zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt::RESTServer>(_ptr) {
@@ -79,7 +79,7 @@ zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer * _ptr) : std::shared_ptr<zpt:
 zpt::RESTServerPtr::~RESTServerPtr() {
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::JSONPtr _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 
@@ -127,8 +127,8 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::JSONPtr _options) : __name(_
 					zlog(string(dlerror()), zpt::error);
 				}
 				else {
-					void (*_populate)(zpt::EventEmitterPtr);
-					_populate = (void (*)(zpt::EventEmitterPtr)) dlsym(hndl, "restify");
+					void (*_populate)(zpt::ev::emitter);
+					_populate = (void (*)(zpt::ev::emitter)) dlsym(hndl, "restify");
 					_populate(this->__emitter);
 				}
 			}
@@ -140,7 +140,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::JSONPtr _options) : __name(_
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload, zpt::EventEmitterPtr _pool) -> zpt::JSONPtr {
+		this->__emitter->on(zpt::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
 			return zpt::undefined;
 		});
 
@@ -148,7 +148,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::JSONPtr _options) : __name(_
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/([^/]+)$"), [] (zpt::ev::Performative _performative, std::string _resource, zpt::JSONPtr _payload, zpt::EventEmitterPtr _pool) -> zpt::JSONPtr {
+		this->__emitter->on(zpt::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/(.+)$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
 			return zpt::undefined;
 		});
 	}
@@ -165,15 +165,15 @@ std::string zpt::RESTServer::name() {
 	return this->__name;
 }
 
-zpt::ZMQPollPtr zpt::RESTServer::poll() {
+zpt::poll zpt::RESTServer::poll() {
 	return this->__poll;
 }
 
-zpt::EventEmitterPtr zpt::RESTServer::emitter() {
+zpt::ev::emitter zpt::RESTServer::emitter() {
 	return this->__emitter;
 }
 
-zpt::JSONPtr zpt::RESTServer::options() {
+zpt::json zpt::RESTServer::options() {
 	return this->__options;
 }
 
@@ -193,8 +193,28 @@ void zpt::RESTServer::start() {
 							_ss->accept(& _fd);
 				
 							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
-							if (this->route_http(_cs)) {
-								_cs->close();
+							try {
+								if (this->route_http(_cs)) {
+									_cs->close();
+								}
+							}
+							catch(zpt::AssertionException& _e) {
+								zpt::http::rep _reply = zpt::rest::zmq2http(
+									zpt::json(
+										{
+											"performative", zpt::ev::Reply,
+											"status", 500,
+											"headers", zpt::ev::init_reply(),
+											"payload", {
+												"text", _e.what(),
+												"assertion_failed", _e.description(),
+												"code", _e.code()
+												}
+										}
+									)
+								);
+								(*_cs) << _reply << flush;
+								_cs->close();								
 							}
 						}
 					}
@@ -245,10 +265,15 @@ void zpt::RESTServer::start() {
 }
 
 bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
-	zpt::HTTPRep _reply;
+	zpt::http::rep _reply;
 	_reply->status((zpt::HTTPStatus) 200);
-	zpt::HTTPReq _request;
-	(*_cs) >> _request;
+	zpt::http::req _request;
+	try {
+		(*_cs) >> _request;
+	}
+	catch(zpt::SyntaxErrorException& _e) {
+		assertz(false, "error parsing HTTP data", 500, 0);
+	}
 
 	bool _return = false;
 	bool _api_found = false;
@@ -261,7 +286,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 					_endpoint_found = true;
 					_api_found = true;
 					short _type = zpt::str2type(_api.second["type"]->str());
-					zpt::JSONPtr _in = zpt::rest::http2zmq(_request);
+					zpt::json _in = zpt::rest::http2zmq(_request);
 					switch(_type) {
 						case ZMQ_REP :
 						case ZMQ_REQ :
@@ -275,18 +300,18 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 						}
 						case ZMQ_PUB_SUB : {
 							std::string _connect = _api.second["connect"]->str();
-							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+							zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
 							_client->send(_in);
-							zpt::HTTPRep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_prefix));
+							zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_prefix));
 							(*_cs) << _reply << flush;
 							_return = true;
 							_client->unbind();
 							break;
 						}
 						case ZMQ_PUSH : {
-							zpt::ZMQPtr _client = this->__poll->bind(ZMQ_PUSH, _api.second["connect"]->str());
+							zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _api.second["connect"]->str());
 							_client->send(_in);
-							zpt::HTTPRep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_prefix));
+							zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_prefix));
 							(*_cs) << _reply << flush;
 							_return = true;
 							_client->unbind();
@@ -303,7 +328,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	}
 				
 	if (!_api_found) {
-		zpt::HTTPRep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_prefix));
+		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_prefix));
 		(*_cs) << _reply << flush;
 		_return = true;
 	}
@@ -314,7 +339,7 @@ bool zpt::RESTServer::route_mqtt(std::iostream& _cs) {
 	return true;
 }
 
-zpt::RESTClientPtr::RESTClientPtr(zpt::JSONPtr _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
+zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
 }
 
 zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt::RESTClient>(_ptr) {
@@ -323,32 +348,32 @@ zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt:
 zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
-zpt::RESTClient::RESTClient(zpt::JSONPtr _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTClient::RESTClient(zpt::json _options) : __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 }
 
 zpt::RESTClient::~RESTClient(){
 }
 
-zpt::ZMQPollPtr zpt::RESTClient::poll() {
+zpt::poll zpt::RESTClient::poll() {
 	return this->__poll;
 }
 
-zpt::EventEmitterPtr zpt::RESTClient::emitter() {
+zpt::ev::emitter zpt::RESTClient::emitter() {
 	return this->__emitter;
 }
 
-zpt::JSONPtr zpt::RESTClient::options() {
+zpt::json zpt::RESTClient::options() {
 	return this->__options;
 }
 
-zpt::ZMQPtr zpt::RESTClient::bind(std::string _object_path) {
-	zpt::JSONPtr _zmq_cnf = this->__options->getPath(_object_path);
+zpt::socket zpt::RESTClient::bind(std::string _object_path) {
+	zpt::json _zmq_cnf = this->__options->getPath(_object_path);
 	short _type = zpt::str2type(_zmq_cnf["type"]->str());
 	return this->bind(_type, _zmq_cnf["bind"]->str());
 }
 
-zpt::ZMQPtr zpt::RESTClient::bind(short _type, std::string _connection) {
+zpt::socket zpt::RESTClient::bind(short _type, std::string _connection) {
 	return this->__poll->bind(_type, _connection);
 }
 
@@ -361,7 +386,7 @@ void zpt::RESTClient::start() {
 	}
 }
 
-void zpt::conf::init(std::string _name, zpt::JSONPtr _options) {
+void zpt::conf::init(std::string _name, zpt::json _options) {
 	zpt::conf::dirs(_options);
 	zpt::conf::env(_options);
 	if (_options["log"]->ok()) {
@@ -380,7 +405,7 @@ void zpt::conf::init(std::string _name, zpt::JSONPtr _options) {
 	zlog(std::string("starting RESTful server instance: ") + _name, zpt::alert);
 }
 
-void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
+void zpt::conf::dirs(std::string _dir, zpt::json _options) {
 	std::vector<std::string> _files;
 	if (zpt::is_dir(_dir)) {
 		zpt::glob(_dir, _files, "(.*)\\.conf");
@@ -389,7 +414,7 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 		_files.push_back(_dir);
 	}
 	for (auto _file : _files) {
-		zpt::JSONPtr _conf;
+		zpt::json _conf;
 		std::ifstream _ifs;
 		_ifs.open(_file.data());
 		try {
@@ -407,21 +432,21 @@ void zpt::conf::dirs(std::string _dir, zpt::JSONPtr _options) {
 				_options << _new_field.first << _new_field.second;
 			}
 			else {
-				zpt::JSONPtr _merged = _options[_new_field.first] + _new_field.second;
+				zpt::json _merged = _options[_new_field.first] + _new_field.second;
 				_options << _new_field.first << _merged;
 			}
 		}
 	}
 }
 
-void zpt::conf::dirs(zpt::JSONPtr _options) {
+void zpt::conf::dirs(zpt::json _options) {
 	// zpt::conf::dirs("/etc/zapata/conf.d", _options);
-	zpt::JSONPtr _traversable = _options->clone();
-	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "(.*)" )),
+	zpt::json _traversable = _options->clone();
+	_traversable->inspect(zpt::json({ "$regexp", "(.*)" }),
 		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 			if (_key == "$include") {
-				zpt::JSONPtr _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
-				zpt::JSONPtr _to_include = _options->getPath(_object_path);
+				zpt::json _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+				zpt::json _to_include = _options->getPath(_object_path);
 				if (_to_include->type() == zpt::JSArray) {
 					for (auto _file : _to_include->arr()) {
 						zpt::conf::dirs((std::string) _file, _object);
@@ -436,9 +461,9 @@ void zpt::conf::dirs(zpt::JSONPtr _options) {
 	);
 }
 
-void zpt::conf::env(zpt::JSONPtr _options) {
-	zpt::JSONPtr _traversable = _options->clone();
-	_traversable->inspect(zpt::mkptr(JSON( "$regexp" << "\\$\\{([^}]+)\\}" )), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+void zpt::conf::env(zpt::json _options) {
+	zpt::json _traversable = _options->clone();
+	_traversable->inspect(zpt::json({ "$regexp", "\\$\\{([^}]+)\\}" }), [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 		std::string _var = _options->getPath(_object_path);
 		_var = _var.substr(2, _var.length() - 3);
 		const char * _valuec = std::getenv(_var.data());
@@ -449,17 +474,17 @@ void zpt::conf::env(zpt::JSONPtr _options) {
 	});
 }
 
-zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
-	zpt::JSONPtr _return = zpt::mkobj();
+zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
+	zpt::json _return = zpt::mkobj();
 	_return <<
 		"channel" << _request->url() <<
 		"performative" << _request->method() <<
 		"resource" << _request->url();
 	
-	zpt::JSONPtr _payload;
+	zpt::json _payload;
 	if (_request->body() != "") {
 		if (_request->header("Content-Type") == "application/x-www-form-urlencoded") {
-			_payload = zpt::rest::http::unserialize(_request->body());
+			_payload = zpt::rest::http::deserialize(_request->body());
 		}
 		else if (_request->header("Content-Type") == "application/json") {
 			try {
@@ -469,7 +494,7 @@ zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
 			}
 		}
 		else {
-			_payload = zpt::mkptr(JSON( "text" << _request->body() ));
+			_payload = zpt::json({ "text", _request->body() });
 		}
 	}
 	else {
@@ -480,7 +505,7 @@ zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
 	}
 	_return << "payload" << _payload;
 
-	zpt::JSONPtr _headers = zpt::mkobj();
+	zpt::json _headers = zpt::mkobj();
 	for (auto _header : _request->headers()) {
 		_headers << _header.first << _header.second;
 	}
@@ -491,8 +516,8 @@ zpt::JSONPtr zpt::rest::http2zmq(zpt::HTTPReq _request) {
 	return _return;
 }
 
-zpt::HTTPRep zpt::rest::zmq2http(zpt::JSONPtr _out) {
-	zpt::HTTPRep _return;
+zpt::http::rep zpt::rest::zmq2http(zpt::json _out) {
+	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	
 	_out["headers"] = zpt::ev::init_reply() + _out["headers"];
@@ -510,8 +535,8 @@ zpt::HTTPRep zpt::rest::zmq2http(zpt::JSONPtr _out) {
 	return _return;
 }
 
-zpt::JSONPtr zpt::rest::http::unserialize(std::string _body) {
-	zpt::JSONPtr _return = zpt::mkobj();
+zpt::json zpt::rest::http::deserialize(std::string _body) {
+	zpt::json _return = zpt::mkobj();
 	std::string _name;
 	std::string _collected;
 	for (const auto& _c : _body) {
@@ -538,7 +563,24 @@ zpt::JSONPtr zpt::rest::http::unserialize(std::string _body) {
 	return _return;
 }
 
-zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::JSONPtr _options, zpt::EventEmitterPtr _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
+zpt::json zpt::rest::authorization::deserialize(std::string _token) {
+	return zpt::rest::cookies::deserialize(_token);
+}
+
+std::string zpt::rest::authorization::extract(zpt::json _envelope) {
+	if (_envelope[ZPT_HEADERS]["Authorization"]->ok()) {
+		return std::string(zpt::split(_envelope[ZPT_HEADERS]["Authorization"], " ")[1]);
+	}
+	if (_envelope[ZPT_HEADERS]["Cookie"]->ok()) {
+		return std::string(zpt::split(_envelope[ZPT_HEADERS]["Cookie"], ";")[0]);
+	}
+	if (_envelope[ZPT_PAYLOAD]["access_token"]->ok()) {
+		return std::string(_envelope[ZPT_PAYLOAD]["access_token"]);
+	}
+	return zpt::undefined;
+}
+
+zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
 	if (_connection.find("://*") != string::npos) {
 		this->__socket->bind(_connection.data());
@@ -577,17 +619,17 @@ bool zpt::ZMQAssyncReq::once() {
 	return true;
 }
 
-zpt::JSONPtr zpt::ZMQAssyncReq::send(zpt::JSONPtr _envelope) {
+zpt::json zpt::ZMQAssyncReq::send(zpt::json _envelope) {
 	zpt::ZMQ::send(_envelope);
 	return zpt::undefined;
 }
 
-zpt::JSONPtr zpt::ZMQAssyncReq::recv() {
-	zpt::JSONPtr _envelope = zpt::ZMQ::recv();
+zpt::json zpt::ZMQAssyncReq::recv() {
+	zpt::json _envelope = zpt::ZMQ::recv();
 	if (!_envelope["status"]->ok() || ((int) _envelope["status"]) < 100) {
 		_envelope << "status" << 501;
 	}
-	zpt::HTTPRep _reply = zpt::rest::zmq2http(_envelope);
+	zpt::http::rep _reply = zpt::rest::zmq2http(_envelope);
 	(* this->__relayed_socket) << _reply << flush;
 	return zpt::undefined;
 }
@@ -596,7 +638,7 @@ void zpt::ZMQAssyncReq::relay_for(zpt::socketstream_ptr _socket) {
 	this->__relayed_socket = _socket;
 }
 
-void zpt::ZMQAssyncReq::listen(zpt::ZMQPollPtr _poll) {
+void zpt::ZMQAssyncReq::listen(zpt::poll _poll) {
 	_poll->poll(this->self());
 }
 

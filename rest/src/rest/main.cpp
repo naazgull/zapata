@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 			return -1;
 		}
 
-		zpt::JSONPtr _ptr;
+		zpt::json _ptr;
 		{
 			ifstream _in;
 			_in.open(_conf_file);
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		zpt::JSONPtr _to_spawn = zpt::mkobj();
+		zpt::json _to_spawn = zpt::mkobj();
 		for (auto _spawn : _ptr->obj()) {
 			if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
 				continue;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 		
 		size_t _spawned = 0;
 		std::string _name;
-		zpt::JSONPtr _options;
+		zpt::json _options;
 		for (auto _spawn : _to_spawn->obj()) {
 			if (_spawned == _to_spawn->obj()->size() - 1) {
 				_name.assign(_spawn.first.data());
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 		}
 		_name += std::string("-") + std::to_string(_i + 1);
 		zpt::conf::init(_name, _options);
-		zpt::RESTServerPtr _server(_name, _options);
+		zpt::rest::server _server(_name, _options);
 		_server->start();
 	}
 	catch (zpt::AssertionException& _e) {

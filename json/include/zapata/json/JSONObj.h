@@ -41,6 +41,7 @@ SOFTWARE.
 #include <sstream>
 #include <cmath>
 #include <sys/time.h>
+#include <chrono>
 #include <zapata/json/config.h>
 #include <zapata/base/assert.h>
 #include <zapata/text/convert.h>
@@ -94,7 +95,7 @@ namespace zpt {
 		/**
 		 * \brief Creates a new JSONPtr instance, pointing to the *target* object.
 		 */
-		JSONPtr(std::initializer_list<JSONElementT> _init);
+		JSONPtr(std::initializer_list<JSONElementT> _list);
 		/**
 		 * \brief Destroys the current JSONPtr instance. It will only free the pointed object if there are no more *shared_ptr* objects pointing to it.
 		 */
@@ -1214,6 +1215,7 @@ namespace zpt {
 		JSONObj& operator<<(string _in);
 		JSONObj& operator<<(const char* _in);
 		JSONObj& operator<<(JSONElementT& _in);
+		JSONObj& operator<<(std::initializer_list<JSONElementT> _list);
 		template <typename T>
 		JSONObj& operator<<(T _in) {
 			(* this)->push(new JSONElementT(_in));
@@ -1279,6 +1281,7 @@ namespace zpt {
 			return *(this->get()) >= _rhs;
 		};
 		JSONArr& operator<<(JSONElementT& _in);
+		JSONArr& operator<<(std::initializer_list<JSONElementT> _list);
 		template <typename T>
 		JSONArr& operator<<(T _in) {
 			(* this)->push(new JSONElementT(_in));
@@ -1349,7 +1352,7 @@ namespace zpt {
 		JSONElementT();
 		JSONElementT(JSONElementT& _element);
 		JSONElementT(std::initializer_list<JSONElementT> _init);
-		JSONElementT(JSONPtr& _value);
+		JSONElementT(JSONPtr _value);
 		JSONElementT(JSONObj& _value);
 		JSONElementT(JSONArr& _value);
 		JSONElementT(string _value);
@@ -1401,6 +1404,7 @@ namespace zpt {
 		JSONElementT& operator<<(const char* _in);
 		JSONElementT& operator<<(string _in);
 		JSONElementT& operator<<(JSONElementT*);
+		JSONElementT& operator<<(std::initializer_list<JSONElementT> _list);
 		template <typename T>
 		JSONElementT& operator<<(T _in){
 			assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
@@ -1525,85 +1529,62 @@ namespace zpt {
 		void init();
 	};
 
-	class json : public std::string {
+	zpt::timestamp_t timestamp(std::string _json_date = "");
+
+	class json : public zpt::JSONPtr {
 	public: 
-		inline json() : std::string() {
+		inline json() : zpt::JSONPtr() {
 		};
-		inline json(std::string _rhs) : std::string(_rhs) {
+		inline json(zpt::JSONPtr _target) : zpt::JSONPtr(_target) {
 		};
-		inline json(const char * _rhs) : std::string(_rhs) {
+		inline json(JSONElementT* _target) : zpt::JSONPtr(_target) {
 		};
-		inline json(zpt::pretty _rhs) : std::string(_rhs.data()) {
+		inline json(std::initializer_list<JSONElementT> _init) : zpt::JSONPtr(_init) {
+		};
+		inline json(std::string _rhs) {
+			std::istringstream _iss;
+			_iss.str(_rhs);
+			_iss >> (*this);
+		};
+		inline json(const char * _rhs) {	
+			std::istringstream _iss;
+			_iss.str(std::string(_rhs));
+			_iss >> (*this);
+		};
+		inline json(zpt::pretty _rhs) {
+			std::istringstream _iss;
+			_iss.str(_rhs);
+			_iss >> (*this);
 		};
 		template <typename T>
-		inline json(T _rhs) : std::string() {
-			_rhs->stringify(* this);
-		};
-		friend ostream& operator<<(ostream& _out, zpt::json& _in) {
-			_out << string(_in.data());
-			return _out;
-		};
-		friend istream& operator>>(istream& _in, zpt::json& _out) {
-			_out.clear();
-			char _c = '\0';
-
-			size_t _n_seps = 0;
-			bool _commas = false;
-			bool _escaped = false;
-			do {
-				_in >> _c;
-				if (_c == '\0') {
-					break;
-				}
-
-				if (!_escaped) {
-					switch (_c) {
-						case '"' : {
-							_commas = !_commas;
-							break;
-						}
-						case '\\' : {
-							_escaped = true;
-							break;
-						}
-						case '{':
-						case '[' : {
-							if (!_commas) {
-								_n_seps++;
-							}
-							break;
-						}
-						case '}':
-						case ']' : {
-							if (!_commas) {
-								_n_seps--;
-							}
-							break;
-						}					
-					}
-				}
-				else {
-					_escaped = false;
-				}
-				_out.push_back(_c);
-				_c = '\0';
-			}
-			while(_in.good() && _n_seps != 0);
-
-			if (_n_seps != 0) {
-				_out.clear();
-			}
-			return _in;
-		};
-		inline operator zpt::JSONPtr() {
-			zpt::JSONPtr _result;
-			std::istringstream _iss;
-			_iss.str(* this);
-			_iss >> _result;
-			return _result;
-		};
-
+		zpt::json operator[](T _idx);
+		
 		static void stringify(std::string& _str);
+
+		inline static zpt::json object() {
+			zpt::JSONObj _empty;
+			return zpt::json(new zpt::JSONElementT(_empty));
+		};
+		inline static zpt::json array() {
+			zpt::JSONArr _empty;
+			return zpt::json(new zpt::JSONElementT(_empty));
+		};
+		template <typename T>
+		static zpt::json text(T _e);
+		template <typename T>
+		static zpt::json unsign(T _e);
+		template <typename T>
+		static zpt::json integer(T _e);
+		template <typename T>
+		static zpt::json floating(T _e);
+		template <typename T>
+		static zpt::json boolean(T _e);
+		inline static zpt::json date(std::string _e) {
+			zpt::timestamp_t _v(zpt::timestamp(_e));
+			return zpt::json(new zpt::JSONElementT(_v));
+		};
+		template <typename T>
+		inline static zpt::json date(T _e);
 	};
 
 	template <typename T>	
@@ -1612,17 +1593,20 @@ namespace zpt {
 	}
 
 	template <typename T>	
-	zpt::JSONPtr mkptr(T _v) {
+	zpt::json mkptr(T _v) {
 		T _e(_v);
-		return zpt::JSONPtr(new zpt::JSONElementT(_e));
+		return zpt::json(new zpt::JSONElementT(_e));
 	}
 
-	zpt::JSONPtr mkobj();
-	zpt::JSONPtr mkarr();
+	zpt::json mkobj();
+	zpt::json mkarr();
 
-	zpt::JSONPtr get(std::string _path, zpt::JSONPtr _source);
+	zpt::json get(std::string _path, zpt::json _source);
 	template <typename T>
-	zpt::JSONPtr set(std::string _path, T _value, zpt::JSONPtr _target = zpt::undefined);
+	zpt::json set(std::string _path, T _value, zpt::json _target = zpt::undefined);
+
+	zpt::timestamp_t timestamp(zpt::json _json_date);
+	std::string timestamp(zpt::timestamp_t _timestamp);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -1669,8 +1653,42 @@ zpt::JSONPtr zpt::JSONPtr::operator+(T _rhs) {
 	return *(this->get()) + _rhs;
 };
 template <typename T>
-zpt::JSONPtr zpt::set(std::string _path, T _value, zpt::JSONPtr _target) {
-	zpt::JSONPtr _return;
+zpt::json zpt::json::operator[](T _idx) {
+	return zpt::json((*(this->get()))[_idx]);
+};
+template <typename T>
+zpt::json zpt::json::text(T _e){
+	std::string _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+ zpt::json zpt::json::integer(T _e){
+	long long int _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+ zpt::json zpt::json::unsign(T _e){
+	unsigned int _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+ zpt::json zpt::json::floating(T _e){
+	double _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+ zpt::json zpt::json::boolean(T _e){
+	bool _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+zpt::json date(T _e){
+	zpt::timestamp_t _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+zpt::json zpt::set(std::string _path, T _value, zpt::json _target) {
+	zpt::json _return;
 	if (_target->ok()) {
 		_return = _target;
 	}
@@ -1680,4 +1698,5 @@ zpt::JSONPtr zpt::set(std::string _path, T _value, zpt::JSONPtr _target) {
 	_return->setPath(_path, zpt::mkptr(_value));
 	return _return;
 }
+
 #endif

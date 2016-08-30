@@ -27,13 +27,13 @@ SOFTWARE.
 zpt::EventEmitter::EventEmitter() : __self( this ) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::JSONPtr _options) :  __options( _options), __self( this ) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self( this ) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
 }
 
-zpt::JSONPtr zpt::EventEmitter::options() {
+zpt::json zpt::EventEmitter::options() {
 	return this->__options;
 }
 
@@ -41,25 +41,25 @@ zpt::EventEmitterPtr zpt::EventEmitter::self() {
 	return this->__self;
 }
 
-void zpt::EventEmitter::add_kb(std::string _name, zpt::KBPtr _kb) {
+void zpt::EventEmitter::add_kb(std::string _name, zpt::kb _kb) {
 	auto _found = this->__kb.find(_name);
 	if (_found == this->__kb.end()) {
 		this->__kb.insert(make_pair(_name, _kb));
 	}
 }
 
-zpt::KBPtr zpt::EventEmitter::get_kb(std::string _name) {
+zpt::kb zpt::EventEmitter::get_kb(std::string _name) {
 	auto _found = this->__kb.find(_name);
 	if (_found == this->__kb.end()) {
-		return zpt::KBPtr(nullptr);
+		return zpt::kb(nullptr);
 	}
 	return _found->second;
 }
 
-zpt::JSONPtr zpt::split(std::string _to_split, std::string _separator) {
+zpt::json zpt::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zpt::JSONPtr _ret = zpt::mkarr();
+	zpt::json _ret = zpt::mkarr();
 	while(_iss.good()) {
 		getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
@@ -69,7 +69,7 @@ zpt::JSONPtr zpt::split(std::string _to_split, std::string _separator) {
 	return _ret;
 }
 
-std::string zpt::join(zpt::JSONPtr _to_join, std::string _separator) {
+std::string zpt::join(zpt::json _to_join, std::string _separator) {
 	assertz(_to_join->type() == zpt::JSArray, "JSON to join must be an array", 412, 0);
 	std::string _return;
 	for (auto _a : _to_join->arr()) {
@@ -82,9 +82,9 @@ std::string zpt::join(zpt::JSONPtr _to_join, std::string _separator) {
 }
 
 
-zpt::JSONPtr zpt::ev::split(std::string _url, zpt::JSONPtr _orphans) {
+zpt::json zpt::ev::split(std::string _url, zpt::json _orphans) {
 	zpt::JSONObj _ret;
-	zpt::JSONPtr _splited = zpt::split(_url, "/");
+	zpt::json _splited = zpt::split(_url, "/");
 
 	size_t _idx = 0;
 	for (auto _label : _orphans->arr()) {
@@ -98,7 +98,7 @@ zpt::JSONPtr zpt::ev::split(std::string _url, zpt::JSONPtr _orphans) {
 	return mkptr(_ret);
 }
 
-std::string zpt::ev::join(zpt::JSONPtr _info, size_t _orphans) {
+std::string zpt::ev::join(zpt::json _info, size_t _orphans) {
 	std::string _ret;
 	size_t _idx = 0;
 
@@ -113,7 +113,7 @@ std::string zpt::ev::join(zpt::JSONPtr _info, size_t _orphans) {
 	return _ret;
 }
 
-std::string zpt::ev::to_str(zpt::ev::Performative _performative) {
+std::string zpt::ev::to_str(zpt::ev::performative _performative) {
 	switch(_performative) {
 		case zpt::ev::Get : {
 			return "GET";
@@ -143,7 +143,7 @@ std::string zpt::ev::to_str(zpt::ev::Performative _performative) {
 	return "HEAD";
 }
 
-zpt::ev::Performative zpt::ev::from_str(std::string _performative) {
+zpt::ev::performative zpt::ev::from_str(std::string _performative) {
 	if (_performative == "GET") {
 		return zpt::ev::Get;
 	}
@@ -171,7 +171,7 @@ zpt::ev::Performative zpt::ev::from_str(std::string _performative) {
 	return zpt::ev::Head;
 }
 
-zpt::JSONPtr zpt::ev::init_request(std::string _cid) {
+zpt::json zpt::ev::init_request(std::string _cid) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -181,14 +181,16 @@ zpt::JSONPtr zpt::ev::init_request(std::string _cid) {
 	char _buffer_expires[80];
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 	
-	zpt::JSONPtr _return = zpt::mkptr(JSON(
-		"Accept" << "application/json" <<
-		"Accept-Charset" << "utf-8" <<
-		"Cache-Control" << "no-cache" <<
-		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires) <<
-		"User-Agent" << "zapata RESTful server"
-	));
+	zpt::json _return(
+		{
+			"Accept", "application/json",
+			"Accept-Charset", "utf-8",
+			"Cache-Control", "no-cache",
+			"Date", string(_buffer_date),
+			"Expires", string(_buffer_expires),
+			"User-Agent", "zapata RESTful server"
+		}
+	);
 	if (_cid != "") {
 		_return << "X-Cid" << _cid;
 	}
@@ -200,7 +202,7 @@ zpt::JSONPtr zpt::ev::init_request(std::string _cid) {
 	return _return;
 }
 
-zpt::JSONPtr zpt::ev::init_reply(std::string _uuid) {
+zpt::json zpt::ev::init_reply(std::string _uuid) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -211,13 +213,15 @@ zpt::JSONPtr zpt::ev::init_reply(std::string _uuid) {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	zpt::JSONPtr _return = zpt::mkptr(JSON(
-		"Server" << "zapata RESTful server" <<
-		"Cache-Control" << "max-age=3600" <<
-		"Vary" << "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag" <<
-		"Date" << string(_buffer_date) <<
-		"Expires" << string(_buffer_expires)
-	));
+	zpt::json _return(
+		{
+			"Server", "zapata RESTful server",
+			"Cache-Control", "max-age=3600",
+			"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
+			"Date", std::string(_buffer_date),
+			"Expires", std::string(_buffer_expires)
+		}
+	);
 	if (_uuid != "") {
 		_return << "X-Cid" << _uuid;
 	}

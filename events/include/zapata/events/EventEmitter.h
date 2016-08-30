@@ -45,50 +45,52 @@ namespace zpt {
 	typedef std::shared_ptr<zpt::EventEmitter> EventEmitterPtr;
 
 	namespace ev {
-		typedef std::function<zpt::JSONPtr (zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr, zpt::EventEmitterPtr)> Handler;
+		typedef std::function<zpt::json (zpt::ev::performative _method, std::string _resource, zpt::json, zpt::EventEmitterPtr)> Handler;
 		typedef Handler Callback;
 		typedef std::map< std::string, pair<regex_t*, vector< zpt::ev::Handler> > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::Handler > ReplyHandlerStack;
 
-		zpt::JSONPtr split(std::string _url, zpt::JSONPtr _orphans);
-		std::string join(zpt::JSONPtr _info, size_t _orphans);
-		std::string to_str(zpt::ev::Performative _performative);
-		zpt::ev::Performative from_str(std::string _performative);
+		zpt::json split(std::string _url, zpt::json _orphans);
+		std::string join(zpt::json _info, size_t _orphans);
+		std::string to_str(zpt::ev::performative _performative);
+		zpt::ev::performative from_str(std::string _performative);
 
-		zpt::JSONPtr init_request(std::string _cid = "");
-		zpt::JSONPtr init_reply(std::string _cid = "");
+		zpt::json init_request(std::string _cid = "");
+		zpt::json init_reply(std::string _cid = "");
+
+		typedef zpt::EventEmitterPtr emitter;
 	}
 
 	class EventEmitter {
 	public:
 		EventEmitter();
-		EventEmitter(zpt::JSONPtr _options);
+		EventEmitter(zpt::json _options);
 		virtual ~EventEmitter();
 		
-		virtual zpt::JSONPtr options();
+		virtual zpt::json options();
 		virtual zpt::EventEmitterPtr self();
 		
-		virtual std::string on(zpt::ev::Performative _method, string _regex,  zpt::ev::Handler _handler) = 0;
+		virtual std::string on(zpt::ev::performative _method, string _regex,  zpt::ev::Handler _handler) = 0;
 		virtual std::string on(std::string _regex,  zpt::ev::Handler _handlers[7]) = 0;
-		virtual std::string on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handlers) = 0;
-		virtual void off(zpt::ev::Performative _method, std::string _callback_id) = 0;
+		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers) = 0;
+		virtual void off(zpt::ev::performative _method, std::string _callback_id) = 0;
 		virtual void off(std::string _callback_id) = 0;
 		
-		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) = 0;
-		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) = 0;
+		virtual zpt::json trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) = 0;
+		virtual zpt::json route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) = 0;
 		
-		virtual void add_kb(std::string _name, zpt::KBPtr _kb) final;
-		virtual zpt::KBPtr get_kb(std::string _name) final;
+		virtual void add_kb(std::string _name, zpt::kb _kb) final;
+		virtual zpt::kb get_kb(std::string _name) final;
 
 	private:
-		zpt::JSONPtr __options;
+		zpt::json __options;
 		zpt::EventEmitterPtr __self;
-		std::map<std::string, zpt::KBPtr> __kb;
+		std::map<std::string, zpt::kb> __kb;
 
 	};
 
-	zpt::JSONPtr split(std::string _to_split, std::string _separator);
-	std::string join(zpt::JSONPtr _to_join, std::string _separator);
+	zpt::json split(std::string _to_split, std::string _separator);
+	std::string join(zpt::json _to_join, std::string _separator);
 
 }
 

@@ -27,13 +27,13 @@ SOFTWARE.
 zpt::redis::ClientPtr::ClientPtr(zpt::redis::Client * _target) : std::shared_ptr<zpt::redis::Client>(_target) {
 }
 
-zpt::redis::ClientPtr::ClientPtr(zpt::JSONPtr _options, std::string _conf_path) : std::shared_ptr<zpt::redis::Client>(new zpt::redis::Client(_options, _conf_path)) {
+zpt::redis::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : std::shared_ptr<zpt::redis::Client>(new zpt::redis::Client(_options, _conf_path)) {
 }
 
 zpt::redis::ClientPtr::~ClientPtr() {
 }
 
-zpt::redis::Client::Client(zpt::JSONPtr _options, std::string _conf_path) : __options( _options), __redis_conf(_options->getPath(_conf_path)), __conf_path(_conf_path) {
+zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __redis_conf(_options->getPath(_conf_path)), __conf_path(_conf_path) {
 	std::string _bind((std::string) this->__redis_conf["bind"]);
 	std::string _address(_bind.substr(0, _bind.find(":")));
 	uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
@@ -44,7 +44,7 @@ zpt::redis::Client::~Client() {
 	redisFree(this->__conn);
 }
 
-zpt::JSONPtr zpt::redis::Client::options() {
+zpt::json zpt::redis::Client::options() {
 	return this->__options;
 }
 
@@ -83,16 +83,18 @@ void zpt::redis::Client::reconnect() {
 	while(!_success && _retry != 10);
 }
 
-std::string zpt::redis::Client::insert(std::string _collection, std::string _id_prefix, zpt::JSONPtr _document) {	
+std::string zpt::redis::Client::insert(std::string _collection, std::string _id_prefix, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
-	_key.insert(0, "|");
+	_key.insert(0, "/");
 	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	_document << "id" << _uuid.string();
+	if (!_document["id"]->ok()) {
+		uuid _uuid;
+		_uuid.make(UUID_MAKE_V1);
+		_document << "id" << _uuid.string();
+	}
 	_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
 	_document << "href" << _document["_id"];
 
@@ -121,11 +123,11 @@ std::string zpt::redis::Client::insert(std::string _collection, std::string _id_
 	return _document["id"]->str();
 }
 
-int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSONPtr _document) {	
+int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
-	_key.insert(0, "|");
+	_key.insert(0, "/");
 	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
 	redisReply* _reply = nullptr;
@@ -153,15 +155,15 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
  	return 1;
  }
 
- int zpt::redis::Client::set(std::string _collection, std::string _url, zpt::JSONPtr _document) {	
+ int zpt::redis::Client::set(std::string _collection, std::string _url, zpt::json _document) {	
  	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
  	std::string _key(_collection);
- 	_key.insert(0, "|");
+ 	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
- 	zpt::JSONPtr _record = this->get(_collection, _url);
- 	zpt::JSONPtr _new_record = _record + _document;
+ 	zpt::json _record = this->get(_collection, _url);
+ 	zpt::json _new_record = _record + _document;
 
  	redisReply* _reply = nullptr;
  	bool _success = true;
@@ -188,15 +190,15 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
  	return 1;
  }
 
- int zpt::redis::Client::unset(std::string _collection, std::string _url, zpt::JSONPtr _document) {
+ int zpt::redis::Client::unset(std::string _collection, std::string _url, zpt::json _document) {
  	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
  	std::string _key(_collection);
- 	_key.insert(0, "|");
+ 	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
- 	zpt::JSONPtr _record = this->get(_collection, _url);
- 	zpt::JSONPtr _new_record = _record->clone();
+ 	zpt::json _record = this->get(_collection, _url);
+ 	zpt::json _new_record = _record->clone();
  	for (auto _attribute : _document->obj()) {
  		_new_record >> _attribute.first;
  	}
@@ -228,7 +230,7 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
 
  int zpt::redis::Client::remove(std::string _collection, std::string _url) {	
  	std::string _key(_collection);
- 	_key.insert(0, "|");
+ 	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
  	redisReply* _reply = nullptr;
@@ -256,12 +258,12 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
  	return 1;
  }
 
- zpt::JSONPtr zpt::redis::Client::get(std::string _collection, std::string _url) {	
+ zpt::json zpt::redis::Client::get(std::string _collection, std::string _url) {	
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
  	assertz(_url.length() != 0, "'_url' parameter must not be empty", 0, 0);
 
  	std::string _key(_collection);
- 	_key.insert(0, "|");
+ 	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
  	redisReply* _reply = nullptr;
@@ -311,7 +313,7 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
  		case REDIS_REPLY_STRING: {
  			std::string _data(_reply->str, _reply->len);
  			try {
- 				zpt::JSONPtr _return = (zpt::JSONPtr) zpt::json(_data);
+ 				zpt::json _return = (zpt::json) zpt::json(_data);
  				freeReplyObject(_reply);
  				return _return;
  			}
@@ -330,12 +332,12 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
  	return zpt::undefined;
  }
 
- zpt::JSONPtr zpt::redis::Client::query(std::string _collection, std::string _regexp) {
+ zpt::json zpt::redis::Client::query(std::string _collection, std::string _regexp) {
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
  	assertz(_regexp.length() != 0, "'_regexp' parameter must not be empty", 0, 0);
 
  	std::string _key(_collection);
- 	_key.insert(0, "|");
+ 	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
  	int _cursor = 0;
@@ -398,7 +400,7 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
 				_cursor = std::stoi(std::string(_reply->element[0]->str, _reply->element[0]->len));
 				for (size_t _i = 0; _i < _reply->element[1]->elements; _i += 2) {
 					std::string _json(_reply->element[1]->element[_i + 1]->str, _reply->element[1]->element[_i + 1]->len);
-					_return << (zpt::JSONPtr) zpt::json(_json);
+					_return << (zpt::json) zpt::json(_json);
 				}
 				freeReplyObject(_reply);
 				break;
@@ -413,7 +415,7 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
 	}
 	while (_cursor != 0);
 
-	return Json(
+	return zpt::json(
 		{
 			"size", _return->size(),
 			"elements", _return
@@ -421,11 +423,11 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::JSO
 	);
 }
 
-zpt::JSONPtr zpt::redis::Client::all(std::string _collection) {
+zpt::json zpt::redis::Client::all(std::string _collection) {
 	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
 
 	std::string _key(_collection);
-	_key.insert(0, "|");
+	_key.insert(0, "/");
 	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
 	redisReply* _reply = nullptr;
@@ -477,10 +479,10 @@ zpt::JSONPtr zpt::redis::Client::all(std::string _collection) {
 			zpt::JSONArr _return;
 			for (size_t _i = 0; _i < _reply->elements; _i += 2) {
 				std::string _json(_reply->element[_i + 1]->str, _reply->element[_i + 1]->len);
-				_return << (zpt::JSONPtr) zpt::json(_json);
+				_return << (zpt::json) zpt::json(_json);
 			}
 			freeReplyObject(_reply);
-			return Json(
+			return zpt::json(
 				{
 					"size", _return->size(),
 					"elements", _return

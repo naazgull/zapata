@@ -142,7 +142,7 @@ string	d_chunked;
 	}
 	([^=& ]+) {
 		return 263;
-	}
+        }
 }
 
 <headers> {

@@ -296,7 +296,7 @@ void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out,
 	}
 }
 
-void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
+void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
 	if (!_in->ok()) {
 		return;
 	}
@@ -479,7 +479,7 @@ void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, 
 					}
 					else if (options == "j") {
 						istringstream iss(expression);
-						zpt::JSONPtr _json;
+						zpt::json _json;
 						try {
 							iss >> _json;
 							if (_json->type() == zpt::JSObject) {
@@ -496,9 +496,7 @@ void zpt::mongodb::get_query(zpt::JSONPtr _in, mongo::BSONObjBuilder&  _queryr, 
 						catch(std::exception& _e) {}
 					}
 					else if (options == "d") {
-						zpt::JSONPtr _json = zpt::mkptr(JSON(
-							"time" << (zpt::timestamp_t) zpt::mkptr(expression)
-						));
+						zpt::json _json({ "time", zpt::timestamp(expression) });
 						mongo::BSONObjBuilder _mongo_json;
 						zpt::mongodb::tomongo(_json, _mongo_json);
 						_queryr.append(key, BSON(comp << _mongo_json.obj()["time"]));

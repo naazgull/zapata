@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/addons/Addons.h>
 #include <dlfcn.h>
 
-zpt::Addons::Addons(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
+zpt::Addons::Addons(zpt::json _options) : zpt::EventEmitter( _options ) {
 	if (_options["addons"]["modules"]->ok()) {
 		for (auto _i : _options["addons"]["modules"]->obj()) {
 			string _key = _i.first;
@@ -41,8 +41,8 @@ zpt::Addons::Addons(zpt::JSONPtr _options) : zpt::EventEmitter( _options ) {
 					zlog(string(dlerror()), zpt::error);
 				}
 				else {
-					void (*_populate)(zpt::EventEmitterPtr);
-					_populate = (void (*)(zpt::EventEmitterPtr)) dlsym(hndl, "plug");
+					void (*_populate)(zpt::ev::emitter);
+					_populate = (void (*)(zpt::ev::emitter)) dlsym(hndl, "plug");
 					_populate(this->self());
 				}
 			}
@@ -61,7 +61,7 @@ std::string zpt::Addons::on(string _regex, zpt::ev::Handler _handler) {
 	return this->on(zpt::ev::Post, _regex, _handler);
 }
 
-std::string zpt::Addons::on(zpt::ev::Performative _event, string _regex,  zpt::ev::Handler _handler) {
+std::string zpt::Addons::on(zpt::ev::performative _event, string _regex,  zpt::ev::Handler _handler) {
 	regex_t * _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -101,7 +101,7 @@ std::string zpt::Addons::on(string _regex,  zpt::ev::Handler _handler_set[7]) {
 	return _uuid.string();
 }
 
-std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handler_set) {
+std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handler_set) {
 	regex_t* _url_pattern = new regex_t();
 	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
 	}
@@ -121,7 +121,7 @@ std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::Performative, zpt
 	return _uuid.string();
 }
 
-void zpt::Addons::off(zpt::ev::Performative _event, std::string _callback_id) {
+void zpt::Addons::off(zpt::ev::performative _event, std::string _callback_id) {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
 		_found->second.second[_event] = nullptr;
@@ -135,35 +135,37 @@ void zpt::Addons::off(std::string _callback_id) {
 	}
 }
 
-zpt::JSONPtr zpt::Addons::trigger(std::string _regex, zpt::JSONPtr _payload) {
+zpt::json zpt::Addons::trigger(std::string _regex, zpt::json _payload) {
 	return this->trigger(zpt::ev::Post, _regex, _payload);
 }
 
-zpt::JSONPtr zpt::Addons::trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) {
-	zpt::JSONPtr _return = zpt::mkarr();
+zpt::json zpt::Addons::trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) {
+	zpt::json _return = zpt::mkarr();
 
 	for (auto _i : this->__resources) {
 		if (regexec(_i.second.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {
 			try {
-				zpt::JSONPtr _result = _i.second.second[_method](_method, _resource, _payload, this->self());
+				zpt::json _result = _i.second.second[_method](_method, _resource, _payload, this->self());
 				if (_result->ok()) {
 					_return << _result;
 				}
 			}
 			catch (zpt::AssertionException& _e) {
-				return zpt::mkptr(JSON(
-					"status" << _e.status()
-					<< "error" <<  true
-					<< "assertion_failed" << _e.description()
-					<< "message" << _e.what()
-					<< "code" << _e.code()
-				));
+				return zpt::json(
+					{
+						"status", _e.status(),
+						"error",  true,
+						"assertion_failed", _e.description(),
+						"message", _e.what(),
+						"code", _e.code()
+					}
+				);
 			}
 		}
 	}
 	return _return;
 }
 
-zpt::JSONPtr zpt::Addons::route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload) {
+zpt::json zpt::Addons::route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) {
 	return zpt::undefined;
 }

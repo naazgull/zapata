@@ -101,19 +101,19 @@ namespace zpt {
 
 	class RESTEmitter : public zpt::EventEmitter {
 	public:
-		RESTEmitter(zpt::JSONPtr _options);
+		RESTEmitter(zpt::json _options);
 		virtual ~RESTEmitter();
 
-		virtual std::string on(zpt::ev::Performative _method, std::string _regex,  zpt::ev::Handler _handler);
+		virtual std::string on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler);
 		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
-		virtual std::string on(string _regex,  std::map< zpt::ev::Performative, zpt::ev::Handler > _handlers);
-		virtual void off(zpt::ev::Performative _method, std::string _callback_id);
+		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers);
+		virtual void off(zpt::ev::performative _method, std::string _callback_id);
 		virtual void off(std::string _callback_id);
 
-		virtual zpt::JSONPtr trigger(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
-		virtual zpt::JSONPtr route(zpt::ev::Performative _method, std::string _resource, zpt::JSONPtr _payload);
+		virtual zpt::json trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload);
+		virtual zpt::json route(zpt::ev::performative _method, std::string _resource, zpt::json _payload);
 
-		virtual void poll(zpt::ZMQPollPtr _poll);
+		virtual void poll(zpt::poll _poll);
 		
 	private:
 		zpt::ev::Handler __default_get;
@@ -126,20 +126,20 @@ namespace zpt {
 		zpt::ev::Handler __default_assync_reply;
 		zpt::ev::HandlerStack __resources;
 		zpt::ev::ReplyHandlerStack __replies;
-		zpt::ZMQPollPtr __poll;
+		zpt::poll __poll;
 
 	};
 
 	namespace rest {
-		zpt::JSONPtr not_found(std::string _resource);
-		zpt::JSONPtr accepted(std::string _resource);
-		zpt::JSONPtr no_content(std::string _resource);
-		zpt::JSONPtr temporary_redirect(std::string _resource, std::string _target_resource);
-		zpt::JSONPtr see_other(std::string _resource, std::string _target_resource);
+		zpt::json not_found(std::string _resource);
+		zpt::json accepted(std::string _resource);
+		zpt::json no_content(std::string _resource);
+		zpt::json temporary_redirect(std::string _resource, std::string _target_resource);
+		zpt::json see_other(std::string _resource, std::string _target_resource);
 
 		namespace cookies {
-			zpt::JSONPtr unserialize(std::string _cookie_header);
-			std::string serialize(zpt::JSONPtr _credentials);
+			zpt::json deserialize(std::string _cookie_header);
+			std::string serialize(zpt::json _credentials);
 		}
 	}
 
