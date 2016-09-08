@@ -4,7 +4,7 @@
 ## Users collection
 
 ```
-/api/{api-version}/users
+/{api-version}/users
 
 ```
 

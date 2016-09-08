@@ -97,8 +97,8 @@ int main(int argc, char* argv[]) {
 		zpt::rest::client _api(_ptr);
 		size_t _max = 10100;
 		size_t * _n = new size_t();
-		_api->emitter()->on(zpt::ev::Reply, "/api/0.9/users",
-			[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+		_api->emitter()->on(zpt::ev::Reply, "/0.9/users",
+			[ _n, _max ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 				(* _n)++;
 				zlog(std::to_string(* _n), zpt::debug);
 				if ((* _n) == (_max - 100)) {
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 		std::thread _sender(
 			[ & ] () -> void {
 				for (size_t _k = 0; _k != _max; _k++) {
-					_client->send(zpt::ev::Get, "/api/0.9/users", _message);
+					_client->send(zpt::ev::Get, "/0.9/users", _message);
 				}
 				if (_ptr["zmq"]["type"]->str() == "req") {
 					cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;

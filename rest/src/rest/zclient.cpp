@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 			}
 			case ZMQ_PULL: {
 				_api->emitter()->on(zpt::ev::Reply, _url,
-					[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+					[ _verbose ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 						if (_verbose) {
 							zlog(zpt::pretty(_envelope), zpt::info);
 						}
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 			}			    
 			case ZMQ_SUB: {
 				_api->emitter()->on(zpt::ev::Reply, _url,
-					[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+					[ _verbose ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 						if (_verbose) {
 							zlog(zpt::pretty(_envelope), zpt::info);
 						}

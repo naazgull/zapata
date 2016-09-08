@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include <zapata/events/EventEmitter.h>
 
+#define ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
+
 zpt::EventEmitter::EventEmitter() : __self( this ) {
 }
 
@@ -226,4 +228,68 @@ zpt::json zpt::ev::init_reply(std::string _uuid) {
 		_return << "X-Cid" << _uuid;
 	}
 	return _return;
+}
+
+zpt::EventListener::EventListener(std::string _regex) : __regex(_regex) {
+}
+
+zpt::EventListener::~EventListener() {
+}
+
+std::string zpt::EventListener::regex() {
+	return this->__regex;
+}
+
+zpt::json zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	if (_envelope["headers"]["Origin"]->ok()) {
+		return zpt::json(
+			{
+				"status", 413,
+				"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
+			}
+		);
+	}
+	string _origin = _envelope["headers"]["Origin"];
+	return zpt::json(
+		{
+			"status", 200,
+			"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
+					{
+						"Access-Control-Allow-Origin", _envelope["headers"]["Origin"],
+						"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
+						"Access-Control-Allow-Headers", ACCESS_CONTROL_HEADERS,
+						"Access-Control-Expose-Headers", ACCESS_CONTROL_HEADERS,
+						"Access-Control-Max-Age", "1728000"
+					}
+				)
+			)
+		});
+}
+
+zpt::json zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	assertz(false, "Performative is not accepted for the given resource", 405, 0);
+}
+
+zpt::json zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+	return zpt::undefined;
 }

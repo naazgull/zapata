@@ -132,6 +132,10 @@ zpt::HTTPReq::HTTPReq(HTTPReqT* _target) : shared_ptr<HTTPReqT>(_target) {
 zpt::HTTPReq::~HTTPReq(){
 }
 
+zpt::HTTPReq::operator std::string() {
+	return (*this)->to_string();
+}
+
 void zpt::HTTPReq::parse(istream& _in){
 	zpt::HTTPParser _p;
 	_p.switchRoots(* this);

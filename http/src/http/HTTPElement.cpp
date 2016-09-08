@@ -216,6 +216,10 @@ void zpt::HTTPObj::header(string _name, string _value) {
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
+zpt::HTTPObj::operator std::string() {
+	return this->to_string();
+}
+
 std::string zpt::HTTPObj::to_string() {
 	std::string _return;
 	this->stringify(_return);

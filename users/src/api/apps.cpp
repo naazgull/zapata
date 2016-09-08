@@ -70,7 +70,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	/***
 	    ## Applications collection
 	    ```
-	    /api/{api-version}/apps
+	    /{api-version}/apps
 	    ```
 	    ### Description
 	    The _Applications_ collections holds the set of _Application_ documents for the configured **MongoDB** database and collection. 
@@ -80,11 +80,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	    - _POST_
 	    - _HEAD_
 	***/ 
-	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps$"),
+	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps$"),
 		{
 			{
 				zpt::ev::Get,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
 					if (!_list->ok()) {
@@ -104,7 +104,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Post,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
 						_envelope[ZPT_PAYLOAD]->ok() &&
 						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
@@ -133,7 +133,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Head,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
 					if (!_list->ok()) {
@@ -156,11 +156,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/api/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/(.+)$"),
+	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/(.+)$"),
 		{
 			{
 				zpt::ev::Get,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
@@ -180,7 +180,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Put,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
 						_envelope[ZPT_PAYLOAD]->ok() &&
 						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
@@ -202,7 +202,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Delete,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->remove("apps", _resource);
 					return zpt::json(
@@ -217,7 +217,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Head,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
@@ -239,7 +239,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			},
 			{
 				zpt::ev::Patch,
-				[ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->set("apps", _resource, _envelope[ZPT_PAYLOAD]);
 					return zpt::json(

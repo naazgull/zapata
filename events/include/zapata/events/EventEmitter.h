@@ -40,12 +40,14 @@ using namespace __gnu_cxx;
 namespace zpt {
 
 	class EventEmitter;
+	class EventListener;
 
 	typedef std::weak_ptr<zpt::EventEmitter> EventEmitterWPtr;
 	typedef std::shared_ptr<zpt::EventEmitter> EventEmitterPtr;
+	typedef std::shared_ptr<zpt::EventListener> EventListenerPtr;
 
 	namespace ev {
-		typedef std::function<zpt::json (zpt::ev::performative _method, std::string _resource, zpt::json, zpt::EventEmitterPtr)> Handler;
+		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> Handler;
 		typedef Handler Callback;
 		typedef std::map< std::string, pair<regex_t*, vector< zpt::ev::Handler> > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::Handler > ReplyHandlerStack;
@@ -59,6 +61,7 @@ namespace zpt {
 		zpt::json init_reply(std::string _cid = "");
 
 		typedef zpt::EventEmitterPtr emitter;
+		typedef zpt::EventListenerPtr listener;
 	}
 
 	class EventEmitter {
@@ -73,6 +76,7 @@ namespace zpt {
 		virtual std::string on(zpt::ev::performative _method, string _regex,  zpt::ev::Handler _handler) = 0;
 		virtual std::string on(std::string _regex,  zpt::ev::Handler _handlers[7]) = 0;
 		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers) = 0;
+		virtual std::string on(zpt::ev::listener _listener) = 0;
 		virtual void off(zpt::ev::performative _method, std::string _callback_id) = 0;
 		virtual void off(std::string _callback_id) = 0;
 		
@@ -89,6 +93,26 @@ namespace zpt {
 
 	};
 
+	class EventListener {
+	public:
+		EventListener(std::string _regex);
+		virtual ~EventListener();
+
+		virtual std::string regex() final;
+		
+		virtual zpt::json get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual zpt::json reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+
+	private:
+		std::string __regex;
+	};
+	
 	zpt::json split(std::string _to_split, std::string _separator);
 	std::string join(zpt::json _to_join, std::string _separator);
 

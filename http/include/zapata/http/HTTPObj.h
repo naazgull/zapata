@@ -135,6 +135,8 @@ namespace zpt {
 		void header(const char* _name, string _value);
 		void header(string _name, string _value);
 
+		operator string();
+
 		virtual std::string to_string();
 		virtual void stringify(string& _out) = 0;
 		virtual void stringify(ostream& _out) = 0;
@@ -200,6 +202,7 @@ namespace zpt {
 
 		virtual void parse(istream& _in);
 
+		operator string();
 		friend ostream& operator<<(ostream& _out, HTTPReq& _in) {
 			_in->stringify(_out);
 			return _out;
@@ -218,6 +221,7 @@ namespace zpt {
 
 		virtual void parse(istream& _in);
 
+		operator string();
 		friend ostream& operator<<(ostream& _out, HTTPRep& _in) {
 			_in->stringify(_out);
 			return _out;

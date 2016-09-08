@@ -80,7 +80,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 	this->__default_head = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
-	this->__default_options = [ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+	this->__default_options = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		if (_envelope["headers"]["Origin"]->ok()) {
 			return zpt::json(
 				{
@@ -187,6 +187,54 @@ std::string zpt::RESTEmitter::on(string _regex,  std::map< zpt::ev::performative
 	return _uuid.string();
 }
 
+std::string zpt::RESTEmitter::on(zpt::ev::listener _listener) {
+	regex_t* _url_pattern = new regex_t();
+	if (regcomp(_url_pattern, _listener->regex().c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
+	}
+
+	zpt::ev::Handler _handler = [ _listener ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+		switch (_performative) {
+			case zpt::ev::Get : {
+				return _listener->get(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Put : {
+				return _listener->put(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Post : {
+				return _listener->post(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Delete : {
+				return _listener->del(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Head : {
+				return _listener->head(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Options : {
+				return _listener->options(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Patch : {
+				return _listener->patch(_resource, _envelope, _emitter);
+			}
+			case zpt::ev::Reply : {
+				return _listener->reply(_resource, _envelope, _emitter);
+			}
+		}
+		return zpt::undefined;
+	};
+	
+	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
+	vector< zpt::ev::Handler > _handlers;
+	for (short _idx = zpt::ev::Get; _idx != zpt::ev::Reply + 1; _idx++) {
+		_handlers.push_back(_handler);
+	}
+	
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
+	zlog(string("registered handlers for ") + _listener->regex(), zpt::info);
+	return _uuid.string();
+}
+
 void zpt::RESTEmitter::off(zpt::ev::performative _event, std::string _callback_id) {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
@@ -215,8 +263,25 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 					zpt::json _result = _i.second.second[_method](_method, _url, _envelope, this->self());
 					if (_result->ok()) {
 						_result << 
-							"performative" << zpt::ev::Reply <<
-							"headers" << (zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) + _result["headers"]);
+						"performative" << zpt::ev::Reply <<
+						"headers" << (zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()) + _result["headers"]);
+						
+						if (_envelope["headers"]["X-No-Redirection"]->ok() && std::string(_envelope["headers"]["X-No-Redirection"]) == "true") {
+							if (((int) _result["status"]) > 299 && ((int) _result["status"]) < 400) {
+								_result << "status" << 200;
+								_result["headers"] << "X-Redirect-To" << _result["headers"]["Location"];
+							}
+						}
+
+						if (_envelope["headers"]["Origin"]->ok()) {
+							_result["headers"] <<
+							"Access-Control-Allow-Origin" << _envelope["headers"]["Origin"] <<
+							"Access-Control-Allow-Credentials" << "true" <<
+							"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
+							"Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS <<
+							"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS <<
+							"Access-Control-Max-Age" << "1728000";
+						}
 						_return = _result;
 					}
 				}
@@ -365,7 +430,6 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 }
 
 zpt::json zpt::rest::not_found(std::string _resource) {
-	zlog(string("-> | \033[31;40m404\033[0m ") + _resource, zpt::info);
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	return zpt::json(
@@ -451,6 +515,29 @@ zpt::json zpt::rest::see_other(std::string _resource, std::string _target_resour
 	);
 }
 
+zpt::json zpt::rest::options(std::string _resource, std::string _origin) {
+	uuid _uuid;
+	_uuid.make(UUID_MAKE_V1);
+	return zpt::json(
+		{
+			"channel", _uuid.string(),
+			"performative", zpt::ev::Reply,
+			"resource", _resource,
+			"status", 200,
+			"headers", {
+				"Access-Control-Allow-Origin", _origin,
+				"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
+				"Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS,
+				"Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS,
+				"Access-Control-Max-Age", "1728000"
+			},
+			"payload", {
+				"text", "request was accepted"
+			}
+		}
+	);
+}
+
 zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
 	zpt::json _splitted = zpt::split(_cookie_header, ";");
 	zpt::json _return = zpt::mkobj();
@@ -472,6 +559,13 @@ zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
 	return _return;
 }
 
-std::string zpt::rest::cookies::serialize(zpt::json _credentials) {
-	return "";
+std::string zpt::rest::cookies::serialize(zpt::json _info) {
+	std::string _return((std::string) _info["value"]);
+	for (auto _field : _info->obj()) {
+		if (_field.first == "value") {
+			continue;
+		}
+		_return += std::string("; ") + _field.first + std::string("=") + std::string(_field.second);
+	}
+	return _return;
 }

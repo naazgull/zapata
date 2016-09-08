@@ -77,7 +77,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define REST_ACCESS_CONTROL_HEADERS "X-Access-Token,X-Access-Token-Expires,X-Error-Reason,X-Error,X-Embed,X-Filter,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,X-Replied-With-Status,Pragma,Cache-Control,E-Tag"
+#define REST_ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
 
 #define no_get nullptr
 #define no_put nullptr
@@ -105,8 +105,9 @@ namespace zpt {
 		virtual ~RESTEmitter();
 
 		virtual std::string on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler);
-		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
-		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers);
+		virtual std::string on(std::string _regex,  zpt::ev::Handler _handlers[7]);
+		virtual std::string on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers);
+		virtual std::string on(zpt::ev::listener _listener);
 		virtual void off(zpt::ev::performative _method, std::string _callback_id);
 		virtual void off(std::string _callback_id);
 
@@ -136,6 +137,7 @@ namespace zpt {
 		zpt::json no_content(std::string _resource);
 		zpt::json temporary_redirect(std::string _resource, std::string _target_resource);
 		zpt::json see_other(std::string _resource, std::string _target_resource);
+		zpt::json options(std::string _resource, std::string _origin);
 
 		namespace cookies {
 			zpt::json deserialize(std::string _cookie_header);

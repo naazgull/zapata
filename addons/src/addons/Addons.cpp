@@ -121,6 +121,10 @@ std::string zpt::Addons::on(string _regex,  std::map< zpt::ev::performative, zpt
 	return _uuid.string();
 }
 
+std::string zpt::Addons::on(zpt::ev::listener _listener) {
+	return "";
+}
+
 void zpt::Addons::off(zpt::ev::performative _event, std::string _callback_id) {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {

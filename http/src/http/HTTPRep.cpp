@@ -72,6 +72,10 @@ zpt::HTTPRep::HTTPRep(HTTPRepT* _target) : shared_ptr<HTTPRepT>(_target) {
 zpt::HTTPRep::~HTTPRep(){
 }
 
+zpt::HTTPRep::operator std::string() {
+	return (*this)->to_string();
+}
+
 void zpt::HTTPRep::parse(istream& _in){
 	zpt::HTTPParser _p;
 	_p.switchRoots(* this);

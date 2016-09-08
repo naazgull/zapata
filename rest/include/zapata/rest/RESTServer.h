@@ -120,8 +120,14 @@ namespace zpt {
 		}
 
 		namespace authorization {
-			std::string extract(zpt::json _envelope);
+			std::string serialize(zpt::json _info);
 			zpt::json deserialize(std::string _token);
+			std::string extract(zpt::json _envelope);
+		}
+
+		namespace scopes {
+			std::string serialize(zpt::json _info);
+			zpt::json deserialize(std::string _scope);
 		}
 	}
 

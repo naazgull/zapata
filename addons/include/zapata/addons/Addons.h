@@ -53,6 +53,7 @@ namespace zpt {
 		virtual std::string on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler);
 		virtual std::string on(string _regex,  zpt::ev::Handler _handlers[7]);
 		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers);
+		virtual std::string on(zpt::ev::listener _listener);
 		virtual void off(zpt::ev::performative _method, std::string _callback_id);
 		virtual void off(std::string _callback_id);
 		

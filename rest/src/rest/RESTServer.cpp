@@ -91,7 +91,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 	}
 	if (!!this->__options["log"]["file"]) {
 		zpt::log_fd = new ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((string) this->__options["log"]["file"]).data());
+		((std::ofstream *) zpt::log_fd)->open(((std::string) this->__options["log"]["file"]).data());
 	}
 
 	for (auto _definition : this->__options["zmq"]->arr()) {
@@ -105,7 +105,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			case ZMQ_PUB_SUB : {
 				this->__pub_sub.push_back(this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str()));
 				std::string _connect(_definition["bind"]->str());
-				zpt::replace(_connect, "*", ((string) this->__options["host"]));
+				zpt::replace(_connect, "*", ((std::string) this->__options["host"]));
 				this->__poll->bind(ZMQ_PUB_SUB, _connect)->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
 				break;
 			}
@@ -117,14 +117,14 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 
 	if (this->__options["rest"]["modules"]->ok()) {
 		for (auto _i : this->__options["rest"]["modules"]->arr()) {
-			string _lib_file("lib");
-			_lib_file.append((string) _i);
+			std::string _lib_file("lib");
+			_lib_file.append((std::string) _i);
 			_lib_file.append(".so");
 
 			if (_lib_file.length() > 6) {
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
-					zlog(string(dlerror()), zpt::error);
+					zlog(std::string(dlerror()), zpt::error);
 				}
 				else {
 					void (*_populate)(zpt::ev::emitter);
@@ -140,7 +140,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Post, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
+		this->__emitter->on(zpt::ev::Post, std::string("^/") + this->__options["rest"]["version"]->str() + std::string("/files$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
 			return zpt::undefined;
 		});
 
@@ -148,7 +148,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Delete, string("^/api/") + this->__options["rest"]["version"]->str() + string("/files/(.+)$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
+		this->__emitter->on(zpt::ev::Delete, std::string("^/") + this->__options["rest"]["version"]->str() + std::string("/files/(.+)$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
 			return zpt::undefined;
 		});
 	}
@@ -183,7 +183,7 @@ void zpt::RESTServer::start() {
 			std::shared_ptr< std::thread > _http(
 				new std::thread(
 					[ & ] () -> void {
-						zlog(string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
+						zlog(std::string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
 
 						zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
 						_ss->bind((uint) this->__options["http"]["port"]);
@@ -227,7 +227,7 @@ void zpt::RESTServer::start() {
 			std::shared_ptr< std::thread > _mqtt(
 				new std::thread(
 					[ & ] () -> void {
-						zlog(string("starting MQTT listener on port ") + std::to_string((uint) this->__options["mqtt"]["port"]), zpt::notice);
+						zlog(std::string("starting MQTT listener on port ") + std::to_string((uint) this->__options["mqtt"]["port"]), zpt::notice);
 					}
 				)
 			);
@@ -328,6 +328,8 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	}
 				
 	if (!_api_found) {
+		zlog(string("-> | \033[33;40m") + zpt::method_names[_request->method()] + string("\033[0m ") + _request->url(), zpt::info);
+		zlog(string("<- | \033[31;40m404\033[0m"), zpt::info);
 		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_prefix));
 		(*_cs) << _reply << flush;
 		_return = true;
@@ -392,7 +394,7 @@ void zpt::conf::init(std::string _name, zpt::json _options) {
 	if (_options["log"]->ok()) {
 		if (_options["log"]["file"]->ok()) {
 			zpt::log_fd = new ofstream();
-			string _log_file((string) _options["log"]["file"]);
+			std::string _log_file((std::string) _options["log"]["file"]);
 			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
 		}
 		if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
@@ -445,7 +447,7 @@ void zpt::conf::dirs(zpt::json _options) {
 	_traversable->inspect(zpt::json({ "$regexp", "(.*)" }),
 		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 			if (_key == "$include") {
-				zpt::json _object = (_object_path.rfind(".") != string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+				zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
 				zpt::json _to_include = _options->getPath(_object_path);
 				if (_to_include->type() == zpt::JSArray) {
 					for (auto _file : _to_include->arr()) {
@@ -483,10 +485,10 @@ zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
 	
 	zpt::json _payload;
 	if (_request->body() != "") {
-		if (_request->header("Content-Type") == "application/x-www-form-urlencoded") {
+		if (_request->header("Content-Type").find("application/x-www-form-urlencoded") != string::npos) {
 			_payload = zpt::rest::http::deserialize(_request->body());
 		}
-		else if (_request->header("Content-Type") == "application/json") {
+		else if (_request->header("Content-Type").find("application/json") != string::npos) {
 			try {
 				_payload = zpt::json(_request->body());
 			}
@@ -520,18 +522,20 @@ zpt::http::rep zpt::rest::zmq2http(zpt::json _out) {
 	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	
-	_out["headers"] = zpt::ev::init_reply() + _out["headers"];
+	_out << "headers" << (zpt::ev::init_reply() + _out["headers"]);
 	for (auto _header : _out["headers"]->obj()) {
-		_return->header(_header.first, ((string) _header.second));
+		_return->header(_header.first, ((std::string) _header.second));
 	}
 	
 	if (_out["payload"]->ok() && _out["payload"]->obj()->size() != 0) {
-		std::string _body = (string) _out["payload"];
+		std::string _body = (std::string) _out["payload"];
 		_return->body(_body);
 		_return->header("Content-Type", "application/json");
 		_return->header("Content-Length", std::to_string(_body.length()));
 	}
 
+	
+	
 	return _return;
 }
 
@@ -563,32 +567,78 @@ zpt::json zpt::rest::http::deserialize(std::string _body) {
 	return _return;
 }
 
+std::string zpt::rest::authorization::serialize(zpt::json _info) {
+	assertz(
+		_info["owner"]->type() == zpt::JSString &&
+		_info["application"]->type() == zpt::JSString &&
+		_info["grant_type"]->type() == zpt::JSString,
+		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
+	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate_key() + std::to_string(time_t(nullptr)) + zpt::generate_key());
+}
+
 zpt::json zpt::rest::authorization::deserialize(std::string _token) {
-	return zpt::rest::cookies::deserialize(_token);
+	zpt::json _return = zpt::mkobj();
+
+	zpt::json _splitted = zpt::split(_token, "@");
+	_return << "owner" << _splitted[0];
+
+	_splitted = zpt::split(_splitted[1], "/");
+	_return << "application" << _splitted[0] << "gran_type" << _splitted[1] << "key" << _splitted[2];
+
+	return _return;
+}
+
+std::string zpt::rest::scopes::serialize(zpt::json _info) {
+	assertz(
+		_info->type() == zpt::JSObject &&
+		_info->obj()->size() != 0,
+		"scope serialization failed: required at least one scope", 412, 0);
+	std::string _scopes;
+	for (auto _field : _info->obj()){
+		if (_scopes.length() != 0) {
+			_scopes += std::string(",");
+		}
+		_scopes += _field.first + std::string("{") + ((std::string) _field.second) + std::string("}");
+	}
+	return _scopes;
+}
+
+zpt::json zpt::rest::scopes::deserialize(std::string _scope) {
+	zpt::json _return = zpt::mkobj();
+
+	zpt::json _splitted = zpt::split(_scope, ",");
+	for (auto _part : _splitted->arr()) {
+		zpt::json _pair = zpt::split(_part->str(), "{");
+		_return << _pair[0]->str() << _pair[1]->str().substr(0, _pair[1]->str().length() - 1);
+	}
+
+	return _return;
 }
 
 std::string zpt::rest::authorization::extract(zpt::json _envelope) {
 	if (_envelope[ZPT_HEADERS]["Authorization"]->ok()) {
 		return std::string(zpt::split(_envelope[ZPT_HEADERS]["Authorization"], " ")[1]);
 	}
+	if (_envelope[ZPT_PAYLOAD]["access_token"]->ok()) {
+		std::string _param(_envelope[ZPT_PAYLOAD]["access_token"]);
+		zpt::url::decode(_param);
+		return _param;
+	}
 	if (_envelope[ZPT_HEADERS]["Cookie"]->ok()) {
 		return std::string(zpt::split(_envelope[ZPT_HEADERS]["Cookie"], ";")[0]);
-	}
-	if (_envelope[ZPT_PAYLOAD]["access_token"]->ok()) {
-		return std::string(_envelope[ZPT_PAYLOAD]["access_token"]);
 	}
 	return zpt::undefined;
 }
 
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
 	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
-	if (_connection.find("://*") != string::npos) {
+	if (_connection.find("://*") != std::string::npos) {
 		this->__socket->bind(_connection.data());
-		zlog(string("binding assync REQ socket on ") + _connection, zpt::notice);
+		zlog(std::string("binding assync REQ socket on ") + _connection, zpt::notice);
 	}
 	else {
 		this->__socket->connect(_connection.data());
-		zlog(string("connecting assync REQ socket on ") + _connection, zpt::notice);
+		zlog(std::string("connecting assync REQ socket on ") + _connection, zpt::notice);
 	}
 }
 
@@ -596,7 +646,7 @@ zpt::ZMQAssyncReq::~ZMQAssyncReq() {
 	this->__socket->close();
 	delete this->__socket;
 	this->__relayed_socket->close();
-	zlog(string("releasing assync REQ from ") + this->connection(), zpt::notice);
+	zlog(std::string("releasing assync REQ from ") + this->connection(), zpt::notice);
 }
 
 zmq::socket_t& zpt::ZMQAssyncReq::socket() {
