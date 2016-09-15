@@ -38,72 +38,21 @@ using namespace __gnu_cxx;
 #endif
 
 int main(int argc, char* argv[]) {
-	char _c;
-	std::string _host;
-	std::string _port;
-	zpt::ev::performative _method = zpt::ev::Get;
-	std::string _url;
-	short _type = ZMQ_REQ;
-	zpt::json _body;
-	bool _verbose = false;
-
-	while ((_c = getopt(argc, argv, "vh:p:m:u:t:j:")) != -1) {
-		switch (_c) {
-			case 'v': {
-				_verbose = true;
-				break;
-			}
-			case 'h': {
-				_host.assign(string(optarg));
-				break;
-			}
-			case 'p': {
-				_port.assign(string(optarg));
-				break;
-			}
-			case 'm': {
-				_method = zpt::ev::from_str(string(optarg));
-				break;
-			}
-			case 'u': {
-				_url.assign(string(optarg));
-				break;
-			}
-			case 't': {
-				_type = zpt::str2type(string(optarg));
-				break;
-			}
-			case 'j': {
-				_body = zpt::json(zpt::json(string(optarg)));
-				break;
-			}
-		}
-	}
-
-	zpt::log_fd = & cout;
-	zpt::log_pid = ::getpid();
-	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = (_verbose ? 7 : 0);
-
 	try {
-		zpt::rest::client _api(zpt::mkobj());
+		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
 
-		switch(_type) {
+		switch(_api->options()["zmq"]["type"]->intr()) {
 			case ZMQ_REQ: {
-				zpt::socket _client = _api->bind(_type, std::string("tcp://") + _host + std::string(":") + _port);
-				zpt::json _reply = _client->send(_method, _url, _body);
-				if (_verbose) {
-					zlog(zpt::pretty(_reply), zpt::info);
-				}
+				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
+				zpt::json _reply = _client->send((zpt::ev::performative) _api->options()["rest"]["method"]->intr(), _api->options()["rest"]["target"]->str(), _api->options()["rest"]["body"]);
+				zlog(zpt::pretty(_reply), zpt::info);
 				exit(0);
 				break;
 			}
 			case ZMQ_PULL: {
-				_api->emitter()->on(zpt::ev::Reply, _url,
-					[ _verbose ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						if (_verbose) {
-							zlog(zpt::pretty(_envelope), zpt::info);
-						}
+				_api->emitter()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
+					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+						zlog(zpt::pretty(_envelope), zpt::info);
 						return zpt::undefined;
 					}
 				);
@@ -111,17 +60,15 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 			case ZMQ_PUB: {
-				zpt::socket _client = _api->bind(_type, std::string("tcp://") + _host + std::string(":") + _port);
-				_client->send(_method, _url, _body);
+				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
+				_client->send((zpt::ev::performative) _api->options()["rest"]["method"]->intr(), _api->options()["rest"]["target"]->str(), _api->options()["rest"]["body"]);
 				exit(0);
 				break;
 			}			    
 			case ZMQ_SUB: {
-				_api->emitter()->on(zpt::ev::Reply, _url,
-					[ _verbose ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						if (_verbose) {
-							zlog(zpt::pretty(_envelope), zpt::info);
-						}
+				_api->emitter()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
+					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
+						zlog(zpt::pretty(_envelope), zpt::info);
 						return zpt::undefined;
 					}
 				);
@@ -132,6 +79,7 @@ int main(int argc, char* argv[]) {
 	}
 	catch (zpt::AssertionException& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
+		throw;
 	}
 	
 	return 0;

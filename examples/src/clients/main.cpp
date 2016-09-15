@@ -37,64 +37,10 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-int main(int argc, char* argv[]) {
-	char _c;
-	short _log_level = -1;
-	char* _conf_file = nullptr;
-
-	while ((_c = getopt(argc, argv, "l:c:")) != -1) {
-		switch (_c) {
-			case 'c': {
-				_conf_file = optarg;
-				break;
-			}
-			case 'l': {
-				_log_level = std::stoi(optarg);
-				break;
-			}
-		}
-	}
-
-	zpt::log_fd = & cout;
-	zpt::log_pid = ::getpid();
-	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = _log_level;
-
-	if (_conf_file == nullptr) {
-		zlog("a configuration file must be provided", zpt::error);
-		return -1;
-	}
-
-	zpt::json _ptr;
-	{
-		ifstream _in;
-		_in.open(_conf_file);
-		if (!_in.is_open()) {
-			zlog("a configuration file must be provided", zpt::error);
-			return -1;
-		}
-
-		_in >> _ptr;
-		zpt::conf::dirs(_ptr);
-		zpt::conf::env(_ptr);
-	}
-	
-	if (_ptr["log"]->ok()) {
-		if (_ptr["log"]["file"]->ok()) {
-			zpt::log_fd = new ofstream();
-			string _log_file((string) _ptr["log"]["file"]);
-			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
-		}
-		if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
-			zpt::log_lvl = (int) _ptr["log"]["level"];
-		}
-	}
-	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 4;
-	}			
-
+int main(int argc, char* argv[]) {	
 	try {
-		zpt::rest::client _api(_ptr);
+		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
+
 		size_t _max = 10100;
 		size_t * _n = new size_t();
 		_api->emitter()->on(zpt::ev::Reply, "/0.9/users",
@@ -115,7 +61,7 @@ int main(int argc, char* argv[]) {
 				for (size_t _k = 0; _k != _max; _k++) {
 					_client->send(zpt::ev::Get, "/0.9/users", _message);
 				}
-				if (_ptr["zmq"]["type"]->str() == "req") {
+				if (_api->options()["zmq"]["type"]->str() == "req") {
 					cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;
 					exit(0);				
 				}

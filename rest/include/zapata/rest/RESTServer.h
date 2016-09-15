@@ -38,12 +38,22 @@ namespace zpt {
 
 	class RESTServer;
 	class RESTClient;
+	class RESTServerPtr;
+	class RESTClientPtr;
+
+	namespace rest {
+		typedef zpt::RESTServerPtr server;
+		typedef zpt::RESTClientPtr client;
+	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
 	public:
 		RESTServerPtr(std::string _name, zpt::json _options);
 		RESTServerPtr(zpt::RESTServer * _ptr);
 		virtual ~RESTServerPtr();
+
+		static zpt::rest::server setup(zpt::json _options, std::string _name);
+		static int launch(int argc, char* argv[]);
 	};
 
 	class RESTClientPtr : public std::shared_ptr<zpt::RESTClient> {
@@ -51,6 +61,8 @@ namespace zpt {
 		RESTClientPtr(zpt::json _options);
 		RESTClientPtr(zpt::RESTClient * _ptr);
 		virtual ~RESTClientPtr();
+
+		static zpt::rest::client launch(int argc, char* argv[]);
 	};
 
 	class RESTServer {
@@ -68,7 +80,6 @@ namespace zpt {
 		virtual bool route_http(zpt::socketstream_ptr _cs);
 		virtual bool route_mqtt(std::iostream& _cs);
 
-		
 	private:
 		std::string __name;
 		zpt::ev::emitter __emitter;
@@ -102,7 +113,8 @@ namespace zpt {
 
 
 	namespace conf {
-		void init(std::string _name, zpt::json _options);
+		zpt::json init(int argc, char* argv[]);
+		void setup(zpt::json _options);
 		void dirs(std::string _dir, zpt::json _options);
 		void dirs(zpt::json _options);
 		void env(zpt::json _options);
@@ -112,9 +124,6 @@ namespace zpt {
 		zpt::json http2zmq(zpt::http::req _request);
 		zpt::HTTPRep zmq2http(zpt::json _out);
 
-		typedef zpt::RESTServerPtr server;
-		typedef zpt::RESTClientPtr client;
-		
 		namespace http {
 			zpt::json deserialize(std::string _body);
 		}
@@ -143,15 +152,15 @@ namespace zpt {
 
 		virtual void relay_for(zpt::socketstream_ptr _socket);
 
-		virtual zmq::socket_t& socket();
-		virtual zmq::socket_t& in();
-		virtual zmq::socket_t& out();
+		virtual zsock_t* socket();
+		virtual zsock_t* in();
+		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
 		
 	private:
-		zmq::socket_t * __socket;
+		zsock_t* __socket;
 		zpt::socketstream_ptr __relayed_socket;
 	};
 }

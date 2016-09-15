@@ -240,6 +240,7 @@ zpt::json zpt::authenticator::OAuth2::token(zpt::ev::performative _performative,
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	std::string _client_id((std::string) _envelope[ZPT_PAYLOAD]["client_id"]);
 	zpt::json _code = _db->get("codes", std::string("/") + this->__options["rest"]["version"]->str() + std::string("/apps/") + _client_id + std::string("/codes/") + ((std::string) _envelope[ZPT_PAYLOAD]["code"]));
+	zlog(zpt::pretty(_code), zpt::debug);
 	assertz(_code->ok(), "invalid parameter: no such code", 404, 0);
 	std::string _client_secret((std::string) _envelope[ZPT_PAYLOAD]["client_secret"]);	
 	zpt::json _token = this->generate_token(_code["user"], _code["application"], _client_id, _client_secret, "code",  std::string(_code["scope"]), _emitter);
@@ -289,7 +290,7 @@ zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, std::stri
 zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) {
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	assertz(_client_secret.length() == 0 || _application["client_secret"]->str() == _client_secret, "invalid parameter: no such client secret", 401, 0);
-	std::string _access_token = zpt::rest::authorization::serialize(zpt::json({ "owner", _owner["id"]->str(), "application", _application["id"]->str(), "gran_type", _grant_type }));
+	std::string _access_token = zpt::rest::authorization::serialize(zpt::json({ "owner", _owner["id"]->str(), "application", _application["id"]->str(), "grant_type", _grant_type }));
 	std::string _refresh_token(zpt::generate_key() + std::to_string(time_t(nullptr)) + zpt::generate_key());
 	zpt::timestamp_t _expires = (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + (90L * 24L * 3600L * 1000L);
 	zpt::json _token = zpt::json(
@@ -363,6 +364,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
+					
 					return _oauth->authorize(_performative, _envelope, _emitter);
 				}
 			},

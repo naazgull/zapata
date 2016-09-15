@@ -36,48 +36,37 @@ zpt::ZMQPollPtr::ZMQPollPtr(zpt::ZMQPoll * _ptr) : std::shared_ptr<zpt::ZMQPoll>
 zpt::ZMQPollPtr::~ZMQPollPtr() {
 }
 
-zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(_emiter), __self(this) {
-	this->__internal = new zmq::socket_t * [2];
+zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options( _options), __id(0), __poll(nullptr), __interrupt(nullptr), __signal(nullptr), __emitter(_emiter), __self(this) {
+	zsys_init();
+	zsys_handler_set(nullptr);
+	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	
+	this->__interrupt = zsock_new(ZMQ_PAIR);
+	assertz(zsock_attach(this->__interrupt, "@inproc://notify", true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to @inproc://notify"), 500, 0);
+	this->__signal = zsock_new(ZMQ_PAIR);
+	assertz(zsock_attach(this->__signal, ">inproc://notify", false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to >inproc://notify"), 500, 0);
 
-	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
-	this->__internal[1] = new zmq::socket_t(this->__context, ZMQ_REQ);
-
-	std::string _bind("inproc://notify");
-	this->__internal[0]->bind(_bind.data());
-	this->__internal[1]->connect(_bind.data());
-
-	this->__poll_size = this->__sockets.size() + 1;
-	this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
-	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
+	this->__poll = zpoller_new(this->__interrupt, nullptr);
 }
 
-zpt::ZMQPoll::ZMQPoll(zpt::json _options) : __options( _options), __context(1), __id(0), __poll(nullptr), __emitter(nullptr), __self(this) {
-	this->__internal = new zmq::socket_t * [2];
+zpt::ZMQPoll::ZMQPoll(zpt::json _options) : __options( _options), __id(0), __poll(nullptr), __interrupt(nullptr), __signal(nullptr), __emitter(nullptr), __self(this) {
+	zsys_init();
+	zsys_handler_set(nullptr);
+	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	
+	this->__interrupt = zsock_new(ZMQ_PAIR);
+	assertz(zsock_attach(this->__interrupt, "@inproc://notify", true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to @inproc://notify"), 500, 0);
+	this->__signal = zsock_new(ZMQ_PAIR);
+	assertz(zsock_attach(this->__signal, ">inproc://notify", false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to >inproc://notify"), 500, 0);
 
-	this->__internal[0] = new zmq::socket_t(this->__context, ZMQ_REP);
-	this->__internal[1] = new zmq::socket_t(this->__context, ZMQ_REQ);
-
-	std::string _bind("inproc://notify");
-	this->__internal[0]->bind(_bind.data());
-	this->__internal[1]->connect(_bind.data());
-
-	this->__poll_size = this->__sockets.size() + 1;
-	this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
-	this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
+	this->__poll = zpoller_new(this->__interrupt, nullptr);
 }
 
 zpt::ZMQPoll::~ZMQPoll() {
-	if (this->__internal != nullptr) {
-		this->__internal[0]->close();
-		this->__internal[1]->close();
-		delete this->__internal[0];
-		delete this->__internal[1];
-		delete [] this->__internal;
-		this->__internal = nullptr;
-		free(this->__poll);
-		
-		zlog(string("zmq poll clean up"), zpt::notice);
-	}
+	zsock_destroy(&this->__interrupt);
+	zsock_destroy(&this->__signal);
+	zpoller_destroy(&this->__poll);	
+	zlog(string("zmq poll clean up"), zpt::notice);
 }
 
 zpt::json zpt::ZMQPoll::options() {
@@ -96,129 +85,44 @@ void zpt::ZMQPoll::unbind() {
 	this->__self.reset();
 }
 
+void zpt::ZMQPoll::signal_poller() {
+	zframe_t* _frame = zframe_new("SIGNAL", 6);
+	bool _message_sent = (zsock_send(this->__signal, "f", _frame) == 0);
+	zframe_destroy(&_frame);
+	assertz(_message_sent, std::string("unable to send message to >inproc://notify"), 500, 0);
+}
+
 void zpt::ZMQPoll::poll(zpt::socket _socket) {
 	std::unique_lock< std::mutex > _synchronize(this->__mtx);
-	this->__sockets.push_back(_socket);
 	_synchronize.unlock();
 
-	if (this->__id != 0 && this->__id != pthread_self()) {
-		zmq::message_t _signal(6);
-		memcpy ((void *) _signal.data(), "SIGNAL", 6);
-		this->__internal[1]->send(_signal);
-		zmq::message_t _reply;
-		try {
-			this->__internal[1]->recv(& _reply);
-		}
-		catch(zmq::error_t& e) {
-			zlog("got a zmq::error_t, signaling polling", zpt::error);
-		}
-	}
-	else {
-		_synchronize.lock();
-		this->repoll();
-		_synchronize.unlock();
-	}
+	_synchronize.lock();
+	zpoller_add(this->__poll, _socket->in());
+	this->__by_socket.insert(make_pair(_socket->in(), _socket));
+	this->signal_poller();
+	_synchronize.unlock();
 }
 
 void zpt::ZMQPoll::unpoll(zpt::ZMQ& _socket) {
 	std::unique_lock< std::mutex > _synchronize(this->__mtx);
-	long _index = 0;
-	for (auto _binded : this->__sockets)  {
-		if (_binded->id() == _socket.id()) {
-			break;
-		}
-		_index++;
-	}
-	if (_index == (long) this->__sockets.size()) {
-		_synchronize.unlock();
-		return;
-	}
 	_synchronize.unlock();
-	
-	if (this->__id != 0 && this->__id != pthread_self()) {
-		zlog(std::string("not in main thread, sending signal"), zpt::info);
-		std::string _message = std::to_string(_index);
-		zmq::message_t _signal(_message.length());
-		memcpy ((void *) _signal.data(), _message.data(), _message.length());
-		this->__internal[1]->send(_signal);
-		zmq::message_t _reply;
-		try {
-			this->__internal[1]->recv(& _reply);
-		}
-		catch(zmq::error_t& e) {
-			zlog("got a zmq::error_t, signaling polling", zpt::error);
-		}
+
+	_synchronize.lock();
+	auto _found = this->__by_socket.find(_socket.in());
+	if (_found != this->__by_socket.end()) {
+		this->__by_socket.erase(_found);
 	}
-	else {
-		_synchronize.lock();
-		this->repoll(_index);
-		_synchronize.unlock();
-	}
+	zpoller_remove(this->__poll, _socket.in());
+	this->signal_poller();
+	_synchronize.unlock();
 }
 
-void zpt::ZMQPoll::_unpoll(zpt::ZMQ& _socket) {
-	long _index = 0;
-	for (auto _binded : this->__sockets)  {
-		if (_binded->id() == _socket.id()) {
-			break;
-		}
-		_index++;
+void zpt::ZMQPoll::unpoll_no_mutex(zpt::socket _socket) {
+	auto _found = this->__by_socket.find(_socket->in());
+	if (_found != this->__by_socket.end()) {
+		this->__by_socket.erase(_found);
 	}
-	if (_index == (long) this->__sockets.size()) {
-		return;
-	}
-	
-	if (this->__id != 0 && this->__id != pthread_self()) {
-		std::string _message = std::to_string(_index);
-		zmq::message_t _signal(_message.length());
-		memcpy ((void *) _signal.data(), _message.data(), _message.length());
-		this->__internal[1]->send(_signal);
-		zmq::message_t _reply;
-		try {
-			this->__internal[1]->recv(& _reply);
-		}
-		catch(zmq::error_t& e) {
-			zlog("got a zmq::error_t, signaling polling", zpt::error);
-		}
-	}
-	else {
-		this->repoll(_index);
-	}
-}
-
-void zpt::ZMQPoll::repoll(long _index) {
-	if (_index == -1) {
-		this->__poll = (zmq::pollitem_t *) realloc(this->__poll, (this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
-		size_t _i = 1;
-		for (auto _socket : this->__sockets) {
-			if (_i < this->__poll_size) {
-				_i++;
-				continue;
-			}
-			this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
-			_i++;
-		}
-	}
-	else {
-		std::string _key(this->__sockets[_index]->connection().data());
-		zpt::replace(_key, "*", ((string) this->__options["host"]));
-		auto _found = this->__by_name.find(_key);
-		if (_found != this->__by_name.end()) {
-			this->__by_name.erase(_found);
-		}
-		this->__sockets.erase(this->__sockets.begin() + _index);
-
-		delete this->__poll;
-		this->__poll = (zmq::pollitem_t *) malloc((this->__sockets.size() + 1) * sizeof(zmq::pollitem_t));
-		this->__poll[0] = { static_cast<void *>(* this->__internal[0]), 0, ZMQ_POLLIN, 0 };
-		size_t _i = 1;
-		for (auto _socket : this->__sockets) {
-			this->__poll[_i] = { static_cast<void *>(_socket->in()), 0, ZMQ_POLLIN, 0 };
-			_i++;
-		}
-	}
-	
-	this->__poll_size = this->__sockets.size() + 1;	
+	zpoller_remove(this->__poll, _socket->in());
 }
 
 void zpt::ZMQPoll::loop() {
@@ -227,56 +131,46 @@ void zpt::ZMQPoll::loop() {
 	this->__id = pthread_self();
 
 	for(; true; ) {
-		try {			
-			zmq::poll(this->__poll, this->__poll_size, -1);
-		}
-		catch(zmq::error_t& _e) {
-			zlog(string("while polling sockets: ") + _e.what(), zpt::error);
+		zsock_t* _awaken = (zsock_t*) zpoller_wait(this->__poll, -1);
+
+		if (_awaken == nullptr) {
+			continue;
 		}
 
-		if (this->__poll[0].revents & ZMQ_POLLIN) {
-			_synchronize.lock();
-			this->repoll();
-			_synchronize.unlock();
-
-			zmq::message_t _reply;
-			try {
-				this->__internal[0]->recv(& _reply);
+		if (_awaken == this->__interrupt) {
+			zframe_t* _frame;
+			if (zsock_recv(this->__interrupt, "f", &_frame) == 0) {
+				zframe_destroy(&_frame);
 			}
-			catch(zmq::error_t& _e) {
-			}
-			zmq::message_t _signal(2);
-			memcpy ((void *) _signal.data(), "ok", 2);
-			this->__internal[0]->send(_signal);
+			continue;
 		}
-		else {
-			_synchronize.lock();
-			for (size_t _k = 1; _k != this->__sockets.size() + 1; _k++) {
-				if (this->__poll[_k].revents & ZMQ_POLLIN) {
-					zpt::json _envelope = this->__sockets[_k - 1]->recv();
-					if (_envelope->ok()) {
-						zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-						zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-						if (_result->ok()) {
-							try {
-								_result << 
-									"channel" << _envelope["headers"]["X-Cid"] <<
-									"performative" << zpt::ev::Reply <<
-									"resource" << _envelope["resource"];
-								this->__sockets[_k - 1]->send(_result);
-							}
-							catch(zpt::AssertionException& _e) {}
-						}
+		
+		_synchronize.lock();
+		auto _found = this->__by_socket.find(_awaken);
+		if (_found != this->__by_socket.end()) {
+			zpt::socket _socket = _found->second;
+			zpt::json _envelope = _socket->recv();
+			if (_envelope->ok()) {
+				zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+				zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+				if (_result->ok()) {
+					try {
+						_result << 
+						"channel" << _envelope["headers"]["X-Cid"] <<
+						"performative" << zpt::ev::Reply <<
+						"resource" << _envelope["resource"];
+						
+						_socket->send(_result);
 					}
-					if (this->__sockets[_k - 1]->once()) {
-						this->__sockets[_k - 1]->unbind();
-						this->_unpoll(*this->__sockets[_k - 1].get());
-						break;
-					}
+					catch(zpt::AssertionException& _e) {}
 				}
 			}
-			_synchronize.unlock();
+			if (_socket->once()) {
+				this->unpoll_no_mutex(_socket);
+				_socket->unbind();
+			}
 		}
+		_synchronize.unlock();
 	}
 }
 

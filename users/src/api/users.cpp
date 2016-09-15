@@ -54,8 +54,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include <zapata/rest.h>
 #include <zapata/mongodb.h>
+#include <zapata/rest.h>
 #include <zapata/users/codes_users.h>
 #include <ctime>
 #include <memory>

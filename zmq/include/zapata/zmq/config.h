@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
 
+/* Define to 1 if you have the `czmq' library (-lczmq). */
+#define HAVE_LIBCZMQ 1
+
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 

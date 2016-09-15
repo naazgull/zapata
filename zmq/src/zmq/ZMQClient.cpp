@@ -26,7 +26,7 @@ SOFTWARE.
 #include <chrono>
 #include <ossp/uuid++.hh>
 
-zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : __options( _options ), __context(1), __connection(_connection.data()), __self(this), __emitter(_emitter) {
+zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : __options( _options ), __connection(_connection.data()), __self(this), __emitter(_emitter) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	this->__id.assign(_uuid.string());
@@ -43,10 +43,6 @@ zpt::json zpt::ZMQ::options() {
 	return this->__options;
 }
 
-zmq::context_t& zpt::ZMQ::context() {
-	return this->__context;
-}
-
 std::string& zpt::ZMQ::connection() {
 	return this->__connection;
 }
@@ -60,75 +56,30 @@ zpt::ev::emitter zpt::ZMQ::emitter() {
 }
 
 zpt::json zpt::ZMQ::recv() {
-	std::vector<std::string> _parts;
-	int _more = 0;
-	size_t _more_size = sizeof(_more);
+	std::vector< std::string > _parts;
+	
+	std::unique_lock< std::mutex > _synchronize(this->__mtx);
+	_synchronize.unlock();
 
-	{
-		std::lock_guard< std::mutex > _lock(this->__mtx);
-		do {
-			zmq::message_t _request;
-			try {
-				this->in().recv(& _request);
-			}
-			catch(zmq::error_t& e) {
-				throw;
-			}
-			_parts.push_back(string(static_cast<char*>(_request.data()), _request.size()));
+	_synchronize.lock();
+	zframe_t* _frame;
+	if (zsock_recv(this->in(), "f", &_frame) == 0) {
+		char* _bytes = zframe_strdup(_frame);
+		zpt::json _envelope(std::string(_bytes, zframe_size(_frame)));		
 
-			_more = 0;
-			this->in().getsockopt(ZMQ_RCVMORE, & _more, & _more_size);
-		}
-		while(_more);
-	}
+		delete _bytes;
+		zframe_destroy(&_frame);
+		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);//zpt::ev::from_str(_method);
+		zlog(std::string("<- | \033[33;40m") + zpt::ev::to_str(_performative) + string("\033[0m ") + (_performative == zpt::ev::Reply ? string("\033[") + (((int) _envelope["headers"]["X-Status"]) <= 299 ? "32" : (((int) _envelope["headers"]["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((std::string) _envelope["headers"]["X-Status"]) + string("\033[0m ") : "") + _envelope["resource"]->str(), zpt::info);
 
-	string _channel(_parts[0]);
-	string _method(_parts[1]);
-	string _resource(_parts[2]);
-	string _body(_parts[_parts.size() - 1]);
-
-	zpt::json _headers = zpt::mkobj();
-	if (_parts.size() > 4) {
-		for (size_t _idx = 3; _idx != _parts.size() - 1; _idx++) {
-			zpt::json _pair = zpt::split(_parts[_idx], ":");
-			std::string _key(_parts[_idx].substr(0, _parts[_idx].find(":")));
-			std::string _value(_parts[_idx].substr(_parts[_idx].find(":") + 1));
-			zpt::trim(_key);
-			zpt::trim(_value);
-			_headers << _key << _value;
-		}
-	}
-
-	zpt::json _payload;
-	try {
-		_payload = zpt::json(_body);
-	}
-	catch(zpt::SyntaxErrorException& _e) {
-		_payload = zpt::undefined;
-	}
-
-	zpt::ev::performative _performative = zpt::ev::from_str(_method);
-	zlog(string("<- | \033[33;40m") + _method + string("\033[0m ") + (_performative == zpt::ev::Reply ? string("\033[") + (((int) _headers["X-Status"]) <= 299 ? "32" : (((int) _headers["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((string) _headers["X-Status"]) + string("\033[0m ") : "") + _resource, zpt::info);
-	if (_performative == zpt::ev::Reply) {
-		return zpt::json(
-			{
-				"channel", _channel,
-				"performative", _performative,
-				"status", (((int) _headers["X-Status"]) > 99 ? ((int) _headers["X-Status"]) : 501),
-				"resource", _resource,
-				"headers", _headers,
-				"payload", _payload
-			}
-		);
+		_synchronize.unlock();
+		return _envelope;
 	}
 	else {
+		_synchronize.unlock();
 		return zpt::json(
 			{
-				"channel", _channel,
-				"performative", _performative,
-				"resource", _resource,
-				"headers", _headers,
-				"payload", _payload
+				"status", 503
 			}
 		);
 	}
@@ -164,30 +115,13 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 		_envelope << "payload" << zpt::mkobj();
 	}
 
-	zlog(string("-> | \033[33;40m") + zpt::ev::to_str((zpt::ev::performative) ((int) _envelope["performative"])) + string("\033[0m ") + (((int) _envelope["performative"]) == zpt::ev::Reply ? string("\033[") + (((int) _envelope["headers"]["X-Status"]) <= 299 ? "32" : (((int) _envelope["headers"]["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((string) _envelope["headers"]["X-Status"]) + string("\033[0m ") : "") + ((string) _envelope["resource"]), zpt::info);
-	std::vector<std::string> _parts;
-	_parts.push_back((string) _envelope["channel"]);
-	_parts.push_back(zpt::ev::to_str((zpt::ev::performative) ((int) _envelope["performative"])));
-	_parts.push_back((string) _envelope["resource"]);
-	if (_envelope["headers"]->ok()) {
-		for (auto _header : _envelope["headers"]->obj()) {
-			_parts.push_back(_header.first + string(": ") + ((string) _header.second));
-		}
-	}
+	zlog(std::string("-> | \033[33;40m") + zpt::ev::to_str((zpt::ev::performative) ((int) _envelope["performative"])) + string("\033[0m ") + (((int) _envelope["performative"]) == zpt::ev::Reply ? string("\033[") + (((int) _envelope["headers"]["X-Status"]) <= 299 ? "32" : (((int) _envelope["headers"]["X-Status"]) <= 399 ? "36" : "32")) + string(";40m") + ((std::string) _envelope["headers"]["X-Status"]) + string("\033[0m ") : "") + ((std::string) _envelope["resource"]), zpt::info);
 
-	{
-		std::lock_guard< std::mutex > _lock(this->__mtx);
-		for (auto _buffer : _parts) {
-			zmq::message_t _request(_buffer.size());
-			memcpy ((void *) _request.data(), _buffer.data(), _buffer.size());
-			this->out().send(_request, ZMQ_SNDMORE);
-		}
-
-		std::string _payload = (string) _envelope["payload"];
-		zmq::message_t _request(_payload.size());
-		memcpy ((void *) _request.data(), _payload.data(), _payload.size());
-		this->out().send(_request);
-	} 
+	std::string _buffer(_envelope);
+	zframe_t* _frame = zframe_new(_buffer.data(), _buffer.size());
+	bool _message_sent = (zsock_send(this->out(), "f", _frame) == 0);
+	zframe_destroy(&_frame);
+	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
 	return zpt::undefined;
 }
@@ -197,38 +131,29 @@ void zpt::ZMQ::unbind() {
 }
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_REQ);
-	if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding REQ socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting REQ socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
-	this->__socket->setsockopt(ZMQ_RCVTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_REQ);
+	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
+	zsock_set_rcvtimeo(this->__socket, 20000);
 }
 
 zpt::ZMQReq::~ZMQReq() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing REQ from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQReq::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQReq::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQReq::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQReq::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQReq::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQReq::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQReq::type() {
@@ -248,37 +173,28 @@ void zpt::ZMQReq::listen(zpt::poll _poll) {
 }
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_REP);
-	if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding REP socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting REP socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_REP);
+	assertz(zsock_attach(this->__socket, this->connection().data(), true) == 0, std::string("unable to attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
 }
 
 zpt::ZMQRep::~ZMQRep() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing REP from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQRep::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQRep::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQRep::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQRep::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQRep::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQRep::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQRep::type() {
@@ -296,47 +212,29 @@ void zpt::ZMQRep::listen(zpt::poll _poll) {
 zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
-	this->__socket_sub = new zmq::socket_t(this->context(), ZMQ_XSUB);
-	this->__socket_sub->bind(_connection1.data());
-	this->__socket_pub = new zmq::socket_t(this->context(), ZMQ_XPUB);
-	this->__socket_pub->bind(_connection2.data());
-	zlog(string("binding XPUB/XSUB socket on ") + _connection, zpt::notice);
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket_sub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_sub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
-	this->__socket_pub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_pub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zactor_new(zproxy, nullptr);
+	zstr_sendx(this->__socket, "FRONTEND", "XSUB", _connection1.data(), nullptr);
+	zsock_wait(this->__socket);
+	zstr_sendx(this->__socket, "BACKEND", "XPUB", _connection2.data(), nullptr);
+	zsock_wait(this->__socket);
+	zlog(std::string("attaching XPUB/XSUB socket to ") + _connection, zpt::notice);
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
-	this->__socket_sub->close();
-	delete this->__socket_sub;
-	this->__socket_pub->close();
-	delete this->__socket_pub;
-	zlog(string("releasing XPUB/XSUB from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching XPUB/XSUB from ") + this->connection(), zpt::notice);
+	zactor_destroy(&this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQXPubXSub::socket() {
-	return * this->__socket_sub;
+zsock_t* zpt::ZMQXPubXSub::socket() {
+	return zactor_sock(this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQXPubXSub::in() {
-	return * this->__socket_sub;
+zsock_t* zpt::ZMQXPubXSub::in() {
+	return zactor_sock(this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQXPubXSub::out() {
-	return * this->__socket_pub;
-}
-
-void zpt::ZMQXPubXSub::loop() {
-	try {
-		zlog("going to proxy PUB/SUB...", zpt::notice);
-		zmq::proxy(static_cast<void*>(*this->__socket_pub), static_cast<void*>(*this->__socket_sub), nullptr);
-	}
-	catch(zmq::error_t& _e) {
-		zlog(_e.what(), zpt::emergency);
-	}
+zsock_t* zpt::ZMQXPubXSub::out() {
+	return zactor_sock(this->__socket);
 }
 
 short int zpt::ZMQXPubXSub::type() {
@@ -353,48 +251,33 @@ void zpt::ZMQXPubXSub::listen(zpt::poll _poll) {
 zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
-	this->__socket_sub = new zmq::socket_t(this->context(), ZMQ_SUB);
-	if (_connection2.find("://*") != string::npos) {
-		this->__socket_sub->bind(_connection2.data());
-	}
-	else {
-		this->__socket_sub->connect(_connection2.data());
-	}
-	this->__socket_pub = new zmq::socket_t(this->context(), ZMQ_PUB);
-        if (_connection1.find("://*") != string::npos) {
-		this->__socket_pub->bind(_connection1.data());
-		zlog(string("binding PUB/SUB socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket_pub->connect(_connection1.data());
-		zlog(string("connecting PUB/SUB socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket_sub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_sub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
-	this->__socket_pub->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_pub->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket_sub = zsock_new(ZMQ_SUB);
+	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + _connection2, 500, 0);
+	this->__socket_pub = zsock_new(ZMQ_PUB);
+	assertz(zsock_attach(this->__socket_pub, _connection1.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_pub)) + std::string(" socket to ") + _connection1, 500, 0);
+	zlog(std::string("attaching PUB/SUB socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket_sub, 1000);	
+	zsock_set_sndtimeo(this->__socket_sub, 20000);
+	zsock_set_sndhwm(this->__socket_pub, 1000);	
+	zsock_set_sndtimeo(this->__socket_pub, 20000);
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
-	this->__socket_sub->close();
-	delete this->__socket_sub;
-	this->__socket_pub->close();
-	delete this->__socket_pub;
-	zlog(string("releasing PUB/SUB from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching PUB/SUB from ") + this->connection(), zpt::notice);
+	zsock_destroy(&this->__socket_pub);
+	zsock_destroy(&this->__socket_sub);
 }
 
-zmq::socket_t& zpt::ZMQPubSub::socket() {
-	return * this->__socket_sub;
+zsock_t* zpt::ZMQPubSub::socket() {
+	return this->__socket_sub;
 }
 
-zmq::socket_t& zpt::ZMQPubSub::in() {
-	return * this->__socket_sub;
+zsock_t* zpt::ZMQPubSub::in() {
+	return this->__socket_sub;
 }
 
-zmq::socket_t& zpt::ZMQPubSub::out() {
-	return * this->__socket_pub;
+zsock_t* zpt::ZMQPubSub::out() {
+	return this->__socket_pub;
 }
 
 short int zpt::ZMQPubSub::type() {
@@ -424,7 +307,8 @@ zpt::json zpt::ZMQPubSub::send(zpt::json _envelope) {
 		}
 		{
 			std::lock_guard< std::mutex > _lock(this->__mtx);
-			this->in().setsockopt(ZMQ_SUBSCRIBE, _cid.data(), _cid.length());
+			zsock_set_subscribe(this->in(), _cid.data());
+			//this->in().setsockopt(ZMQ_SUBSCRIBE, _cid.data(), _cid.length());
 		}
 	}
 	zpt::ZMQ::send(_envelope);
@@ -437,7 +321,8 @@ zpt::json zpt::ZMQPubSub::recv() {
 		std::string _cid(_envelope["channel"]->str());
 		{
 			std::lock_guard< std::mutex > _lock(this->__mtx);
-			this->in().setsockopt(ZMQ_UNSUBSCRIBE, _cid.data(), _cid.length());
+			zsock_set_unsubscribe(this->in(), _cid.data());
+			//this->in().setsockopt(ZMQ_UNSUBSCRIBE, _cid.data(), _cid.length());
 		}
 	}
 	return _envelope;
@@ -448,37 +333,28 @@ void zpt::ZMQPubSub::listen(zpt::poll _poll) {
 }
 
 zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_PUB);
-        if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding PUB socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting PUB socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_PUB);
+	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
 }
 
 zpt::ZMQPub::~ZMQPub() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing PUB from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQPub::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPub::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPub::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPub::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPub::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPub::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQPub::type() {
@@ -497,41 +373,33 @@ void zpt::ZMQPub::listen(zpt::poll _poll) {
 }
 
 zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_SUB);
-	if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding SUB socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting SUB socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_SUB);
+	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
 	{
 		std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
+		zsock_set_subscribe(this->in(), "/");
+		//this->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);
 	}
 }
 
 zpt::ZMQSub::~ZMQSub() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing SUB from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQSub::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQSub::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQSub::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQSub::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQSub::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQSub::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQSub::type() {
@@ -551,38 +419,29 @@ void zpt::ZMQSub::listen(zpt::poll _poll) {
 }
 
 zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_PUSH);
-        if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding PUSH socket on ") + _connection, zpt::notice);
-	}
-	else {
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting PUSH socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_PUSH);
+	assertz(zsock_attach(this->__socket, _connection.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
 }
 
 
 zpt::ZMQPush::~ZMQPush() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing PUSH from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQPush::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPush::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPush::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPush::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPush::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPush::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQPush::type() {
@@ -601,37 +460,28 @@ void zpt::ZMQPush::listen(zpt::poll _poll) {
 }
 
 zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
-	this->__socket = new zmq::socket_t(this->context(), ZMQ_PULL);
-        if (_connection.find("://*") != string::npos) {
-		this->__socket->bind(_connection.data());
-		zlog(string("binding PULL socket on ") + _connection, zpt::notice);
-	}
-	else {	
-		this->__socket->connect(_connection.data());
-		zlog(string("connecting PULL socket on ") + _connection, zpt::notice);
-	}
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zsock_new(ZMQ_PULL);
+	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
 }
 
 zpt::ZMQPull::~ZMQPull() {
-	this->__socket->close();
-	delete this->__socket;
-	zlog(string("releasing PULL from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	zsock_destroy(& this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQPull::socket() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPull::socket() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPull::in() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPull::in() {
+	return this->__socket;
 }
 
-zmq::socket_t& zpt::ZMQPull::out() {
-	return * this->__socket;
+zsock_t* zpt::ZMQPull::out() {
+	return this->__socket;
 }
 
 short int zpt::ZMQPull::type() {
@@ -653,47 +503,31 @@ void zpt::ZMQPull::listen(zpt::poll _poll) {
 zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
-	this->__socket_router = new zmq::socket_t(this->context(), ZMQ_ROUTER);
-	this->__socket_router->bind(_connection1.data());
-	this->__socket_dealer = new zmq::socket_t(this->context(), ZMQ_DEALER);
-	this->__socket_dealer->bind(_connection2.data());
-	zlog(string("binding ROUTER/DEALER socket on ") + _connection, zpt::notice);
-	int _max_messages = 1000;
-	int _timeout = 20000;
-	this->__socket_router->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_router->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
-	this->__socket_dealer->setsockopt(ZMQ_SNDHWM, & _max_messages, sizeof(int));
-	this->__socket_dealer->setsockopt(ZMQ_SNDTIMEO, & _timeout, sizeof(int));
+	this->__socket = zactor_new(zproxy, nullptr);
+	// zstr_sendx(this->__socket, "VERBOSE", nullptr);
+	// zsock_wait(this->__socket);
+	zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
+	zsock_wait(this->__socket);
+	zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
+	zsock_wait(this->__socket);
+	zlog(std::string("attaching ROUTER/DEALER socket to ") + _connection, zpt::notice);
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
-	this->__socket_router->close();
-	delete this->__socket_router;
-	this->__socket_dealer->close();
-	delete this->__socket_dealer;
-	zlog(string("releasing ROUTER/DEALER from ") + this->connection(), zpt::notice);
+	zlog(std::string("dettaching ROUTER/DEALER from ") + this->connection(), zpt::notice);
+	zactor_destroy(&this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQRouterDealer::socket() {
-	return * this->__socket_router;
+zsock_t* zpt::ZMQRouterDealer::socket() {
+	return zactor_sock(this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQRouterDealer::in() {
-	return * this->__socket_router;
+zsock_t* zpt::ZMQRouterDealer::in() {
+	return zactor_sock(this->__socket);
 }
 
-zmq::socket_t& zpt::ZMQRouterDealer::out() {
-	return * this->__socket_dealer;
-}
-
-void zpt::ZMQRouterDealer::loop() {
-	try {
-		zlog("going to proxy REQ/REP...", zpt::notice);
-		zmq::proxy(static_cast<void*>(*this->__socket_dealer), static_cast<void*>(*this->__socket_router), nullptr);
-	}
-	catch(zmq::error_t& _e) {
-		zlog(_e.what(), zpt::emergency);
-	}
+zsock_t* zpt::ZMQRouterDealer::out() {
+	return zactor_sock(this->__socket);
 }
 
 short int zpt::ZMQRouterDealer::type() {
