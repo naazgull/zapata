@@ -32,7 +32,6 @@ SOFTWARE.
 #define ZPT_PAYLOAD "payload"
 
 #include <zapata/zmq/config.h>
-#include <zmq.hpp>
 #include <zapata/zmq/SocketStreams.h>
 #include <zapata/zmq/SSLSocketStreams.h>
 #include <zapata/zmq/WebSocket.h>

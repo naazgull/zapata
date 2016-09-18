@@ -32,7 +32,6 @@ SOFTWARE.
 #include <string>
 #include <map>
 #include <memory>
-#include <zmq.hpp>
 
 using namespace std;
 #if !defined __APPLE__

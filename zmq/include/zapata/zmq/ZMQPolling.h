@@ -45,6 +45,9 @@ using namespace __gnu_cxx;
 #define ZMQ_ROUTER_DEALER -3
 #define ZMQ_ASSYNC_REQ -4
 
+#define ZPT_SELF_CERTIFICATE 0
+#define ZPT_PEER_CERTIFICATE 1
+
 namespace zpt {
 
 	short str2type(std::string _type);
@@ -111,6 +114,10 @@ namespace zpt {
 		virtual std::string& connection();
 		virtual zpt::ZMQPtr self();
 		virtual zpt::ev::emitter emitter();
+		virtual zactor_t* auth();
+		virtual void auth(std::string _client_cert_dir);
+		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
+		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
 		
 		virtual zpt::json recv();
 		virtual zpt::json send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload);
@@ -131,7 +138,10 @@ namespace zpt {
 		zpt::ZMQPtr __self;
 		zpt::ev::emitter __emitter;
 		std::string __id;
-
+		zactor_t* __auth;
+		zcert_t* __self_cert;
+		zcert_t* __peer_cert;
+		
 	protected:
 		std::mutex __mtx;		
 	};
@@ -199,15 +209,13 @@ namespace zpt {
 		ZMQPubSub(std::string _connection, zpt::ev::emitter _emitter);
 		virtual ~ZMQPubSub();
 		
-		virtual zpt::json recv();
-		virtual zpt::json send(zpt::json _envelope);
-		
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual void subscribe(std::string _prefix);
 		
 	private:
 		zsock_t* __socket_sub;
@@ -249,6 +257,7 @@ namespace zpt {
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual void subscribe(std::string _prefix);
 		
 	private:
 		zsock_t* __socket;

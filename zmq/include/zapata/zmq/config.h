@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
 
+/* Define to 1 if you have the `curve' library (-lcurve). */
+#define HAVE_LIBCURVE 1
+
 /* Define to 1 if you have the `czmq' library (-lczmq). */
 #define HAVE_LIBCZMQ 1
 
@@ -23,6 +26,9 @@
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
 #define HAVE_LIBOSSP_UUID__ 1
+
+/* Define to 1 if you have the `sodium' library (-lsodium). */
+#define HAVE_LIBSODIUM 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
