@@ -452,19 +452,12 @@ void zpt::conf::dirs(std::string _dir, zpt::json _options) {
 		assertz(_conf->ok(), std::string("syntax error parsing file: ") + _file, 500, 0);
 
 		for (auto _new_field : _conf->obj()) {
-			if (!_options[_new_field.first]->ok()) {
-				_options << _new_field.first << _new_field.second;
-			}
-			else {
-				zpt::json _merged = _options[_new_field.first] + _new_field.second;
-				_options << _new_field.first << _merged;
-			}
+			_options << _new_field.first << (_options[_new_field.first] + _new_field.second);
 		}
 	}
 }
 
 void zpt::conf::dirs(zpt::json _options) {
-	// zpt::conf::dirs("/etc/zapata/conf.d", _options);
 	zpt::json _traversable = _options->clone();
 	_traversable->inspect(zpt::json({ "$regexp", "(.*)" }),
 		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
@@ -768,13 +761,11 @@ std::string zpt::rest::authorization::extract(zpt::json _envelope) {
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
 	this->__socket = zsock_new(ZMQ_REQ);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
-	// zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
-	// zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
 	this->__relayed_socket->close();
 }

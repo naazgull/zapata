@@ -8,13 +8,13 @@ libzapata_rest_la_SOURCES = \
 ./RESTEmitter.cpp \
 ./RESTServer.cpp 
 
-bin_PROGRAMS = zapi zcli
+bin_PROGRAMS = zapa zcli
 
-zapi_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest
-zapi_LDFLAGS =  -L../rest/.libs
-zapi_CPPFLAGS = -O3 -std=c++11 -I../../include
+zapa_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest
+zapa_LDFLAGS =  -L../rest/.libs
+zapa_CPPFLAGS = -O3 -std=c++11 -I../../include
 
-zapi_SOURCES = \
+zapa_SOURCES = \
 ./main.cpp
 
 zcli_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest

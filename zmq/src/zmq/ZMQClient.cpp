@@ -64,16 +64,17 @@ zpt::ev::emitter zpt::ZMQ::emitter() {
 	return this->__emitter;
 }
 
-zactor_t* zpt::ZMQ::auth() {
-	return this->__auth;
-}
-
-void zpt::ZMQ::auth(std::string _client_cert_dir){
+zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
 	if (this->__auth == nullptr) {
 		this->__auth = zactor_new(zauth, nullptr);
+		zstr_sendx(this->__auth, "VERBOSE", nullptr);
+		zsock_wait(this->__auth);
 	}
-	zstr_sendx(this->__auth, "CURVE", _client_cert_dir.data(), nullptr);
-	zsock_wait(this->__auth);
+	if (_client_cert_dir.length() != 0) {
+		zstr_sendx(this->__auth, "CURVE", _client_cert_dir.data(), nullptr);
+		zsock_wait(this->__auth);
+	}
+	return this->__auth;
 }
 
 zcert_t* zpt::ZMQ::certificate(int _which) {
@@ -89,9 +90,6 @@ zcert_t* zpt::ZMQ::certificate(int _which) {
 }
 
 void zpt::ZMQ::certificate(std::string _cert_file, int _which){
-	if (this->__auth == nullptr) {
-		this->__auth = zactor_new(zauth, nullptr);
-	}
 	switch (_which) {
 		case ZPT_SELF_CERTIFICATE : {
 			this->__self_cert = zcert_load(_cert_file.data());
@@ -129,7 +127,7 @@ zpt::json zpt::ZMQ::recv() {
 		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 		int _status = (_performative == zpt::ev::Reply ? ((int) _envelope["headers"]["X-Status"]) : 0);
 		
-		zlog(std::string("I | <- \033[33;40m") + zpt::r_replace(_directive, " ",
+		zlog(std::string("\033[1;37;46m in  \033[0m | \033[33;40m") + zpt::r_replace(_directive, " ",
 				std::string("\033[0m \033[") + (
 					_status != 0 ?
 					std::string(
@@ -137,7 +135,7 @@ zpt::json zpt::ZMQ::recv() {
 						(_status <= 399 ? "36" : "31")
 					) :
 					std::string("37")
-				) + std::string(";0m")
+				) + std::string("m")
 			) + std::string("\033[0m"),
 			zpt::info
 		);
@@ -173,7 +171,8 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
 
-	if ((zpt::ev::performative) ((int) _envelope["performative"]) != zpt::ev::Reply) {
+	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+	if (_performative != zpt::ev::Reply) {
 		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
 	}
 	else {
@@ -184,9 +183,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::mkobj();
 	}
-
-	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-	int _status = (_performative == zpt::ev::Reply ? ((int) _envelope["headers"]["X-Status"]) : 0);
+	int _status = (int) _envelope["headers"]["X-Status"];
 
 	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));
 	zframe_t* _frame1 = zframe_new(_directive.data(), _directive.size());
@@ -198,7 +195,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	zlog(std::string("O | -> \033[33;40m") + zpt::r_replace(_directive, " ",
+	zlog(std::string("\033[1;37;45m out \033[0m | \033[33;40m") + zpt::r_replace(_directive, " ",
 			std::string("\033[0m \033[") + (
 				_status != 0 ?
 				std::string(
@@ -206,7 +203,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 					(_status <= 399 ? "36" : "31")
 				) :
 				std::string("37")
-			) + std::string(";0m")
+			) + std::string("m")
 		) + std::string("\033[0m"),
 		zpt::info
 	);
@@ -229,11 +226,10 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options, zpt::ev::emitte
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
-		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
-		
 		zsock_set_curve_serverkey(this->__socket, _peer_key.data());
+		this->auth();
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }
@@ -278,11 +274,12 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitte
 	zsock_set_sndtimeo(this->__socket, 20000);
 
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
-		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
-		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
-		
+		zlog(std::string("curve: using ") + _options["curve"]["certificates"]["self"]->str() + std::string(" as certificate"), zpt::alert);
+		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
+		zlog(std::string("curve: using ") + _options["curve"]["certificates"]["client_dir"]->str() + std::string(" as client public repository"), zpt::alert);
+		this->auth(_options["curve"]["certificates"]["client_dir"]->str());		
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }

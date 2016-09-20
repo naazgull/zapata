@@ -176,6 +176,8 @@ void zpt::ZMQPoll::loop() {
 		if (_found != this->__by_socket.end()) {
 			zpt::socket _socket = _found->second;
 			zpt::json _envelope = _socket->recv();
+			_synchronize.unlock();
+			
 			if (_envelope->ok()) {
 				zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 				zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
@@ -196,7 +198,9 @@ void zpt::ZMQPoll::loop() {
 				_socket->unbind();
 			}
 		}
-		_synchronize.unlock();
+		else {
+			_synchronize.unlock();
+		}
 	}
 }
 

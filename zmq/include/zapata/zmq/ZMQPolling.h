@@ -114,8 +114,7 @@ namespace zpt {
 		virtual std::string& connection();
 		virtual zpt::ZMQPtr self();
 		virtual zpt::ev::emitter emitter();
-		virtual zactor_t* auth();
-		virtual void auth(std::string _client_cert_dir);
+		virtual zactor_t* auth(std::string _client_cert_dir = "");
 		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
 		

@@ -986,7 +986,7 @@ zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) {
 		case zpt::JSObject : {
 			zpt::JSONPtr _lhs = this->clone();
 			for (auto _e : _rhs.obj()) {
-				_lhs << _e.first  << _e.second;
+				_lhs << _e.first  << (_lhs[_e.first] + _e.second);
 			}
 			return _lhs;
 		}
