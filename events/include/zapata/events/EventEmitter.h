@@ -72,6 +72,7 @@ namespace zpt {
 		
 		virtual zpt::json options();
 		virtual zpt::EventEmitterPtr self();
+		virtual std::string version();
 		
 		virtual std::string on(zpt::ev::performative _method, string _regex,  zpt::ev::Handler _handler) = 0;
 		virtual std::string on(std::string _regex,  zpt::ev::Handler _handlers[7]) = 0;
@@ -112,9 +113,6 @@ namespace zpt {
 	private:
 		std::string __regex;
 	};
-	
-	zpt::json split(std::string _to_split, std::string _separator);
-	std::string join(zpt::json _to_join, std::string _separator);
 
 }
 

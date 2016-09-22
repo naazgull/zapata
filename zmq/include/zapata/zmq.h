@@ -24,12 +24,12 @@ SOFTWARE.
 
 #pragma once
 
-#define ZPT_TOPIC "channel"
-#define ZPT_PERFORMATIVE "performative"
-#define ZPT_STATUS "status"
-#define ZPT_RESOURCE "resource"
-#define ZPT_HEADERS "headers"
-#define ZPT_PAYLOAD "payload"
+// #define ZPT_TOPIC "channel"
+// #define ZPT_PERFORMATIVE "performative"
+// #define ZPT_STATUS "status"
+// #define ZPT_RESOURCE "resource"
+// #define ZPT_HEADERS "headers"
+// #define ZPT_PAYLOAD "payload"
 
 #include <zapata/zmq/config.h>
 #include <zapata/zmq/SocketStreams.h>

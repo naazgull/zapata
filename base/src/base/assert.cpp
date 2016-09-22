@@ -46,3 +46,4 @@ std::string zpt::get_tz() {
 	}
 	return *zpt::tz;
 }
+

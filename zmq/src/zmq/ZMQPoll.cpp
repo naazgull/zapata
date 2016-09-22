@@ -23,6 +23,21 @@ SOFTWARE.
 */
 
 #include <zapata/zmq/ZMQPolling.h>
+#include <future>
+
+zpt::assync::AssyncReplyException::AssyncReplyException(zpt::socket _relay) : std::exception(), __relay(_relay) {
+}
+
+zpt::assync::AssyncReplyException::~AssyncReplyException() {
+}
+
+std::string zpt::assync::AssyncReplyException::what() {
+	return std::string("creating assync request/reply attached to ") + this->__relay->connection();
+}
+
+zpt::socket zpt::assync::AssyncReplyException::relay() {
+	return this->__relay;
+}
 
 zpt::ZMQPollPtr::ZMQPollPtr(zpt::json _options, zpt::ev::emitter _emiter) : std::shared_ptr<zpt::ZMQPoll>(new zpt::ZMQPoll(_options, _emiter)) {
 }
@@ -41,23 +56,14 @@ zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options(
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	
+	uuid _poll_uuid;
+	_poll_uuid.make(UUID_MAKE_V1);
+	std::string _connection1(std::string("@inproc://") + _poll_uuid.string());
+	std::string _connection2(std::string(">inproc://") + _poll_uuid.string());
 	this->__interrupt = zsock_new(ZMQ_PAIR);
-	bool _attached = false;
-	size_t _try = 0;
-	std::string _connection;
-	do {
-		try {
-			_connection.assign(std::string("@inproc://notify-") + std::to_string(_try));
-			assertz(zsock_attach(this->__interrupt, _connection.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to ") + _connection, 500, 0);
-			_attached = true;
-		}
-		catch(zpt::AssertionException& _e) {
-			_try++;
-		}
-	}
-	while(!_attached);
+	assertz(zsock_attach(this->__interrupt, _connection1.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to ") + _connection1, 500, 0);
 	this->__signal = zsock_new(ZMQ_PAIR);
-	assertz(zsock_attach(this->__signal, (std::string(">inproc://notify-") + std::to_string(_try)).data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to ") + (std::string(">inproc://notify-") + std::to_string(_try)), 500, 0);
+	assertz(zsock_attach(this->__signal, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to ") + _connection2, 500, 0);
 
 	this->__poll = zpoller_new(this->__interrupt, nullptr);
 }
@@ -67,23 +73,14 @@ zpt::ZMQPoll::ZMQPoll(zpt::json _options) : __options( _options), __id(0), __pol
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	
+	uuid _poll_uuid;
+	_poll_uuid.make(UUID_MAKE_V1);
+	std::string _connection1(std::string("@inproc://") + _poll_uuid.string());
+	std::string _connection2(std::string(">inproc://") + _poll_uuid.string());
 	this->__interrupt = zsock_new(ZMQ_PAIR);
-	bool _attached = false;
-	size_t _try = 0;
-	std::string _connection;
-	do {
-		try {
-			_connection.assign(std::string("@inproc://notify-") + std::to_string(_try));
-			assertz(zsock_attach(this->__interrupt, _connection.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to ") + _connection, 500, 0);
-			_attached = true;
-		}
-		catch(zpt::AssertionException& _e) {
-			_try++;
-		}
-	}
-	while(!_attached);
+	assertz(zsock_attach(this->__interrupt, _connection1.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__interrupt)) + std::string(" socket to ") + _connection1, 500, 0);
 	this->__signal = zsock_new(ZMQ_PAIR);
-	assertz(zsock_attach(this->__signal, (std::string(">inproc://notify-") + std::to_string(_try)).data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to ") + (std::string(">inproc://notify-") + std::to_string(_try)), 500, 0);
+	assertz(zsock_attach(this->__signal, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__signal)) + std::string(" socket to ") + _connection2, 500, 0);
 
 	this->__poll = zpoller_new(this->__interrupt, nullptr);
 }
@@ -177,7 +174,7 @@ void zpt::ZMQPoll::loop() {
 			zpt::socket _socket = _found->second;
 			zpt::json _envelope = _socket->recv();
 			_synchronize.unlock();
-			
+
 			if (_envelope->ok()) {
 				zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 				zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
@@ -219,7 +216,7 @@ zpt::socket zpt::ZMQPoll::bind(short _type, std::string _connection) {
 			}
 			else {
 				_synchronize.unlock();
-				zpt::ZMQRouterDealer * _socket = new zpt::ZMQRouterDealer(_connection, this->__options, this->__emitter);
+				zpt::ZMQRouterDealer* _socket = new zpt::ZMQRouterDealer(_connection, this->__options, this->__emitter);
 				_socket->listen(this->__self);
 				_synchronize.lock();
 				this->__by_name.insert(make_pair(_key, _socket->self()));
@@ -227,8 +224,13 @@ zpt::socket zpt::ZMQPoll::bind(short _type, std::string _connection) {
 				return _socket->self();
 			}
 		}
+		case ZMQ_ASSYNC_REQ : {
+			zpt::ZMQAssyncReq* _socket = new zpt::ZMQAssyncReq(_connection, this->__options, this->__emitter);
+			_socket->listen(this->__self);
+			return _socket->self();
+		}
 		case ZMQ_REQ : {
-			zpt::ZMQReq * _socket = new zpt::ZMQReq(_connection, this->__options, this->__emitter);
+			zpt::ZMQReq* _socket = new zpt::ZMQReq(_connection, this->__options, this->__emitter);
 			_socket->listen(this->__self);
 			return _socket->self();
 		}

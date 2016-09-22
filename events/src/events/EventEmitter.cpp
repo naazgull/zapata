@@ -43,6 +43,10 @@ zpt::EventEmitterPtr zpt::EventEmitter::self() {
 	return this->__self;
 }
 
+std::string zpt::EventEmitter::version() {
+	return this->__options["rest"]["version"]->str();
+}
+
 void zpt::EventEmitter::add_kb(std::string _name, zpt::kb _kb) {
 	auto _found = this->__kb.find(_name);
 	if (_found == this->__kb.end()) {
@@ -57,32 +61,6 @@ zpt::kb zpt::EventEmitter::get_kb(std::string _name) {
 	}
 	return _found->second;
 }
-
-zpt::json zpt::split(std::string _to_split, std::string _separator) {
-	std::istringstream _iss(_to_split);
-	std::string _part;
-	zpt::json _ret = zpt::mkarr();
-	while(_iss.good()) {
-		getline(_iss, _part, _separator[0]);
-		if (_part.length() != 0) {
-			_ret << _part;
-		}
-	}
-	return _ret;
-}
-
-std::string zpt::join(zpt::json _to_join, std::string _separator) {
-	assertz(_to_join->type() == zpt::JSArray, "JSON to join must be an array", 412, 0);
-	std::string _return;
-	for (auto _a : _to_join->arr()) {
-		if (_return.length() != 0) {
-			_return += _separator;
-		}
-		_return += ((string) _a);
-	}
-	return _return;
-}
-
 
 zpt::json zpt::ev::split(std::string _url, zpt::json _orphans) {
 	zpt::JSONObj _ret;

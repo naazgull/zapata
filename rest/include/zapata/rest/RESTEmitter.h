@@ -139,6 +139,8 @@ namespace zpt {
 		zpt::json see_other(std::string _resource, std::string _target_resource);
 		zpt::json options(std::string _resource, std::string _origin);
 
+		std::string url_pattern(zpt::json _to_join);
+
 		namespace cookies {
 			zpt::json deserialize(std::string _cookie_header);
 			std::string serialize(zpt::json _credentials);

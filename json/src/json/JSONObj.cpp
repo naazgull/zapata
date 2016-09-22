@@ -1089,7 +1089,7 @@ void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 zpt::JSONPtr zpt::JSONElementT::flatten() {
 	if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
 		zpt::JSONPtr _return = zpt::mkobj();
-		this->inspect(zpt::json({ "$regexp", "(.*)" }),
+		this->inspect({ "$regexp", "(.*)" },
 			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 				zpt::JSONPtr _self = this->getPath(_object_path);
 				if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {

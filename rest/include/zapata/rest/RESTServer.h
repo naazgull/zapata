@@ -137,30 +137,8 @@ namespace zpt {
 		namespace scopes {
 			std::string serialize(zpt::json _info);
 			zpt::json deserialize(std::string _scope);
+			bool has_permission(std::string _scope, std::string _ns, std::string _permissions);
+			bool has_permission(zpt::json _scope, std::string _ns, std::string _permissions);
 		}
 	}
-
-	class ZMQAssyncReq : public zpt::ZMQ {
-	public:
-		ZMQAssyncReq(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQAssyncReq(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQAssyncReq(std::string _connection, zpt::ev::emitter _emitter);
-		virtual ~ZMQAssyncReq();
-		
-		virtual zpt::json recv();
-		virtual zpt::json send(zpt::json _envelope);
-
-		virtual void relay_for(zpt::socketstream_ptr _socket);
-
-		virtual zsock_t* socket();
-		virtual zsock_t* in();
-		virtual zsock_t* out();
-		virtual short int type();
-		virtual bool once();
-		virtual void listen(zpt::poll _poll);
-		
-	private:
-		zsock_t* __socket;
-		zpt::socketstream_ptr __relayed_socket;
-	};
 }

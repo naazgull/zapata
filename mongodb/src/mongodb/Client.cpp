@@ -137,7 +137,7 @@ int zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt::
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zpt::json({ "$set", _document });
+	_document = { "$set", _document };
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);
@@ -169,7 +169,7 @@ int zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zpt
 	unsigned long _size = this->__conn->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 	assertz(this->__conn->getLastError().length() == 0, string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	_document = zpt::json({ "$unset", _document });
+	_document = { "$unset", _document };
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->update(_full_collection, _filter, _mongo_document.obj(), false, true);

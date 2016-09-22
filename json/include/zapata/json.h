@@ -40,4 +40,3 @@ SOFTWARE.
 #include <zapata/json/JSONObj.h>
 #include <zapata/json/json.h>
 #include <zapata/json/JSONParser.h>
-

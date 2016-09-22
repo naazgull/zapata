@@ -68,6 +68,22 @@ namespace zpt {
 	typedef zpt::ZMQPtr socket;
 	typedef zpt::ZMQPollPtr poll;
 
+	namespace assync {
+		typedef std::function< std::string (zpt::json _envelope) > reply_fn;
+
+		class AssyncReplyException : public std::exception {
+		public:
+			AssyncReplyException(zpt::socket _relay);
+			virtual ~AssyncReplyException();
+
+			virtual std::string what();
+			virtual zpt::socket relay();
+
+		private:
+			zpt::socket __relay;
+		};
+	}
+	
 	class ZMQPoll {
 	public:
 		ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter);
@@ -122,6 +138,9 @@ namespace zpt {
 		virtual zpt::json send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload);
 		virtual zpt::json send(zpt::json _envelope);
 		
+		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
+		virtual void relay_for(zpt::socket _socket);
+
 		virtual zsock_t* socket() = 0;
 		virtual zsock_t* in() = 0;
 		virtual zsock_t* out() = 0;
@@ -137,10 +156,11 @@ namespace zpt {
 		zpt::ZMQPtr __self;
 		zpt::ev::emitter __emitter;
 		std::string __id;
-		zactor_t* __auth;
 		zcert_t* __self_cert;
 		zcert_t* __peer_cert;
-		
+
+		static zactor_t* __auth;
+
 	protected:
 		std::mutex __mtx;		
 	};
@@ -320,5 +340,32 @@ namespace zpt {
 		zactor_t* __socket;
 	};
 
+	class ZMQAssyncReq : public zpt::ZMQ {
+	public:
+		ZMQAssyncReq(zpt::json _options, zpt::ev::emitter _emitter);
+		ZMQAssyncReq(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
+		ZMQAssyncReq(std::string _connection, zpt::ev::emitter _emitter);
+		virtual ~ZMQAssyncReq();
+		
+		virtual zpt::json recv();
+		virtual zpt::json send(zpt::json _envelope);
+
+		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
+		virtual void relay_for(zpt::socket _socket);
+
+		virtual zsock_t* socket();
+		virtual zsock_t* in();
+		virtual zsock_t* out();
+		virtual short int type();
+		virtual bool once();
+		virtual void listen(zpt::poll _poll);
+		
+	private:
+		zsock_t* __socket;
+		zpt::socketstream_ptr __raw_socket;
+		zpt::socket __zmq_socket;
+		short __type;
+		zpt::assync::reply_fn __raw_transformer;
+	};
 }
 

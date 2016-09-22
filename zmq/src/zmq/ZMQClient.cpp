@@ -26,16 +26,15 @@ SOFTWARE.
 #include <chrono>
 #include <ossp/uuid++.hh>
 
-zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : __options( _options ), __connection(_connection.data()), __self(this), __emitter(_emitter), __auth(nullptr), __self_cert(nullptr), __peer_cert(nullptr) {
+zactor_t* zpt::ZMQ::__auth = nullptr;
+
+zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : __options( _options ), __connection(_connection.data()), __self(this), __emitter(_emitter), __self_cert(nullptr), __peer_cert(nullptr) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
 	this->__id.assign(_uuid.string());
 }
 
 zpt::ZMQ::~ZMQ() {
-	if (this->__auth != nullptr) {
-		zactor_destroy(&this->__auth);
-	}
 	if (this->__self_cert != nullptr) {
 		zcert_destroy(&this->__self_cert);
 	}
@@ -65,16 +64,16 @@ zpt::ev::emitter zpt::ZMQ::emitter() {
 }
 
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
-	if (this->__auth == nullptr) {
-		this->__auth = zactor_new(zauth, nullptr);
-		zstr_sendx(this->__auth, "VERBOSE", nullptr);
-		zsock_wait(this->__auth);
+	if (zpt::ZMQ::__auth == nullptr) {
+		zpt::ZMQ::__auth = zactor_new(zauth, nullptr);
+		zstr_sendx(zpt::ZMQ::__auth, "VERBOSE", nullptr);
+		zsock_wait(zpt::ZMQ::__auth);
 	}
 	if (_client_cert_dir.length() != 0) {
-		zstr_sendx(this->__auth, "CURVE", _client_cert_dir.data(), nullptr);
-		zsock_wait(this->__auth);
+		zstr_sendx(zpt::ZMQ::__auth, "CURVE", _client_cert_dir.data(), nullptr);
+		zsock_wait(zpt::ZMQ::__auth);
 	}
-	return this->__auth;
+	return zpt::ZMQ::__auth;
 }
 
 zcert_t* zpt::ZMQ::certificate(int _which) {
@@ -211,6 +210,12 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	return zpt::undefined;
 }
 
+void zpt::ZMQ::relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform) {
+}
+
+void zpt::ZMQ::relay_for(zpt::socket _socket) {
+}
+
 void zpt::ZMQ::unbind() {
 	this->__self.reset();
 }
@@ -227,8 +232,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options, zpt::ev::emitte
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
-		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
-		zsock_set_curve_serverkey(this->__socket, _peer_key.data());
+		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		this->auth();
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
@@ -274,11 +278,11 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitte
 	zsock_set_sndtimeo(this->__socket, 20000);
 
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
-		zlog(std::string("curve: using ") + _options["curve"]["certificates"]["self"]->str() + std::string(" as certificate"), zpt::alert);
+		zlog(std::string("curve: private ") + _options["curve"]["certificates"]["self"]->str(), zpt::alert);
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
-		zlog(std::string("curve: using ") + _options["curve"]["certificates"]["client_dir"]->str() + std::string(" as client public repository"), zpt::alert);
+		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::alert);
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());		
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
@@ -368,7 +372,6 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options, zpt::ev::
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
-		
 		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket_sub);		
 		zsock_set_curve_serverkey(this->__socket_sub, _peer_key.data());
@@ -425,11 +428,8 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options, zpt::ev::emitte
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
-		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
-		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
-		
-		zsock_set_curve_serverkey(this->__socket, _peer_key.data());
+		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }
@@ -476,11 +476,8 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options, zpt::ev::emitte
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
-		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
-		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
-		
-		zsock_set_curve_serverkey(this->__socket, _peer_key.data());
+		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
 
 	/*{
@@ -591,11 +588,8 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options, zpt::ev::emit
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
 		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
-		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
-		std::string _peer_key(zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
-		
-		zsock_set_curve_serverkey(this->__socket, _peer_key.data());
+		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }
@@ -679,6 +673,96 @@ bool zpt::ZMQRouterDealer::once() {
 }
 
 void zpt::ZMQRouterDealer::listen(zpt::poll _poll) {
+}
+
+zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter), __type(-1) {
+	this->__socket = zsock_new(ZMQ_REQ);
+	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndtimeo(this->__socket, 20000);
+	zsock_set_rcvtimeo(this->__socket, 20000);
+
+	std::string _peer(_connection.substr(_connection.find(":") + 3));
+	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
+		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
+		this->certificate(_options["curve"]["certificates"]["peers"][_peer]->str(), ZPT_PEER_CERTIFICATE);
+		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
+		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
+		this->auth();
+	}
+}
+
+zpt::ZMQAssyncReq::~ZMQAssyncReq() {
+	zsock_destroy(& this->__socket);
+	switch (this->__type) {
+		case 1 : {
+			this->__raw_socket->close();
+			break;
+		}
+		case 2 : {
+			this->__zmq_socket->unbind();
+			break;
+		}
+	}
+}
+
+zsock_t* zpt::ZMQAssyncReq::socket() {
+	return this->__socket;
+}
+
+zsock_t* zpt::ZMQAssyncReq::in() {
+	return this->__socket;
+}
+
+zsock_t* zpt::ZMQAssyncReq::out() {
+	return this->__socket;
+}
+
+short int zpt::ZMQAssyncReq::type() {
+	return ZMQ_ASSYNC_REQ;
+}
+
+bool zpt::ZMQAssyncReq::once() {
+	return true;
+}
+
+zpt::json zpt::ZMQAssyncReq::send(zpt::json _envelope) {
+	zpt::ZMQ::send(_envelope);
+	return zpt::undefined;
+}
+
+zpt::json zpt::ZMQAssyncReq::recv() {
+	zpt::json _envelope = zpt::ZMQ::recv();
+	if (!_envelope["status"]->ok() || ((int) _envelope["status"]) < 100) {
+		_envelope << "status" << 501;
+	}
+	switch (this->__type) {
+		case 1 : {
+			std::string _reply = this->__raw_transformer(_envelope);
+			(* this->__raw_socket) << _reply << flush;
+			break;
+		}
+		case 2 : {
+			this->__zmq_socket->send(_envelope);
+			break;
+		}
+	}
+	return zpt::undefined;
+}
+
+void zpt::ZMQAssyncReq::relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform) {
+	this->__raw_socket = _socket;
+	this->__raw_transformer = _transform;
+	this->__type = 1;
+}
+
+void zpt::ZMQAssyncReq::relay_for(zpt::socket _socket) {
+	this->__zmq_socket = _socket;
+	this->__type = 2;
+}
+
+void zpt::ZMQAssyncReq::listen(zpt::poll _poll) {
+	_poll->poll(this->self());
 }
 
 short zpt::str2type(std::string _type) {

@@ -80,7 +80,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	    - _POST_
 	    - _HEAD_
 	***/ 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/apps$"),
 		{
 			{
 				zpt::ev::Get,
@@ -90,14 +90,14 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, _list
+							"status", 200,
+							"payload", _list
 						}
 					);
 				}
@@ -106,24 +106,24 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["description"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["redirect_domain"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["description"]->ok() &&
+						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 					assertz(
-						_envelope[ZPT_PAYLOAD]["redirect_domain"]->type() == zpt::JSArray,
+						_envelope["payload"]["redirect_domain"]->type() == zpt::JSArray,
 						"invalid field type: 'redirect_domain' must be a list of strings", 400, 0);
 
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					std::string _id = _db->insert("apps", _resource, _envelope[ZPT_PAYLOAD]);
+					std::string _id = _db->insert("apps", _resource, _envelope["payload"]);
 					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
-					_db->set("apps", _href, zpt::json({ "client_id", _id, "client_secret", zpt::generate_key() }));
+					_db->set("apps", _href, { "client_id", _id, "client_secret", zpt::generate_key() });
 					
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"id", _id,
 								"href", _href
 							}
@@ -135,18 +135,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					zpt::json _list = _db->query("apps", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("apps", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _list).length()
 							}
 						}
@@ -156,7 +156,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/apps/(.+)$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/apps/(.+)$"),
 		{
 			{
 				zpt::ev::Get,
@@ -166,14 +166,14 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					if (!_document->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 404
+								"status", 404
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, _document
+							"status", 200,
+							"payload", _document
 						}
 					);
 				}
@@ -182,18 +182,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Put,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["description"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["redirect_domain"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["description"]->ok() &&
+						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->save("apps", _resource, _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->save("apps", _resource, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}
@@ -207,8 +207,8 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					size_t _size = _db->remove("apps", _resource);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"removed", _size
 							}
 						}
@@ -223,14 +223,14 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					if (!_document->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 404
+								"status", 404
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _document["elements"][0]).length()
 							}
 						}
@@ -241,11 +241,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Patch,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
-					size_t _size = _db->set("apps", _resource, _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->set("apps", _resource, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}

@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
 		size_t _max = 10100;
 		size_t * _n = new size_t();
-		_api->emitter()->on(zpt::ev::Reply, "/0.9/apps",
+		_api->emitter()->on(zpt::ev::Reply, zpt::path::join({_api->emitter()->version(), "apps"}),
 			[ _n, _max ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 				(* _n)++;
 				zlog(std::to_string(* _n), zpt::debug);
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 		std::thread _sender(
 			[ & ] () -> void {
 				for (size_t _k = 0; _k != _max; _k++) {
-					_client->send(zpt::ev::Get, "/0.9/apps", _message);
+					_client->send(zpt::ev::Get, zpt::path::join({_api->emitter()->version(), "apps"}), _message);
 				}
 				if (_api->options()["zmq"]["type"]->str() == "req") {
 					cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;

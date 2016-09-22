@@ -303,6 +303,7 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 			}
 			catch(std::exception& _e) {
 				zlog(string("unhandled exception: ") + _e.what(), zpt::emergency);
+				throw;
 			}
 		}
 	}
@@ -337,7 +338,7 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope) {
 	zpt::json _in = zpt::mkobj() + _envelope;
 	_in <<
-	"headers" << (zpt::ev::init_request() + _envelope[ZPT_HEADERS]) <<
+	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<
 	"channel" << _url <<
 	"performative" << _method <<
 	"resource" << _url;
@@ -386,8 +387,6 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 			}
 		}
 	}
-
-	zlog("endpoint not found internally, going to loook in directory", zpt::debug);
 
 	if (this->options()["directory"]->ok()) {
 		for (auto _api : this->options()["directory"]->obj()) {
@@ -538,6 +537,10 @@ zpt::json zpt::rest::options(std::string _resource, std::string _origin) {
 	);
 }
 
+std::string zpt::rest::url_pattern(zpt::json _to_join) {
+	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
+}
+		
 zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
 	zpt::json _splitted = zpt::split(_cookie_header, ";");
 	zpt::json _return = zpt::mkobj();

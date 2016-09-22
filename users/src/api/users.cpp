@@ -80,35 +80,53 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	  - _POST_
 	  - _HEAD_
 	***/ 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/users$"),
+	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "users" }),
 		{
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, std::string("/") + _emitter->version() + std::string("/oauth2.0/validate"), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "ar"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("users", zpt::get(ZPT_PAYLOAD, _envelope));
+					zpt::json _list = _db->query("users", zpt::get("payload", _envelope));
 					if (!_list->ok()) {
-						return zpt::set(ZPT_STATUS, 204);
+						return zpt::set("status", 204);
 					}
-					return zpt::set(ZPT_STATUS, 200, zpt::set(ZPT_PAYLOAD, _list));
+					return zpt::set("status", 200, zpt::set("payload", _list));
 				}
 			},
 			{
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, std::string("/") + _emitter->version() + std::string("/oauth2.0/validate"), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["e-mail"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["password"]->ok(),
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "aw"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
+					assertz(
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["e-mail"]->ok() &&
+						_envelope["payload"]["password"]->ok(),
 						"required fields: 'name', 'e-mail' and 'password'", 412, 0);
 					
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					std::string _id = _db->insert("users", _resource, _envelope[ZPT_PAYLOAD]);
+					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"id", _id,
 								"href", (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
 							}
@@ -119,19 +137,28 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, std::string("/") + _emitter->version() + std::string("/oauth2.0/validate"), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } } );
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "a"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("users", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("users", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _list).length()
 							}
 						}
@@ -141,64 +168,64 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/(.+)$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/users/(.+)$"),
 		{
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					if (_resource == (std::string("/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/me"))) {
-						assertz((_envelope[ZPT_PAYLOAD]["username"]->ok() && _envelope[ZPT_PAYLOAD]["password"]->ok()) || _envelope[ZPT_HEADERS]["Cookie"]->ok() || _envelope[ZPT_HEADERS]["Authorization"]->ok(), "access to this endpoint must be authenticated", 401, 0);
-						if (_envelope[ZPT_HEADERS]["Authorization"]->ok()) {
-							zpt::json _validation = _emitter->route(zpt::ev::Post, std::string("/0.9/oauth2.0/validate"),
+					if (_resource == (std::string("/") + _emitter->version() + std::string("/users/me"))) {
+						assertz((_envelope["payload"]["username"]->ok() && _envelope["payload"]["password"]->ok()) || _envelope["headers"]["Cookie"]->ok() || _envelope["headers"]["Authorization"]->ok(), "access to this endpoint must be authenticated", 401, 0);
+						if (_envelope["headers"]["Authorization"]->ok()) {
+							zpt::json _validation = _emitter->route(zpt::ev::Post, std::string("/") + _emitter->version() + std::string("/oauth2.0/validate"),
 								zpt::json(
 									{
-										ZPT_PAYLOAD, {
-											"access_token", _envelope[ZPT_HEADERS]["Authentication"]
+										"payload", {
+											"access_token", _envelope["headers"]["Authentication"]
 										}
 									}
 								)
 							); 
 							assertz(_validation->ok(), "Bad authorization", 412, 0);
-							_envelope[ZPT_PAYLOAD] << "_id" << _validation["owner"]["_id"]->str();
-							zpt::json _document = _db->query("users", _envelope[ZPT_PAYLOAD]);
+							_envelope["payload"] << "_id" << _validation["owner"]["_id"]->str();
+							zpt::json _document = _db->query("users", _envelope["payload"]);
 							assertz(_document->ok() && ((int) _document["size"]) != 0, "access to this endpoint must be authenticated", 401, 0);
 							return zpt::json(
 								{
-									ZPT_STATUS, 200,
-									ZPT_PAYLOAD, _document["elements"][0]
+									"status", 200,
+									"payload", _document["elements"][0]
 								}
 							);
 						}
-						else if (_envelope[ZPT_PAYLOAD]["username"]->ok() && _envelope[ZPT_PAYLOAD]["password"]->ok()) {
-							zpt::json _document = _db->query("users", _envelope[ZPT_PAYLOAD]);
+						else if (_envelope["payload"]["username"]->ok() && _envelope["payload"]["password"]->ok()) {
+							zpt::json _document = _db->query("users", _envelope["payload"]);
 							assertz(_document->ok() && ((int) _document["size"]) != 0, "access to this endpoint must be authenticated", 401, 0);
 							return zpt::json(
 								{
-									ZPT_STATUS, 200,
-									ZPT_PAYLOAD, _document["elements"][0]
+									"status", 200,
+									"payload", _document["elements"][0]
 								}
 							);
 							
 						}
-						else if (_envelope[ZPT_HEADERS]["Cookie"]->ok()) {
-							zpt::json _cookie = zpt::rest::cookies::deserialize(_envelope[ZPT_HEADERS]["Cookie"]->str());
-							zpt::json _validation = _emitter->route(zpt::ev::Post, std::string("/0.9/oauth2.0/validate"),
+						else if (_envelope["headers"]["Cookie"]->ok()) {
+							zpt::json _cookie = zpt::rest::cookies::deserialize(_envelope["headers"]["Cookie"]->str());
+							zpt::json _validation = _emitter->route(zpt::ev::Post, std::string("/") + _emitter->version() + std::string("/oauth2.0/validate"),
 								zpt::json(
 									{
-										ZPT_PAYLOAD, {
+										"payload", {
 											"access_token", _cookie["value"]
 										}
 									}
 								)
 							);
-							assertz(_validation->ok() && _validation[ZPT_STATUS] == 200, "Bad cookie", 412, 0);
-							zpt::json _document = _db->query("users", zpt::json({ "_id", _validation[ZPT_PAYLOAD]["owner"]["_id"]->str() }));
+							assertz(_validation->ok() && _validation["status"] == 200, "Bad cookie", 412, 0);
+							zpt::json _document = _db->query("users", { "_id", _validation["payload"]["owner"]["_id"]->str() });
 							assertz(_document->ok() && ((int) _document["size"]) != 0, "access to this endpoint must be authenticated", 401, 0);
 							return zpt::json(
 								{
-									ZPT_STATUS, 200,
-									ZPT_PAYLOAD, _document["elements"][0]
+									"status", 200,
+									"payload", _document["elements"][0]
 								}
 							);
 						}
@@ -210,18 +237,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Put,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["e-mail"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["password"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["e-mail"]->ok() &&
+						_envelope["payload"]["password"]->ok(),
 						"required fields: 'name', 'e-mail' and 'password'", 412, 0);
 				
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->save("users", zpt::json({ "_id", _resource }), _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->save("users", { "_id", _resource }, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}
@@ -232,11 +259,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Delete,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->remove("users", zpt::json({ "_id", _resource }));
+					size_t _size = _db->remove("users", { "_id", _resource });
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"removed", _size
 							}
 						}
@@ -247,19 +274,19 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					_envelope[ZPT_PAYLOAD] << "_id" << _resource;
-					zpt::json _document = _db->query("users", _envelope[ZPT_PAYLOAD]);
+					_envelope["payload"] << "_id" << _resource;
+					zpt::json _document = _db->query("users", _envelope["payload"]);
 					if (!_document->ok() || _document["size"] == 0) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 404
+								"status", 404
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _document["elements"][0]).length()
 							}
 						}
@@ -270,11 +297,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Patch,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->set("users", zpt::json({ "_id", _resource }), _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->set("users", { "_id", _resource }, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}
@@ -284,24 +311,24 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/users/([^/]+)/groups$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/users/([^/]+)/groups$"),
 		{
 			{
 				zpt::ev::Get, 
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("users", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("users", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, _list
+							"status", 200,
+							"payload", _list
 						}
 					);
 				}
@@ -310,18 +337,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["e-mail"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["password"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["e-mail"]->ok() &&
+						_envelope["payload"]["password"]->ok(),
 						"required fields: 'name', 'e-mail' and 'password'", 412, 0);
 				
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					std::string _id = _db->insert("users", _resource, _envelope[ZPT_PAYLOAD]);
+					std::string _id = _db->insert("users", _resource, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"id", _id,
 								"href", (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
 							}
@@ -333,18 +360,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("users", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("users", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _list).length()
 							}
 						}
@@ -354,24 +381,24 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 	
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/groups$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/groups$"),
 		{
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("groups", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("groups", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, _list
+							"status", 200,
+							"payload", _list
 						}
 					);
 				}
@@ -380,18 +407,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["code"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["scopes"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["code"]->ok() &&
+						_envelope["payload"]["scopes"]->ok(),
 						"required fields: 'name', 'code' and 'scopes'", 412, 0);
 				
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					std::string _id = _db->insert("groups", _resource, _envelope[ZPT_PAYLOAD]);
+					std::string _id = _db->insert("groups", _resource, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"id", _id,
 								"href", (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id)
 							}
@@ -403,18 +430,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					zpt::json _list = _db->query("groups", _envelope[ZPT_PAYLOAD]);
+					zpt::json _list = _db->query("groups", _envelope["payload"]);
 					if (!_list->ok()) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 204
+								"status", 204
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _list).length()
 							}
 						}
@@ -424,25 +451,25 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 		}
 	);
 
-	_emitter->on(std::string("^/") + _emitter->options()["rest"]["version"]->str() + std::string("/groups/(.+)$"),
+	_emitter->on(std::string("^/") + _emitter->version() + std::string("/groups/(.+)$"),
 		{
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					_envelope[ZPT_PAYLOAD] << "_id" << _resource;
-					zpt::json _document = _db->query("groups", _envelope[ZPT_PAYLOAD]);
+					_envelope["payload"] << "_id" << _resource;
+					zpt::json _document = _db->query("groups", _envelope["payload"]);
 					if (!_document->ok() || _document["size"] == 0) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 404
+								"status", 404
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, _document["elements"][0]
+							"status", 200,
+							"payload", _document["elements"][0]
 						}
 					);
 				}
@@ -451,18 +478,18 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Put,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					assertz(
-						_envelope[ZPT_PAYLOAD]->ok() &&
-						_envelope[ZPT_PAYLOAD]["name"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["code"]->ok() &&
-						_envelope[ZPT_PAYLOAD]["scopes"]->ok(),
+						_envelope["payload"]->ok() &&
+						_envelope["payload"]["name"]->ok() &&
+						_envelope["payload"]["code"]->ok() &&
+						_envelope["payload"]["scopes"]->ok(),
 						"required fields: 'name', 'code' and 'scopes'", 412, 0);
 				
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->save("groups", zpt::json({ "_id", _resource }), _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->save("groups", { "_id", _resource }, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}
@@ -473,11 +500,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Delete,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->remove("groups", zpt::json({ "_id", _resource }));
+					size_t _size = _db->remove("groups", { "_id", _resource });
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"removed", _size
 							}
 						}
@@ -488,19 +515,19 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					_envelope[ZPT_PAYLOAD] << "_id" << _resource;
-					zpt::json _document = _db->query("groups", _envelope[ZPT_PAYLOAD]);
+					_envelope["payload"] << "_id" << _resource;
+					zpt::json _document = _db->query("groups", _envelope["payload"]);
 					if (!_document->ok() || _document["size"] == 0) {
 						return zpt::json(
 							{
-								ZPT_STATUS, 404
+								"status", 404
 							}
 						);
 					}
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_HEADERS, {
+							"status", 200,
+							"headers", {
 								"Content-Length", ((std::string) _document["elements"][0]).length()
 							}
 						}
@@ -511,11 +538,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Patch,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
-					size_t _size = _db->set("groups", zpt::json({ "_id", _resource }), _envelope[ZPT_PAYLOAD]);
+					size_t _size = _db->set("groups", { "_id", _resource }, _envelope["payload"]);
 					return zpt::json(
 						{
-							ZPT_STATUS, 200,
-							ZPT_PAYLOAD, {
+							"status", 200,
+							"payload", {
 								"updated", _size
 							}
 						}

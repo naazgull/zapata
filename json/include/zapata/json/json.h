@@ -105,4 +105,13 @@ namespace zpt {
 			return _result;
 		};
 	};
+
+	zpt::json split(std::string _to_split, std::string _separator);
+	std::string join(zpt::json _to_join, std::string _separator);
+
+	namespace path {
+		zpt::json split(std::string _to_split);
+		std::string join(zpt::json _to_join);
+	}
+
 }
