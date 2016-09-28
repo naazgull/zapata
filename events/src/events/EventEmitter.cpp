@@ -240,28 +240,25 @@ zpt::json zpt::EventListener::head(std::string _resource, zpt::json _envelope, z
 
 zpt::json zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
 	if (_envelope["headers"]["Origin"]->ok()) {
-		return zpt::json(
-			{
-				"status", 413,
-				"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
-			}
-		);
+		return {
+			"status", 413,
+			"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
+		};
 	}
 	string _origin = _envelope["headers"]["Origin"];
-	return zpt::json(
-		{
-			"status", 200,
-			"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
-					{
-						"Access-Control-Allow-Origin", _envelope["headers"]["Origin"],
-						"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
-						"Access-Control-Allow-Headers", ACCESS_CONTROL_HEADERS,
-						"Access-Control-Expose-Headers", ACCESS_CONTROL_HEADERS,
-						"Access-Control-Max-Age", "1728000"
-					}
-				)
+	return {
+		"status", 200,
+		"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
+				{
+					"Access-Control-Allow-Origin", _envelope["headers"]["Origin"],
+					"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
+					"Access-Control-Allow-Headers", ACCESS_CONTROL_HEADERS,
+					"Access-Control-Expose-Headers", ACCESS_CONTROL_HEADERS,
+					"Access-Control-Max-Age", "1728000"
+				}
 			)
-		});
+		)
+	};
 }
 
 zpt::json zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {

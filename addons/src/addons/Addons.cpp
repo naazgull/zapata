@@ -155,15 +155,13 @@ zpt::json zpt::Addons::trigger(zpt::ev::performative _method, std::string _resou
 				}
 			}
 			catch (zpt::AssertionException& _e) {
-				return zpt::json(
-					{
-						"status", _e.status(),
-						"error",  true,
-						"assertion_failed", _e.description(),
-						"message", _e.what(),
-						"code", _e.code()
-					}
-				);
+				return {
+					"status", _e.status(),
+					"error",  true,
+					"assertion_failed", _e.description(),
+					"message", _e.what(),
+					"code", _e.code()
+				};
 			}
 		}
 	}

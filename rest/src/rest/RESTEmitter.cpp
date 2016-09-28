@@ -82,16 +82,13 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 	};
 	this->__default_options = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		if (_envelope["headers"]["Origin"]->ok()) {
-			return zpt::json(
-				{
-					"status", 413,
-					"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
-				}
-			);
+			return {
+				"status", 413,
+				"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
+			};
 		}
 		string _origin = _envelope["headers"]["Origin"];
-		return zpt::json(
-		{
+		return {
 			"status", 200,
 			"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
 					{
@@ -103,7 +100,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 					}
 				)
 			)
-		});
+		};
 	};
 	this->__default_patch = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
@@ -287,18 +284,16 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 				}
 			}
 			catch (zpt::AssertionException& _e) {
-				_return = zpt::json(
-					{
-						"performative", zpt::ev::Reply,
-						"status", _e.status(),
-						"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
-						"payload", {
-							"text", _e.what(),
-							"assertion_failed", _e.description(),
-							"code", _e.code()
-						}
+				_return = {
+					"performative", zpt::ev::Reply,
+					"status", _e.status(),
+					"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
+					"payload", {
+						"text", _e.what(),
+						"assertion_failed", _e.description(),
+						"code", _e.code()
 					}
-				);
+				};
 				break;
 			}
 			catch(std::exception& _e) {
@@ -308,28 +303,24 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 		}
 	}
 	if (!_endpoint_found) {
-		_return = zpt::json(
-			{
-				"performative", zpt::ev::Reply,
-				"status", 404,
-				"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
-				"payload", {
-					"text", "the requrested resource was not found"
-				}
+		_return = {
+			"performative", zpt::ev::Reply,
+			"status", 404,
+			"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
+			"payload", {
+				"text", "the requrested resource was not found"
 			}
-		);
+		};
 	}
 	else if (!_method_found) {
-		_return = zpt::json(
-			{
-				"performative", zpt::ev::Reply,
-				"status", 405,
-				"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
-				"payload", {
-					"text", "the requrested performative is not allowed to be used with the requested resource"
-				}
+		_return = {
+			"performative", zpt::ev::Reply,
+			"status", 405,
+			"headers", zpt::ev::init_reply(_envelope["headers"]["X-Cid"]->str()),
+			"payload", {
+				"text", "the requrested performative is not allowed to be used with the requested resource"
 			}
-		);
+		};
 	}
 	
 	return _return;
@@ -358,32 +349,28 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 				}
 			}
 			catch (zpt::AssertionException& _e) {
-			       return zpt::json(
-				       {
-					       "performative", zpt::ev::Reply,
-					       "status", _e.status(),
-					       "headers", zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]),
-					       "payload", {
-						       "text", _e.what(),
-						       "assertion_failed", _e.description(),
-						       "code", _e.code()
-						}
-				       }
-				);
-				break;
+			       return {
+				       "performative", zpt::ev::Reply,
+				       "status", _e.status(),
+				       "headers", zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]),
+				       "payload", {
+					       "text", _e.what(),
+					       "assertion_failed", _e.description(),
+					       "code", _e.code()
+					       }
+			       };
+			       break;
 			}
 			catch(std::exception& _e) {
-			       return zpt::json(
-				       {
-					       "performative", zpt::ev::Reply,
-					       "status", 500,
-					       "headers", zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]),
-					       "payload", {
-						       "text", _e.what(),
-						       "code", 0
-						}
-				       }
-				);
+				return {
+					"performative", zpt::ev::Reply,
+					"status", 500,
+					"headers", zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]),
+					"payload", {
+						"text", _e.what(),
+						"code", 0
+					}
+				};
 			}
 		}
 	}
@@ -418,7 +405,6 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 							_client->unbind();
 							return zpt::rest::accepted(_url);
 						}
-						
 					}
 				}
 			}
@@ -431,110 +417,98 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 zpt::json zpt::rest::not_found(std::string _resource) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 404,
-			"payload", {
-				"text", "resource not found"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 404,
+		"payload", {
+			"text", "resource not found"
 		}
-	);
+	};
 }
 
 zpt::json zpt::rest::accepted(std::string _resource) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 202,
-			"payload", {
-				"text", "request was accepted"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 202,
+		"payload", {
+			"text", "request was accepted"
 		}
-	);
+	};
 }
 
 zpt::json zpt::rest::no_content(std::string _resource) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 204,
-			"payload", {
-				"text", "the required resource produced no content"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 204,
+		"payload", {
+			"text", "the required resource produced no content"
 		}
-	);
+	};
 }
 
 zpt::json zpt::rest::temporary_redirect(std::string _resource, std::string _target_resource) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 307,
-			"headers", {
-				"Location", _target_resource
-			},
-			"payload", {
-				"text", "temporarily redirecting you to another location"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 307,
+		"headers", {
+			"Location", _target_resource
+		},
+		"payload", {
+			"text", "temporarily redirecting you to another location"
 		}
-	);
+	};
 }
 
 zpt::json zpt::rest::see_other(std::string _resource, std::string _target_resource) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 303,
-			"headers", {
-				"Location", _target_resource
-			},
-			"payload", {
-				"text", "temporarily redirecting you to another location"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 303,
+		"headers", {
+			"Location", _target_resource
+		},
+		"payload", {
+			"text", "temporarily redirecting you to another location"
 		}
-	);
+	};
 }
 
 zpt::json zpt::rest::options(std::string _resource, std::string _origin) {
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);
-	return zpt::json(
-		{
-			"channel", _uuid.string(),
-			"performative", zpt::ev::Reply,
-			"resource", _resource,
-			"status", 200,
-			"headers", {
-				"Access-Control-Allow-Origin", _origin,
-				"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
-				"Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS,
-				"Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS,
-				"Access-Control-Max-Age", "1728000"
-			},
-			"payload", {
-				"text", "request was accepted"
-			}
+	return {
+		"channel", _uuid.string(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 200,
+		"headers", {
+			"Access-Control-Allow-Origin", _origin,
+			"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
+			"Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS,
+			"Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS,
+			"Access-Control-Max-Age", "1728000"
+		},
+		"payload", {
+			"text", "request was accepted"
 		}
-	);
+	};
 }
 
 std::string zpt::rest::url_pattern(zpt::json _to_join) {

@@ -68,10 +68,10 @@ zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
 		zpt::ZMQ::__auth = zactor_new(zauth, nullptr);
 		zstr_sendx(zpt::ZMQ::__auth, "VERBOSE", nullptr);
 		zsock_wait(zpt::ZMQ::__auth);
-	}
-	if (_client_cert_dir.length() != 0) {
-		zstr_sendx(zpt::ZMQ::__auth, "CURVE", _client_cert_dir.data(), nullptr);
-		zsock_wait(zpt::ZMQ::__auth);
+		if (_client_cert_dir.length() != 0) {
+			zstr_sendx(zpt::ZMQ::__auth, "CURVE", _client_cert_dir.data(), nullptr);
+			zsock_wait(zpt::ZMQ::__auth);
+		}
 	}
 	return zpt::ZMQ::__auth;
 }
@@ -144,24 +144,18 @@ zpt::json zpt::ZMQ::recv() {
 	}
 	else {
 		_synchronize.unlock();
-		return zpt::json(
-			{
-				"status", 503
-			}
-		);
+		return { "status", 503 };
 	}
 }
 
 zpt::json zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) {
 	return this->send(
-		zpt::json(
-			{
-				"channel", _resource,
-				"performative", _performative,
-				"resource", _resource,
-				"payload", _payload
-			}
-		)
+		{
+			"channel", _resource,
+			"performative", _performative,
+			"resource", _resource,
+			"payload", _payload
+		}
 	);
 }
 
@@ -321,11 +315,11 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options, zpt::
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket = zactor_new(zproxy, nullptr);
-	zstr_sendx(this->__socket, "FRONTEND", "XSUB", _connection1.data(), nullptr);
+	zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr);
 	zsock_wait(this->__socket);
-	zstr_sendx(this->__socket, "BACKEND", "XPUB", _connection2.data(), nullptr);
+	zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr);
 	zsock_wait(this->__socket);
-	zlog(std::string("attaching XPUB/XSUB socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching XSUB/XPUB socket to ") + _connection, zpt::notice);
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
@@ -414,7 +408,7 @@ void zpt::ZMQPubSub::listen(zpt::poll _poll) {
 void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	for (size_t _p = 0; _p != 8; _p++) {
-		zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + _prefix).data());
+		zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + std::string(" ") + _prefix).data());
 	}
 }
 
@@ -525,7 +519,7 @@ void zpt::ZMQSub::listen(zpt::poll _poll) {
 void zpt::ZMQSub::subscribe(std::string _prefix) {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	for (size_t _p = 0; _p != 8; _p++) {
-		zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + _prefix).data());
+		zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + std::string(" ") + _prefix).data());
 	}
 }
 

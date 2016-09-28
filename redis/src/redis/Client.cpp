@@ -415,12 +415,10 @@ int zpt::redis::Client::save(std::string _collection, std::string _url, zpt::jso
 	}
 	while (_cursor != 0);
 
-	return zpt::json(
-		{
-			"size", _return->size(),
-			"elements", _return
-		}
-	);
+	return {
+		"size", _return->size(),
+		"elements", _return
+	};
 }
 
 zpt::json zpt::redis::Client::all(std::string _collection) {
@@ -482,12 +480,10 @@ zpt::json zpt::redis::Client::all(std::string _collection) {
 				_return << (zpt::json) zpt::json(_json);
 			}
 			freeReplyObject(_reply);
-			return zpt::json(
-				{
-					"size", _return->size(),
-					"elements", _return
-				 }
-			);
+			return {
+				"size", _return->size(),
+				"elements", _return
+			};
 		}
 		default : {
 			zlog("\nnone of the above", zpt::notice);

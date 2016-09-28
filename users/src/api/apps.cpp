@@ -43,7 +43,7 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
+T he above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -80,7 +80,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	    - _POST_
 	    - _HEAD_
 	***/ 
-	_emitter->on(std::string("^/") + _emitter->version() + std::string("/apps$"),
+	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "apps" }),
 		{
 			{
 				zpt::ev::Get,
@@ -88,18 +88,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _list = _db->query("apps", (!_envelope["payload"]->ok() || _envelope["payload"]->obj()->size() == 0 ? std::string("*") : std::string("*") + ((std::string) _envelope["payload"]->obj()->begin()->second) + std::string("*")));
 					if (!_list->ok()) {
-						return zpt::json(
-							{
-								"status", 204
-							}
-						);
+						return { "status", 204 };
 					}
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", _list
-						}
-					);
+					return {
+						"status", 200,
+						"payload", _list
+					};
 				}
 			},
 			{
@@ -120,15 +114,13 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					std::string _href = (_resource + (_resource.back() != '/' ? std::string("/") : std::string("")) + _id);					
 					_db->set("apps", _href, { "client_id", _id, "client_secret", zpt::generate_key() });
 					
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", {
-								"id", _id,
-								"href", _href
-							}
+					return {
+						"status", 200,
+						"payload", {
+							"id", _id,
+							"href", _href
 						}
-					);
+					};
 				}
 			},
 			{
@@ -137,26 +129,20 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _list = _db->query("apps", _envelope["payload"]);
 					if (!_list->ok()) {
-						return zpt::json(
-							{
-								"status", 204
-							}
-						);
+						return { "status", 204 };
 					}
-					return zpt::json(
-						{
-							"status", 200,
-							"headers", {
-								"Content-Length", ((std::string) _list).length()
-							}
+					return {
+						"status", 200,
+						"headers", {
+							"Content-Length", ((std::string) _list).length()
 						}
-					);
+					};
 				}
 			}
 		}
 	);
 
-	_emitter->on(std::string("^/") + _emitter->version() + std::string("/apps/(.+)$"),
+	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "apps", "(.+)" }),
 		{
 			{
 				zpt::ev::Get,
@@ -164,18 +150,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return zpt::json(
-							{
-								"status", 404
-							}
-						);
+						return { "status", 404 };
 					}
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", _document
-						}
-					);
+					return {
+						"status", 200,
+						"payload", _document
+					};
 				}
 			},
 			{
@@ -190,14 +170,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->save("apps", _resource, _envelope["payload"]);
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", {
-								"updated", _size
-							}
+					return {
+						"status", 200,
+						"payload", {
+							"updated", _size
 						}
-					);
+					};
 				}
 			},
 			{
@@ -205,14 +183,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->remove("apps", _resource);
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", {
-								"removed", _size
-							}
+					return {
+						"status", 200,
+						"payload", {
+							"removed", _size
 						}
-					);
+					};
 				}
 			},
 			{
@@ -221,20 +197,14 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {
-						return zpt::json(
-							{
-								"status", 404
-							}
-						);
+						return { "status", 404 };
 					}
-					return zpt::json(
-						{
-							"status", 200,
-							"headers", {
-								"Content-Length", ((std::string) _document["elements"][0]).length()
-							}
+					return {
+						"status", 200,
+						"headers", {
+							"Content-Length", ((std::string) _document["elements"][0]).length()
 						}
-					);
+					};
 				}
 			},
 			{
@@ -242,14 +212,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					size_t _size = _db->set("apps", _resource, _envelope["payload"]);
-					return zpt::json(
-						{
-							"status", 200,
-							"payload", {
-								"updated", _size
-							}
+					return {
+						"status", 200,
+						"payload", {
+							"updated", _size
 						}
-					);
+					};
 				}
 			}
 		}

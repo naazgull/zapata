@@ -170,6 +170,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			_lib_file.append(".so");
 
 			if (_lib_file.length() > 6) {
+				zlog(std::string("loading module '") + _lib_file + std::string("'"), zpt::notice);
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
 					zlog(std::string(dlerror()), zpt::error);
@@ -188,17 +189,21 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		 *  definition of handlers for the file upload controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Post, std::string("^/") + this->__emitter->version() + std::string("/files$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
-			return zpt::undefined;
-		});
+		this->__emitter->on(zpt::ev::Post, zpt::rest::url_pattern({ this->__emitter->version(), "files" }),
+			[] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
+				return zpt::undefined;
+			}
+		);
 
 		/*
 		 *  definition of handlers for the file upload removal controller
 		 *  registered as a Controller
 		 */
-		this->__emitter->on(zpt::ev::Delete, std::string("^/") + this->__emitter->version() + std::string("/files/(.+)$"), [] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
-			return zpt::undefined;
-		});
+		this->__emitter->on(zpt::ev::Delete, zpt::rest::url_pattern({ this->__emitter->version(), "files", "(.+)" }),
+			[] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
+				return zpt::undefined;
+			}
+		);
 	}
 
 }
@@ -248,21 +253,19 @@ void zpt::RESTServer::start() {
 							}
 							catch(zpt::AssertionException& _e) {
 								zpt::http::rep _reply = zpt::rest::zmq2http(
-									zpt::json(
-										{
-											"performative", zpt::ev::Reply,
-											"status", 500,
-											"headers", zpt::ev::init_reply(),
-											"payload", {
-												"text", _e.what(),
-												"assertion_failed", _e.description(),
-												"code", _e.code()
-												}
+									{
+										"performative", zpt::ev::Reply,
+										"status", 500,
+										"headers", zpt::ev::init_reply(),
+										"payload", {
+											"text", _e.what(),
+											"assertion_failed", _e.description(),
+											"code", _e.code()
 										}
-									)
+									}
 								);
 								(*_cs) << _reply << flush;
-								_cs->close();								
+								_cs->close();							
 							}
 						}
 					}

@@ -246,12 +246,10 @@ zpt::json zpt::mongodb::Client::query(std::string _collection, zpt::json _patter
 	if (_elements->size() == 0) {
 		return zpt::undefined;
 	}
-	zpt::json _return = zpt::json(
-		{
-			"size", _size, 
-			"elements", _elements
-		}
-	);
+	zpt::json _return = {
+		"size", _size, 
+		"elements", _elements
+	};
 	if (_page_size != 0) {
 		_return << "links" << zpt::json(
 			{

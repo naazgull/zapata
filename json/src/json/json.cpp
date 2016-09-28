@@ -38,13 +38,23 @@ zpt::json zpt::split(std::string _to_split, std::string _separator) {
 }
 
 std::string zpt::join(zpt::json _to_join, std::string _separator) {
-	assertz(_to_join->type() == zpt::JSArray, "JSON to join must be an array", 412, 0);
+	assertz(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject, "JSON to join must be an array", 412, 0);
 	std::string _return;
-	for (auto _a : _to_join->arr()) {
-		if (_return.length() != 0) {
-			_return += _separator;
+	if (_to_join->type() == zpt::JSArray) {
+		for (auto _a : _to_join->arr()) {
+			if (_return.length() != 0) {
+				_return += _separator;
+			}
+			_return += ((std::string) _a);
 		}
-		_return += ((string) _a);
+	}
+	else if (_to_join->type() == zpt::JSObject) {
+		for (auto _a : _to_join->obj()) {
+			if (_return.length() != 0) {
+				_return += _separator;
+			}
+			_return += _a.first + _separator + ((std::string) _a.second);
+		}
 	}
 	return _return;
 }

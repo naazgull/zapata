@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
 		size_t _max = 10100;
 		size_t * _n = new size_t();
-		_api->emitter()->on(zpt::ev::Reply, zpt::path::join({_api->emitter()->version(), "apps"}),
+		_api->emitter()->on(zpt::ev::Reply, zpt::rest::url_pattern({ _api->emitter()->version(), "apps" }),
 			[ _n, _max ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 				(* _n)++;
 				zlog(std::to_string(* _n), zpt::debug);
