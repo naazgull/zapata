@@ -229,7 +229,6 @@ zpt::json zpt::mongodb::Client::query(std::string _collection, zpt::json _patter
 	zpt::mongodb::get_query(_pattern, _query_b, _order_b, _page_size, _page_start_index);
 
 	mongo::Query _query(_query_b.done());
-	cout << _query.obj.jsonString(mongo::JS) << endl << flush;
 	unsigned long _size = this->__conn->count(_full_collection, _query.obj, (int) mongo::QueryOption_SlaveOk);
 	mongo::BSONObj _order = _order_b.done();
 	if (!_order.isEmpty()) {
