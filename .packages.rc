@@ -11,5 +11,4 @@ export projects=(
        mongodb
        redis
        users
-       examples
 )

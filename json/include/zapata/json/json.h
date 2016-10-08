@@ -25,6 +25,8 @@ SOFTWARE.
 #pragma once
 
 #include <string>
+#include <unistd.h>
+#include <getopt.h>
 #include <zapata/json/JSONObj.h>
 #include <zapata/json/JSONParser.h>
 
@@ -112,6 +114,14 @@ namespace zpt {
 	namespace path {
 		zpt::json split(std::string _to_split);
 		std::string join(zpt::json _to_join);
+	}
+
+	namespace conf {
+		zpt::json init(int argc, char* argv[]);
+		void setup(zpt::json _options);
+		void dirs(std::string _dir, zpt::json _options);
+		void dirs(zpt::json _options);
+		void env(zpt::json _options);
 	}
 
 }

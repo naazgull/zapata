@@ -40,3 +40,5 @@ rest/src/rest/zapi
 rest/src/rest/zcli
 base/src/base/zoc
 zmq/src/zmq/zcert
+upstream
+packages

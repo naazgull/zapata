@@ -111,15 +111,6 @@ namespace zpt {
 		zpt::json __options;
 	};
 
-
-	namespace conf {
-		zpt::json init(int argc, char* argv[]);
-		void setup(zpt::json _options);
-		void dirs(std::string _dir, zpt::json _options);
-		void dirs(zpt::json _options);
-		void env(zpt::json _options);
-	}
-
 	namespace rest {
 		zpt::json http2zmq(zpt::http::req _request);
 		zpt::HTTPRep zmq2http(zpt::json _out);

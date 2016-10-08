@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 // $insert class_ih
-#include "JSONLexerimpl.h"
+#include <zapata/json/JSONLexerimpl.h>
 
 // $insert namespace-open
 namespace zpt

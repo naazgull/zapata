@@ -11,6 +11,7 @@ uninstall:
 	./.build uninstall
 
 distcheck:
+	sudo rm -rfv */zapata-*.tar.gz
 	./.build distcheck
 
 config:
@@ -21,3 +22,8 @@ debug:
 
 bump:
 	./.repo bump minor
+
+package:
+	sudo rm -rfv upstream/*
+	./.build package
+

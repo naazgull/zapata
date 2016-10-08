@@ -29,6 +29,36 @@ do
 	debug)
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    ;;
+	package)
+	    for f in *.tar.gz
+	    do
+		fullname=${f%.tar.gz}
+		prefix=${fullname##*/}
+		revision=${prefix##*-}
+		no_revision_prefix=${prefix%-*}
+		version=${no_revision_prefix##*-}
+		no_version_prefix=${no_revision_prefix%-*}
+		orig=../upstream/$no_version_prefix\_$version.orig.tar.gz
+		rm -rfv ../upstream/*
+		echo "processing $orig"
+		cp -rf $f $orig
+		pushd ../upstream/
+		tar xvzf $no_version_prefix\_$version.orig.tar.gz
+		pushd $prefix/
+		debuild -us -uc
+		if [[ $? != 0 ]]
+		then
+		    exit -1
+		fi
+		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../packages/binary-amd64
+		if [[ $? != 0 ]]
+		then
+		    exit -1
+		fi
+		popd
+		popd
+	    done
+	    ;;
     esac
     if [[ $? != 0 ]]
     then

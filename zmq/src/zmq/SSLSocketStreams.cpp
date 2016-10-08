@@ -24,3 +24,38 @@ SOFTWARE.
 
 #include <zapata/zmq/SSLSocketStreams.h>
 
+std::string zpt::ssl_error_print(SSL * _ssl, int _ret) {
+	switch(SSL_get_error(_ssl, _ret)) {
+		case SSL_ERROR_NONE : {
+			return string("SSL_ERROR_NONE: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_ZERO_RETURN : {
+			return string("SSL_ERROR_ZERO_RETURN: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_WANT_READ :{
+			return string("SSL_ERROR_WANT_READ: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_WANT_WRITE : {
+			return string("SSL_ERROR_WANT_WRITE: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_WANT_CONNECT :{
+			return string("SSL_ERROR_WANT_CONNECT: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_WANT_ACCEPT : {
+			return string("SSL_ERROR_WANT_ACCEPT: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+		case SSL_ERROR_WANT_X509_LOOKUP : {
+			return string("SSL_ERROR_WANT_X509_LOOKUP: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+			/*case SSL_ERROR_WANT_ASYNC : {                                                                                                                                                                                                                          
+                         return string("SSL_ERROR_WANT_ASYNC: ") + string(ERR_error_string(ERR_get_error(), nullptr));                                                                                                                                                    
+			 }*/
+		case SSL_ERROR_SYSCALL : {
+			return string("SSL_ERROR_SYSCALL: ") + string(strerror(errno));
+		}
+		case SSL_ERROR_SSL : {
+			return string("SSL_ERROR_SSL: ") + string(ERR_error_string(ERR_get_error(), nullptr));
+		}
+	}
+	return "UNKNOW ERROR";
+}

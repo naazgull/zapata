@@ -105,6 +105,7 @@ namespace zpt {
 		HTTP429 = 429,
 		HTTP430 = 430,
 		HTTP431 = 431,
+		HTTP451 = 451,
 		HTTP500 = 500,
 		HTTP501 = 501,
 		HTTP502 = 502,

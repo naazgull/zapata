@@ -83,5 +83,7 @@ namespace zpt {
 			 */
 			virtual ~ClientPtr();
 		};
+
+		typedef zpt::redis::ClientPtr client;
 	}
 }

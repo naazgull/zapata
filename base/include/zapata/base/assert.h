@@ -60,6 +60,9 @@ namespace zpt {
 			Patch = 6,
 			Reply = 7
 		};
+
+		std::string to_str(zpt::ev::performative _performative);
+		zpt::ev::performative from_str(std::string _performative);
 	}
 
 	extern std::string* tz;

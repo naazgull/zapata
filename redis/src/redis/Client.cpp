@@ -95,7 +95,9 @@ std::string zpt::redis::Client::insert(std::string _collection, std::string _id_
 		_uuid.make(UUID_MAKE_V1);
 		_document << "id" << _uuid.string();
 	}
-	_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
+	if (!_document["_id"]->ok()) {
+		_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
+	}
 	_document << "href" << _document["_id"];
 
 	redisReply* _reply = nullptr;

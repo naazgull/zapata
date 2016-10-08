@@ -77,5 +77,8 @@ namespace zpt {
 			 */
 			 virtual ~ClientPtr();
 		};
+
+		typedef zpt::mongodb::ClientPtr client;
 	}
+	
 }

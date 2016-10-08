@@ -36,7 +36,7 @@ void zpt::mongodb::frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out) {
 
 		switch (_it.type()) {
 			case mongo::jstNULL: {
-				_out << _key << "null";
+				_out << _key << zpt::undefined;
 				break;
 			}
 			case mongo::Bool: {
@@ -82,7 +82,7 @@ void zpt::mongodb::frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out) {
 	for (auto _it : _obj) {
 		switch (_it.type()) {
 			case mongo::jstNULL: {
-				_out << "null";
+				_out << zpt::undefined;
 				break;
 			}
 			case mongo::Bool: {
@@ -371,6 +371,19 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr, mon
 		oss << _key << flush;
 
 		string key = oss.str();
+		if (_value->type() == zpt::JSObject) {
+			mongo::BSONObjBuilder _tmp;
+			zpt::mongodb::tomongo(_value, _tmp);
+			_queryr.append(key, _tmp.done());
+			continue;
+		}
+		if (_value->type() == zpt::JSArray) {
+			mongo::BSONArrayBuilder _tmp;
+			zpt::mongodb::tomongo(_value->arr(), _tmp);
+			_queryr.append(key, _tmp.arr());
+			continue;
+		}
+		
 		string value = (string) _value;
 		if (value.length() > 3 && value.find('/') != string::npos) {
 			int bar_count = 0;

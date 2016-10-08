@@ -54,8 +54,6 @@ namespace zpt {
 
 		zpt::json split(std::string _url, zpt::json _orphans);
 		std::string join(zpt::json _info, size_t _orphans);
-		std::string to_str(zpt::ev::performative _performative);
-		zpt::ev::performative from_str(std::string _performative);
 
 		zpt::json init_request(std::string _cid = "");
 		zpt::json init_reply(std::string _cid = "");

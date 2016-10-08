@@ -3,11 +3,11 @@ Maintainer: n@zgul <naazgull@dfz.pt>
 Section: Development
 Priority: optional
 Standards-Version: 3.9.5
-Build-Depends: debhelper (>= 9), libssl-dev, zapata-base (>=0.9), zapata-json (>=0.9), zapata-http (>=0.9)
+Build-Depends: debhelper (>= 9), libssl-dev
 
 Package: zapata-rest
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=0.9), zapata-json (>=0.9), zapata-http (>=0.9)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=0.9), zapata-json (>=0.9), zapata-http (>=0.9), zapata-events (>=0.9), zapata-zmq (>=0.9)
 Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides an HTTP server, event 

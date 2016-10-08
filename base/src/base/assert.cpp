@@ -47,3 +47,61 @@ std::string zpt::get_tz() {
 	return *zpt::tz;
 }
 
+std::string zpt::ev::to_str(zpt::ev::performative _performative) {
+	switch(_performative) {
+		case zpt::ev::Get : {
+			return "GET";
+		}
+		case zpt::ev::Put : {
+			return "PUT";
+		}
+		case zpt::ev::Post : {
+			return "POST";
+		}
+		case zpt::ev::Delete : {
+			return "DELETE";
+		}
+		case zpt::ev::Head : {
+			return "HEAD";
+		}
+		case zpt::ev::Options : {
+			return "OPTIONS";
+		}
+		case zpt::ev::Patch: {
+			return "PATCH";
+		}
+		case zpt::ev::Reply: {
+			return "REPLY";
+		}
+	}
+	return "HEAD";
+}
+
+zpt::ev::performative zpt::ev::from_str(std::string _performative) {
+	if (_performative == "GET") {
+		return zpt::ev::Get;
+	}
+	if (_performative == "PUT") {
+		return zpt::ev::Put;
+	}
+	if (_performative == "POST") {
+		return zpt::ev::Post;
+	}
+	if (_performative == "DELETE") {
+		return zpt::ev::Delete;
+	}
+	if (_performative == "HEAD") {
+		return zpt::ev::Head;
+	}
+	if (_performative == "OPTIONS") {
+		return zpt::ev::Options;
+	}
+	if (_performative == "PATCH") {
+		return zpt::ev::Patch;
+	}
+	if (_performative == "REPLY") {
+		return zpt::ev::Reply;
+	}
+	return zpt::ev::Head;
+}
+
