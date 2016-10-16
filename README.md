@@ -112,9 +112,6 @@ a) Clone the git repository:
 	
 b) Go into package source dir and build (using zapata-base as an example):
 
-	$ autoreconf -fi
-	$ ./configure --prefix=/usr --sysconf=/etc
-	$ sudo make install-strip
 	$ cd zapata/base
 	$ autoreconf -vfi 
 	$ ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
