@@ -1,7 +1,7 @@
 ![zapata](http://dfz.pt/logo_zapata.png)
 ================================
 
-Zapata is a RESTful API development framework for *C++*, built upon the *&#216;mq*
+Zapata is a RESTful API development framework for **C++**, built upon the **&#216;mq**
 communication library and designed for high-performance and high
 scalability. It follows the _C++14_ and _C++17_ standards and coding style,
 including _lambda_ functions, _promisses_ and _assync_ programming. It also
