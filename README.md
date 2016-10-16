@@ -115,6 +115,7 @@ b) Go into package source dir and build (using zapata-base as an example):
 	$ cd zapata/base
 	$ autoreconf -vfi 
 	$ ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
-	$ make && sudo make install
+	$ make
+	$ sudo make install
 	
 c) Repeat _b)_ for every package you want
