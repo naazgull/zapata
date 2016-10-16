@@ -44,3 +44,5 @@ upstream
 packages
 .build
 Makefile
+.bump
+.repo
