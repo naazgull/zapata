@@ -106,6 +106,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					zlog(zpt::pretty(_auth_data), zpt::debug);
 					assertz(
 						((int) _auth_data["status"]) == 200,
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0

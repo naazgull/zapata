@@ -42,3 +42,5 @@ base/src/base/zoc
 zmq/src/zmq/zcert
 upstream
 packages
+.build
+Makefile
