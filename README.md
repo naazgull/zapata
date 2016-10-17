@@ -4,9 +4,9 @@
 Zapata is a RESTful API development framework for **C++**, built upon the **&#216;mq**
 communication library and designed for high-performance and high
 scalability. It follows the _C++14_ and _C++17_ standards and coding style,
-including _lambda_ functions, _promisses_ and _assync_ programming. It also
-delivers *Router/Dealer*, *Pub/Sub* and *Push/Pull* networking patterns,
-encapsulated and abstracted by the RESTful pattern and has built-in support
+including _lambda_ functions, _promisses_ and _assync_ programming. It delivers 
+*Router/Dealer*, *Pub/Sub* and *Push/Pull* networking patterns 
+encapsulated and abstracted by the RESTful pattern. It has built-in support
 for MongoDB, Redis, Oauth2.0 user authorization and authentication. Finally, 
 it has a really neat JSON support. It still lacks documentation, that's a work in progress.
 
