@@ -46,3 +46,4 @@ packages
 Makefile
 .bump
 .repo
+rest/src/rest/zpt
