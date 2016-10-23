@@ -202,7 +202,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					return {
 						"status", 200,
 						"headers", {
-							"Content-Length", ((std::string) _document["elements"][0]).length()
+							"Content-Length", ((std::string) _document).length()
 						}
 					};
 				}

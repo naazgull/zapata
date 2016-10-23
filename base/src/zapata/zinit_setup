@@ -1,0 +1,85 @@
+#!/bin/bash
+
+name=$1
+abbreviation=$2
+dev_email=$3
+dev_name=$4
+underscore_name=$(echo $1 | sed -r 's#-#_#g')
+upper_name=$(echo $underscore_name | awk '{print toupper($0)}')
+upper_abbr=$(echo $abbreviation | awk '{print toupper($0)}')
+
+files=$(find . -name "*")
+for file in ${files[@]}
+do
+	if [ -f $file ]
+	then
+		sed -i "s#project-name#$name#g" $file
+		sed -i "s#project_name#$underscore_name#g" $file
+		sed -i "s#PROJECT_NAME#$upper_name#g" $file
+		sed -i "s#project-abbreviation#$abbreviation#g" $file
+		sed -i "s#PROJECT_ABBREVIATION#$upper_abbr#g" $file
+		sed -i "s#developer-name#$dev_name#g" $file
+		sed -i "s#developer-email#$dev_email#g" $file
+	fi
+done
+
+sed -i "s#project-name#$name#g" .gitignore
+sed -i "s#project-abbreviation#$abbreviation#g" .gitignore
+
+name_dirs=$(find . -name "project-name*")
+for file in ${name_dirs[@]}
+do
+	if [ -d $file ]
+	then
+		fullname=${file#*./}
+		prefix=${fullname%/*}
+		mv $file "$prefix/$name"
+	fi
+done
+
+abbr_dirs=$(find . -name "project-abbreviation*")
+for file in ${abbr_dirs[@]}
+do
+	if [ -d $file ]
+	then
+		fullname=${file#*./}
+		prefix=${fullname%/*}
+		mv $file "$prefix/$abbreviation"
+	fi
+done
+
+name_files=$(find . -name "project-name*")
+for file in ${name_files[@]}
+do
+	if [ -f $file ]
+	then
+		fullname=${file#*./}
+		prefix=${fullname%/*}
+		filename=${fullname##*/}
+		suffix=${filename##*.}
+		if [[ $suffix == "project-name" ]]
+		then
+			mv $file "$prefix/$name"
+		else 
+			mv $file "$prefix/$name.$suffix"
+		fi
+	fi
+done
+
+abbr_files=$(find . -name "project-abbreviation*")
+for file in ${abbr_files[@]}
+do
+	if [ -f $file ]
+	then
+		fullname=${file#*./}
+		prefix=${fullname%/*}
+		filename=${fullname##*/}
+		suffix=${filename#*.}
+		if [[ $suffix == "project-abbreviation" ]]
+		then
+			mv $file "$prefix/$abbreviation"
+		else 
+			mv $file "$prefix/$abbreviation.$suffix"
+		fi
+	fi
+done

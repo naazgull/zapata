@@ -107,7 +107,6 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			_options = _spawn.second;
 		}
 		else {
-			cout << "FORK" << endl << flush;
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				_name.assign(_spawn.first.data());
@@ -123,7 +122,6 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 	size_t _i = 0;
 	for (; _i != _n_workers - 1; _i++) {
-		cout << "FORK" << endl << flush;
 		pid_t _pid = fork();
 		if (_pid == 0) {
 			break;
@@ -374,7 +372,7 @@ zpt::RESTClientPtr::~RESTClientPtr() {
 
 zpt::rest::client zpt::RESTClientPtr::launch(int argc, char* argv[]) {
 	zpt::json _options = zpt::conf::init(argc, argv)->obj()->begin()->second;
-	if (!_options->obj()->begin()->second["rest"]->ok() || !_options->obj()->begin()->second["zmq"]->ok()) {
+	if (!_options["rest"]->ok() || !_options["zmq"]->ok()) {
 		std::cout << "unable to start client: unsufficient configurations" << endl << flush;
 		exit(-10);
 	}

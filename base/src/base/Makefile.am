@@ -27,7 +27,7 @@ libzapata_base_la_SOURCES = \
 ./usage.cpp \
 ./utf8.cpp
 
-bin_PROGRAMS = zoc
+bin_PROGRAMS = zoc zinit
 
 zoc_LDADD = -lpthread -lzapata-base
 zoc_LDFLAGS= 
@@ -35,3 +35,10 @@ zoc_CPPFLAGS = -std=c++11 -Wall -I../../include
 
 zoc_SOURCES = \
 zoc.cpp
+
+zinit_LDADD = -lpthread -lzapata-base
+zinit_LDFLAGS= 
+zinit_CPPFLAGS = -std=c++11 -Wall -I../../include
+
+zinit_SOURCES = \
+zinit.cpp

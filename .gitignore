@@ -47,3 +47,4 @@ Makefile
 .bump
 .repo
 rest/src/rest/zpt
+base/src/base/zinit
