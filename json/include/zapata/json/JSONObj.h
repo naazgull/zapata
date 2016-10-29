@@ -1327,12 +1327,15 @@ namespace zpt {
 
 		static void add(std::string _signature, zpt::symbol _lambda);
 		static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
-		static zpt::symbol find(std::string _signature);
-		static zpt::symbol find(std::string _name, unsigned short _n_args);
+		
+		static zpt::json call(std::string _name, unsigned short _n_args, zpt::json _args...);
 
 		static std::string stringify(std::string _name, unsigned short _n_args);
 		static std::tuple< std::string, unsigned short > parse(std::string _signature);
 
+	private:
+		static zpt::symbol find(std::string _signature);
+		static zpt::symbol find(std::string _name, unsigned short _n_args);
 	};
 
 	class JSONLambda {
@@ -1341,10 +1344,11 @@ namespace zpt {
 		JSONLambda(std::string _name, unsigned short _n_args);
 		virtual ~JSONLambda();
 
+		virtual zpt::json call(zpt::json _args...);
+
 		virtual std::string name();
 		virtual unsigned short n_args();
 		virtual std::string signature();
-		virtual zpt::symbol symbol();
 		
 	private:
 		std::string __name;

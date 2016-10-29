@@ -47,6 +47,13 @@ int main(int argc, char* argv[]) {
 		}
 		_in >> _ptr;
 		std::cout << zpt::pretty(_ptr) << endl << flush;
+
+		zpt::lambda::add("f", 2,
+			[] (zpt::json _args, unsigned short _n_args) -> zpt::json {
+				return zpt::undefined;
+			}
+		);
+		
 	}
 	return 0;
 }

@@ -27,6 +27,7 @@ SOFTWARE.
 #include <ostream>
 #include <zapata/json/JSONParser.h>
 #include <regex.h>
+#include <cstdarg>
 
 namespace zpt {
 	JSONPtr undefined;
@@ -1518,6 +1519,18 @@ void zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _la
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }
 
+zpt::json zpt::lambda::call(std::string _name, unsigned short _n_args, zpt::json _list...) {
+	zpt::json _args_arr = zpt::mkarr();
+	va_list _args;
+	va_start(_args, _list);
+	for (unsigned short _i = 0; _i != _n_args; _i++) {
+		_args_arr << va_arg(_args, zpt::json);
+	}
+	va_end(_args);
+	zpt::symbol _f = zpt::lambda::find(_name, _n_args);
+	return _f(_args_arr, _n_args);
+}
+
 zpt::symbol zpt::lambda::find(std::string _signature) {
 	auto _found = zpt::__lambdas->find(_signature);
 	assertz(_found != zpt::__lambdas->end(), std::string("symbol for ") + _signature + std::string(" was not found"), 404, 0);
@@ -1553,8 +1566,8 @@ std::string zpt::JSONLambda::signature() {
 	return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 
-zpt::symbol zpt::JSONLambda::symbol() {
-	return zpt::lambda::find(this->__name, this->__n_args);
+zpt::json zpt::JSONLambda::call(zpt::json _args...) {
+	return zpt::lambda::call(this->__name, this->__n_args, _args);
 }		
 
 /*JSON OBJECT*/
