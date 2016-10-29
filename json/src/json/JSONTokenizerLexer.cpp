@@ -147,7 +147,20 @@ void zpt::JSONTokenizerLexer::init(double _in) {
 	}
 }
 
-void zpt::JSONTokenizerLexer::init(string _in) {
+void zpt::JSONTokenizerLexer::init(std::string _in) {
+	JSONElementT* _ptr = new JSONElementT(_in);
+	_ptr->parent(this->__parent);
+	try {
+		(* this->__parent) <<  _ptr;
+	}
+	catch (zpt::AssertionException& _e) {
+		cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << endl << flush;
+		delete _ptr;
+		throw _e;
+	}
+}
+
+void zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
 	JSONElementT* _ptr = new JSONElementT(_in);
 	_ptr->parent(this->__parent);
 	try {

@@ -39,7 +39,7 @@ typedef struct epoll_event epoll_event_t;
 
 namespace zpt {
 	enum JSONType {
-		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate
+		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda
 	};
 
 	class KnowledgeBase {
