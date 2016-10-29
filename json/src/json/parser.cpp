@@ -22,49 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#include <signal.h>
+#include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
-#include <memory>
-#include <zapata/exceptions/AssertionException.h>
+#include <zapata/json.h>
+#include <semaphore.h>
 
-/**
- * Compact form for throwing exceptions when validating logical requirements and input/output validation
- * @param x a boolean expression to be validated
- * @param y the error message
- * @param z the HTTP status code to be replied to the invoking HTTP client
- */
-#define assertz(x,y,z,c) if (! (x)) { throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+using namespace std;
+#if !defined __APPLE__
+using namespace __gnu_cxx;
+#endif
 
-typedef struct epoll_event epoll_event_t;
-
-namespace zpt {
-	enum JSONType {
-		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda
-	};
-
-	class KnowledgeBase {
-	public:
-		virtual std::string name() = 0;
-	};
-	typedef std::shared_ptr<zpt::KnowledgeBase> KBPtr;
-	typedef KBPtr kb;
-
-	namespace ev {
-		enum performative {
-			Get = 0,
-			Put = 1,
-			Post = 2,
-			Delete = 3,
-			Head = 4,
-			Options = 5,
-			Patch = 6,
-			Reply = 7
-		};
-
-		std::string to_str(zpt::ev::performative _performative);
-		zpt::ev::performative from_str(std::string _performative);
+int main(int argc, char* argv[]) {
+	if (argc > 1) {
+		zpt::json _ptr;
+		std::ifstream _in;
+		_in.open(argv[1]);
+		if (!_in.is_open()) {
+			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+			exit(-10);
+		}
+		_in >> _ptr;
+		std::cout << zpt::pretty(_ptr) << endl << flush;
 	}
-
-	extern std::string* tz;
-	std::string get_tz();
+	return 0;
 }

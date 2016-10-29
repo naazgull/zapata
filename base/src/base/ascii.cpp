@@ -54,11 +54,28 @@ void zpt::ascii::encode(string& _out, bool quote) {
 	_out.assign(_oss.str());
 }
 
-void zpt::generate_key(string& _out) {
+void zpt::generate_key(std::string& _out, size_t _size) {
+	static string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+	timeval _tv;
+
+	for (size_t _idx = 0; _idx != _size; _idx++) {
+		gettimeofday (&_tv, nullptr);
+		srand(_tv.tv_usec);
+		_out.push_back(charset[rand() % charset.length()]);
+	}
+}
+
+std::string zpt::generate_key(size_t _size) {
+	std::string _out;
+	zpt::generate_key(_out, _size);
+	return _out;
+}
+
+void zpt::generate_key(std::string& _out) {
 	timeval _tv;
 	gettimeofday (&_tv, nullptr);
 
-	static string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static string charset = "abcdefghijklmnopqrstuvwxyz";
 	string code1;
 	code1.resize(2);
 	srand(_tv.tv_usec);

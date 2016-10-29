@@ -55,7 +55,7 @@ int main(int _argc, char* _argv[]) {
 			while (std::getline(_iss, _line)) {
 				if (_state == OUTSIDE) {
 					if ((_to_trim = _line.find("/***")) != string::npos) {
-						_to_trim += 2;
+						_to_trim += 3;
 						_state = PARAGRAPH;
 					}
 				}

@@ -12,7 +12,7 @@
 //%debug
 %no-lines
 
-%token STRING BOOLEAN INTEGER DOUBLE NIL
+%token STRING BOOLEAN INTEGER DOUBLE NIL LAMBDA
 %left LCB RCB
 %left LB RB
 %left COMMA
@@ -138,6 +138,13 @@ value :
 		double _out;
 		string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
+		d_scanner.init(_out);
+	}
+|
+	LAMBDA
+	{
+		string _in(d_scanner.matched());
+		zpt::lambda _out(_in);
 		d_scanner.init(_out);
 	}
 |
