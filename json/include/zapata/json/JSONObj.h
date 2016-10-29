@@ -397,6 +397,7 @@ namespace zpt {
 	 */
 	extern JSONPtr undefined;
 	extern JSONPtr nilptr;
+	extern JSONPtr array;
 
 	/**
 	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zpt::JSONPtr key-value pairs.
@@ -1328,7 +1329,7 @@ namespace zpt {
 		static void add(std::string _signature, zpt::symbol _lambda);
 		static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
 		
-		static zpt::json call(std::string _name, unsigned short _n_args, zpt::json _args...);
+		static zpt::json call(std::string _name, zpt::json _args);
 
 		static std::string stringify(std::string _name, unsigned short _n_args);
 		static std::tuple< std::string, unsigned short > parse(std::string _signature);
@@ -1344,7 +1345,7 @@ namespace zpt {
 		JSONLambda(std::string _name, unsigned short _n_args);
 		virtual ~JSONLambda();
 
-		virtual zpt::json call(zpt::json _args...);
+		virtual zpt::json call(zpt::json _args);
 
 		virtual std::string name();
 		virtual unsigned short n_args();

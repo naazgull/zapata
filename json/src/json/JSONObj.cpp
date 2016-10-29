@@ -32,6 +32,7 @@ SOFTWARE.
 namespace zpt {
 	JSONPtr undefined;
 	JSONPtr nilptr = undefined;
+	JSONPtr array = zpt::mkptr("1b394520-2fed-4118-b622-940f25b8b35e");
 	symbol_table __lambdas = zpt::symbol_table(new std::map< std::string, std::tuple< std::string, unsigned short, zpt::symbol > >());
 }
 
@@ -87,7 +88,8 @@ zpt::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr ) {
 }
 
 zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __parent( nullptr ) {
-	bool _is_object = (_list.size() % 2 == 0 && _list.begin()->__target.__type == zpt::JSString);
+	bool _is_array = (_list.size() > 1 && _list.begin()->__target.__type == zpt::JSString && (*_list.begin()->__target.__string) == "1b394520-2fed-4118-b622-940f25b8b35e");
+	bool _is_object = (!_is_array && _list.size() % 2 == 0 && _list.begin()->__target.__type == zpt::JSString);
 	if (_is_object) {
 		size_t _idx = 0;
 		size_t* _pidx = &_idx;
@@ -150,7 +152,7 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 	}
 	else {
 		this->type(zpt::JSArray);
-		std::for_each(_list.begin(), _list.end(),
+		std::for_each((_is_array ? _list.begin() + 1 : _list.begin()), _list.end(),
 			[ & ] (const zpt::JSONElementT& _element) {
 				zpt::JSONElementT* _other = new zpt::JSONElementT();
 				_other->type( _element.__target.__type);
@@ -1519,16 +1521,10 @@ void zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _la
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }
 
-zpt::json zpt::lambda::call(std::string _name, unsigned short _n_args, zpt::json _list...) {
-	zpt::json _args_arr = zpt::mkarr();
-	va_list _args;
-	va_start(_args, _list);
-	for (unsigned short _i = 0; _i != _n_args; _i++) {
-		_args_arr << va_arg(_args, zpt::json);
-	}
-	va_end(_args);
-	zpt::symbol _f = zpt::lambda::find(_name, _n_args);
-	return _f(_args_arr, _n_args);
+zpt::json zpt::lambda::call(std::string _name, zpt::json _args) {
+	assertz(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
+	zpt::symbol _f = zpt::lambda::find(_name, _args->arr()->size());
+	return _f(_args, _args->arr()->size());
 }
 
 zpt::symbol zpt::lambda::find(std::string _signature) {
@@ -1566,8 +1562,8 @@ std::string zpt::JSONLambda::signature() {
 	return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 
-zpt::json zpt::JSONLambda::call(zpt::json _args...) {
-	return zpt::lambda::call(this->__name, this->__n_args, _args);
+zpt::json zpt::JSONLambda::call(zpt::json _args) {
+	return zpt::lambda::call(this->__name, _args);
 }		
 
 /*JSON OBJECT*/
