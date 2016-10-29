@@ -47,9 +47,15 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	 * - _GET_
 	 * - _POST_
 	 * - _HEAD_
+	 *
 	 ***/ 
 	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "users" }),
 		{
+			/***
+			 * ## _**GET**_ /{api-version}/users
+			 *
+			 * 
+			 ***/
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
@@ -59,7 +65,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
 					);
 					assertz(
-						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "ar"),
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "ar"),
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
 					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
@@ -80,7 +86,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
 					);
 					assertz(
-						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "aw"),
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
 					);
 					assertz(
@@ -110,7 +116,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
 					);
 					assertz(
-						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "services", "a"),
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "ar"),
 						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
 					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
@@ -169,12 +175,42 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 							};
 						}
 					}
+					else {
+						zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+						assertz(
+							((int) _auth_data["status"]) == 200,
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+						);
+						assertz(
+							zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "ar"),
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+						);
+						zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+						_envelope["payload"] << "_id" << _resource;
+						zpt::json _document = _db->query("users", _envelope["payload"]);
+						if (!_document->ok() || _document["size"] == 0) {
+							return { "status", 404 };
+						}
+						return {
+							"status", 200,
+							"payload", _document["elements"][0]
+						};
+					}
 					return zpt::undefined;
 				}
 			},
 			{
 				zpt::ev::Put,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					assertz(
 						_envelope["payload"]->ok() &&
 						_envelope["payload"]["name"]->ok() &&
@@ -195,6 +231,15 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Delete,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
 					size_t _size = _db->remove("users", { "_id", _resource });
 					return {
@@ -208,6 +253,15 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Head,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "ar"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
 					_envelope["payload"] << "_id" << _resource;
 					zpt::json _document = _db->query("users", _envelope["payload"]);
@@ -225,6 +279,15 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Patch,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+					assertz(
+						((int) _auth_data["status"]) == 200,
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+					);
+					assertz(
+						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
+						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+					);
 					zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
 					size_t _size = _db->set("users", { "_id", _resource }, _envelope["payload"]);
 					return {
