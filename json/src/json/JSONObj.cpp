@@ -1495,8 +1495,9 @@ std::tuple< std::string, unsigned short > zpt::lambda::parse(std::string _signat
 
 	assertz(_lpar != string::npos && _rpar != string::npos && _comma != string::npos, "lambda signature format not recognized", 412, 0);
 
-	std::string _name(_signature.substr(_lpar + 1, _lpar - _comma - 1));
-	std::string _args(_signature.substr(_comma + 1, _comma - _rpar - 1));
+	std::string _name(_signature.substr(_lpar + 1, _comma - _lpar - 1));
+	std::string _args(_signature.substr(_comma + 1, _rpar - _comma - 1));
+	zpt::replace(_name, "\"", "");
 	zpt::trim(_name);
 	zpt::trim(_args);
 	unsigned short _n_args = std::stoi(_args);
@@ -1504,7 +1505,7 @@ std::tuple< std::string, unsigned short > zpt::lambda::parse(std::string _signat
 }
 
 std::string zpt::lambda::stringify(std::string _name, unsigned short _n_args) {
-	return std::string("lambda(") + _name + std::string(",") + std::to_string(_n_args) + std::string(")");
+	return std::string("lambda(\"") + _name + std::string("\",") + std::to_string(_n_args) + std::string(")");
  }
 
 void zpt::lambda::add(std::string _signature, zpt::symbol _lambda) {
@@ -1549,7 +1550,7 @@ unsigned short zpt::JSONLambda::n_args() {
 }
 
 std::string zpt::JSONLambda::signature() {
-	return std::string("lambda(") + this->__name + std::string(",") + std::to_string(this->__n_args) + std::string(")");
+	return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 
 zpt::symbol zpt::JSONLambda::symbol() {

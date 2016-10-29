@@ -12,7 +12,7 @@ namespace zpt
 
 inline void JSONTokenizer::error(char const *msg)
 {
-    //std::cerr << msg << '\n';
+    std::cout << msg << '\n';
    throw zpt::SyntaxErrorException(string(msg));
 }
 

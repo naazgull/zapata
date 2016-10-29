@@ -48,3 +48,4 @@ Makefile
 .repo
 rest/src/rest/zpt
 base/src/base/zinit
+json/src/json/zpt-json

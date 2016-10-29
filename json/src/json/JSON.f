@@ -6,21 +6,6 @@
         INTEGER = 259,
         DOUBLE = 260,
         NIL = 261,
-        LCB = 262,
-        RCB = 263,
-        LB = 264,
-        RB = 265,
-        COMMA = 266,
-        COLON = 267,
-        };
-
-    enum Tokens__
-    {
-        STRING = 257,
-        BOOLEAN = 258,
-        INTEGER = 259,
-        DOUBLE = 260,
-        NIL = 261,
         LAMBDA = 262,
         LCB = 263,
         RCB = 264,
@@ -57,8 +42,8 @@ lambda\(([^\)]+)\) return 262;
 \} return 264;
 \[ return 265;
 \] return 266;
-\: return 267;
-\, return 268;
+\, return 267;
+\: return 268;
 [\-0-9] {
 	more();
 	begin(StartCondition__::number);
