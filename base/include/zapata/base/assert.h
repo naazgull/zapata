@@ -25,6 +25,8 @@ SOFTWARE.
 #pragma once
 
 #include <memory>
+#include <ctime>
+#include <cstring>
 #include <zapata/exceptions/AssertionException.h>
 
 /**
@@ -67,4 +69,8 @@ namespace zpt {
 
 	extern std::string* tz;
 	std::string get_tz();
+
+        typedef std::shared_ptr< std::tm > tm_ptr;
+
+	zpt::tm_ptr get_time(time_t _t);
 }

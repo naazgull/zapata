@@ -90,6 +90,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 						_envelope["payload"]->ok() &&
 						_envelope["payload"]["name"]->ok() &&
 						_envelope["payload"]["description"]->ok() &&
+						_envelope["payload"]["scope"]->ok() &&
 						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 					assertz(
@@ -179,6 +180,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 						_envelope["payload"]->ok() &&
 						_envelope["payload"]["name"]->ok() &&
 						_envelope["payload"]["description"]->ok() &&
+						_envelope["payload"]["scope"]->ok() &&
 						_envelope["payload"]["redirect_domain"]->ok(),
 						"required fields: 'name', 'description' and 'redirect_domain'", 412, 0);
 				

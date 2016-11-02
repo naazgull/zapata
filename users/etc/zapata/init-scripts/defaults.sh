@@ -1,0 +1,8 @@
+#!/bin/bash
+
+redis-cli hset 'applications/clients/apps' '00000000-0000-0000-0000-000000000000' '{ "_id" : "/api/0.9/apps/00000000-0000-0000-0000-000000000000", "href" : "/api/0.9/apps/00000000-0000-0000-0000-000000000000", "id" : "00000000-0000-0000-0000-000000000000", "name" : "confapp", "description" : "Configuration Application", "scope" : "all{arwx}", "redirect_domain" : "localhost" }'
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/api/0.9/roles/administrator", "href" : "/api/0.9/roles/administrator", "id" : "administrator", "name" : "Administrator", "scope" : "all{arwx}" })'
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/api/0.9/roles/app-admin", "href" : "/api/0.9/roles/app-admin", "id" : "app-admin", "name" : "Application Administrator", "scope" : "apps{arwx}" })'
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/api/0.9/roles/user", "href" : "/api/0.9/roles/user", "id" : "user", "name" : "User", "scope" : "me{arwx}" })'
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/api/0.9/roles/guest", "href" : "/api/0.9/roles/guest", "id" : "guest", "name" : "Guest", "scope" : "open" })'
+mongo localhost/users --eval 'db.users.insert({ "_id" : "/api/0.9/users/00000000-0000-0000-0000-000000000000", "e-mail" : "admin@localhost", "href" : "/api/0.9/users/00000000-0000-0000-0000-000000000000", "id" : "00000000-0000-0000-0000-000000000000", "name" : "Admin", "password" : "chC-Gns@DxvyJgpuxXh@AEx5!jTJ9yp?@pV2!tNsbV#LfseXwv&k#pxtarre6KVbzJ4LZ83k$5WBSZW^h5gLSffv*7H_@zs57twf6T46wedL+^DJFY+ydywSQmTRXfZQ", "username" : "admin", "role" : "administrator" })'

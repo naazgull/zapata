@@ -77,11 +77,12 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 	std::string _bind;
 	zpt::ev::performative _method = zpt::ev::Get;
 	std::string _url;
+	std::string _token;
 	short _type = 0;
 	zpt::json _body;
 	bool _verbose = false;
 
-	while ((_c = getopt(argc, argv, "vc:l:b:m:u:t:j:")) != -1) {
+	while ((_c = getopt(argc, argv, "vc:l:b:m:u:a:t:j:")) != -1) {
 		switch (_c) {
 			case 'c': {
 				_conf_file = optarg;
@@ -108,6 +109,10 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 			}
 			case 'u': {
 				_url.assign(string(optarg));
+				break;
+			}
+			case 'a': {
+				_token.assign(string(optarg));
 				break;
 			}
 			case 't': {
@@ -171,6 +176,9 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 		);
 		if (_url.length() != 0) {
 			_ptr[_name]["rest"] << "target" << _url;
+		}
+		if (_token.length() != 0) {
+			_ptr[_name]["rest"] << "token" << _token;
 		}
 		if (_body->ok()) {
 			_ptr[_name]["rest"] << "body" << _body;

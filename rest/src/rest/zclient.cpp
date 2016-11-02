@@ -40,11 +40,22 @@ using namespace __gnu_cxx;
 int main(int argc, char* argv[]) {
 	try {
 		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
-
+		
 		switch(_api->options()["zmq"]["type"]->intr()) {
 			case ZMQ_REQ: {
 				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
-				zpt::json _reply = _client->send((zpt::ev::performative) _api->options()["rest"]["method"]->intr(), _api->options()["rest"]["target"]->str(), _api->options()["rest"]["body"]);
+				zpt::json _envelope(
+					{
+						"channel", _api->options()["rest"]["target"],
+						"performative", (zpt::ev::performative) _api->options()["rest"]["method"]->intr(),
+						"resource", _api->options()["rest"]["target"],
+						"payload", _api->options()["rest"]["body"]
+					}
+				);
+				if (_api->options()["rest"]["token"]->ok()) {
+					_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
+				}
+				zpt::json _reply = _client->send(_envelope);
 				zlog(zpt::pretty(_reply), zpt::info);
 				exit(0);
 				break;
@@ -61,7 +72,18 @@ int main(int argc, char* argv[]) {
 			}
 			case ZMQ_PUB: {
 				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
-				_client->send((zpt::ev::performative) _api->options()["rest"]["method"]->intr(), _api->options()["rest"]["target"]->str(), _api->options()["rest"]["body"]);
+				zpt::json _envelope(
+					{
+						"channel", _api->options()["rest"]["target"],
+						"performative", (zpt::ev::performative) _api->options()["rest"]["method"]->intr(),
+						"resource", _api->options()["rest"]["target"],
+						"payload", _api->options()["rest"]["body"]
+					}
+				);
+				if (_api->options()["rest"]["token"]->ok()) {
+					_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
+				}
+				_client->send(_envelope);
 				exit(0);
 				break;
 			}			    

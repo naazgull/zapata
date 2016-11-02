@@ -31,6 +31,7 @@ SOFTWARE.
 #include <zapata/rest.h>
 #include <zapata/mem/usage.h>
 #include <semaphore.h>
+#include <iomanip>
 
 using namespace std;
 #if !defined __APPLE__
@@ -39,6 +40,15 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {	
 	try {
+		time_t _now = time(nullptr);
+		zpt::tm_ptr _tm_now = zpt::get_time(_now);
+		time_t _then = _now - (3600 * 24 * 30);
+		zpt::tm_ptr _tm_then = zpt::get_time(_then);
+
+		std::cout << "DST: " << _then << " " << std::put_time(_tm_then.get(), "%c %Z") << " > " << _tm_then->tm_gmtoff << endl << flush;
+		std::cout << "NO DST: " << _now << " " << std::put_time(_tm_now.get(), "%c %Z") << " > " << _tm_now->tm_gmtoff << endl << flush;
+		return 0;
+		
 		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
 
 		size_t _max = 10100;
