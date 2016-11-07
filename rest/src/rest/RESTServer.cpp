@@ -530,7 +530,15 @@ bool zpt::rest::scopes::has_permission(std::string _scope, std::string _ns, std:
 }
 
 bool zpt::rest::scopes::has_permission(zpt::json _scope, std::string _ns, std::string _needed) {
-	if (_scope->ok() && _scope[_ns]->ok()) {
+	if (_scope["all"]->ok()) {
+		std::string _difference;
+		std::string _granted(_scope["all"]->str());
+		std::sort(_needed.begin(), _needed.end());
+		std::sort(_granted.begin(), _granted.end());
+		std::set_difference(_needed.begin(), _needed.end(), _granted.begin(), _granted.end(), std::back_inserter(_difference));
+		return _difference.length() == 0;
+	}
+	else if (_scope->ok() && _scope[_ns]->ok()) {
 		std::string _difference;
 		std::string _granted(_scope[_ns]->str());
 		std::sort(_needed.begin(), _needed.end());

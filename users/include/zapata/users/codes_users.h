@@ -35,5 +35,36 @@ namespace zpt {
 		ERRUserNotFound = 1005,
 		ERRIDMandatory = 1006
 	};
-}
 
+	class Users : public zpt::KnowledgeBase {
+	public:
+		Users(zpt::ev::emitter _emitter);
+		virtual ~Users();
+
+		virtual std::string name();
+		
+		virtual std::tuple< std::string, std::string > salt_hash(std::string _password);
+		virtual bool validate(std::string _username, std::string _password);
+		
+		virtual zpt::json list(std::string _resource, zpt::json _envelope);
+		virtual zpt::json get(std::string _resource, zpt::json _envelope);
+		virtual zpt::json add(std::string _resource, zpt::json _envelope);
+		virtual zpt::json replace(std::string _resource, zpt::json _envelope);
+		virtual zpt::json patch(std::string _resource, zpt::json _envelope);
+		virtual zpt::json remove(std::string _resource, zpt::json _envelope);
+
+	private:
+		zpt::ev::emitter __emitter;
+	};
+
+	namespace users {
+		typedef zpt::Users broker;
+	}
+	
+	class UsersPtr : public std::shared_ptr< zpt::Users > {
+	public:
+		UsersPtr(zpt::ev::emitter _emitter);
+		virtual ~UsersPtr();
+	};
+
+}
