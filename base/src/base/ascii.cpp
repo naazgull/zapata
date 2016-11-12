@@ -61,7 +61,7 @@ void zpt::generate_key(std::string& _out, size_t _size) {
 	for (size_t _idx = 0; _idx != _size; _idx++) {
 		gettimeofday (&_tv, nullptr);
 		srand(_tv.tv_usec);
-		_out.push_back(charset[rand() % charset.length()]);
+		_out.append(1, charset[rand() % charset.length()]);
 	}
 }
 

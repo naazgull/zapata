@@ -83,3 +83,11 @@ do
 		fi
 	fi
 done
+
+pushd "src/$abbreviation/app" &> /dev/null
+npm install --save --save-dev babel-cli react@15.3.2 react-dom@15.3.2 babel-preset-es2015 babel-preset-react babel-preset-stage-0 semantic-ui-react semantic-ui babel-plugin-transform-es2015-modules-umd
+popd &> /dev/null
+
+pushd "src/$abbreviation/www" &> /dev/null
+npm install --save --save-dev babel-cli react@15.3.2 react-dom@15.3.2 babel-preset-es2015 babel-preset-react babel-preset-stage-0 semantic-ui-react semantic-ui babel-plugin-transform-es2015-modules-umd
+popd &> /dev/null

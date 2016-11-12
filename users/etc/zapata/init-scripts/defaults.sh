@@ -1,17 +1,36 @@
 #!/bin/bash
 
-zpt -c /etc/zapata/backend-available/auth.conf &
+zpt -c /etc/zapata/backend-available/auth.conf -l 0 -r &
 
 # CLEAN UP
-redis-cli keys 'applications*' | xargs -L 1 redis-cli del
-mongo localhost/users --eval 'db.dropDatabase()'
+redis-cli del 'applications/authentication/tokens/default' &> /dev/null
+redis-cli hdel 'applications/clients/apps' '/0.9/apps/00000000-0000-0000-0000-000000000000' &> /dev/null
+mongo localhost/users --eval 'db.users.remove({"role" : "administrator"})' &> /dev/null
+mongo localhost/users --eval 'db.roles.drop()' &> /dev/null
 
 # SETUP DEFAULTS
-redis-cli hset 'applications/clients/apps' '/0.9/apps/00000000-0000-0000-0000-000000000000' '{ "_id" : "/0.9/apps/00000000-0000-0000-0000-000000000000", "href" : "/0.9/apps/00000000-0000-0000-0000-000000000000", "id" : "00000000-0000-0000-0000-000000000000", "name" : "confapp", "description" : "Configuration Application", "scope" : "all{arwx}", "redirect_domain" : "localhost" }'
-# redis-cli hset 'applications/authentication/tokens' '/0.9/oauth2.0/tokens/00000000-0000-0000-0000-000000000000@00000000-0000-0000-0000-000000000000/password/kv161102ep27686fi0pn161102ts27654ns' "{\"_id\":\"\\/0.9\\/oauth2.0\\/tokens\\/00000000-0000-0000-0000-000000000000@00000000-0000-0000-0000-000000000000\\/password\\/kv161102ep27686fi0pn161102ts27654ns\",\"access_token\":\"00000000-0000-0000-0000-000000000000@00000000-0000-0000-0000-000000000000\\/password\\/kv161102ep27686fi0pn161102ts27654ns\",\"application\":{\"_id\":\"\\/0.9\\/apps\\/00000000-0000-0000-0000-000000000000\",\"description\":\"Configuration Application\",\"href\":\"\\/0.9\\/apps\\/00000000-0000-0000-0000-000000000000\",\"id\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"confapp\",\"redirect_domain\":\"localhost\",\"scope\":\"all{arwx}\"},\"expires\":\"6000-01-31T23:22:58.027Z\",\"grant_type\":\"password\",\"href\":\"\\/0.9\\/oauth2.0\\/tokens\\/00000000-0000-0000-0000-000000000000@00000000-0000-0000-0000-000000000000\\/password\\/kv161102ep27686fi0pn161102ts27654ns\",\"id\":\"00000000-0000-0000-0000-000000000000@00000000-0000-0000-0000-000000000000\\/password\\/kv161102ep27686fi0pn161102ts27654ns\",\"owner\":{\"_id\":\"\\/0.9\\/users\\/00000000-0000-0000-0000-000000000000\",\"e-mail\":\"admin@localhost\",\"href\":\"\\/0.9\\/users\\/00000000-0000-0000-0000-000000000000\",\"id\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"Admin\",\"password\":\"chC-Gns@DxvyJgpuxXh@AEx5!jTJ9yp?@pV2!tNsbV#LfseXwv&k#pxtarre6KVbzJ4LZ83k$5WBSZW^h5gLSffv*7H_@zs57twf6T46wedL+^DJFY+ydywSQmTRXfZQ\",\"role\":\"administrator\",\"username\":\"admin\"},\"refresh_token\":\"mw161102sb27714yr0bd161102fg27705mw\",\"scope\":{\"all\":\"arwx\"}}"
-mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/administrator", "href" : "/0.9/roles/administrator", "id" : "administrator", "name" : "Administrator", "scope" : "all{arwx}" })'
-mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/app-admin", "href" : "/0.9/roles/app-admin", "id" : "app-admin", "name" : "Application Administrator", "scope" : "apps{arwx}" })'
-mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/user", "href" : "/0.9/roles/user", "id" : "user", "name" : "User", "scope" : "me{arwx},users{r},roles{r}" })'
-mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/guest", "href" : "/0.9/roles/guest", "id" : "guest", "name" : "Guest", "scope" : "open" })'
-mongo localhost/users --eval 'db.users.insert({ "_id" : "/0.9/users/00000000-0000-0000-0000-000000000000", "e-mail" : "admin@localhost", "href" : "/0.9/users/00000000-0000-0000-0000-000000000000", "id" : "00000000-0000-0000-0000-000000000000", "name" : "Admin", "password" : "chC-Gns@DxvyJgpuxXh@AEx5!jTJ9yp?@pV2!tNsbV#LfseXwv&k#pxtarre6KVbzJ4LZ83k$5WBSZW^h5gLSffv*7H_@zs57twf6T46wedL+^DJFY+ydywSQmTRXfZQ", "username" : "admin", "role" : "administrator" })'
+redis-cli hset 'applications/clients/apps' '/0.9/apps/00000000-0000-0000-0000-000000000000' '{ "_id" : "/0.9/apps/00000000-0000-0000-0000-000000000000", "href" : "/0.9/apps/00000000-0000-0000-0000-000000000000", "id" : "00000000-0000-0000-0000-000000000000", "name" : "confapp", "description" : "Configuration Application", "scope" : "all{arwx}", "redirect_domain" : "localhost" }'  &> /dev/null
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/administrator", "href" : "/0.9/roles/administrator", "id" : "administrator", "name" : "Administrator", "scope" : "all{arwx}" })' &> /dev/null
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/app-admin", "href" : "/0.9/roles/app-admin", "id" : "app-admin", "name" : "Application Administrator", "scope" : "apps{arwx}" })' &> /dev/null
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/user", "href" : "/0.9/roles/user", "id" : "user", "name" : "User", "scope" : "me{arwx},users{r},roles{r}" })' &> /dev/null
+mongo localhost/users --eval 'db.roles.insert({ "_id" : "/0.9/roles/guest", "href" : "/0.9/roles/guest", "id" : "guest", "name" : "Guest", "scope" : "open" })' &> /dev/null
 
+unset password
+prompt="Enter administrator password: "
+while IFS= read -p "$prompt" -r -s -n 1 char
+do
+    if [[ $char == $'\0' ]]
+    then
+	break
+    fi
+    prompt='*'
+    password+="$char"
+done
+echo
+
+zcli -b tcp://localhost:10009 -t req -m POST -u /0.9/users -j "{ \"name\" : \"Administrator\", \"username\" : \"root\", \"e-mail\" : \"root@localhost\", \"password\" : \"$password\", \"role\" : \"administrator\" }" -l 0 -r
+zcli -b tcp://localhost:10009 -t req -m POST -u /0.9/oauth2.0/authorize -j "{ \"response_type\" : \"password\", \"client_id\" : \"00000000-0000-0000-0000-000000000000\", \"redirect_uri\" : \"/blank\", \"scope\" : \"all{arwx}\", \"username\" : \"root\", \"password\" : \"$password\", \"state\" : \"administrator\" }" -l 0 -r
+
+kill -9 $(ps ax | grep 'zpt -c /etc/zapata/backend-available/auth.conf' | grep -v grep | awk '{print $1}')
+
+echo "Successfully create root user and default application"

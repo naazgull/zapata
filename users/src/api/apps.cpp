@@ -144,15 +144,17 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Get,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
-					assertz(
-						((int) _auth_data["status"]) == 200,
-						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
-					);
-					assertz(
-						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "apps", "ar"),
-						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
-					);
+					if (_resource != zpt::path::join({ _emitter->version(), "apps", "00000000-0000-0000-0000-000000000000" })) {
+						zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+						assertz(
+							((int) _auth_data["status"]) == 200,
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+						);
+						assertz(
+							zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "apps", "ar"),
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+						);
+					}
 					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.apps").get();
 					zpt::json _document = _db->get("apps", _resource);
 					if (!_document->ok()) {

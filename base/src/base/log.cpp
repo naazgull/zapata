@@ -35,6 +35,7 @@ namespace zpt {
 	long log_pid = 0;
 	string* log_pname = nullptr;
 	char* log_hname = nullptr;
+	bool log_format = true;
 
 	const char* log_lvl_names[] = {
 		"\033[1;37;41m emergency \033[0m | ",
@@ -52,6 +53,11 @@ int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string
 	if (zpt::log_fd == nullptr) {
 		return - 1;
 	}
+	if (!zpt::log_format) {
+		(* zpt::log_fd) << _text << endl << flush;
+		return 0;
+	}
+	
 	struct timeval _tp;
 	gettimeofday(& _tp, nullptr);
 

@@ -40,23 +40,30 @@ zpt::Users::Users(zpt::ev::emitter _emitter) : __emitter(_emitter) {
 zpt::Users::~Users() {
 }
 
-std::string name() {
+std::string zpt::Users::name() {
 	return "users.broker";
 }
 
 std::tuple< std::string, std::string > zpt::Users::salt_hash(std::string _password) {
 	uuid _uuid;
-	_uuid.make(UUID_MAKE_V5);
+	_uuid.make(UUID_MAKE_V1);
 	std::string _salt = _uuid.string();
-	return std::make_tuple(_salt, zpt::hash::SHA512(_password + _salt));
+	std::string _salted = zpt::hash::SHA512(_password + _salt);
+	zpt::base64::url_encode(_salted);
+	return std::make_tuple(_salt, _salted);
 }
 
-bool zpt::Users::validate(std::string _username, std::string _password) {
+zpt::json zpt::Users::validate(std::string _username, std::string _password) {
 	zpt::mongodb::Client* _db = (zpt::mongodb::Client*) this->__emitter->get_kb("mongodb.users").get();
 	zpt::json _list = _db->query("users", zpt::json({ "username", _username }));
 	assertz(_list->ok() && ((size_t) _list["size"]) != 0, "could not find such username", 404, 0);
 	std::string _salted = zpt::hash::SHA512(_password + _list["elements"][0]["salt"]->str());
-	return _salted == _list["elements"][0]["password"]->str();
+	zpt::base64::url_encode(_salted);
+	zpt::json _return = _list["elements"][0];
+	if(_salted == _return["password"]->str()) {
+		return _return;
+	}
+	return zpt::undefined;
 }
 
 zpt::json zpt::Users::list(std::string _resource, zpt::json _envelope) {
@@ -66,7 +73,7 @@ zpt::json zpt::Users::list(std::string _resource, zpt::json _envelope) {
 					
 	zpt::mongodb::Client* _db = (zpt::mongodb::Client*) this->__emitter->get_kb("mongodb.users").get();
 	zpt::json _list = _db->query("users", zpt::get("payload", _envelope));
-	if (!_list->ok()) {
+	if (!_list->ok() || ((size_t) _list["size"]) == 0) {
 		return zpt::set("status", 204);
 	}
 	return zpt::set("status", 200, zpt::set("payload", _list));
@@ -80,7 +87,7 @@ zpt::json zpt::Users::get(std::string _resource, zpt::json _envelope) {
 					
 	zpt::mongodb::Client* _db = (zpt::mongodb::Client*) this->__emitter->get_kb("mongodb.users").get();
 	zpt::json _document = _db->query("users", _envelope["payload"]);
-	if (!_document->ok() || _document["size"] == 0) {
+	if (!_document->ok() || ((size_t) _document["size"]) == 0) {
 		return { "status", 404 };
 	}
 	return {
@@ -132,6 +139,10 @@ zpt::json zpt::Users::replace(std::string _resource, zpt::json _envelope) {
 	_envelope["payload"] >> "_id";
 	_envelope["payload"] >> "id";
 	
+	std::tuple< std::string, std::string> _secret = this->salt_hash(_envelope["payload"]["password"]->str());
+	_envelope["payload"] << "salt" << std::get<0>(_secret);
+	_envelope["payload"] << "password" << std::get<1>(_secret);
+
 	zpt::mongodb::Client* _db = (zpt::mongodb::Client*) this->__emitter->get_kb("mongodb.users").get();
 	size_t _size = _db->save("users", { "_id", _resource }, _envelope["payload"]);
 	return {
@@ -146,6 +157,12 @@ zpt::json zpt::Users::patch(std::string _resource, zpt::json _envelope) {
 	_envelope["payload"] >> "_id";
 	_envelope["payload"] >> "id";
 
+	if (_envelope["payload"]["password"]->ok()) {
+		std::tuple< std::string, std::string> _secret = this->salt_hash(_envelope["payload"]["password"]->str());
+		_envelope["payload"] << "salt" << std::get<0>(_secret);
+		_envelope["payload"] << "password" << std::get<1>(_secret);
+	}
+	
 	zpt::mongodb::Client* _db = (zpt::mongodb::Client*) this->__emitter->get_kb("mongodb.users").get();
 	size_t _size = _db->set("users", { "_id", _resource }, _envelope["payload"]);
 	return {
@@ -216,15 +233,22 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 			{
 				zpt::ev::Post,
 				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
-					assertz(
-						((int) _auth_data["status"]) == 200,
-						"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
-					);
-					assertz(
-						zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
-						"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
-					);
+					if (std::string(_envelope["payload"]["role"]) == "administrator") {
+						zpt::mongodb::Client* _db = (zpt::mongodb::Client*) _emitter->get_kb("mongodb.users").get();
+						zpt::json _list = _db->query("users", zpt::json({ "role", "administrator" }));
+						assertz(!_list->ok() || ((size_t) _list["size"]) == 0, "you can't add another administrator role to this system", 412, 0);
+					}
+					else {
+						zpt::json _auth_data = _emitter->route(zpt::ev::Post, zpt::path::join({ _emitter->version(), "oauth2.0", "validate" }), { "payload", { "access_token", zpt::rest::authorization::extract(_envelope) } });
+						assertz(
+							((int) _auth_data["status"]) == 200,
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 401, 0
+						);
+						assertz(
+							zpt::rest::scopes::has_permission(_auth_data["payload"]["scope"], "users", "aw"),
+							"required authorization: access to this endpoint must be authorized, providing a valid access token", 403, 0
+						);
+					}
 					return ((zpt::users::broker*) _emitter->get_kb("users.broker").get())->add(_resource, _envelope);
 				}
 			},
@@ -264,12 +288,11 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 					if (_resource == (std::string("/") + _emitter->version() + std::string("/users/me"))) {
 						assertz((_envelope["payload"]["username"]->ok() && _envelope["payload"]["password"]->ok()) || _envelope["headers"]["Cookie"]->ok() || _envelope["headers"]["Authorization"]->ok(), "access to this endpoint must be authenticated", 401, 0);
 						if (_envelope["payload"]["username"]->ok() && _envelope["payload"]["password"]->ok()) {
-							assertz(((zpt::users::broker*) _emitter->get_kb("users.broker").get())->validate(_envelope["payload"]["username"]->str(), _envelope["payload"]["password"]->str()), "invalid credentials", 401, 0);
-							zpt::json _document = _db->query("users", _envelope["payload"]);
-							assertz(_document->ok() && ((int) _document["size"]) != 0, "access to this endpoint must be authenticated", 401, 0);
+							zpt::json _document = ((zpt::users::broker*) _emitter->get_kb("users.broker").get())->validate(_envelope["payload"]["username"]->str(), _envelope["payload"]["password"]->str());
+							assertz(_document->ok(), "access to this endpoint must be authenticated", 401, 0);
 							return {
 								"status", 200,
-								"payload", _document["elements"][0]
+								"payload", _document
 							};
 						}
 						else if (_envelope["headers"]["Authorization"]->ok()) {

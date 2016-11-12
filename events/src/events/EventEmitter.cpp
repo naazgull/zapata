@@ -26,6 +26,12 @@ SOFTWARE.
 
 #define ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
 
+namespace zpt {
+	namespace ev {
+		std::string* __default_authorization = nullptr;
+	}
+}
+
 zpt::EventEmitter::EventEmitter() : __self( this ) {
 }
 
@@ -93,6 +99,20 @@ std::string zpt::ev::join(zpt::json _info, size_t _orphans) {
 	return _ret;
 }
 
+void zpt::ev::set_default_authorization(std::string _default_authorization) {
+	if (zpt::ev::__default_authorization != nullptr) {
+		delete zpt::ev::__default_authorization;
+	}
+	zpt::ev::__default_authorization = new std::string(_default_authorization.data());
+}
+
+std::string zpt::ev::get_default_authorization() {
+	if (zpt::ev::__default_authorization != nullptr) {
+		return std::string(zpt::ev::__default_authorization->data());
+	}
+	return "";
+}
+
 zpt::json zpt::ev::init_request(std::string _cid) {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
@@ -120,6 +140,9 @@ zpt::json zpt::ev::init_request(std::string _cid) {
 		uuid _uuid;
 		_uuid.make(UUID_MAKE_V1);
 		_return << "X-Cid" << _uuid.string();
+	}
+	if (zpt::ev::__default_authorization != nullptr) {
+		_return << "Authorization" << std::string(zpt::ev::__default_authorization->data());
 	}
 	return _return;
 }

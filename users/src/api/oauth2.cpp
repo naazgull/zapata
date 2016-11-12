@@ -142,22 +142,35 @@ zpt::json zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performat
 				}
 			}
 		);
+
 		if (_user->ok() && ((int) _user["status"]) == 200) {
 			std::string _redirect_uri(_envelope["payload"]["redirect_uri"]->str());
 			zpt::json _token = this->generate_token(_user["payload"], zpt::path::join({ _emitter->version(), "apps", _envelope["payload"]["client_id"]->str() }), _envelope["payload"]["client_id"]->str(), "", "me{rwx},users{r}", _response_type, _emitter);
-			return {
-				"status", (_performative == zpt::ev::Post ? 303 : 307),
-				"headers", {
-					"Set-Cookie", (_token["access_token"]->str() + std::string("; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; HttpOnly")), 
-					"Location", (
-						(_redirect_uri + (_redirect_uri.find("?") != string::npos ? "&" : "?") +
-							std::string("access_token=") + _token["access_token"]->str() +
-							std::string("&refresh_token=") + _token["refresh_token"]->str() +
-							std::string("&expires=") + ((std::string) _token["expires"]) +
-							std::string("&state=") + ((std::string) _envelope["payload"]["state"]))
-					)
-				}
-			};
+			if (_envelope["payload"]["username"]->str() == "root" && _envelope["payload"]["client_id"]->str() == "00000000-0000-0000-0000-000000000000") {
+				_token << "id" << "default";
+				std::string _code = _db->insert("tokens/default", "root", _token);
+				return {
+					"status", 200,
+					"payload", {
+						"text", "administration token has been generated and stored"
+					}
+				};
+			}
+			else {
+				return {
+					"status", (_performative == zpt::ev::Post ? 303 : 307),
+					"headers", {
+						"Set-Cookie", (_token["access_token"]->str() + std::string("; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; HttpOnly")), 
+						"Location", (
+							(_redirect_uri + (_redirect_uri.find("?") != string::npos ? "&" : "?") +
+								std::string("access_token=") + _token["access_token"]->str() +
+								std::string("&refresh_token=") + _token["refresh_token"]->str() +
+								std::string("&expires=") + ((std::string) _token["expires"]) +
+								std::string("&state=") + ((std::string) _envelope["payload"]["state"]))
+						)
+					}
+				};
+			}
 		}
 		std::string _login_url(this->__options["url"]["auth"]["login"]->str());
 		return {
@@ -234,8 +247,8 @@ zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, zpt::json
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	assertz(_client_secret.length() == 0 || _application["client_secret"]->str() == _client_secret, "invalid parameter: no such client secret", 401, 0);
 	std::string _access_token = zpt::rest::authorization::serialize({ "owner", _owner["id"]->str(), "application", _application["id"]->str(), "grant_type", _grant_type });
-	std::string _refresh_token(zpt::generate_key() + std::to_string(time_t(nullptr)) + zpt::generate_key());
-	zpt::timestamp_t _expires = (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + (90L * 24L * 3600L * 1000L);
+	std::string _refresh_token(zpt::generate_key(64));
+	zpt::timestamp_t _expires = (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + ((_owner["username"]->str() == "root" && _client_id == "00000000-0000-0000-0000-000000000000" ? 400 : 1) * 90L * 24L * 3600L * 1000L);
 	zpt::json _token = {
 		"id", _access_token,
 		"access_token", _access_token,
@@ -283,8 +296,15 @@ zpt::json zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::e
 
 extern "C" void restify(zpt::ev::emitter _emitter) {
 	assertz(_emitter->options()["redis"]["oauth"]->ok(), "no 'redis.oauth' object found in provided configuration", 500, 0);
-	_emitter->add_kb("redis.oauth", zpt::kb(new zpt::redis::Client(_emitter->options(), "redis.oauth")));
-	_emitter->add_kb("authenticator.oauth", zpt::kb(new zpt::authenticator::OAuth2(_emitter->options())));
+	zpt::kb _redis(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
+	_emitter->add_kb("redis.oauth", _redis);
+	zpt::kb _oauth(new zpt::authenticator::OAuth2(_emitter->options()));
+	_emitter->add_kb("authenticator.oauth", _oauth);
+
+	zpt::json _default_authorization = ((zpt::redis::Client*) _redis.get())->get("tokens/default", "root/default");
+	if (_default_authorization["access_token"]->type() == zpt::JSString) {
+		zpt::ev::set_default_authorization(std::string("OAuth2.0 ") + _default_authorization["access_token"]->str());
+	}
 
 	/*
 	  4.1.  Authorization Code Grant

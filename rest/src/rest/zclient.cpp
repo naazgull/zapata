@@ -56,14 +56,24 @@ int main(int argc, char* argv[]) {
 					_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
 				}
 				zpt::json _reply = _client->send(_envelope);
-				zlog(zpt::pretty(_reply), zpt::info);
+				if (zpt::log_format) {
+					zlog(zpt::pretty(_reply), zpt::info);
+				}
+				else {
+					zlog(std::string(_reply), zpt::info);
+				}
 				exit(0);
 				break;
 			}
 			case ZMQ_PULL: {
 				_api->emitter()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
 					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						zlog(zpt::pretty(_envelope), zpt::info);
+						if (zpt::log_format) {
+							zlog(zpt::pretty(_envelope), zpt::info);
+						}
+						else {
+							zlog(std::string(_envelope), zpt::info);
+						}
 						return zpt::undefined;
 					}
 				);
@@ -90,7 +100,12 @@ int main(int argc, char* argv[]) {
 			case ZMQ_SUB: {
 				_api->emitter()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
 					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						zlog(zpt::pretty(_envelope), zpt::info);
+						if (zpt::log_format) {
+							zlog(zpt::pretty(_envelope), zpt::info);
+						}
+						else {
+							zlog(std::string(_envelope), zpt::info);
+						}
 						return zpt::undefined;
 					}
 				);

@@ -88,17 +88,12 @@ void zpt::tostr(std::string& s, char i){
 }
 
 void zpt::tostr(string& s, time_t i, const char* f){
-	std::string _current(zpt::get_tz());
-	setenv("TZ", "UTC", 1);
-	tzset();
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
 	localtime_r(&i, &_ptm);
 	strftime(_buffer_date, 80, f, &_ptm);
 	s.insert(s.length(), _buffer_date);
-	setenv("TZ", _current.data(), 1);
-	tzset();
 }
 
 std::string zpt::tostr(int i){
@@ -230,29 +225,26 @@ void zpt::fromstr(std::string s, bool* i){
 	*i = s == string("true");
 }
 
-void zpt::fromstr(std::string s, time_t* i, const char* f) {
-	std::string _current(zpt::get_tz());
-	bool _use_utc = (string(f).find("%Z") == string::npos);
-	if (_use_utc) {
-		setenv("TZ", "UTC", 1);
-		tzset();
+void zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone){
+	/*
+	  setenv("TZ", "UTC", 1);
+	  tzset();
+	*/
+	if (_no_timezone) {
+		time_t _localtime = time(nullptr);
+		struct tm* local_tm = std::localtime(&_localtime);
+		struct tm tm[1] = { { 0 } };
+		strptime(s.data(), f, tm);
+		*i = std::mktime(tm) - (local_tm->tm_isdst ? 3600 : 0);
 	}
-	struct tm tm[1] = { { 0 } };
-	strptime(s.data(), f, tm);
-	if (!_use_utc) {
-		tzset();
-		struct timeval tv;
-		struct timezone _current_tz = { 0, 0 };
-		gettimeofday(&tv, &_current_tz);
-
-		tm->tm_isdst = _current_tz.tz_dsttime;
-		tm->tm_gmtoff = zpt::timezone_offset();
-		tm->tm_zone =_current_tz.tz_dsttime == 0 ? tzname[0] : tzname[1];
-	} 
-	*i = mktime(tm);
-	if (_use_utc) {
-		setenv("TZ", _current.data(), 1);
-		tzset();
+	else {
+		time_t _localtime = time(nullptr);
+		struct tm* local_tm = std::localtime(&_localtime);
+		struct tm tm[1] = { { 0 } };
+		strptime(s.data(), f, tm);
+		time_t _local_offset = local_tm->tm_gmtoff - (local_tm->tm_isdst ? 3600 : 0);
+		time_t _target_offset = tm->tm_gmtoff - (tm->tm_isdst ? 3600 : 0);
+		*i = std::mktime(tm) - (_target_offset - _local_offset);
 	}
 }
 

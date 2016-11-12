@@ -66,8 +66,6 @@ zpt::ev::emitter zpt::ZMQ::emitter() {
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
 	if (zpt::ZMQ::__auth == nullptr) {
 		zpt::ZMQ::__auth = zactor_new(zauth, nullptr);
-		zstr_sendx(zpt::ZMQ::__auth, "VERBOSE", nullptr);
-		zsock_wait(zpt::ZMQ::__auth);
 		if (_client_cert_dir.length() != 0) {
 			zstr_sendx(zpt::ZMQ::__auth, "CURVE", _client_cert_dir.data(), nullptr);
 			zsock_wait(zpt::ZMQ::__auth);
@@ -277,7 +275,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitte
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
 		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::alert);
-		this->auth(_options["curve"]["certificates"]["client_dir"]->str());		
+		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }

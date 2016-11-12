@@ -47,6 +47,8 @@ namespace zpt {
 	typedef std::shared_ptr<zpt::EventListener> EventListenerPtr;
 
 	namespace ev {
+		extern std::string* __default_authorization;
+
 		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> Handler;
 		typedef Handler Callback;
 		typedef std::map< std::string, pair<regex_t*, vector< zpt::ev::Handler> > > HandlerStack;
@@ -54,6 +56,9 @@ namespace zpt {
 
 		zpt::json split(std::string _url, zpt::json _orphans);
 		std::string join(zpt::json _info, size_t _orphans);
+
+		void set_default_authorization(std::string _default_authorization);
+		std::string get_default_authorization();
 
 		zpt::json init_request(std::string _cid = "");
 		zpt::json init_reply(std::string _cid = "");

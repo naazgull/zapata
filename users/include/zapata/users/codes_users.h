@@ -44,7 +44,7 @@ namespace zpt {
 		virtual std::string name();
 		
 		virtual std::tuple< std::string, std::string > salt_hash(std::string _password);
-		virtual bool validate(std::string _username, std::string _password);
+		virtual zpt::json validate(std::string _username, std::string _password);
 		
 		virtual zpt::json list(std::string _resource, zpt::json _envelope);
 		virtual zpt::json get(std::string _resource, zpt::json _envelope);

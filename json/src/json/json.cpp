@@ -81,8 +81,9 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 	short _type = 0;
 	zpt::json _body;
 	bool _verbose = false;
+	zpt::log_format = true;
 
-	while ((_c = getopt(argc, argv, "vc:l:b:m:u:a:t:j:")) != -1) {
+	while ((_c = getopt(argc, argv, "vc:l:b:m:u:a:t:j:r")) != -1) {
 		switch (_c) {
 			case 'c': {
 				_conf_file = optarg;
@@ -149,6 +150,10 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 			}
 			case 'j': {
 				_body = zpt::json(string(optarg));
+				break;
+			}
+			case 'r': {
+				zpt::log_format = false;
 				break;
 			}
 		}

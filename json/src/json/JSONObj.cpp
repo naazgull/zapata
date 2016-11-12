@@ -416,7 +416,45 @@ bool zpt::JSONElementT::ok() {
 }
 
 bool zpt::JSONElementT::empty() {
-	return this->__target.__type == zpt::JSNil;
+	switch(this->__target.__type) {
+		case zpt::JSObject : {
+			if (this->__target.__object.get() != nullptr) {
+				return this->__target.__object->size() == 0;
+			}
+			return true;
+		}
+		case zpt::JSArray : {
+			if (this->__target.__array.get() != nullptr) {
+				return this->__target.__array->size() == 0;
+			}
+			return true;
+		}
+		case zpt::JSString : {
+			if (this->__target.__string.get() != nullptr) {
+				return (*this->__target.__string) == "";
+			}
+			return true;
+		}
+		case zpt::JSInteger : {
+			return false;
+		}
+		case zpt::JSDouble : {
+			return false;
+		}
+		case zpt::JSBoolean : {
+			return false;
+		}
+		case zpt::JSNil : {
+			return true;
+		}
+		case zpt::JSDate : {
+			return false;
+		}
+		case zpt::JSLambda : {
+			return false;
+		}
+	}
+	return true;
 }
 
 bool zpt::JSONElementT::nil() {
@@ -519,16 +557,7 @@ bool zpt::JSONElementT::bln() {
 zpt::timestamp_t zpt::JSONElementT::date() {
 	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString, std::string("this element is not of type JSDate: ") + this->stringify(), 0, 0);
 	if (this->__target.__type == zpt::JSString) {
-		time_t _n = 0;
-		int _ms = 0;
-		string _s(this->__target.__string.get()->data());
-		size_t _idx = _s.rfind(".");
-		string _mss(_s.substr(_idx + 1));
-		_mss.assign(_mss.substr(0, _mss.length() - 1));
-		_s.assign(_s.substr(0, _idx));
-		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
-		zpt::fromstr(_mss, &_ms);
-		return _n * 1000 + _ms;
+		return zpt::timestamp(*(this->__target.__string.get()));
 	}
 	return this->__target.__date;
 }
@@ -1048,7 +1077,12 @@ zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) {
 		case zpt::JSObject : {
 			zpt::JSONPtr _lhs = this->clone();
 			for (auto _e : _rhs.obj()) {
-				_lhs << _e.first  << (_lhs[_e.first] + _e.second);
+				if (_lhs[_e.first]->type() == zpt::JSObject || _lhs[_e.first]->type() == zpt::JSArray) {
+					_lhs << _e.first << (_lhs[_e.first] + _e.second);
+				}
+				else {
+					_lhs << _e.first << _e.second;
+				}
 			}
 			return _lhs;
 		}
@@ -1280,18 +1314,7 @@ void zpt::JSONElementT::stringify(ostream& _out) {
 			break;
 		}
 		case zpt::JSDate : {
-			string _date = zpt::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
-			_date.insert(_date.length(), ".");
-			size_t _remainder = this->__target.__date % 1000;
-			if (_remainder < 100) {
-				_date.insert(_date.length(), "0");
-				if (_remainder < 10) {
-					_date.insert(_date.length(), "0");
-				}
-			}
-			zpt::tostr(_date, _remainder);
-			_date.insert(_date.length(), "Z");
-			_out << "\"" << _date << "\"" << flush;
+			_out << "\"" << zpt::timestamp(this->__target.__date) << "\"" << flush;
 			break;
 		}
 		case zpt::JSLambda : {
@@ -1337,17 +1360,7 @@ void zpt::JSONElementT::stringify(std::string& _out) {
 		}
 		case zpt::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zpt::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
-			_out.insert(_out.length(), ".");
-			size_t _remainder = this->__target.__date % 1000;
-			if (_remainder < 100) {
-				_out.insert(_out.length(), "0");
-				if (_remainder < 10) {
-					_out.insert(_out.length(), "0");
-				}
-			}
-			zpt::tostr(_out, _remainder);
-			_out.insert(_out.length(), "Z");
+			_out.insert(_out.length(), zpt::timestamp(this->__target.__date));
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -1397,18 +1410,7 @@ void zpt::JSONElementT::prettify(ostream& _out, uint _n_tabs) {
 			break;
 		}
 		case zpt::JSDate : {
-			string _date = zpt::tostr((size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
-			_date.insert(_date.length(), ".");
-			size_t _remainder = this->__target.__date % 1000;
-			if (_remainder < 100) {
-				_date.insert(_date.length(), "0");
-				if (_remainder < 10) {
-					_date.insert(_date.length(), "0");
-				}
-			}
-			zpt::tostr(_date, _remainder);
-			_date.insert(_date.length(), "Z");
-			_out << "\"" << _date << "\"" << flush;
+			_out << "\"" << zpt::timestamp(this->__target.__date) << "\"" << flush;
 			break;
 		}
 		case zpt::JSLambda : {
@@ -1457,17 +1459,7 @@ void zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) {
 		}
 		case zpt::JSDate : {
 			_out.insert(_out.length(), "\"");
-			zpt::tostr(_out, (size_t) this->__target.__date / 1000, "%Y-%m-%dT%H:%M:%S");
-			_out.insert(_out.length(), ".");
-			size_t _remainder = this->__target.__date % 1000;
-			if (_remainder < 100) {
-				_out.insert(_out.length(), "0");
-				if (_remainder < 10) {
-					_out.insert(_out.length(), "0");
-				}
-			}
-			zpt::tostr(_out, _remainder);
-			_out.insert(_out.length(), "Z");
+			_out.insert(_out.length(), zpt::timestamp(this->__target.__date));
 			_out.insert(_out.length(), "\"");
 			break;
 		}
@@ -2266,17 +2258,7 @@ zpt::JSONPtr::operator std::string() {
 			break;
 		}
 		case zpt::JSDate : {
-			zpt::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
-			_out.insert(_out.length(), ".");
-			size_t _remainder = this->get()->date() % 1000;
-			if (_remainder < 100) {
-				_out.insert(_out.length(), "0");
-				if (_remainder < 10) {
-					_out.insert(_out.length(), "0");
-				}
-			}
-			zpt::tostr(_out, _remainder);
-			_out.insert(_out.length(), "Z");
+			_out.insert(_out.length(), zpt::timestamp(this->get()->date()));
 			break;
 		}
 		case zpt::JSLambda : {
@@ -2322,17 +2304,7 @@ zpt::JSONPtr::operator zpt::pretty() {
 			break;
 		}
 		case zpt::JSDate : {
-			zpt::tostr(_out, (size_t) this->get()->date() / 1000, "%Y-%m-%dT%H:%M:%S");
-			_out.insert(_out.length(), ".");
-			size_t _remainder = this->get()->date() % 1000;
-			if (_remainder < 100) {
-				_out.insert(_out.length(), "0");
-				if (_remainder < 10) {
-					_out.insert(_out.length(), "0");
-				}
-			}
-			zpt::tostr(_out, _remainder);
-			_out.insert(_out.length(), "Z");
+			_out.insert(_out.length(), zpt::timestamp(this->get()->date()));
 			break;
 		}
 		case zpt::JSLambda : {
@@ -2810,14 +2782,31 @@ zpt::timestamp_t zpt::timestamp(std::string _json_date) {
 	}
 	time_t _n = 0;
 	int _ms = 0;
-	string _s(_json_date.data());
-	size_t _idx = _s.rfind(".");
-	string _mss(_s.substr(_idx + 1));
-	_mss.assign(_mss.substr(0, _mss.length() - 1));
-	_s.assign(_s.substr(0, _idx));
-	zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S");
+	std::string _s(_json_date.data());
+	size_t _idx = _s.rfind(".");	      
+	std::string _mss;
+	bool _prev_is_zero = true;
+	if (_s[_idx + 1] != '0') {
+		_mss.push_back(_s[_idx + 1]);
+		_prev_is_zero = false;
+	}
+	if (!_prev_is_zero || _s[_idx + 2] != '0') {
+		_mss.push_back(_s[_idx + 2]);
+	}
+	_mss.push_back(_s[_idx + 3]);
+	_s.erase(_idx, 4);
+	if (_s.length() < 20) {
+		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true);
+	}
+	else if (_s[_idx] == '+' || _s[_idx] == '-') {
+		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
+	}
+	else {
+		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z");
+	}
 	zpt::fromstr(_mss, &_ms);
 	return _n * 1000 + _ms;
+
 }
 
  zpt::timestamp_t zpt::timestamp(zpt::json _json_date) {
@@ -2825,17 +2814,16 @@ zpt::timestamp_t zpt::timestamp(std::string _json_date) {
 }
 
 std::string zpt::timestamp(zpt::timestamp_t _timestamp) {
-	std::string _out;
-	zpt::tostr(_out, (size_t) _timestamp / 1000, "%Y-%m-%dT%H:%M:%S");
-	_out.insert(_out.length(), ".");
+	std::string _date = zpt::tostr((size_t) (_timestamp / 1000), "%Y-%m-%dT%H:%M:%S");
+	_date.insert(_date.length(), ".");
 	size_t _remainder = _timestamp % 1000;
 	if (_remainder < 100) {
-		_out.insert(_out.length(), "0");
+		_date.insert(_date.length(), "0");
 		if (_remainder < 10) {
-			_out.insert(_out.length(), "0");
+			_date.insert(_date.length(), "0");
 		}
 	}
-	zpt::tostr(_out, _remainder);
-	_out.insert(_out.length(), "Z");
-	return _out;
+	zpt::tostr(_date, _remainder);
+	zpt::tostr(_date, (size_t) (_timestamp / 1000), "%z");
+	return _date;
 }
