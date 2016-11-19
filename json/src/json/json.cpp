@@ -30,7 +30,7 @@ SOFTWARE.
 zpt::json zpt::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zpt::json _ret = zpt::mkarr();
+	zpt::json _ret = zpt::json::array();
 	while(_iss.good()) {
 		std::getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
@@ -166,7 +166,7 @@ zpt::json zpt::conf::init(int argc, char* argv[]) {
 
 	zpt::json _ptr;
 	if (_conf_file == nullptr) {
-		_ptr = zpt::mkobj();
+		_ptr = zpt::json::object();
 		std::string _name(argv[0], strlen(argv[0]));
 		_ptr << _name << zpt::json(
 			{

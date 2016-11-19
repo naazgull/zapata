@@ -50,7 +50,9 @@ namespace zpt {
 		extern std::string* __default_authorization;
 
 		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> Handler;
+		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> handler;
 		typedef Handler Callback;
+		typedef handler callback;
 		typedef std::map< std::string, pair<regex_t*, vector< zpt::ev::Handler> > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::Handler > ReplyHandlerStack;
 

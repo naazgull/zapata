@@ -1313,39 +1313,62 @@ namespace zpt {
 			return _out;
 		};		
 	};
-
 	typedef std::shared_ptr< std::string > JSONStr;
 
-	typedef std::function< zpt::json (zpt::json, unsigned short) > symbol;
+	class JSONContext  {
+	public:		
+		JSONContext(void* _target);
+		virtual ~JSONContext();
+
+		virtual void* unpack();
+		
+	private:
+		void* __target;
+	};
+	
+	class context : public std::shared_ptr< zpt::JSONContext > {
+	public:		
+		context(void* _target);
+		virtual ~context();
+	};
+	
+	typedef std::function< zpt::json (zpt::json, unsigned short, zpt::context) > symbol;
 	typedef std::shared_ptr< std::map< std::string, std::tuple< std::string, unsigned short, zpt::symbol > > > symbol_table;
 	extern zpt::symbol_table __lambdas;
 
 	class lambda : public std::shared_ptr< zpt::JSONLambda > {
 	public:
+		lambda();
+		lambda(std::shared_ptr< zpt::JSONLambda > _target);
+		lambda(zpt::lambda& _target);
+		lambda(zpt::JSONLambda* _target);
 		lambda(std::string _signature);
 		lambda(std::string _name, unsigned short _n_args);
 		virtual ~lambda();
 
+		virtual zpt::json operator ()(zpt::json _args, zpt::context _ctx);
+		
 		static void add(std::string _signature, zpt::symbol _lambda);
 		static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
 		
-		static zpt::json call(std::string _name, zpt::json _args);
+		static zpt::json call(std::string _name, zpt::json _args, zpt::context _ctx);
 
 		static std::string stringify(std::string _name, unsigned short _n_args);
 		static std::tuple< std::string, unsigned short > parse(std::string _signature);
 
 	private:
 		static zpt::symbol find(std::string _signature);
-		static zpt::symbol find(std::string _name, unsigned short _n_args);
+		static zpt::symbol find(std::string _name, unsigned short _1n_args);
 	};
 
 	class JSONLambda {
 	public:
+		JSONLambda();
 		JSONLambda(std::string _signature);
 		JSONLambda(std::string _name, unsigned short _n_args);
 		virtual ~JSONLambda();
 
-		virtual zpt::json call(zpt::json _args);
+		virtual zpt::json call(zpt::json _args, zpt::context _ctx);
 
 		virtual std::string name();
 		virtual unsigned short n_args();
@@ -1454,13 +1477,13 @@ namespace zpt {
 
 		virtual JSONObj& obj();
 		virtual JSONArr& arr();
-		string str();
-		long long intr();
-		double dbl();
-		bool bln();
-		zpt::timestamp_t date();
-		zpt::lambda lbd();
-		double number();
+		virtual std::string str();
+		virtual long long intr();
+		virtual double dbl();
+		virtual bool bln();
+		virtual zpt::timestamp_t date();
+		virtual zpt::lambda& lbd();
+		virtual double number();
 
 		JSONElementT& operator<<(const char* _in);
 		JSONElementT& operator<<(string _in);
@@ -1592,6 +1615,9 @@ namespace zpt {
 
 	zpt::timestamp_t timestamp(std::string _json_date = "");
 
+	zpt::json mkobj();
+	zpt::json mkarr();
+
 	class json : public zpt::JSONPtr {
 	public: 
 		inline json() : zpt::JSONPtr() {
@@ -1623,12 +1649,10 @@ namespace zpt {
 		static void stringify(std::string& _str);
 
 		inline static zpt::json object() {
-			zpt::JSONObj _empty;
-			return zpt::json(new zpt::JSONElementT(_empty));
+			return zpt::mkobj();
 		};
 		inline static zpt::json array() {
-			zpt::JSONArr _empty;
-			return zpt::json(new zpt::JSONElementT(_empty));
+			return zpt::mkarr();
 		};
 		template <typename T>
 		static zpt::json text(T _e);
@@ -1648,6 +1672,10 @@ namespace zpt {
 		inline static zpt::json date(T _e);
 		template <typename T>
 		static zpt::json lambda(T _e);
+		inline static zpt::json lambda(std::string _name, unsigned short _n_args) {
+			zpt::lambda _v(_name, _n_args);
+			return zpt::json(new zpt::JSONElementT(_v));
+		};
 	};
 
 	template <typename T>	
@@ -1660,9 +1688,6 @@ namespace zpt {
 		T _e(_v);
 		return zpt::json(new zpt::JSONElementT(_e));
 	}
-
-	zpt::json mkobj();
-	zpt::json mkarr();
 
 	zpt::json get(std::string _path, zpt::json _source);
 	template <typename T>
@@ -1761,7 +1786,7 @@ zpt::json zpt::set(std::string _path, T _value, zpt::json _target) {
 		_return = _target;
 	}
 	else {
-		_return = zpt::mkobj();
+		_return = zpt::json::object();
 	}
 	_return->setPath(_path, zpt::mkptr(_value));
 	return _return;

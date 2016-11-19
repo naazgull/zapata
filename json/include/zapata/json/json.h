@@ -56,7 +56,7 @@ namespace zpt {
 			return _in;
 		};
 		inline operator zpt::JSONPtr() {
-			zpt::JSONPtr _result = zpt::mkarr();
+			zpt::JSONPtr _result = zpt::json::array();
 			std::istringstream _iss;
 			_iss.str(* this);
 

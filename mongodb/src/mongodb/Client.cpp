@@ -91,7 +91,7 @@ std::string zpt::mongodb::Client::insert(std::string _collection, std::string _i
 int zpt::mongodb::Client::save(std::string _collection, zpt::json _pattern, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
-		_pattern = zpt::mkobj();
+		_pattern = zpt::json::object();
 	}
 
 	std::string _full_collection(_collection);
@@ -122,7 +122,7 @@ int zpt::mongodb::Client::save(std::string _collection, zpt::json _pattern, zpt:
 int zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document) {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
-		_pattern = zpt::mkobj();
+		_pattern = zpt::json::object();
 	}
 
 	std::string _full_collection(_collection);
@@ -154,7 +154,7 @@ int zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt::
 int zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document) {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	if (!_pattern->ok()) {
-		_pattern = zpt::mkobj();
+		_pattern = zpt::json::object();
 	}
 
 	std::string _full_collection(_collection);
@@ -185,7 +185,7 @@ int zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zpt
 
 int zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern) {
 	if (!_pattern->ok()) {
-		_pattern = zpt::mkobj();
+		_pattern = zpt::json::object();
 	}
 
 	std::string _full_collection(_collection);
@@ -213,7 +213,7 @@ int zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern) {
 
 zpt::json zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern) {
 	if (!_pattern->ok()) {
-		_pattern = zpt::mkobj();
+		_pattern = zpt::json::object();
 	}
 
 	zpt::JSONArr _elements;

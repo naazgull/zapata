@@ -81,7 +81,9 @@ zpt::JSONElementT::JSONElementT(JSONElementT& _element) : __parent( nullptr ) {
 			break;
 		}
 		case zpt::JSLambda : {
-			this->__target.__lambda = _element.lbd();
+			if (_element.__target.__lambda.get() != nullptr) {
+				this->__target.__lambda = _element.__target.__lambda;
+			}
 			break;
 		}
 	}
@@ -140,7 +142,9 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 							break;
 						}
 						case zpt::JSLambda : {
-							_other->__target.__lambda = _element.__target.__lambda;
+							if (_element.__target.__lambda.get() != nullptr) {
+								_other->__target.__lambda = _element.__target.__lambda;
+							}
 							break;
 						}
 					}
@@ -194,7 +198,9 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 						break;
 					}
 					case zpt::JSLambda : {
-						_other->__target.__lambda = _element.__target.__lambda;
+						if (_element.__target.__lambda.get() != nullptr) {
+							_other->__target.__lambda = _element.__target.__lambda;
+						}
 						break;
 					}
 				}
@@ -244,7 +250,9 @@ zpt::JSONElementT::JSONElementT(JSONPtr _value) {
 			break;
 		}
 		case zpt::JSLambda : {
-			this->__target.__lambda = _value->lbd();
+			if (_value->lbd().get() != nullptr) {
+				this->__target.__lambda = _value->lbd();
+			}
 			break;
 		}
 	}
@@ -382,6 +390,12 @@ void zpt::JSONElementT::type(JSONType _in) {
 			}
 			break;
 		}
+		case zpt::JSLambda : {
+			if (this->__target.__lambda.get() != nullptr) {
+				this->__target.__lambda.~lambda();
+			}
+			break;
+		}
 		default : {
 			break;
 		}
@@ -397,6 +411,10 @@ void zpt::JSONElementT::type(JSONType _in) {
 		}
 		case zpt::JSString : {
 			new(& this->__target.__string) JSONStr();
+			break;
+		}
+		case zpt::JSLambda : {
+			new(& this->__target.__lambda) lambda();
 			break;
 		}
 		default : {
@@ -510,6 +528,9 @@ void zpt::JSONElementT::assign(JSONElementT& _rhs) {
 			break;
 		}
 		case zpt::JSLambda : {
+			if (this->__target.__lambda.get() != nullptr) {
+				this->__target.__lambda.~lambda();
+			}
 			this->__target.__lambda = _rhs.lbd();
 			break;
 		}
@@ -562,7 +583,7 @@ zpt::timestamp_t zpt::JSONElementT::date() {
 	return this->__target.__date;
 }
 
-zpt::lambda zpt::JSONElementT::lbd() {
+zpt::lambda& zpt::JSONElementT::lbd() {
 	assertz(this->__target.__type == zpt::JSLambda, std::string("this element is not of type JSLambda: ") + this->stringify(), 0, 0);
 	return this->__target.__lambda;
 }
@@ -621,8 +642,7 @@ zpt::JSONPtr zpt::JSONElementT::clone() {
 			return zpt::mkptr(_v);
 		}
 		case zpt::JSLambda : {
-			zpt::lambda _v = this->lbd();
-			return zpt::mkptr(_v);
+			return zpt::json::lambda(this->lbd()->name(), this->lbd()->n_args());
 		}
 	}
 	return zpt::undefined;	
@@ -1190,7 +1210,7 @@ void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 
 zpt::JSONPtr zpt::JSONElementT::flatten() {
 	if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
-		zpt::JSONPtr _return = zpt::mkobj();
+		zpt::JSONPtr _return = zpt::json::object();
 		this->inspect({ "$regexp", "(.*)" },
 			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 				zpt::JSONPtr _self = this->getPath(_object_path);
@@ -1473,7 +1493,37 @@ void zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) {
 	}
 }
 
+/*JSON CONTEXT*/
+zpt::JSONContext::JSONContext(void* _target) : __target(_target) {
+}
+
+zpt::JSONContext::~JSONContext() {
+	this->__target = nullptr;
+}
+
+void* zpt::JSONContext::unpack() {
+	return this->__target;
+}
+		
+zpt::context::context(void* _target) : std::shared_ptr< zpt::JSONContext >(new zpt::JSONContext(_target)) {
+}
+
+zpt::context::~context() {
+}
+
 /*JSON LAMBDA */
+zpt::lambda::lambda() : std::shared_ptr< zpt::JSONLambda >(std::make_shared< zpt::JSONLambda >(zpt::JSONLambda())) {
+}
+
+zpt::lambda::lambda(std::shared_ptr< zpt::JSONLambda > _target) : std::shared_ptr< zpt::JSONLambda >(_target) {
+}
+
+zpt::lambda::lambda(zpt::lambda& _target) : std::shared_ptr< zpt::JSONLambda >(_target) {
+}
+
+zpt::lambda::lambda(zpt::JSONLambda* _target) : std::shared_ptr< zpt::JSONLambda >(_target) {
+}
+
 zpt::lambda::lambda(std::string _signature) : std::shared_ptr< zpt::JSONLambda >(new zpt::JSONLambda(_signature)) {
 }
 
@@ -1481,6 +1531,10 @@ zpt::lambda::lambda(std::string _name, unsigned short _n_args) : std::shared_ptr
 }
 
 zpt::lambda::~lambda() {
+}
+
+zpt::json zpt::lambda::operator ()(zpt::json _args, zpt::context _ctx) {
+	return this->get()->call(_args, _ctx);
 }
 
 std::tuple< std::string, unsigned short > zpt::lambda::parse(std::string _signature) {
@@ -1504,19 +1558,29 @@ std::string zpt::lambda::stringify(std::string _name, unsigned short _n_args) {
  }
 
 void zpt::lambda::add(std::string _signature, zpt::symbol _lambda) {
+	try {
+		zpt::lambda::find(_signature);
+		assertz(true, "lambda already defined", 412, 0);
+	}
+	catch(zpt::AssertionException& _e) {}
 	std::tuple< std::string, unsigned short > _parsed = zpt::lambda::parse(_signature);
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
 
 void zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _lambda) {
+	try {
+		zpt::lambda::find(_name, _n_args);
+		assertz(true, "lambda already defined", 412, 0);
+	}
+	catch(zpt::AssertionException& _e) {}
 	std::string _signature(zpt::lambda::stringify(_name, _n_args));
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }
 
-zpt::json zpt::lambda::call(std::string _name, zpt::json _args) {
+zpt::json zpt::lambda::call(std::string _name, zpt::json _args, zpt::context  _ctx) {
 	assertz(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
 	zpt::symbol _f = zpt::lambda::find(_name, _args->arr()->size());
-	return _f(_args, _args->arr()->size());
+	return _f(_args, _args->arr()->size(), _ctx);
 }
 
 zpt::symbol zpt::lambda::find(std::string _signature) {
@@ -1528,6 +1592,9 @@ zpt::symbol zpt::lambda::find(std::string _signature) {
 zpt::symbol zpt::lambda::find(std::string _name, unsigned short _n_args) {
 	std::string _signature = zpt::lambda::stringify(_name, _n_args);
 	return zpt::lambda::find(_signature);
+}
+
+zpt::JSONLambda::JSONLambda() : __name(""), __n_args(0) {
 }
 
 zpt::JSONLambda::JSONLambda(std::string _signature) {
@@ -1554,8 +1621,8 @@ std::string zpt::JSONLambda::signature() {
 	return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 
-zpt::json zpt::JSONLambda::call(zpt::json _args) {
-	return zpt::lambda::call(this->__name, _args);
+zpt::json zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) {
+	return zpt::lambda::call(this->__name, _args, _ctx);
 }		
 
 /*JSON OBJECT*/

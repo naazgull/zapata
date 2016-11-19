@@ -312,25 +312,12 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	  4.3.  Resource Owner Password Credentials Grant
 	  4.4.  Client Credentials Grant
 	*/
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "authorize" }),
-		{
-			{
-				zpt::ev::Post,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-					return _oauth->authorize(_performative, _envelope, _emitter);
-				}
-			},
-			{
-				zpt::ev::Get,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-					return _oauth->authorize(_performative, _envelope, _emitter);
-				}
-			}			
-		}
-	);
-
+	zpt::ev::callback _authorize = 	[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+		zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
+		return _oauth->authorize(_performative, _envelope, _emitter);
+	};
+	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "authorize" }), { { zpt::ev::Post, _authorize }, { zpt::ev::Get, _authorize } } );
+	
 	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "token" }),
 		{
 			{

@@ -57,7 +57,7 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 
 int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::json _ptr = zpt::conf::init(argc, argv);
-	zpt::json _to_spawn = zpt::mkobj();
+	zpt::json _to_spawn = zpt::json::object();
 	for (auto _spawn : _ptr->obj()) {
 		if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
 			continue;
@@ -387,7 +387,7 @@ void zpt::RESTClient::start() {
 }
 
 zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	_return <<
 		"channel" << _request->url() <<
 		"performative" << _request->method() <<
@@ -410,14 +410,14 @@ zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
 		}
 	}
 	else {
-		_payload = zpt::mkobj();
+		_payload = zpt::json::object();
 	}
 	for (auto _param : _request->params()) {
 		_payload << _param.first << _param.second;
 	}
 	_return << "payload" << _payload;
 
-	zpt::json _headers = zpt::mkobj();
+	zpt::json _headers = zpt::json::object();
 	for (auto _header : _request->headers()) {
 		_headers << _header.first << _header.second;
 	}
@@ -450,7 +450,7 @@ zpt::http::rep zpt::rest::zmq2http(zpt::json _out) {
 }
 
 zpt::json zpt::rest::http::deserialize(std::string _body) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	std::string _name;
 	std::string _collected;
 	for (const auto& _c : _body) {
@@ -487,7 +487,7 @@ std::string zpt::rest::authorization::serialize(zpt::json _info) {
 }
 
 zpt::json zpt::rest::authorization::deserialize(std::string _token) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 
 	zpt::json _splitted = zpt::split(_token, "@");
 	_return << "owner" << _splitted[0];
@@ -514,7 +514,7 @@ std::string zpt::rest::scopes::serialize(zpt::json _info) {
 }
 
 zpt::json zpt::rest::scopes::deserialize(std::string _scope) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 
 	zpt::json _splited = zpt::split(_scope, ",");
 	for (auto _part : _splited->arr()) {

@@ -172,7 +172,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
-		_envelope << "payload" << zpt::mkobj();
+		_envelope << "payload" << zpt::json::object();
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 

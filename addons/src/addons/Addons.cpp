@@ -144,7 +144,7 @@ zpt::json zpt::Addons::trigger(std::string _regex, zpt::json _payload) {
 }
 
 zpt::json zpt::Addons::trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) {
-	zpt::json _return = zpt::mkarr();
+	zpt::json _return = zpt::json::array();
 
 	for (auto _i : this->__resources) {
 		if (regexec(_i.second.first, _resource.c_str(), (size_t) (0), nullptr, 0) == 0) {

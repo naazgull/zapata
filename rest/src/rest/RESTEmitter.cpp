@@ -288,7 +288,7 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 }
 
 zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope) {
-	zpt::json _in = zpt::mkobj() + _envelope;
+	zpt::json _in = zpt::json::object() + _envelope;
 	_in <<
 	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<
 	"channel" << _url <<
@@ -478,7 +478,7 @@ std::string zpt::rest::url_pattern(zpt::json _to_join) {
 		
 zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
 	zpt::json _splitted = zpt::split(_cookie_header, ";");
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	bool _first = true;
 	for (auto _part : _splitted->arr()){
 		std::string _value = std::string(_part);
