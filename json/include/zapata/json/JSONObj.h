@@ -373,6 +373,10 @@ namespace zpt {
 
 		template <typename T>
 		JSONPtr operator+(T _in);
+		template <typename T>
+		JSONPtr operator-(T _in);
+		template <typename T>
+		JSONPtr operator/(T _in);
 
 		/**
 		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zpt::JSONPtr object.
@@ -1586,6 +1590,10 @@ namespace zpt {
 
 		JSONPtr operator+(zpt::JSONPtr _rhs);
 		JSONPtr operator+(zpt::JSONElementT& _rhs);
+		JSONPtr operator-(zpt::JSONPtr _rhs);
+		JSONPtr operator-(zpt::JSONElementT& _rhs);
+		JSONPtr operator/(zpt::JSONPtr _rhs);
+		JSONPtr operator/(zpt::JSONElementT& _rhs);
 
 		friend ostream& operator<<(ostream& _out, JSONElementT _in) {
 			_in.stringify(_out);
@@ -1662,6 +1670,8 @@ namespace zpt {
 		static zpt::json integer(T _e);
 		template <typename T>
 		static zpt::json floating(T _e);
+		template <typename T>
+		static zpt::json unsign_long(T _e);
 		template <typename T>
 		static zpt::json boolean(T _e);
 		inline static zpt::json date(std::string _e) {
@@ -1741,6 +1751,14 @@ zpt::JSONPtr zpt::JSONPtr::operator+(T _rhs) {
 	return *(this->get()) + _rhs;
 };
 template <typename T>
+zpt::JSONPtr zpt::JSONPtr::operator-(T _rhs) {
+	return *(this->get()) - _rhs;
+};
+template <typename T>
+zpt::JSONPtr zpt::JSONPtr::operator/(T _rhs) {
+	return *(this->get()) / _rhs;
+};
+template <typename T>
 zpt::json zpt::json::operator[](T _idx) {
 	return zpt::json((*(this->get()))[_idx]);
 };
@@ -1750,22 +1768,27 @@ zpt::json zpt::json::text(T _e){
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::integer(T _e){
+zpt::json zpt::json::integer(T _e){
 	long long int _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::unsign(T _e){
+zpt::json zpt::json::unsign(T _e){
 	unsigned int _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::floating(T _e){
+zpt::json zpt::json::floating(T _e){
 	double _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::boolean(T _e){
+zpt::json zpt::json::unsign_long(T _e){
+	size_t _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+zpt::json zpt::json::boolean(T _e){
 	bool _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
