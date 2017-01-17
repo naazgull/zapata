@@ -36,7 +36,7 @@ namespace zpt {
 		ERRIDMandatory = 1006
 	};
 
-	class Users : public zpt::KnowledgeBase {
+	class Users : public zpt::Connector {
 	public:
 		Users(zpt::ev::emitter _emitter);
 		virtual ~Users();

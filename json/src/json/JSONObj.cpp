@@ -3070,13 +3070,13 @@ zpt::JSONObj& zpt::JSONObj::operator<<(JSONElementT& _in) {
 }
 
 /*JSON POINTER TO ARRAY*/
-zpt::JSONArr::JSONArr() : shared_ptr<JSONArrT>(make_shared<JSONArrT>(JSONArrT())) {
+zpt::JSONArr::JSONArr() : shared_ptr<zpt::JSONArrT>(make_shared<zpt::JSONArrT>(JSONArrT())) {
 }
 
-zpt::JSONArr::JSONArr(JSONArr& _rhs)  : shared_ptr<JSONArrT>(_rhs){
+zpt::JSONArr::JSONArr(zpt::JSONArr& _rhs)  : shared_ptr<zpt::JSONArrT>(_rhs){
 }
 
-zpt::JSONArr::JSONArr(JSONArrT* _target) : shared_ptr<JSONArrT>(_target) {
+zpt::JSONArr::JSONArr(zpt::JSONArrT* _target) : shared_ptr<zpt::JSONArrT>(_target) {
 }
 
 zpt::JSONArr::~JSONArr(){

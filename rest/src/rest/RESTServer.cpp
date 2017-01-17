@@ -117,9 +117,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			}
 			case ZMQ_PUB_SUB : {
 				this->__pub_sub.push_back(this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str()));
-				/*std::string _connect(_definition["bind"]->str());
-				zpt::replace(_connect, "*", ((std::string) this->__options["host"]));
-				this->__poll->bind(ZMQ_PUB_SUB, _connect)->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);*/
 				break;
 			}
 			default : {
@@ -230,7 +227,7 @@ void zpt::RESTServer::start() {
 									}
 								);
 								(*_cs) << _reply << flush;
-								_cs->close();							
+								_cs->close();				
 							}
 						}
 					}

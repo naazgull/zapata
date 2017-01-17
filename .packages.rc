@@ -10,5 +10,7 @@ export projects=(
        rest
        mongodb
        redis
+       mariadb
+       postgresql
        users
 )

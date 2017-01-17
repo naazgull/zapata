@@ -36,7 +36,7 @@ namespace zpt {
 
 	namespace mongodb {
 
-		class Client : public zpt::KnowledgeBase {
+		class Client : public zpt::Connector {
 		public:
 			Client(zpt::json _options, std::string _conf_path);
 			virtual ~Client();

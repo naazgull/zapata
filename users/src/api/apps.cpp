@@ -26,8 +26,14 @@ SOFTWARE.
 #include <ctime>
 #include <memory>
 #include <ossp/uuid++.hh>
+#include <python3.5m/Python.h>
 
 extern "C" void restify(zpt::ev::emitter _emitter) {
+	Py_Initialize();
+	PyRun_SimpleString("name = raw_input('Who are you? ')n"
+		"print 'Hi there, %s!' % namen");
+	Py_Finalize();
+	
 	assertz(_emitter->options()["redis"]["apps"]->ok(), "no 'redis.apps' object found in provided configuration", 500, 0);
 	_emitter->add_kb("redis.apps", zpt::kb(new zpt::redis::Client(_emitter->options(), "redis.apps")));
 

@@ -75,27 +75,27 @@ namespace zpt {
 		EventEmitter(zpt::json _options);
 		virtual ~EventEmitter();
 		
-		virtual zpt::json options();
-		virtual zpt::EventEmitterPtr self();
-		virtual std::string version();
+		virtual auto options() -> zpt::json;
+		virtual auto self() -> zpt::ev::emitter;
+		virtual auto version() -> std::string;
 		
-		virtual std::string on(zpt::ev::performative _method, string _regex,  zpt::ev::Handler _handler) = 0;
-		virtual std::string on(std::string _regex,  zpt::ev::Handler _handlers[7]) = 0;
-		virtual std::string on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers) = 0;
-		virtual std::string on(zpt::ev::listener _listener) = 0;
-		virtual void off(zpt::ev::performative _method, std::string _callback_id) = 0;
-		virtual void off(std::string _callback_id) = 0;
+		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = undefined) -> std::string = 0;
+		virtual auto on(std::string _regex,  zpt::ev::Handler _handlers[7], zpt::json _opts = undefined) -> std::string = 0;
+		virtual auto on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = undefined) -> std::string = 0;
+		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = undefined) -> std::string = 0;
+		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void = 0;
+		virtual auto off(std::string _callback_id) -> void = 0;
 		
-		virtual zpt::json trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) = 0;
-		virtual zpt::json route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) = 0;
+		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
 		
-		virtual void add_kb(std::string _name, zpt::kb _kb) final;
-		virtual zpt::kb get_kb(std::string _name) final;
+		virtual auto add_connector(std::string _name, zpt::connector _connector) -> void final;
+		virtual auto get_connector(std::string _name) -> zpt::connector final;
 
 	private:
 		zpt::json __options;
-		zpt::EventEmitterPtr __self;
-		std::map<std::string, zpt::kb> __kb;
+		zpt::ev::emitter __self;
+		std::map<std::string, zpt::connector> __connector;
 
 	};
 

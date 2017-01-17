@@ -33,15 +33,15 @@ zpt::authenticator::OAuth2::OAuth2(zpt::json _options) : __options(_options) {
 zpt::authenticator::OAuth2::~OAuth2() {
 }
 
-zpt::json zpt::authenticator::OAuth2::options() {
+auto zpt::authenticator::OAuth2::options() -> zpt::json {
 	return this->__options;
 }
-
-std::string zpt::authenticator::OAuth2::name() {
+						  
+auto zpt::authenticator::OAuth2::name() -> std::string {
 	return "oauth2.0";
 }
 
-zpt::json zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 	assertz(
 		_envelope["payload"]->ok() &&
 		_envelope["payload"]["scope"]->ok() &&
@@ -50,7 +50,7 @@ zpt::json zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performat
 
 	std::string _response_type((std::string) _envelope["payload"]["response_type"]);
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
-
+	
 	if (_response_type == "code") {
 		assertz(
 			_envelope["payload"]->ok() &&
@@ -190,7 +190,7 @@ zpt::json zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performat
 	assertz(false, "\"response_type\" not valid", 400, 0);
 }
 
-zpt::json zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 	assertz(
 		_envelope["payload"]->ok() &&
 		_envelope["payload"]["client_id"]->ok() &&
@@ -212,7 +212,7 @@ zpt::json zpt::authenticator::OAuth2::token(zpt::ev::performative _performative,
 	};
 }
 
-zpt::json zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 	assertz(
 		_envelope["payload"]->ok() &&
 		_envelope["payload"]["grant_type"]->ok() &&
@@ -231,19 +231,19 @@ zpt::json zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performativ
 	};
 }
 
-zpt::json zpt::authenticator::OAuth2::generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json {
 	zpt::json _owner = _emitter->route(zpt::ev::Get, _owner_url, zpt::undefined);
 	assertz(_owner["status"] == 200, "invalid resource: no such resource owner", 404, 0);
 	return this->generate_token(_owner["payload"], _application_url, _client_id, _client_secret, _scope, _grant_type, _emitter);
 }
 
-zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::generate_token(zpt::json _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json {
 	zpt::json _application = _emitter->route(zpt::ev::Get, _application_url, zpt::undefined);
 	assertz(_application["status"] == 200, "invalid resource: no such application", 404, 0);
 	return this->generate_token(_owner, _application["payload"], _client_id, _client_secret, _scope, _grant_type, _emitter);
 }
 
-zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json {
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	assertz(_client_secret.length() == 0 || _application["client_secret"]->str() == _client_secret, "invalid parameter: no such client secret", 401, 0);
 	std::string _access_token = zpt::rest::authorization::serialize({ "owner", _owner["id"]->str(), "application", _application["id"]->str(), "grant_type", _grant_type });
@@ -280,7 +280,7 @@ zpt::json zpt::authenticator::OAuth2::generate_token(zpt::json _owner, zpt::json
 	};
 }
 
-zpt::json zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::ev::emitter _emitter) {
+auto zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::ev::emitter _emitter) -> zpt::json {
 	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	zpt::json _token = _db->get("tokens", std::string("/") + _emitter->version() + std::string("/oauth2.0/tokens/") + _access_token);
 	assertz(_token->ok(), "token is invalid", 403, 0);
@@ -294,7 +294,7 @@ zpt::json zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::e
 	return _token;
 }
 
-extern "C" void restify(zpt::ev::emitter _emitter) {
+extern "C" auto restify(zpt::ev::emitter _emitter) -> void {
 	assertz(_emitter->options()["redis"]["oauth"]->ok(), "no 'redis.oauth' object found in provided configuration", 500, 0);
 	zpt::kb _redis(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
 	_emitter->add_kb("redis.oauth", _redis);

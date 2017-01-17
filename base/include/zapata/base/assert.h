@@ -44,12 +44,13 @@ namespace zpt {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda
 	};
 
-	class KnowledgeBase {
+	class Connector {
 	public:
-		virtual std::string name() = 0;
+		virtual auto name() -> std::string = 0;
+		
 	};
-	typedef std::shared_ptr<zpt::KnowledgeBase> KBPtr;
-	typedef KBPtr kb;
+	typedef std::shared_ptr<zpt::Connector> ConnectorPtr;
+	typedef ConnectorPtr connector;
 
 	namespace ev {
 		enum performative {

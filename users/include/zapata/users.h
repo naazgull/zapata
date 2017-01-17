@@ -41,25 +41,25 @@ using namespace __gnu_cxx;
 namespace zpt {
 	namespace authenticator {
 		
-		class OAuth2 : public zpt::KnowledgeBase {
+		class OAuth2 : public zpt::Connector {
 		public:
 			OAuth2(zpt::json _options);
 			virtual ~OAuth2();
 
-			virtual zpt::json options();
-			virtual std::string name();
+			virtual auto options() -> zpt::json;
+			virtual auto name() -> std::string;
 
-			virtual zpt::json authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter);
-			virtual zpt::json token(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter);
-			virtual zpt::json refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter);
-			virtual zpt::json validate(std::string _access_token, zpt::ev::emitter _emitter);
+			virtual auto authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+			virtual auto token(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+			virtual auto validate(std::string _access_token, zpt::ev::emitter _emitter) -> zpt::json;
 			
 		private:
 			zpt::json __options;
 
-			zpt::json generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter);
-			zpt::json generate_token(zpt::json _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter);
-			zpt::json generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter);
+			auto generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) ->zpt::json;
+			auto generate_token(zpt::json _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json;
+			auto generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json;
 		};
 		
 	}

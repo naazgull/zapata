@@ -44,8 +44,8 @@ zpt::EventEmitter::~EventEmitter() {
 zpt::json zpt::EventEmitter::options() {
 	return this->__options;
 }
-
-zpt::EventEmitterPtr zpt::EventEmitter::self() {
+					 
+zpt::ev::emitter zpt::EventEmitter::self() {
 	return this->__self;
 }
 
@@ -53,17 +53,17 @@ std::string zpt::EventEmitter::version() {
 	return this->__options["rest"]["version"]->str();
 }
 
-void zpt::EventEmitter::add_kb(std::string _name, zpt::kb _kb) {
-	auto _found = this->__kb.find(_name);
-	if (_found == this->__kb.end()) {
-		this->__kb.insert(make_pair(_name, _kb));
+auto zpt::EventEmitter::add_connector(std::string _name, zpt::connector _connector) -> void {
+	auto _found = this->__connector.find(_name);
+	if (_found == this->__connector.end()) {
+		this->__connector.insert(make_pair(_name, _connector));
 	}
 }
 
-zpt::kb zpt::EventEmitter::get_kb(std::string _name) {
-	auto _found = this->__kb.find(_name);
-	if (_found == this->__kb.end()) {
-		return zpt::kb(nullptr);
+auto zpt::EventEmitter::get_connector(std::string _name) -> zpt::connector {
+	auto _found = this->__connector.find(_name);
+	if (_found == this->__connector.end()) {
+		return zpt::connector(nullptr);
 	}
 	return _found->second;
 }
