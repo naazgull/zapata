@@ -309,61 +309,14 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr, mon
 		}
 
 		if (_key == "page-size") {
-			istringstream iss((string) _value);
-			int i = 0;
-			iss >> i;
-			if (!iss.eof()) {
-				_page_size = 0;
-			}
-			else {
-				_page_size = i;
-				if (_page_size < 0) {
-					_page_size *= -1;
-				}
-			}
 			continue;
 		}
 
 		if (_key == "page-start-index") {
-			istringstream iss((string) _value);
-			int i = 0;
-			iss >> i;
-			if (!iss.eof()) {
-				_page_start_index = 0;
-			}
-			else {
-				_page_start_index = i;
-				if (_page_start_index < 0) {
-					_page_start_index *= -1;
-				}
-			}
 			continue;
 		}
 
 		if (_key == "order-by") {
-			istringstream lss(((string) _value).data());
-			string part;
-			while (std::getline(lss, part, ',')) {
-				if (part.length() > 0) {
-					int dir = 1;
-
-					if (part[0] == '-') {
-						dir = -1;
-						part.erase(0, 1);
-					}
-					else if (part[0] == '+') {
-						part.erase(0, 1);
-					}
-
-					if (part.length() > 0) {
-						ostringstream oss;
-						oss << part << flush;
-
-						_order.append(oss.str(), dir);
-					}
-				}
-			}
-
 			continue;
 		}
 

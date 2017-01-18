@@ -44,14 +44,6 @@ namespace zpt {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda
 	};
 
-	class Connector {
-	public:
-		virtual auto name() -> std::string = 0;
-		
-	};
-	typedef std::shared_ptr<zpt::Connector> ConnectorPtr;
-	typedef ConnectorPtr connector;
-
 	namespace ev {
 		enum performative {
 			Get = 0,
@@ -64,8 +56,22 @@ namespace zpt {
 			Reply = 7
 		};
 
-		std::string to_str(zpt::ev::performative _performative);
-		zpt::ev::performative from_str(std::string _performative);
+		auto to_str(zpt::ev::performative _performative) -> std::string;
+		auto from_str(std::string _performative) -> zpt::ev::performative;
+	}
+
+	namespace mutation {
+		enum operation {
+			Insert = 0,
+			Remove = 1,
+			Update = 2,
+			Replace = 3,
+			Connect = 4,
+			Reconnect = 5
+		};
+
+		auto to_str(zpt::mutation::operation _operation) -> std::string;
+		auto from_str(std::string _operation) -> zpt::mutation::operation;
 	}
 
 	extern std::string* tz;

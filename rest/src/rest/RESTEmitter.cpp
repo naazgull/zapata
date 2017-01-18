@@ -74,6 +74,10 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 zpt::RESTEmitter::~RESTEmitter() {
 }
 
+auto zpt::RESTEmitter::version() -> std::string {
+	return this->options()["rest"]["version"]->str();
+}
+
 void zpt::RESTEmitter::poll(zpt::poll _poll) {
 	this->__poll = _poll;
 }
@@ -92,28 +96,6 @@ std::string zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _rege
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Patch ? this->__default_patch : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Reply ? this->__default_assync_reply : _handler));
-
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
-	zlog(string("registered handlers for ") + _regex, zpt::info);
-	return _uuid.string();
-}
-
-std::string zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]) {
-	regex_t* _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
-
-	vector< zpt::ev::Handler> _handlers;
-	_handlers.push_back(_handler_set[zpt::ev::Get] == nullptr ?  this->__default_get : _handler_set[zpt::ev::Get]);
-	_handlers.push_back(_handler_set[zpt::ev::Put] == nullptr ?  this->__default_put : _handler_set[zpt::ev::Put]);
-	_handlers.push_back(_handler_set[zpt::ev::Post] == nullptr ?  this->__default_post : _handler_set[zpt::ev::Post]);
-	_handlers.push_back(_handler_set[zpt::ev::Delete] == nullptr ?  this->__default_delete : _handler_set[zpt::ev::Delete]);
-	_handlers.push_back(_handler_set[zpt::ev::Head] == nullptr ?  this->__default_head : _handler_set[zpt::ev::Head]);
-	_handlers.push_back(this->__default_options);
-	_handlers.push_back(_handler_set[zpt::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zpt::ev::Patch]);
-	_handlers.push_back(this->__default_assync_reply);
 
 	uuid _uuid;
 	_uuid.make(UUID_MAKE_V1);

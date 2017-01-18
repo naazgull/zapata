@@ -47,7 +47,7 @@ std::string zpt::get_tz() {
 	return *zpt::tz;
 }
 
-std::string zpt::ev::to_str(zpt::ev::performative _performative) {
+auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
 	switch(_performative) {
 		case zpt::ev::Get : {
 			return "GET";
@@ -77,7 +77,7 @@ std::string zpt::ev::to_str(zpt::ev::performative _performative) {
 	return "HEAD";
 }
 
-zpt::ev::performative zpt::ev::from_str(std::string _performative) {
+auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
 	if (_performative == "GET") {
 		return zpt::ev::Get;
 	}
@@ -103,6 +103,52 @@ zpt::ev::performative zpt::ev::from_str(std::string _performative) {
 		return zpt::ev::Reply;
 	}
 	return zpt::ev::Head;
+}
+
+auto zpt::mutation::to_str(zpt::mutation::operation _performative) -> std::string{
+	switch(_performative) {
+		case zpt::mutation::Insert : {
+			return "INSERT";
+		}
+		case zpt::mutation::Remove : {
+			return "REMOVE";
+		}
+		case zpt::mutation::Update : {
+			return "UPDATE";
+		}
+		case zpt::mutation::Replace : {
+			return "REPLACE";
+		}
+		case zpt::mutation::Connect : {
+			return "CONNECT";
+		}
+		case zpt::mutation::Reconnect : {
+			return "RECONNECT";
+		}
+	}
+	return "";
+}
+
+auto zpt::mutation::from_str(std::string _performative) -> zpt::mutation::operation {
+	if (_performative == "INSERT") {
+		return zpt::mutation::Insert;
+	}
+	if (_performative == "REMOVE") {
+		return zpt::mutation::Remove;
+	}
+	if (_performative == "UPDATE") {
+		return zpt::mutation::Update;
+	}
+	if (_performative == "REPLACE") {
+		return zpt::mutation::Replace;
+	}
+	if (_performative == "CONNECT") {
+		return zpt::mutation::Connect;
+	}
+	if (_performative == "RECONNECT") {
+		return zpt::mutation::Reconnect;
+	}
+	return zpt::mutation::Insert;
 }
 
 zpt::tm_ptr zpt::get_time(time_t _t) {

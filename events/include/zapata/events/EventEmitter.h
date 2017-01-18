@@ -39,9 +39,13 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
+	class MutationEmitter;
+	class MutationListener;
 	class EventEmitter;
 	class EventListener;
 
+	typedef std::shared_ptr<zpt::MutationEmitter> MutationEmitterPtr;
+	typedef std::shared_ptr<zpt::MutationListener> MutationListenerPtr;
 	typedef std::weak_ptr<zpt::EventEmitter> EventEmitterWPtr;
 	typedef std::shared_ptr<zpt::EventEmitter> EventEmitterPtr;
 	typedef std::shared_ptr<zpt::EventListener> EventListenerPtr;
@@ -49,26 +53,113 @@ namespace zpt {
 	namespace ev {
 		extern std::string* __default_authorization;
 
-		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> Handler;
-		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::EventEmitterPtr)> handler;
-		typedef Handler Callback;
-		typedef handler callback;
-		typedef std::map< std::string, pair<regex_t*, vector< zpt::ev::Handler> > > HandlerStack;
-		typedef std::map< std::string, zpt::ev::Handler > ReplyHandlerStack;
-
-		zpt::json split(std::string _url, zpt::json _orphans);
-		std::string join(zpt::json _info, size_t _orphans);
-
-		void set_default_authorization(std::string _default_authorization);
-		std::string get_default_authorization();
-
-		zpt::json init_request(std::string _cid = "");
-		zpt::json init_reply(std::string _cid = "");
-
 		typedef zpt::EventEmitterPtr emitter;
 		typedef zpt::EventListenerPtr listener;
+
+		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> Handler;
+		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
+		typedef Handler Callback;
+		typedef handler callback;
+		typedef std::map< std::string, pair<regex_t*, std::vector< zpt::ev::handler> > > HandlerStack;
+		typedef std::map< std::string, zpt::ev::handler > ReplyHandlerStack;
+
+		auto split(std::string _url, zpt::json _orphans) -> zpt::json;
+		auto join(zpt::json _info, std::size_t _orphans) -> std::string;
+
+		auto set_default_authorization(std::string _default_authorization) -> void;
+		auto get_default_authorization() -> std::string;
+
+		auto init_request(std::string _cid = "") -> zpt::json;
+		auto init_reply(std::string _cid = "") -> zpt::json;
 	}
 
+	namespace mutation {
+		typedef zpt::MutationEmitterPtr emitter;
+		typedef zpt::MutationListenerPtr listener;
+
+		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> Handler;
+		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> handler;
+		typedef Handler Callback;
+		typedef handler callback;
+		typedef std::map< std::string, pair<regex_t*, vector< zpt::mutation::handler> > > HandlerStack;
+		typedef std::map< std::string, zpt::mutation::handler > ReplyHandlerStack;
+	}
+
+	class Connector {
+	public:
+		Connector();
+		virtual ~Connector();
+		
+		virtual auto name() -> std::string = 0;
+		virtual auto options() -> zpt::json = 0;
+		virtual auto events(zpt::ev::emitter _emitter) -> void = 0;
+		virtual auto events() -> zpt::ev::emitter = 0;
+		virtual auto mutations(zpt::mutation::emitter _emitter) -> void = 0;
+		virtual auto mutations() -> zpt::mutation::emitter = 0;
+
+		virtual auto connect(zpt::json _opts) -> void;
+		virtual auto reconnect() -> void;
+
+		virtual auto insert(std::string _collection, std::string _id_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
+		virtual auto save(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto set(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto unset(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto unset(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto remove(std::string _collection, std::string _id, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
+		virtual auto get(std::string _collection, std::string _id, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto query(std::string _collection, std::string _query, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
+
+	};
+	typedef std::shared_ptr<zpt::Connector> ConnectorPtr;
+	typedef ConnectorPtr connector;
+
+	class MutationEmitter {
+	public:
+		MutationEmitter();
+		MutationEmitter(zpt::json _options);
+		virtual ~MutationEmitter();
+		
+		virtual auto options() -> zpt::json;
+		virtual auto self() -> zpt::mutation::emitter;
+		virtual auto version() -> std::string = 0;
+		
+		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void = 0;
+		virtual auto off(std::string _callback_id) -> void = 0;
+		
+		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json = 0;
+		
+		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
+		virtual auto connector(std::string _name) -> zpt::connector final;
+
+	private:
+		zpt::json __options;
+		zpt::mutation::emitter __self;
+		std::map<std::string, zpt::connector> __connector;
+	};
+
+	class MutationListener {
+	public:
+		MutationListener(std::string _data_class_ns);
+		virtual ~MutationListener();
+
+		virtual std::string ns() final;
+		
+		virtual auto inserted(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+		virtual auto removed(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+		virtual auto updated(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+		virtual auto replaced(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+
+	private:
+		std::string __namespace;
+	};
+	
 	class EventEmitter {
 	public:
 		EventEmitter();
@@ -77,26 +168,25 @@ namespace zpt {
 		
 		virtual auto options() -> zpt::json;
 		virtual auto self() -> zpt::ev::emitter;
-		virtual auto version() -> std::string;
+		virtual auto mutations() -> zpt::mutation::emitter;
+		virtual auto version() -> std::string = 0;
 		
-		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = undefined) -> std::string = 0;
-		virtual auto on(std::string _regex,  zpt::ev::Handler _handlers[7], zpt::json _opts = undefined) -> std::string = 0;
-		virtual auto on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = undefined) -> std::string = 0;
-		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = undefined) -> std::string = 0;
+		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> std::string = 0;
 		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void = 0;
 		virtual auto off(std::string _callback_id) -> void = 0;
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
 		
-		virtual auto add_connector(std::string _name, zpt::connector _connector) -> void final;
-		virtual auto get_connector(std::string _name) -> zpt::connector final;
+		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
+		virtual auto connector(std::string _name) -> zpt::connector final;
 
 	private:
 		zpt::json __options;
 		zpt::ev::emitter __self;
-		std::map<std::string, zpt::connector> __connector;
-
+		zpt::mutation::emitter __mutant;
 	};
 
 	class EventListener {
@@ -106,14 +196,14 @@ namespace zpt {
 
 		virtual std::string regex() final;
 		
-		virtual zpt::json get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
-		virtual zpt::json reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter);
+		virtual auto get(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto put(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto post(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto del(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto head(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto options(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto patch(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto reply(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
 
 	private:
 		std::string __regex;
