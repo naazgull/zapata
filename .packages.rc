@@ -7,10 +7,13 @@ export projects=(
        http
        addons
        zmq
+       gen
        rest
        mongodb
        redis
        mariadb
        postgresql
+       datum
+       auth
        users
 )
