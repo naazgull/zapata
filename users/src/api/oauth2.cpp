@@ -129,7 +129,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		assertz(
 			_envelope["payload"]->ok() &&
 			_envelope["payload"]["client_id"]->ok() &&
-			_envelope["payload"]["redirect_uri"]->ok() &&
+			//_envelope["payload"]["redirect_uri"]->ok() &&
 			_envelope["payload"]["username"]->ok() &&
 			_envelope["payload"]["password"]->ok(),
 			"required fields: 'client_id', 'redirect_uri', 'username' & 'password'", 412, 0);

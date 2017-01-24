@@ -67,14 +67,15 @@ auto zpt::mongodb::Client::mutations() -> zpt::mutation::emitter {
 	return this->__events->mutations();
 }
 
-auto zpt::mongodb::Client::connect(zpt::json _opts) -> void {
+auto zpt::mongodb::Client::connect(zpt::json _opts) -> void {	
 }
 
 auto zpt::mongodb::Client::reconnect() -> void {
 }
 
-auto zpt::mongodb::Client::insert(std::string _collection, std::string _id_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+auto zpt::mongodb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 
 	std::string _full_collection(_collection);
@@ -86,22 +87,23 @@ auto zpt::mongodb::Client::insert(std::string _collection, std::string _id_prefi
 		_uuid.make(UUID_MAKE_V1);
 		_document << "id" << _uuid.string();
 	}
-	if (!_document["_id"]->ok() && _id_prefix.length() != 0) {
-		_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+	if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+		_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 	}
-	_document << "href" << _document["_id"];
+	_document << "_id" << _document["href"];
 
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
 	this->__conn->insert(_full_collection, _mongo_document.obj());
 	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	zpt::Connector::insert(_collection, _id_prefix, _document, _opts);
+	zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
 
-auto zpt::mongodb::Client::save(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {	
+auto zpt::mongodb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 
 	std::string _full_collection(_collection);
@@ -110,15 +112,16 @@ auto zpt::mongodb::Client::save(std::string _collection, std::string _id, zpt::j
 
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
-	this->__conn->update(_full_collection, BSON( "_id" << _id ), _mongo_document.obj(), false, false);
+	this->__conn->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
 	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	zpt::Connector::save(_collection, _id, _document, _opts);
+	zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
 }
 
-auto zpt::mongodb::Client::set(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mongodb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 
 	std::string _full_collection(_collection);
@@ -128,15 +131,16 @@ auto zpt::mongodb::Client::set(std::string _collection, std::string _id, zpt::js
 	_document = { "$set", _document };
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
-	this->__conn->update(_full_collection, BSON( "_id" << _id ), _mongo_document.obj(), false, false);
+	this->__conn->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
 	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	zpt::Connector::set(_collection, _id, _document, _opts);
+	zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
 }
 
 auto zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 	if (!_pattern->ok()) {
 		_pattern = zpt::json::object();
@@ -166,8 +170,9 @@ auto zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	return _size;
 }
 
-auto zpt::mongodb::Client::unset(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mongodb::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 
 	std::string _full_collection(_collection);
@@ -177,15 +182,16 @@ auto zpt::mongodb::Client::unset(std::string _collection, std::string _id, zpt::
 	_document = { "$unset", _document };
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document, _mongo_document);
-	this->__conn->update(_full_collection, BSON( "_id" << _id ), _mongo_document.obj(), false, false);
+	this->__conn->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
 	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	zpt::Connector::unset(_collection, _id, _document, _opts);
+	zpt::Connector::unset(_collection, _href, _document, _opts);
 	return 1;
 }
 
 auto zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 	if (!_pattern->ok()) {
 		_pattern = zpt::json::object();
@@ -215,21 +221,23 @@ auto zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	return _size;
 }
 
-auto zpt::mongodb::Client::remove(std::string _collection, std::string _id, zpt::json _opts) -> int {
+auto zpt::mongodb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 
 	std::string _full_collection(_collection);
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->__mongodb_conf["db"]);
 
-	this->__conn->remove(_full_collection, BSON( "_id" << _id ));
+	this->__conn->remove(_full_collection, BSON( "_id" << _href ));
 	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
 
-	zpt::Connector::remove(_collection, _id, _opts);
+	zpt::Connector::remove(_collection, _href, _opts);
 	return 1;
 }
 
 auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 	if (!_pattern->ok()) {
 		_pattern = zpt::json::object();
@@ -261,6 +269,7 @@ auto zpt::mongodb::Client::query(std::string _collection, std::string _pattern, 
 }
 
 auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 	if (!_pattern->ok()) {
 		_pattern = zpt::json::object();
@@ -339,6 +348,7 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 }
 
 auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn->resetError();
 	zpt::JSONArr _elements;
 

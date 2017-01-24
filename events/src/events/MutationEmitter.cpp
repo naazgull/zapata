@@ -38,48 +38,48 @@ auto zpt::Connector::reconnect() -> void {
 	this->mutations()->trigger(zpt::mutation::Reconnect, this->name(), { "node", { "ip", "127.0.0.1" } });	
 }
 
-auto zpt::Connector::insert(std::string _collection, std::string _id_prefix, zpt::json _record, zpt::json _opts) -> std::string {
-	assertz(_record["_id"]->ok(), "required fields: '_id'", 412, 0);
-	this->mutations()->trigger(zpt::mutation::Insert, std::string("/") + _collection, { "lambda", "insert", "id", _record["_id"], "new", _record });
-	return std::string(_record["id"]);
+auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
+	assertz(_record["href"]->ok(), "required fields: 'href'", 412, 0);
+	this->mutations()->trigger(zpt::mutation::Insert, std::string("/") + _collection, { "performative", "insert", "href", _record["href"], "new", _record });
+	return std::string(_record["href"]);
 }
 
-auto zpt::Connector::save(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Replace, std::string("/") + _collection + _id, { "lambda", "save", "id", _id, "new", _record });
+auto zpt::Connector::save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
+	this->mutations()->trigger(zpt::mutation::Replace, std::string("/") + _collection + _href, { "performative", "save", "href", _href, "new", _record });
 	return 0;
 }
 
-auto zpt::Connector::set(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection + _id, { "lambda", "set", "id", _id, "changes", _record });
+auto zpt::Connector::set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
+	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection + _href, { "performative", "set", "href", _href, "changes", _record });
 	return 0;
 }
 
 auto zpt::Connector::set(std::string _collection, zpt::json _pattern, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection, { "lambda", "set", "pattern", _pattern, "changes", _record });
+	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection, { "performative", "set", "pattern", _pattern, "changes", _record });
 	return 0;
 }
 
-auto zpt::Connector::unset(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection + _id, { "lambda", "unset", "id", _id, "changes", _record });
+auto zpt::Connector::unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
+	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection + _href, { "performative", "unset", "href", _href, "changes", _record });
 	return 0;
 }
 
 auto zpt::Connector::unset(std::string _collection, zpt::json _pattern, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection, { "lambda", "unset", "pattern", _pattern, "changes", _record });
+	this->mutations()->trigger(zpt::mutation::Update, std::string("/") + _collection, { "performative", "unset", "pattern", _pattern, "changes", _record });
 	return 0;
 }
 
-auto zpt::Connector::remove(std::string _collection, std::string _id, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Remove, std::string("/") + _collection + _id, { "lambda", "remove", "id", _id });
+auto zpt::Connector::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+	this->mutations()->trigger(zpt::mutation::Remove, std::string("/") + _collection + _href, { "performative", "remove", "href", _href });
 	return 0;
 }
 
 auto zpt::Connector::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
-	this->mutations()->trigger(zpt::mutation::Remove, std::string("/") + _collection, { "lambda", "remove", "pattern", _pattern });
+	this->mutations()->trigger(zpt::mutation::Remove, std::string("/") + _collection, { "performative", "remove", "pattern", _pattern });
 	return 0;
 }
 
-auto zpt::Connector::get(std::string _collection, std::string _id, zpt::json _opts) -> zpt::json {
+auto zpt::Connector::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
 	return zpt::undefined;
 }
 	 

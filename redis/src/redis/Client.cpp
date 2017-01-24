@@ -92,7 +92,7 @@ auto zpt::redis::Client::reconnect() -> void {
 	zpt::Connector::reconnect();
 }
 
-auto zpt::redis::Client::insert(std::string _collection, std::string _id_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+auto zpt::redis::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
@@ -104,17 +104,16 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _id_prefix,
 		_uuid.make(UUID_MAKE_V1);
 		_document << "id" << _uuid.string();
 	}
-	if (!_document["_id"]->ok()) {
-		_document << "_id" << (_id_prefix + (_id_prefix.back() != '/' ? string("/") : string("")) + _document["id"]->str());
+	if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+		_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 	}
-	_document << "href" << _document["_id"];
 
 	redisReply* _reply = nullptr;
 	bool _success = true;
 	do {
 		{
 			std::lock_guard< std::mutex > _lock(this->__mtx);
-			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["_id"]->str().data(), ((std::string) _document).data());
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["href"]->str().data(), ((std::string) _document).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		}
 		if (!_success) {
@@ -123,13 +122,13 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _id_prefix,
 		}
 	}
 	while(!_success);
-	freeReplyObject(_reply);	
+	freeReplyObject(_reply);
 
-	zpt::Connector::insert(_collection, _id_prefix, _document, _opts);
+	zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
 
-auto zpt::redis::Client::save(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {	
+auto zpt::redis::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
@@ -141,7 +140,7 @@ auto zpt::redis::Client::save(std::string _collection, std::string _id, zpt::jso
 	do {
 		{
 			std::lock_guard< std::mutex > _lock(this->__mtx);
-			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _id.data(), ((std::string) _document).data());
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _document).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
 		}
 		if (!_success) {
@@ -152,18 +151,18 @@ auto zpt::redis::Client::save(std::string _collection, std::string _id, zpt::jso
 	while(!_success);
 	freeReplyObject(_reply);
 
-	zpt::Connector::save(_collection, _id, _document, _opts);
+	zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
 }
 
-auto zpt::redis::Client::set(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {	
+auto zpt::redis::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
  	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
- 	zpt::json _record = this->get(_collection, _id);
+ 	zpt::json _record = this->get(_collection, _href);
  	zpt::json _new_record = _record + _document;
 
  	redisReply* _reply = nullptr;
@@ -171,7 +170,7 @@ auto zpt::redis::Client::set(std::string _collection, std::string _id, zpt::json
   	do {
  		{
  			std::lock_guard< std::mutex > _lock(this->__mtx);
- 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _id.data(), ((std::string) _new_record).data());
+ 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
  		}
  		if (!_success) {
@@ -182,33 +181,33 @@ auto zpt::redis::Client::set(std::string _collection, std::string _id, zpt::json
  	while(!_success);
  	freeReplyObject(_reply);	
 
-	zpt::Connector::set(_collection, _id, _document, _opts);
+	zpt::Connector::set(_collection, _href, _document, _opts);
  	return 1;
 }
 
 auto zpt::redis::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
- 	assertz(_pattern["_id"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'_id' field must be of types string or array", 412, 0);
-	if (_pattern["_id"]->type() == zpt::JSString) {
-		return this->set(_collection, _pattern["_id"]->str(), _document, _opts);
+ 	assertz(_pattern["href"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'href' field must be of types string or array", 412, 0);
+	if (_pattern["href"]->type() == zpt::JSString) {
+		return this->set(_collection, _pattern["href"]->str(), _document, _opts);
 	}
 	else {
 		int _changes = 0;
-		for (auto _id : _pattern["_id"]->arr()) {
-			_changes += this->set(_collection, std::string(_id), _document, _opts);
+		for (auto _href : _pattern["href"]->arr()) {
+			_changes += this->set(_collection, std::string(_href), _document, _opts);
 		}
 		return _changes;
 	}
 }
 
-auto zpt::redis::Client::unset(std::string _collection, std::string _id, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::redis::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
  	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
 
- 	zpt::json _record = this->get(_collection, _id);
+ 	zpt::json _record = this->get(_collection, _href);
  	zpt::json _new_record = _record->clone();
  	for (auto _attribute : _document->obj()) {
  		_new_record >> _attribute.first;
@@ -219,7 +218,7 @@ auto zpt::redis::Client::unset(std::string _collection, std::string _id, zpt::js
   	do {
  		{
  			std::lock_guard< std::mutex > _lock(this->__mtx);
- 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _id.data(), ((std::string) _new_record).data());
+ 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
  		}
  		if (!_success) {
@@ -230,26 +229,26 @@ auto zpt::redis::Client::unset(std::string _collection, std::string _id, zpt::js
  	while(!_success);
  	freeReplyObject(_reply);
 
-	zpt::Connector::unset(_collection, _id, _document, _opts);
+	zpt::Connector::unset(_collection, _href, _document, _opts);
  	return 1;
 }
 
 auto zpt::redis::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
- 	assertz(_pattern["_id"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'_id' field must be of types string or array", 412, 0);
-	if (_pattern["_id"]->type() == zpt::JSString) {
-		return this->unset(_collection, _pattern["_id"]->str(), _document, _opts);
+ 	assertz(_pattern["href"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'href' field must be of types string or array", 412, 0);
+	if (_pattern["href"]->type() == zpt::JSString) {
+		return this->unset(_collection, _pattern["href"]->str(), _document, _opts);
 	}
 	else {
 		int _changes = 0;
-		for (auto _id : _pattern["_id"]->arr()) {
-			_changes += this->unset(_collection, std::string(_id), _document, _opts);
+		for (auto _href : _pattern["href"]->arr()) {
+			_changes += this->unset(_collection, std::string(_href), _document, _opts);
 		}
 		return _changes;
 	}
 }
 
-auto zpt::redis::Client::remove(std::string _collection, std::string _id, zpt::json _opts) -> int {	
+auto zpt::redis::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {	
  	std::string _key(_collection);
  	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->__redis_conf["db"]);
@@ -259,7 +258,7 @@ auto zpt::redis::Client::remove(std::string _collection, std::string _id, zpt::j
   	do {
  		{
  			std::lock_guard< std::mutex > _lock(this->__mtx);
- 			redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _id.data());
+ 			redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _href.data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK);
  		}
  		if (!_success) {
@@ -274,28 +273,28 @@ auto zpt::redis::Client::remove(std::string _collection, std::string _id, zpt::j
  	}
  	freeReplyObject(_reply);
 
-	zpt::Connector::remove(_collection, _id, _opts);
+	zpt::Connector::remove(_collection, _href, _opts);
  	return 1;
 }
 
 auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
- 	assertz(_pattern["_id"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'_id' field must be of types string or array", 412, 0);
-	if (_pattern["_id"]->type() == zpt::JSString) {
-		return this->remove(_collection, _pattern["_id"]->str(), _opts);
+ 	assertz(_pattern["href"]->ok() && (_pattern->type() == zpt::JSString || _pattern->type() == zpt::JSArray), "'href' field must be of types string or array", 412, 0);
+	if (_pattern["href"]->type() == zpt::JSString) {
+		return this->remove(_collection, _pattern["href"]->str(), _opts);
 	}
 	else {
 		int _changes = 0;
-		for (auto _id : _pattern["_id"]->arr()) {
-			_changes += this->remove(_collection, std::string(_id), _opts);
+		for (auto _href : _pattern["href"]->arr()) {
+			_changes += this->remove(_collection, std::string(_href), _opts);
 		}
 		return _changes;
 	}
 }
 
-auto zpt::redis::Client::get(std::string _collection, std::string _id, zpt::json _opts) -> zpt::json {
+auto zpt::redis::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
- 	assertz(_id.length() != 0, "'_id' parameter must not be empty", 0, 0);
+ 	assertz(_href.length() != 0, "'href' parameter must not be empty", 0, 0);
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
@@ -306,7 +305,7 @@ auto zpt::redis::Client::get(std::string _collection, std::string _id, zpt::json
   	do {
  		{
  			std::lock_guard< std::mutex > _lock(this->__mtx);
- 			redisAppendCommand(this->__conn, "HGET %s %s", _key.data(), _id.data());
+ 			redisAppendCommand(this->__conn, "HGET %s %s", _key.data(), _href.data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK) && (_reply != nullptr);
  		}
  		if (!_success) {
@@ -362,7 +361,7 @@ auto zpt::redis::Client::get(std::string _collection, std::string _id, zpt::json
  	}
  	freeReplyObject(_reply);
 	
-	zpt::Connector::get(_collection, _id, _opts);
+	zpt::Connector::get(_collection, _href, _opts);
  	return zpt::undefined;
 }
 

@@ -52,15 +52,15 @@ namespace zpt {
 			virtual auto connect(zpt::json _opts) -> void;
 			virtual auto reconnect() -> void;
 
-			virtual auto insert(std::string _collection, std::string _id_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
-			virtual auto save(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-			virtual auto set(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
+			virtual auto save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-			virtual auto unset(std::string _collection, std::string _id, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto unset(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-			virtual auto remove(std::string _collection, std::string _id, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto remove(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
-			virtual auto get(std::string _collection, std::string _id, zpt::json _opts = zpt::undefined) -> zpt::json;
+			virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> zpt::json;
 			virtual auto query(std::string _collection, std::string _query, zpt::json _opts = zpt::undefined) -> zpt::json;
 			virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
 			virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
