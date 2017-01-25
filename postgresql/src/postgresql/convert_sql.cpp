@@ -79,7 +79,7 @@ auto zpt::mariadb::fromsql(sql::ResultSet* _in, sql::ResultSetMetaData* _metadat
 }
 
 auto zpt::mariadb::fromsql_r(sql::ResultSet* _in, sql::ResultSetMetaData* _metadata) -> zpt::json {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	zpt::mariadb::fromsql(_in, _metadata, _return);
 	return _return;
 }

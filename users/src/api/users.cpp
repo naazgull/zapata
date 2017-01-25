@@ -198,7 +198,7 @@ extern "C" void restify(zpt::ev::emitter _emitter) {
 	 *
 	 * ## Description
 	 *
-	 * The _**Users**_ colqwlections holds the set of _User_ documents for the configured **MongoDB** database and collection. 
+	 * The _**Users**_ collection holds the set of _User_ documents for the configured **MongoDB** database and collection. 
 	 *
 	 * ## Allowed methods
 	 *

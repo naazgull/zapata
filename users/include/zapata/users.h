@@ -28,7 +28,6 @@ SOFTWARE.
 #include <zapata/json.h>
 #include <zapata/events.h>
 #include <zapata/rest.h>
-#include <regex.h>
 #include <string>
 #include <map>
 #include <memory>

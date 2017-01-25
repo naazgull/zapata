@@ -151,7 +151,7 @@ zpt::json zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resou
 		{
 			"channel", _resource,
 			"performative", _performative,
-			"resource", _resource,
+			"resource", _resource, 
 			"payload", _payload
 		}
 	);
@@ -162,6 +162,12 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
 
+	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
+	_envelope <<
+	"channel" << _uri["path"] <<
+	"resource" << _uri["path"] <<
+	"params" << _uri["query"];
+	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
 		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);

@@ -56,7 +56,7 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 }
 
 int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
-	zpt::json _ptr = zpt::conf::init(argc, argv);
+	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::json _to_spawn = zpt::json::object();
 	for (auto _spawn : _ptr->obj()) {
 		if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
@@ -103,9 +103,10 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options), __self(this) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
+	((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
 
 	for (auto _definition : this->__options["zmq"]->arr()) {
 		short int _type = zpt::str2type(_definition["type"]->str());
@@ -174,6 +175,7 @@ zpt::RESTServer::~RESTServer(){
 	zpt::ZMQPoll* _poll = this->__poll.get();
 	this->__poll.reset();
 	_poll->unbind();
+	this->__self.reset();
 }
 
 std::string zpt::RESTServer::name() {
@@ -325,6 +327,10 @@ bool zpt::RESTServer::route_mqtt(std::iostream& _cs) {
 	return true;
 }
 
+auto zpt::RESTServer::assync_on(std::string _regex, zpt::json _opts) -> void {
+}
+
+
 zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
 }
 
@@ -335,7 +341,7 @@ zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
 zpt::rest::client zpt::RESTClientPtr::launch(int argc, char* argv[]) {
-	zpt::json _options = zpt::conf::init(argc, argv)->obj()->begin()->second;
+	zpt::json _options = zpt::conf::rest::init(argc, argv)->obj()->begin()->second;
 	if (!_options["rest"]->ok() || !_options["zmq"]->ok()) {
 		std::cout << "unable to start client: unsufficient configurations" << endl << flush;
 		exit(-10);
@@ -559,4 +565,116 @@ std::string zpt::rest::authorization::extract(zpt::json _envelope) {
 		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
 	}
 	return zpt::undefined;
+}
+
+auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
+	zpt::json _args = zpt::conf::getopt(argc, argv);
+	
+	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
+	const char* _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]).data() : nullptr);
+	zpt::ev::performative _method = (_args["m"]->ok() ? zpt::ev::from_str(std::string(_args["m"][0])) : zpt::ev::Get);
+	std::string _url(_args["u"][0]);
+	std::string _token(_args["a"][0]);
+	zpt::json _body = (_args["j"]->ok() ? zpt::json(std::string(_args["j"][0])) : zpt::undefined);
+	bool _verbose = bool(_args["v"]);
+	zpt::log_format = bool(_args["r"]);
+
+	std::string _bind(_args["b"][0]);
+	if (_args["b"]->ok() && _bind[0] != '@' && _bind[0] != '>') {
+		_bind = std::string(">") + _bind;
+	}
+
+	short _type = 0;
+	if (_args["t"]->ok()) {
+		std::string _type_s(_args["t"][0]);
+		std::transform(_type_s.begin(), _type_s.end(), _type_s.begin(), ::toupper);
+		if (_type_s == "ROUTER/DEALER"){
+			_type = -3;
+		}
+		else if (_type_s == "REQ"){
+			_type = 3;
+		}
+		else if (_type_s == "REP"){
+			_type = 4;
+		}
+		else if (_type_s == "PUB/SUB"){
+			_type = -1;
+		}
+		else if (_type_s == "XPUB/XSUB"){
+			_type = -2;
+		}
+		else if (_type_s == "PUB"){
+			_type = 1;
+		}
+		else if (_type_s == "SUB"){
+			_type = 2;
+		}
+		else if (_type_s == "PUSH"){
+			_type = 8;
+		}
+		else if (_type_s == "PULL"){
+			_type = 7;
+		}
+	}
+
+	zpt::log_fd = & cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+	zpt::log_lvl = (_verbose ? 7 : _log_level);
+
+	zpt::json _ptr;
+	if (_conf_file == nullptr) {
+		_ptr = zpt::json::object();
+		std::string _name(argv[0], strlen(argv[0]));
+		_ptr << _name << zpt::json(
+			{
+				"argv", _args,
+				"rest", {
+					"method", _method
+				},
+				"zmq", {
+					"bind", _bind,
+					"type", _type					
+				}
+			}
+		);
+		if (_url.length() != 0) {
+			_ptr[_name]["rest"] << "target" << _url;
+		}
+		if (_token.length() != 0) {
+			_ptr[_name]["rest"] << "token" << _token;
+		}
+		if (_body->ok()) {
+			_ptr[_name]["rest"] << "body" << _body;
+		}
+	}
+	else {
+		std::ifstream _in;
+		_in.open(_conf_file);
+		if (!_in.is_open()) {
+			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+			exit(-10);
+		}
+		try {
+			_in >> _ptr;
+		}
+		catch(zpt::SyntaxErrorException& _e) {
+			std::cout << "unable to start client: syntax error when parsing configuration file: " << _e.what() << endl << flush;
+			exit(-10);
+		}
+		_ptr << "argv" << _args;
+	}
+
+	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
+		zpt::log_lvl = (int) _ptr["log"]["level"];
+	}
+	if (zpt::log_lvl == -1) {
+		zpt::log_lvl = 4;
+	}
+	if (!!_ptr["log"]["file"]) {
+		zpt::log_fd = new std::ofstream();
+		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
+	}
+
+	return _ptr;
 }

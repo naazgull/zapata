@@ -58,6 +58,12 @@ auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) 
 	this->__mutant->connector(_name, _connector);
 }
 
+auto zpt::EventEmitter::connector(std::map<std::string, zpt::connector> _connectors) -> void {
+	for (auto _connector : _connectors) {
+		this->connector(_connector.first, _connector.second);
+	}
+}
+
 auto zpt::EventEmitter::connector(std::string _name) -> zpt::connector {
 	return this->__mutant->connector(_name);
 }

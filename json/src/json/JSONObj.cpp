@@ -23,11 +23,10 @@ SOFTWARE.
 */
 
 #include <zapata/json/JSONObj.h>
-
-#include <ostream>
 #include <zapata/json/JSONParser.h>
-#include <regex.h>
+#include <ostream>
 #include <cstdarg>
+#include <regex>
 
 namespace zpt {
 	JSONPtr undefined;
@@ -1525,19 +1524,15 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
 			if (_pattern["$regexp"]->ok()) {
-				::regex_t * _rgx = new ::regex_t();
-				if (regcomp(_rgx, ((std::string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
-					std::string _exp;
-					this->stringify(_exp);
-					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
-						_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
-					}
+				std::regex _rgx(((std::string) _pattern["$regexp"]));
+				std::string _exp;
+				this->stringify(_exp);
+				if (std::regex_match(_exp, _rgx)) {
+					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
-				regfree(_rgx);
-				delete _rgx;
 			}
 			else {
-				if (* this == _pattern) {
+				if (*this == _pattern) {
 					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
 			}
@@ -1548,19 +1543,15 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
 			if (_pattern["$regexp"]->ok()) {
-				::regex_t * _rgx = new ::regex_t();
-				if (regcomp(_rgx, ((std::string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
-					std::string _exp;
-					this->stringify(_exp);
-					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
-						_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
-					}
+				std::regex _rgx(((std::string) _pattern["$regexp"]));
+				std::string _exp;
+				this->stringify(_exp);
+				if (std::regex_match(_exp, _rgx)) {
+					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
-				regfree(_rgx);
-				delete _rgx;
 			}
 			else {
-				if (* this == _pattern) {
+				if (*this == _pattern) {
 					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
 			}
@@ -1568,19 +1559,15 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 		}
 		default: {
 			if (_pattern["$regexp"]->ok()) {
-				::regex_t * _rgx = new ::regex_t();
-				if (regcomp(_rgx, ((std::string) _pattern["$regexp"]).c_str(), REG_EXTENDED | REG_NOSUB) == 0) {
-					std::string _exp;
-					this->stringify(_exp);
-					if (regexec(_rgx, _exp.c_str(), (size_t) (0), nullptr, 0) == 0) {
-						_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
-					}
+				std::regex _rgx(((std::string) _pattern["$regexp"]));
+				std::string _exp;
+				this->stringify(_exp);
+				if (std::regex_match(_exp, _rgx)) {
+					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
-				regfree(_rgx);
-				delete _rgx;
 			}
 			else {
-				if (* this == _pattern) {
+				if (*this == _pattern) {
 					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
 			}
@@ -3111,16 +3098,6 @@ zpt::JSONArrT::iterator zpt::JSONArr::end() {
 zpt::JSONArr& zpt::JSONArr::operator<<(JSONElementT& _in) {
 	(* this)->push(_in);
 	return * this;
-}
-
-zpt::json zpt::mkobj() {
-	zpt::JSONObj _empty;
-	return zpt::json(new zpt::JSONElementT(_empty));
-}
-
-zpt::json zpt::mkarr() {
-	zpt::JSONArr _empty;
-	return zpt::json(new zpt::JSONElementT(_empty));
 }
 
 void zpt::json::stringify(std::string& _str) {

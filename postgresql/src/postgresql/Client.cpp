@@ -326,7 +326,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	size_t _size = 0;
-	zpt::json _elements = zpt::mkarr();
+	zpt::json _elements = zpt::json::array();
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 	_stmt->execute(string("USE ") + this->__pgsql_conf["db"]->str());
 

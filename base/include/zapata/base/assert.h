@@ -37,6 +37,19 @@ SOFTWARE.
  */
 #define assertz(x,y,z,c) if (! (x)) { throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
+#define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string("field '") + std::string(y) + std::string("' is mandatory."), z, 0)
+#define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+#define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string("field '") + std::string(y) + std::string("' must be an integer."), z, 0)
+#define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string("field '") + std::string(y) + std::string("' must be a double."), z, 0)
+#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate, std::string("field '") + std::string(y) + std::string("' must be a timestamp."), z, 0)
+#define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string("field '") + std::string(y) + std::string("' must be an object."), z, 0)
+#define assertz_array(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string("field '") + std::string(y) + std::string("' must be an array."), z, 0)
+
+#define assertz_utf8(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+#define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString), std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+#define assertz_token(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+#define assertz_uri(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+
 typedef struct epoll_event epoll_event_t;
 
 namespace zpt {

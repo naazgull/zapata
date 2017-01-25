@@ -1,0 +1,56 @@
+{
+	"lib" : "zapata-apps",
+	"namespace" : "zpt::apps",
+	"resources" : [
+		{
+			"topic" : "/v2/datums/applications",
+			"type" : "collection",
+			"performatives" : [ "get", "post", "patch", "delete", "head" ],
+			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
+			"datum" : {
+				"ref" : "zpt::datum::Application",
+				"opts" : [ "generate-data-access" ]
+			},
+			"permissions" : [
+				{ "role" : "root", "pattern" : "/v2/applications", "perms" : "00101111" },
+				{ "role" : "*", "pattern" : "/v2/applications", "perms" : "00100001" }
+			]
+		},
+		{
+			"topic" : "/v2/datums/applications/{id}",
+			"type" : "document",
+			"performatives" : [ "get", "put", "patch", "delete", "head" ],
+			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
+			"datum" : {
+				"ref" : "zpt::datum::Application",
+				"opts" : [ "generate-data-access" ]
+			},
+			"permissions" : [
+				{ "role" : "root", "pattern" : "/v2/applications/{id}", "perms" : "00101111" },
+				{ "role" : "app_admin", "pattern" : "/v2/applications/{$token.app_id}", "perms" : "00100101" },
+				{ "role" : "*", "pattern" : "/v2/applications/{id}", "perms" : "00100001" }
+			]
+		}
+	],
+	"datums" : [
+		{
+			"name" : "Application",
+			"namespace" : "zpt::datum",
+			"extends" : [ "zpt::datum::ResourceOwner" ],
+			"dbms" : [ "postgresql", "mongodb", "redis" ],
+			"opts" : [ "generate-pk" ],
+			"fields" : {
+				"name" : { "type" : "utf8", "opts" : [ "mandatory" ] },
+				"namespace" : { "type" : "ascii", "opts" : [ "mandatory", "unique", "index" ] },
+				"app_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
+				"device_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
+				"cloud_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
+				"icon" : { "type" : "uri" },
+				"image" : { "type" : "uri" },
+				"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
+				"updated" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
+				"users" : { "type" : "array", "ref" : "zpt::datum::UserApplication", "rel" : "id/app_id" }
+			}
+		}
+	]
+}

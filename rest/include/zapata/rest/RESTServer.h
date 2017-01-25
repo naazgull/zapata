@@ -36,80 +36,11 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class RESTServer;
-	class RESTClient;
-	class RESTServerPtr;
-	class RESTClientPtr;
-
-	namespace rest {
-		typedef zpt::RESTServerPtr server;
-		typedef zpt::RESTClientPtr client;
+	namespace conf {
+		namespace rest {
+			zpt::json init(int argc, char* argv[]);
+		}
 	}
-
-	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
-	public:
-		RESTServerPtr(std::string _name, zpt::json _options);
-		RESTServerPtr(zpt::RESTServer * _ptr);
-		virtual ~RESTServerPtr();
-
-		static zpt::rest::server setup(zpt::json _options, std::string _name);
-		static int launch(int argc, char* argv[]);
-	};
-
-	class RESTClientPtr : public std::shared_ptr<zpt::RESTClient> {
-	public:
-		RESTClientPtr(zpt::json _options);
-		RESTClientPtr(zpt::RESTClient * _ptr);
-		virtual ~RESTClientPtr();
-
-		static zpt::rest::client launch(int argc, char* argv[]);
-	};
-
-	class RESTServer {
-	public:
-		RESTServer(std::string _name, zpt::json _options);
-		virtual ~RESTServer();
-
-		virtual void start();
-
-		virtual std::string name();
-		virtual zpt::json options();
-		virtual zpt::poll poll();
-		virtual zpt::ev::emitter emitter();
-
-		virtual bool route_http(zpt::socketstream_ptr _cs);
-		virtual bool route_mqtt(std::iostream& _cs);
-
-	private:
-		std::string __name;
-		zpt::ev::emitter __emitter;
-		zpt::poll __poll;
-		zpt::json __options;
-		std::vector< zpt::socket > __pub_sub;
-		std::vector< zpt::socket > __router_dealer;
-		std::vector< std::shared_ptr< std::thread > > __threads;
-
-	};
-
-	class RESTClient {
-	public:
-		RESTClient(zpt::json _options);
-		virtual ~RESTClient();
-
-		virtual void start();
-
-		virtual zpt::json options();
-		virtual zpt::poll poll();
-		virtual zpt::ev::emitter emitter();
-
-		virtual zpt::socket bind(short _type, std::string _connection);
-		virtual zpt::socket bind(std::string _object_path);
-
-	private:
-		zpt::ev::emitter __emitter;
-		zpt::poll __poll;
-		zpt::json __options;
-	};
 
 	namespace rest {
 		zpt::json http2zmq(zpt::http::req _request);

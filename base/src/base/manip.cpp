@@ -52,7 +52,7 @@ void zpt::trim(std::string &_in_out) {
         zpt::rtrim(_in_out);
 }
 
-void zpt::replace(std::string& str, std::string find, std::string replace) {
+auto zpt::replace(std::string& str, std::string find, std::string replace) -> void {
 	if (str.length() == 0) {
 		return;
 	}

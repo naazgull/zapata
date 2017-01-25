@@ -41,6 +41,7 @@ AC_CONFIG_FILES(Makefile
         debian/Makefile
         etc/Makefile
         include/Makefile
+	src/Makefile
         src/gen/Makefile)
 
 AC_OUTPUT

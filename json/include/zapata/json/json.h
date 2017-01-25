@@ -26,7 +26,6 @@ SOFTWARE.
 
 #include <string>
 #include <unistd.h>
-#include <getopt.h>
 #include <zapata/json/JSONObj.h>
 #include <zapata/json/JSONParser.h>
 
@@ -116,12 +115,16 @@ namespace zpt {
 		std::string join(zpt::json _to_join);
 	}
 
+	namespace uri {
+		auto parse(std::string _uri) -> zpt::json;
+	}
+
 	namespace conf {
-		zpt::json init(int argc, char* argv[]);
-		void setup(zpt::json _options);
-		void dirs(std::string _dir, zpt::json _options);
-		void dirs(zpt::json _options);
-		void env(zpt::json _options);
+		auto getopt(int _argc, char* _argv[]) -> zpt::json;
+		auto setup(zpt::json _options) -> void;
+		auto dirs(std::string _dir, zpt::json _options) -> void;
+		auto dirs(zpt::json _options) -> void;
+		auto env(zpt::json _options) -> void;
 	}
 
 }

@@ -23,16 +23,6 @@ SOFTWARE.
 */
 #pragma once
 
-#define JSON(z) ((zpt::JSONObj()) << z)
-#define JSON_ARRAY(z) ((zpt::JSONArr()) << z)
-#define JPTR(z) zpt::mkptr((zpt::JSONObj()) << z)
-#define JPTR_ARRAY(z) zpt::mkptr((zpt::JSONArr()) << z)
-#define JSON_NIL zpt::undefined;
-
-#define Json zpt::JSONPtr
-#define Jstr (zpt::JSONPtr)zpt::json
-#define Jpretty zpt::pretty
-
 #include <string>
 #include <memory>
 #include <vector>
@@ -1623,9 +1613,6 @@ namespace zpt {
 
 	zpt::timestamp_t timestamp(std::string _json_date = "");
 
-	zpt::json mkobj();
-	zpt::json mkarr();
-
 	class json : public zpt::JSONPtr {
 	public: 
 		inline json() : zpt::JSONPtr() {
@@ -1657,21 +1644,25 @@ namespace zpt {
 		static void stringify(std::string& _str);
 
 		inline static zpt::json object() {
-			return zpt::mkobj();
+			zpt::JSONObj _empty;
+			return zpt::json(new zpt::JSONElementT(_empty));
 		};
 		inline static zpt::json array() {
-			return zpt::mkarr();
+			zpt::JSONArr _empty;
+			return zpt::json(new zpt::JSONElementT(_empty));
 		};
 		template <typename T>
-		static zpt::json text(T _e);
+		static std::string pretty(T _e);
 		template <typename T>
-		static zpt::json unsign(T _e);
+		static zpt::json string(T _e);
+		template <typename T>
+		static zpt::json uinteger(T _e);
 		template <typename T>
 		static zpt::json integer(T _e);
 		template <typename T>
 		static zpt::json floating(T _e);
 		template <typename T>
-		static zpt::json unsign_long(T _e);
+		static zpt::json ulong(T _e);
 		template <typename T>
 		static zpt::json boolean(T _e);
 		inline static zpt::json date(std::string _e) {
@@ -1763,7 +1754,11 @@ zpt::json zpt::json::operator[](T _idx) {
 	return zpt::json((*(this->get()))[_idx]);
 };
 template <typename T>
-zpt::json zpt::json::text(T _e){
+std::string zpt::json::pretty(T _e){
+	return zpt::pretty(_e);
+}
+template <typename T>
+zpt::json zpt::json::string(T _e){
 	std::string _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
@@ -1773,7 +1768,7 @@ zpt::json zpt::json::integer(T _e){
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
-zpt::json zpt::json::unsign(T _e){
+zpt::json zpt::json::uinteger(T _e){
 	unsigned int _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
@@ -1783,7 +1778,7 @@ zpt::json zpt::json::floating(T _e){
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
-zpt::json zpt::json::unsign_long(T _e){
+zpt::json zpt::json::ulong(T _e){
 	size_t _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }

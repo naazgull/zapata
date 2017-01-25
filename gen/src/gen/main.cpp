@@ -30,7 +30,6 @@ SOFTWARE.
 
 #include <zapata/gen.h>
 #include <zapata/mem/usage.h>
-#include <semaphore.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -39,7 +38,7 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	try {
-		zpt::gen::server::launch(argc, argv);
+		zpt::gen::worker::launch(argc, argv);
 	}
 	catch (zpt::AssertionException& _e) {
 		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);

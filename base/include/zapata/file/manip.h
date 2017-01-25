@@ -28,7 +28,7 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <string>
 #include <vector>
-#include <regex.h>
+#include <regex>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 using namespace std;
@@ -470,7 +470,7 @@ namespace zpt {
 	bool path_exists(string _in);
 	bool is_dir(std::string _path);
 	
-	int globRegexp(string& dir, vector<string>& result, regex_t& pattern, short recursion = 0);
+	int globRegexp(string& dir, vector<string>& result, std::regex& pattern, short recursion = 0);
 	int glob(string dir, vector<string>& result, string pattern, short recursion = 0);
 
 }

@@ -25,3 +25,4 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/gen/config.h>
+#include <zapata/gen/Generator.h>

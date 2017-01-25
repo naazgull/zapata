@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <zapata/base.h>
 #include <zapata/json.h>
-#include <regex.h>
+#include <regex>
 #include <string>
 #include <map>
 #include <memory>
@@ -60,7 +60,7 @@ namespace zpt {
 		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
 		typedef Handler Callback;
 		typedef handler callback;
-		typedef std::map< std::string, pair<regex_t*, std::vector< zpt::ev::handler> > > HandlerStack;
+		typedef std::map< std::string, std::pair<std::regex, std::vector< zpt::ev::handler> > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::handler > ReplyHandlerStack;
 
 		auto split(std::string _url, zpt::json _orphans) -> zpt::json;
@@ -81,7 +81,7 @@ namespace zpt {
 		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> handler;
 		typedef Handler Callback;
 		typedef handler callback;
-		typedef std::map< std::string, pair<regex_t*, vector< zpt::mutation::handler> > > HandlerStack;
+		typedef std::map< std::string, pair<std::regex, vector< zpt::mutation::handler> > > HandlerStack;
 		typedef std::map< std::string, zpt::mutation::handler > ReplyHandlerStack;
 	}
 
@@ -181,6 +181,7 @@ namespace zpt {
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
+		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
 
 	private:

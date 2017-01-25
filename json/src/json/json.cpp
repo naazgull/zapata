@@ -26,6 +26,7 @@ SOFTWARE.
 #include <zapata/log/log.h>
 #include <zapata/file/manip.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
+#include <regex>
 
 zpt::json zpt::split(std::string _to_split, std::string _separator) {
 	std::istringstream _iss(_to_split);
@@ -70,156 +71,43 @@ std::string zpt::path::join(zpt::json _to_join) {
 	return std::string("/") + zpt::join(_to_join, "/");
 }
 
-zpt::json zpt::conf::init(int argc, char* argv[]) {
-	char _c;
-	short _log_level = -1;
-	char* _conf_file = nullptr;
-	std::string _bind;
-	zpt::ev::performative _method = zpt::ev::Get;
-	std::string _url;
-	std::string _token;
-	short _type = 0;
-	zpt::json _body;
-	bool _verbose = false;
-	zpt::log_format = true;
-
-	while ((_c = getopt(argc, argv, "vc:l:b:m:u:a:t:j:r")) != -1) {
-		switch (_c) {
-			case 'c': {
-				_conf_file = optarg;
-				break;
+auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
+	zpt::json _files = zpt::json::array();
+	zpt::json _return = { "files", _files };
+	std::string _last("");
+	for (int _i = 1; _i != _argc; _i++) {
+		std::string _arg(_argv[_i]);
+		if (_arg.find("--") == 0) {
+			if (_last.length() != 0) {
+				_return << std::string(_last.data()) << true;
 			}
-			case 'l': {
-				_log_level = std::stoi(optarg);
-				break;
+			_arg.erase(0, 2);
+			_last.assign(_arg);
+		}
+		else if (_arg.find("-") == 0) {
+			if (_last.length() != 0) {
+				_return << std::string(_last.data()) << true;
 			}
-			case 'v': {
-				_verbose = true;
-				break;
+			_arg.erase(0, 1);
+			_last.assign(_arg);
+		}
+		else {
+			if (_last.length() != 0) {
+				if (!_return[_last]->ok()) {
+					_return << std::string(_last.data()) << zpt::json::array();
+				}
+				_return[_last] << _arg;
+				_last.assign("");
 			}
-			case 'b': {
-				_bind.assign(string(optarg));
-				if (_bind[0] != '@' && _bind[0] != '>') {
-					_bind = std::string(">") + _bind;
-				}
-				break;
-			}
-			case 'm': {
-				_method = zpt::ev::from_str(string(optarg));
-				break;
-			}
-			case 'u': {
-				_url.assign(string(optarg));
-				break;
-			}
-			case 'a': {
-				_token.assign(string(optarg));
-				break;
-			}
-			case 't': {
-				std::string _str_type(optarg);
-				std::transform(_str_type.begin(), _str_type.end(), _str_type.begin(), ::toupper);
-				if (_str_type == "ROUTER/DEALER"){
-					_type = -3;
-				}
-				else if (_str_type == "REQ"){
-					_type = 3;
-				}
-				else if (_str_type == "REP"){
-					_type = 4;
-				}
-				else if (_str_type == "PUB/SUB"){
-					_type = -1;
-				}
-				else if (_str_type == "XPUB/XSUB"){
-					_type = -2;
-				}
-				else if (_str_type == "PUB"){
-					_type = 1;
-				}
-				else if (_str_type == "SUB"){
-					_type = 2;
-				}
-				else if (_str_type == "PUSH"){
-					_type = 8;
-				}
-				else if (_str_type == "PULL"){
-					_type = 7;
-				}
-				break;
-			}
-			case 'j': {
-				_body = zpt::json(string(optarg));
-				break;
-			}
-			case 'r': {
-				zpt::log_format = false;
-				break;
+			else {
+				_files << _arg;
 			}
 		}
 	}
-
-	zpt::log_fd = & cout;
-	zpt::log_pid = ::getpid();
-	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = (_verbose ? 7 : _log_level);
-
-	zpt::json _ptr;
-	if (_conf_file == nullptr) {
-		_ptr = zpt::json::object();
-		std::string _name(argv[0], strlen(argv[0]));
-		_ptr << _name << zpt::json(
-			{
-				"rest", {
-					"method", _method
-				},
-				"zmq", {
-					"bind", _bind,
-					"type", _type					
-				}
-			}
-		);
-		if (_url.length() != 0) {
-			_ptr[_name]["rest"] << "target" << _url;
-		}
-		if (_token.length() != 0) {
-			_ptr[_name]["rest"] << "token" << _token;
-		}
-		if (_body->ok()) {
-			_ptr[_name]["rest"] << "body" << _body;
-		}
-	}
-	else {
-		std::ifstream _in;
-		_in.open(_conf_file);
-		if (!_in.is_open()) {
-			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
-			exit(-10);
-		}
-		try {
-			_in >> _ptr;
-		}
-		catch(zpt::SyntaxErrorException& _e) {
-			std::cout << "unable to start client: syntax error when parsing configuration file: " << _e.what() << endl << flush;
-			exit(-10);
-		}
-	}
-
-	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
-		zpt::log_lvl = (int) _ptr["log"]["level"];
-	}
-	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 4;
-	}
-	if (!!_ptr["log"]["file"]) {
-		zpt::log_fd = new std::ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
-	}
-
-	return _ptr;
+	return _return;
 }
 
-void zpt::conf::setup(zpt::json _options) {
+auto zpt::conf::setup(zpt::json _options) -> void {
 	zpt::conf::dirs(_options);
 	zpt::conf::env(_options);
 	if (_options["log"]->ok()) {
@@ -237,7 +125,7 @@ void zpt::conf::setup(zpt::json _options) {
 	}
 }
 
-void zpt::conf::dirs(std::string _dir, zpt::json _options) {
+auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
 	std::vector<std::string> _files;
 	if (zpt::is_dir(_dir)) {
 		zpt::glob(_dir, _files, "(.*)\\.conf");
@@ -265,7 +153,7 @@ void zpt::conf::dirs(std::string _dir, zpt::json _options) {
 	}
 }
 
-void zpt::conf::dirs(zpt::json _options) {
+auto zpt::conf::dirs(zpt::json _options) -> void {
 	zpt::json _traversable = _options->clone();
 	_traversable->inspect({ "$regexp", "(.*)" },
 		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
@@ -286,7 +174,7 @@ void zpt::conf::dirs(zpt::json _options) {
 	);
 }
 
-void zpt::conf::env(zpt::json _options) {
+auto zpt::conf::env(zpt::json _options) -> void {
 	zpt::json _traversable = _options->clone();
 	_traversable->inspect({ "$regexp", "\\$\\{([^}]+)\\}" }, [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 		std::string _var = _options->getPath(_object_path);
@@ -299,3 +187,37 @@ void zpt::conf::env(zpt::json _options) {
 	});
 }
 
+auto zpt::uri::parse(std::string _uri) -> zpt::json {
+	if (_uri.find(":") >= _uri.find("/")) {
+		_uri = std::string("zpt:") + _uri; 
+	}
+	static const std::regex _uri_rgx(
+		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([^?#]*)"                    // authority and path
+		"(?:\\?([^#]*))?"             // ?query
+		"(?:#(.*))?"		      // #fragment
+	);
+	static const std::regex _query_rgx(
+		"(^|&)" 			//start of query or start of parameter "&"
+		"([^=&]*)=?" 			//parameter name and "=" if value is expected
+		"([^=&]*)" 			//parameter value
+		"(?=(&|$))" 			//forward reference, next should be end of query or start of next parameter
+	);
+	
+	std::smatch _uri_matches;
+	std::regex_match(_uri, _uri_matches, _uri_rgx);
+
+	zpt::json _query = zpt::json::object();
+	std::string _q_str = (std::string) _uri_matches[3];
+	std::smatch _q_matches;
+	std::regex_match(_q_str, _q_matches, _query_rgx);
+	for (size_t _i = 1; _i < _q_matches.size(); _i += 2) {
+		_query << (std::string) _q_matches[_i] << (std::string) _q_matches[_i + 1];
+	}
+	return {
+		"scheme", (std::string) _uri_matches[1],
+		"path", (std::string) _uri_matches[2],
+		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
+		"fragment", (std::string) _uri_matches[4]
+	};
+}
