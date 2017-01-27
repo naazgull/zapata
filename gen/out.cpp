@@ -27,56 +27,73 @@ auto remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) ->
 
 
 
-auto zpt::apps::ResourceOwners::get(std::string _topic, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.redis.zpt.apps");
 	zpt::json _r_data = _c->get("ResourceOwners", _topic);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::query(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::query(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.mongodb.zpt.apps");
 	zpt::json _r_data = _c->query("ResourceOwners", _filter, _filter);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"created" << zpt::json::date() <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->insert("ResourceOwners", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->save("ResourceOwners", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->set("ResourceOwners", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->set("ResourceOwners", _filter, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::remove(std::string _topic, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
 	zpt::json _r_data = _c->remove("ResourceOwners", _topic);
 	
 	return _r_data;
 }
 
-auto zpt::apps::ResourceOwners::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::ResourceOwners::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
 	zpt::json _r_data = _c->remove("ResourceOwners", _filter, _filter);
 	
@@ -113,56 +130,116 @@ auto remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) ->
 
 
 
-auto zpt::apps::Applications::get(std::string _topic, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.redis.zpt.apps");
 	zpt::json _r_data = _c->get("Applications", _topic);
-	
+	zpt::json _d_resource_owner = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "resource-owners" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "id", std::string(_r_data["id"]) }) }
+)["payload"];
+_r_data << "resource_owner" << (_d_resource_owner["elements"]->type() == zpt::JSArray ? _d_resource_owner["elements"][0] : _d_resource_owner);
+zpt::json _d_token = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "token" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "id", std::string(_r_data["id"]) }) }
+)["payload"];
+_r_data << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_token["elements"][0] : _d_token);
+zpt::json _d_users = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "users" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "app_id", std::string(_r_data["id"]) }) }
+)["payload"];
+_r_data << "users" << (_d_users["elements"]->type() == zpt::JSArray ? _d_users["elements"] : { zpt::array, _d_users });
+
 	return _r_data;
 }
 
-auto zpt::apps::Applications::query(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::query(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.mongodb.zpt.apps");
 	zpt::json _r_data = _c->query("Applications", _filter, _filter);
-	
+	if (_r_data["elements"]->type() == zpt::JSArray) {
+for (auto _d_element : _r_data["elements"]->arr()) {
+zpt::json _d_resource_owner = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "resource-owners" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "id", std::string(_d_element["id"]) }) }
+)["payload"];
+;
+_d_element << "resource_owner" << (_d_resource_owner["elements"]->type() == zpt::JSArray ? _d_resource_owner["elements"][0] : _d_resource_owner);
+}
+}
+zpt::json _d_token = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "token" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "id", std::string(_d_element["id"]) }) }
+)["payload"];
+;
+_d_element << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_token["elements"][0] : _d_token);
+zpt::json _d_users = _emitter->route(
+zpt::ev::Get,
+zpt::path::join({ zpt::array, "v2", "datums", "users" }),
+{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + { "app_id", std::string(_d_element["id"]) }) }
+)["payload"];
+;
+_d_element << "users" << (_d_users["elements"]->type() == zpt::JSArray ? _d_users["elements"] : { zpt::array, _d_users});
+
 	return _r_data;
 }
 
-auto zpt::apps::Applications::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"created" << zpt::json::date() <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->insert("Applications", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::Applications::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->save("Applications", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::Applications::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->set("Applications", _topic, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::Applications::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+
+	_document <<
+	"updated" << zpt::json::date();
+	
 	zpt::json _r_data = _c->set("Applications", _filter, _document);
 	
 	return _r_data;
 }
 
-auto zpt::apps::Applications::remove(std::string _topic, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
 	zpt::json _r_data = _c->remove("Applications", _topic);
 	
 	return _r_data;
 }
 
-auto zpt::apps::Applications::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::apps::Applications::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity) -> zpt::json {
 	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
 	zpt::json _r_data = _c->remove("Applications", _filter, _filter);
 	
@@ -190,15 +267,11 @@ zpt::ev::Get,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
@@ -218,9 +291,6 @@ _envelope["payload"] >> "app_secret";
 _envelope["payload"] << "app_secret" << zpt::generate_key(24);
 _envelope["payload"] >> "cloud_secret";
 _envelope["payload"] << "cloud_secret" << zpt::generate_key(24);
-assertz_mandatory(_envelope["payload"], "created", 412);
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 _envelope["payload"] << "device_secret" << zpt::generate_key(24);
 assertz_uri(_envelope["payload"], "icon", 412);
@@ -229,9 +299,6 @@ assertz_mandatory(_envelope["payload"], "name", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_mandatory(_envelope["payload"], "namespace", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_mandatory(_envelope["payload"], "updated", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
@@ -250,15 +317,11 @@ zpt::ev::Patch,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
@@ -276,15 +339,11 @@ zpt::ev::Delete,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
@@ -302,15 +361,11 @@ zpt::ev::Head,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
@@ -335,15 +390,11 @@ zpt::ev::Get,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
@@ -365,9 +416,6 @@ _envelope["payload"] >> "app_secret";
 _envelope["payload"] << "app_secret" << zpt::generate_key(24);
 _envelope["payload"] >> "cloud_secret";
 _envelope["payload"] << "cloud_secret" << zpt::generate_key(24);
-assertz_mandatory(_envelope["payload"], "created", 412);
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 _envelope["payload"] << "device_secret" << zpt::generate_key(24);
 assertz_uri(_envelope["payload"], "icon", 412);
@@ -376,9 +424,6 @@ assertz_mandatory(_envelope["payload"], "name", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_mandatory(_envelope["payload"], "namespace", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_mandatory(_envelope["payload"], "updated", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
@@ -397,15 +442,11 @@ zpt::ev::Patch,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
@@ -424,15 +465,11 @@ zpt::ev::Delete,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
@@ -451,15 +488,11 @@ zpt::ev::Head,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] >> "cloud_secret";
-assertz_timestamp(_envelope["payload"], "created", 412);
-_envelope["payload"] << "created" << zpt::json::date();
 _envelope["payload"] >> "device_secret";
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
-assertz_timestamp(_envelope["payload"], "updated", 412);
-_envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];

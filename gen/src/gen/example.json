@@ -1,5 +1,5 @@
 {
-	"lib" : "zapata-apps",
+	"lib" : "zapata-datum-apps",
 	"namespace" : "zpt::apps",
 	"resources" : [
 		{
@@ -37,7 +37,6 @@
 		},
 		{
 			"name" : "Applications",
-			"extends" : [ "zpt::apps::ResourceOwners" ],
 			"dbms" : [ "postgresql", "mongodb", "redis" ],
 			"opts" : [ "generate-pk" ],
 			"fields" : {
@@ -48,9 +47,16 @@
 				"cloud_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
 				"icon" : { "type" : "uri" },
 				"image" : { "type" : "uri" },
-				"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
-				"updated" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
-				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "publish" ] }
+				"resource_owner" : { "type" : "object", "ref" : "/v2/datums/resource-owners", "rel" : "id={id}", "opts" : [ "on-demand" ] },
+				"token" :  { "type" : "object", "ref" : "/v2/datums/token", "rel" : "id={id}", "opts" : [ "on-demand" ] },
+				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
+			}
+		},
+		{
+			"name" : "MyApplications",
+			"extends" : { "ref" : "/v2/datums/applications",  "rel" : "namespace=m/engie/i", [ "on-demand" ] },
+			"fields" : {
+				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
 			}
 		}
 	]
