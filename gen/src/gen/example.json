@@ -1,5 +1,5 @@
 {
-	"lib" : "zapata-datum-apps",
+	"lib" : "zapata-apps-datum",
 	"namespace" : "zpt::apps",
 	"resources" : [
 		{
@@ -7,14 +7,21 @@
 			"type" : "collection",
 			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : { "name" : "zpt::apps::Applications", "opts" : [ "generate-data-access" ] }
+			"datum" : { "name" : "zpt::apps::Applications" }
 		},
 		{
 			"topic" : "/v2/datums/applications/{id}",
 			"type" : "document",
 			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : { "name" : "zpt::apps::Applications", "opts" : [ "generate-data-access" ] }
+			"datum" : { "name" : "zpt::apps::Applications" },
+			"links" : [
+				{ "ref" : "/v2/datums/applications/{id}/users", "rel" : "users" },
+				{ "ref" : "/v2/datums/applications/{id}/channel-templates", "rel" : "templates" },
+				{ "ref" : "/v2/datums/applications/{id}/services", "rel" : "services" }
+				{ "ref" : "/v2/datums/applications/{id}/channel-subscriptions", "rel" : "paired" },
+				{ "ref" : "/v2/datums/applications/{id}/service-subscriptions", "rel" : "subscribed" }
+			]
 		},
 		{
 			"topic" : "/v2/datums/applications/{app_id}/users/{user_id}/channels",
@@ -28,7 +35,6 @@
 		{
 			"name" : "ResourceOwners",
 			"dbms" : [ "postgresql", "mongodb", "redis" ],
-			"opts" : [ "generate-pk" ],
 			"fields" : {
 				"type" : { "type" : "ascii", "opts" : [ "mandatory", "index" ] },
 				"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
@@ -38,7 +44,6 @@
 		{
 			"name" : "Applications",
 			"dbms" : [ "postgresql", "mongodb", "redis" ],
-			"opts" : [ "generate-pk" ],
 			"fields" : {
 				"name" : { "type" : "utf8", "opts" : [ "mandatory" ] },
 				"namespace" : { "type" : "ascii", "opts" : [ "mandatory", "unique", "index" ] },
@@ -47,14 +52,23 @@
 				"cloud_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
 				"icon" : { "type" : "uri" },
 				"image" : { "type" : "uri" },
-				"resource_owner" : { "type" : "object", "ref" : "/v2/datums/resource-owners", "rel" : "id={id}", "opts" : [ "on-demand" ] },
+				"admin" : { "type" : "object", "ref" : "/v2/datums/user-applications", "rel" : "app_id={id}&role=m/admin/i", "opts" : [ "on-demand" ] },
 				"token" :  { "type" : "object", "ref" : "/v2/datums/token", "rel" : "id={id}", "opts" : [ "on-demand" ] },
 				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
 			}
 		},
 		{
 			"name" : "MyApplications",
-			"extends" : { "ref" : "/v2/datums/applications",  "rel" : "namespace=m/engie/i", [ "on-demand" ] },
+			"dbms" : [ "mongodb", "redis" ],
+			"extends" : { "ref" : "/v2/datums/applications",  "rel" : "namespace=m/engie/i", "opts" : [ "on-demand" ] },
+			"fields" : {
+				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
+			}
+		},
+		{
+			"name" : "MyUsers",
+			"dbms" : [ "mongodb", "redis" ],
+			"extends" : { "ref" : "/v2/datums/users",  "rel" : "email=m/muzzley.com/i", "opts" : [ "publish" ] },
 			"fields" : {
 				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
 			}

@@ -119,76 +119,75 @@ auto zpt::Generator::build_data_layer() -> void {
 		zpt::json _spec = _pair.second;
 
 		for (auto _datum : _spec["datums"]->arr()) {
-			if (_datum["extends"]->type == zpt::JSObject) {
+			std::string _datum_h;
+			zpt::load_path("/usr/share/zapata/gen/Datum.h", _datum_h);
+			std::string _datum_cxx;
+			zpt::load_path("/usr/share/zapata/gen/Datum.cpp", _datum_cxx);
+
+			if (_datum["extends"]->type() == zpt::JSObject) {
 			}
-			else {
-				std::string _datum_h;
-				zpt::load_path("/usr/share/zapata/gen/Datum.h", _datum_h);
-				std::string _datum_cxx;
-				zpt::load_path("/usr/share/zapata/gen/Datum.cpp", _datum_cxx);
-
-				std::string _namespace = std::string(_spec["namespace"]);
-				std::string _collection = std::string(_datum["name"]);
-				zpt::replace(_datum_h, "$[datum.collection]", _collection);
-				zpt::replace(_datum_cxx, "$[datum.collection]", _collection);
-
-				zpt::replace(_datum_h, "$[datum.name]", std::string(_datum["name"]));
-				zpt::replace(_datum_cxx, "$[datum.name]", std::string(_datum["name"]));
-		
-				zpt::json _namespaces = zpt::split(_namespace, "::");
-				std::string _namespaces_begin;
-				std::string _namespaces_end;
-				for (auto _part : _namespaces->arr()) {
-					_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
-					_namespaces_end += "}\n";
-				}
-				zpt::replace(_datum_h, "$[namespaces.begin]", _namespaces_begin);
-				zpt::replace(_datum_h, "$[namepsaces.end]", _namespaces_end);
-				zpt::replace(_datum_cxx, "$[namespaces.begin]", _namespaces_begin);
-				zpt::replace(_datum_cxx, "$[namepsaces.end]", _namespaces_end);
-		
-				zpt::replace(_datum_cxx, "$[resource.path.h]", "");
-
-				zpt::replace(_datum_h, "$[namespace]", _namespace);
-				zpt::replace(_datum_cxx, "$[namespace]", _namespace);
 			
-				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "mongodb", "postgresql", "mariadb" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.get.client]", _get_client);
-				zpt::replace(_datum_cxx, "$[datum.method.get.client]", _get_client);
+			std::string _namespace = std::string(_spec["namespace"]);
+			std::string _collection = std::string(_datum["name"]);
+			zpt::replace(_datum_h, "$[datum.collection]", _collection);
+			zpt::replace(_datum_cxx, "$[datum.collection]", _collection);
+
+			zpt::replace(_datum_h, "$[datum.name]", std::string(_datum["name"]));
+			zpt::replace(_datum_cxx, "$[datum.name]", std::string(_datum["name"]));
 		
-				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.query.client]", _query_client);
-				zpt::replace(_datum_cxx, "$[datum.method.query.client]", _query_client);
-
-				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.insert.client]", _insert_client);
-				zpt::replace(_datum_cxx, "$[datum.method.insert.client]", _insert_client);
-		
-				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.save.client]", _save_client);
-				zpt::replace(_datum_cxx, "$[datum.method.save.client]", _save_client);
-
-				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.set.client]", _set_client);
-				zpt::replace(_datum_cxx, "$[datum.method.set.client]", _set_client);
-
-				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
-				zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
-				zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
-			
-				auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]));
-				if (_found != zpt::Generator::datums.end()) {
-					zpt::replace(_datum_cxx, "$[datum.relations.get]", _found->second->build_associations_get());
-					zpt::replace(_datum_cxx, "$[datum.relations.query]", _found->second->build_associations_query());
-					zpt::replace(_datum_cxx, "$[datum.relations.insert]", _found->second->build_associations_insert());
-					zpt::replace(_datum_cxx, "$[datum.relations.save]", _found->second->build_associations_save());
-					zpt::replace(_datum_cxx, "$[datum.relations.set]", _found->second->build_associations_set());
-					zpt::replace(_datum_cxx, "$[datum.relations.remove]", _found->second->build_associations_remove());
-				}
-
-				zlog(_datum_h, zpt::debug);
-				zlog(_datum_cxx, zpt::debug);
+			zpt::json _namespaces = zpt::split(_namespace, "::");
+			std::string _namespaces_begin;
+			std::string _namespaces_end;
+			for (auto _part : _namespaces->arr()) {
+				_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
+				_namespaces_end += "}\n";
 			}
+			zpt::replace(_datum_h, "$[namespaces.begin]", _namespaces_begin);
+			zpt::replace(_datum_h, "$[namepsaces.end]", _namespaces_end);
+			zpt::replace(_datum_cxx, "$[namespaces.begin]", _namespaces_begin);
+			zpt::replace(_datum_cxx, "$[namepsaces.end]", _namespaces_end);
+		
+			zpt::replace(_datum_cxx, "$[resource.path.h]", "");
+
+			zpt::replace(_datum_h, "$[namespace]", _namespace);
+			zpt::replace(_datum_cxx, "$[namespace]", _namespace);
+			
+			std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "mongodb", "postgresql", "mariadb" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.get.client]", _get_client);
+			zpt::replace(_datum_cxx, "$[datum.method.get.client]", _get_client);
+		
+			std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.query.client]", _query_client);
+			zpt::replace(_datum_cxx, "$[datum.method.query.client]", _query_client);
+
+			std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.insert.client]", _insert_client);
+			zpt::replace(_datum_cxx, "$[datum.method.insert.client]", _insert_client);
+		
+			std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.save.client]", _save_client);
+			zpt::replace(_datum_cxx, "$[datum.method.save.client]", _save_client);
+
+			std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.set.client]", _set_client);
+			zpt::replace(_datum_cxx, "$[datum.method.set.client]", _set_client);
+
+			std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+			zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
+			zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
+			
+			auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]));
+			if (_found != zpt::Generator::datums.end()) {
+				zpt::replace(_datum_cxx, "$[datum.relations.get]", _found->second->build_associations_get());
+				zpt::replace(_datum_cxx, "$[datum.relations.query]", _found->second->build_associations_query());
+				zpt::replace(_datum_cxx, "$[datum.relations.insert]", _found->second->build_associations_insert());
+				zpt::replace(_datum_cxx, "$[datum.relations.save]", _found->second->build_associations_save());
+				zpt::replace(_datum_cxx, "$[datum.relations.set]", _found->second->build_associations_set());
+				zpt::replace(_datum_cxx, "$[datum.relations.remove]", _found->second->build_associations_remove());
+			}
+
+			zlog(_datum_h, zpt::debug);
+			zlog(_datum_cxx, zpt::debug);
 		}
 	}
 }
@@ -703,13 +702,10 @@ auto zpt::GenResource::build_get() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_get(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_get(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -768,13 +764,10 @@ auto zpt::GenResource::build_post() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_post(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_post(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -821,13 +814,10 @@ auto zpt::GenResource::build_put() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_put(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_put(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -874,13 +864,10 @@ auto zpt::GenResource::build_patch() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_patch(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_patch(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -939,13 +926,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_delete(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_delete(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -1004,13 +988,10 @@ auto zpt::GenResource::build_head() -> std::string {
 	}
 	_return += std::string("\n}\n},\n");
 
-	if (this->__spec["datum"]["name"]->ok() && this->__spec["datum"]["opts"]->ok()) {
-		zpt::json _opts = this->__spec["datum"]["opts"];
-		if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("generate-data-access")) != std::end(_opts->arr())) {
-			std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-			if (_found != zpt::Generator::datums.end()) {
-				zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_head(this->__spec));
-			}
+	if (this->__spec["datum"]["name"]->ok()) {
+		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
+		if (_found != zpt::Generator::datums.end()) {
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_head(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
