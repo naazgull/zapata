@@ -480,27 +480,6 @@ zpt::json zpt::rest::http::deserialize(std::string _body) {
 	return _return;
 }
 
-std::string zpt::rest::authorization::serialize(zpt::json _info) {
-	assertz(
-		_info["owner"]->type() == zpt::JSString &&
-		_info["application"]->type() == zpt::JSString &&
-		_info["grant_type"]->type() == zpt::JSString,
-		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
-	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate_key(64));
-}
-
-zpt::json zpt::rest::authorization::deserialize(std::string _token) {
-	zpt::json _return = zpt::json::object();
-
-	zpt::json _splitted = zpt::split(_token, "@");
-	_return << "owner" << _splitted[0];
-
-	_splitted = zpt::split(_splitted[1], "/");
-	_return << "application" << _splitted[0] << "grant_type" << _splitted[1] << "key" << _splitted[2];
-
-	return _return;
-}
-
 std::string zpt::rest::scopes::serialize(zpt::json _info) {
 	assertz(
 		_info->type() == zpt::JSObject &&
@@ -552,7 +531,28 @@ bool zpt::rest::scopes::has_permission(zpt::json _scope, std::string _ns, std::s
 	return false;
 }
 
-std::string zpt::rest::authorization::extract(zpt::json _envelope) {
+auto zpt::rest::authorization::serialize(zpt::json _info) -> std::string {
+	assertz(
+		_info["owner"]->type() == zpt::JSString &&
+		_info["application"]->type() == zpt::JSString &&
+		_info["grant_type"]->type() == zpt::JSString,
+		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
+	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate_key(64));
+}
+
+auto zpt::rest::authorization::deserialize(std::string _token) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+
+	zpt::json _splitted = zpt::split(_token, "@");
+	_return << "owner" << _splitted[0];
+
+	_splitted = zpt::split(_splitted[1], "/");
+	_return << "application" << _splitted[0] << "grant_type" << _splitted[1] << "key" << _splitted[2];
+
+	return _return;
+}
+
+auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 	if (_envelope["headers"]["Authorization"]->ok()) {
 		return std::string(zpt::split(_envelope["headers"]["Authorization"], " ")[1]);
 	}
@@ -564,7 +564,11 @@ std::string zpt::rest::authorization::extract(zpt::json _envelope) {
 	if (_envelope["headers"]["Cookie"]->ok()) {
 		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
 	}
-	return zpt::undefined;
+	return "";
+}
+
+auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
+	return { "Authorization", (std::string("OAuth2.0 ") + _token) };
 }
 
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {

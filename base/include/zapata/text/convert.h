@@ -126,9 +126,11 @@ namespace zpt {
 	}
 	
 	namespace url {
-		void encode(wstring s, ostream& out);
-		void encode(string& out);
-		void decode(string& out);
+		auto encode(wstring s, ostream& out) -> void;
+		auto encode(string& out) -> void;
+		auto decode(string& out) -> void;
+		auto r_encode(std::string _out) -> std::string;
+		auto r_decode(std::string _out) -> std::string;
 	}
 
 	namespace ascii {

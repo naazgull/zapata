@@ -51,9 +51,10 @@ namespace zpt {
 		}
 
 		namespace authorization {
-			std::string serialize(zpt::json _info);
-			zpt::json deserialize(std::string _token);
-			std::string extract(zpt::json _envelope);
+			auto serialize(zpt::json _info) -> std::string;
+			auto deserialize(std::string _token) -> zpt::json;
+			auto extract(zpt::json _envelope) -> std::string;
+			auto headers(std::string _token) -> zpt::json;
 		}
 
 		namespace scopes {

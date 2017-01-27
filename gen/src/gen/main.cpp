@@ -37,17 +37,6 @@ using namespace __gnu_cxx;
 #endif
 
 int main(int argc, char* argv[]) {
-	try {
-		zpt::gen::worker::launch(argc, argv);
-	}
-	catch (zpt::AssertionException& _e) {
-		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
-		exit(-10);
-	}
-	catch (std::exception& _e) {
-		zlog(_e.what(), zpt::emergency);
-		exit(-10);
-	}
-	
+	zpt::gen::worker::launch(argc, argv);
 	return 0;
 }

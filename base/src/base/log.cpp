@@ -30,12 +30,12 @@ SOFTWARE.
 #include <strings.h>
 
 namespace zpt {
-	short int log_lvl = 0;
-	ostream* log_fd = nullptr;
+	short int log_lvl = 7;
+	std::ostream* log_fd = &std::cout;
 	long log_pid = 0;
-	string* log_pname = nullptr;
+	std::string* log_pname = nullptr;
 	char* log_hname = nullptr;
-	bool log_format = true;
+	bool log_format = false;
 
 	const char* log_lvl_names[] = {
 		"\033[1;37;41m emergency \033[0m | ",
@@ -54,7 +54,7 @@ int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string
 		return - 1;
 	}
 	if (!zpt::log_format) {
-		(* zpt::log_fd) << _text << endl << flush;
+		(*zpt::log_fd) << _text << endl << flush;
 		return 0;
 	}
 	

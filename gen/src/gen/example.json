@@ -5,38 +5,39 @@
 		{
 			"topic" : "/v2/datums/applications",
 			"type" : "collection",
-			"performatives" : [ "get", "post", "patch", "delete", "head" ],
+			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : {
-				"ref" : "zpt::datum::Application",
-				"opts" : [ "generate-data-access" ]
-			},
-			"permissions" : [
-				{ "role" : "root", "pattern" : "/v2/applications", "perms" : "00101111" },
-				{ "role" : "*", "pattern" : "/v2/applications", "perms" : "00100001" }
-			]
+			"datum" : { "name" : "zpt::apps::Applications", "opts" : [ "generate-data-access" ] }
 		},
 		{
 			"topic" : "/v2/datums/applications/{id}",
 			"type" : "document",
-			"performatives" : [ "get", "put", "patch", "delete", "head" ],
+			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : {
-				"ref" : "zpt::datum::Application",
-				"opts" : [ "generate-data-access" ]
-			},
-			"permissions" : [
-				{ "role" : "root", "pattern" : "/v2/applications/{id}", "perms" : "00101111" },
-				{ "role" : "app_admin", "pattern" : "/v2/applications/{$token.app_id}", "perms" : "00100101" },
-				{ "role" : "*", "pattern" : "/v2/applications/{id}", "perms" : "00100001" }
-			]
+			"datum" : { "name" : "zpt::apps::Applications", "opts" : [ "generate-data-access" ] }
+		},
+		{
+			"topic" : "/v2/datums/applications/{app_id}/users/{user_id}/channels",
+			"type" : "collection",
+			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
+			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
+			"datum" : { "ref" : "/v2/datums/users/{user_id}/channels", "rel" : "app_id={app_id}&user_id={user_id}" }
 		}
 	],
 	"datums" : [
 		{
-			"name" : "Application",
-			"namespace" : "zpt::datum",
-			"extends" : [ "zpt::datum::ResourceOwner" ],
+			"name" : "ResourceOwners",
+			"dbms" : [ "postgresql", "mongodb", "redis" ],
+			"opts" : [ "generate-pk" ],
+			"fields" : {
+				"type" : { "type" : "ascii", "opts" : [ "mandatory", "index" ] },
+				"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
+				"updated" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] }
+			}
+		},
+		{
+			"name" : "Applications",
+			"extends" : [ "zpt::apps::ResourceOwners" ],
 			"dbms" : [ "postgresql", "mongodb", "redis" ],
 			"opts" : [ "generate-pk" ],
 			"fields" : {
@@ -49,7 +50,7 @@
 				"image" : { "type" : "uri" },
 				"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
 				"updated" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
-				"users" : { "type" : "array", "ref" : "zpt::datum::UserApplication", "rel" : "id/app_id" }
+				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "publish" ] }
 			}
 		}
 	]

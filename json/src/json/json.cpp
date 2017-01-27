@@ -197,27 +197,36 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment
 	);
-	static const std::regex _query_rgx(
+	
+	std::smatch _uri_matches;
+	std::regex_match(_uri, _uri_matches, _uri_rgx);
+
+	std::string _q_str = (std::string) _uri_matches[3];
+	zpt::json _query = zpt::uri::query::parse(_q_str);
+
+	return {
+		"scheme", (std::string) _uri_matches[1],
+		"path", (std::string) _uri_matches[2],
+		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
+		"fragment", zpt::url::r_decode((std::string) _uri_matches[4])
+	};
+}
+
+auto zpt::uri::query::parse(std::string _query) -> zpt::json {
+	static const std::regex _rgx(
 		"(^|&)" 			//start of query or start of parameter "&"
 		"([^=&]*)=?" 			//parameter name and "=" if value is expected
 		"([^=&]*)" 			//parameter value
 		"(?=(&|$))" 			//forward reference, next should be end of query or start of next parameter
 	);
-	
-	std::smatch _uri_matches;
-	std::regex_match(_uri, _uri_matches, _uri_rgx);
 
-	zpt::json _query = zpt::json::object();
-	std::string _q_str = (std::string) _uri_matches[3];
-	std::smatch _q_matches;
-	std::regex_match(_q_str, _q_matches, _query_rgx);
-	for (size_t _i = 1; _i < _q_matches.size(); _i += 2) {
-		_query << (std::string) _q_matches[_i] << (std::string) _q_matches[_i + 1];
+	zpt::json _return = zpt::json::object();
+	auto _begin = std::sregex_iterator(_query.begin(), _query.end(), _rgx);
+	auto _end = std::sregex_iterator();
+	for (auto _i = _begin; _i != _end; ++_i) {
+		std::smatch _match = *_i;
+		_return << (std::string) _match[2] << zpt::url::r_decode((std::string) _match[3]);
 	}
-	return {
-		"scheme", (std::string) _uri_matches[1],
-		"path", (std::string) _uri_matches[2],
-		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
-		"fragment", (std::string) _uri_matches[4]
-	};
+	
+	return _return;
 }

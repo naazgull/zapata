@@ -1,5 +1,6 @@
 #include <zapata/rest.h>
 #include <string>
+$[resource.path.h]
 
 using namespace std;
 #if !defined __APPLE__

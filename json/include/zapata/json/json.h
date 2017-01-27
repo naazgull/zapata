@@ -117,6 +117,10 @@ namespace zpt {
 
 	namespace uri {
 		auto parse(std::string _uri) -> zpt::json;
+		
+		namespace query {
+			auto parse(std::string _query) -> zpt::json;
+		}
 	}
 
 	namespace conf {

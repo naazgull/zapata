@@ -48,6 +48,7 @@ namespace zpt {
 
 		auto url_pattern_to_regexp(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
+		auto url_pattern_to_params(std::string _url) -> zpt::json;
 	}
 
 	namespace conf {
@@ -100,8 +101,16 @@ namespace zpt {
 		virtual auto build_delete(zpt::json _resource) -> std::string;
 		virtual auto build_head(zpt::json _resource) -> std::string;
 		virtual auto build_mutations() -> std::string;
+		virtual auto build_associations_get() -> std::string;
+		virtual auto build_associations_query() -> std::string;
+		virtual auto build_associations_insert() -> std::string;
+		virtual auto build_associations_save() -> std::string;
+		virtual auto build_associations_set() -> std::string;
+		virtual auto build_associations_remove() -> std::string;
 
 		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
+		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
+		
 	private:
 		zpt::json __spec;
 
