@@ -1669,6 +1669,10 @@ namespace zpt {
 			zpt::timestamp_t _v(zpt::timestamp(_e));
 			return zpt::json(new zpt::JSONElementT(_v));
 		};
+		inline static zpt::json date() {
+			zpt::timestamp_t _v((zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+			return zpt::json(new zpt::JSONElementT(_v));
+		};
 		template <typename T>
 		inline static zpt::json date(T _e);
 		template <typename T>

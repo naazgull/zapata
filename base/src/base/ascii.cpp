@@ -33,6 +33,10 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+namespace zpt {
+	uuid uuid_gen;
+}
+
 void zpt::ascii::encode(string& _out, bool quote) {
 	wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
@@ -123,4 +127,14 @@ void zpt::generate_hash(string& _out) {
 		_randompass[i] = _charset[rand() % _charset.length()];
 	};
 	_out.insert(_out.length(), _randompass);
+}
+
+auto zpt::generate_uuid(std::string& _out) -> void {
+	zpt::uuid_gen.make(UUID_MAKE_V1);
+	_out.append(zpt::uuid_gen.string());
+}
+
+auto zpt::r_generate_uuid() -> std::string {
+	zpt::uuid_gen.make(UUID_MAKE_V1);
+	return zpt::uuid_gen.string();
 }

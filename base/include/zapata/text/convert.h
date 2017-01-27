@@ -44,10 +44,13 @@ SOFTWARE.
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 
+#include <ossp/uuid++.hh>
+
 using namespace std;
 using namespace __gnu_cxx;
 
 namespace zpt {
+	extern uuid uuid_gen;
 
 	void tostr(std::string& s, int i);
 	void tostr(std::string& s, bool i);
@@ -209,4 +212,7 @@ namespace zpt {
 	std::string generate_key();
 	void generate_hash(string& _out);
 
+	auto generate_uuid(std::string& _out) -> void;
+	auto r_generate_uuid() -> std::string;
+	
 }

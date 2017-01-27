@@ -453,7 +453,7 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 		for (auto _field : _found->second->spec()["fields"]->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = _field.second["opts"];
-			
+
 			if (_mandatory
 				&& _opts->type() == zpt::JSArray
 				&& std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("mandatory")) != std::end(_opts->arr())
@@ -462,17 +462,33 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 				_return += std::string("assertz_mandatory(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 			}
 
-			if ( _type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri") {
-				_return += std::string("assertz_") + _type + std::string("(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+			if (!_opts->ok() || std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("read-only")) == std::end(_opts->arr())) {
+				if ( _type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri") {
+					_return += std::string("assertz_") + _type + std::string("(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+				}
+				else if ( _type == "int") {
+					_return += std::string("assertz_integer(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+				}
+				else if ( _type == "double") {
+					_return += std::string("assertz_double(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+				}
+				else if ( _type == "timestamp") {
+					_return += std::string("assertz_timestamp(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+				}
 			}
-			else if ( _type == "int") {
-				_return += std::string("assertz_integer(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+			else if (_opts->ok()) {
+				_return += std::string("_envelope[\"payload\"] >> \"") + _field.first + std::string("\";\n");
 			}
-			else if ( _type == "double") {
-				_return += std::string("assertz_double(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+
+			if (_mandatory && _opts->ok() && std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("auto")) != std::end(_opts->arr())) {
+				if ( _type == "token") {
+					_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate_key(24);\n");
+				}
 			}
-			else if ( _type == "timestamp") {
-				_return += std::string("assertz_timestamp(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
+			if (_opts->ok() && std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("auto")) != std::end(_opts->arr())) {
+				if ( _type == "timestamp") {
+					_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::date();\n");
+				}
 			}
 		}
 	}
