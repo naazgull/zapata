@@ -18,7 +18,7 @@
 			"links" : [
 				{ "ref" : "/v2/datums/applications/{id}/users", "rel" : "users" },
 				{ "ref" : "/v2/datums/applications/{id}/channel-templates", "rel" : "templates" },
-				{ "ref" : "/v2/datums/applications/{id}/services", "rel" : "services" }
+				{ "ref" : "/v2/datums/applications/{id}/services", "rel" : "services" },
 				{ "ref" : "/v2/datums/applications/{id}/channel-subscriptions", "rel" : "paired" },
 				{ "ref" : "/v2/datums/applications/{id}/service-subscriptions", "rel" : "subscribed" }
 			]

@@ -94,6 +94,7 @@ namespace zpt {
 		virtual auto spec() -> zpt::json;
 		virtual auto build() -> std::string;
 		virtual auto build_data_layer() -> std::string;
+		virtual auto build_params(zpt::json _rel, bool _multi) -> std::string;
 		virtual auto build_get(zpt::json _resource) -> std::string;
 		virtual auto build_post(zpt::json _resource) -> std::string;
 		virtual auto build_put(zpt::json _resource) -> std::string;
@@ -107,6 +108,14 @@ namespace zpt {
 		virtual auto build_associations_save() -> std::string;
 		virtual auto build_associations_set() -> std::string;
 		virtual auto build_associations_remove() -> std::string;
+		virtual auto build_extends_get() -> std::string;
+		virtual auto build_extends_query() -> std::string;
+		virtual auto build_extends_insert() -> std::string;
+		virtual auto build_extends_save() -> std::string;
+		virtual auto build_extends_set_topic() -> std::string;
+		virtual auto build_extends_set_pattern() -> std::string;
+		virtual auto build_extends_remove_topic() -> std::string;
+		virtual auto build_extends_remove_pattern() -> std::string;
 
 		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
 		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
