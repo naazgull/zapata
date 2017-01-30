@@ -50,8 +50,14 @@ zpt::GeneratorPtr::~GeneratorPtr() {
 
 auto zpt::GeneratorPtr::launch(int argc, char* argv[]) -> int {
 	zpt::json _options = zpt::conf::gen::init(argc, argv);
+	std::ifstream _ifs;
 	if (_options["c"]->type() == zpt::JSString) {
-		std::ifstream _ifs(_options["c"]->str().data());
+		_ifs.open(_options["c"]->str().data());
+	}
+	else {
+		_ifs.open(".zpt_rc");
+	}
+	if (_ifs.is_open()) {
 		zpt::json _conf_options;
 		_ifs >> _conf_options;
 		_options = _conf_options + _options;
@@ -81,7 +87,12 @@ auto zpt::Generator::load() -> void {
 		zpt::json _spec;
 		_ifs >> _spec;
 
-		this->__specs << _file->str() << _spec;
+		if (this->__specs[std::string(_spec["lib"])]->ok()) {
+			this->__specs << std::string(_spec["lib"]) << (this->__specs[std::string(_spec["lib"])] + _spec);
+		}
+		else {
+			this->__specs << std::string(_spec["lib"]) << _spec;
+		}
 		_spec << "dbms" << zpt::json::object();
 		
 		if (_spec["resources"]->type() == zpt::JSArray) {
@@ -125,6 +136,8 @@ auto zpt::Generator::build_data_layer() -> void {
 		zpt::json _spec = _pair.second;
 
 		for (auto _datum : _spec["datums"]->arr()) {
+			std::string _h_file = std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_datum["name"]) + std::string(".h");
+			std::string _cxx_file = std::string(this->__options["data-out-cxx"][0]) + std::string("/") + std::string(_datum["name"]) + std::string(".cpp");
 			std::string _datum_h;
 			zpt::load_path("/usr/share/zapata/gen/Datum.h", _datum_h);
 			std::string _datum_cxx;
@@ -173,8 +186,14 @@ auto zpt::Generator::build_data_layer() -> void {
 			zpt::replace(_datum_h, "$[namepsaces.end]", _namespaces_end);
 			zpt::replace(_datum_cxx, "$[namespaces.begin]", _namespaces_begin);
 			zpt::replace(_datum_cxx, "$[namepsaces.end]", _namespaces_end);
-		
-			zpt::replace(_datum_cxx, "$[resource.path.h]", "");
+
+			std::string _include_path(_h_file.data());
+			zpt::replace(_include_path, std::string(this->__options["prefix-h"][0]), "");
+			if (_include_path.front() == '/') {
+				_include_path.erase(0, 1);
+			}
+			_include_path.erase(_include_path.length() - 1, 2);
+			zpt::replace(_datum_cxx, "$[resource.path.h]", std::string("#include <") + _include_path + std::string(">"));
 
 			zpt::replace(_datum_h, "$[namespace]", _namespace);
 			zpt::replace(_datum_cxx, "$[namespace]", _namespace);
@@ -212,8 +231,16 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_cxx, "$[datum.relations.remove]", _found->second->build_associations_remove());
 			}
 
-			zlog(_datum_h, zpt::debug);
-			zlog(_datum_cxx, zpt::debug);
+			std::ofstream _h_ofs(_h_file.data());
+			_h_ofs << _datum_h << endl << flush;
+			_h_ofs.close();
+			std::ofstream _cxx_ofs(_cxx_file.data());
+			_cxx_ofs << _datum_cxx << endl << flush;
+			_cxx_ofs.close();
+			zlog(_h_file, zpt::debug);
+			zlog(_cxx_file, zpt::debug);
+			// zlog(_datum_h, zpt::debug);
+			// zlog(_datum_cxx, zpt::debug);
 		}
 	}
 }
@@ -225,20 +252,6 @@ auto zpt::Generator::build_container() -> void {
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
 		
-		zpt::json _namespaces = zpt::split(std::string(_spec["namespace"]), "::");
-		std::string _namespaces_begin;
-		std::string _namespaces_end;
-		for (auto _part : _namespaces->arr()) {
-			_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
-			_namespaces_end += "}\n";
-		}
-		zpt::replace(_container_cxx, "$[namespaces.begin]", _namespaces_begin);
-		zpt::replace(_container_cxx, "$[namepsaces.end]", _namespaces_end);
-		
-		zpt::replace(_container_cxx, "$[resource.path.h]", "");
-
-		zpt::replace(_container_cxx, "$[namespace]", std::string(_spec["namespace"]));
-
 		std::string _connectors_initialize("{ ");
 		for (auto _dbms : _spec["dbms"]->obj()) {
 			_connectors_initialize += zpt::GenDatum::build_initialization(_dbms.first, std::string(_spec["namespace"]));
@@ -246,23 +259,33 @@ auto zpt::Generator::build_container() -> void {
 		_connectors_initialize += "}";
 		zpt::replace(_container_cxx, "$[datum.connectors.initialize]", _connectors_initialize);
 
-		size_t _begin = _container_cxx.find("$[resource.registry.begin]") + 26;
-		size_t _end = _container_cxx.find("$[resource.registry.end]") + 24;
-		if (_begin != string::npos && _end != string::npos) {
-			_container_cxx.erase(_begin, _end - _begin);
-		}
+		zpt::replace(_container_cxx, "$[namespace]", std::string(_spec["namespace"]));
 
+		std::string _includes;
 		std::string _registry;
 		if (_spec["resources"]->type() == zpt::JSArray) {
 			for (auto _resource : _spec["resources"]->arr()) {
 				std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+
+				std::string _include(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]));
+				zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
+				if (_include.front() == '/') {
+					_include.erase(0, 1);
+				}
+				_includes += std::string("#include <") + _include + std::string(">\n");				
 				_registry += zpt::Generator::resources.find(_key)->second->build_handlers();
 			}
 		}
 		
-		zpt::replace(_container_cxx, "$[resource.registry.begin]", _registry);
+		zpt::replace(_container_cxx, "$[resource.path.h]", _includes);
+		zpt::replace(_container_cxx, "$[resource.handlers.delegate]", _registry);
 	}
-	zlog(_container_cxx, zpt::debug);
+	
+	for (auto _pair : this->__specs->obj()) {
+		zpt::json _spec = _pair.second;
+		
+	}
+	//zlog(_handler_cxx, zpt::debug);
 }
 
 auto zpt::Generator::build_mutations() -> void {
@@ -688,13 +711,18 @@ auto zpt::GenResource::build_data_layer() -> std::string {
 }
 
 auto zpt::GenResource::build_handlers() -> std::string {
-	std::string _container_cxx;
-	zpt::load_path("/usr/share/zapata/gen/Container.cpp", _container_cxx);
+	std::string _handler_h;
+	zpt::load_path("/usr/share/zapata/gen/Handlers.h", _handler_h);
+	std::string _handler_cxx;
+	zpt::load_path("/usr/share/zapata/gen/Handlers.cpp", _handler_cxx);
 
-	size_t _begin = _container_cxx.find("$[resource.registry.begin]") + 26;
-	size_t _end = _container_cxx.find("$[resource.registry.end]");
+	std::string _handler_cxx;
+	zpt::load_path("/usr/share/zapata/gen/Container.cpp", _handler_cxx);
 
-	std::string _return(_container_cxx.substr(_begin, _end - _begin));
+	size_t _begin = _handler_cxx.find("$[resource.registry.begin]") + 26;
+	size_t _end = _handler_cxx.find("$[resource.registry.end]");
+
+	std::string _return(_handler_cxx.substr(_begin, _end - _begin));
 	zpt::replace(_return, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
 	zpt::replace(_return, "$[resource.handler.get]", this->build_get());
 	zpt::replace(_return, "$[resource.handler.post]", this->build_post());

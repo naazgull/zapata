@@ -5,6 +5,7 @@
 		{
 			"topic" : "/v2/datums/applications",
 			"type" : "collection",
+			"name" : "Applications",
 			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
 			"datum" : { "name" : "zpt::apps::Applications" }
@@ -12,6 +13,7 @@
 		{
 			"topic" : "/v2/datums/applications/{id}",
 			"type" : "document",
+			"name" : "Applications",
 			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
 			"datum" : { "name" : "zpt::apps::Applications" },
@@ -26,6 +28,7 @@
 		{
 			"topic" : "/v2/datums/applications/{app_id}/users/{user_id}/channels",
 			"type" : "collection",
+			"name" : "Channels",
 			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
 			"datum" : { "ref" : "/v2/datums/users/{user_id}/channels", "rel" : "app_id={app_id}&user_id={user_id}" }

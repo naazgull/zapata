@@ -1,7 +1,8 @@
 #pragma once
 
-#include <zapata/rest.h>
 #include <string>
+#include <zapata/rest.h>
+$[data.path.h]
 
 using namespace std;
 #if !defined __APPLE__

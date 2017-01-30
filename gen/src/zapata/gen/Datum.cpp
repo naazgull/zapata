@@ -1,4 +1,4 @@
-$[resource.path.h]
+$[data.path.self.h]
 
 auto $[namespace]::$[datum.name]::get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
