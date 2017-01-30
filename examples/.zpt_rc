@@ -1,0 +1,13 @@
+{
+	"prefix-cxx" : [ "src" ],
+	"prefix-h" : [ "include" ],
+	"force-makefile" : [ true ],
+
+	"data-out-cxx" : [ "src" ],
+	"data-out-h" : [ "include/zapata" ],
+	"force-data" : [ true ],
+
+	"resource-out-cxx" : [ "src" ],
+	"resource-out-h" : [ "include/zapata" ],
+	"force-resource" : [ true ]
+}
