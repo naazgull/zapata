@@ -10,5 +10,5 @@ using namespace __gnu_cxx;
 #endif
 
 $[namespaces.begin]
-$[resource.handlers.delegate.declaration]
+auto restify(zpt::ev::emitter _emitter) -> void;
 $[namepsaces.end]

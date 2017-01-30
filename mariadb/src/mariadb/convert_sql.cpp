@@ -31,7 +31,8 @@ namespace zpt {
 	}
 }
 
-auto zpt::mariadb::fromsql(sql::ResultSet* _in, sql::ResultSetMetaData* _metadata, zpt::json _out) -> void {
+auto zpt::mariadb::fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void {
+	sql::ResultSetMetaData* _metadata = _in->getMetaData();
 	for (size_t _i = 0; _i != _metadata->getColumnCount(); _i++) {
 		switch(_metadata->getColumnType(_i + 1)) {
 			case sql::DataType::UNKNOWN : {
@@ -78,9 +79,9 @@ auto zpt::mariadb::fromsql(sql::ResultSet* _in, sql::ResultSetMetaData* _metadat
 	}
 }
 
-auto zpt::mariadb::fromsql_r(sql::ResultSet* _in, sql::ResultSetMetaData* _metadata) -> zpt::json {
+auto zpt::mariadb::fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json {
 	zpt::json _return = zpt::json::object();
-	zpt::mariadb::fromsql(_in, _metadata, _return);
+	zpt::mariadb::fromsql(_in, _return);
 	return _return;
 }
 
@@ -142,7 +143,7 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 
 			if (_command == "m") {
-				_queryr += _key + std::string("=") + zpt::mariadb::escape(_expression);
+				_queryr += zpt::mariadb::escape(_key) + std::string("=") + zpt::mariadb::escape(_expression);
 				continue;
 			}
 			else if (_command == "n") {
@@ -158,18 +159,18 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 							std::string _bexpr(_expression.data());
 							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr += _key + std::string("=") + zpt::mariadb::escape(_expression);
+								_queryr += zpt::mariadb::escape(_key) + std::string("=") + zpt::mariadb::escape(_expression);
 							}
 							else {
-								_queryr += _key + std::string("=") + _bexpr;
+								_queryr += zpt::mariadb::escape(_key) + std::string("=") + _bexpr;
 							}
 						}
 						else {
-							_queryr += _key + std::string("=") + std::to_string(d);
+							_queryr += zpt::mariadb::escape(_key) + std::string("=") + std::to_string(d);
 						}
 					}
 					else {
-						_queryr += _key + std::string("=") + std::to_string(i);
+						_queryr += zpt::mariadb::escape(_key) + std::string("=") + std::to_string(i);
 					}
 					continue;
 				}
@@ -178,7 +179,7 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 				std::map<std::string, std::string>::iterator _found = zpt::mariadb::OPS.find(_command);
 				if (_found != zpt::mariadb::OPS.end()) {
 					if (_bar_count == 2) {
-						_queryr += _key + _found->second + zpt::mariadb::escape(_expression);
+						_queryr += zpt::mariadb::escape(_key) + _found->second + zpt::mariadb::escape(_expression);
 					}
 					else if (_options == "n") {
 						std::istringstream iss(_expression);
@@ -192,24 +193,24 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 								std::string _bexpr(_expression.data());
 								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += _key + _found->second + zpt::mariadb::escape(_expression);
+									_queryr += zpt::mariadb::escape(_key) + _found->second + zpt::mariadb::escape(_expression);
 								}
 								else {
-									_queryr += _key + _found->second + _bexpr;
+									_queryr += zpt::mariadb::escape(_key) + _found->second + _bexpr;
 								}
 							}
 							else {
-								_queryr += _key + _found->second + std::to_string(d);
+								_queryr += zpt::mariadb::escape(_key) + _found->second + std::to_string(d);
 							}
 						}
 						else {
-							_queryr += _key + _found->second + std::to_string(i);
+							_queryr += zpt::mariadb::escape(_key) + _found->second + std::to_string(i);
 						}
 					}
 					else if (_options == "j") {
 					}
 					else if (_options == "d") {
-						_queryr += _key + _found->second + std::string("TIMESTAMP('") + zpt::mariadb::escape(_expression) + std::string("')");
+						_queryr += zpt::mariadb::escape(_key) + _found->second + std::string("TIMESTAMP('") + zpt::mariadb::escape(_expression) + std::string("')");
 					}
 					continue;
 				}
@@ -239,7 +240,7 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 					_dir = "DESC";
 				}
 				_part.erase(0, 1);
-				_queryr += (!_first ? ", " : "") + _part + std::string(" ") + _dir;
+				_queryr += (!_first ? ", " : "") + zpt::mariadb::escape(_part) + std::string(" ") + _dir;
 				_first = false;
 			}
 		}
@@ -248,4 +249,8 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 	}
 	if (_in["embed"]) {
 	}
+}
+
+auto zpt::mariadb::escape(std::string _in) -> std::string {
+	return _in;
 }

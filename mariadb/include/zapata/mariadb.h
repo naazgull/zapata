@@ -25,5 +25,5 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/mariadb/config.h>
-#include <zapata/mariadb/convert_mongo.h>
+#include <zapata/mariadb/convert_sql.h>
 #include <zapata/mariadb/Client.h>

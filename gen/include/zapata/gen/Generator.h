@@ -127,7 +127,7 @@ namespace zpt {
 
 	class GenResource {
 	public:
-		GenResource(zpt::json _spec);
+		GenResource(zpt::json _spec, zpt::json _options);
 		virtual ~GenResource();
 
 		virtual auto spec() -> zpt::json;
@@ -135,7 +135,7 @@ namespace zpt {
 		virtual auto build_validation(bool _mandatory = false) -> std::string;
 		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
 		virtual auto build_data_layer() -> std::string;
-		virtual auto build_handlers() -> std::string;
+		virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;
 		virtual auto build_get() -> std::string;
 		virtual auto build_post() -> std::string;
 		virtual auto build_put() -> std::string;
@@ -146,6 +146,7 @@ namespace zpt {
 
 	private:
 		zpt::json __spec;
+		zpt::json __options;
 
 	};
 }

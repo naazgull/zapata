@@ -25,9 +25,11 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/json/JSONObj.h>
+#undef INVALID_SOCKET
 #include <mongo/client/dbclient.h>
 #include <mongo/bson/bsonelement.h>
 #include <mongo/bson/bsonobjbuilder.h>
+#define INVALID_SOCKET -1
 #include <stddef.h>
 #include <string>
 

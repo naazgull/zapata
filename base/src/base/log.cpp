@@ -30,7 +30,7 @@ SOFTWARE.
 #include <strings.h>
 
 namespace zpt {
-	short int log_lvl = 7;
+	short int log_lvl = 8;
 	std::ostream* log_fd = &std::cout;
 	long log_pid = 0;
 	std::string* log_pname = nullptr;
@@ -45,7 +45,8 @@ namespace zpt {
 		"\033[1;37;43m  warning  \033[0m | ",
 		"\033[1;37;46m  notice   \033[0m | ",
 		"\033[1;37;40m   info    \033[0m | ",
-		"\033[1;30;47m   debug   \033[0m | "
+		"\033[1;30;47m   debug   \033[0m | ",
+		"\033[1;30;47m   trace   \033[0m | "
 	};
 }
 

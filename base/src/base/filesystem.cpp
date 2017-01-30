@@ -58,7 +58,7 @@ int zpt::ls(std::string dir, std::vector<string>& result, bool recursive) {
 	return 0;
 }
 
-bool zpt::mkdir_recursive(std::string _name, mode_t _mode) {
+bool zpt::mkdir_recursive(std::string _name) {
 	istringstream _iss(_name);
 	std::string _line;
 	int _count = 0;
@@ -69,7 +69,7 @@ bool zpt::mkdir_recursive(std::string _name, mode_t _mode) {
 		std::string cname(_line.data());
 		_dname << cname << flush;
 
-		if (mkdir(_dname.str().data(), 0777) == 0) {
+		if (mkdir(_dname.str().data(), 0755) == 0) {
 			_count++;
 		}
 		_dname << "/" << flush;

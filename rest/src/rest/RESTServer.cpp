@@ -571,6 +571,11 @@ auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
 	return { "Authorization", (std::string("OAuth2.0 ") + _token) };
 }
 
+auto zpt::rest::authorization::validate(zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+	assertz(true, std::string("provided access token doesn't have granted access to ") + std::string(_envelope["resource"]), 401, 0);
+	return { "access_token", "xpto" };
+}
+
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	zpt::json _args = zpt::conf::getopt(argc, argv);
 	

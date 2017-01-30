@@ -457,7 +457,7 @@ namespace zpt {
 	};
 
 	int ls(string dir, std::vector<string>& result, bool recursive);
-	bool mkdir_recursive(string _name, mode_t _mode);
+	bool mkdir_recursive(string _name);
 
 	bool copy_path(string _from, string _to);
 	bool move_path(string _from, string _to);

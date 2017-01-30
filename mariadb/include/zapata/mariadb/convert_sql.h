@@ -46,8 +46,8 @@ namespace zpt {
 
 		extern std::map<std::string, std::string> OPS;
 		
-		auto fromsql(sql::ResultSet* _in, sql::ResultSetMetaData* _metadata, zpt::json _out) -> void;
-		auto fromsql_r(sql::ResultSet* _in, sql::ResultSetMetaData* _metadata) -> zpt::json;
+		auto fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void;
+		auto fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json;
 		auto get_query(zpt::json _in, std::string&  _queryr) -> void;
 		auto escape(std::string _to_espace) -> std::string;
 

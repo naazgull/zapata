@@ -1,7 +1,6 @@
 $[resource.path.self.h]
 
-auto $[namespace]::restify(zpt::ev::emitter _emitter) -> void {
-$[resource.registry.begin]
+auto $[namespace]::$[resource.type]s::$[resource.name]::restify(zpt::ev::emitter _emitter) -> void {
 _emitter->on("$[resource.topic.regex]",
 {
 $[resource.handler.get]
@@ -13,5 +12,4 @@ $[resource.handler.head]
 },
 $[resource.opts]
 );
-$[resource.registry.end]
 }

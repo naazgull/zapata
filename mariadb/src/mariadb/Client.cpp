@@ -326,39 +326,49 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 
 auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	size_t _size = 0;
 	zpt::json _elements = zpt::json::array();
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
 
-	std::unique_ptr<sql::ResultSet> _result(_stmt->executeQuery(_pattern));
-	sql::ResultSetMetaData* _metadata = _result->getMetaData();
+	std::shared_ptr<sql::ResultSet> _result(_stmt->executeQuery(_pattern));
 	for (; _result->next(); ) {
-		_elements << zpt::mariadb::fromsql_r(_result.get(), _metadata);
+		_elements << zpt::mariadb::fromsql_r(_result);
 	}
 
-	zpt::json _return = {
-		"size", _size, 
-		"elements", _elements
-	};
-	return _return;
+	return _elements;
 }
 
 auto zpt::mariadb::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
+	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
+	_count_expression += _collection;
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
 		std::string _where;
 		zpt::mariadb::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
+		_count_expression += std::string(" WHERE ") + _where;
 	}
 	zpt::mariadb::get_query(_opts, _expression);
-	return this->query(_collection, _expression, _opts);
+	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
+	zpt::json _return = {
+		"size", _size, 
+		"elements", this->query(_collection, _expression, _opts)
+	};
+	return _return;
+	
 }
 
 auto zpt::mariadb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
+	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
+	_count_expression += _collection;
 	zpt::mariadb::get_query(_opts, _expression);
-	return this->query(_collection, _expression, _opts);
+	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
+	zpt::json _return = {
+		"size", _size, 
+		"elements", this->query(_collection, _expression, _opts)
+	};
+	return _return;
 }

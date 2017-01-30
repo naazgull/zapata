@@ -1,7 +1,7 @@
-dnl Process this file with autoconf to produce a configure script.
+<dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-addons, 0.9.1-3, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-examples, 0.9.1-3, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -20,6 +20,10 @@ AC_HAVE_LIBRARY(zapata-events)
 AC_HAVE_LIBRARY(zapata-zmq)
 AC_HAVE_LIBRARY(zapata-http)
 AC_HAVE_LIBRARY(zapata-rest)
+AC_HAVE_LIBRARY(zapata-postgresql)
+AC_HAVE_LIBRARY(zapata-mariadb)
+AC_HAVE_LIBRARY(zapata-mongodb)
+AC_HAVE_LIBRARY(zapata-redis)
 
 AC_CANONICAL_SYSTEM
 
@@ -41,6 +45,8 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile
         debian/Makefile
+        include/Makefile
+        src/applications/Makefile
         src/clients/Makefile)
 
 AC_OUTPUT

@@ -25,5 +25,5 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/postgresql/config.h>
-#include <zapata/postgresql/convert_mongo.h>
+#include <zapata/postgresql/convert_sql.h>
 #include <zapata/postgresql/Client.h>
