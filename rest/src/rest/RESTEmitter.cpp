@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 #include <map>
 
-zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options ), __poll(nullptr), __server(nullptr) {
+zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
 	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
