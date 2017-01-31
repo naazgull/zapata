@@ -24,7 +24,7 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/mongodb/convert_mongo.h>
-#include <zapata/addons.h>
+#include <zapata/events.h>
 #include <ossp/uuid++.hh>
 #include <mutex>
 

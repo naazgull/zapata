@@ -324,6 +324,13 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 	return _size;
 }
 
+auto zpt::mariadb::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
+	std::string _expression("SELECT * FROM ");
+	zpt::json _splited = zpt::split(_href, "/");
+	_expression += string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	return this->query(_collection, _expression, _opts)[0];
+}
+
 auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	zpt::json _elements = zpt::json::array();

@@ -264,6 +264,27 @@ auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, z
 	return _size;
 }
 
+auto zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt::json _opts) -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
+	this->__conn->resetError();
+
+	std::string _full_collection(_collection);
+	_full_collection.insert(0, ".");
+	_full_collection.insert(0, (std::string) this->__mongodb_conf["db"]);
+
+	std::unique_ptr<mongo::DBClientCursor> _result = this->__conn->query(_full_collection, BSON( "_id" << _topic ), 0, 0, nullptr, (int) mongo::QueryOption_SlaveOk);
+	assertz(this->__conn->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->__conn->getLastError(), 500, 0);
+
+	if (_result->more()) {
+		mongo::BSONObj _record = _result->next();
+		zpt::json _obj = zpt::json::object();
+		zpt::mongodb::frommongo(_record, _obj);
+		return _obj;
+	}
+
+	return zpt::undefined;
+}
+
 auto zpt::mongodb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	return this->query(_collection, zpt::json(_pattern), _opts);
 }

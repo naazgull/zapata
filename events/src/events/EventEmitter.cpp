@@ -53,6 +53,10 @@ auto zpt::EventEmitter::mutations() -> zpt::mutation::emitter {
 	return this->__mutant;
 }
 
+auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
+	this->__mutant = _emitter;
+}
+
 auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
 	_connector->events(this->__self);
 	this->__mutant->connector(_name, _connector);

@@ -81,7 +81,7 @@ namespace zpt {
 		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> handler;
 		typedef Handler Callback;
 		typedef handler callback;
-		typedef std::map< std::string, pair<std::regex, vector< zpt::mutation::handler> > > HandlerStack;
+		typedef std::map< std::string, pair<std::regex, std::vector< zpt::mutation::handler > > > HandlerStack;
 		typedef std::map< std::string, zpt::mutation::handler > ReplyHandlerStack;
 	}
 
@@ -134,6 +134,7 @@ namespace zpt {
 		virtual auto off(std::string _callback_id) -> void = 0;
 		
 		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json = 0;
+		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
@@ -184,6 +185,9 @@ namespace zpt {
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
 
+	protected:
+		virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
+		
 	private:
 		zpt::json __options;
 		zpt::ev::emitter __self;

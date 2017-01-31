@@ -47,7 +47,7 @@ a) Add GPG key and repository to your 'sources.list.d'
 b) Update your repository cache and install base packages:
 
 	$ sudo apt-get update
-	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-addons zapata-events zapata-zmq zapata-rest
+	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-events zapata-zmq zapata-rest
 
 ### 3) MongoDB support
 

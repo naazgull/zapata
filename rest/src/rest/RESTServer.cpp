@@ -96,7 +96,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
 	
-	zlog(std::string("starting RESTful server instance: ") + _name, zpt::alert);
+	zlog(std::string("starting RESTful service container: ") + _name, zpt::alert);
 	zpt::rest::server _server = zpt::rest::server::setup(_options, _name);
 	_server->start();
 
@@ -329,7 +329,6 @@ bool zpt::RESTServer::route_mqtt(std::iostream& _cs) {
 
 auto zpt::RESTServer::assync_on(std::string _regex, zpt::json _opts) -> void {
 }
-
 
 zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
 }
@@ -577,16 +576,19 @@ auto zpt::rest::authorization::validate(zpt::json _envelope, zpt::ev::emitter _e
 }
 
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
+	zpt::log_fd = &std::cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+
 	zpt::json _args = zpt::conf::getopt(argc, argv);
 	
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
-	const char* _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]).data() : nullptr);
+	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
 	zpt::ev::performative _method = (_args["m"]->ok() ? zpt::ev::from_str(std::string(_args["m"][0])) : zpt::ev::Get);
 	std::string _url(_args["u"][0]);
 	std::string _token(_args["a"][0]);
 	zpt::json _body = (_args["j"]->ok() ? zpt::json(std::string(_args["j"][0])) : zpt::undefined);
-	bool _verbose = bool(_args["v"]);
-	zpt::log_format = bool(_args["r"]);
+	zpt::log_format = !bool(_args["r"]);
 
 	std::string _bind(_args["b"][0]);
 	if (_args["b"]->ok() && _bind[0] != '@' && _bind[0] != '>') {
@@ -626,13 +628,8 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 		}
 	}
 
-	zpt::log_fd = & cout;
-	zpt::log_pid = ::getpid();
-	zpt::log_pname = new string(argv[0]);
-	zpt::log_lvl = (_verbose ? 7 : _log_level);
-
 	zpt::json _ptr;
-	if (_conf_file == nullptr) {
+	if (_conf_file.length() == 0) {
 		_ptr = zpt::json::object();
 		std::string _name(argv[0], strlen(argv[0]));
 		_ptr << _name << zpt::json(
@@ -659,7 +656,7 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	}
 	else {
 		std::ifstream _in;
-		_in.open(_conf_file);
+		_in.open(_conf_file.data());
 		if (!_in.is_open()) {
 			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
 			exit(-10);
@@ -668,17 +665,22 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 			_in >> _ptr;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
-			std::cout << "unable to start client: syntax error when parsing configuration file: " << _e.what() << endl << flush;
+			zlog("unable to start client: syntax error when parsing configuration file", zpt::error);
 			exit(-10);
 		}
-		_ptr << "argv" << _args;
+		if (_ptr->type() == zpt::JSObject) {
+			for (auto _proc : _ptr->obj()) {
+				_proc.second << "argv" << _args;
+			}
+		}
 	}
 
+	zpt::log_lvl = _log_level;
 	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
 		zpt::log_lvl = (int) _ptr["log"]["level"];
 	}
 	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 4;
+		zpt::log_lvl = 8;
 	}
 	if (!!_ptr["log"]["file"]) {
 		zpt::log_fd = new std::ofstream();

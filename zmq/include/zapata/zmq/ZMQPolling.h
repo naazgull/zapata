@@ -119,16 +119,13 @@ namespace zpt {
 
 	class ZMQ {
 	public:
-		ZMQ(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQ(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQ(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQ(std::string _connection, zpt::json _options);
 		virtual ~ZMQ();
 		
 		virtual std::string id();
 		virtual zpt::json options();
 		virtual std::string& connection();
 		virtual zpt::ZMQPtr self();
-		virtual zpt::ev::emitter emitter();
 		virtual zactor_t* auth(std::string _client_cert_dir = "");
 		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
@@ -153,7 +150,6 @@ namespace zpt {
 		zpt::json __options;
 		std::string __connection;
 		zpt::ZMQPtr __self;
-		zpt::ev::emitter __emitter;
 		std::string __id;
 		zcert_t* __self_cert;
 		zcert_t* __peer_cert;
@@ -166,9 +162,7 @@ namespace zpt {
 
 	class ZMQReq : public zpt::ZMQ {
 	public:
-		ZMQReq(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQReq(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQReq(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQReq(std::string _connection, zpt::json _options);
 		virtual ~ZMQReq();
 		
 		virtual zpt::json send(zpt::json _envelope);
@@ -186,9 +180,7 @@ namespace zpt {
 	
 	class ZMQRep : public zpt::ZMQ {
 	public:
-		ZMQRep(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQRep(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQRep(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQRep(std::string _connection, zpt::json _options);
 		virtual ~ZMQRep();
 		
 		virtual zsock_t* socket();
@@ -204,9 +196,7 @@ namespace zpt {
 	
 	class ZMQXPubXSub : public zpt::ZMQ {
 	public:
-		ZMQXPubXSub(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQXPubXSub(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQXPubXSub(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQXPubXSub(std::string _connection, zpt::json _options);
 		virtual ~ZMQXPubXSub();
 		
 		virtual zsock_t* socket();
@@ -222,9 +212,7 @@ namespace zpt {
 	
 	class ZMQPubSub : public zpt::ZMQ {
 	public:
-		ZMQPubSub(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPubSub(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPubSub(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQPubSub(std::string _connection, zpt::json _options);
 		virtual ~ZMQPubSub();
 		
 		virtual zsock_t* socket();
@@ -242,9 +230,7 @@ namespace zpt {
 	
 	class ZMQPub : public zpt::ZMQ {
 	public:
-		ZMQPub(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPub(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPub(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQPub(std::string _connection, zpt::json _options);
 		virtual ~ZMQPub();
 		
 		virtual zpt::json recv();
@@ -262,9 +248,7 @@ namespace zpt {
 	
 	class ZMQSub : public zpt::ZMQ {
 	public:
-		ZMQSub(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQSub(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQSub(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQSub(std::string _connection, zpt::json _options);
 		virtual ~ZMQSub();
 		
 		virtual zpt::json send(zpt::json _envelope);
@@ -283,9 +267,7 @@ namespace zpt {
 	
 	class ZMQPush : public zpt::ZMQ {
 	public:
-		ZMQPush(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPush(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPush(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQPush(std::string _connection, zpt::json _options);
 		virtual ~ZMQPush();
 		
 		virtual zpt::json recv();
@@ -303,9 +285,7 @@ namespace zpt {
 
 	class ZMQPull : public zpt::ZMQ {
 	public:
-		ZMQPull(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPull(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQPull(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQPull(std::string _connection, zpt::json _options);
 		virtual ~ZMQPull();
 		
 		virtual zpt::json send(zpt::json _envelope);
@@ -323,9 +303,7 @@ namespace zpt {
 
 	class ZMQRouterDealer : public zpt::ZMQ {
 	public:
-		ZMQRouterDealer(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQRouterDealer(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQRouterDealer(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQRouterDealer(std::string _connection, zpt::json _options);
 		virtual ~ZMQRouterDealer();
 		
 		virtual zsock_t* socket();
@@ -341,9 +319,7 @@ namespace zpt {
 
 	class ZMQAssyncReq : public zpt::ZMQ {
 	public:
-		ZMQAssyncReq(zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQAssyncReq(std::string _obj_path, zpt::json _options, zpt::ev::emitter _emitter);
-		ZMQAssyncReq(std::string _connection, zpt::ev::emitter _emitter);
+		ZMQAssyncReq(std::string _connection, zpt::json _options);
 		virtual ~ZMQAssyncReq();
 		
 		virtual zpt::json recv();

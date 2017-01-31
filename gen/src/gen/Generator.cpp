@@ -284,7 +284,7 @@ auto zpt::Generator::build_container() -> void {
 		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
 		
 		std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.cpp");
-		std::string _h_am_file = std::string(this->__options["prefix-h"][0]) + std::string("/add_to_am_from_") + std::string(_spec["name"]) + std::string(".mk");
+		std::string _h_am_file = std::string(this->__options["prefix-h"][0]) + std::string("/add_to_am_from_") + zpt::r_replace(std::string(_spec["name"]), "/", "_") + std::string(".mk");
 		std::string _am_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/Makefile.am");
 		
 		std::string _connectors_initialize("{ ");
@@ -335,6 +335,7 @@ auto zpt::Generator::build_container() -> void {
 		}		
 		zpt::replace(_container_cxx, "$[resource.path.h]", _includes);
 		zpt::replace(_container_cxx, "$[resource.handlers.delegate]", _registry);
+		zpt::replace(_container_cxx, "_emitter->connector({ });", "");
 
 		struct stat _buffer;
 		bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
@@ -346,12 +347,15 @@ auto zpt::Generator::build_container() -> void {
 			zlog(std::string("processed ") + _cxx_file, zpt::trace);	
 		}
 
+		size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + zpt::split(std::string(_spec["name"]), "/")->arr()->size();
+		std::string _parent_dir;
+		for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
 		std::string _make;
 		std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 		_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-addons -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis\n");
 		_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I../../include\n\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 		_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
 		_make += _make_files;
 		_make += std::string("./api.cpp\n");

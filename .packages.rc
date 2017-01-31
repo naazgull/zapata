@@ -5,7 +5,6 @@ export projects=(
        json
        events
        http
-       addons
        zmq
        gen
        rest

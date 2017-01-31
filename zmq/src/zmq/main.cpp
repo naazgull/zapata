@@ -22,7 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#include <signal.h>
+#include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
-#include <zapata/addons/Addons.h>
+#include <zapata/zmq.h>
+#include <zapata/mem/usage.h>
+#include <semaphore.h>
 
+using namespace std;
+#if !defined __APPLE__
+using namespace __gnu_cxx;
+#endif
+
+int main(int argc, char* argv[]) {
+	try {
+		zpt::mutation::server::launch(argc, argv);
+	}
+	catch (zpt::AssertionException& _e) {
+		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
+		exit(-10);
+	}
+	catch (std::exception& _e) {
+		zlog(_e.what(), zpt::emergency);
+		exit(-10);
+	}
+	
+	return 0;
+}

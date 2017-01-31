@@ -33,573 +33,732 @@ namespace zpt {
 
 auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 	for (auto _f : _in) {
+		_out << std::string(_f.name());
 		switch(_f.type()) {
 			// T_bool            
 			case 16 : {
+				_out << _f.as<bool>();
 				break;
 			} 
 			// T_bytea           
 			case 17 : {
+				_out << _f.as<short>();
 				break;
 			} 
-			// T_char            
+			// T_char
 			case 18 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_name            
 			case 19 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_int8            
 			case 20 : {
+				_out << _f.as<long long>();
 				break;
 			} 
 			// T_int2            
 			case 21 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T_int2vector      
 			case 22 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
-			// T_int4            
+			// T_int4
 			case 23 : {
+				_out << _f.as<int>();
 				break;
 			} 
 			// T_regproc         
 			case 24 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T_text            
 			case 25 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_oid             
 			case 26 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_tid             
 			case 27 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_xid             
 			case 28 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_cid             
 			case 29 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_oidvector       
 			case 30 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_pg_type         
 			case 71 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_pg_attribute    
 			case 75 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_pg_proc         
 			case 81 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T_pg_class        
 			case 83 : {
+				_out << _f.as<std::string>();
 				break;
 			}
 			// T_json            
 			case 114 : {
+				_out << zpt::json(_f.as<std::string>());
 				break;
 			} 
 			// T_xml             
 			case 142 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__xml            
 			case 143 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_pg_node_tree    
 			case 194 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__json           
 			case 199 : {
+				_out << zpt::json(_f.as<std::string>());
 				break;
 			} 
 			// T_smgr            
 			case 210 : {
+				_out << _f.as<int>();
 				break;
 			} 
 			// T_point           
 			case 600 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_lseg            
 			case 601 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_path            
 			case 602 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_box             
 			case 603 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_polygon         
 			case 604 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_line            
 			case 628 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__line           
 			case 629 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_cidr            
 			case 650 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__cidr           
 			case 651 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_float4          
 			case 700 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T_float8          
 			case 701 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T_abstime         
 			case 702 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_reltime         
 			case 703 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_tinterval       
 			case 704 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_unknown         
 			case 705 : {
+				_out << zpt::undefined;
 				break;
 			} 
 			// T_circle          
 			case 718 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__circle         
 			case 719 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_money           
 			case 790 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T__money          
 			case 791 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T_macaddr         
 			case 829 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_inet            
 			case 869 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__bool           
 			case 1000 : {
+				_out << _f.as<bool>();
 				break;
 			} 
 			// T__bytea          
 			case 1001 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T__char           
 			case 1002 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__name           
 			case 1003 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__int2           
 			case 1005 : {
+				_out << _f.as<int>();
 				break;
 			} 
 			// T__int2vector     
 			case 1006 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__int4           
 			case 1007 : {
+				_out << _f.as<int>();
 				break;
 			} 
 			// T__regproc        
 			case 1008 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T__text           
 			case 1009 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__tid            
 			case 1010 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T__xid            
 			case 1011 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T__cid            
 			case 1012 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T__oidvector      
 			case 1013 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__bpchar         
 			case 1014 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__varchar        
 			case 1015 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__int8           
 			case 1016 : {
+				_out << _f.as<int>();
 				break;
 			} 
 			// T__point          
 			case 1017 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__lseg           
 			case 1018 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__path           
 			case 1019 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__box            
 			case 1020 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__float4         
 			case 1021 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T__float8         
 			case 1022 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T__abstime        
 			case 1023 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__reltime        
 			case 1024 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__tinterval      
 			case 1025 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__polygon        
 			case 1027 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__oid            
 			case 1028 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_aclitem         
 			case 1033 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__aclitem        
 			case 1034 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__macaddr        
 			case 1040 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__inet           
 			case 1041 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_bpchar          
 			case 1042 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_varchar         
 			case 1043 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_date            
 			case 1082 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_time            
 			case 1083 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_timestamp       
 			case 1114 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__timestamp      
 			case 1115 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__date           
 			case 1182 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__time           
 			case 1183 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_timestamptz     
 			case 1184 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__timestamptz    
 			case 1185 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_interval        
 			case 1186 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__interval       
 			case 1187 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__numeric        
 			case 1231 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T_pg_database     
 			case 1248 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__cstring        
 			case 1263 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_timetz          
 			case 1266 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T__timetz         
 			case 1270 : {
+				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
 				break;
 			} 
 			// T_bit             
 			case 1560 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T__bit            
 			case 1561 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T_varbit          
 			case 1562 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T__varbit         
 			case 1563 : {
+				_out << _f.as<short>();
 				break;
 			} 
 			// T_numeric         
 			case 1700 : {
+				_out << _f.as<double>();
 				break;
 			} 
 			// T_refcursor       
 			case 1790 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T__refcursor      
 			case 2201 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_regprocedure    
 			case 2202 : {
+				std::string _functor = _f.as<std::string>();
+				size_t _lparen = _functor.find("(");
+				_functor = _functor.substr(0, _lparen);
+				std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
+				_out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
 				break;
 			} 
 			// T_regoper         
 			case 2203 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T_regoperator     
 			case 2204 : {
+				std::string _functor = _f.as<std::string>();
+				size_t _lparen = _functor.find("(");
+				_functor = _functor.substr(0, _lparen);
+				std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
+				_out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
 				break;
 			} 
 			// T_regclass        
 			case 2205 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T_regtype         
 			case 2206 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T__regprocedure   
 			case 2207 : {
+				std::string _functor = _f.as<std::string>();
+				size_t _lparen = _functor.find("(");
+				_functor = _functor.substr(0, _lparen);
+				std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
+				_out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
 				break;
 			} 
 			// T__regoper        
 			case 2208 : {
+				_out << zpt::json::lambda(_f.as<std::string>(), 0);
 				break;
 			} 
 			// T__regoperator    
 			case 2209 : {
+				std::string _functor = _f.as<std::string>();
+				size_t _lparen = _functor.find("(");
+				_functor = _functor.substr(0, _lparen);
+				std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
+				_out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
 				break;
 			} 
 			// T__regclass       
 			case 2210 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__regtype        
 			case 2211 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_record          
 			case 2249 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_cstring         
 			case 2275 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_any             
 			case 2276 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_anyarray        
 			case 2277 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_void            
 			case 2278 : {
+				_out << zpt::undefined;
 				break;
 			} 
 			// T_trigger         
 			case 2279 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_language_handler
 			case 2280 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_internal        
 			case 2281 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_opaque          
 			case 2282 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_anyelement      
 			case 2283 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__record         
 			case 2287 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_anynonarray     
 			case 2776 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_pg_authid       
 			case 2842 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_pg_auth_members 
 			case 2843 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__txid_snapshot  
 			case 2949 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_uuid            
 			case 2950 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__uuid           
 			case 2951 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_txid_snapshot   
 			case 2970 : {
+				_out << _f.as<unsigned int>();
 				break;
 			} 
 			// T_fdw_handler     
 			case 3115 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_anyenum         
 			case 3500 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_tsvector        
 			case 3614 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_tsquery         
 			case 3615 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_gtsvector       
 			case 3642 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__tsvector       
 			case 3643 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__gtsvector      
 			case 3644 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__tsquery        
 			case 3645 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_regconfig       
 			case 3734 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__regconfig      
 			case 3735 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_regdictionary   
 			case 3769 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T__regdictionary  
 			case 3770 : {
+				_out << _f.as<std::string>();
 				break;
 			} 
 			// T_anyrange        
 			case 3831 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_event_trigger   
@@ -608,50 +767,66 @@ auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 			} 
 			// T_int4range       
 			case 3904 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__int4range      
 			case 3905 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_numrange        
 			case 3906 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__numrange       
 			case 3907 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_tsrange         
 			case 3908 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__tsrange        
 			case 3909 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_tstzrange       
 			case 3910 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__tstzrange      
 			case 3911 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_daterange       
 			case 3912 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__daterange      
 			case 3913 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T_int8range       
 			case 3926 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
 				break;
 			} 
 			// T__int8range Oid =
 			case 3927 : {
+				_out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+				break;
+			}
+			default : {
+				_out << zpt::undefined;
 				break;
 			}
 		}
@@ -831,6 +1006,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 }
 
 auto zpt::pgsql::escape(std::string _in) -> std::string {
-	// return pqxx::esc(_in);
+	//return pqxx::transaction_base::esc(_in);
+	//return pqxx::sqlesc(_in);
 	return _in;
 }
