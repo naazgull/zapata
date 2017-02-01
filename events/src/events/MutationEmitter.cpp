@@ -30,12 +30,20 @@ zpt::Connector::Connector() {
 zpt::Connector::~Connector() {
 }
 
-auto zpt::Connector::connect(zpt::json _opts) -> void {
-	this->mutations()->route(zpt::mutation::Connect, this->name(), { "node", { "ip", "127.0.0.1" } });	
+auto zpt::Connector::connection() -> zpt::json {
+	return this->__connection;
+}
+
+auto zpt::Connector::connection(zpt::json _conn_conf) -> void {
+	this->__connection = _conn_conf;
+}
+
+auto zpt::Connector::connect() -> void {
+	this->mutations()->route(zpt::mutation::Connect, this->name(), { "node", this->connection() });	
 }
 
 auto zpt::Connector::reconnect() -> void {
-	this->mutations()->route(zpt::mutation::Reconnect, this->name(), { "node", { "ip", "127.0.0.1" } });	
+	this->mutations()->route(zpt::mutation::Reconnect, this->name(), { "node", this->connection() });	
 }
 
 auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
@@ -113,6 +121,7 @@ auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connecto
 	auto _found = this->__connector.find(_name);
 	if (_found == this->__connector.end()) {
 		_connector->mutations(this->__self);
+		_connector->connect();
 		this->__connector.insert(make_pair(_name, _connector));
 	}
 }

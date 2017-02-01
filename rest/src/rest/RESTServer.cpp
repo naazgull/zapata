@@ -249,7 +249,7 @@ void zpt::RESTServer::start() {
 
 bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	zpt::http::rep _reply;
-	_reply->status((zpt::HTTPStatus) 200);
+	_reply->status(zpt::HTTP200);
 	zpt::http::req _request;
 	try {
 		(*_cs) >> _request;
@@ -258,6 +258,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		assertz(false, "error parsing HTTP data", 500, 0);
 	}
 
+	zlog("processing HTTP request", zpt::debug);
 	bool _return = false;
 	bool _api_found = false;
 	std::string _prefix(_request->url());
@@ -314,8 +315,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	}
 				
 	if (!_api_found) {
-		zlog(string("-> | \033[33;40m") + zpt::method_names[_request->method()] + string("\033[0m ") + _request->url(), zpt::info);
-		zlog(string("<- | \033[31;40m404\033[0m"), zpt::info);
+		zlog(std::string("didn't produce anything for HTTP request"), zpt::info);
 		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_prefix));
 		(*_cs) << _reply << flush;
 		_return = true;
@@ -588,7 +588,7 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	std::string _url(_args["u"][0]);
 	std::string _token(_args["a"][0]);
 	zpt::json _body = (_args["j"]->ok() ? zpt::json(std::string(_args["j"][0])) : zpt::undefined);
-	zpt::log_format = !bool(_args["r"]);
+	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
 
 	std::string _bind(_args["b"][0]);
 	if (_args["b"]->ok() && _bind[0] != '@' && _bind[0] != '>') {

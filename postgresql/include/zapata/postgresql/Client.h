@@ -42,6 +42,8 @@ namespace zpt {
 			Client(zpt::json _options, std::string _conf_path);
 			virtual ~Client();
 
+			virtual auto conn() -> pqxx::connection&;
+
 			virtual auto name() -> std::string;
 			virtual auto options() -> zpt::json;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
@@ -67,10 +69,8 @@ namespace zpt {
 
 		private:
 			zpt::json __options;
-			zpt::json __pgsql_conf;
-			std::string __conf_path;
 			std::mutex __mtx;
-			pqxx::connection __conn;
+			std::unique_ptr<pqxx::connection> __conn;
 			std::string _conn_str;
 			zpt::ev::emitter __events;
 		};

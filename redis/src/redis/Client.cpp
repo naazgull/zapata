@@ -33,11 +33,11 @@ zpt::redis::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : s
 zpt::redis::ClientPtr::~ClientPtr() {
 }
 
-zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __redis_conf(_options->getPath(_conf_path)), __conf_path(_conf_path) {
-	std::string _bind((std::string) this->__redis_conf["bind"]);
+zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options) {
+	std::string _bind((std::string) _options->getPath(_conf_path)["bind"]);
 	std::string _address(_bind.substr(0, _bind.find(":")));
 	uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
-	this->connect({ "host", _address, "port", _port });
+	this->connection(_options->getPath(_conf_path) + zpt::json({ "host", _address, "port", _port }));
 }
 
 zpt::redis::Client::~Client() {
@@ -45,7 +45,7 @@ zpt::redis::Client::~Client() {
 }
 
 auto zpt::redis::Client::name() -> std::string {
-	return std::string("redis://") + ((std::string) this->__redis_conf["bind"]) + std::string("/") + ((std::string) this->__redis_conf["db"]);
+	return std::string("redis://") + ((std::string) this->connection()["bind"]) + std::string("/") + ((std::string) this->connection()["db"]);
 }
 
 auto zpt::redis::Client::options() -> zpt::json{
@@ -67,9 +67,9 @@ auto zpt::redis::Client::mutations() -> zpt::mutation::emitter {
 	return this->__events->mutations();
 }
 
-auto zpt::redis::Client::connect(zpt::json _opts) -> void {
-	this->__host.assign(std::string(_opts["host"]).data());
-	this->__port = int(_opts["port"]);
+auto zpt::redis::Client::connect() -> void {
+	this->__host.assign(std::string(this->connection()["host"]).data());
+	this->__port = int(this->connection()["port"]);
 	bool _success = true;
 	do {
 		_success = ((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr);
@@ -78,7 +78,7 @@ auto zpt::redis::Client::connect(zpt::json _opts) -> void {
 		}
 	}
 	while(!_success);
-	zpt::Connector::connect(_opts);
+	zpt::Connector::connect();
 };
 
 auto zpt::redis::Client::reconnect() -> void {
@@ -97,7 +97,7 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _href_prefi
 
 	std::string _key(_collection);
 	_key.insert(0, "/");
-	_key.insert(0, (std::string) this->__redis_conf["db"]);
+	_key.insert(0, (std::string) this->connection()["db"]);
 
 	if (!_document["id"]->ok()) {
 		uuid _uuid;
@@ -133,7 +133,7 @@ auto zpt::redis::Client::save(std::string _collection, std::string _href, zpt::j
 
 	std::string _key(_collection);
 	_key.insert(0, "/");
-	_key.insert(0, (std::string) this->__redis_conf["db"]);
+	_key.insert(0, (std::string) this->connection()["db"]);
 
 	redisReply* _reply = nullptr;
 	bool _success = true;
@@ -160,7 +160,7 @@ auto zpt::redis::Client::set(std::string _collection, std::string _href, zpt::js
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->__redis_conf["db"]);
+ 	_key.insert(0, (std::string) this->connection()["db"]);
 
  	zpt::json _record = this->get(_collection, _href);
  	zpt::json _new_record = _record + _document;
@@ -205,7 +205,7 @@ auto zpt::redis::Client::unset(std::string _collection, std::string _href, zpt::
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->__redis_conf["db"]);
+ 	_key.insert(0, (std::string) this->connection()["db"]);
 
  	zpt::json _record = this->get(_collection, _href);
  	zpt::json _new_record = _record->clone();
@@ -251,7 +251,7 @@ auto zpt::redis::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 auto zpt::redis::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {	
  	std::string _key(_collection);
  	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->__redis_conf["db"]);
+ 	_key.insert(0, (std::string) this->connection()["db"]);
 
  	redisReply* _reply = nullptr;
  	bool _success = true;
@@ -298,7 +298,7 @@ auto zpt::redis::Client::get(std::string _collection, std::string _href, zpt::js
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->__redis_conf["db"]);
+ 	_key.insert(0, (std::string) this->connection()["db"]);
 
  	redisReply* _reply = nullptr;
  	bool _success = true;
@@ -371,7 +371,7 @@ auto zpt::redis::Client::query(std::string _collection, std::string _regexp, zpt
 
  	std::string _key(_collection);
  	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->__redis_conf["db"]);
+ 	_key.insert(0, (std::string) this->connection()["db"]);
 
  	int _cursor = 0;
  	redisReply* _reply = nullptr;
@@ -466,7 +466,7 @@ auto zpt::redis::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 
 	std::string _key(_collection);
 	_key.insert(0, "/");
-	_key.insert(0, (std::string) this->__redis_conf["db"]);
+	_key.insert(0, (std::string) this->connection()["db"]);
 
 	redisReply* _reply = nullptr;
 	bool _success = true;

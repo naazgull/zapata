@@ -33,14 +33,19 @@ zpt::pgsql::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : s
 zpt::pgsql::ClientPtr::~ClientPtr() {
 }
 
-zpt::pgsql::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __pgsql_conf(_options->getPath(_conf_path)), __conf_path(_conf_path), __conn(__pgsql_conf["bind"]->str() + std::string(";Database=") + __pgsql_conf["db"]->str() + (__pgsql_conf["user"]->ok() ? std::string(";User=") + __pgsql_conf["user"]->str() + std::string(";Password=") + __pgsql_conf["passwd"]->str() : "") + std::string(";")) {
+zpt::pgsql::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
+	this->connection(_options->getPath(_conf_path));
 }
 
 zpt::pgsql::Client::~Client() {
 }
 
+auto zpt::pgsql::Client::conn() -> pqxx::connection& {
+	return (*this->__conn.get());
+}
+
 auto zpt::pgsql::Client::name() -> std::string {
-	return std::string("pgsql://") + ((std::string) this->__pgsql_conf["bind"]) + std::string("/") + ((std::string) this->__pgsql_conf["db"]);
+	return std::string("pgsql://") + ((std::string) this->connection()["bind"]) + std::string("/") + ((std::string) this->connection()["db"]);
 }
 
 auto zpt::pgsql::Client::options() -> zpt::json {
@@ -63,15 +68,21 @@ auto zpt::pgsql::Client::mutations() -> zpt::mutation::emitter {
 }
 
 auto zpt::pgsql::Client::connect(zpt::json _opts) -> void {
+	this->__conn.release();
+	this->__conn.reset(new pqxx::connection(this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("")));
+	zpt::Connector::connect();
 }
 
 auto zpt::pgsql::Client::reconnect() -> void {
+	this->__conn.release();
+	this->__conn.reset(new pqxx::connection(this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("")));
+	zpt::Connector::reconnect();
 }
 
 auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	if (!_document["id"]->ok()) {
 		uuid _uuid;
@@ -115,7 +126,7 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -146,7 +157,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -177,7 +188,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -197,7 +208,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 		zpt::pgsql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::pgsql::get_query(_opts, _expression);
+	zpt::pgsql::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -206,14 +217,14 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::set(_collection, _pattern, _document, _opts);
+	zpt::Connector::set(_collection, std::string(_opts["href"]), _document, _opts);
 	return _size;
 }
 
 auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -243,7 +254,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -262,7 +273,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 		zpt::pgsql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::pgsql::get_query(_opts, _expression);
+	zpt::pgsql::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -271,13 +282,13 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	zpt::Connector::unset(_collection, std::string(_opts["href"]), _document, _opts);
 	return _size;
 }
 
 auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -297,7 +308,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 
 auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -307,7 +318,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 		zpt::pgsql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::pgsql::get_query(_opts, _expression);
+	zpt::pgsql::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -316,7 +327,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::remove(_collection, _pattern, _opts);
+	zpt::Connector::remove(_collection, std::string(_opts["href"]), _opts);
 	return _size;
 }
 
@@ -330,7 +341,7 @@ auto zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::js
 auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	zpt::json _elements = zpt::json::array();
-	pqxx::work _stmt(this->__conn);
+	pqxx::work _stmt(this->conn());
 
 	pqxx::result _result = _stmt.exec(_pattern);
 	for (auto _r : _result) {
@@ -350,7 +361,7 @@ auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 		_expression += std::string(" WHERE ") + _where;
 		_count_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::pgsql::get_query(_opts, _expression);
+	zpt::pgsql::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 
@@ -364,7 +375,7 @@ auto zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
 	_count_expression += _collection;
-	zpt::pgsql::get_query(_opts, _expression);
+	zpt::pgsql::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 

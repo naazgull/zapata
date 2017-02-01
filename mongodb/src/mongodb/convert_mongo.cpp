@@ -296,29 +296,13 @@ void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out,
 	}
 }
 
-void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index) {
+void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 	if (!_in->ok()) {
 		return;
 	}
 	for (auto _i : _in->obj()) {
 		string _key = _i.first;
 		JSONElement _value = _i.second;
-
-		if (_key == "fields" || _key == "embed" || _key == "_ts") {
-			continue;
-		}
-
-		if (_key == "page-size") {
-			continue;
-		}
-
-		if (_key == "page-start-index") {
-			continue;
-		}
-
-		if (_key == "order-by") {
-			continue;
-		}
 
 		ostringstream oss;
 		oss << _key << flush;

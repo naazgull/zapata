@@ -44,7 +44,7 @@ namespace zpt {
 	extern long log_pid;
 	extern string* log_pname;
 	extern char* log_hname;
-	extern bool log_format;
+	extern short log_format;
 
 	extern const char* log_lvl_names[];
 

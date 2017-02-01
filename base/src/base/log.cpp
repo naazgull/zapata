@@ -35,7 +35,7 @@ namespace zpt {
 	long log_pid = 0;
 	std::string* log_pname = nullptr;
 	char* log_hname = nullptr;
-	bool log_format = false;
+	short log_format = 0;
 
 	const char* log_lvl_names[] = {
 		"\033[1;37;41m emergency \033[0m | ",
@@ -62,38 +62,43 @@ int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string
 	struct timeval _tp;
 	gettimeofday(& _tp, nullptr);
 
-	zpt::replace(_text, "\n", "\\n");
-	zpt::replace(_text, "\"", "\\\"");
+	std::string _log;
+	if (zpt::log_format == 1) {
+		(* zpt::log_fd) << zpt::log_lvl_names[_level] << "\033[1;37m" << zpt::tostr(time(nullptr), "%Y-%m-%dT%H:%M:%S") << "\033[0m | " << _text << " | \033[1;30m" << *zpt::log_pname << ":" << zpt::log_pid << " " << _file << ":" << _line << "\033[0m" << endl << flush;
+	}
+	else {
+		zpt::replace(_text, "\n", "\\n");
+		zpt::replace(_text, "\"", "\\\"");
 
-	string _log("{\"version\":\"1.1\",\"host\":\"");
-	_log.insert(_log.length(), _host);
-	_log.insert(_log.length(), "\",\"source\":\"");
-	_log.insert(_log.length(), _host);
-	_log.insert(_log.length(), "\",\"short_message\":\"");
-	_log.insert(_log.length(), _text);
-	_log.insert(_log.length(), "\",\"full_message\":\"");
-	_log.insert(_log.length(), _file);
-	_log.insert(_log.length(), ":");
-	zpt::tostr(_log, _line);
-	_log.insert(_log.length(), " | ");
-	_log.insert(_log.length(), _text);
-	_log.insert(_log.length(), "\",\"timestamp\":");
-	zpt::tostr(_log, _tp.tv_sec);
-	_log.insert(_log.length(), ".");
-	zpt::tostr(_log, (int) (_tp.tv_usec / 1000));
-	_log.insert(_log.length(), ",\"level\":");
-	zpt::tostr(_log, (int) _level);
-	_log.insert(_log.length(), ",\"pid\":");
-	zpt::tostr(_log, zpt::log_pid);
-	_log.insert(_log.length(), ",\"exec\":\"");
-	_log.insert(_log.length(), * zpt::log_pname);
-	_log.insert(_log.length(), "\",\"file\":\"");
-	_log.insert(_log.length(), _file);
-	_log.insert(_log.length(), "\",\"line\":");
-	zpt::tostr(_log, _line);
-	_log.insert(_log.length(), "}");
-
-	(* zpt::log_fd) << _log << endl << flush;
+		_log.assign("{\"version\":\"1.1\",\"host\":\"");
+		_log.insert(_log.length(), _host);
+		_log.insert(_log.length(), "\",\"source\":\"");
+		_log.insert(_log.length(), _host);
+		_log.insert(_log.length(), "\",\"short_message\":\"");
+		_log.insert(_log.length(), _text);
+		_log.insert(_log.length(), "\",\"full_message\":\"");
+		_log.insert(_log.length(), _file);
+		_log.insert(_log.length(), ":");
+		zpt::tostr(_log, _line);
+		_log.insert(_log.length(), " | ");
+		_log.insert(_log.length(), _text);
+		_log.insert(_log.length(), "\",\"timestamp\":");
+		zpt::tostr(_log, _tp.tv_sec);
+		_log.insert(_log.length(), ".");
+		zpt::tostr(_log, (int) (_tp.tv_usec / 1000));
+		_log.insert(_log.length(), ",\"level\":");
+		zpt::tostr(_log, (int) _level);
+		_log.insert(_log.length(), ",\"pid\":");
+		zpt::tostr(_log, zpt::log_pid);
+		_log.insert(_log.length(), ",\"exec\":\"");
+		_log.insert(_log.length(), * zpt::log_pname);
+		_log.insert(_log.length(), "\",\"file\":\"");
+		_log.insert(_log.length(), _file);
+		_log.insert(_log.length(), "\",\"line\":");
+		zpt::tostr(_log, _line);
+		_log.insert(_log.length(), "}");
+		(* zpt::log_fd) << _log << endl << flush;
+	}
 	return 0;
 }
 

@@ -93,16 +93,6 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 		std::string _key = _i.first;
 		zpt::json _v = _i.second;
 
-		if (_key == "page-size" || _key == "page-start-index" || _key == "order-by" || _key == "fields" || _key == "embed" || _key == "_ts") {
-			continue;
-		}
-		if (_v->type() == zpt::JSObject) {
-			continue;
-		}
-		if (_v->type() == zpt::JSArray) {
-			continue;
-		}
-
 		if (_queryr.length() != 0) {
 			_queryr += std::string(" AND ");
 		}
@@ -219,6 +209,12 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 		}
 
 		_queryr += _key + std::string("=") + zpt::mariadb::escape(_value);
+	}
+}
+
+auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
+	if (_in->ok() && _in->type() == zpt::JSObject) {
+		return;
 	}
 
 	if (_in["page-size"]) {

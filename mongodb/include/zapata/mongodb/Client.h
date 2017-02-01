@@ -49,9 +49,10 @@ namespace zpt {
 			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
 			virtual auto mutations() -> zpt::mutation::emitter;
 
-			virtual auto connect(zpt::json _opts) -> void;
+			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;
-
+			virtual auto conn() -> mongo::ScopedDbConnection&;
+			
 			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
 			virtual auto save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
@@ -67,10 +68,8 @@ namespace zpt {
 
 		private:
 			zpt::json __options;
-			zpt::json __mongodb_conf;
-			std::string __conf_path;
 			std::mutex __mtx;
-			mongo::ScopedDbConnection __conn;
+			std::unique_ptr<mongo::ScopedDbConnection> __conn;
 			std::string _conn_str;
 			zpt::ev::emitter __events;
 		};

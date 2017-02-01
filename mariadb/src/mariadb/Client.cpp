@@ -33,14 +33,15 @@ zpt::mariadb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) :
 zpt::mariadb::ClientPtr::~ClientPtr() {
 }
 
-zpt::mariadb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __mariadb_conf(_options->getPath(_conf_path)), __conf_path(_conf_path), __conn(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + __mariadb_conf["bind"]->str(), std::string(__mariadb_conf["user"]), std::string(__mariadb_conf["passwd"]))) {
+zpt::mariadb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
+	this->connection(_options->getPath(_conf_path));
 }
 
 zpt::mariadb::Client::~Client() {
 }
 
 auto zpt::mariadb::Client::name() -> std::string {
-	return std::string("mariadb://") + ((std::string) this->__mariadb_conf["bind"]) + std::string("/") + ((std::string) this->__mariadb_conf["db"]);
+	return std::string("mariadb://") + ((std::string) this->connection()["bind"]) + std::string("/") + ((std::string) this->connection()["db"]);
 }
 
 auto zpt::mariadb::Client::options() -> zpt::json {
@@ -62,17 +63,23 @@ auto zpt::mariadb::Client::mutations() -> zpt::mutation::emitter {
 	return this->__events->mutations();
 }
 
-auto zpt::mariadb::Client::connect(zpt::json _opts) -> void {
+auto zpt::mariadb::Client::connect() -> void {
+	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
+	zpt::Connector::connect();
 }
 
 auto zpt::mariadb::Client::reconnect() -> void {
+	this->__conn->close();
+	this->__conn.release();
+	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
+	zpt::Connector::reconnect();
 }
 
 auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	if (!_document["id"]->ok()) {
 		uuid _uuid;
@@ -117,7 +124,7 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -149,7 +156,7 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -181,7 +188,7 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -202,7 +209,7 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 		zpt::mariadb::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_query(_opts, _expression);
+	zpt::mariadb::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -210,7 +217,7 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::set(_collection, _pattern, _document, _opts);
+	zpt::Connector::set(_collection, std::string(_opts["href"]), _document, _opts);
 	return _size;
 }
 
@@ -218,7 +225,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -248,7 +255,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -267,7 +274,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 		zpt::mariadb::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_query(_opts, _expression);
+	zpt::mariadb::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -275,14 +282,14 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	zpt::Connector::unset(_collection, std::string(_opts["href"]), _document, _opts);
 	return _size;
 }
 
 auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -302,7 +309,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -312,7 +319,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 		zpt::mariadb::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_query(_opts, _expression);
+	zpt::mariadb::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -320,7 +327,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 	}
 	catch(std::exception& _e) {}
 
-	zpt::Connector::remove(_collection, _pattern, _opts);
+	zpt::Connector::remove(_collection, std::string(_opts["href"]), _opts);
 	return _size;
 }
 
@@ -335,7 +342,7 @@ auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, 
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	zpt::json _elements = zpt::json::array();
 	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->__mariadb_conf["db"]->str());
+	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	std::shared_ptr<sql::ResultSet> _result(_stmt->executeQuery(_pattern));
 	for (; _result->next(); ) {
@@ -356,7 +363,7 @@ auto zpt::mariadb::Client::query(std::string _collection, zpt::json _pattern, zp
 		_expression += std::string(" WHERE ") + _where;
 		_count_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_query(_opts, _expression);
+	zpt::mariadb::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 
@@ -371,7 +378,7 @@ auto zpt::mariadb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
 	_count_expression += _collection;
-	zpt::mariadb::get_query(_opts, _expression);
+	zpt::mariadb::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 

@@ -97,7 +97,7 @@ namespace zpt {
 		virtual auto mutations(zpt::mutation::emitter _emitter) -> void = 0;
 		virtual auto mutations() -> zpt::mutation::emitter = 0;
 
-		virtual auto connect(zpt::json _opts) -> void;
+		virtual auto connect() -> void;
 		virtual auto reconnect() -> void;
 
 		virtual auto insert(std::string _collection, std::string _id_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
@@ -113,6 +113,12 @@ namespace zpt {
 		virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
 		virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
 
+	protected:
+		virtual auto connection() -> zpt::json;
+		virtual auto connection(zpt::json _conn_conf) -> void;
+
+	private:
+		zpt::json __connection;
 	};
 	typedef std::shared_ptr<zpt::Connector> ConnectorPtr;
 	typedef ConnectorPtr connector;

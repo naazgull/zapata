@@ -85,35 +85,46 @@ namespace zpt {
 	
 	class ZMQPoll {
 	public:
-		ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter);
-		ZMQPoll(zpt::json _options);
+		ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter = nullptr);
 		virtual ~ZMQPoll();
 		
-		virtual zpt::json options();
-		virtual zpt::ev::emitter emitter();
-		virtual zpt::ZMQPollPtr self();
+		virtual auto options() -> zpt::json;
+		virtual auto emitter() -> zpt::ev::emitter;
+		virtual auto self() -> zpt::ZMQPollPtr;
+
+		auto get_by_name(std::string _name) -> zpt::socket;
+		auto get_by_uuid(std::string _uuid) -> zpt::socket;
+		auto get_by_zsock(zsock_t* _sock) -> zpt::socket;
+		auto add_by_name(zpt::socket _socket) -> void;
+		auto add_by_uuid(zpt::socket _socket) -> void;
+		auto add_by_zsock(zpt::socket _socket) -> void;
+		auto remove_by_name(zpt::socket _socket) -> void;
+		auto remove_by_uuid(zpt::socket _socket) -> void;
+		auto remove_by_zsock(zpt::socket _socket) -> void;
+
 		
-		virtual void poll(zpt::ZMQPtr _socket);
-		virtual void unpoll(zpt::ZMQ& _socket);
-		virtual void loop();
-		virtual zpt::socket bind(short _type, std::string _connection);
+		virtual auto poll(zpt::socket _socket) -> void;
+		virtual auto unpoll(zpt::socket _socket, bool _signal = true) -> void;
+		virtual auto loop() -> void;
+		virtual auto bind(short _type, std::string _connection) -> zpt::socket;
 		
-		virtual void unbind();
+		virtual auto unbind() -> void;
 			
 	private:
 		zpt::json __options;
 		std::map< std::string, zpt::socket > __by_name;
+		std::map< std::string, zpt::socket > __by_uuid;
 		std::map< zsock_t*, zpt::socket > __by_socket;
 		::pthread_t __id;
 		zpoller_t* __poll;
-		zsock_t* __interrupt;
-		zsock_t* __signal;
-		std::mutex __mtx;
-		zpt::ev::emitter __emitter;
+		zsock_t* __sync[4];
+		std::mutex __mtx[2];
 		zpt::ZMQPollPtr __self;
+		zpt::ev::emitter __emitter;
 		
-		virtual void unpoll_no_mutex(zpt::socket _socket);
-		virtual void signal_poller();
+		auto signal(std::string _message, int _idx_send) -> void;
+		auto notify(std::string _message, int _idx_send) -> void;
+		auto wait(int _idx_send) -> void;
 
 	};
 
@@ -125,7 +136,6 @@ namespace zpt {
 		virtual std::string id();
 		virtual zpt::json options();
 		virtual std::string& connection();
-		virtual zpt::ZMQPtr self();
 		virtual zactor_t* auth(std::string _client_cert_dir = "");
 		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
@@ -137,19 +147,20 @@ namespace zpt {
 		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
 		virtual void relay_for(zpt::socket _socket);
 
-		virtual zsock_t* socket() = 0;
-		virtual zsock_t* in() = 0;
-		virtual zsock_t* out() = 0;
-		virtual short int type() = 0;
-		virtual bool once() = 0;
-		virtual void listen(zpt::poll _poll) = 0;
+		virtual auto self() const -> zpt::socket = 0;
+		virtual auto socket() -> zsock_t* = 0;
+		virtual auto in() -> zsock_t* = 0;
+		virtual auto out() -> zsock_t* = 0;
+		virtual auto type() -> short int = 0;
+		virtual auto once() -> bool = 0;
+		virtual auto listen(zpt::poll _poll) -> void = 0;
+		virtual auto unbind() -> void = 0;
 		
-		virtual void unbind();
+		virtual auto unlisten() -> void;
 		
 	private:
 		zpt::json __options;
 		std::string __connection;
-		zpt::ZMQPtr __self;
 		std::string __id;
 		zcert_t* __self_cert;
 		zcert_t* __peer_cert;
@@ -158,6 +169,8 @@ namespace zpt {
 
 	protected:
 		std::mutex __mtx;		
+		zpt::poll __poll;
+		
 	};
 
 	class ZMQReq : public zpt::ZMQ {
@@ -167,15 +180,19 @@ namespace zpt {
 		
 		virtual zpt::json send(zpt::json _envelope);
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 	
 	class ZMQRep : public zpt::ZMQ {
@@ -183,15 +200,19 @@ namespace zpt {
 		ZMQRep(std::string _connection, zpt::json _options);
 		virtual ~ZMQRep();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 	
 	class ZMQXPubXSub : public zpt::ZMQ {
@@ -199,15 +220,19 @@ namespace zpt {
 		ZMQXPubXSub(std::string _connection, zpt::json _options);
 		virtual ~ZMQXPubXSub();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zactor_t* __socket;
+		zpt::socket __self;
 	};
 	
 	class ZMQPubSub : public zpt::ZMQ {
@@ -215,17 +240,21 @@ namespace zpt {
 		ZMQPubSub(std::string _connection, zpt::json _options);
 		virtual ~ZMQPubSub();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		virtual void subscribe(std::string _prefix);
 		
 	private:
 		zsock_t* __socket_sub;
 		zsock_t* __socket_pub;
+		zpt::socket __self;
 	};
 	
 	class ZMQPub : public zpt::ZMQ {
@@ -235,15 +264,19 @@ namespace zpt {
 		
 		virtual zpt::json recv();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 	
 	class ZMQSub : public zpt::ZMQ {
@@ -253,16 +286,20 @@ namespace zpt {
 		
 		virtual zpt::json send(zpt::json _envelope);
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		virtual void subscribe(std::string _prefix);
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 	
 	class ZMQPush : public zpt::ZMQ {
@@ -272,15 +309,19 @@ namespace zpt {
 		
 		virtual zpt::json recv();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 
 	class ZMQPull : public zpt::ZMQ {
@@ -290,15 +331,19 @@ namespace zpt {
 		
 		virtual zpt::json send(zpt::json _envelope);
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
+		zpt::socket __self;
 	};
 
 	class ZMQRouterDealer : public zpt::ZMQ {
@@ -306,15 +351,19 @@ namespace zpt {
 		ZMQRouterDealer(std::string _connection, zpt::json _options);
 		virtual ~ZMQRouterDealer();
 		
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zactor_t* __socket;
+		zpt::socket __self;
 	};
 
 	class ZMQAssyncReq : public zpt::ZMQ {
@@ -328,12 +377,15 @@ namespace zpt {
 		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
 		virtual void relay_for(zpt::socket _socket);
 
+		virtual auto self() const -> zpt::socket;
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
+		virtual auto unbind() -> void;
+
 		
 	private:
 		zsock_t* __socket;
@@ -341,6 +393,7 @@ namespace zpt {
 		zpt::socket __zmq_socket;
 		short __type;
 		zpt::assync::reply_fn __raw_transformer;
+		zpt::socket __self;
 	};
 }
 
