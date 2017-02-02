@@ -158,9 +158,15 @@ namespace zpt {
 		virtual auto initialize() -> void = 0;
 		virtual auto self() const -> zpt::bridge = 0;
 
+
 		template< typename T >
-		inline auto eval(std::string _expr) -> decltype(((T*) T::instance().get())->eval(_expr)) {
-			return ((T*) T::instance().get())->eval(_expr);
+		inline auto deflbd(zpt::json _conf, std::function< T (int, T[]) > _callback, int _n_args) -> void {
+			return T::bridge()->deflbd(_conf, _callback, _n_args);
+		};
+
+		template< typename T >
+		inline auto eval(std::string _expr) -> decltype(T::bridge()->eval(_expr)) {
+			return T::bridge()->eval(_expr);
 		};
 
 		template< typename T >

@@ -12,14 +12,11 @@ AC_HAVE_LIBRARY(magic)
 AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
-AC_HAVE_LIBRARY(mongoclient)
-AC_HAVE_LIBRARY(boost_system)
-AC_HAVE_LIBRARY(boost_program_options)
-AC_HAVE_LIBRARY(boost_thread)
-AC_HAVE_LIBRARY(boost_filesystem)
+AC_HAVE_LIBRARY(ecl)
 AC_HAVE_LIBRARY(ossp-uuid++)
 AC_HAVE_LIBRARY(zapata-base)
 AC_HAVE_LIBRARY(zapata-json)
+AC_HAVE_LIBRARY(zapata-events)
 
 AC_CANONICAL_SYSTEM
 

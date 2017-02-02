@@ -83,6 +83,8 @@ namespace zpt {
 		public:
 			Object(cl_object _target);
 			Object();
+
+			static auto bridge() -> zpt::lisp::bridge*;
 		};
 		
 		class Type {

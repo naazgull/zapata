@@ -31,7 +31,7 @@ namespace zpt {
 	}
 }
 
-zpt::lisp::Bridge::Bridge(zpt::json _options) : zpt::Bridge(_options), __self(this) {
+zpt::lisp::Bridge::Bridge(zpt::json _options) : zpt::Bridge(_options), __self(this), __lambdas(new std::map<std::string, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > >()), __modules(new std::map<std::string, std::string>()), __consistency(new std::map<std::string, std::function< bool (const std::string, const std::string) > >())  {
 }
 
 zpt::lisp::Bridge::~Bridge() {
@@ -244,8 +244,8 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		(cl_objectfn_fixed) zpt::lisp::on,
 		3
 	);
-	_bridge->initialize();
 	
+	_bridge->initialize();	
 	zpt::lisp::__instance = _bridge;
 }
 
@@ -253,6 +253,10 @@ zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type 
 }
 
 zpt::lisp::Object::Object() : std::shared_ptr< zpt::lisp::Type >(nullptr) {
+}
+
+auto zpt::lisp::Object::bridge() -> zpt::lisp::bridge* {
+	return zpt::lisp::__instance;
 }
 
 zpt::lisp::Type::Type(cl_object _target) : __target(_target) {
@@ -329,7 +333,7 @@ auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
 			std::make_pair(_performative,
 				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-					zpt::lisp::object _ret = _bridge->eval< zpt::lisp::bridge >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
+					zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
 					return _bridge->from< zpt::lisp::object >(_ret);
 				}
 			)
