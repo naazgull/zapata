@@ -38,6 +38,7 @@ SOFTWARE.
 #include <fstream>
 #include <zapata/text/manip.h>
 #include <cmath>
+#include <regex>
 
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
@@ -206,13 +207,22 @@ namespace zpt {
 		}		
 	}
 
-	void generate_key(string& _out, size_t _size);
-	std::string generate_key(size_t _size);
-	void generate_key(string& _out);
-	std::string generate_key();
-	void generate_hash(string& _out);
+	namespace generate {
+		auto key(std::string& _out, size_t _size = 24) -> void;
+		auto r_key(size_t _size) -> std::string;
+		auto r_key() -> std::string;
+		auto hash(std::string& _out) -> void;
+		auto r_hash() -> std::string;
+		auto uuid(std::string& _out) -> void;
+		auto r_uuid() -> std::string;
+	}
 
-	auto generate_uuid(std::string& _out) -> void;
-	auto r_generate_uuid() -> std::string;
-	
+	namespace test {
+		auto uuid(std::string _uuid) -> bool;
+		auto utf8(std::string _uri) -> bool;
+		auto ascii(std::string _ascii) -> bool;
+		auto token(std::string _token) -> bool;
+		auto uri(std::string _uri) -> bool;
+	}
+
 }

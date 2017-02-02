@@ -50,12 +50,10 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::strin
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Update ? nullptr : _handler));
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Replace ? nullptr : _handler));
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::info);
-	
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
@@ -69,12 +67,10 @@ auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mut
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Update)) == _handler_set.end() ?  nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Replace)) == _handler_set.end() ?  nullptr : _found->second);
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::info);
-	
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
@@ -106,13 +102,11 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _o
 	for (short _idx = zpt::mutation::Insert; _idx != zpt::mutation::Replace + 1; _idx++) {
 		_handlers.push_back(_handler);
 	}
-	
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered mutation listener for ") + _listener->ns(), zpt::info);
-	
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::off(zpt::mutation::operation _operation, std::string _callback_id) -> void {

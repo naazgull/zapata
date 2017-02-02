@@ -37,7 +37,7 @@ namespace zpt {
 	uuid uuid_gen;
 }
 
-void zpt::ascii::encode(string& _out, bool quote) {
+auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
 	wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
 	wstring ws(wc);
 
@@ -58,7 +58,7 @@ void zpt::ascii::encode(string& _out, bool quote) {
 	_out.assign(_oss.str());
 }
 
-void zpt::generate_key(std::string& _out, size_t _size) {
+auto zpt::generate::key(std::string& _out, size_t _size) -> void {
 	static string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
 	timeval _tv;
 
@@ -69,50 +69,19 @@ void zpt::generate_key(std::string& _out, size_t _size) {
 	}
 }
 
-std::string zpt::generate_key(size_t _size) {
+auto zpt::generate::r_key(size_t _size) -> std::string{
 	std::string _out;
-	zpt::generate_key(_out, _size);
+	zpt::generate::key(_out, _size);
 	return _out;
 }
 
-void zpt::generate_key(std::string& _out) {
-	timeval _tv;
-	gettimeofday (&_tv, nullptr);
-
-	static string charset = "abcdefghijklmnopqrstuvwxyz";
-	string code1;
-	code1.resize(2);
-	srand(_tv.tv_usec);
-	code1[0] = charset[rand() % charset.length()];
-	code1[1] = charset[rand() % charset.length()];
-	string code2;
-	code2.resize(2);
-	srand(_tv.tv_usec * 2);
-	code2[0] = charset[rand() % charset.length()];
-	code2[1] = charset[rand() % charset.length()];
-	string code3;
-	code3.resize(2);
-	srand(_tv.tv_usec * 3);
-	code3[0] = charset[rand() % charset.length()];
-	code3[1] = charset[rand() % charset.length()];
-
-	string _ts = zpt::tostr(time(nullptr), "%y%m%d");
-	string _usec = zpt::tostr(_tv.tv_usec);
-
-	_out.insert(_out.length(), code3);
-	_out.insert(_out.length(), _ts);
-	_out.insert(_out.length(), code1);
-	_out.insert(_out.length(), _usec);
-	_out.insert(_out.length(), code2);
-}
-
-std::string zpt::generate_key() {
+auto zpt::generate::r_key() -> std::string {
 	std::string _out;
-	zpt::generate_key(_out);
+	zpt::generate::key(_out);
 	return _out;
 }
 
-void zpt::generate_hash(string& _out) {
+auto zpt::generate::hash(std::string& _out) -> void {
 	static string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	string _randompass;
 	_randompass.resize(45);
@@ -129,12 +98,60 @@ void zpt::generate_hash(string& _out) {
 	_out.insert(_out.length(), _randompass);
 }
 
-auto zpt::generate_uuid(std::string& _out) -> void {
+auto zpt::generate::r_hash() -> std::string {
+	std::string _out;
+	zpt::generate::hash(_out);
+	return _out;
+}
+
+auto zpt::generate::uuid(std::string& _out) -> void {
 	zpt::uuid_gen.make(UUID_MAKE_V1);
 	_out.append(zpt::uuid_gen.string());
 }
 
-auto zpt::r_generate_uuid() -> std::string {
+auto zpt::generate::r_uuid() -> std::string {
 	zpt::uuid_gen.make(UUID_MAKE_V1);
 	return zpt::uuid_gen.string();
+}
+
+auto zpt::test::uuid(std::string _uuid) -> bool {
+	static const std::regex _uuid_rgx(
+		"^([a-fA-f0-9]{8})-"
+		"([a-fA-f0-9]{4})-"
+		"([a-fA-f0-9]{4})-"
+		"([a-fA-f0-9]{4})-"
+		"([a-fA-f0-9]{12})$"
+	);
+	return std::regex_match(_uuid, _uuid_rgx);
+}
+
+auto zpt::test::utf8(std::string _uri) -> bool {
+	return true;
+}
+
+auto zpt::test::ascii(std::string _ascii) -> bool {
+	static const std::regex _ascii_rgx(
+		"^([a-zA-Z])([a-zA-Z0-9_]*)$"
+	);
+	return std::regex_match(_ascii, _ascii_rgx);
+}
+
+auto zpt::test::token(std::string _token) -> bool {
+	static const std::regex _token_rgx(
+		"^([a-zA-Z])([a-zA-Z0-9]*)$"
+	);
+	return std::regex_match(_token, _token_rgx);
+}
+
+auto zpt::test::uri(std::string _uri) -> bool {
+	if (_uri.find(":") >= _uri.find("/")) {
+		_uri = std::string("zpt:") + _uri; 
+	}
+	static const std::regex _uri_rgx(
+		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([^?#]*)"                    // authority and path
+		"(?:\\?([^#]*))?"             // ?query
+		"(?:#(.*))?"		      // #fragment
+	);
+	return std::regex_match(_uri, _uri_rgx);
 }

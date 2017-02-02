@@ -371,11 +371,15 @@ namespace zpt {
 		/**
 		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zpt::JSONPtr object.
 		 */
-		friend istream& operator>>(istream& _in, JSONPtr& _out) {
+		friend std::istream& operator>>(std::istream& _in, zpt::JSONPtr& _out) {
 			_out.parse(_in);
 			return _in;
 		};
 
+		template<typename T>
+		static inline auto data(const T _delegate) -> zpt::JSONPtr {
+			return _delegate->get_json();
+		};
 	};
 
 	typedef JSONPtr JSONElement;

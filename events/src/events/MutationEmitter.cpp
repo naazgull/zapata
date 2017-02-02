@@ -113,7 +113,7 @@ auto zpt::MutationEmitter::options() -> zpt::json {
 	return this->__options;
 }
 					 
-auto zpt::MutationEmitter::self() -> zpt::mutation::emitter {
+auto zpt::MutationEmitter::self() const -> zpt::mutation::emitter {
 	return this->__self;
 }
 

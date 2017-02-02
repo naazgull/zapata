@@ -82,9 +82,7 @@ auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_pre
 	_stmt->execute(string("USE ") + this->connection()["db"]->str());
 
 	if (!_document["id"]->ok()) {
-		uuid _uuid;
-		_uuid.make(UUID_MAKE_V1);
-		_document << "id" << _uuid.string();
+		_document << "id" << zpt::generate::r_uuid();
 	}
 	if (!_document["href"]->ok() && _href_prefix.length() != 0) {
 		_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());

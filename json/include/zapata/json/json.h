@@ -122,7 +122,7 @@ namespace zpt {
 			auto parse(std::string _query) -> zpt::json;
 		}
 	}
-
+	
 	namespace conf {
 		auto getopt(int _argc, char* _argv[]) -> zpt::json;
 		auto setup(zpt::json _options) -> void;

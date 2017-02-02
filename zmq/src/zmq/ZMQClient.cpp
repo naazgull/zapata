@@ -29,9 +29,7 @@ SOFTWARE.
 zactor_t* zpt::ZMQ::__auth = nullptr;
 
 zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options) : __options( _options ), __connection(_connection.data()), __self_cert(nullptr), __peer_cert(nullptr), __poll(nullptr) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__id.assign(_uuid.string());
+	this->__id.assign(zpt::generate::r_uuid());
 }
 
 zpt::ZMQ::~ZMQ() {

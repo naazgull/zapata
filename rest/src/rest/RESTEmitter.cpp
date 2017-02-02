@@ -109,12 +109,11 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Patch ? this->__default_patch : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Reply ? this->__default_assync_reply : _handler));
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::RESTEmitter::on(string _regex, std::map< zpt::ev::performative, zpt::ev::Handler > _handler_set, zpt::json _opts) -> std::string {
@@ -131,12 +130,11 @@ auto zpt::RESTEmitter::on(string _regex, std::map< zpt::ev::performative, zpt::e
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Patch)) == _handler_set.end() ?  this->__default_patch : _found->second);
 	_handlers.push_back(this->__default_assync_reply);
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::string {
@@ -177,12 +175,11 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 		_handlers.push_back(_handler);
 	}
 	
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(std::make_pair(_uuid.string(), std::make_pair(_url_pattern, _handlers)));
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	zlog(string("registered handlers for ") + _listener->regex(), zpt::info);
 	this->server()->assync_on(_listener->regex(), _opts);
-	return _uuid.string();
+	return _uuid;
 }
 
 auto zpt::RESTEmitter::off(zpt::ev::performative _event, std::string _callback_id) -> void {
@@ -368,10 +365,8 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 }
 
 auto zpt::rest::not_found(std::string _resource) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 404,
@@ -382,10 +377,8 @@ auto zpt::rest::not_found(std::string _resource) -> zpt::json {
 }
 
 auto zpt::rest::accepted(std::string _resource) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 202,
@@ -396,10 +389,8 @@ auto zpt::rest::accepted(std::string _resource) -> zpt::json {
 }
 
 auto zpt::rest::no_content(std::string _resource) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 204,
@@ -410,10 +401,8 @@ auto zpt::rest::no_content(std::string _resource) -> zpt::json {
 }
 
 auto zpt::rest::temporary_redirect(std::string _resource, std::string _target_resource) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 307,
@@ -427,10 +416,8 @@ auto zpt::rest::temporary_redirect(std::string _resource, std::string _target_re
 }
 
 auto zpt::rest::see_other(std::string _resource, std::string _target_resource) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 303,
@@ -444,10 +431,8 @@ auto zpt::rest::see_other(std::string _resource, std::string _target_resource) -
 }
 
 auto zpt::rest::options(std::string _resource, std::string _origin) -> zpt::json {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 200,

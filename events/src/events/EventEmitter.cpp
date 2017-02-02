@@ -32,6 +32,22 @@ namespace zpt {
 	}
 }
 
+zpt::BridgePtr::BridgePtr(zpt::Bridge* _target) : std::shared_ptr< zpt::Bridge >(_target) {
+}
+
+zpt::BridgePtr::BridgePtr() : std::shared_ptr< zpt::Bridge >(nullptr) {
+}
+
+zpt::Bridge::Bridge(zpt::json _options) : __options(_options) {
+}
+
+zpt::Bridge::~Bridge() {
+}
+		
+auto zpt::Bridge::options() -> zpt::json {
+	return this->__options;
+}
+
 zpt::EventEmitter::EventEmitter() : __self( this ), __mutant() {
 }
 
@@ -45,7 +61,7 @@ auto zpt::EventEmitter::options() -> zpt::json {
 	return this->__options;
 }
 					 
-auto zpt::EventEmitter::self() -> zpt::ev::emitter {
+auto zpt::EventEmitter::self() const -> zpt::ev::emitter {
 	return this->__self;
 }
 
@@ -141,9 +157,7 @@ auto zpt::ev::init_request(std::string _cid) -> zpt::json {
 		_return << "X-Cid" << _cid;
 	}
 	else {
-		uuid _uuid;
-		_uuid.make(UUID_MAKE_V1);
-		_return << "X-Cid" << _uuid.string();
+		_return << "X-Cid" << zpt::generate::r_uuid();
 	}
 	if (zpt::ev::__default_authorization != nullptr) {
 		_return << "Authorization" << std::string(zpt::ev::__default_authorization->data());

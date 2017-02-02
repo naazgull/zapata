@@ -45,9 +45,7 @@ std::string zpt::Users::name() {
 }
 
 std::tuple< std::string, std::string > zpt::Users::salt_hash(std::string _password) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	std::string _salt = _uuid.string();
+	std::string _salt = zpt::generate::r_uuid();
 	std::string _salted = zpt::hash::SHA512(_password + _salt);
 	zpt::base64::url_encode(_salted);
 	return std::make_tuple(_salt, _salted);

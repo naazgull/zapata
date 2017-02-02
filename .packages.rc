@@ -12,6 +12,7 @@ export projects=(
        redis
        mariadb
        postgresql
+       lisp
        auth
        users
 )

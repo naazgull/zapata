@@ -363,7 +363,7 @@ string zpt::JSONElementT::demangle() {
 	return "null";
 }
 
-void zpt::JSONElementT::type(JSONType _in) {
+void zpt::JSONElementT::type(zpt::JSONType _in) {
 	assertz(_in >= 0, "the type must be a valid value", 500, 0);
 	
 	if (_in == this->__target.__type) {

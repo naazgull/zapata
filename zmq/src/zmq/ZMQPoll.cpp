@@ -56,11 +56,10 @@ zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options(
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	
-	uuid _poll_uuid;
 	for (short _i = 0; _i < 4; _i += 2) {
-		_poll_uuid.make(UUID_MAKE_V1);
-		std::string _connection1(std::string("@inproc://") + _poll_uuid.string());
-		std::string _connection2(std::string(">inproc://") + _poll_uuid.string());
+		std::string _uuid = zpt::generate::r_uuid();
+		std::string _connection1(std::string("@inproc://") + _uuid);
+		std::string _connection2(std::string(">inproc://") + _uuid);
 		this->__sync[_i] = zsock_new(ZMQ_REP);
 		assertz(zsock_attach(this->__sync[_i], _connection1.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__sync[_i])) + std::string(" socket to ") + _connection1, 500, 0);
 		this->__sync[_i + 1] = zsock_new(ZMQ_REQ);
@@ -88,7 +87,7 @@ auto zpt::ZMQPoll::emitter() -> zpt::ev::emitter {
 	return this->__emitter;
 }
 
-auto zpt::ZMQPoll::self() -> zpt::ZMQPollPtr {
+auto zpt::ZMQPoll::self() const -> zpt::ZMQPollPtr {
 	return this->__self;
 }
 

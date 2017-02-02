@@ -43,12 +43,16 @@ namespace zpt {
 	class MutationListener;
 	class EventEmitter;
 	class EventListener;
+	class Bridge;
+	class BridgePtr;
 
-	typedef std::shared_ptr<zpt::MutationEmitter> MutationEmitterPtr;
-	typedef std::shared_ptr<zpt::MutationListener> MutationListenerPtr;
-	typedef std::weak_ptr<zpt::EventEmitter> EventEmitterWPtr;
-	typedef std::shared_ptr<zpt::EventEmitter> EventEmitterPtr;
-	typedef std::shared_ptr<zpt::EventListener> EventListenerPtr;
+	typedef std::shared_ptr< zpt::MutationEmitter > MutationEmitterPtr;
+	typedef std::shared_ptr< zpt::MutationListener > MutationListenerPtr;
+	typedef std::weak_ptr< zpt::EventEmitter > EventEmitterWPtr;
+	typedef std::shared_ptr< zpt::EventEmitter > EventEmitterPtr;
+	typedef std::shared_ptr< zpt::EventListener > EventListenerPtr;
+
+	typedef BridgePtr bridge;
 
 	namespace ev {
 		extern std::string* __default_authorization;
@@ -123,6 +127,60 @@ namespace zpt {
 	typedef std::shared_ptr<zpt::Connector> ConnectorPtr;
 	typedef ConnectorPtr connector;
 
+	class BridgePtr : public std::shared_ptr< zpt::Bridge > {
+	public:
+		BridgePtr(zpt::Bridge* _target);
+		BridgePtr();
+		
+		template< typename B >
+		static inline auto instance() -> zpt::bridge {
+			return B::instance();
+		};
+		
+		template< typename B >
+		static inline auto boot(zpt::json _options) -> void {
+			B::boot(_options);
+		};
+	};
+	
+	class Bridge {
+	public:
+		Bridge(zpt::json _options);
+		virtual ~Bridge();
+		
+		virtual auto options() -> zpt::json;
+		virtual auto name() -> std::string = 0;
+		virtual auto events(zpt::ev::emitter _emitter) -> void = 0;
+		virtual auto events() -> zpt::ev::emitter = 0;
+		virtual auto mutations(zpt::mutation::emitter _emitter) -> void = 0;
+		virtual auto mutations() -> zpt::mutation::emitter = 0;
+		virtual auto initialize() -> void = 0;
+		virtual auto self() const -> zpt::bridge = 0;
+
+		template< typename T >
+		inline auto eval(std::string _expr) -> decltype(((T*) T::instance().get())->eval(_expr)) {
+			return ((T*) T::instance().get())->eval(_expr);
+		};
+
+		template< typename T >
+		inline auto from(T _o) -> zpt::json {
+			return _o->tojson();
+		};
+
+		template< typename T >
+		inline auto to(zpt::json _o) -> T {
+			return T::fromjson(_o);
+		};
+
+		template< typename D >
+		inline auto data() -> D {
+			return D::data(this->self());
+		};
+
+	private:
+		zpt::json __options;
+	};
+
 	class MutationEmitter {
 	public:
 		MutationEmitter();
@@ -130,7 +188,7 @@ namespace zpt {
 		virtual ~MutationEmitter();
 		
 		virtual auto options() -> zpt::json;
-		virtual auto self() -> zpt::mutation::emitter;
+		virtual auto self() const -> zpt::mutation::emitter;
 		virtual auto version() -> std::string = 0;
 		
 		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
@@ -174,7 +232,7 @@ namespace zpt {
 		virtual ~EventEmitter();
 		
 		virtual auto options() -> zpt::json;
-		virtual auto self() -> zpt::ev::emitter;
+		virtual auto self() const -> zpt::ev::emitter;
 		virtual auto mutations() -> zpt::mutation::emitter;
 		virtual auto version() -> std::string = 0;
 		

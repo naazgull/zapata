@@ -536,7 +536,7 @@ auto zpt::rest::authorization::serialize(zpt::json _info) -> std::string {
 		_info["application"]->type() == zpt::JSString &&
 		_info["grant_type"]->type() == zpt::JSString,
 		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
-	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate_key(64));
+	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate::r_key(64));
 }
 
 auto zpt::rest::authorization::deserialize(std::string _token) -> zpt::json {

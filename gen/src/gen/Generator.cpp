@@ -866,7 +866,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	return std::string(this->__spec["namespace"]) + std::string("::") + std::string(this->__spec["type"]) + std::string("s::") + std::string(this->__spec["name"]) + std::string("::restify(_emitter);\n");
 }
 
-auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
+auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::string {
 	if (!this->__spec["datum"]["name"]->ok()) {
 		return "";
 	}
@@ -876,8 +876,13 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 		for (auto _field : _found->second->spec()["fields"]->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = _field.second["opts"];
-
-			if (_mandatory
+			
+			if (
+				(
+					(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
+					(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put) ||
+					(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
+				)
 				&& _opts->type() == zpt::JSArray
 				&& std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("mandatory")) != std::end(_opts->arr())
 				&& std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("read-only")) == std::end(_opts->arr())
@@ -886,16 +891,16 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 			}
 
 			if (!_opts->ok() || std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("read-only")) == std::end(_opts->arr())) {
-				if ( _type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri") {
+				if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid") {
 					_return += std::string("assertz_") + _type + std::string("(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 				}
-				else if ( _type == "int") {
+				else if (_type == "int") {
 					_return += std::string("assertz_integer(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 				}
-				else if ( _type == "double") {
+				else if (_type == "double") {
 					_return += std::string("assertz_double(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 				}
-				else if ( _type == "timestamp") {
+				else if (_type == "timestamp") {
 					_return += std::string("assertz_timestamp(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 				}
 			}
@@ -903,14 +908,54 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 				_return += std::string("_envelope[\"payload\"] >> \"") + _field.first + std::string("\";\n");
 			}
 
-			if (_mandatory && _opts->ok() && std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("auto")) != std::end(_opts->arr())) {
-				if ( _type == "token") {
-					_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate_key(24);\n");
-				}
-			}
 			if (_opts->ok() && std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("auto")) != std::end(_opts->arr())) {
-				if ( _type == "timestamp") {
-					_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::date();\n");
+				if (std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("every-time")) != std::end(_opts->arr())) {
+					if (_type == "token") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(24);\n");
+					}
+					else if (_type == "uuid") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_uuid();\n");
+					}
+					else if (_type == "hash") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(64);\n");
+					}
+					else if (_type == "timestamp") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::date();\n");
+					}
+				}
+				else if (
+					std::find(std::begin(_opts->arr()), std::end(_opts->arr()), zpt::json::string("on-creation")) != std::end(_opts->arr())
+					&& (
+						(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
+						(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put)
+					)
+				) {
+					if (_type == "token") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(24);\n");
+					}
+					else if (_type == "uuid") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_uuid();\n");
+					}
+					else if (_type == "hash") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(64);\n");
+					}
+					else if (_type == "timestamp") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::date();\n");
+					}
+				}
+				else if (std::string(this->__spec["type"]) == "document" && (_perf == zpt::ev::Patch || _perf == zpt::ev::Put)) {
+					if (_type == "token") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(24);\n");
+					}
+					else if (_type == "uuid") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_uuid();\n");
+					}
+					else if (_type == "hash") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::generate::r_key(64);\n");
+					}
+					else if (_type == "timestamp") {
+						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::date();\n");
+					}
 				}
 			}
 		}
@@ -920,12 +965,8 @@ auto zpt::GenResource::build_validation(bool _mandatory) -> std::string {
 
 auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std::string {
 	std::string _return;
-	bool _mandatory =
-	(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
-	(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put) ||
-	(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put);
 	
-	_return += this->build_validation(_mandatory);
+	_return += this->build_validation(_perf);
 	_return += std::string("\nzpt::json _t_split = zpt::split(_topic, \"/\");\n");
 	_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
 	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);\n");

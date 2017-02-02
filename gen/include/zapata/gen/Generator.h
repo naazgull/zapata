@@ -132,7 +132,7 @@ namespace zpt {
 
 		virtual auto spec() -> zpt::json;
 		virtual auto build() -> std::string;
-		virtual auto build_validation(bool _mandatory = false) -> std::string;
+		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
 		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
 		virtual auto build_data_layer() -> std::string;
 		virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;

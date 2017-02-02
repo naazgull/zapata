@@ -90,7 +90,7 @@ namespace zpt {
 		
 		virtual auto options() -> zpt::json;
 		virtual auto emitter() -> zpt::ev::emitter;
-		virtual auto self() -> zpt::ZMQPollPtr;
+		virtual auto self() const -> zpt::ZMQPollPtr;
 
 		auto get_by_name(std::string _name) -> zpt::socket;
 		auto get_by_uuid(std::string _uuid) -> zpt::socket;
