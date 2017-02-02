@@ -231,14 +231,18 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	);
 	_bridge->defun(
 		{
-			"name", "get-log-level",
+			"name", "on",
 			"type", "internal",
-			"access", "r",
-			"label", "Get current specified log level",
-			"args", zpt::json::array()
+			"access", "a",
+			"label", "Registers resource handler",
+			"args", { zpt::array,
+				{ "type", "string", "label", "request performative" },
+				{ "type", "string", "label", "request topic pattern" },
+				{ "type", "string", "label", "lisp handler name" }
+			}
 		},
-		(cl_objectfn_fixed) zpt::lisp::get_log_level,
-		0
+		(cl_objectfn_fixed) zpt::lisp::on,
+		3
 	);
 	_bridge->initialize();
 	
@@ -311,3 +315,27 @@ auto zpt::lisp::get_log_level() -> cl_object {
 	return ecl_make_bool(false);
 }
 
+auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+	std::string _topic = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic)));
+	zpt::json _lambdas = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_lambda));
+	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
+
+	for (auto _lambda : _lambdas->obj()) {
+		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
+		std::string _name = std::string(_lambda.second);
+		_handlers.insert(
+			std::make_pair(_performative,
+				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+					zpt::lisp::object _ret = _bridge->eval< zpt::lisp::bridge >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
+					return _bridge->from< zpt::lisp::object >(_ret);
+				}
+			)
+		);
+	}
+	
+	_bridge->events()->on(_topic, _handlers);
+	return ecl_make_bool(true);
+}
