@@ -7,12 +7,12 @@ export projects=(
        http
        zmq
        gen
-       rest
        mongodb
        redis
        mariadb
        postgresql
        lisp
+       rest
        auth
        users
 )

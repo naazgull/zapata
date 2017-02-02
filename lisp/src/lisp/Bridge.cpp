@@ -229,6 +229,17 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		(cl_objectfn_fixed) zpt::lisp::get_log_level,
 		0
 	);
+	_bridge->defun(
+		{
+			"name", "get-log-level",
+			"type", "internal",
+			"access", "r",
+			"label", "Get current specified log level",
+			"args", zpt::json::array()
+		},
+		(cl_objectfn_fixed) zpt::lisp::get_log_level,
+		0
+	);
 	_bridge->initialize();
 	
 	zpt::lisp::__instance = _bridge;
