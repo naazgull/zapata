@@ -857,27 +857,47 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::ofstream _h_ofs(_h_file.data());
 			_h_ofs << _handler_h << endl << flush;
 			_h_ofs.close();
+			zlog(std::string("processed ") + _h_file, zpt::trace);
 		}
 		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
 			std::ofstream _cxx_ofs(_cxx_file.data());
 			_cxx_ofs << _handler_cxx << endl << flush;
 			_cxx_ofs.close();
+			zlog(std::string("processed ") + _cxx_file, zpt::trace);
 		}
 	}		
-	else if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("lisp")) != std::end(this->__options["resource-out-lang"]->arr())) {
-		std::string _handler_lisp;
-		zpt::load_path("/usr/share/zapata/gen/Handler.lisp", _handler_lisp);
+	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("lisp")) != std::end(this->__options["resource-out-lang"]->arr())) {
 		std::string _lisp_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".lisp");
 
+		std::string _handler_lisp;
+		zpt::load_path("/usr/share/zapata/gen/Handlers.lisp", _handler_lisp);
+
+		zpt::json _performatives = { zpt::array, "get", "post", "put", "patch", "delete", "head" };
+		for (auto _perf : _performatives->arr()) {
+			if (this->__spec["performatives"]->ok() && std::find(std::begin(this->__spec["performatives"]->arr()), std::end(this->__spec["performatives"]->arr()), zpt::json::string(_perf->str())) == std::end(this->__spec["performatives"]->arr())) {
+				zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string("]\n"), std::string(""));
+				zpt::replace(_handler_lisp, std::string("      $[resource.handler.") + _perf->str() + std::string(".name]\n"), std::string(""));
+				continue;
+			}
+
+			std::string _f_name = std::string(this->__spec["name"]) + std::string("-") + std::string(this->__spec["type"]) + std::string("-") + _perf->str();
+			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n;; YOUR CODE HERE\n)\n");
+
+			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string("]"), _function);
+			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), std::string("(") + _perf->str() + std::string(" . \"") + _f_name + std::string("\")"));
+		}
+		zpt::replace(_handler_lisp, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
+		
 		struct stat _buffer;
 		bool _lisp_exists = stat(_lisp_file.c_str(), &_buffer) == 0;
 		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_lisp_exists)) {
 			std::ofstream _lisp_ofs(_lisp_file.data());
 			_lisp_ofs << _handler_lisp << endl << flush;
 			_lisp_ofs.close();
+			zlog(std::string("processed ") + _lisp_file, zpt::trace);
 		}
 	}
-	else if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
+	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
 		std::string _handler_py;
 		zpt::load_path("/usr/share/zapata/gen/Handler.py", _handler_py);
 		std::string _py_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".lisp");
@@ -888,6 +908,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::ofstream _py_ofs(_py_file.data());
 			_py_ofs << _handler_py << endl << flush;
 			_py_ofs.close();
+			zlog(std::string("processed ") + _py_file, zpt::trace);
 		}
 	}
 

@@ -84,6 +84,7 @@ namespace zpt {
 			Object();
 
 			static auto bridge() -> zpt::lisp::bridge*;
+			static auto fromjson(zpt::json _in) -> zpt::lisp::object;
 		};
 		
 		class Type {
@@ -100,7 +101,6 @@ namespace zpt {
 			}
 			
 			virtual auto tojson() -> zpt::json;
-			static auto fromjson(zpt::json _in) -> zpt::lisp::object;
 
 		private:
 			cl_object __target;
@@ -113,6 +113,7 @@ namespace zpt {
 		auto logger(cl_object _text, cl_object _level) -> cl_object;
 		auto get_log_level() -> cl_object;
 		auto on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object;
+		auto route(cl_object _cl_performative, cl_object _cl_topic, cl_object _cl_payload) -> cl_object;
 		
 		auto from_lisp(cl_object _in) -> zpt::json;
 		auto from_lisp(cl_object _in, zpt::json& _parent) -> void;

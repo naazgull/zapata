@@ -136,6 +136,10 @@ auto zpt::python::Object::bridge() -> zpt::python::bridge* {
 	return zpt::python::__instance;
 }
 
+auto zpt::python::Object::fromjson(zpt::json _in) -> zpt::python::object {
+	return zpt::python::object(zpt::python::to_python(_in, zpt::python::__instance));
+}
+
 zpt::python::Type::Type(PyObject* _target) : __target(_target) {
 }
 
@@ -150,10 +154,6 @@ zpt::python::Type::~Type() {
 
 auto zpt::python::Type::tojson() -> zpt::json {
 	return zpt::python::from_python(this->__target);
-}
-
-auto zpt::python::Type::fromjson(zpt::json _in) -> zpt::python::object {
-	return zpt::python::object(zpt::python::to_python(_in, zpt::python::__instance));
 }
 
 /*-------------------------------------------------------------------------\
