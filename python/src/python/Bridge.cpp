@@ -71,7 +71,7 @@ auto zpt::python::Bridge::initialize() -> void {
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
 			if (_python_script->str().find(".py") != std::string::npos) {
-				zlog(std::string("loading module '") + _python_script->str() + std::string("'"), zpt::notice);
+				zlog(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"), zpt::notice);
 				PyObject* _name = PyUnicode_DecodeFSDefault(_python_script->str().data());				
 				PyObject* _module = PyImport_Import(_name);
 				Py_DECREF(_name);
@@ -79,6 +79,7 @@ auto zpt::python::Bridge::initialize() -> void {
 			}
 		}
 	}
+	zlog(std::string("PYTHON bridge initialized"), zpt::alert);
 }
 
 auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback, int _n_args) -> void {
@@ -118,12 +119,11 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
 	zpt::python::__instance = _bridge;
 
-	zlog(std::string("loading basic Python module (zpt.on, zpt.route)"), zpt::info);
+	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route)"), zpt::info);
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_Initialize();
-
-	_bridge->initialize();
-	zlog(std::string("booted PYTHON bridge"), zpt::alert);
+	
+	zlog(std::string("PYTHON bridge booted"), zpt::alert);
 }
 
 zpt::python::Object::Object(PyObject* _target) : std::shared_ptr< zpt::python::Type >(new zpt::python::Type(_target)) {

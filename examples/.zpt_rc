@@ -9,6 +9,6 @@
 
 	"resource-out-cxx" : [ "src" ],
 	"resource-out-h" : [ "include/zapata" ],
-	"resource-out-lang" : [ "c++", "lisp" ],
+	"resource-out-lang" : [ "c++", "lisp", "python" ],
 	"force-resource" : [ true ]
 }

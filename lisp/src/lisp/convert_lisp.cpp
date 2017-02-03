@@ -160,10 +160,10 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 				}
 			}
 			else {
-				if (_parent->ok()) {
+				/*if (_parent->ok()) {
 					_parent << zpt::undefined;
-				}
-				//assertz(false, "symbol is pair", 500, 0);
+					}*/
+				assertz(false, "symbol is pair", 500, 0);
 			}
 			break;
 		}

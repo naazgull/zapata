@@ -21,11 +21,13 @@
 
 
 (zpt-on "^/v2/datums/applications/([^/]+)$"
-    `(
-      (get . "applications-document-get")
-      (put . "applications-document-put")
-      (patch . "applications-document-patch")
-      (delete . "applications-document-delete")
-      (head . "applications-document-head")
-      ))
+    (json
+      "get" "applications-document-get"
+      "put" "applications-document-put"
+      "patch" "applications-document-patch"
+      "delete" "applications-document-delete"
+      "head" "applications-document-head"
+      )
+    (json  "http" t "mqtt" t "0mq" t "amqp" t)
+    )
 

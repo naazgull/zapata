@@ -70,20 +70,25 @@ auto zpt::lisp::Bridge::eval(std::string _call) -> zpt::lisp::object {
 
 auto zpt::lisp::Bridge::initialize() -> void {
 	this->eval(
-		"(defun create-hash (&rest args)\n"
-		"(let ((hash (make-hash-table :test #'equal :size (length args))))\n"
-		"(loop for el in args do\n"
-		"(setf (gethash (car el) hash) (cdr el))) hash))"
+		"(defmacro json (&rest args)\n"
+		"(let ((temphash (gensym))\n"
+		"(tempkey (gensym))\n"
+		"(tempval (gensym)))\n"
+		"`(let ((,temphash (make-hash-table :test #'equal :size ,(/ (length args) 2))))\n"
+		"(loop for (,tempkey ,tempval) on ',args by #'cddr do\n"
+		"(setf (gethash (eval ,tempkey) ,temphash) (eval ,tempval)))\n"
+		",temphash)))"
 	);
-
+	
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
 			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
-				zlog(std::string("loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
+				zlog(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
 				this->eval(std::string("(load \"") + ((std::string) _lisp_script) + std::string("\")"));
 			}
 		}
 	}
+	zlog(std::string("LISP bridge initialized"), zpt::alert);
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -181,7 +186,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	zpt::lisp::__instance = _bridge;
 	_bridge->eval("(defparameter *defined-operators* (make-hash-table))");
 
-	zlog(std::string("loading basic LISP operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt-on, zpt-route)"), zpt::info);
+	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt-on, zpt-route)"), zpt::info);
 	_bridge->defun(
 		{
 			"name", "cpp-lambda-call",
@@ -244,11 +249,12 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 			"label", "Registers resource handler",
 			"args", { zpt::array,
 				{ "type", "string", "label", "request topic pattern" },
-				{ "type", "object", "label", "performative <> operator hash table" }
+				{ "type", "object", "label", "performative <> operator hash table" },
+				{ "type", "object", "label", "options" }				
 			}
 		},
 		(cl_objectfn_fixed) zpt::lisp::on,
-		2
+		3
 	);	
 	_bridge->defun(
 		{
@@ -265,9 +271,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		(cl_objectfn_fixed) zpt::lisp::route,
 		3
 	);
-	
-	_bridge->initialize();	
-	zlog(std::string("booted LISP bridge"), zpt::alert);
+	zlog(std::string("LISP bridge booted"), zpt::alert);
 }
 
 zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type >(new zpt::lisp::Type(_target)) {
@@ -340,11 +344,12 @@ auto zpt::lisp::get_log_level() -> cl_object {
 	return ecl_make_bool(false);
 }
 
-auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
+auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda, cl_object _cl_opts) -> cl_object {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
 	std::string _topic = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic)));
 	zpt::json _lambdas = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_lambda));
+	zpt::json _opts = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_opts));
 	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
 
 	for (auto _lambda : _lambdas->obj()) {
@@ -361,7 +366,7 @@ auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
 		);
 	}
 	
-	_bridge->events()->on(_topic, _handlers);
+	_bridge->events()->on(_topic, _handlers, _opts);
 	return ecl_make_bool(true);
 }
 

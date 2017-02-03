@@ -141,6 +141,7 @@ namespace zpt {
 		static inline auto boot(zpt::json _options, zpt::ev::emitter _emitter) -> void {
 			B::boot(_options);
 			zpt::bridge::instance< B >()->events(_emitter);
+			zpt::bridge::instance< B >()->initialize();
 		};
 	};
 	

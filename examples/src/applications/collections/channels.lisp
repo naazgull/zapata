@@ -9,8 +9,10 @@
 
 
 (zpt-on "^/v2/datums/applications/([^/]+)/users/([^/]+)/channels$"
-    `(
-      (get . "channels-collection-get")
-      (head . "channels-collection-head")
-      ))
+    (json
+      "get" "channels-collection-get"
+      "head" "channels-collection-head"
+      )
+    (json  "http" t "mqtt" t "0mq" t "amqp" t)
+    )
 

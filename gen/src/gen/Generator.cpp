@@ -270,104 +270,193 @@ auto zpt::Generator::build_container() -> void {
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
 
-		std::string _container_cxx;
-		zpt::load_path("/usr/share/zapata/gen/Container.cpp", _container_cxx);
+		if (!this->__options["resource-out-lang"]->ok() || std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("c++")) != std::end(this->__options["resource-out-lang"]->arr())) {
+			std::string _container_cxx;
+			zpt::load_path("/usr/share/zapata/gen/Container.cpp", _container_cxx);
 
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
-		zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
 		
-		std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.cpp");
-		std::string _h_am_file = std::string(this->__options["prefix-h"][0]) + std::string("/add_to_am_from_") + zpt::r_replace(std::string(_spec["name"]), "/", "_") + std::string(".mk");
-		std::string _am_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/Makefile.am");
+			std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.cpp");
+			std::string _h_am_file = std::string(this->__options["prefix-h"][0]) + std::string("/add_to_am_from_") + zpt::r_replace(std::string(_spec["name"]), "/", "_") + std::string(".mk");
+			std::string _am_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/Makefile.am");
 		
-		std::string _connectors_initialize("{ ");
-		for (auto _dbms : _spec["dbms"]->obj()) {
-			_connectors_initialize += zpt::GenDatum::build_initialization(_dbms.first, std::string(_spec["namespace"]));
-		}
-		_connectors_initialize += "}";
-		zpt::replace(_container_cxx, "$[datum.connectors.initialize]", _connectors_initialize);
+			std::string _connectors_initialize("{ ");
+			for (auto _dbms : _spec["dbms"]->obj()) {
+				_connectors_initialize += zpt::GenDatum::build_initialization(_dbms.first, std::string(_spec["namespace"]));
+			}
+			_connectors_initialize += "}";
+			zpt::replace(_container_cxx, "$[datum.connectors.initialize]", _connectors_initialize);
 
-		zpt::replace(_container_cxx, "$[namespace]", std::string(_spec["namespace"]));
+			zpt::replace(_container_cxx, "$[namespace]", std::string(_spec["namespace"]));
 
-		std::string _h_make_files;
-		std::string _make_files;
-		std::string _child_includes;
-		if (_spec["datums"]->type() == zpt::JSArray) {
-			for (auto _datum : _spec["datums"]->arr()) {
-				std::string _include(std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h"));
-				zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
-				if (_include.front() == '/') {
-					_include.erase(0, 1);
+			std::string _h_make_files;
+			std::string _make_files;
+			std::string _child_includes;
+			if (_spec["datums"]->type() == zpt::JSArray) {
+				for (auto _datum : _spec["datums"]->arr()) {
+					std::string _include(std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h"));
+					zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
+					if (_include.front() == '/') {
+						_include.erase(0, 1);
+					}
+					_child_includes += std::string("#include <") + _include + std::string(">\n");
+
+					_h_make_files += std::string("./") + _include + std::string(" \\\n");
+					std::string _make_file(std::string("./datums/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
+					_make_files += _make_file;
 				}
-				_child_includes += std::string("#include <") + _include + std::string(">\n");
+			}
+		
+			std::string _includes;
+			std::string _registry;
+			if (_spec["resources"]->type() == zpt::JSArray) {
+				for (auto _resource : _spec["resources"]->arr()) {
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
 
-				_h_make_files += std::string("./") + _include + std::string(" \\\n");
-				std::string _make_file(std::string("./datums/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
-				_make_files += _make_file;
+					std::string _include(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".h"));
+					zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
+					if (_include.front() == '/') {
+						_include.erase(0, 1);
+					}
+					_includes += std::string("#include <") + _include + std::string(">\n");
+					_registry += zpt::Generator::resources.find(_key)->second->build_handlers(std::string(_spec["name"]), _child_includes);
+
+					_h_make_files += std::string("./") + _include + std::string(" \\\n");
+					std::string _make_file(std::string("./") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".cpp \\\n"));
+					_make_files += _make_file;
+				}
+			}		
+			zpt::replace(_container_cxx, "$[resource.path.h]", _includes);
+			zpt::replace(_container_cxx, "$[resource.handlers.delegate]", _registry);
+			zpt::replace(_container_cxx, "_emitter->connector({ });", "");
+
+			struct stat _buffer;
+			bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
+			bool _am_exists = stat(_am_file.c_str(), &_buffer) == 0;
+			if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
+				std::ofstream _cxx_ofs(_cxx_file.data());
+				_cxx_ofs << _container_cxx << endl << flush;
+				_cxx_ofs.close();
+				zlog(std::string("processed ") + _cxx_file, zpt::trace);	
+			}
+
+			size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + zpt::split(std::string(_spec["name"]), "/")->arr()->size();
+			std::string _parent_dir;
+			for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
+			std::string _make;
+			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
+			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
+			_make += _make_files;
+			_make += std::string("./api.cpp\n");
+			if (bool(this->__options["force-makefile"][0]) || (!bool(this->__options["force-makefile"][0]) && !_am_exists)) {
+				std::ofstream _am_ofs(_am_file.data());
+				_am_ofs << _make << endl << flush;
+				_am_ofs.close();
+				zlog(std::string("processed ") + _am_file, zpt::trace);
+				std::ofstream _h_am_ofs(_h_am_file.data());
+				_h_am_ofs << _h_make_files << endl << flush;
+				_h_am_ofs.close();
 			}
 		}
+		if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("lisp")) != std::end(this->__options["resource-out-lang"]->arr())) {
+			std::string _container_lisp;
+			zpt::load_path("/usr/share/zapata/gen/Container.lisp", _container_lisp);
+
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
 		
-		std::string _includes;
-		std::string _registry;
-		if (_spec["resources"]->type() == zpt::JSArray) {
-			for (auto _resource : _spec["resources"]->arr()) {
-				std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
-
-				std::string _include(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".h"));
-				zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
-				if (_include.front() == '/') {
-					_include.erase(0, 1);
+			std::string _lisp_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.lisp");
+				
+			std::string _includes;
+			if (_spec["resources"]->type() == zpt::JSArray) {
+				for (auto _resource : _spec["resources"]->arr()) {
+					std::string _include = std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".lisp");
+					if (_include.front() == '/') {
+						_include.erase(0, 1);
+					}
+					_includes += std::string("(load \"") + _include + std::string("\")\n");
 				}
-				_includes += std::string("#include <") + _include + std::string(">\n");
-				_registry += zpt::Generator::resources.find(_key)->second->build_handlers(std::string(_spec["name"]), _child_includes);
+			}		
+			zpt::replace(_container_lisp, "$[resource.path.h]", _includes);
 
-				_h_make_files += std::string("./") + _include + std::string(" \\\n");
-				std::string _make_file(std::string("./") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".cpp \\\n"));
-				_make_files += _make_file;
+			struct stat _buffer;
+			bool _lisp_exists = stat(_lisp_file.c_str(), &_buffer) == 0;
+			if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_lisp_exists)) {
+				std::ofstream _lisp_ofs(_lisp_file.data());
+				_lisp_ofs << _container_lisp << endl << flush;
+				_lisp_ofs.close();
+				zlog(std::string("processed ") + _lisp_file, zpt::trace);	
 			}
-		}		
-		zpt::replace(_container_cxx, "$[resource.path.h]", _includes);
-		zpt::replace(_container_cxx, "$[resource.handlers.delegate]", _registry);
-		zpt::replace(_container_cxx, "_emitter->connector({ });", "");
-
-		struct stat _buffer;
-		bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
-		bool _am_exists = stat(_am_file.c_str(), &_buffer) == 0;
-		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
-			std::ofstream _cxx_ofs(_cxx_file.data());
-			_cxx_ofs << _container_cxx << endl << flush;
-			_cxx_ofs.close();
-			zlog(std::string("processed ") + _cxx_file, zpt::trace);	
 		}
+		if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
+			std::string _container_py;
+			zpt::load_path("/usr/share/zapata/gen/Container.py", _container_py);
 
-		size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + zpt::split(std::string(_spec["name"]), "/")->arr()->size();
-		std::string _parent_dir;
-		for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
-		std::string _make;
-		std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
-		_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
-		_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
-		_make += _make_files;
-		_make += std::string("./api.cpp\n");
-		if (bool(this->__options["force-makefile"][0]) || (!bool(this->__options["force-makefile"][0]) && !_am_exists)) {
-			std::ofstream _am_ofs(_am_file.data());
-			_am_ofs << _make << endl << flush;
-			_am_ofs.close();
-			zlog(std::string("processed ") + _am_file, zpt::trace);
-			std::ofstream _h_am_ofs(_h_am_file.data());
-			_h_am_ofs << _h_make_files << endl << flush;
-			_h_am_ofs.close();
+			std::ofstream _py_ofs;
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]));
+			_py_ofs.open((std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/"));
+			_py_ofs.open((std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/collections/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/"));
+			_py_ofs.open((std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/stores/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/"));
+			_py_ofs.open((std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/documents/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/"));
+			_py_ofs.open((std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+		
+			std::string _py_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.py");
+				
+			std::string _includes;
+			if (_spec["resources"]->type() == zpt::JSArray) {
+				for (auto _resource : _spec["resources"]->arr()) {
+					std::string _include = std::string(_spec["name"]) + std::string(".") + std::string(_resource["type"]) + std::string("s.") + std::string(_resource["name"]) + std::string("");
+					if (_include.front() == '/') {
+						_include.erase(0, 1);
+					}
+					_includes += std::string("import ") + _include + std::string("\n");
+				}
+			}		
+			zpt::replace(_container_py, "$[resource.path.h]", _includes);
+
+			struct stat _buffer;
+			bool _py_exists = stat(_py_file.c_str(), &_buffer) == 0;
+			if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_py_exists)) {
+				_py_ofs.open(_py_file.data());
+				_py_ofs << _container_py << endl << flush;
+				_py_ofs.close();
+				zlog(std::string("processed ") + _py_file, zpt::trace);	
+			}
 		}
 	}
 	
@@ -884,9 +973,17 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n;; YOUR CODE HERE\n)\n");
 
 			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string("]"), _function);
-			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), std::string("(") + _perf->str() + std::string(" . \"") + _f_name + std::string("\")"));
+			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), std::string("\"") + _perf->str() + std::string("\" \"") + _f_name + std::string("\""));
 		}
 		zpt::replace(_handler_lisp, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
+
+		std::string _resource_opts;
+		if (this->__spec["protocols"]->type() == zpt::JSArray) {
+			for (auto _proto : this->__spec["protocols"]->arr()) {
+				_resource_opts += std::string(" \"") + _proto->str() + std::string("\" t");
+			}
+		}
+		zpt::replace(_handler_lisp, "$[resource.opts]", _resource_opts);
 		
 		struct stat _buffer;
 		bool _lisp_exists = stat(_lisp_file.c_str(), &_buffer) == 0;
@@ -900,7 +997,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
 		std::string _handler_py;
 		zpt::load_path("/usr/share/zapata/gen/Handler.py", _handler_py);
-		std::string _py_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".lisp");
+		std::string _py_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".py");
 
 		struct stat _buffer;
 		bool _py_exists = stat(_py_file.c_str(), &_buffer) == 0;
