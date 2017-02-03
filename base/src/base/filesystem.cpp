@@ -58,7 +58,7 @@ int zpt::ls(std::string dir, std::vector<string>& result, bool recursive) {
 	return 0;
 }
 
-bool zpt::mkdir_recursive(std::string _name, mode_t _mode) {
+bool zpt::mkdir_recursive(std::string _name) {
 	istringstream _iss(_name);
 	std::string _line;
 	int _count = 0;
@@ -69,7 +69,7 @@ bool zpt::mkdir_recursive(std::string _name, mode_t _mode) {
 		std::string cname(_line.data());
 		_dname << cname << flush;
 
-		if (mkdir(_dname.str().data(), 0777) == 0) {
+		if (mkdir(_dname.str().data(), 0755) == 0) {
 			_count++;
 		}
 		_dname << "/" << flush;
@@ -103,23 +103,29 @@ bool zpt::move_path(std::string _from, std::string _to) {
 }
 
 bool zpt::load_path(std::string _in, std::string& _out) {
-	ifstream _ifs;
+	std::ifstream _ifs;
 	_ifs.open(_in.data());
 
 	if (_ifs.is_open()) {
-		while(_ifs >> _out);
+		_ifs.seekg(0, std::ios::end);
+		_out.reserve(_ifs.tellg());
+		_ifs.seekg(0, std::ios::beg);
+		_out.assign((std::istreambuf_iterator<char>(_ifs)), std::istreambuf_iterator<char>());
 		_ifs.close();
 		return true;
 	}
 	return false;
 }
 
-bool zpt::load_path(std::string _in, wstring& _out) {
-	wifstream _ifs;
+bool zpt::load_path(std::string _in, std::wstring& _out) {
+	std::wifstream _ifs;
 	_ifs.open(_in.data());
 
 	if (_ifs.is_open()) {
-		while(_ifs >> _out);
+		_ifs.seekg(0, std::ios::end);
+		_out.reserve(_ifs.tellg());
+		_ifs.seekg(0, std::ios::beg);
+		_out.assign((std::istreambuf_iterator<wchar_t>(_ifs)), std::istreambuf_iterator<wchar_t>());
 		_ifs.close();
 		return true;
 	}
@@ -145,7 +151,7 @@ bool zpt::dump_path(std::string _in, wstring& _content) {
 	return true;
 }
 
-int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, short recursion) {
+int zpt::globRegexp(std::string& dir, vector<string>& result, std::regex& pattern, short recursion) {
 	DIR *dp;
 	struct dirent *dirp;
 	vector<string> torecurse;
@@ -163,7 +169,7 @@ int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, 
 			if (recursion != 0 && dirp->d_type == 4 && cname != dir) {
 				torecurse.push_back(cname);
 			}
-			if (regexec(&pattern, dirp->d_name, (size_t) (0), NULL, 0) == 0) {
+			if (std::regex_match(std::string(dirp->d_name), pattern)) {
 				result.insert(result.begin(), cname);
 			}
 
@@ -179,10 +185,8 @@ int zpt::globRegexp(std::string& dir, vector<string>& result, regex_t& pattern, 
 }
 
 int zpt::glob(std::string dir, vector<string>& result, std::string pattern, short recursion) {
-	regex_t regexp;
-	assertz(regcomp(& regexp, pattern.data(), REG_EXTENDED | REG_NOSUB) == 0, "the regular expression is not well defined.", 500, 0);
+	std::regex regexp(pattern);
 	int _return = zpt::globRegexp(dir, result, regexp, recursion);
-	regfree(& regexp);	
 	return _return;
 }
 

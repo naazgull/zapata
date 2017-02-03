@@ -5,10 +5,12 @@ export projects=(
        json
        events
        http
-       addons
        zmq
-       rest
+       gen
        mongodb
        redis
-       users
+       mariadb
+       postgresql
+       lisp
+       rest
 )

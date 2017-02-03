@@ -5,6 +5,7 @@ abbreviation=$2
 dev_email=$3
 dev_name=$4
 underscore_name=$(echo $1 | sed -r 's#-#_#g')
+underscore_abbr=$(echo $2 | sed -r 's#-#_#g')
 upper_name=$(echo $underscore_name | awk '{print toupper($0)}')
 upper_abbr=$(echo $abbreviation | awk '{print toupper($0)}')
 
@@ -17,6 +18,7 @@ do
 		sed -i "s#project_name#$underscore_name#g" $file
 		sed -i "s#PROJECT_NAME#$upper_name#g" $file
 		sed -i "s#project-abbreviation#$abbreviation#g" $file
+		sed -i "s#project_abbreviation#$underscore_abbr#g" $file
 		sed -i "s#PROJECT_ABBREVIATION#$upper_abbr#g" $file
 		sed -i "s#developer-name#$dev_name#g" $file
 		sed -i "s#developer-email#$dev_email#g" $file

@@ -44,6 +44,7 @@ namespace zpt {
 	extern long log_pid;
 	extern string* log_pname;
 	extern char* log_hname;
+	extern short log_format;
 
 	extern const char* log_lvl_names[];
 
@@ -55,7 +56,8 @@ namespace zpt {
 		warning = 4,
 		notice = 5,
 		info = 6,
-		debug = 7
+		debug = 7,
+		trace = 8
 	};
 
 	int log(string _text, zpt::LogLevel _level, string _host, int _line, string _file);

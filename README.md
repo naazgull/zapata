@@ -18,13 +18,13 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 
 # INSTALLATION
 
-## Ubuntu 16.04
+## Ubuntu 16.04/16.10
 
 ### 1) Dependencies
 
-a) Install libzmq, libczmq and sodium from Ubuntu repositories:
+a) Install python, ecl, libzmq, libczmq and sodium from Ubuntu repositories:
 
-	$ sudo apt-get install libzmq5 libczmq3 libsodium18
+	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium18 libpython3.5-dev ecl
 
 b) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 
@@ -42,12 +42,12 @@ b) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 a) Add GPG key and repository to your 'sources.list.d'
 
 	$ wget -O - https://repo.dfz.pt/apt/dfz_apt.key | sudo apt-key add -
-	$ echo 'deb https://repo.dfz.pt/apt/ubuntu xenial main' | sudo tee /etc/apt/sources.list.d/naazgull.list
+	$ echo "deb https://repo.dfz.pt/apt/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/naazgull.list
 
 b) Update your repository cache and install base packages:
 
 	$ sudo apt-get update
-	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-addons zapata-events zapata-zmq zapata-rest
+	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-events zapata-zmq zapata-rest
 
 ### 3) MongoDB support
 

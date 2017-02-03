@@ -38,16 +38,20 @@ SOFTWARE.
 #include <fstream>
 #include <zapata/text/manip.h>
 #include <cmath>
+#include <regex>
 
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
 
+#include <ossp/uuid++.hh>
+
 using namespace std;
 using namespace __gnu_cxx;
 
 namespace zpt {
+	extern uuid uuid_gen;
 
 	void tostr(std::string& s, int i);
 	void tostr(std::string& s, bool i);
@@ -88,8 +92,8 @@ namespace zpt {
 	void fromstr(std::string s, double* i);
 	void fromstr(std::string s, char* i);
 	void fromstr(std::string s, bool* i);
-	void fromstr(std::string s, time_t* i, const char* f);
-
+	void fromstr(std::string s, time_t* i, const char* f, bool _no_timezone = false);
+	
 	const char encodeCharacterTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	const char decodeCharacterTable[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 	const char encodeCharacterTableUrl[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -126,9 +130,11 @@ namespace zpt {
 	}
 	
 	namespace url {
-		void encode(wstring s, ostream& out);
-		void encode(string& out);
-		void decode(string& out);
+		auto encode(wstring s, ostream& out) -> void;
+		auto encode(string& out) -> void;
+		auto decode(string& out) -> void;
+		auto r_encode(std::string _out) -> std::string;
+		auto r_decode(std::string _out) -> std::string;
 	}
 
 	namespace ascii {
@@ -201,10 +207,22 @@ namespace zpt {
 		}		
 	}
 
-	void generate_key(string& _out, size_t _size);
-	std::string generate_key(size_t _size);
-	void generate_key(string& _out);
-	std::string generate_key();
-	void generate_hash(string& _out);
+	namespace generate {
+		auto key(std::string& _out, size_t _size = 24) -> void;
+		auto r_key(size_t _size) -> std::string;
+		auto r_key() -> std::string;
+		auto hash(std::string& _out) -> void;
+		auto r_hash() -> std::string;
+		auto uuid(std::string& _out) -> void;
+		auto r_uuid() -> std::string;
+	}
+
+	namespace test {
+		auto uuid(std::string _uuid) -> bool;
+		auto utf8(std::string _uri) -> bool;
+		auto ascii(std::string _ascii) -> bool;
+		auto token(std::string _token) -> bool;
+		auto uri(std::string _uri) -> bool;
+	}
 
 }

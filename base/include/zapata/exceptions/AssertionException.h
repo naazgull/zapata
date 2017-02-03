@@ -53,4 +53,5 @@ namespace zpt {
 			virtual int status();
 	};
 
+	typedef AssertionException assertion;
 }

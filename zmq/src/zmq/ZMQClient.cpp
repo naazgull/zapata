@@ -28,10 +28,8 @@ SOFTWARE.
 
 zactor_t* zpt::ZMQ::__auth = nullptr;
 
-zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : __options( _options ), __connection(_connection.data()), __self(this), __emitter(_emitter), __self_cert(nullptr), __peer_cert(nullptr) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__id.assign(_uuid.string());
+zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options) : __options( _options ), __connection(_connection.data()), __self_cert(nullptr), __peer_cert(nullptr), __poll(nullptr) {
+	this->__id.assign(zpt::generate::r_uuid());
 }
 
 zpt::ZMQ::~ZMQ() {
@@ -55,19 +53,9 @@ std::string& zpt::ZMQ::connection() {
 	return this->__connection;
 }
 
-zpt::ZMQPtr zpt::ZMQ::self() {
-	return this->__self;
-}
-
-zpt::ev::emitter zpt::ZMQ::emitter() {
-	return this->__emitter;
-}
-
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
 	if (zpt::ZMQ::__auth == nullptr) {
 		zpt::ZMQ::__auth = zactor_new(zauth, nullptr);
-		zstr_sendx(zpt::ZMQ::__auth, "VERBOSE", nullptr);
-		zsock_wait(zpt::ZMQ::__auth);
 		if (_client_cert_dir.length() != 0) {
 			zstr_sendx(zpt::ZMQ::__auth, "CURVE", _client_cert_dir.data(), nullptr);
 			zsock_wait(zpt::ZMQ::__auth);
@@ -104,10 +92,7 @@ void zpt::ZMQ::certificate(std::string _cert_file, int _which){
 zpt::json zpt::ZMQ::recv() {
 	std::vector< std::string > _parts;
 	
-	std::unique_lock< std::mutex > _synchronize(this->__mtx);
-	_synchronize.unlock();
-
-	_synchronize.lock();
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	zframe_t* _frame1;
 	zframe_t* _frame2;
 	if (zsock_recv(this->in(), "ff", &_frame1, &_frame2) == 0) {
@@ -123,27 +108,10 @@ zpt::json zpt::ZMQ::recv() {
 		delete _bytes;
 		zframe_destroy(&_frame2);
 
-		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-		int _status = (_performative == zpt::ev::Reply ? ((int) _envelope["headers"]["X-Status"]) : 0);
-		
-		zlog(std::string("\033[1;37;46m in  \033[0m | \033[33;40m") + zpt::r_replace(_directive, " ",
-				std::string("\033[0m \033[") + (
-					_status != 0 ?
-					std::string(
-						_status <= 299 ? "32" :
-						(_status <= 399 ? "36" : "31")
-					) :
-					std::string("37")
-				) + std::string("m")
-			) + std::string("\033[0m"),
-			zpt::info
-		);
-
-		_synchronize.unlock();
+		zlog(this->connection() + std::string(" | receiving message <- ") + _directive, zpt::info);
 		return _envelope;
 	}
 	else {
-		_synchronize.unlock();
 		return { "status", 503 };
 	}
 }
@@ -153,7 +121,7 @@ zpt::json zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resou
 		{
 			"channel", _resource,
 			"performative", _performative,
-			"resource", _resource,
+			"resource", _resource, 
 			"payload", _payload
 		}
 	);
@@ -164,6 +132,12 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
 
+	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
+	_envelope <<
+	"channel" << _uri["path"] <<
+	"resource" << _uri["path"] <<
+	"params" << _uri["query"];
+	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
 		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
@@ -174,7 +148,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
-		_envelope << "payload" << zpt::mkobj();
+		_envelope << "payload" << zpt::json::object();
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
@@ -183,23 +157,13 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	std::string _buffer(_envelope);
 	zframe_t* _frame2 = zframe_new(_buffer.data(), _buffer.size());
 
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	bool _message_sent = (zsock_send(this->out(), "ff", _frame1, _frame2) == 0);
 	zframe_destroy(&_frame1);
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	zlog(std::string("\033[1;37;45m out \033[0m | \033[33;40m") + zpt::r_replace(_directive, " ",
-			std::string("\033[0m \033[") + (
-				_status != 0 ?
-				std::string(
-					_status <= 299 ? "32" :
-					(_status <= 399 ? "36" : "31")
-				) :
-				std::string("37")
-			) + std::string("m")
-		) + std::string("\033[0m"),
-		zpt::info
-	);
+	zlog(this->connection() + std::string(" | sending message -> ") + _directive, zpt::info);
 
 	return zpt::undefined;
 }
@@ -210,11 +174,11 @@ void zpt::ZMQ::relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _t
 void zpt::ZMQ::relay_for(zpt::socket _socket) {
 }
 
-void zpt::ZMQ::unbind() {
-	this->__self.reset();
+auto zpt::ZMQ::unlisten() -> void {
+	this->__poll.reset();
 }
 
-zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
+zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -235,6 +199,10 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options, zpt::ev::emitte
 zpt::ZMQReq::~ZMQReq() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
+}
+
+auto zpt::ZMQReq::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQReq::socket() {
@@ -265,7 +233,15 @@ zpt::json zpt::ZMQReq::send(zpt::json _envelope) {
 void zpt::ZMQReq::listen(zpt::poll _poll) {
 }
 
-zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+auto zpt::ZMQReq::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REP);
 	assertz(zsock_attach(this->__socket, this->connection().data(), true) == 0, std::string("unable to attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -277,7 +253,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitte
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
 		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::alert);
-		this->auth(_options["curve"]["certificates"]["client_dir"]->str());		
+		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 	}
 	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
 }
@@ -285,6 +261,10 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options, zpt::ev::emitte
 zpt::ZMQRep::~ZMQRep() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
+}
+
+auto zpt::ZMQRep::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQRep::socket() {
@@ -308,10 +288,19 @@ bool zpt::ZMQRep::once() {
 }
 
 void zpt::ZMQRep::listen(zpt::poll _poll) {
-	_poll->poll(this->self());
+	this->__poll = _poll;
+	this->__poll->poll(this->__self);
 }
 
-zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+auto zpt::ZMQRep::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket = zactor_new(zproxy, nullptr);
@@ -325,6 +314,10 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options, zpt::
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
 	zlog(std::string("dettaching XPUB/XSUB from ") + this->connection(), zpt::notice);
 	zactor_destroy(&this->__socket);
+}
+
+auto zpt::ZMQXPubXSub::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQXPubXSub::socket() {
@@ -350,7 +343,15 @@ bool zpt::ZMQXPubXSub::once() {
 void zpt::ZMQXPubXSub::listen(zpt::poll _poll) {
 }
 
-zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+auto zpt::ZMQXPubXSub::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket_sub = zsock_new(ZMQ_SUB);
@@ -381,6 +382,10 @@ zpt::ZMQPubSub::~ZMQPubSub() {
 	zsock_destroy(&this->__socket_sub);
 }
 
+auto zpt::ZMQPubSub::self() const -> zpt::socket {
+	return this->__self;
+}
+
 zsock_t* zpt::ZMQPubSub::socket() {
 	return this->__socket_sub;
 }
@@ -402,7 +407,16 @@ bool zpt::ZMQPubSub::once() {
 }
 
 void zpt::ZMQPubSub::listen(zpt::poll _poll) {
-	_poll->poll(this->self());
+	this->__poll = _poll;
+	this->__poll->poll(this->__self);
+}
+
+auto zpt::ZMQPubSub::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
 }
 
 void zpt::ZMQPubSub::subscribe(std::string _prefix) {
@@ -412,7 +426,7 @@ void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 	}
 }
 
-zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUB);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -431,6 +445,10 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options, zpt::ev::emitte
 zpt::ZMQPub::~ZMQPub() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
+}
+
+auto zpt::ZMQPub::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQPub::socket() {
@@ -460,7 +478,15 @@ zpt::json zpt::ZMQPub::recv() {
 void zpt::ZMQPub::listen(zpt::poll _poll) {
 }
 
-zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+auto zpt::ZMQPub::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options) {
 	this->__socket = zsock_new(ZMQ_SUB);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -488,6 +514,10 @@ zpt::ZMQSub::~ZMQSub() {
 	zsock_destroy(& this->__socket);
 }
 
+auto zpt::ZMQSub::self() const -> zpt::socket {
+	return this->__self;
+}
+
 zsock_t* zpt::ZMQSub::socket() {
 	return this->__socket;
 }
@@ -513,7 +543,16 @@ bool zpt::ZMQSub::once() {
 }
 
 void zpt::ZMQSub::listen(zpt::poll _poll) {
-	_poll->poll(this->self());
+	this->__poll = _poll;
+	this->__poll->poll(this->__self);
+}
+
+auto zpt::ZMQSub::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
 }
 
 void zpt::ZMQSub::subscribe(std::string _prefix) {
@@ -523,7 +562,7 @@ void zpt::ZMQSub::subscribe(std::string _prefix) {
 	}
 }
 
-zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUSH);
 	assertz(zsock_attach(this->__socket, _connection.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -543,6 +582,10 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options, zpt::ev::emit
 zpt::ZMQPush::~ZMQPush() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
+}
+
+auto zpt::ZMQPush::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQPush::socket() {
@@ -572,7 +615,15 @@ bool zpt::ZMQPush::once() {
 void zpt::ZMQPush::listen(zpt::poll _poll) {
 }
 
-zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ( _connection, _options, _emitter ) {
+auto zpt::ZMQPush::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PULL);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -591,6 +642,10 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options, zpt::ev::emit
 zpt::ZMQPull::~ZMQPull() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
+}
+
+auto zpt::ZMQPull::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQPull::socket() {
@@ -618,10 +673,19 @@ zpt::json zpt::ZMQPull::send(zpt::json _envelope) {
 }
 
 void zpt::ZMQPull::listen(zpt::poll _poll) {
-	_poll->poll(this->self());
+	this->__poll = _poll;
+	this->__poll->poll(this->__self);
 }
 
-zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter) {
+auto zpt::ZMQPull::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	std::string _connection1(_connection.substr(0, _connection.find(",")));
 	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket = zactor_new(zproxy, nullptr);
@@ -644,6 +708,10 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
 	zlog(std::string("dettaching ROUTER/DEALER from ") + this->connection(), zpt::notice);
 	zactor_destroy(&this->__socket);
+}
+
+auto zpt::ZMQRouterDealer::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQRouterDealer::socket() {
@@ -669,7 +737,15 @@ bool zpt::ZMQRouterDealer::once() {
 void zpt::ZMQRouterDealer::listen(zpt::poll _poll) {
 }
 
-zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt::ev::emitter _emitter) : zpt::ZMQ(_connection, _options, _emitter), __type(-1) {
+auto zpt::ZMQRouterDealer::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
+}
+
+zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __type(-1), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
 	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
@@ -687,6 +763,7 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options, zpt
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
+	zlog(std::string("dettaching ASSYNC_REQ from ") + this->connection(), zpt::notice);
 	zsock_destroy(& this->__socket);
 	switch (this->__type) {
 		case 1 : {
@@ -698,6 +775,10 @@ zpt::ZMQAssyncReq::~ZMQAssyncReq() {
 			break;
 		}
 	}
+}
+
+auto zpt::ZMQAssyncReq::self() const -> zpt::socket {
+	return this->__self;
 }
 
 zsock_t* zpt::ZMQAssyncReq::socket() {
@@ -734,6 +815,7 @@ zpt::json zpt::ZMQAssyncReq::recv() {
 		case 1 : {
 			std::string _reply = this->__raw_transformer(_envelope);
 			(* this->__raw_socket) << _reply << flush;
+			this->__raw_socket->close();
 			break;
 		}
 		case 2 : {
@@ -756,7 +838,16 @@ void zpt::ZMQAssyncReq::relay_for(zpt::socket _socket) {
 }
 
 void zpt::ZMQAssyncReq::listen(zpt::poll _poll) {
-	_poll->poll(this->self());
+	this->__poll = _poll;
+	this->__poll->poll(this->__self);
+}
+
+auto zpt::ZMQAssyncReq::unbind() -> void {
+	if (this->__poll.get() != nullptr) {
+		this->__poll->unpoll(this->self());
+		this->__poll.reset();
+	}
+	this->__self.reset();
 }
 
 short zpt::str2type(std::string _type) {

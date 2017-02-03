@@ -25,6 +25,8 @@ SOFTWARE.
 #pragma once
 
 #include <memory>
+#include <ctime>
+#include <cstring>
 #include <zapata/exceptions/AssertionException.h>
 
 /**
@@ -35,19 +37,26 @@ SOFTWARE.
  */
 #define assertz(x,y,z,c) if (! (x)) { throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
 
+#define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string("field '") + std::string(y) + std::string("' is mandatory."), z, 0)
+#define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
+#define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string("field '") + std::string(y) + std::string("' must be an integer."), z, 0)
+#define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string("field '") + std::string(y) + std::string("' must be a double."), z, 0)
+#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate, std::string("field '") + std::string(y) + std::string("' must be a timestamp."), z, 0)
+#define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string("field '") + std::string(y) + std::string("' must be an object."), z, 0)
+#define assertz_array(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string("field '") + std::string(y) + std::string("' must be an array."), z, 0)
+
+#define assertz_uuid(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UUID."), z, 0)
+#define assertz_utf8(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UTF-8 string."), z, 0)
+#define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9 and '_' characters."), z, 0)
+#define assertz_token(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9."), z, 0)
+#define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an URI."), z, 0)
+
 typedef struct epoll_event epoll_event_t;
 
 namespace zpt {
 	enum JSONType {
 		JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda
 	};
-
-	class KnowledgeBase {
-	public:
-		virtual std::string name() = 0;
-	};
-	typedef std::shared_ptr<zpt::KnowledgeBase> KBPtr;
-	typedef KBPtr kb;
 
 	namespace ev {
 		enum performative {
@@ -61,10 +70,28 @@ namespace zpt {
 			Reply = 7
 		};
 
-		std::string to_str(zpt::ev::performative _performative);
-		zpt::ev::performative from_str(std::string _performative);
+		auto to_str(zpt::ev::performative _performative) -> std::string;
+		auto from_str(std::string _performative) -> zpt::ev::performative;
+	}
+
+	namespace mutation {
+		enum operation {
+			Insert = 0,
+			Remove = 1,
+			Update = 2,
+			Replace = 3,
+			Connect = 4,
+			Reconnect = 5
+		};
+
+		auto to_str(zpt::mutation::operation _operation) -> std::string;
+		auto from_str(std::string _operation) -> zpt::mutation::operation;
 	}
 
 	extern std::string* tz;
 	std::string get_tz();
+
+        typedef std::shared_ptr< std::tm > tm_ptr;
+
+	zpt::tm_ptr get_time(time_t _t);
 }

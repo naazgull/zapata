@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 		std::ifstream _in;
 		_in.open(argv[1]);
 		if (!_in.is_open()) {
-			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+			zlog("unable to open provided file", zpt::error);
 			exit(-10);
 		}
 		_in >> _ptr;

@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/json.h>
+#include <zapata/events.h>
 #include <hiredis/hiredis.h>
 #include <ossp/uuid++.hh>
 #include <mutex>
@@ -38,34 +39,41 @@ namespace zpt {
 
 	namespace redis {
 
-		class Client : public zpt::KnowledgeBase {
+		class Client : public zpt::Connector {
 		public:
 			Client(zpt::json _options, std::string _conf_path);
 			virtual ~Client();
 
-			virtual zpt::json options();
-			virtual std::string name();
+			virtual auto name() -> std::string;
+			virtual auto options() -> zpt::json;
+			virtual auto events(zpt::ev::emitter _emitter) -> void;
+			virtual auto events() -> zpt::ev::emitter;
+			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
+			virtual auto mutations() -> zpt::mutation::emitter;
 
-			virtual void connect(string _host, uint _port);
-			virtual void reconnect();
+			virtual auto connect() -> void;
+			virtual auto reconnect() -> void;
 
-			virtual std::string insert(std::string _collection, std::string _id_prefix, zpt::json _record);
-			virtual int save(std::string _collection, std::string _url, zpt::json _record);
-			virtual int set(std::string _collection, std::string _url, zpt::json _record);
-			virtual int unset(std::string _collection, std::string _url, zpt::json _document);
-			virtual int remove(std::string _collection, std::string _url);
-			virtual zpt::json get(std::string _collection, std::string _url);
-			virtual zpt::json query(std::string _collection, std::string _regex);
-			virtual zpt::json all(std::string _collection);
-
+			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
+			virtual auto save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto unset(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto remove(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
+			virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> zpt::json;
+			virtual auto query(std::string _collection, std::string _query, zpt::json _opts = zpt::undefined) -> zpt::json;
+			virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
+			virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
+			
 		private:
 			zpt::json __options;
-			zpt::json __redis_conf;
-			std::string __conf_path;
 			std::mutex __mtx;
 			redisContext* __conn;
 			std::string __host;
 			uint __port;
+			zpt::ev::emitter __events;
 		};
 
 		class ClientPtr : public std::shared_ptr<zpt::redis::Client> {

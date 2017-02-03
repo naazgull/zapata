@@ -36,6 +36,8 @@ SOFTWARE.
 #include <string>
 #include <vector>
 #include <zapata/rest/codes_rest.h>
+#include <zapata/python.h>
+#include <zapata/lisp.h>
 
 zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::json _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
 }
@@ -56,8 +58,8 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 }
 
 int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
-	zpt::json _ptr = zpt::conf::init(argc, argv);
-	zpt::json _to_spawn = zpt::mkobj();
+	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
+	zpt::json _to_spawn = zpt::json::object();
 	for (auto _spawn : _ptr->obj()) {
 		if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
 			continue;
@@ -96,16 +98,17 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
 	
-	zlog(std::string("starting RESTful server instance: ") + _name, zpt::alert);
+	zlog(std::string("starting RESTful service container: ") + _name, zpt::alert);
 	zpt::rest::server _server = zpt::rest::server::setup(_options, _name);
 	_server->start();
 
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter( new zpt::RESTEmitter(_options)), __poll(new zpt::ZMQPoll(_options, __emitter)), __options(_options), __self(this) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
+	((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
 
 	for (auto _definition : this->__options["zmq"]->arr()) {
 		short int _type = zpt::str2type(_definition["type"]->str());
@@ -117,9 +120,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			}
 			case ZMQ_PUB_SUB : {
 				this->__pub_sub.push_back(this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str()));
-				/*std::string _connect(_definition["bind"]->str());
-				zpt::replace(_connect, "*", ((std::string) this->__options["host"]));
-				this->__poll->bind(ZMQ_PUB_SUB, _connect)->in().setsockopt(ZMQ_SUBSCRIBE, "/", 1);*/
 				break;
 			}
 			default : {
@@ -130,6 +130,10 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 
 	if (this->__options["rest"]["modules"]->ok()) {
 		for (auto _i : this->__options["rest"]["modules"]->arr()) {
+			if (_i->str().find(".py") != std::string::npos || _i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
+				continue;
+			}
+			
 			std::string _lib_file("lib");
 			_lib_file.append((std::string) _i);
 			_lib_file.append(".so");
@@ -148,6 +152,9 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			}
 		}
 	}
+
+	zpt::bridge::boot< zpt::lisp::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
+	zpt::bridge::boot< zpt::python::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
 
 	if (!!this->__options["rest"]["uploads"]["upload_controller"]) {
 		/*
@@ -177,6 +184,7 @@ zpt::RESTServer::~RESTServer(){
 	zpt::ZMQPoll* _poll = this->__poll.get();
 	this->__poll.reset();
 	_poll->unbind();
+	this->__self.reset();
 }
 
 std::string zpt::RESTServer::name() {
@@ -230,7 +238,7 @@ void zpt::RESTServer::start() {
 									}
 								);
 								(*_cs) << _reply << flush;
-								_cs->close();							
+								_cs->close();				
 							}
 						}
 					}
@@ -250,7 +258,7 @@ void zpt::RESTServer::start() {
 
 bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	zpt::http::rep _reply;
-	_reply->status((zpt::HTTPStatus) 200);
+	_reply->status(zpt::HTTP200);
 	zpt::http::req _request;
 	try {
 		(*_cs) >> _request;
@@ -259,6 +267,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		assertz(false, "error parsing HTTP data", 500, 0);
 	}
 
+	zlog("processing HTTP request", zpt::debug);
 	bool _return = false;
 	bool _api_found = false;
 	std::string _prefix(_request->url());
@@ -315,8 +324,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	}
 				
 	if (!_api_found) {
-		zlog(string("-> | \033[33;40m") + zpt::method_names[_request->method()] + string("\033[0m ") + _request->url(), zpt::info);
-		zlog(string("<- | \033[31;40m404\033[0m"), zpt::info);
+		zlog(std::string("didn't produce anything for HTTP request"), zpt::info);
 		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_prefix));
 		(*_cs) << _reply << flush;
 		_return = true;
@@ -326,6 +334,9 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 
 bool zpt::RESTServer::route_mqtt(std::iostream& _cs) {
 	return true;
+}
+
+auto zpt::RESTServer::assync_on(std::string _regex, zpt::json _opts) -> void {
 }
 
 zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
@@ -338,7 +349,7 @@ zpt::RESTClientPtr::~RESTClientPtr() {
 }
 
 zpt::rest::client zpt::RESTClientPtr::launch(int argc, char* argv[]) {
-	zpt::json _options = zpt::conf::init(argc, argv)->obj()->begin()->second;
+	zpt::json _options = zpt::conf::rest::init(argc, argv)->obj()->begin()->second;
 	if (!_options["rest"]->ok() || !_options["zmq"]->ok()) {
 		std::cout << "unable to start client: unsufficient configurations" << endl << flush;
 		exit(-10);
@@ -387,7 +398,7 @@ void zpt::RESTClient::start() {
 }
 
 zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	_return <<
 		"channel" << _request->url() <<
 		"performative" << _request->method() <<
@@ -410,14 +421,14 @@ zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
 		}
 	}
 	else {
-		_payload = zpt::mkobj();
+		_payload = zpt::json::object();
 	}
 	for (auto _param : _request->params()) {
 		_payload << _param.first << _param.second;
 	}
 	_return << "payload" << _payload;
 
-	zpt::json _headers = zpt::mkobj();
+	zpt::json _headers = zpt::json::object();
 	for (auto _header : _request->headers()) {
 		_headers << _header.first << _header.second;
 	}
@@ -450,7 +461,7 @@ zpt::http::rep zpt::rest::zmq2http(zpt::json _out) {
 }
 
 zpt::json zpt::rest::http::deserialize(std::string _body) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	std::string _name;
 	std::string _collected;
 	for (const auto& _c : _body) {
@@ -477,27 +488,6 @@ zpt::json zpt::rest::http::deserialize(std::string _body) {
 	return _return;
 }
 
-std::string zpt::rest::authorization::serialize(zpt::json _info) {
-	assertz(
-		_info["owner"]->type() == zpt::JSString &&
-		_info["application"]->type() == zpt::JSString &&
-		_info["grant_type"]->type() == zpt::JSString,
-		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
-	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate_key() + std::to_string(time_t(nullptr)) + zpt::generate_key());
-}
-
-zpt::json zpt::rest::authorization::deserialize(std::string _token) {
-	zpt::json _return = zpt::mkobj();
-
-	zpt::json _splitted = zpt::split(_token, "@");
-	_return << "owner" << _splitted[0];
-
-	_splitted = zpt::split(_splitted[1], "/");
-	_return << "application" << _splitted[0] << "grant_type" << _splitted[1] << "key" << _splitted[2];
-
-	return _return;
-}
-
 std::string zpt::rest::scopes::serialize(zpt::json _info) {
 	assertz(
 		_info->type() == zpt::JSObject &&
@@ -514,7 +504,7 @@ std::string zpt::rest::scopes::serialize(zpt::json _info) {
 }
 
 zpt::json zpt::rest::scopes::deserialize(std::string _scope) {
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 
 	zpt::json _splited = zpt::split(_scope, ",");
 	for (auto _part : _splited->arr()) {
@@ -530,7 +520,15 @@ bool zpt::rest::scopes::has_permission(std::string _scope, std::string _ns, std:
 }
 
 bool zpt::rest::scopes::has_permission(zpt::json _scope, std::string _ns, std::string _needed) {
-	if (_scope->ok() && _scope[_ns]->ok()) {
+	if (_scope["all"]->ok()) {
+		std::string _difference;
+		std::string _granted(_scope["all"]->str());
+		std::sort(_needed.begin(), _needed.end());
+		std::sort(_granted.begin(), _granted.end());
+		std::set_difference(_needed.begin(), _needed.end(), _granted.begin(), _granted.end(), std::back_inserter(_difference));
+		return _difference.length() == 0;
+	}
+	else if (_scope->ok() && _scope[_ns]->ok()) {
 		std::string _difference;
 		std::string _granted(_scope[_ns]->str());
 		std::sort(_needed.begin(), _needed.end());
@@ -541,7 +539,28 @@ bool zpt::rest::scopes::has_permission(zpt::json _scope, std::string _ns, std::s
 	return false;
 }
 
-std::string zpt::rest::authorization::extract(zpt::json _envelope) {
+auto zpt::rest::authorization::serialize(zpt::json _info) -> std::string {
+	assertz(
+		_info["owner"]->type() == zpt::JSString &&
+		_info["application"]->type() == zpt::JSString &&
+		_info["grant_type"]->type() == zpt::JSString,
+		"token serialization failed: required fields are 'owner', 'application' and 'grant_type'", 412, 0);
+	return _info["owner"]->str() + std::string("@") + _info["application"]->str() + std::string("/") + _info["grant_type"]->str() + std::string("/") + (_info["key"]->type() == zpt::JSString ? _info["key"]->str() : zpt::generate::r_key(64));
+}
+
+auto zpt::rest::authorization::deserialize(std::string _token) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+
+	zpt::json _splitted = zpt::split(_token, "@");
+	_return << "owner" << _splitted[0];
+
+	_splitted = zpt::split(_splitted[1], "/");
+	_return << "application" << _splitted[0] << "grant_type" << _splitted[1] << "key" << _splitted[2];
+
+	return _return;
+}
+
+auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 	if (_envelope["headers"]["Authorization"]->ok()) {
 		return std::string(zpt::split(_envelope["headers"]["Authorization"], " ")[1]);
 	}
@@ -553,5 +572,129 @@ std::string zpt::rest::authorization::extract(zpt::json _envelope) {
 	if (_envelope["headers"]["Cookie"]->ok()) {
 		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
 	}
-	return zpt::undefined;
+	return "";
+}
+
+auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
+	return { "Authorization", (std::string("OAuth2.0 ") + _token) };
+}
+
+auto zpt::rest::authorization::validate(zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+	assertz(true, std::string("provided access token doesn't have granted access to ") + std::string(_envelope["resource"]), 401, 0);
+	return { "access_token", "xpto" };
+}
+
+auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
+	zpt::log_fd = &std::cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+
+	zpt::json _args = zpt::conf::getopt(argc, argv);
+	
+	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
+	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
+	zpt::ev::performative _method = (_args["m"]->ok() ? zpt::ev::from_str(std::string(_args["m"][0])) : zpt::ev::Get);
+	std::string _url(_args["u"][0]);
+	std::string _token(_args["a"][0]);
+	zpt::json _body = (_args["j"]->ok() ? zpt::json(std::string(_args["j"][0])) : zpt::undefined);
+	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
+
+	std::string _bind(_args["b"][0]);
+	if (_args["b"]->ok() && _bind[0] != '@' && _bind[0] != '>') {
+		_bind = std::string(">") + _bind;
+	}
+
+	short _type = 0;
+	if (_args["t"]->ok()) {
+		std::string _type_s(_args["t"][0]);
+		std::transform(_type_s.begin(), _type_s.end(), _type_s.begin(), ::toupper);
+		if (_type_s == "ROUTER/DEALER"){
+			_type = -3;
+		}
+		else if (_type_s == "REQ"){
+			_type = 3;
+		}
+		else if (_type_s == "REP"){
+			_type = 4;
+		}
+		else if (_type_s == "PUB/SUB"){
+			_type = -1;
+		}
+		else if (_type_s == "XPUB/XSUB"){
+			_type = -2;
+		}
+		else if (_type_s == "PUB"){
+			_type = 1;
+		}
+		else if (_type_s == "SUB"){
+			_type = 2;
+		}
+		else if (_type_s == "PUSH"){
+			_type = 8;
+		}
+		else if (_type_s == "PULL"){
+			_type = 7;
+		}
+	}
+
+	zpt::json _ptr;
+	if (_conf_file.length() == 0) {
+		_ptr = zpt::json::object();
+		std::string _name(argv[0], strlen(argv[0]));
+		_ptr << _name << zpt::json(
+			{
+				"argv", _args,
+				"rest", {
+					"method", _method
+				},
+				"zmq", {
+					"bind", _bind,
+					"type", _type					
+				}
+			}
+		);
+		if (_url.length() != 0) {
+			_ptr[_name]["rest"] << "target" << _url;
+		}
+		if (_token.length() != 0) {
+			_ptr[_name]["rest"] << "token" << _token;
+		}
+		if (_body->ok()) {
+			_ptr[_name]["rest"] << "body" << _body;
+		}
+	}
+	else {
+		std::ifstream _in;
+		_in.open(_conf_file.data());
+		if (!_in.is_open()) {
+			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+			exit(-10);
+		}
+		try {
+			_in >> _ptr;
+		}
+		catch(zpt::SyntaxErrorException& _e) {
+			zlog("unable to start client: syntax error when parsing configuration file", zpt::error);
+			exit(-10);
+		}
+		if (_ptr->type() == zpt::JSObject) {
+			for (auto _proc : _ptr->obj()) {
+				_proc.second << "argv" << _args;
+			}
+		}
+	}
+
+	zpt::log_lvl = _log_level;
+	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
+		zpt::log_lvl = (int) _ptr["log"]["level"];
+	}
+	if (zpt::log_lvl == -1) {
+		zpt::log_lvl = 8;
+	}
+	if (!!_ptr["log"]["file"]) {
+		zpt::log_fd = new std::ofstream();
+		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
+	}
+
+	return _ptr;
 }

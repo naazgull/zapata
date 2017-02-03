@@ -43,7 +43,7 @@ namespace zpt {
 	void ltrim(std::string &_in_out);
 	void rtrim(std::string &_in_out);
 	void trim(std::string &_in_out);
-	void replace(std::string& str, std::string find, std::string replace);
+	auto replace(std::string& str, std::string find, std::string replace) -> void;
 
 	void normalize_path(std::string& _in_out, bool _with_trailing);
 

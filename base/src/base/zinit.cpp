@@ -74,8 +74,8 @@ int main(int _argc, char* _argv[]) {
 	while(_input.find(" ") != string::npos);
 	std::string _dev_email(_input.data());
 
-	std::system("tar xvjf /usr/share/zapata/autoconf.template.tar.bz2");
-	std::system((std::string("/usr/share/zapata/zinit_setup '") + _project_name + std::string("' '") + _project_abbr + std::string("' '") + _dev_email + std::string("' '") + _dev_name + std::string("'")).data());
+	if (std::system("tar xvjf /usr/share/zapata/autoconf.template.tar.bz2"));
+	if (std::system((std::string("/usr/share/zapata/zinit_setup '") + _project_name + std::string("' '") + _project_abbr + std::string("' '") + _dev_email + std::string("' '") + _dev_name + std::string("'")).data()));
 	
 	return 0;
 }

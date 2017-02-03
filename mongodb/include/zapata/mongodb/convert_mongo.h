@@ -25,9 +25,11 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/json/JSONObj.h>
+#undef INVALID_SOCKET
 #include <mongo/client/dbclient.h>
 #include <mongo/bson/bsonelement.h>
 #include <mongo/bson/bsonobjbuilder.h>
+#define INVALID_SOCKET -1
 #include <stddef.h>
 #include <string>
 
@@ -54,7 +56,7 @@ namespace zpt {
 		void tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix = "");
 		void tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
 
-		void get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr, mongo::BSONObjBuilder& _order, size_t& _page_size, size_t& _page_start_index);
+		void get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr);
 
 		float valid_mongo_version();
 	}

@@ -32,7 +32,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zpt::url::encode(string& _out) {
+auto zpt::url::encode(std::string& _out) -> void {
 	const char DEC2HEX[16 + 1] = "0123456789ABCDEF";
 	const unsigned char * pSrc = (const unsigned char *) _out.c_str();
 	const int SRC_LEN = _out.length();
@@ -56,7 +56,7 @@ void zpt::url::encode(string& _out) {
 	_out.assign(sResult);
 }
 
-void zpt::url::decode(string& _out) {
+auto zpt::url::decode(std::string& _out) -> void {
 	zpt::replace(_out, "+", "%20");
 
 	const unsigned char * pSrc = (const unsigned char *) _out.c_str();
@@ -88,4 +88,16 @@ void zpt::url::decode(string& _out) {
 	std::string sResult(pStart, pEnd);
 	delete[] pStart;
 	_out.assign(sResult);
+}
+
+auto zpt::url::r_encode(std::string _out) -> std::string {
+	std::string _return(_out.data());
+	zpt::url::encode(_return);
+	return _return;
+}
+
+auto zpt::url::r_decode(std::string _out) -> std::string {
+	std::string _return(_out.data());
+	zpt::url::decode(_return);
+	return _return;
 }

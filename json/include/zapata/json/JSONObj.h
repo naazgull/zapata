@@ -23,16 +23,6 @@ SOFTWARE.
 */
 #pragma once
 
-#define JSON(z) ((zpt::JSONObj()) << z)
-#define JSON_ARRAY(z) ((zpt::JSONArr()) << z)
-#define JPTR(z) zpt::mkptr((zpt::JSONObj()) << z)
-#define JPTR_ARRAY(z) zpt::mkptr((zpt::JSONArr()) << z)
-#define JSON_NIL zpt::undefined;
-
-#define Json zpt::JSONPtr
-#define Jstr (zpt::JSONPtr)zpt::json
-#define Jpretty zpt::pretty
-
 #include <string>
 #include <memory>
 #include <vector>
@@ -373,15 +363,23 @@ namespace zpt {
 
 		template <typename T>
 		JSONPtr operator+(T _in);
+		template <typename T>
+		JSONPtr operator-(T _in);
+		template <typename T>
+		JSONPtr operator/(T _in);
 
 		/**
 		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zpt::JSONPtr object.
 		 */
-		friend istream& operator>>(istream& _in, JSONPtr& _out) {
+		friend std::istream& operator>>(std::istream& _in, zpt::JSONPtr& _out) {
 			_out.parse(_in);
 			return _in;
 		};
 
+		template<typename T>
+		static inline auto data(const T _delegate) -> zpt::JSONPtr {
+			return _delegate->get_json();
+		};
 	};
 
 	typedef JSONPtr JSONElement;
@@ -1313,39 +1311,62 @@ namespace zpt {
 			return _out;
 		};		
 	};
-
 	typedef std::shared_ptr< std::string > JSONStr;
 
-	typedef std::function< zpt::json (zpt::json, unsigned short) > symbol;
+	class JSONContext  {
+	public:		
+		JSONContext(void* _target);
+		virtual ~JSONContext();
+
+		virtual void* unpack();
+		
+	private:
+		void* __target;
+	};
+	
+	class context : public std::shared_ptr< zpt::JSONContext > {
+	public:		
+		context(void* _target);
+		virtual ~context();
+	};
+	
+	typedef std::function< zpt::json (zpt::json, unsigned short, zpt::context) > symbol;
 	typedef std::shared_ptr< std::map< std::string, std::tuple< std::string, unsigned short, zpt::symbol > > > symbol_table;
 	extern zpt::symbol_table __lambdas;
 
 	class lambda : public std::shared_ptr< zpt::JSONLambda > {
 	public:
+		lambda();
+		lambda(std::shared_ptr< zpt::JSONLambda > _target);
+		lambda(zpt::lambda& _target);
+		lambda(zpt::JSONLambda* _target);
 		lambda(std::string _signature);
 		lambda(std::string _name, unsigned short _n_args);
 		virtual ~lambda();
 
+		virtual zpt::json operator ()(zpt::json _args, zpt::context _ctx);
+		
 		static void add(std::string _signature, zpt::symbol _lambda);
 		static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
 		
-		static zpt::json call(std::string _name, zpt::json _args);
+		static zpt::json call(std::string _name, zpt::json _args, zpt::context _ctx);
 
 		static std::string stringify(std::string _name, unsigned short _n_args);
 		static std::tuple< std::string, unsigned short > parse(std::string _signature);
 
 	private:
 		static zpt::symbol find(std::string _signature);
-		static zpt::symbol find(std::string _name, unsigned short _n_args);
+		static zpt::symbol find(std::string _name, unsigned short _1n_args);
 	};
 
 	class JSONLambda {
 	public:
+		JSONLambda();
 		JSONLambda(std::string _signature);
 		JSONLambda(std::string _name, unsigned short _n_args);
 		virtual ~JSONLambda();
 
-		virtual zpt::json call(zpt::json _args);
+		virtual zpt::json call(zpt::json _args, zpt::context _ctx);
 
 		virtual std::string name();
 		virtual unsigned short n_args();
@@ -1454,13 +1475,13 @@ namespace zpt {
 
 		virtual JSONObj& obj();
 		virtual JSONArr& arr();
-		string str();
-		long long intr();
-		double dbl();
-		bool bln();
-		zpt::timestamp_t date();
-		zpt::lambda lbd();
-		double number();
+		virtual std::string str();
+		virtual long long intr();
+		virtual double dbl();
+		virtual bool bln();
+		virtual zpt::timestamp_t date();
+		virtual zpt::lambda& lbd();
+		virtual double number();
 
 		JSONElementT& operator<<(const char* _in);
 		JSONElementT& operator<<(string _in);
@@ -1563,6 +1584,10 @@ namespace zpt {
 
 		JSONPtr operator+(zpt::JSONPtr _rhs);
 		JSONPtr operator+(zpt::JSONElementT& _rhs);
+		JSONPtr operator-(zpt::JSONPtr _rhs);
+		JSONPtr operator-(zpt::JSONElementT& _rhs);
+		JSONPtr operator/(zpt::JSONPtr _rhs);
+		JSONPtr operator/(zpt::JSONElementT& _rhs);
 
 		friend ostream& operator<<(ostream& _out, JSONElementT _in) {
 			_in.stringify(_out);
@@ -1631,23 +1656,35 @@ namespace zpt {
 			return zpt::json(new zpt::JSONElementT(_empty));
 		};
 		template <typename T>
-		static zpt::json text(T _e);
+		static std::string pretty(T _e);
 		template <typename T>
-		static zpt::json unsign(T _e);
+		static zpt::json string(T _e);
+		template <typename T>
+		static zpt::json uinteger(T _e);
 		template <typename T>
 		static zpt::json integer(T _e);
 		template <typename T>
 		static zpt::json floating(T _e);
+		template <typename T>
+		static zpt::json ulong(T _e);
 		template <typename T>
 		static zpt::json boolean(T _e);
 		inline static zpt::json date(std::string _e) {
 			zpt::timestamp_t _v(zpt::timestamp(_e));
 			return zpt::json(new zpt::JSONElementT(_v));
 		};
+		inline static zpt::json date() {
+			zpt::timestamp_t _v((zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+			return zpt::json(new zpt::JSONElementT(_v));
+		};
 		template <typename T>
 		inline static zpt::json date(T _e);
 		template <typename T>
 		static zpt::json lambda(T _e);
+		inline static zpt::json lambda(std::string _name, unsigned short _n_args) {
+			zpt::lambda _v(_name, _n_args);
+			return zpt::json(new zpt::JSONElementT(_v));
+		};
 	};
 
 	template <typename T>	
@@ -1660,9 +1697,6 @@ namespace zpt {
 		T _e(_v);
 		return zpt::json(new zpt::JSONElementT(_e));
 	}
-
-	zpt::json mkobj();
-	zpt::json mkarr();
 
 	zpt::json get(std::string _path, zpt::json _source);
 	template <typename T>
@@ -1716,31 +1750,48 @@ zpt::JSONPtr zpt::JSONPtr::operator+(T _rhs) {
 	return *(this->get()) + _rhs;
 };
 template <typename T>
+zpt::JSONPtr zpt::JSONPtr::operator-(T _rhs) {
+	return *(this->get()) - _rhs;
+};
+template <typename T>
+zpt::JSONPtr zpt::JSONPtr::operator/(T _rhs) {
+	return *(this->get()) / _rhs;
+};
+template <typename T>
 zpt::json zpt::json::operator[](T _idx) {
 	return zpt::json((*(this->get()))[_idx]);
 };
 template <typename T>
-zpt::json zpt::json::text(T _e){
+std::string zpt::json::pretty(T _e){
+	return zpt::pretty(_e);
+}
+template <typename T>
+zpt::json zpt::json::string(T _e){
 	std::string _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::integer(T _e){
+zpt::json zpt::json::integer(T _e){
 	long long int _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::unsign(T _e){
+zpt::json zpt::json::uinteger(T _e){
 	unsigned int _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::floating(T _e){
+zpt::json zpt::json::floating(T _e){
 	double _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
 template <typename T>
- zpt::json zpt::json::boolean(T _e){
+zpt::json zpt::json::ulong(T _e){
+	size_t _v(_e);
+	return zpt::json(new zpt::JSONElementT(_v));
+}
+template <typename T>
+zpt::json zpt::json::boolean(T _e){
 	bool _v(_e);
 	return zpt::json(new zpt::JSONElementT(_v));
 }
@@ -1761,7 +1812,7 @@ zpt::json zpt::set(std::string _path, T _value, zpt::json _target) {
 		_return = _target;
 	}
 	else {
-		_return = zpt::mkobj();
+		_return = zpt::json::object();
 	}
 	_return->setPath(_path, zpt::mkptr(_value));
 	return _return;

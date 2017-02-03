@@ -26,7 +26,29 @@ SOFTWARE.
 
 #define ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
 
-zpt::EventEmitter::EventEmitter() : __self( this ) {
+namespace zpt {
+	namespace ev {
+		std::string* __default_authorization = nullptr;
+	}
+}
+
+zpt::BridgePtr::BridgePtr(zpt::Bridge* _target) : std::shared_ptr< zpt::Bridge >(_target) {
+}
+
+zpt::BridgePtr::BridgePtr() : std::shared_ptr< zpt::Bridge >(nullptr) {
+}
+
+zpt::Bridge::Bridge(zpt::json _options) : __options(_options) {
+}
+
+zpt::Bridge::~Bridge() {
+}
+		
+auto zpt::Bridge::options() -> zpt::json {
+	return this->__options;
+}
+
+zpt::EventEmitter::EventEmitter() : __self( this ), __mutant() {
 }
 
 zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self( this ) {
@@ -35,34 +57,38 @@ zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __s
 zpt::EventEmitter::~EventEmitter() {
 }
 
-zpt::json zpt::EventEmitter::options() {
+auto zpt::EventEmitter::options() -> zpt::json {
 	return this->__options;
 }
-
-zpt::EventEmitterPtr zpt::EventEmitter::self() {
+					 
+auto zpt::EventEmitter::self() const -> zpt::ev::emitter {
 	return this->__self;
 }
 
-std::string zpt::EventEmitter::version() {
-	return this->__options["rest"]["version"]->str();
+auto zpt::EventEmitter::mutations() -> zpt::mutation::emitter {
+	return this->__mutant;
 }
 
-void zpt::EventEmitter::add_kb(std::string _name, zpt::kb _kb) {
-	auto _found = this->__kb.find(_name);
-	if (_found == this->__kb.end()) {
-		this->__kb.insert(make_pair(_name, _kb));
+auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
+	this->__mutant = _emitter;
+}
+
+auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
+	_connector->events(this->__self);
+	this->__mutant->connector(_name, _connector);
+}
+
+auto zpt::EventEmitter::connector(std::map<std::string, zpt::connector> _connectors) -> void {
+	for (auto _connector : _connectors) {
+		this->connector(_connector.first, _connector.second);
 	}
 }
 
-zpt::kb zpt::EventEmitter::get_kb(std::string _name) {
-	auto _found = this->__kb.find(_name);
-	if (_found == this->__kb.end()) {
-		return zpt::kb(nullptr);
-	}
-	return _found->second;
+auto zpt::EventEmitter::connector(std::string _name) -> zpt::connector {
+	return this->__mutant->connector(_name);
 }
 
-zpt::json zpt::ev::split(std::string _url, zpt::json _orphans) {
+auto zpt::ev::split(std::string _url, zpt::json _orphans) -> zpt::json {
 	zpt::JSONObj _ret;
 	zpt::json _splited = zpt::split(_url, "/");
 
@@ -78,7 +104,7 @@ zpt::json zpt::ev::split(std::string _url, zpt::json _orphans) {
 	return mkptr(_ret);
 }
 
-std::string zpt::ev::join(zpt::json _info, size_t _orphans) {
+auto zpt::ev::join(zpt::json _info, size_t _orphans) -> std::string {
 	std::string _ret;
 	size_t _idx = 0;
 
@@ -93,7 +119,21 @@ std::string zpt::ev::join(zpt::json _info, size_t _orphans) {
 	return _ret;
 }
 
-zpt::json zpt::ev::init_request(std::string _cid) {
+auto zpt::ev::set_default_authorization(std::string _default_authorization) -> void {
+	if (zpt::ev::__default_authorization != nullptr) {
+		delete zpt::ev::__default_authorization;
+	}
+	zpt::ev::__default_authorization = new std::string(_default_authorization.data());
+}
+
+auto zpt::ev::get_default_authorization() -> std::string{
+	if (zpt::ev::__default_authorization != nullptr) {
+		return std::string(zpt::ev::__default_authorization->data());
+	}
+	return "";
+}
+
+auto zpt::ev::init_request(std::string _cid) -> zpt::json {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -117,14 +157,15 @@ zpt::json zpt::ev::init_request(std::string _cid) {
 		_return << "X-Cid" << _cid;
 	}
 	else {
-		uuid _uuid;
-		_uuid.make(UUID_MAKE_V1);
-		_return << "X-Cid" << _uuid.string();
+		_return << "X-Cid" << zpt::generate::r_uuid();
+	}
+	if (zpt::ev::__default_authorization != nullptr) {
+		_return << "Authorization" << std::string(zpt::ev::__default_authorization->data());
 	}
 	return _return;
 }
 
-zpt::json zpt::ev::init_reply(std::string _uuid) {
+auto zpt::ev::init_reply(std::string _uuid) -> zpt::json {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -154,31 +195,31 @@ zpt::EventListener::EventListener(std::string _regex) : __regex(_regex) {
 zpt::EventListener::~EventListener() {
 }
 
-std::string zpt::EventListener::regex() {
+auto zpt::EventListener::regex() -> std::string {
 	return this->__regex;
 }
 
-zpt::json zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	if (_envelope["headers"]["Origin"]->ok()) {
 		return {
 			"status", 413,
@@ -201,10 +242,10 @@ zpt::json zpt::EventListener::options(std::string _resource, zpt::json _envelope
 	};
 }
 
-zpt::json zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-zpt::json zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) {
+auto zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	return zpt::undefined;
 }

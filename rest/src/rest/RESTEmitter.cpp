@@ -25,7 +25,9 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 #include <map>
 
-zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options ), __poll(nullptr) {
+zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
+	this->mutations(zpt::mutation::emitter(new zpt::ZMQMutationEmitter(_options)));
+	
 	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
 	};
@@ -45,13 +47,13 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 		if (_envelope["headers"]["Origin"]->ok()) {
 			return {
 				"status", 413,
-				"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
+				"headers", zpt::ev::init_reply(((std::string) _envelope["headers"]["X-Cid"]))
 			};
 		}
-		string _origin = _envelope["headers"]["Origin"];
+		std::string _origin = _envelope["headers"]["Origin"];
 		return {
 			"status", 200,
-			"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
+			"headers", (zpt::ev::init_reply(((std::string) _envelope["headers"]["X-Cid"])) + zpt::json(
 					{
 						"Access-Control-Allow-Origin", _envelope["headers"]["Origin"],
 						"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
@@ -74,14 +76,28 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter( _options 
 zpt::RESTEmitter::~RESTEmitter() {
 }
 
-void zpt::RESTEmitter::poll(zpt::poll _poll) {
+auto zpt::RESTEmitter::version() -> std::string {
+	return this->options()["rest"]["version"]->str();
+}
+
+auto zpt::RESTEmitter::poll(zpt::poll _poll) -> void {
 	this->__poll = _poll;
 }
 
-std::string zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler) {
-	regex_t * _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
+auto zpt::RESTEmitter::poll() -> zpt::poll {
+	return this->__poll;
+}
+
+auto zpt::RESTEmitter::server(zpt::rest::server _server) -> void {
+	this->__server = _server;
+}
+
+auto zpt::RESTEmitter::server() -> zpt::rest::server {
+	return this->__server;
+}
+
+auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts) -> std::string {
+	std::regex _url_pattern(_regex);
 
 	std::vector< zpt::ev::Handler> _handlers;
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Get? this->__default_get : _handler));
@@ -93,39 +109,15 @@ std::string zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _rege
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Patch ? this->__default_patch : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Reply ? this->__default_assync_reply : _handler));
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
-	zlog(string("registered handlers for ") + _regex, zpt::info);
-	return _uuid.string();
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	zlog(std::string("registered handlers for ") + _regex, zpt::info);
+	this->server()->assync_on(_regex, _opts);
+	return _uuid;
 }
 
-std::string zpt::RESTEmitter::on(string _regex, zpt::ev::Handler _handler_set[7]) {
-	regex_t* _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
-
-	vector< zpt::ev::Handler> _handlers;
-	_handlers.push_back(_handler_set[zpt::ev::Get] == nullptr ?  this->__default_get : _handler_set[zpt::ev::Get]);
-	_handlers.push_back(_handler_set[zpt::ev::Put] == nullptr ?  this->__default_put : _handler_set[zpt::ev::Put]);
-	_handlers.push_back(_handler_set[zpt::ev::Post] == nullptr ?  this->__default_post : _handler_set[zpt::ev::Post]);
-	_handlers.push_back(_handler_set[zpt::ev::Delete] == nullptr ?  this->__default_delete : _handler_set[zpt::ev::Delete]);
-	_handlers.push_back(_handler_set[zpt::ev::Head] == nullptr ?  this->__default_head : _handler_set[zpt::ev::Head]);
-	_handlers.push_back(this->__default_options);
-	_handlers.push_back(_handler_set[zpt::ev::Patch] == nullptr ?  this->__default_patch : _handler_set[zpt::ev::Patch]);
-	_handlers.push_back(this->__default_assync_reply);
-
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
-	zlog(string("registered handlers for ") + _regex, zpt::info);
-	return _uuid.string();
-}
-
-std::string zpt::RESTEmitter::on(string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handler_set) {
-	regex_t* _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _regex.c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
+auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, zpt::ev::Handler > _handler_set, zpt::json _opts) -> std::string {
+	std::regex _url_pattern(_regex);
 
 	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
 	vector< zpt::ev::Handler> _handlers;
@@ -138,17 +130,15 @@ std::string zpt::RESTEmitter::on(string _regex,  std::map< zpt::ev::performative
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Patch)) == _handler_set.end() ?  this->__default_patch : _found->second);
 	_handlers.push_back(this->__default_assync_reply);
 
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
-	zlog(string("registered handlers for ") + _regex, zpt::info);
-	return _uuid.string();
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	zlog(std::string("registered handlers for ") + _regex, zpt::info);
+	this->server()->assync_on(_regex, _opts);
+	return _uuid;
 }
 
-std::string zpt::RESTEmitter::on(zpt::ev::listener _listener) {
-	regex_t* _url_pattern = new regex_t();
-	if (regcomp(_url_pattern, _listener->regex().c_str(), REG_EXTENDED | REG_NOSUB) != 0) {
-	}
+auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::string {
+	std::regex _url_pattern(_listener->regex());
 
 	zpt::ev::Handler _handler = [ _listener ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 		switch (_performative) {
@@ -180,40 +170,39 @@ std::string zpt::RESTEmitter::on(zpt::ev::listener _listener) {
 		return zpt::undefined;
 	};
 	
-	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
 	vector< zpt::ev::Handler > _handlers;
 	for (short _idx = zpt::ev::Get; _idx != zpt::ev::Reply + 1; _idx++) {
 		_handlers.push_back(_handler);
 	}
 	
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
-	this->__resources.insert(make_pair(_uuid.string(), make_pair(_url_pattern, _handlers)));
-	zlog(string("registered handlers for ") + _listener->regex(), zpt::info);
-	return _uuid.string();
+	std::string _uuid = zpt::generate::r_uuid();
+	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::info);
+	this->server()->assync_on(_listener->regex(), _opts);
+	return _uuid;
 }
 
-void zpt::RESTEmitter::off(zpt::ev::performative _event, std::string _callback_id) {
+auto zpt::RESTEmitter::off(zpt::ev::performative _event, std::string _callback_id) -> void {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
 		_found->second.second[_event] = nullptr;
 	}
 }
 
-void zpt::RESTEmitter::off(std::string _callback_id) {
+auto zpt::RESTEmitter::off(std::string _callback_id) -> void {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
 		this->__resources.erase(_callback_id);
 	}
 }
 
-zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope) {
+auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope) -> zpt::json {
 	zpt::json _return;
 	bool _endpoint_found = false;
 	bool _method_found = false;
 	for (auto _i : this->__resources) {
-		regex_t* _regexp = _i.second.first;
-		if (regexec(_regexp, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+		std::regex _regexp = _i.second.first;
+		if (std::regex_match(_url, _regexp)) {
 			_endpoint_found = true;
 			try {
 				if (_i.second.second[_method] != nullptr) {
@@ -258,7 +247,7 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 				break;
 			}
 			catch(std::exception& _e) {
-				zlog(string("unhandled exception: ") + _e.what(), zpt::emergency);
+				zlog(std::string("unhandled exception: ") + _e.what(), zpt::emergency);
 				throw;
 			}
 		}
@@ -287,8 +276,8 @@ zpt::json zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _
 	return _return;
 }
 
-zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope) {
-	zpt::json _in = zpt::mkobj() + _envelope;
+auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope) -> zpt::json {
+	zpt::json _in = zpt::json::object() + _envelope;
 	_in <<
 	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<
 	"channel" << _url <<
@@ -296,8 +285,8 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 	"resource" << _url;
 	
 	for (auto _i : this->__resources) {
-		regex_t* _regexp = _i.second.first;
-		if (regexec(_regexp, _url.c_str(), (size_t) (0), nullptr, 0) == 0) {
+		std::regex _regexp = _i.second.first;
+		if (std::regex_match(_url, _regexp)) {
 			try {
 				if (_i.second.second[_method] != nullptr) {
 					zpt::json _out = _i.second.second[_method](_method, _url, _in, this->self());
@@ -375,11 +364,9 @@ zpt::json zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _ur
 	return zpt::rest::not_found(_url);
 }
 
-zpt::json zpt::rest::not_found(std::string _resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::not_found(std::string _resource) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 404,
@@ -389,11 +376,9 @@ zpt::json zpt::rest::not_found(std::string _resource) {
 	};
 }
 
-zpt::json zpt::rest::accepted(std::string _resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::accepted(std::string _resource) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 202,
@@ -403,11 +388,9 @@ zpt::json zpt::rest::accepted(std::string _resource) {
 	};
 }
 
-zpt::json zpt::rest::no_content(std::string _resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::no_content(std::string _resource) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 204,
@@ -417,11 +400,9 @@ zpt::json zpt::rest::no_content(std::string _resource) {
 	};
 }
 
-zpt::json zpt::rest::temporary_redirect(std::string _resource, std::string _target_resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::temporary_redirect(std::string _resource, std::string _target_resource) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 307,
@@ -434,11 +415,9 @@ zpt::json zpt::rest::temporary_redirect(std::string _resource, std::string _targ
 	};
 }
 
-zpt::json zpt::rest::see_other(std::string _resource, std::string _target_resource) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::see_other(std::string _resource, std::string _target_resource) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 303,
@@ -451,11 +430,9 @@ zpt::json zpt::rest::see_other(std::string _resource, std::string _target_resour
 	};
 }
 
-zpt::json zpt::rest::options(std::string _resource, std::string _origin) {
-	uuid _uuid;
-	_uuid.make(UUID_MAKE_V1);
+auto zpt::rest::options(std::string _resource, std::string _origin) -> zpt::json {
 	return {
-		"channel", _uuid.string(),
+		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
 		"status", 200,
@@ -472,19 +449,19 @@ zpt::json zpt::rest::options(std::string _resource, std::string _origin) {
 	};
 }
 
-std::string zpt::rest::url_pattern(zpt::json _to_join) {
+auto zpt::rest::url_pattern(zpt::json _to_join) -> std::string {
 	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
 }
 		
-zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
+auto zpt::rest::cookies::deserialize(std::string _cookie_header) -> zpt::json {
 	zpt::json _splitted = zpt::split(_cookie_header, ";");
-	zpt::json _return = zpt::mkobj();
+	zpt::json _return = zpt::json::object();
 	bool _first = true;
 	for (auto _part : _splitted->arr()){
 		std::string _value = std::string(_part);
 		zpt::trim(_value);
 		if (_first) {
-			_return << "value" << zpt::json::text(_value); 
+			_return << "value" << zpt::json::string(_value); 
 			_first = false;
 		}
 		else {
@@ -497,7 +474,7 @@ zpt::json zpt::rest::cookies::deserialize(std::string _cookie_header) {
 	return _return;
 }
 
-std::string zpt::rest::cookies::serialize(zpt::json _info) {
+auto zpt::rest::cookies::serialize(zpt::json _info) -> std::string {
 	std::string _return((std::string) _info["value"]);
 	for (auto _field : _info->obj()) {
 		if (_field.first == "value") {

@@ -27,7 +27,6 @@ SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <getopt.h>
 #include <zapata/zmq.h>
 
 using namespace std;
@@ -37,41 +36,19 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	try {
-		char _c;
-		std::string _email;
-		std::string _name;
-		std::string _organization;
-		std::string _out_cert;
-		std::string _out_key;
+		zpt::json _args = zpt::conf::getopt(argc, argv);
+		
+		std::string _email(_args["email"]->ok() ? std::string(_args["email"][0]) : "");
+		std::string _name(_args["name"]->ok() ? std::string(_args["name"][0]) : "");
+		std::string _organization(_args["org"]->ok() ? std::string(_args["org"][0]) : "");
+		std::string _out_cert(_args["priv"]->ok() ? std::string(_args["priv"][0]) : "");
+		std::string _out_key(_args["pub"]->ok() ? std::string(_args["pub"][0]) : "");
 
-		static struct option _literal_options[] = { {"email", required_argument, 0, 0}, {"name", required_argument, 0, 0}, {"org", required_argument, 0, 0}, {"priv", required_argument, 0, 0}, {"pub", required_argument, 0, 0}, {0, 0, 0, 0} };
-		int _literal_option_index = 0;
-	
-		while ((_c = getopt_long(argc, argv, "", _literal_options, &_literal_option_index)) != -1) {
-			switch (_c) {
-				case 0 : {
-					if (_literal_options[_literal_option_index].flag != 0) {
-						break;
-					}
-					if (std::string(_literal_options[_literal_option_index].name) == "email") {
-						_email.assign(std::string(optarg));
-					}
-					if (std::string(_literal_options[_literal_option_index].name) == "name") {
-						_name.assign(std::string(optarg));
-					}
-					if (std::string(_literal_options[_literal_option_index].name) == "org") {
-						_organization.assign(std::string(optarg));
-					}
-					if (std::string(_literal_options[_literal_option_index].name) == "priv") {
-						_out_cert.assign(std::string(optarg));
-					}
-					if (std::string(_literal_options[_literal_option_index].name) == "pub") {
-						_out_key.assign(std::string(optarg));
-					}
-					break;
-				}
-			}
-		}
+		assertz(_email.length() != 0, "--email is required", 412, 0);
+		assertz(_name.length() != 0, "--name is required", 412, 0);
+		assertz(_organization.length() != 0, "--org is required", 412, 0);
+		assertz(_out_cert.length() != 0, "--priv is required", 412, 0);
+		assertz(_out_key.length() != 0, "--pub is required", 412, 0);
 
 		zcert_t *_cert = zcert_new();
 		zcert_set_meta(_cert, "email", _email.data());
