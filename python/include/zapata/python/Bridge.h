@@ -77,6 +77,7 @@ namespace zpt {
 			Object();
 
 			static auto bridge() -> zpt::python::bridge*;
+			static auto fromjson(zpt::json _in) -> zpt::python::object;
 		};
 		
 		class Type {
@@ -94,7 +95,6 @@ namespace zpt {
 			}
 			
 			virtual auto tojson() -> zpt::json;
-			static auto fromjson(zpt::json _in) -> zpt::python::object;
 
 		private:
 			PyObject* __target;

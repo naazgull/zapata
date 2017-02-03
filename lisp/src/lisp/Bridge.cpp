@@ -280,6 +280,10 @@ auto zpt::lisp::Object::bridge() -> zpt::lisp::bridge* {
 	return zpt::lisp::__instance;
 }
 
+auto zpt::lisp::Object::fromjson(zpt::json _in) -> zpt::lisp::object {
+	return zpt::lisp::object(zpt::lisp::to_lisp(_in, zpt::lisp::__instance));
+}
+
 zpt::lisp::Type::Type(cl_object _target) : __target(_target) {
 }
 
@@ -288,10 +292,6 @@ zpt::lisp::Type::Type() : __target(nullptr) {
 
 auto zpt::lisp::Type::tojson() -> zpt::json {
 	return zpt::lisp::from_lisp(this->__target);
-}
-
-auto zpt::lisp::Type::fromjson(zpt::json _in) -> zpt::lisp::object {
-	return zpt::lisp::object(zpt::lisp::to_lisp(_in, zpt::lisp::__instance));
 }
 
 /*-------------------------------------------------------------------------\
@@ -365,27 +365,13 @@ auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
 	return ecl_make_bool(true);
 }
 
-auto zpt::lisp::route(cl_object _cl_topic, cl_object _cl_lambda) -> cl_object {
+auto zpt::lisp::route(cl_object _cl_performative, cl_object _cl_topic, cl_object _cl_payload) -> cl_object {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
+	zpt::ev::performative _performative = zpt::ev::from_str(std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_performative))));
 	std::string _topic = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic)));
-	zpt::json _lambdas = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_lambda));
-	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
-
-	for (auto _lambda : _lambdas->obj()) {
-		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
-		std::string _name = std::string(_lambda.second);
-		_handlers.insert(
-			std::make_pair(_performative,
-				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-					zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
-					return _bridge->from< zpt::lisp::object >(_ret);
-				}
-			)
-		);
-	}
+	zpt::json _payload = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_payload));
 	
-	_bridge->events()->on(_topic, _handlers);
-	return ecl_make_bool(true);
+	zpt::json _result = _bridge->events()->route(_performative, _topic, _payload);
+	return **_bridge->to< zpt::lisp::object >(_result);
 }

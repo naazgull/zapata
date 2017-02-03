@@ -29,11 +29,8 @@ return { "status", (_r_body->ok() ? 200 : 204), "payload", _r_body };
 zpt::ev::Post,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 _envelope["payload"] >> "app_secret";
-_envelope["payload"] << "app_secret" << zpt::generate_key(24);
 _envelope["payload"] >> "cloud_secret";
-_envelope["payload"] << "cloud_secret" << zpt::generate_key(24);
 _envelope["payload"] >> "device_secret";
-_envelope["payload"] << "device_secret" << zpt::generate_key(24);
 assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_mandatory(_envelope["payload"], "name", 412);
