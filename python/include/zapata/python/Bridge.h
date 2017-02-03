@@ -65,7 +65,6 @@ namespace zpt {
 			static auto boot(zpt::json _options) -> void;
 				
 		private:
-			zpt::json __options;
 			zpt::bridge __self;
 			zpt::ev::emitter __events;
 			std::shared_ptr< std::map< std::string, std::function< zpt::python::object (int, zpt::python::object[]) > > > __lambdas;
@@ -110,6 +109,11 @@ namespace zpt {
 
 		namespace module {
 			auto init() -> PyObject*;
+			auto on(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto route(PyObject* _self, PyObject* _args) -> PyObject*;
+			
+			extern PyMethodDef methods[];
+			extern PyModuleDef spec;
 		}
 	}	
 }

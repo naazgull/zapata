@@ -13,6 +13,4 @@ export projects=(
        postgresql
        lisp
        rest
-       auth
-       users
 )

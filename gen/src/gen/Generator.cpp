@@ -269,6 +269,7 @@ auto zpt::Generator::build_data_layer() -> void {
 auto zpt::Generator::build_container() -> void {
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
+
 		std::string _container_cxx;
 		zpt::load_path("/usr/share/zapata/gen/Container.cpp", _container_cxx);
 
@@ -368,7 +369,6 @@ auto zpt::Generator::build_container() -> void {
 			_h_am_ofs << _h_make_files << endl << flush;
 			_h_am_ofs.close();
 		}
-		
 	}
 	
 	//zlog(_handler_cxx, zpt::trace);
@@ -793,74 +793,102 @@ auto zpt::GenResource::build_data_layer() -> std::string {
 }
 
 auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _child_includes) -> std::string {
-	std::string _h_file = std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".h");
-	std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".cpp");
+	if (!this->__options["resource-out-lang"]->ok() || std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("c++")) != std::end(this->__options["resource-out-lang"]->arr())) {
+		std::string _h_file = std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".h");
+		std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".cpp");
 
-	std::string _handler_h;
-	zpt::load_path("/usr/share/zapata/gen/Handlers.h", _handler_h);
-	std::string _handler_cxx;
-	zpt::load_path("/usr/share/zapata/gen/Handlers.cpp", _handler_cxx);
+		std::string _handler_h;
+		zpt::load_path("/usr/share/zapata/gen/Handlers.h", _handler_h);
+		std::string _handler_cxx;
+		zpt::load_path("/usr/share/zapata/gen/Handlers.cpp", _handler_cxx);
 
-	std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
-	if (_include.front() == '/') {
-		_include.erase(0, 1);
-	}
-	zpt::replace(_handler_h, "$[data.path.h]", _child_includes);
-	zpt::replace(_handler_cxx, "$[resource.path.self.h]", std::string("#include <") + _include + std::string(">"));
+		std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
+		if (_include.front() == '/') {
+			_include.erase(0, 1);
+		}
+		zpt::replace(_handler_h, "$[data.path.h]", _child_includes);
+		zpt::replace(_handler_cxx, "$[resource.path.self.h]", std::string("#include <") + _include + std::string(">"));
 	
-	zpt::replace(_handler_h, "$[namespace]", std::string(this->__spec["namespace"]));
-	zpt::replace(_handler_cxx, "$[namespace]", std::string(this->__spec["namespace"]));
+		zpt::replace(_handler_h, "$[namespace]", std::string(this->__spec["namespace"]));
+		zpt::replace(_handler_cxx, "$[namespace]", std::string(this->__spec["namespace"]));
 
-	zpt::json _namespaces = zpt::split(std::string(this->__spec["namespace"]), "::");
-	std::string _namespaces_begin;
-	std::string _namespaces_end;
-	for (auto _part : _namespaces->arr()) {
-		_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
+		zpt::json _namespaces = zpt::split(std::string(this->__spec["namespace"]), "::");
+		std::string _namespaces_begin;
+		std::string _namespaces_end;
+		for (auto _part : _namespaces->arr()) {
+			_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
+			_namespaces_end += "}\n";
+		}
+		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["type"]) + std::string("s {\n");
 		_namespaces_end += "}\n";
-	}
-	_namespaces_begin += std::string("namespace ") + std::string(this->__spec["type"]) + std::string("s {\n");
-	_namespaces_end += "}\n";
-	_namespaces_begin += std::string("namespace ") + std::string(this->__spec["name"]) + std::string(" {\n");
-	_namespaces_end += "}\n";
+		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["name"]) + std::string(" {\n");
+		_namespaces_end += "}\n";
 	
-	zpt::replace(_handler_h, "$[namespaces.begin]", _namespaces_begin);
-	zpt::replace(_handler_h, "$[namepsaces.end]", _namespaces_end);
-	zpt::replace(_handler_cxx, "$[namespaces.begin]", _namespaces_begin);
-	zpt::replace(_handler_cxx, "$[namepsaces.end]", _namespaces_end);
+		zpt::replace(_handler_h, "$[namespaces.begin]", _namespaces_begin);
+		zpt::replace(_handler_h, "$[namepsaces.end]", _namespaces_end);
+		zpt::replace(_handler_cxx, "$[namespaces.begin]", _namespaces_begin);
+		zpt::replace(_handler_cxx, "$[namepsaces.end]", _namespaces_end);
 
-	zpt::replace(_handler_h, "$[resource.type]", std::string(this->__spec["type"]));
-	zpt::replace(_handler_cxx, "$[resource.type]", std::string(this->__spec["type"]));
-	zpt::replace(_handler_h, "$[resource.name]", std::string(this->__spec["name"]));
-	zpt::replace(_handler_cxx, "$[resource.name]", std::string(this->__spec["name"]));
+		zpt::replace(_handler_h, "$[resource.type]", std::string(this->__spec["type"]));
+		zpt::replace(_handler_cxx, "$[resource.type]", std::string(this->__spec["type"]));
+		zpt::replace(_handler_h, "$[resource.name]", std::string(this->__spec["name"]));
+		zpt::replace(_handler_cxx, "$[resource.name]", std::string(this->__spec["name"]));
 	
-	zpt::replace(_handler_cxx, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
-	zpt::replace(_handler_cxx, "$[resource.handler.get]", this->build_get());
-	zpt::replace(_handler_cxx, "$[resource.handler.post]", this->build_post());
-	zpt::replace(_handler_cxx, "$[resource.handler.put]", this->build_put());
-	zpt::replace(_handler_cxx, "$[resource.handler.patch]", this->build_patch());
-	zpt::replace(_handler_cxx, "$[resource.handler.delete]", this->build_delete());
-	zpt::replace(_handler_cxx, "$[resource.handler.head]", this->build_head());
+		zpt::replace(_handler_cxx, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
+		zpt::replace(_handler_cxx, "$[resource.handler.get]", this->build_get());
+		zpt::replace(_handler_cxx, "$[resource.handler.post]", this->build_post());
+		zpt::replace(_handler_cxx, "$[resource.handler.put]", this->build_put());
+		zpt::replace(_handler_cxx, "$[resource.handler.patch]", this->build_patch());
+		zpt::replace(_handler_cxx, "$[resource.handler.delete]", this->build_delete());
+		zpt::replace(_handler_cxx, "$[resource.handler.head]", this->build_head());
 
-	zpt::json _resource_opts = zpt::json::object();
-	if (this->__spec["protocols"]->type() == zpt::JSArray) {
-		for (auto _proto : this->__spec["protocols"]->arr()) {
-			_resource_opts << _proto->str() << true;
+		zpt::json _resource_opts = zpt::json::object();
+		if (this->__spec["protocols"]->type() == zpt::JSArray) {
+			for (auto _proto : this->__spec["protocols"]->arr()) {
+				_resource_opts << _proto->str() << true;
+			}
+		}
+		zpt::replace(_handler_cxx, "$[resource.opts]", zpt::r_replace(std::string(_resource_opts), ":", ", "));
+	
+		struct stat _buffer;
+		bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
+		bool _h_exists = stat(_h_file.c_str(), &_buffer) == 0;
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_h_exists)) {
+			std::ofstream _h_ofs(_h_file.data());
+			_h_ofs << _handler_h << endl << flush;
+			_h_ofs.close();
+		}
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
+			std::ofstream _cxx_ofs(_cxx_file.data());
+			_cxx_ofs << _handler_cxx << endl << flush;
+			_cxx_ofs.close();
+		}
+	}		
+	else if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("lisp")) != std::end(this->__options["resource-out-lang"]->arr())) {
+		std::string _handler_lisp;
+		zpt::load_path("/usr/share/zapata/gen/Handler.lisp", _handler_lisp);
+		std::string _lisp_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".lisp");
+
+		struct stat _buffer;
+		bool _lisp_exists = stat(_lisp_file.c_str(), &_buffer) == 0;
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_lisp_exists)) {
+			std::ofstream _lisp_ofs(_lisp_file.data());
+			_lisp_ofs << _handler_lisp << endl << flush;
+			_lisp_ofs.close();
 		}
 	}
-	zpt::replace(_handler_cxx, "$[resource.opts]", zpt::r_replace(std::string(_resource_opts), ":", ", "));
-	
-	struct stat _buffer;
-	bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
-	bool _h_exists = stat(_h_file.c_str(), &_buffer) == 0;
-	if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_h_exists)) {
-		std::ofstream _h_ofs(_h_file.data());
-		_h_ofs << _handler_h << endl << flush;
-		_h_ofs.close();
-	}
-	if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
-		std::ofstream _cxx_ofs(_cxx_file.data());
-		_cxx_ofs << _handler_cxx << endl << flush;
-		_cxx_ofs.close();
+	else if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
+		std::string _handler_py;
+		zpt::load_path("/usr/share/zapata/gen/Handler.py", _handler_py);
+		std::string _py_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".lisp");
+
+		struct stat _buffer;
+		bool _py_exists = stat(_py_file.c_str(), &_buffer) == 0;
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_py_exists)) {
+			std::ofstream _py_ofs(_py_file.data());
+			_py_ofs << _handler_py << endl << flush;
+			_py_ofs.close();
+		}
 	}
 
 	return std::string(this->__spec["namespace"]) + std::string("::") + std::string(this->__spec["type"]) + std::string("s::") + std::string(this->__spec["name"]) + std::string("::restify(_emitter);\n");

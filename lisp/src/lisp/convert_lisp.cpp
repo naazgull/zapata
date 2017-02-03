@@ -155,13 +155,15 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 						_parent = zpt::json::boolean(_o);
 					}
 				}
-
 				else {
 					zpt::lisp::from_lisp(_exp->symbol.value, _parent);
 				}
 			}
 			else {
-				assertz(false, "symbol is pair", 500, 0);
+				if (_parent->ok()) {
+					_parent << zpt::undefined;
+				}
+				//assertz(false, "symbol is pair", 500, 0);
 			}
 			break;
 		}

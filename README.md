@@ -22,9 +22,9 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 
 ### 1) Dependencies
 
-a) Install libzmq, libczmq and sodium from Ubuntu repositories:
+a) Install python, ecl, libzmq, libczmq and sodium from Ubuntu repositories:
 
-	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium18
+	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium18 libpython3.5-dev ecl
 
 b) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 

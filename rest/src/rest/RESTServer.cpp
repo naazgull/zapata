@@ -36,6 +36,8 @@ SOFTWARE.
 #include <string>
 #include <vector>
 #include <zapata/rest/codes_rest.h>
+#include <zapata/python.h>
+#include <zapata/lisp.h>
 
 zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::json _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
 }
@@ -128,6 +130,10 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 
 	if (this->__options["rest"]["modules"]->ok()) {
 		for (auto _i : this->__options["rest"]["modules"]->arr()) {
+			if (_i->str().find(".py") != std::string::npos || _i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
+				continue;
+			}
+			
 			std::string _lib_file("lib");
 			_lib_file.append((std::string) _i);
 			_lib_file.append(".so");
@@ -146,6 +152,9 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			}
 		}
 	}
+
+	zpt::bridge::boot< zpt::lisp::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
+	zpt::bridge::boot< zpt::python::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
 
 	if (!!this->__options["rest"]["uploads"]["upload_controller"]) {
 		/*

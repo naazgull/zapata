@@ -68,9 +68,10 @@ auto zpt::python::Bridge::eval(std::string _call) -> zpt::python::object {
 }
 
 auto zpt::python::Bridge::initialize() -> void {
-	if (this->__options["rest"]["modules"]->ok()) {
-		for (auto _python_script : this->__options["rest"]["modules"]->arr()) {
+	if (this->options()["rest"]["modules"]->ok()) {
+		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
 			if (_python_script->str().find(".py") != std::string::npos) {
+				zlog(std::string("loading module '") + _python_script->str() + std::string("'"), zpt::notice);
 				PyObject* _name = PyUnicode_DecodeFSDefault(_python_script->str().data());				
 				PyObject* _module = PyImport_Import(_name);
 				Py_DECREF(_name);
@@ -115,12 +116,14 @@ auto zpt::python::Bridge::instance() -> zpt::bridge {
 auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	assertz(zpt::python::__instance == nullptr, "bridge instance isn't null, 'zpt::bridge::boot< zpt::python::bridge >' already invoked", 500, 0);
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
+	zpt::python::__instance = _bridge;
 
+	zlog(std::string("loading basic Python module (zpt.on, zpt.route)"), zpt::info);
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_Initialize();
 
 	_bridge->initialize();
-	zpt::python::__instance = _bridge;
+	zlog(std::string("booted PYTHON bridge"), zpt::alert);
 }
 
 zpt::python::Object::Object(PyObject* _target) : std::shared_ptr< zpt::python::Type >(new zpt::python::Type(_target)) {
@@ -157,5 +160,54 @@ auto zpt::python::Type::fromjson(zpt::json _in) -> zpt::python::object {
 | PYTHON MODULE                                                           |
 \-------------------------------------------------------------------------*/
 auto zpt::python::module::init() -> PyObject* {
-	return nullptr;
+	return PyModule_Create(&zpt::python::module::spec);
 }
+
+auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+
+	std::string _topic;
+	zpt::json _lambdas;
+	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
+
+	for (auto _lambda : _lambdas->obj()) {
+		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
+		std::string _name = std::string(_lambda.second);
+		_handlers.insert(
+			std::make_pair(_performative,
+				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+					zpt::python::object _ret = _bridge->eval< zpt::python::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::python::to_python_string(_envelope) + std::string(")"));
+					return _bridge->from< zpt::python::object >(_ret);
+				}
+			)
+		);
+	}
+	
+	_bridge->events()->on(_topic, _handlers);
+	Py_RETURN_TRUE;
+}
+
+auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
+	if(!PyArg_ParseTuple(_args, ":numargs"))
+	        return nullptr;
+	return PyLong_FromLong(0);
+}
+
+namespace zpt {
+	namespace python {
+		namespace module {
+			PyMethodDef methods[] = {
+				{"on", zpt::python::module::on, METH_VARARGS, "Registers RESTful resource handler."},
+				{"route", zpt::python::module::route, METH_VARARGS, "Route messages."},
+				{nullptr, nullptr, 0, nullptr}
+			};
+
+			PyModuleDef spec = {
+				PyModuleDef_HEAD_INIT, "zpt", nullptr, -1, zpt::python::module::methods,
+				nullptr, nullptr, nullptr, nullptr
+			};
+		}
+	}
+}
+

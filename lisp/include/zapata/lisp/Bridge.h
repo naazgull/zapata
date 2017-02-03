@@ -69,7 +69,6 @@ namespace zpt {
 			static auto boot(zpt::json _options) -> void;
 				
 		private:
-			zpt::json __options;
 			zpt::bridge __self;
 			zpt::ev::emitter __events;
 			std::shared_ptr< std::map< std::string, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > > > __lambdas;
