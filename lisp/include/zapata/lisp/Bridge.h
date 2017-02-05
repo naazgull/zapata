@@ -114,6 +114,9 @@ namespace zpt {
 		auto get_log_level() -> cl_object;
 		auto on(cl_object _cl_topic, cl_object _cl_lambda, cl_object _cl_opts) -> cl_object;
 		auto route(cl_object _cl_performative, cl_object _cl_topic, cl_object _cl_payload) -> cl_object;
+		auto split(cl_object _cl_string, cl_object _cl_separator) -> cl_object;
+		auto topic_var(cl_object _cl_topic, cl_object _cl_index) -> cl_object;
+		auto validate_authorization(cl_object _cl_envelope) -> cl_object;
 		
 		auto from_lisp(cl_object _in) -> zpt::json;
 		auto from_lisp(cl_object _in, zpt::json& _parent) -> void;

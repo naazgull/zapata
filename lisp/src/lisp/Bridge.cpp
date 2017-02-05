@@ -185,8 +185,18 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	zpt::lisp::bridge* _bridge = new zpt::lisp::bridge(_options);
 	zpt::lisp::__instance = _bridge;
 	_bridge->eval("(defparameter *defined-operators* (make-hash-table))");
+	_bridge->eval(
+		"(defpackage :zpt "
+		"(:use :common-lisp) "
+		"(:export "
+		":on "
+		":route "
+		":split "
+		":topic-var "
+		"))"
+	);
 
-	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt-on, zpt-route)"), zpt::info);
+	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var)"), zpt::info);
 	_bridge->defun(
 		{
 			"name", "cpp-lambda-call",
@@ -243,7 +253,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	);
 	_bridge->defun(
 		{
-			"name", "zpt-on",
+			"name", "zpt:on",
 			"type", "internal",
 			"access", "a",
 			"label", "Registers resource handler",
@@ -258,7 +268,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	);	
 	_bridge->defun(
 		{
-			"name", "zpt-route",
+			"name", "zpt:route",
 			"type", "internal",
 			"access", "a",
 			"label", "Routes RESTful resource requests",
@@ -270,6 +280,47 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		},
 		(cl_objectfn_fixed) zpt::lisp::route,
 		3
+	);
+	_bridge->defun(
+		{
+			"name", "zpt:split",
+			"type", "internal",
+			"access", "a",
+			"label", "Splits a string by a given separator",
+			"args", { zpt::array,
+				{ "type", "string", "label", "the string to split" },
+				{ "type", "string", "label", "the separator to split by" }
+			}
+		},
+		(cl_objectfn_fixed) zpt::lisp::split,
+		2
+	);
+	_bridge->defun(
+		{
+			"name", "zpt:topic-var",
+			"type", "internal",
+			"access", "a",
+			"label", "Routes RESTful resource requests",
+			"args", { zpt::array,
+				{ "type", "array", "label", "the splited topic" },
+				{ "type", "int", "label", "index for the topic part" }
+			}
+		},
+		(cl_objectfn_fixed) zpt::lisp::topic_var,
+		2
+	);
+	_bridge->defun(
+		{
+			"name", "zpt:validate-authorization",
+			"type", "internal",
+			"access", "a",
+			"label", "Validates authorization headers",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the message envelope" }
+			}
+		},
+		(cl_objectfn_fixed) zpt::lisp::validate_authorization,
+		1
 	);
 	zlog(std::string("LISP bridge booted"), zpt::alert);
 }
@@ -379,4 +430,31 @@ auto zpt::lisp::route(cl_object _cl_performative, cl_object _cl_topic, cl_object
 	
 	zpt::json _result = _bridge->events()->route(_performative, _topic, _payload);
 	return **_bridge->to< zpt::lisp::object >(_result);
+}
+
+auto zpt::lisp::split(cl_object _cl_string, cl_object _cl_separator) -> cl_object {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+	std::string _string = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_string)));
+	std::string _separator = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_separator)));
+	
+	return **_bridge->to< zpt::lisp::object >(zpt::split(_string, _separator));
+}
+
+auto zpt::lisp::topic_var(cl_object _cl_topic, cl_object _cl_index) -> cl_object {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+	zpt::json _topic = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic));
+	size_t _index = size_t(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_index)));
+	
+	return **_bridge->to< zpt::lisp::object >(_topic[_index]);
+}
+
+auto zpt::lisp::validate_authorization(cl_object _cl_envelope) -> cl_object {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+	zpt::json _envelope = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_envelope));
+
+	_bridge->events()->authorize(_envelope);
+	
+	return ecl_make_bool(true);
 }

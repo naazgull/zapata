@@ -99,7 +99,8 @@ namespace zpt {
 		virtual std::string name();
 		virtual zpt::json options();
 		virtual zpt::poll poll();
-		virtual zpt::ev::emitter emitter();
+		virtual zpt::ev::emitter events();
+		virtual zpt::mutation::emitter mutations();
 
 		virtual bool route_http(zpt::socketstream_ptr _cs);
 		virtual bool route_mqtt(std::iostream& _cs);
@@ -126,7 +127,8 @@ namespace zpt {
 
 		virtual zpt::json options();
 		virtual zpt::poll poll();
-		virtual zpt::ev::emitter emitter();
+		virtual zpt::ev::emitter events();
+		virtual zpt::mutation::emitter mutations();
 
 		virtual zpt::socket bind(short _type, std::string _connection);
 		virtual zpt::socket bind(std::string _object_path);

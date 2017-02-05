@@ -48,6 +48,7 @@ namespace zpt {
 
 		auto url_pattern_to_regexp(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
+		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
 		auto url_pattern_to_params(std::string _url) -> zpt::json;
 	}
 

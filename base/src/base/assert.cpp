@@ -78,28 +78,28 @@ auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
 }
 
 auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
-	if (_performative == "GET") {
+	if (_performative == "GET" || _performative == "get") {
 		return zpt::ev::Get;
 	}
-	if (_performative == "PUT") {
+	if (_performative == "PUT" || _performative == "put") {
 		return zpt::ev::Put;
 	}
-	if (_performative == "POST") {
+	if (_performative == "POST" || _performative == "post") {
 		return zpt::ev::Post;
 	}
-	if (_performative == "DELETE") {
+	if (_performative == "DELETE" || _performative == "delete") {
 		return zpt::ev::Delete;
 	}
-	if (_performative == "HEAD") {
+	if (_performative == "HEAD" || _performative == "head") {
 		return zpt::ev::Head;
 	}
-	if (_performative == "OPTIONS") {
+	if (_performative == "OPTIONS" || _performative == "options") {
 		return zpt::ev::Options;
 	}
-	if (_performative == "PATCH") {
+	if (_performative == "PATCH" || _performative == "patch") {
 		return zpt::ev::Patch;
 	}
-	if (_performative == "REPLY") {
+	if (_performative == "REPLY" || _performative == "reply") {
 		return zpt::ev::Reply;
 	}
 	return zpt::ev::Head;
@@ -130,22 +130,22 @@ auto zpt::mutation::to_str(zpt::mutation::operation _performative) -> std::strin
 }
 
 auto zpt::mutation::from_str(std::string _performative) -> zpt::mutation::operation {
-	if (_performative == "INSERT") {
+	if (_performative == "INSERT" || _performative == "insert") {
 		return zpt::mutation::Insert;
 	}
-	if (_performative == "REMOVE") {
+	if (_performative == "REMOVE" || _performative == "remove") {
 		return zpt::mutation::Remove;
 	}
-	if (_performative == "UPDATE") {
+	if (_performative == "UPDATE" || _performative == "update") {
 		return zpt::mutation::Update;
 	}
-	if (_performative == "REPLACE") {
+	if (_performative == "REPLACE" || _performative == "replace") {
 		return zpt::mutation::Replace;
 	}
-	if (_performative == "CONNECT") {
+	if (_performative == "CONNECT" || _performative == "connect") {
 		return zpt::mutation::Connect;
 	}
-	if (_performative == "RECONNECT") {
+	if (_performative == "RECONNECT" || _performative == "reconnect") {
 		return zpt::mutation::Reconnect;
 	}
 	return zpt::mutation::Insert;

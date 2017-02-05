@@ -6,7 +6,7 @@ $[resource.handler.patch]
 $[resource.handler.delete]
 $[resource.handler.head]
 
-(zpt-on "$[resource.topic.regex]"
+(zpt:on "$[resource.topic.regex]"
     (json
       $[resource.handler.get.name]
       $[resource.handler.post.name]

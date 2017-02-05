@@ -195,8 +195,12 @@ zpt::poll zpt::RESTServer::poll() {
 	return this->__poll;
 }
 
-zpt::ev::emitter zpt::RESTServer::emitter() {
+zpt::ev::emitter zpt::RESTServer::events() {
 	return this->__emitter;
+}
+
+zpt::mutation::emitter zpt::RESTServer::mutations() {
+	return this->__emitter->mutations();
 }
 
 zpt::json zpt::RESTServer::options() {
@@ -370,8 +374,12 @@ zpt::poll zpt::RESTClient::poll() {
 	return this->__poll;
 }
 
-zpt::ev::emitter zpt::RESTClient::emitter() {
+zpt::ev::emitter zpt::RESTClient::events() {
 	return this->__emitter;
+}
+
+zpt::mutation::emitter zpt::RESTClient::mutations() {
+	return this->__emitter->mutations();
 }
 
 zpt::json zpt::RESTClient::options() {
@@ -580,8 +588,7 @@ auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
 }
 
 auto zpt::rest::authorization::validate(zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-	assertz(true, std::string("provided access token doesn't have granted access to ") + std::string(_envelope["resource"]), 401, 0);
-	return { "access_token", "xpto" };
+	return _emitter->authorize(_envelope);
 }
 
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
