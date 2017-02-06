@@ -48,10 +48,10 @@ auto zpt::Bridge::options() -> zpt::json {
 	return this->__options;
 }
 
-zpt::EventEmitter::EventEmitter() : __self( this ), __mutant() {
+zpt::EventEmitter::EventEmitter() : __self( this ), __mutant(), __keeper(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self( this ) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self( this ), __keeper(new zpt::EventGatekeeper(_options)) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
@@ -71,6 +71,18 @@ auto zpt::EventEmitter::mutations() -> zpt::mutation::emitter {
 
 auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
 	this->__mutant = _emitter;
+}
+
+auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {
+	return this->__keeper;
+}
+
+auto zpt::EventEmitter::gatekeeper(zpt::ev::gatekeeper _gatekeeper) -> void {
+	this->__keeper = _gatekeeper;
+}
+
+auto zpt::EventEmitter::authorize(zpt::json _envelope) -> zpt::json {
+	return this->__keeper->authorize(_envelope);
 }
 
 auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
@@ -249,3 +261,30 @@ auto zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::
 auto zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
 	return zpt::undefined;
 }
+
+zpt::EventGatekeeper::EventGatekeeper(zpt::json _options) : __options(_options), __self(this) {
+}
+
+zpt::EventGatekeeper::~EventGatekeeper() {
+}
+		
+auto zpt::EventGatekeeper::options() -> zpt::json {
+	return this->__options;
+}
+
+auto zpt::EventGatekeeper::self() const -> zpt::ev::gatekeeper {
+	return this->__self;
+}
+
+auto zpt::EventGatekeeper::events() -> zpt::ev::emitter {
+	return this->__emitter;
+}
+
+auto zpt::EventGatekeeper::events(zpt::ev::emitter _emitter) -> void {
+	this->__emitter = _emitter;
+}
+
+auto zpt::EventGatekeeper::authorize(zpt::json _envelope) -> zpt::json {
+	return { "identity", "anyone", "access_token", "--blank--" };
+}
+

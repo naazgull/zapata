@@ -1,6 +1,7 @@
 {
 	"prefix-cxx" : [ "src" ],
 	"prefix-h" : [ "include" ],
+	"prefix-scripts" : [ "src" ],
 	"force-makefile" : [ true ],
 
 	"data-out-cxx" : [ "src" ],
@@ -9,6 +10,7 @@
 
 	"resource-out-cxx" : [ "src" ],
 	"resource-out-h" : [ "include/zapata" ],
-	"resource-out-lang" : [ "c++", "lisp" ],
+	"resource-out-scripts" : [ "src/zapata/examples" ],
+	"resource-out-lang" : [ "c++", "lisp", "python" ],
 	"force-resource" : [ true ]
 }

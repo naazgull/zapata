@@ -38,7 +38,9 @@ zpt::mongodb::Client::Client(zpt::json _options, std::string _conf_path) : __opt
 }
 
 zpt::mongodb::Client::~Client() {
-	this->conn().done();
+	if (this->__conn.get() != nullptr) {
+		this->conn().done();
+	}
 }
 
 auto zpt::mongodb::Client::name() -> std::string {
