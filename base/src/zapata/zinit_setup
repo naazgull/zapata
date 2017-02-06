@@ -1,30 +1,16 @@
 #!/bin/bash
 
 distro=$(lsb_release -cs)
+environment="master"
 name=$1
 abbreviation=$2
 dev_email=$3
 dev_name=$4
-path_prefix=$5
+path_prefix="$5/"
 underscore_name=$(echo $1 | sed -r 's#-#_#g')
 underscore_abbr=$(echo $2 | sed -r 's#-#_#g')
 upper_name=$(echo $underscore_name | awk '{print toupper($0)}')
 upper_abbr=$(echo $abbreviation | awk '{print toupper($0)}')
-
-special_files=(.gitignore .zpt_rc configure.ac)
-
-for special_file in ${special_files[@]}
-do
-    sed -i "s#project-name#$name#g" $special_file
-    sed -i "s#project_name#$underscore_name#g" $special_file
-    sed -i "s#PROJECT_NAME#$upper_name#g" $special_file
-    sed -i "s#project-abbreviation#$path_prefix/$abbreviation#g" $special_file
-    sed -i "s#project_abbreviation#$path_prefix/$underscore_abbr#g" $special_file
-    sed -i "s#PROJECT_ABBREVIATION#$path_prefix/$upper_abbr#g" $special_file
-    sed -i "s#developer-name#$dev_name#g" $special_file
-    sed -i "s#developer-email#$dev_email#g" $special_file
-    sed -i "s#distro-version#$distro#g" $special_file
-done
 
 files=$(find . -name "*")
 for file in ${files[@]}
@@ -43,6 +29,8 @@ do
 		sed -i "s#developer-name#$dev_name#g" $file
 		sed -i "s#developer-email#$dev_email#g" $file
 		sed -i "s#distro-version#$distro#g" $file
+		sed -i "s#environment#$environment#g" $file
+		sed -i "s#project-prefix#$path_prefix#g" $file
 	fi
 done
 
@@ -53,8 +41,7 @@ do
 	then
 		fullname=${file#*./}
 		prefix=${fullname%/*}
-		mkdir -p "$prefix/$path_prefix"
-		mv $file "$prefix/$path_prefix/$name"
+		mv $file "$prefix/$name"
 	fi
 done
 
@@ -102,8 +89,13 @@ do
 			mv $file "$prefix/$abbreviation"
 		else 
 		    mkdir -p "$prefix/$path_prefix"
-		    mv $file "$prefix/$path_prefix/$name.$suffix"
+		    mv $file "$prefix/$path_prefix/$abbreviation.$suffix"
 		    # mv $file "$prefix/$abbreviation.$suffix"
 		fi
 	fi
 done
+
+git init
+git add --all
+git commit -m "zapata project initialization"
+git config --global merge.ours.driver true

@@ -966,9 +966,9 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			}
 
 			std::string _f_name = std::string(this->__spec["name"]) + std::string("-") + std::string(this->__spec["type"]) + std::string("-") + _perf->str();
-			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:authorize envelope)\n   (setf t-split (zpt:split topic \"/\"))\n");
+			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:authorize envelope)\n   (let* ((t-split (zpt:split topic \"/\"))\n");
 			_function += zpt::gen::url_pattern_to_vars_lisp(this->__spec["topic"]->str());
-			_function += std::string("   ;; YOUR CODE HERE\n   (json \"status\" 204)\n)\n");
+			_function += std::string(")\n     ;; YOUR CODE HERE\n     (json \"status\" 204)))\n");
 
 			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string("]"), _function);
 			zpt::replace(_handler_lisp, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), std::string("\"") + _perf->str() + std::string("\" \"") + _f_name + std::string("\""));
@@ -1521,11 +1521,13 @@ auto zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
 		if (_part->str().find("{") != string::npos) {
-			_return += std::string("   (setf tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-") + std::string(" (zpt:topic-var t-split ") + std::to_string(_i) + std::string("))\n");
+			_return += std::string("	  (tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-") + std::string(" (zpt:topic-var t-split ") + std::to_string(_i) + std::string("))\n");
 		}
 		_i++;
 	}
-
+	if (_return.length() != 0) {
+		_return.erase(_return.length() - 1, 1);
+	}
 	return _return;
 }
 

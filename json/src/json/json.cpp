@@ -104,6 +104,9 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 			}
 		}
 	}
+	if (_last.length() != 0) {
+		_return << std::string(_last.data()) << true;
+	}
 	return _return;
 }
 

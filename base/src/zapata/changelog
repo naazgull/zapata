@@ -1,0 +1,5 @@
+project-name (0.0.1-1distro-version+environment1) distro-version; urgency=medium
+
+  * Initial release.
+
+ -- developer-name <developer-email>  Mon, 18 Oct 2016 14:06:51 +0000

@@ -1,43 +1,38 @@
 
 (defun applications-document-get (performative topic envelope)
    (zpt:authorize envelope)
-   (setf t-split (zpt:split topic "/"))
-   (setf tv-id (zpt:topic-var t-split 3))
-   ;; YOUR CODE HERE
-   (json "status" 204)
-)
+   (let* ((t-split (zpt:split topic "/"))
+	  (tv-id (zpt:topic-var t-split 3)))
+     ;; YOUR CODE HERE
+     (json "status" 204)))
 
 (defun applications-document-put (performative topic envelope)
    (zpt:authorize envelope)
-   (setf t-split (zpt:split topic "/"))
-   (setf tv-id (zpt:topic-var t-split 3))
-   ;; YOUR CODE HERE
-   (json "status" 204)
-)
+   (let* ((t-split (zpt:split topic "/"))
+	  (tv-id (zpt:topic-var t-split 3)))
+     ;; YOUR CODE HERE
+     (json "status" 204)))
 
 (defun applications-document-patch (performative topic envelope)
    (zpt:authorize envelope)
-   (setf t-split (zpt:split topic "/"))
-   (setf tv-id (zpt:topic-var t-split 3))
-   ;; YOUR CODE HERE
-   (json "status" 204)
-)
+   (let* ((t-split (zpt:split topic "/"))
+	  (tv-id (zpt:topic-var t-split 3)))
+     ;; YOUR CODE HERE
+     (json "status" 204)))
 
 (defun applications-document-delete (performative topic envelope)
    (zpt:authorize envelope)
-   (setf t-split (zpt:split topic "/"))
-   (setf tv-id (zpt:topic-var t-split 3))
-   ;; YOUR CODE HERE
-   (json "status" 204)
-)
+   (let* ((t-split (zpt:split topic "/"))
+	  (tv-id (zpt:topic-var t-split 3)))
+     ;; YOUR CODE HERE
+     (json "status" 204)))
 
 (defun applications-document-head (performative topic envelope)
    (zpt:authorize envelope)
-   (setf t-split (zpt:split topic "/"))
-   (setf tv-id (zpt:topic-var t-split 3))
-   ;; YOUR CODE HERE
-   (json "status" 204)
-)
+   (let* ((t-split (zpt:split topic "/"))
+	  (tv-id (zpt:topic-var t-split 3)))
+     ;; YOUR CODE HERE
+     (json "status" 204)))
 
 
 (zpt:on "^/v2/datums/applications/([^/]+)$"
