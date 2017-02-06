@@ -966,7 +966,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			}
 
 			std::string _f_name = std::string(this->__spec["name"]) + std::string("-") + std::string(this->__spec["type"]) + std::string("-") + _perf->str();
-			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:validate-authorization envelope)\n   (setf t-split (zpt:split topic \"/\"))\n");
+			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:authorize envelope)\n   (setf t-split (zpt:split topic \"/\"))\n");
 			_function += zpt::gen::url_pattern_to_vars_lisp(this->__spec["topic"]->str());
 			_function += std::string("   ;; YOUR CODE HERE\n   (json \"status\" 204)\n)\n");
 

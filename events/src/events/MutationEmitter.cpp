@@ -121,7 +121,12 @@ auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connecto
 	auto _found = this->__connector.find(_name);
 	if (_found == this->__connector.end()) {
 		_connector->mutations(this->__self);
-		_connector->connect();
+		try {
+			_connector->connect();
+		}
+		catch(std::exception& _e) {
+			zlog(_e.what(), zpt::error);
+		}
 		this->__connector.insert(make_pair(_name, _connector));
 	}
 }

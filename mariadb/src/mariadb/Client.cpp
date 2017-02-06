@@ -38,6 +38,10 @@ zpt::mariadb::Client::Client(zpt::json _options, std::string _conf_path) : __opt
 }
 
 zpt::mariadb::Client::~Client() {
+	if (this->__conn.get() != nullptr) {
+		this->__conn->close();
+		this->__conn.release();
+	}
 }
 
 auto zpt::mariadb::Client::name() -> std::string {

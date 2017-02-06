@@ -88,7 +88,7 @@ auto zpt::lisp::Bridge::initialize() -> void {
 			}
 		}
 	}
-	zlog(std::string("LISP bridge initialized"), zpt::alert);
+	zlog(std::string("LISP bridge initialized"), zpt::info);
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -193,10 +193,11 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":route "
 		":split "
 		":topic-var "
+		":authorize "
 		"))"
 	);
 
-	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var)"), zpt::info);
+	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::info);
 	_bridge->defun(
 		{
 			"name", "cpp-lambda-call",
@@ -311,7 +312,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	);
 	_bridge->defun(
 		{
-			"name", "zpt:validate-authorization",
+			"name", "zpt:authorize",
 			"type", "internal",
 			"access", "a",
 			"label", "Validates authorization headers",

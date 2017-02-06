@@ -1,6 +1,6 @@
 
 (defun applications-document-get (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    (setf tv-id (zpt:topic-var t-split 3))
    ;; YOUR CODE HERE
@@ -8,7 +8,7 @@
 )
 
 (defun applications-document-put (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    (setf tv-id (zpt:topic-var t-split 3))
    ;; YOUR CODE HERE
@@ -16,7 +16,7 @@
 )
 
 (defun applications-document-patch (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    (setf tv-id (zpt:topic-var t-split 3))
    ;; YOUR CODE HERE
@@ -24,7 +24,7 @@
 )
 
 (defun applications-document-delete (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    (setf tv-id (zpt:topic-var t-split 3))
    ;; YOUR CODE HERE
@@ -32,7 +32,7 @@
 )
 
 (defun applications-document-head (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    (setf tv-id (zpt:topic-var t-split 3))
    ;; YOUR CODE HERE

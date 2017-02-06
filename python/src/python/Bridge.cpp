@@ -79,7 +79,7 @@ auto zpt::python::Bridge::initialize() -> void {
 			}
 		}
 	}
-	zlog(std::string("PYTHON bridge initialized"), zpt::alert);
+	zlog(std::string("PYTHON bridge initialized"), zpt::info);
 }
 
 auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback, int _n_args) -> void {
@@ -119,7 +119,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
 	zpt::python::__instance = _bridge;
 
-	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route)"), zpt::info);
+	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::info);
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_Initialize();
 	
@@ -189,10 +189,25 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 }
 
 auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
-	if(!PyArg_ParseTuple(_args, ":numargs"))
-	        return nullptr;
-	return PyLong_FromLong(0);
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	Py_RETURN_TRUE;
 }
+
+auto zpt::python::module::split(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	Py_RETURN_TRUE;
+}
+
+auto zpt::python::module::topic_var(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	Py_RETURN_TRUE;
+}
+
+auto zpt::python::module::validate_authorization(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	Py_RETURN_TRUE;
+}
+
 
 namespace zpt {
 	namespace python {
@@ -200,6 +215,9 @@ namespace zpt {
 			PyMethodDef methods[] = {
 				{"on", zpt::python::module::on, METH_VARARGS, "Registers RESTful resource handler."},
 				{"route", zpt::python::module::route, METH_VARARGS, "Route messages."},
+				{"split", zpt::python::module::split, METH_VARARGS, "Split a string according to a separator."},
+				{"topic_var", zpt::python::module::topic_var, METH_VARARGS, "Retrieves the nth part of a RESTful topic."},
+				{"authorize", zpt::python::module::validate_authorization, METH_VARARGS, "Validates the received message authorization."},
 				{nullptr, nullptr, 0, nullptr}
 			};
 

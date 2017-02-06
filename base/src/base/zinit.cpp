@@ -60,6 +60,10 @@ int main(int _argc, char* _argv[]) {
 	while(_input.find(" ") != string::npos);
 	std::string _project_abbr(_input.data());
 	
+	std::cout << "Path prefix: " << flush;
+	std::getline(std::cin, _input, '\n');
+	std::string _path_prefix(_input.data());
+	
 	std::cout << "Developer name: " << flush;
 	std::getline(std::cin, _input, '\n');
 	std::string _dev_name(_input.data());
@@ -75,7 +79,7 @@ int main(int _argc, char* _argv[]) {
 	std::string _dev_email(_input.data());
 
 	if (std::system("tar xvjf /usr/share/zapata/autoconf.template.tar.bz2"));
-	if (std::system((std::string("/usr/share/zapata/zinit_setup '") + _project_name + std::string("' '") + _project_abbr + std::string("' '") + _dev_email + std::string("' '") + _dev_name + std::string("'")).data()));
+	if (std::system((std::string("/usr/share/zapata/zinit_setup '") + _project_name + std::string("' '") + _project_abbr + std::string("' '") + _dev_email + std::string("' '") + _dev_name + std::string("' '") + _path_prefix + std::string("'")).data()));
 	
 	return 0;
 }

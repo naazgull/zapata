@@ -1,34 +1,34 @@
 
 (defun applications-collection-get (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    ;; YOUR CODE HERE
    (json "status" 204)
 )
 
 (defun applications-collection-post (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    ;; YOUR CODE HERE
    (json "status" 204)
 )
 
 (defun applications-collection-patch (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    ;; YOUR CODE HERE
    (json "status" 204)
 )
 
 (defun applications-collection-delete (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    ;; YOUR CODE HERE
    (json "status" 204)
 )
 
 (defun applications-collection-head (performative topic envelope)
-   (zpt:validate-authorization envelope)
+   (zpt:authorize envelope)
    (setf t-split (zpt:split topic "/"))
    ;; YOUR CODE HERE
    (json "status" 204)

@@ -12,5 +12,6 @@ export projects=(
        mariadb
        postgresql
        lisp
+       python
        rest
 )

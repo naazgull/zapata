@@ -33,7 +33,7 @@ zpt::redis::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : s
 zpt::redis::ClientPtr::~ClientPtr() {
 }
 
-zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options) {
+zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
 	std::string _bind((std::string) _options->getPath(_conf_path)["bind"]);
 	std::string _address(_bind.substr(0, _bind.find(":")));
 	uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
@@ -41,7 +41,9 @@ zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __optio
 }
 
 zpt::redis::Client::~Client() {
-	redisFree(this->__conn);
+	if (this->__conn != nullptr) {
+		redisFree(this->__conn);
+	}
 }
 
 auto zpt::redis::Client::name() -> std::string {
@@ -74,7 +76,7 @@ auto zpt::redis::Client::connect() -> void {
 	do {
 		_success = ((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr);
 		if (!_success) {
-			sleep(1);		
+			sleep(1);
 		}
 	}
 	while(!_success);
