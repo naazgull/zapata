@@ -1,0 +1,74 @@
+#!/bin/zsh
+
+source .packages.rc
+
+for package in ${projects[@]}
+do
+    pushd $package
+    echo && pwd
+
+    case "$1" in
+	j4)
+	    make -j4 && sudo make install
+	    ;;
+	all)
+	    make && sudo make install
+	    ;;
+	clean)
+	    make clean
+	    ;;
+	install)
+	    sudo make install
+	    ;;
+	uninstall)
+	    sudo make uninstall
+	    ;;
+	distcheck)
+	    sudo make distcheck
+	    ;;
+	config)
+	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
+	    ;;
+	debug)
+	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    ;;
+	package)
+	    distro=$(lsb_release -c -s)
+	    mkdir -p ../upstream/$distro/
+	    mkdir -p ../packages/$distro/binary-amd64/
+	    rm -rfv ../upstream/$distro/*
+	    for f in *.tar.gz
+	    do
+		fullname=${f%.tar.gz}
+		prefix=${fullname##*/}
+		revision=${prefix##*-}
+		no_revision_prefix=${prefix%-*}
+		version=${no_revision_prefix##*-}
+		no_version_prefix=${no_revision_prefix%-*}
+		orig=../upstream/$distro/$no_version_prefix\_$version.orig.tar.gz
+		echo "processing $orig"
+		cp -rf $f $orig
+		pushd ../upstream/$distro
+		tar xvzf $no_version_prefix\_$version.orig.tar.gz
+		pushd $prefix/
+		debuild -us -uc
+		if [[ $? != 0 ]]
+		then
+		    exit -1
+		fi
+		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../../packages/$distro/binary-amd64/
+		if [[ $? != 0 ]]
+		then
+		    exit -1
+		fi
+		popd
+		popd
+	    done
+	    ;;
+    esac
+    if [[ $? != 0 ]]
+    then
+	exit -1
+    fi
+    popd
+done

@@ -1,0 +1,25 @@
+#!/bin/zsh
+
+source .packages.rc
+
+for package in ${projects[@]}
+do
+    pushd $package
+    echo && pwd
+
+    case "$1" in
+	bump)
+	    if [[ "$2" == "minor" ]]
+	    then
+		../.bump
+	    else
+		../.bump "$3" "$4" "$5"
+	    fi
+	    ;;
+    esac
+    if [[ $? != 0 ]]
+    then
+	exit -1
+    fi
+    popd
+done
