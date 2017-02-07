@@ -23,7 +23,6 @@ SOFTWARE.
 */
 #include <zapata/mongodb/convert_mongo.h>
 #include <zapata/http/HTTPObj.h>
-#include <zapata/rest/codes_rest.h>
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 

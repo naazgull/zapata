@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-base.la
 
 libzapata_base_la_LIBADD = -lpthread -lmagic -lossp-uuid++ -lcrypto++ 
-libzapata_base_la_LDFLAGS = -version-info 9:1:9
+libzapata_base_la_LDFLAGS = -version-info 9:4:9
 libzapata_base_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_base_la_SOURCES = \
@@ -27,7 +27,7 @@ libzapata_base_la_SOURCES = \
 ./usage.cpp \
 ./utf8.cpp
 
-bin_PROGRAMS = zoc zinit
+bin_PROGRAMS = zoc
 
 zoc_LDADD = -lpthread -lzapata-base
 zoc_LDFLAGS= 
@@ -35,10 +35,3 @@ zoc_CPPFLAGS = -std=c++14 -Wall -I../../include
 
 zoc_SOURCES = \
 zoc.cpp
-
-zinit_LDADD = -lpthread -lzapata-base
-zinit_LDFLAGS= 
-zinit_CPPFLAGS = -std=c++14 -Wall -I../../include
-
-zinit_SOURCES = \
-zinit.cpp
