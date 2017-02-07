@@ -22,25 +22,25 @@ zapata-zmq (0.9.2-1) yakkety; urgency=medium
 
  -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:04:32 +0000
 
-zapata-zmq (0.9.1-4) trusty; urgency=medium
+zapata-zmq (0.9.1-4) yakkety; urgency=medium
 
   * Version bump
 
  -- n@zgul <naazgull@dfz.pt>  Mon, 17 Oct 2016 18:46:22 +0100
 
-zapata-zmq (0.9.1-3) trusty; urgency=medium
+zapata-zmq (0.9.1-3) yakkety; urgency=medium
 
   * Version bump
 
  -- n@zgul <naazgull@dfz.pt>  Sun, 12 Jun 2016 16:04:31 +0100
 
-zapata-zmq (0.9.1-2) trusty; urgency=medium
+zapata-zmq (0.9.1-2) yakkety; urgency=medium
 
   * Version bump
 
  -- n@zgul <naazgull@dfz.pt>  Sat, 21 May 2016 00:41:11 +0100
 
-zapata-zmq (0.9.1-1) trusty; urgency=medium
+zapata-zmq (0.9.1-1) yakkety; urgency=medium
 
   * Clean up and refactoring
 
