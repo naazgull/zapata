@@ -12,6 +12,11 @@ underscore_abbr=$(echo $2 | sed -r 's#-#_#g')
 upper_name=$(echo $underscore_name | awk '{print toupper($0)}')
 upper_abbr=$(echo $abbreviation | awk '{print toupper($0)}')
 
+if [[ "$path_prefix" == "/" ]]
+then
+    path_prefix=""
+fi
+
 files=$(find . -name "*")
 for file in ${files[@]}
 do
@@ -20,9 +25,6 @@ do
 		sed -i "s#project-name#$name#g" $file
 		sed -i "s#project_name#$underscore_name#g" $file
 		sed -i "s#PROJECT_NAME#$upper_name#g" $file
-		sed -i "s#/project-abbreviation/#/$path_prefix/$abbreviation/#g" $file
-		sed -i "s#/project_abbreviation/#/$path_prefix/$underscore_abbr/#g" $file
-		sed -i "s#/PROJECT_ABBREVIATION/#/$path_prefix/$upper_abbr/#g" $file
 		sed -i "s#project-abbreviation#$abbreviation#g" $file
 		sed -i "s#project_abbreviation#$underscore_abbr#g" $file
 		sed -i "s#PROJECT_ABBREVIATION#$upper_abbr#g" $file
@@ -31,6 +33,17 @@ do
 		sed -i "s#distro-version#$distro#g" $file
 		sed -i "s#environment#$environment#g" $file
 		sed -i "s#project-prefix#$path_prefix#g" $file
+	fi
+done
+
+name_dirs=$(find . -name "project-prefix*")
+for file in ${name_dirs[@]}
+do
+	if [ -d $file ]
+	then
+		fullname=${file#*./}
+		prefix=${fullname%/*}
+		mv $file "$prefix/$path_prefix"
 	fi
 done
 
@@ -52,8 +65,7 @@ do
 	then
 		fullname=${file#*./}
 		prefix=${fullname%/*}
-		mkdir -p "$prefix/$path_prefix"
-		mv $file "$prefix/$path_prefix/$abbreviation"
+		mv $file "$prefix/$abbreviation"
 	fi
 done
 
@@ -88,9 +100,7 @@ do
 		then
 			mv $file "$prefix/$abbreviation"
 		else 
-		    mkdir -p "$prefix/$path_prefix"
-		    mv $file "$prefix/$path_prefix/$abbreviation.$suffix"
-		    # mv $file "$prefix/$abbreviation.$suffix"
+		    mv $file "$prefix/$abbreviation.$suffix"
 		fi
 	fi
 done

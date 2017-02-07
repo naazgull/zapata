@@ -160,7 +160,7 @@ auto zpt::Generator::build_data_layer() -> void {
 				}
 				zpt::replace(_datum_h, "$[data.path.h]", _includes);
 				
-				auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]));
+				auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
 				if (_found != zpt::Generator::datums.end()) {
 					if (_datum["extends"]->type() == zpt::JSObject) {
 						zpt::replace(_datum_cxx, "$[datum.extends.get]", _found->second->build_extends_get());
@@ -189,14 +189,14 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_h, "$[datum.collection]", _collection);
 				zpt::replace(_datum_cxx, "$[datum.collection]", _collection);
 
-				zpt::replace(_datum_h, "$[datum.name]", std::string(_datum["name"]));
-				zpt::replace(_datum_cxx, "$[datum.name]", std::string(_datum["name"]));
+				zpt::replace(_datum_h, "$[datum.name]", std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
+				zpt::replace(_datum_cxx, "$[datum.name]", std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
 		
 				zpt::json _namespaces = zpt::split(_namespace, "::");
 				std::string _namespaces_begin;
 				std::string _namespaces_end;
 				for (auto _part : _namespaces->arr()) {
-					_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
+					_namespaces_begin += std::string("namespace ") + std::string(zpt::r_replace(_part, "-", "_")) + std::string(" {\n");
 					_namespaces_end += "}\n";
 				}
 				zpt::replace(_datum_h, "$[namespaces.begin]", _namespaces_begin);
@@ -436,7 +436,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				for (auto _resource : _spec["resources"]->arr()) {
-					std::string _include = std::string(_spec["name"]) + std::string(" import ") + std::string(_resource["type"]) + std::string("s.") + std::string(_resource["name"]) + std::string("");
+					std::string _include = std::string(zpt::r_replace(_spec["name"]->str(), "-", "_")) + std::string(" import ") + std::string(_resource["type"]) + std::string("s.") + std::string(zpt::r_replace(_resource["name"]->str(), "-", "_")) + std::string("");
 					if (_include.front() == '/') {
 						_include.erase(0, 1);
 					}
@@ -500,7 +500,7 @@ auto zpt::GenDatum::build_params(zpt::json _rel, bool _multi) -> std::string {
 
 auto zpt::GenDatum::build_get(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "collection" || std::string(_resource["type"]) == "store") {
 		_return += std::string("_r_body = ") + _class + std::string("::query(_topic, _envelope[\"params\"], _emitter, _identity, _envelope);\n");
@@ -513,7 +513,7 @@ auto zpt::GenDatum::build_get(zpt::json _resource) -> std::string {
 
 auto zpt::GenDatum::build_post(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "collection") {
 		_return += std::string("_r_body = ") + _class + std::string("::insert(_topic, _envelope[\"payload\"], _emitter, _identity, _envelope);\n");
@@ -523,7 +523,7 @@ auto zpt::GenDatum::build_post(zpt::json _resource) -> std::string {
 
 auto zpt::GenDatum::build_put(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "store") {
 		_return += std::string("_r_body = ") + _class + std::string("::insert(_topic, _envelope[\"payload\"], _emitter, _identity, _envelope);\n");
@@ -536,7 +536,7 @@ auto zpt::GenDatum::build_put(zpt::json _resource) -> std::string {
 
 auto zpt::GenDatum::build_patch(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "collection" || std::string(_resource["type"]) == "store") {
 		_return += std::string("_r_body = ") + _class + std::string("::set(_topic, _envelope[\"payload\"], _envelope[\"params\"], _emitter, _identity, _envelope);\n");
@@ -549,7 +549,7 @@ auto zpt::GenDatum::build_patch(zpt::json _resource) -> std::string {
 
 auto zpt::GenDatum::build_delete(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "collection" || std::string(_resource["type"]) == "store") {
 		_return += std::string("_r_body = ") + _class + std::string("::remove(_topic, _envelope[\"params\"], _emitter, _identity, _envelope);\n");
@@ -562,7 +562,7 @@ auto zpt::GenDatum::build_delete(zpt::json _resource) -> std::string {
 
 auto zpt::GenDatum::build_head(zpt::json _resource) -> std::string {
 	std::string _return;
-	std::string _name = std::string(this->__spec["name"]);
+	std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
 	std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
 	if (std::string(_resource["type"]) == "collection" || std::string(_resource["type"]) == "store") {
 		_return += std::string("_r_body = ") + _class + std::string("::query(_topic, _envelope[\"params\"], _emitter, _identity, _envelope);\n");
@@ -906,7 +906,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		}
 		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["type"]) + std::string("s {\n");
 		_namespaces_end += "}\n";
-		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["name"]) + std::string(" {\n");
+		_namespaces_begin += std::string("namespace ") + std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")) + std::string(" {\n");
 		_namespaces_end += "}\n";
 	
 		zpt::replace(_handler_h, "$[namespaces.begin]", _namespaces_begin);
@@ -916,8 +916,8 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 
 		zpt::replace(_handler_h, "$[resource.type]", std::string(this->__spec["type"]));
 		zpt::replace(_handler_cxx, "$[resource.type]", std::string(this->__spec["type"]));
-		zpt::replace(_handler_h, "$[resource.name]", std::string(this->__spec["name"]));
-		zpt::replace(_handler_cxx, "$[resource.name]", std::string(this->__spec["name"]));
+		zpt::replace(_handler_h, "$[resource.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
+		zpt::replace(_handler_cxx, "$[resource.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 	
 		zpt::replace(_handler_cxx, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
 		zpt::replace(_handler_cxx, "$[resource.handler.get]", this->build_get());
@@ -1007,7 +1007,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		}
 	}
 
-	return std::string(this->__spec["namespace"]) + std::string("::") + std::string(this->__spec["type"]) + std::string("s::") + std::string(this->__spec["name"]) + std::string("::restify(_emitter);\n");
+	return std::string(this->__spec["namespace"]) + std::string("::") + std::string(this->__spec["type"]) + std::string("s::") + std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")) + std::string("::restify(_emitter);\n");
 }
 
 auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::string {

@@ -1,3 +1,27 @@
+zapata-base (0.9.5-1yakkety1) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:20:48 +0000
+
+zapata-base (0.9.4-1) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:08:51 +0000
+
+zapata-base (0.9.3-1) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:08:19 +0000
+
+zapata-base (0.9.2-1) trusty; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Mon, 17 Oct 2016 18:46:08 +0100
+
 zapata-base (0.9.1-6) trusty; urgency=medium
 
   * Version bump

@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-rest.la
 
 libzapata_rest_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lpython3.5m -lecl -lzapata-lisp -lzapata-python
-libzapata_rest_la_LDFLAGS = -version-info 9:1:9
+libzapata_rest_la_LDFLAGS = -version-info 9:5:9
 libzapata_rest_la_CPPFLAGS = -O3 -std=c++14 -I../../include -I/usr/include/python3.5 -fwrapv
 
 libzapata_rest_la_SOURCES = \
