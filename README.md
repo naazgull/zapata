@@ -22,13 +22,13 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 
 ### 1) Dependencies
 
-a) Install g++-4.8, build-essential, autoconf, libtool, libssl:
+a) Install g++-4.8, build-essential, autoconf, libtool:
 
-	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config libssl-dev
+	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config
 
-b) Install python, ecl, libzmq, libczmq and sodium from Ubuntu repositories:
+b) Install feature dependencies from Ubuntu repositories:
 
-	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium-dev libpython3.5-dev ecl
+	$ sudo apt-get install libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libczmq-dev libsodium-dev libpython3.5-dev ecl
 
 c) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 
