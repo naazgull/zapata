@@ -42,10 +42,7 @@ base/src/base/zoc
 zmq/src/zmq/zcert
 upstream
 packages
-.build
 Makefile
-.bump
-.repo
 rest/src/rest/zpt
 base/src/base/zinit
 json/src/json/zpt-json
