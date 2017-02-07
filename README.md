@@ -22,11 +22,15 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 
 ### 1) Dependencies
 
-a) Install python, ecl, libzmq, libczmq and sodium from Ubuntu repositories:
+a) Install g++-4.8, build-essential, autoconf, libtool, libssl:
 
-	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium18 libpython3.5-dev ecl
+	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config libssl-dev
 
-b) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
+b) Install python, ecl, libzmq, libczmq and sodium from Ubuntu repositories:
+
+	$ sudo apt-get install libzmq3-dev libczmq-dev libsodium-dev libpython3.5-dev ecl
+
+c) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 
 	$ git clone git://github.com/zeromq/libcurve.git
 	$ cd libcurve
@@ -51,25 +55,21 @@ b) Update your repository cache and install base packages:
 
 ### 3) MongoDB support
 
-a) Install g++-4.8, build-essential, autoconf, libtool, libssl:
-
-	$ sudo apt-get install g++ build-essential autoconf libtool libssl-dev
-
-b) Install Boost & Scons dependencies:
+a) Install Boost & Scons dependencies:
 
 	$ sudo apt-get install scons libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
 
-c) Clone and checkout repo:
+b) Clone and checkout repo:
 
 	$ git clone git@github.com:mongodb/mongo-cxx-driver.git
 	$ cd mongo-cxx-driver
 	$ git checkout 26compat
 
-d) Build:
+c) Build:
 
 	$ sudo scons --prefix=/usr --sharedclient --use-system-boost --full install-mongoclient
 
-e) Install MongoDB support packages:
+d) Install MongoDB support packages:
 
 	$ sudo apt-get install zapata-mongodb
 
