@@ -34,7 +34,7 @@ b) Update your repository cache and install base packages:
 
 ### 2) 0mq _libcurve_ dependency ###
 
-c) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
+a) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 
 	$ git clone git://github.com/zeromq/libcurve.git
 	$ cd libcurve
@@ -78,7 +78,7 @@ c) Build:
 
 	$ sudo scons --prefix=/usr --sharedclient --use-system-boost --full install-mongoclient
 
-d) Install MongoDB support packages:
+d) Install Zapata's MongoDB support packages:
 
 	$ sudo apt-get install zapata-mongodb
 
@@ -103,7 +103,7 @@ navigate into the package dir and build the package.
 
 a) Install dependencies:
 
-	$ sudo apt-get install g++ build-essential autoconf libtool
+	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libczmq-dev libsodium-dev libpython3.5-dev ecl
 
 ### 2) Building a zapata package
 

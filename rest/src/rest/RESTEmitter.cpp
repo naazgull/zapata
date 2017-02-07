@@ -26,7 +26,7 @@ SOFTWARE.
 #include <map>
 
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
-	this->mutations(zpt::mutation::emitter(new zpt::ZMQMutationEmitter(_options)));
+	this->mutations((new zpt::ZMQMutationEmitter(_options))->self());
 	
 	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);
@@ -233,7 +233,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 					}
 				}
 			}
-			catch (zpt::AssertionException& _e) {
+			catch (zpt::assertion& _e) {
 				_return = {
 					"performative", zpt::ev::Reply,
 					"status", _e.status(),
@@ -298,7 +298,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 					}
 				}
 			}
-			catch (zpt::AssertionException& _e) {
+			catch (zpt::assertion& _e) {
 			       return {
 				       "performative", zpt::ev::Reply,
 				       "status", _e.status(),
@@ -325,42 +325,36 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		}
 	}
 
-	if (this->options()["directory"]->ok()) {
-		for (auto _api : this->options()["directory"]->obj()) {
-			for (auto _endpoint : _api.second["endpoints"]->arr()) {
-				if (_url.find(_endpoint->str()) == 0) {
-					short _type = zpt::str2type(_api.second["type"]->str());
-					switch(_type) {
-						case ZMQ_ROUTER_DEALER :
-						case ZMQ_REP :
-						case ZMQ_REQ : {
-							zpt::socket _client = this->__poll->bind(ZMQ_REQ, _api.second["connect"]->str());
-							zpt::json _out = _client->send(_in);
-							if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
-								_out << "status" << 501;
-							}
-							_client->unbind();
-							return _out;
-						}
-						case ZMQ_PUB_SUB : {
-							std::string _connect = _api.second["connect"]->str();
-							zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
-							_client->send(_in);
-							_client->unbind();
-							return zpt::rest::accepted(_url);
-						}
-						case ZMQ_PUSH : {
-							zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _api.second["connect"]->str());
-							_client->send(_in);
-							_client->unbind();
-							return zpt::rest::accepted(_url);
-						}
-					}
+	zpt::json _container = this->lookup(_url);
+	if (_container->ok()) {
+		short _type = zpt::str2type(_container["type"]->str());
+		switch(_type) {
+			case ZMQ_ROUTER_DEALER :
+			case ZMQ_REP :
+			case ZMQ_REQ : {
+				zpt::socket _client = this->__poll->bind(ZMQ_REQ, _container["connect"]->str());
+				zpt::json _out = _client->send(_in);
+				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
+					_out << "status" << 501;
 				}
+				_client->unbind();
+				return _out;
+			}
+			case ZMQ_PUB_SUB : {
+				std::string _connect = _container["connect"]->str();
+				zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+				_client->send(_in);
+				_client->unbind();
+				return zpt::rest::accepted(_url);
+			}
+			case ZMQ_PUSH : {
+				zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _container["connect"]->str());
+				_client->send(_in);
+				_client->unbind();
+				return zpt::rest::accepted(_url);
 			}
 		}
-	}
-				
+	}				
 	return zpt::rest::not_found(_url);
 }
 

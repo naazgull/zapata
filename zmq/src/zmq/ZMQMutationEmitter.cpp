@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/zmq/ZMQMutationEmitter.h>
 #include <map>
 
-zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new zpt::ZMQPubSub(std::string(_options["mutations"]["connect"]), _options)) {
+zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket((new zpt::ZMQPubSub(std::string(_options["mutations"]["connect"]), _options))->self()) {
 	((zpt::ZMQPubSub*) this->__socket.get())->subscribe("/v2/mutations");
 }
 
@@ -260,12 +260,12 @@ void zpt::ZMQMutationServer::start() {
 
 				_bytes = zframe_strdup(_frame1);
 				std::string _directive(std::string(_bytes, zframe_size(_frame1)));
-				delete _bytes;
+				std::free(_bytes);
 				zframe_destroy(&_frame1);
 
 				_bytes = zframe_strdup(_frame2);
 				zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
-				delete _bytes;
+				std::free(_bytes);
 				zframe_destroy(&_frame2);
 				zlog(std::string(_envelope), zpt::info);
 			}

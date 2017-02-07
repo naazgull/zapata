@@ -100,12 +100,12 @@ zpt::json zpt::ZMQ::recv() {
 
 		_bytes = zframe_strdup(_frame1);
 		std::string _directive(std::string(_bytes, zframe_size(_frame1)));
-		delete _bytes;
+		std::free(_bytes);
 		zframe_destroy(&_frame1);
 
 		_bytes = zframe_strdup(_frame2);
 		zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
-		delete _bytes;
+		std::free(_bytes);
 		zframe_destroy(&_frame2);
 
 		zlog(this->connection() + std::string(" | receiving message <- ") + _directive, zpt::info);
