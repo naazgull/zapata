@@ -20,15 +20,19 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 
 ## Ubuntu 16.04/16.10
 
-### 1) Dependencies
+### 1) Zapata RESTful libraries ###
 
-a) Install g++-4.8, build-essential, autoconf, libtool:
+a) Add GPG key and repository to your 'sources.list.d'
 
-	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config
+	$ wget -O - https://repo.dfz.pt/apt/dfz_apt.key | sudo apt-key add -
+	$ echo "deb https://repo.dfz.pt/apt/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/naazgull.list
 
-b) Install feature dependencies from Ubuntu repositories:
+b) Update your repository cache and install base packages:
 
-	$ sudo apt-get install libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libczmq-dev libsodium-dev libpython3.5-dev ecl
+	$ sudo apt-get update
+	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-events zapata-zmq zapata-rest
+
+### 2) 0mq _libcurve_ dependency ###
 
 c) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 
@@ -41,39 +45,24 @@ c) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 	$ sudo ldconfig
 	$ cd ..
 
-### 2) Zapata RESTful libraries
+### 3) PostgreSQL support ###
 
-a) Add GPG key and repository to your 'sources.list.d'
+a) In 16.04, add apt repository;
 
-	$ wget -O - https://repo.dfz.pt/apt/dfz_apt.key | sudo apt-key add -
-	$ echo "deb https://repo.dfz.pt/apt/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/naazgull.list
-
-b) Update your repository cache and install base packages:
-
+	$ sudo add-apt-repository ppa:jtv/ppa
 	$ sudo apt-get update
-	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-events zapata-zmq zapata-rest
 
-### 3) PostgreSQL support
-
-a) Install PostgreSQL dependencies:
-
-	$ sudo apt-get install libpq-dev libpxx-dev
-
-b) Install Redis support packages:
+b) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
-### 4) MySQL support
+### 4) MariaDB support ####
 
-a) Install hiredis dependencies:
-
-	$ sudo apt-get install libmysqlcppconn-dev
-
-b) Install Redis support packages:
+a) Install Zapata's MariaDB support packages:
 
 	$ sudo apt-get install zapata-mariadb
 
-### 5) MongoDB support
+### 5) MongoDB support ###
 
 a) Install Boost & Scons dependencies:
 
@@ -93,17 +82,13 @@ d) Install MongoDB support packages:
 
 	$ sudo apt-get install zapata-mongodb
 
-### 6) Redis support
+### 6) Redis support ###
 
-a) Install hiredis dependencies:
-
-	$ sudo apt-get install libhiredis0.13
-
-b) Install Redis support packages:
+a) Install Zapata's Redis support packages:
 
 	$ sudo apt-get install zapata-redis
 
-### 7) OAuth2.0 support
+### 7) OAuth2.0 support ###
 
 a) Install Users/OAuth2.0 support packages:
 
