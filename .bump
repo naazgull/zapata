@@ -6,8 +6,6 @@ if [[ -z $1 ]]
 then
     current_ac=$(cat configure.ac | grep -F 'AC_INIT' | awk '{print $2}')
     current_ac=${current_ac%,}
-    git tag -a "v$current_ac" -m "Version $current_ac"
-    git push origin "v$current_ac"
 
     dch -m -U -D $distro "Version bump"
     new_ac=$(head -n 1 debian/changelog | awk '{print $2}')
@@ -21,8 +19,6 @@ then
 else
     current_ac=$(cat configure.ac | grep -F 'AC_INIT' | awk '{print $2}')
     current_ac=${current_ac%,}
-    git tag -a "v$current_ac" -m "Version $current_ac"
-    git push origin "v$current_ac"
 
     dch -v "$1.$2.$3-1${distro}1" -m -U -D ${distro} "Version bump"
 
