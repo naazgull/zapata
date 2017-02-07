@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9)
 
 Package: zapata-base
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl
+Depends: ${shlibs:Depends}, ${misc:Depends}, g++(>=4.9), build-essential, autoconf, libtool, pkg-config, libcrypto++-dev, libssl-dev, libmagic-dev, libossp-uuid-dev, libzmq3-dev, libczmq-dev, libsodium-dev, libpython3.5-dev, ecl
 Description: RESTful API's C++ toolkit named after Emiliano Zapata
  Provides a set of C++ tool libraries for the development of 
  RESTful API's.
