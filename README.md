@@ -53,7 +53,27 @@ b) Update your repository cache and install base packages:
 	$ sudo apt-get update
 	$ sudo apt-get install zapata-base zapata-json zapata-http zapata-events zapata-zmq zapata-rest
 
-### 3) MongoDB support
+### 3) PostgreSQL support
+
+a) Install PostgreSQL dependencies:
+
+	$ sudo apt-get install libpq-dev libpxx-dev
+
+b) Install Redis support packages:
+
+	$ sudo apt-get install zapata-postgresql
+
+### 4) MySQL support
+
+a) Install hiredis dependencies:
+
+	$ sudo apt-get install libmysqlcppconn-dev
+
+b) Install Redis support packages:
+
+	$ sudo apt-get install zapata-mariadb
+
+### 5) MongoDB support
 
 a) Install Boost & Scons dependencies:
 
@@ -61,7 +81,7 @@ a) Install Boost & Scons dependencies:
 
 b) Clone and checkout repo:
 
-	$ git clone git@github.com:mongodb/mongo-cxx-driver.git
+	$ git clone git://github.com/mongodb/mongo-cxx-driver.git
 	$ cd mongo-cxx-driver
 	$ git checkout 26compat
 
@@ -73,25 +93,21 @@ d) Install MongoDB support packages:
 
 	$ sudo apt-get install zapata-mongodb
 
-### 4) Redis support
+### 6) Redis support
 
 a) Install hiredis dependencies:
 
 	$ sudo apt-get install libhiredis0.13
 
-e) Install Redis support packages:
+b) Install Redis support packages:
 
 	$ sudo apt-get install zapata-redis
 
-### 5) User management and OAuth2.0 support
+### 7) OAuth2.0 support
 
-a) Install MongoDB and Redis support dependencies (if not yet installed, follow steps _3)_ and _4)_):
+a) Install Users/OAuth2.0 support packages:
 
-	$ sudo apt-get install zaptaa-mongodb zapata-redis
-
-e) Install Users/OAuth2.0 support packages:
-
-	$ sudo apt-get install zapata-users
+	$ sudo apt-get install zapata-oauth2
 
 ## Compiling from sources
 
