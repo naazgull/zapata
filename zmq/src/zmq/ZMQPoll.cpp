@@ -229,7 +229,7 @@ auto zpt::ZMQPoll::loop() -> void {
 				if (_frame != nullptr) {
 					char* _bytes = zframe_strdup(_frame);
 					std::string _uuid(std::string(_bytes, zframe_size(_frame)));
-					delete _bytes;
+					std::free(_bytes);
 					zframe_destroy(&_frame);
 					try {
 						zpt::socket _socket = this->get_by_uuid(_uuid);
@@ -251,7 +251,7 @@ auto zpt::ZMQPoll::loop() -> void {
 				if (_frame != nullptr) {
 					char* _bytes = zframe_strdup(_frame);
 					std::string _uuid(std::string(_bytes, zframe_size(_frame)));
-					delete _bytes;
+					std::free(_bytes);
 					zframe_destroy(&_frame);
 					try {
 						zpt::socket _socket = this->get_by_uuid(_uuid);

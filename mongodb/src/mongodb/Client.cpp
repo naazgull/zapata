@@ -76,6 +76,7 @@ auto zpt::mongodb::Client::connect() -> void {
 		this->conn()->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (std::string) this->connection()["user"] << "pwd" << (std::string) this->connection()["passwd"] << "db" << (std::string) this->connection()["db"]));
 	}
 	this->conn()->setWriteConcern((mongo::WriteConcern) 2);
+	zpt::Connector::connect();
 }
 
 auto zpt::mongodb::Client::reconnect() -> void {
@@ -86,6 +87,7 @@ auto zpt::mongodb::Client::reconnect() -> void {
 		this->conn()->auth(BSON("mechanism" << "MONGODB-CR" << "user" << (std::string) this->connection()["user"] << "pwd" << (std::string) this->connection()["passwd"] << "db" << (std::string) this->connection()["db"]));
 	}
 	this->conn()->setWriteConcern((mongo::WriteConcern) 2);
+	zpt::Connector::reconnect();
 }
 
 auto zpt::mongodb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	

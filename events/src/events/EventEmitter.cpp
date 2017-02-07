@@ -48,10 +48,10 @@ auto zpt::Bridge::options() -> zpt::json {
 	return this->__options;
 }
 
-zpt::EventEmitter::EventEmitter() : __self( this ), __mutant(), __keeper(nullptr) {
+zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self( this ), __keeper(new zpt::EventGatekeeper(_options)) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
@@ -78,11 +78,25 @@ auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {
 }
 
 auto zpt::EventEmitter::gatekeeper(zpt::ev::gatekeeper _gatekeeper) -> void {
+	this->__keeper->unbind();
 	this->__keeper = _gatekeeper;
+}
+
+auto zpt::EventEmitter::directory() -> zpt::ev::directory {
+	return this->__directory;
+}
+
+auto zpt::EventEmitter::directory(zpt::ev::directory _directory) -> void {
+	this->__directory->unbind();
+	this->__directory = _directory;
 }
 
 auto zpt::EventEmitter::authorize(zpt::json _envelope) -> zpt::json {
 	return this->__keeper->authorize(_envelope);
+}
+
+auto zpt::EventEmitter::lookup(std::string _topic) -> zpt::json {
+	return this->__directory->lookup(_topic);
 }
 
 auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
@@ -272,6 +286,10 @@ auto zpt::EventGatekeeper::options() -> zpt::json {
 	return this->__options;
 }
 
+auto zpt::EventGatekeeper::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::EventGatekeeper::self() const -> zpt::ev::gatekeeper {
 	return this->__self;
 }
@@ -286,5 +304,44 @@ auto zpt::EventGatekeeper::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::EventGatekeeper::authorize(zpt::json _envelope) -> zpt::json {
 	return { "identity", "anyone", "access_token", "--blank--" };
+}
+
+zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), __self(this) {
+}
+
+zpt::EventDirectory::~EventDirectory() {
+}
+		
+auto zpt::EventDirectory::options() -> zpt::json {
+	return this->__options;
+}
+
+auto zpt::EventDirectory::unbind() -> void {
+	this->__self.reset();
+}
+
+auto zpt::EventDirectory::self() const -> zpt::ev::directory {
+	return this->__self;
+}
+
+auto zpt::EventDirectory::events() -> zpt::ev::emitter {
+	return this->__emitter;
+}
+
+auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void {
+	this->__emitter = _emitter;
+}
+
+auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
+	if (this->options()["directory"]->ok()) {
+		for (auto _api : this->options()["directory"]->obj()) {
+			for (auto _endpoint : _api.second["endpoints"]->arr()) {
+				if (_topic.find(_endpoint->str()) == 0) {
+					return _api.second;
+				}
+			}
+		}
+	}	
+	return zpt::undefined;
 }
 
