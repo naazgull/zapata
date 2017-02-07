@@ -10,14 +10,14 @@ libzapata_rest_la_SOURCES = \
 
 bin_PROGRAMS = zpt zcli
 
-zpt_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest
+zpt_LDADD = -lpthread -lmagic -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lpython3.5m -lecl -lzapata-lisp -lzapata-python -lzapata-rest
 zpt_LDFLAGS =  -L../rest/.libs
 zpt_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 zpt_SOURCES = \
 ./main.cpp
 
-zcli_LDADD = -lpthread -lmagic -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest
+zcli_LDADD = -lpthread -lmagic  -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lpython3.5m -lecl -lzapata-lisp -lzapata-python -lzapata-rest
 zcli_LDFLAGS =  -L../rest/.libs
 zcli_CPPFLAGS = -O3 -std=c++14 -I../../include
 
