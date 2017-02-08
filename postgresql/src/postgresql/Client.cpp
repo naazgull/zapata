@@ -68,21 +68,23 @@ auto zpt::pgsql::Client::mutations() -> zpt::mutation::emitter {
 }
 
 auto zpt::pgsql::Client::connect(zpt::json _opts) -> void {
-	this->__conn.release();
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn.reset(new pqxx::connection(this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("")));
 	zpt::Connector::connect();
 }
 
 auto zpt::pgsql::Client::reconnect() -> void {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
+	assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 	this->__conn.release();
 	this->__conn.reset(new pqxx::connection(this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("")));
 	zpt::Connector::reconnect();
 }
 
 auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	if (!_document["id"]->ok()) {
 		_document << "id" << zpt::generate::r_uuid();
@@ -110,8 +112,10 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 
 	_expression += _columns + std::string(") VALUES (") + _values + (")");
 	try {
-		_stmt.exec(_expression);
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_stmt.exec(_expression);
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
@@ -122,9 +126,9 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 }
 
 auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -143,8 +147,10 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	_expression += string(" WHERE id=") + zpt::pgsql::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt.exec(_expression);
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_stmt.exec(_expression);
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -153,9 +159,9 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 }
 
 auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -174,8 +180,10 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	_expression += string(" WHERE id=") + zpt::pgsql::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt.exec(_expression);
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_stmt.exec(_expression);
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -184,9 +192,9 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 }
 
 auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -210,8 +218,10 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 	
 	int _size = 0;
 	try {
-		_size = _stmt.exec(_expression)[0][0].as<int>();
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -220,9 +230,9 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 }
 
 auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -240,8 +250,10 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	_expression += string(" WHERE id=") + zpt::pgsql::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt.exec(_expression);
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_stmt.exec(_expression);
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -250,9 +262,9 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 }
 
 auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -275,8 +287,10 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 	
 	int _size = 0;
 	try {
-		_size = _stmt.exec(_expression)[0][0].as<int>();
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -285,8 +299,8 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 }
 
 auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -295,8 +309,10 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	_expression += string(" WHERE id=") + zpt::pgsql::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt.exec(_expression);
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_stmt.exec(_expression);
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -305,8 +321,8 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 }
 
 auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	pqxx::work _stmt(this->conn());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -320,8 +336,10 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 	
 	int _size = 0;
 	try {
-		_size = _stmt.exec(_expression)[0][0].as<int>();
-		_stmt.commit();
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {}
 
@@ -337,11 +355,14 @@ auto zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::js
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	zpt::json _elements = zpt::json::array();
-	pqxx::work _stmt(this->conn());
-
-	pqxx::result _result = _stmt.exec(_pattern);
+	
+	pqxx::result _result;
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		pqxx::work _stmt(this->conn());
+		_result = _stmt.exec(_pattern); }
 	for (auto _r : _result) {
 		_elements << zpt::pgsql::fromsql_r(_r);
 	}

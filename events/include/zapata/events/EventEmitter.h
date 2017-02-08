@@ -145,6 +145,11 @@ namespace zpt {
 		};
 		
 		template< typename B >
+		static inline auto is_booted() -> bool {
+			return B::is_booted();
+		};
+		
+		template< typename B >
 		static inline auto boot(zpt::json _options, zpt::ev::emitter _emitter) -> void {
 			B::boot(_options);
 			zpt::bridge::instance< B >()->events(_emitter);
@@ -311,11 +316,13 @@ namespace zpt {
 		virtual auto events() -> zpt::ev::emitter;
 		virtual auto events(zpt::ev::emitter _emitter) -> void;
 		virtual auto lookup(std::string _topic) -> zpt::json;
+		virtual auto notify(std::string _topic, zpt::json _connection = zpt::undefined) -> void;
 		
 	private:
 		zpt::json __options;
 		zpt::ev::directory __self;
 		zpt::ev::emitter __emitter;
+		std::vector< std::pair< std::regex, zpt::json > > __index;
 	};
 	
 	class EventListener {

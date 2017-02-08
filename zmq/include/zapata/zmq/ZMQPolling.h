@@ -135,7 +135,8 @@ namespace zpt {
 		
 		virtual std::string id();
 		virtual zpt::json options();
-		virtual std::string& connection();
+		virtual auto connection() -> std::string;
+		virtual auto connection(std::string _connection) -> void;
 		virtual zactor_t* auth(std::string _client_cert_dir = "");
 		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
@@ -395,5 +396,9 @@ namespace zpt {
 		zpt::assync::reply_fn __raw_transformer;
 		zpt::socket __self;
 	};
+
+	namespace net {
+		auto getip() -> std::string;
+	}
 }
 

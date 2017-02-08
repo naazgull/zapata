@@ -62,6 +62,7 @@ namespace zpt {
 			virtual auto call(const char* _c_name, int _n_args, zpt::python::object _args[]) -> zpt::python::object;
 
 			static auto instance() -> zpt::bridge;
+			static auto is_booted() -> bool;
 			static auto boot(zpt::json _options) -> void;
 				
 		private:

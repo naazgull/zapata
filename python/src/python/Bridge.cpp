@@ -114,6 +114,10 @@ auto zpt::python::Bridge::instance() -> zpt::bridge {
 	return zpt::python::__instance->self();
 }
 
+auto zpt::python::Bridge::is_booted() -> bool {
+	return zpt::python::__instance != nullptr;
+}
+
 auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	assertz(zpt::python::__instance == nullptr, "bridge instance isn't null, 'zpt::bridge::boot< zpt::python::bridge >' already invoked", 500, 0);
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
