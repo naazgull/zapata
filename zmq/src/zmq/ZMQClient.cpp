@@ -25,6 +25,9 @@ SOFTWARE.
 #include <zapata/zmq/ZMQPolling.h>
 #include <chrono>
 #include <ossp/uuid++.hh>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 zactor_t* zpt::ZMQ::__auth = nullptr;
 
@@ -49,8 +52,13 @@ zpt::json zpt::ZMQ::options() {
 	return this->__options;
 }
 
-std::string& zpt::ZMQ::connection() {
+auto zpt::ZMQ::connection() -> std::string{
 	return this->__connection;
+}
+
+auto zpt::ZMQ::connection(std::string _connection) -> void{
+	this->__connection.assign(_connection);
+	zpt::replace(this->__connection, "tcp://*:", std::string("tcp://") + zpt::net::getip() + std::string(":"));
 }
 
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
@@ -180,7 +188,26 @@ auto zpt::ZMQ::unlisten() -> void {
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 	zsock_set_rcvtimeo(this->__socket, 20000);
@@ -193,7 +220,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		this->auth();
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQReq::~ZMQReq() {
@@ -243,7 +270,26 @@ auto zpt::ZMQReq::unbind() -> void {
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REP);
-	assertz(zsock_attach(this->__socket, this->connection().data(), true) == 0, std::string("unable to attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -255,12 +301,12 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::alert);
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQRep::~ZMQRep() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQRep::self() const -> zpt::socket {
@@ -301,14 +347,57 @@ auto zpt::ZMQRep::unbind() -> void {
 }
 
 zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
-	std::string _connection1(_connection.substr(0, _connection.find(",")));
-	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket = zactor_new(zproxy, nullptr);
-	zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr);
-	zsock_wait(this->__socket);
-	zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr);
-	zsock_wait(this->__socket);
-	zlog(std::string("attaching XSUB/XPUB socket to ") + _connection, zpt::notice);
+	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
+	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
+	if (_connection2.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection2.find(":", 5);
+		std::string _port_part = _connection2.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			_connection2.assign(_connection2.substr(0, _port_sep + 1) + std::to_string(_available));
+			if (zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr) != -1) {
+				if (zsock_wait(this->__socket) != -1) {
+					break;
+				}
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+	}
+	else {
+		zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr);
+		zsock_wait(this->__socket);
+	}	
+	if (_connection1.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection1.find(":", 5);
+		std::string _port_part = _connection1.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			_connection1.assign(_connection1.substr(0, _port_sep + 1) + std::to_string(_available));
+			if (zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr) != -1) {
+				if (zsock_wait(this->__socket) != -1) {
+					break;
+				}
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+	}
+	else {
+		zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr);
+		zsock_wait(this->__socket);
+	}
+	this->connection(_connection1 + std::string(",") + _connection2);
+	zlog(std::string("attaching XSUB/XPUB socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
@@ -352,12 +441,12 @@ auto zpt::ZMQXPubXSub::unbind() -> void {
 }
 
 zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
-	std::string _connection1(_connection.substr(0, _connection.find(",")));
-	std::string _connection2(_connection.substr(_connection.find(",") + 1));
+	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
+	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
 	this->__socket_sub = zsock_new(ZMQ_SUB);
-	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + _connection2, 500, 0);
+	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	this->__socket_pub = zsock_new(ZMQ_PUB);
-	assertz(zsock_attach(this->__socket_pub, _connection1.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_pub)) + std::string(" socket to ") + _connection1, 500, 0);
+	assertz(zsock_attach(this->__socket_pub, _connection1.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_pub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	zsock_set_sndhwm(this->__socket_sub, 1000);
 	zsock_set_sndtimeo(this->__socket_sub, 20000);
 	zsock_set_sndhwm(this->__socket_pub, 1000);
@@ -373,7 +462,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket_pub);		
 		zsock_set_curve_serverkey(this->__socket_pub, _peer_key.data());
 	}	
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
@@ -428,7 +517,26 @@ void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUB);
-	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -439,12 +547,12 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQPub::~ZMQPub() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQPub::self() const -> zpt::socket {
@@ -488,7 +596,26 @@ auto zpt::ZMQPub::unbind() -> void {
 
 zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options) {
 	this->__socket = zsock_new(ZMQ_SUB);
-	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -506,12 +633,12 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 			zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + std::string(" /")).data());
 		}
 	}*/
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQSub::~ZMQSub() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQSub::self() const -> zpt::socket {
@@ -564,7 +691,26 @@ void zpt::ZMQSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUSH);
-	assertz(zsock_attach(this->__socket, _connection.data(), true) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -575,13 +721,13 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 
 zpt::ZMQPush::~ZMQPush() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQPush::self() const -> zpt::socket {
@@ -625,7 +771,26 @@ auto zpt::ZMQPush::unbind() -> void {
 
 zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PULL);
-	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
+	else {
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -636,12 +801,12 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQPull::~ZMQPull() {
 	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQPull::self() const -> zpt::socket {
@@ -686,14 +851,56 @@ auto zpt::ZMQPull::unbind() -> void {
 }
 
 zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
-	std::string _connection1(_connection.substr(0, _connection.find(",")));
-	std::string _connection2(_connection.substr(_connection.find(",") + 1));
 	this->__socket = zactor_new(zproxy, nullptr);
-	zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
-	zsock_wait(this->__socket);
-	zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
-	zsock_wait(this->__socket);
-
+	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
+	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
+	if (_connection1.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection1.find(":", 5);
+		std::string _port_part = _connection1.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			_connection1.assign(_connection1.substr(0, _port_sep + 1) + std::to_string(_available));
+			if (zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr) != -1) {
+				if (zsock_wait(this->__socket) != -1) {
+					break;
+				}
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+	}
+	else {
+		zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
+		zsock_wait(this->__socket);
+	}
+	if (_connection2.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection2.find(":", 5);
+		std::string _port_part = _connection2.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			_connection2.assign(_connection2.substr(0, _port_sep + 1) + std::to_string(_available));
+			if (zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr) != -1) {
+				if (zsock_wait(this->__socket) != -1) {
+					break;
+				}
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+	}
+	else {
+		zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
+		zsock_wait(this->__socket);
+	}	
+	this->connection(_connection1);
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);
@@ -702,7 +909,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 		zsock_set_curve_server(this->__socket, true);
 	}
 
-	zlog(std::string("attaching ROUTER/DEALER socket to ") + _connection, zpt::notice);
+	zlog(std::string("attaching ROUTER/DEALER socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
@@ -747,7 +954,26 @@ auto zpt::ZMQRouterDealer::unbind() -> void {
 
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __type(-1), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	assertz(zsock_attach(this->__socket, _connection.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
+	/*if (_connection.find("@tcp:") != string::npos) {
+		size_t _port_sep = _connection.find(":", 5);
+		std::string _port_part = _connection.substr(_port_sep + 1);
+		int _available = 32769;
+		if (_port_part != "*") {
+			_available = (int) zpt::json::string(_port_part);
+		}
+		do {
+			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
+				break;
+			}
+			_available++;
+		}
+		while(_available < 60999);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
+	else {*/
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+		//}	
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 	zsock_set_rcvtimeo(this->__socket, 20000);
@@ -760,11 +986,12 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : z
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		this->auth();
 	}
+	zlog(std::string("attaching ASSYNC_REQ socket to ") + this->connection(), zpt::notice);
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
 	zlog(std::string("dettaching ASSYNC_REQ from ") + this->connection(), zpt::notice);
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 	switch (this->__type) {
 		case 1 : {
 			this->__raw_socket->close();
@@ -880,4 +1107,44 @@ short zpt::str2type(std::string _type) {
 		return ZMQ_PULL;
 	}
 	return -20;
+}
+
+auto zpt::net::getip() -> std::string {
+	string _out;
+	struct ifaddrs * _if_addr = nullptr, * _ifa = nullptr;
+	void * _tmp_add_ptr = nullptr;
+
+	getifaddrs(&_if_addr);
+	for (_ifa = _if_addr; _ifa != nullptr; _ifa = _ifa->ifa_next) {
+		if (_ifa ->ifa_addr->sa_family == AF_INET) {
+			char _mask[INET_ADDRSTRLEN];
+			void* _mask_ptr = &((struct sockaddr_in*) _ifa->ifa_netmask)->sin_addr;
+			inet_ntop(AF_INET, _mask_ptr, _mask, INET_ADDRSTRLEN);
+			if (strcmp(_mask, "255.0.0.0") != 0) {
+				_tmp_add_ptr = &((struct sockaddr_in *) _ifa->ifa_addr)->sin_addr;
+				char _address_buf[INET_ADDRSTRLEN];
+				bzero(_address_buf, INET_ADDRSTRLEN);
+				inet_ntop(AF_INET, _tmp_add_ptr, _address_buf, INET_ADDRSTRLEN);
+				_out.assign(_address_buf);
+				if (_if_addr != nullptr) freeifaddrs(_if_addr);
+				return _out;
+			}
+		}
+		else if (_ifa->ifa_addr->sa_family == AF_INET6) {
+			char _mask[INET6_ADDRSTRLEN];
+			void* _mask_ptr = &((struct sockaddr_in*) _ifa->ifa_netmask)->sin_addr;
+			inet_ntop(AF_INET6, _mask_ptr, _mask, INET6_ADDRSTRLEN);
+			if (strcmp(_mask, "255.0.0.0") != 0) {
+				_tmp_add_ptr = &((struct sockaddr_in *) _ifa->ifa_addr)->sin_addr;
+				char _address_buf[INET6_ADDRSTRLEN];
+				bzero(_address_buf, INET6_ADDRSTRLEN);
+				inet_ntop(AF_INET6, _tmp_add_ptr, _address_buf, INET6_ADDRSTRLEN);
+				_out.assign(_address_buf);
+				if (_if_addr != nullptr) freeifaddrs(_if_addr);
+				return _out;
+			}
+		}
+	}
+	if (_if_addr != nullptr) freeifaddrs(_if_addr);
+	return _out;
 }

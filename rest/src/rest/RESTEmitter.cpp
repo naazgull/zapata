@@ -111,6 +111,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	this->directory()->notify(_regex, this->options()["zmq"]);
 	zlog(std::string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
 	return _uuid;
@@ -120,7 +121,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	std::regex _url_pattern(_regex);
 
 	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
-	vector< zpt::ev::Handler> _handlers;
+	std::vector< zpt::ev::Handler> _handlers;
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Get)) == _handler_set.end() ?  this->__default_get : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Put)) == _handler_set.end() ?  this->__default_put : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Post)) == _handler_set.end() ?  this->__default_post : _found->second);
@@ -132,6 +133,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	this->directory()->notify(_regex, this->options()["zmq"]);
 	zlog(std::string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
 	return _uuid;
@@ -170,13 +172,14 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 		return zpt::undefined;
 	};
 	
-	vector< zpt::ev::Handler > _handlers;
+	std::vector< zpt::ev::Handler > _handlers;
 	for (short _idx = zpt::ev::Get; _idx != zpt::ev::Reply + 1; _idx++) {
 		_handlers.push_back(_handler);
 	}
 	
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
 	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::info);
 	this->server()->assync_on(_listener->regex(), _opts);
 	return _uuid;

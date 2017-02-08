@@ -307,6 +307,14 @@ auto zpt::EventGatekeeper::authorize(zpt::json _envelope) -> zpt::json {
 }
 
 zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), __self(this) {
+	if (this->options()["directory"]->ok()) {
+		for (auto _api : this->options()["directory"]->obj()) {
+			for (auto _endpoint : _api.second["endpoints"]->arr()) {
+				std::regex _regex(std::string("^") + _endpoint->str() + std::string("(.*)$"));
+				this->__index.push_back(std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] })));
+			}
+		}
+	}	
 }
 
 zpt::EventDirectory::~EventDirectory() {
@@ -333,15 +341,15 @@ auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void {
 }
 
 auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
-	if (this->options()["directory"]->ok()) {
-		for (auto _api : this->options()["directory"]->obj()) {
-			for (auto _endpoint : _api.second["endpoints"]->arr()) {
-				if (_topic.find(_endpoint->str()) == 0) {
-					return _api.second;
-				}
-			}
+	for (auto _service : this->__index) {
+		if (std::regex_match(_topic, _service.first)) {
+			return _service.second;
 		}
-	}	
+	}
 	return zpt::undefined;
 }
 
+auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> void {
+	std::regex _regex(_topic);
+	this->__index.push_back(std::make_pair(_regex, (_connection->type() == zpt::JSArray ? _connection[0] : _connection)));
+}

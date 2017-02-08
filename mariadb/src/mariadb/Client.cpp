@@ -68,11 +68,14 @@ auto zpt::mariadb::Client::mutations() -> zpt::mutation::emitter {
 }
 
 auto zpt::mariadb::Client::connect() -> void {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
 	zpt::Connector::connect();
 }
 
 auto zpt::mariadb::Client::reconnect() -> void {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
+	assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
 	this->__conn->close();
 	this->__conn.release();
 	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
@@ -81,9 +84,10 @@ auto zpt::mariadb::Client::reconnect() -> void {
 
 auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	if (!_document["id"]->ok()) {
 		_document << "id" << zpt::generate::r_uuid();
@@ -112,7 +116,9 @@ auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_pre
 
 	_expression += _columns + std::string(") VALUES (") + _values + (")");
 	try {
-		_stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
@@ -124,9 +130,10 @@ auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_pre
 
 auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -146,7 +153,9 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 	_expression += string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -156,9 +165,10 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 
 auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -178,7 +188,9 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	_expression += string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -188,9 +200,10 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 
 auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -215,7 +228,9 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	
 	int _size = 0;
 	try {
-		_size = _stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_size = _stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -225,9 +240,10 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 
 auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -245,7 +261,9 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 	_expression += string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -255,9 +273,10 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 
 auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("UPDATE ");
 	_expression += _collection;
@@ -280,7 +299,9 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	
 	int _size = 0;
 	try {
-		_size = _stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_size = _stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -289,9 +310,10 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 }
 
 auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -300,7 +322,9 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 	_expression += string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
 
 	try {
-		_stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -309,9 +333,10 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 }
 
 auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	std::string _expression("DELETE FROM ");
 	_expression += _collection;
@@ -325,7 +350,9 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 	
 	int _size = 0;
 	try {
-		_size = _stmt->execute(_expression);
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+			_size = _stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
@@ -341,12 +368,16 @@ auto zpt::mariadb::Client::get(std::string _collection, std::string _href, zpt::
 }
 
 auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
 	zpt::json _elements = zpt::json::array();
-	std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-	_stmt->execute(string("USE ") + this->connection()["db"]->str());
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
-	std::shared_ptr<sql::ResultSet> _result(_stmt->executeQuery(_pattern));
+	std::shared_ptr<sql::ResultSet> _result;
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_result.reset(_stmt->executeQuery(_pattern)); }
 	for (; _result->next(); ) {
 		_elements << zpt::mariadb::fromsql_r(_result);
 	}

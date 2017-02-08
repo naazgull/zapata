@@ -180,6 +180,10 @@ auto zpt::lisp::Bridge::instance() -> zpt::bridge {
 	return zpt::lisp::__instance->self();
 }
 
+auto zpt::lisp::Bridge::is_booted() -> bool {
+	return zpt::lisp::__instance != nullptr;
+}
+
 auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	assertz(zpt::lisp::__instance == nullptr, "bridge instance isn't null, 'zpt::bridge::boot< zpt::lisp::bridge >' already invoked", 500, 0);
 	zpt::lisp::bridge* _bridge = new zpt::lisp::bridge(_options);

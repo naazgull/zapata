@@ -66,6 +66,7 @@ namespace zpt {
 			virtual auto check(const std::string _op1, const std::string _op2) -> bool;
 
 			static auto instance() -> zpt::bridge;
+			static auto is_booted() -> bool;
 			static auto boot(zpt::json _options) -> void;
 				
 		private:
