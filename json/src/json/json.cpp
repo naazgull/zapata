@@ -192,11 +192,12 @@ auto zpt::conf::env(zpt::json _options) -> void {
 
 auto zpt::uri::parse(std::string _uri) -> zpt::json {
 	if (_uri.find(":") >= _uri.find("/")) {
-		_uri = std::string("zpt:") + _uri; 
+		_uri = std::string("zpt://127.0.0.1") + _uri;
 	}
 	static const std::regex _uri_rgx(
 		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
-		"([^?#]*)"                    // authority and path
+		"([/]{1,2})([^/]+)"           // authority
+		"([^?#]*)"                    // path
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment
 	);
@@ -204,14 +205,15 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 	std::smatch _uri_matches;
 	std::regex_match(_uri, _uri_matches, _uri_rgx);
 
-	std::string _q_str = (std::string) _uri_matches[3];
+	std::string _q_str = (std::string) _uri_matches[5];
 	zpt::json _query = zpt::uri::query::parse(_q_str);
 
 	return {
 		"scheme", (std::string) _uri_matches[1],
-		"path", (std::string) _uri_matches[2],
+		"authority", (std::string) _uri_matches[3],
+		"path", (std::string) _uri_matches[4],
 		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
-		"fragment", zpt::url::r_decode((std::string) _uri_matches[4])
+		"fragment", zpt::url::r_decode((std::string) _uri_matches[6])
 	};
 }
 

@@ -38,80 +38,40 @@ using namespace __gnu_cxx;
 #endif
 
 int main(int argc, char* argv[]) {
+	zpt::log_fd = &std::cout;
+	zpt::log_pid = ::getpid();
+	zpt::log_pname = new string(argv[0]);
+	zpt::log_format = 1;
+
 	try {
-		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
+		// z0mqc tcp://platform.muzzley.com:993/v2/channels/74885d26-e15b-11e6 -N req -X GET -H 'Authorization: q2093rnw98n0f8iquwefqwuef980wnj98f0ufj9842uf9n08j2'
+		zpt::json _opts = zpt::conf::getopt(argc, argv);
+		if (!_opts["files"]->ok()) {
+			exit(-1);
+		}
+	
+		zpt::json _uri = zpt::uri::parse(std::string(_opts["files"][0]));
 		
-		switch(_api->options()["zmq"]["type"]->intr()) {
-			case ZMQ_REQ: {
-				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
-				zpt::json _envelope(
-					{
-						"channel", _api->options()["rest"]["target"],
-						"performative", (zpt::ev::performative) _api->options()["rest"]["method"]->intr(),
-						"resource", _api->options()["rest"]["target"],
-						"payload", _api->options()["rest"]["body"]
-					}
-				);
-				if (_api->options()["rest"]["token"]->ok()) {
-					_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
-				}
-				zpt::json _reply = _client->send(_envelope);
-				if (zpt::log_format) {
-					zlog(zpt::pretty(_reply), zpt::info);
-				}
-				else {
-					zlog(std::string(_reply), zpt::info);
-				}
-				exit(0);
-				break;
+		if (std::string(_opts["N"][0]) == "req") {
+			zpt::ZMQReq _socket(std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]), _opts);
+			zpt::json _envelope = {
+				"channel", std::string(_uri["path"]),
+				"performative", zpt::ev::from_str(std::string(_opts["X"][0])),
+				"resource", std::string(_uri["path"]),
+				"payload", (_opts["d"]->ok() ? zpt::json(std::string(_opts["d"][0])) : zpt::undefined)
+			};
+			if (_opts["H"]->ok()) {
+				//_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
 			}
-			case ZMQ_PULL: {
-				_api->events()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
-					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						if (zpt::log_format) {
-							zlog(zpt::pretty(_envelope), zpt::info);
-						}
-						else {
-							zlog(std::string(_envelope), zpt::info);
-						}
-						return zpt::undefined;
-					}
-				);
-				_api->start();
-				break;
-			}
-			case ZMQ_PUB: {
-				zpt::socket _client = _api->bind(_api->options()["zmq"]["type"]->intr(), _api->options()["zmq"]["bind"]->str());
-				zpt::json _envelope(
-					{
-						"channel", _api->options()["rest"]["target"],
-						"performative", (zpt::ev::performative) _api->options()["rest"]["method"]->intr(),
-						"resource", _api->options()["rest"]["target"],
-						"payload", _api->options()["rest"]["body"]
-					}
-				);
-				if (_api->options()["rest"]["token"]->ok()) {
-					_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
-				}
-				_client->send(_envelope);
-				exit(0);
-				break;
-			}			    
-			case ZMQ_SUB: {
-				_api->events()->on(zpt::ev::Reply, _api->options()["rest"]["target"]->str(),
-					[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-						if (zpt::log_format) {
-							zlog(zpt::pretty(_envelope), zpt::info);
-						}
-						else {
-							zlog(std::string(_envelope), zpt::info);
-						}
-						return zpt::undefined;
-					}
-				);
-				_api->start();
-				break;
-			}
+			zpt::json _reply = _socket.send(_envelope);
+			zlog(std::string("STATUS  ") + std::string(zpt::status_names[int(_reply["status"])]), zpt::notice);
+			zlog(std::string("HEADERS ") + zpt::json::pretty(_reply["headers"]) + (_reply["payload"]->ok() && _reply["payload"]->obj()->size() != 0 ? zpt::json::pretty(_reply["payload"]) : ""), zpt::notice);
+			zlog(std::string("PAYLOAD ") + std::string(_reply["payload"]), zpt::notice);
+			exit(0);
+		}
+		else if (std::string(_opts["N"][0]) == "pub-sub") {
+		}
+		else if (std::string(_opts["N"][0]) == "pull") {
 		}
 	}
 	catch (zpt::AssertionException& _e) {
