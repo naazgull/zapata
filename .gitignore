@@ -50,4 +50,4 @@ gen/src/gen/zgen
 zmq/src/zmq/zmut
 json/src/json/zinit
 zmq/src/zmq/zmut
-src/rest/z0mqc
+rest/src/rest/z0mqc
