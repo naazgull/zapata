@@ -6,9 +6,13 @@ libzapata_apps_datum_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_apps_datum_la_SOURCES = \
 ./datums/ResourceOwners.cpp \
+./mutations/ResourceOwners.cpp \
 ./datums/Applications.cpp \
+./mutations/Applications.cpp \
 ./datums/MyApplications.cpp \
+./mutations/MyApplications.cpp \
 ./datums/MyUsers.cpp \
+./mutations/MyUsers.cpp \
 ./collections/applications.cpp \
 ./documents/applications.cpp \
 ./collections/channels.cpp \

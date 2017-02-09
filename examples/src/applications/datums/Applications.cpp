@@ -5,24 +5,12 @@ auto zpt::apps::datums::Applications::get(std::string _topic, zpt::ev::emitter _
 	zpt::connector _c = _emitter->connector("dbms.redis.zpt.apps");
 _r_data = _c->get("Applications", _topic);
 
-	zpt::json _d_admin = _emitter->route(
-zpt::ev::Get,
-zpt::path::join({ zpt::array, "v2", "datums", "user-applications" }),
-{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "app_id", std::string(_r_data["id"]), "role", "m/admin/i" })) }
-)["payload"];
-_r_data << "admin" << (_d_admin["elements"]->type() == zpt::JSArray ? _d_admin["elements"][0] : _d_admin);
-zpt::json _d_token = _emitter->route(
+	zpt::json _d_token = _emitter->route(
 zpt::ev::Get,
 zpt::path::join({ zpt::array, "v2", "datums", "token" }),
 { "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "id", std::string(_r_data["id"]) })) }
 )["payload"];
 _r_data << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_token["elements"][0] : _d_token);
-zpt::json _d_users = _emitter->route(
-zpt::ev::Get,
-zpt::path::join({ zpt::array, "v2", "datums", "users" }),
-{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "app_id", std::string(_r_data["id"]) })) }
-)["payload"];
-_r_data << "users" << (_d_users["elements"]->type() == zpt::JSArray ? _d_users["elements"] : zpt::json({ zpt::array, _d_users }));
 
 	return _r_data;
 }
@@ -34,24 +22,12 @@ _r_data = _c->query("Applications", _filter, _filter);
 
 	if (_r_data["elements"]->type() == zpt::JSArray) {
 for (auto _d_element : _r_data["elements"]->arr()) {
-zpt::json _d_admin = _emitter->route(
-zpt::ev::Get,
-zpt::path::join({ zpt::array, "v2", "datums", "user-applications" }),
-{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "app_id", std::string(_d_element["id"]), "role", "m/admin/i" })) }
-)["payload"];
-_d_element << "admin" << (_d_admin["elements"]->type() == zpt::JSArray ? _d_admin["elements"][0] : _d_admin);
 zpt::json _d_token = _emitter->route(
 zpt::ev::Get,
 zpt::path::join({ zpt::array, "v2", "datums", "token" }),
 { "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "id", std::string(_d_element["id"]) })) }
 )["payload"];
 _d_element << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_token["elements"][0] : _d_token);
-zpt::json _d_users = _emitter->route(
-zpt::ev::Get,
-zpt::path::join({ zpt::array, "v2", "datums", "users" }),
-{ "headers", zpt::rest::authorization::headers(_identity["access_token"]), "params", (_envelope["params"] + zpt::json({ "app_id", std::string(_d_element["id"]) })) }
-)["payload"];
-_d_element << "users" << (_d_users["elements"]->type() == zpt::JSArray ? _d_users["elements"] : zpt::json({ zpt::array, _d_users }));
 }
 }
 
