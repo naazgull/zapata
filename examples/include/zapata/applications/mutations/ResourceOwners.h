@@ -19,10 +19,10 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 namespace apps {
-namespace documents {
-namespace applications {
+namespace mutations {
+namespace ResourceOwners {
 
-auto restify(zpt::ev::emitter _emitter) -> void;
+auto mutify(zpt::mutation::emitter _emitter) -> void;
 }
 }
 }

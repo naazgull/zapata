@@ -9,6 +9,7 @@ $[resource.handler.put]
 $[resource.handler.patch]
 $[resource.handler.delete]
 $[resource.handler.head]
+$[resource.handler.reply]
 },
 $[resource.opts]
 );

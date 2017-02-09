@@ -56,9 +56,9 @@
 				"cloud_secret" : { "type" : "token", "opts" : [ "auto", "mandatory", "index", "read-only" ] },
 				"icon" : { "type" : "uri" },
 				"image" : { "type" : "uri" },
-				"admin" : { "type" : "object", "ref" : "/v2/datums/user-applications", "rel" : "app_id={id}&role=m/admin/i", "opts" : [ "on-demand" ] },
+				"admin" : { "type" : "object", "ref" : "/v2/datums/user-applications", "rel" : "app_id={id}&role=m/admin/i", "opts" : [ "publish" ] },
 				"token" :  { "type" : "object", "ref" : "/v2/datums/token", "rel" : "id={id}", "opts" : [ "on-demand" ] },
-				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
+				"users" : { "type" : "array", "ref" : "/v2/datums/users", "rel" : "app_id={id}", "opts" : [ "publish" ] }
 			}
 		},
 		{
@@ -74,7 +74,7 @@
 			"dbms" : [ "mongodb", "redis" ],
 			"extends" : { "ref" : "/v2/datums/users",  "rel" : "email=m/muzzley.com/i", "opts" : [ "publish" ] },
 			"fields" : {
-				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
+				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "publish" ] }
 			}
 		}
 	]

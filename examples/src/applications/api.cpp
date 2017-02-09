@@ -11,8 +11,12 @@ using namespace __gnu_cxx;
 #endif
 
 extern "C" void restify(zpt::ev::emitter _emitter) {
-	_emitter->connector({ { "dbms.mongodb.zpt.apps", (new zpt::mongodb::Client(_emitter->options(), "mongodb.zpt.apps"))->self() }, { "dbms.pgsql.zpt.apps", zpt::connector(new zpt::pgsql::Client(_emitter->options(), "pgsql.zpt.apps")) }, { "dbms.redis.zpt.apps", zpt::connector(new zpt::redis::Client(_emitter->options(), "redis.zpt.apps")) }, });
+_emitter->connector({ { "dbms.mongodb.zpt.apps", zpt::connector(new zpt::mongodb::Client(_emitter->options(), "mongodb.zpt.apps")) }, { "dbms.pgsql.zpt.apps", zpt::connector(new zpt::pgsql::Client(_emitter->options(), "pgsql.zpt.apps")) }, { "dbms.redis.zpt.apps", zpt::connector(new zpt::redis::Client(_emitter->options(), "redis.zpt.apps")) }, });
 
+zpt::apps::mutations::ResourceOwners::mutify(_emitter->mutations());
+zpt::apps::mutations::Applications::mutify(_emitter->mutations());
+zpt::apps::mutations::MyApplications::mutify(_emitter->mutations());
+zpt::apps::mutations::MyUsers::mutify(_emitter->mutations());
 zpt::apps::collections::applications::restify(_emitter);
 zpt::apps::documents::applications::restify(_emitter);
 zpt::apps::collections::channels::restify(_emitter);

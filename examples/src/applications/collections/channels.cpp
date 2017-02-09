@@ -21,12 +21,12 @@ zpt::path::join({ zpt::array, "v2", "datums", "applications", std::string(_tv_ap
 
 
 }
-},
+}
 
 
 
 
-
+,
 {
 zpt::ev::Head,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
@@ -45,7 +45,7 @@ zpt::path::join({ zpt::array, "v2", "datums", "applications", std::string(_tv_ap
 
 
 }
-},
+}
 
 },
 {"0mq", true,"amqp", true,"http", true,"mqtt", true}

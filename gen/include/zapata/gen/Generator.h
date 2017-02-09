@@ -50,6 +50,8 @@ namespace zpt {
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
 		auto url_pattern_to_params(std::string _url) -> zpt::json;
+
+		auto get_opts(zpt::json _field) -> zpt::json;
 	}
 
 	namespace conf {
@@ -89,7 +91,7 @@ namespace zpt {
 	
 	class GenDatum {
 	public:
-		GenDatum(zpt::json _spec);
+		GenDatum(zpt::json _spec, zpt::json _options);
 		virtual ~GenDatum();
 
 		virtual auto spec() -> zpt::json;
@@ -102,7 +104,11 @@ namespace zpt {
 		virtual auto build_patch(zpt::json _resource) -> std::string;
 		virtual auto build_delete(zpt::json _resource) -> std::string;
 		virtual auto build_head(zpt::json _resource) -> std::string;
-		virtual auto build_mutations() -> std::string;
+		virtual auto build_mutations(std::string _parent_name, std::string _child_includes) -> std::string;
+		virtual auto build_insert(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_update(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_remove(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_replace(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_get() -> std::string;
 		virtual auto build_associations_query() -> std::string;
 		virtual auto build_associations_insert() -> std::string;
@@ -123,6 +129,7 @@ namespace zpt {
 		
 	private:
 		zpt::json __spec;
+		zpt::json __options;
 
 	};
 
@@ -143,6 +150,7 @@ namespace zpt {
 		virtual auto build_patch() -> std::string;
 		virtual auto build_delete() -> std::string;
 		virtual auto build_head() -> std::string;
+		virtual auto build_reply() -> std::string;
 		virtual auto build_mutations() -> std::string;
 
 	private:
