@@ -51,7 +51,7 @@ auto zpt::Bridge::options() -> zpt::json {
 zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options( _options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
@@ -65,11 +65,18 @@ auto zpt::EventEmitter::self() const -> zpt::ev::emitter {
 	return this->__self;
 }
 
+auto zpt::EventEmitter::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::EventEmitter::mutations() -> zpt::mutation::emitter {
 	return this->__mutant;
 }
 
 auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
+	if (this->__mutant.get() != nullptr) {
+		this->__mutant->unbind();
+	}
 	this->__mutant = _emitter;
 }
 
@@ -307,14 +314,23 @@ auto zpt::EventGatekeeper::authorize(zpt::json _envelope) -> zpt::json {
 }
 
 zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), __self(this) {
-	if (this->options()["directory"]->ok()) {
-		for (auto _api : this->options()["directory"]->obj()) {
+	if (_options["directory"]->type() == zpt::JSObject) {
+		for (auto _api : _options["directory"]->obj()) {
+			if (_api.second["endpoints"]->type() != zpt::JSArray) {
+				continue;
+			}
 			for (auto _endpoint : _api.second["endpoints"]->arr()) {
-				std::regex _regex(std::string("^") + _endpoint->str() + std::string("(.*)$"));
-				this->__index.push_back(std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] })));
+				if (_endpoint->type() != zpt::JSString) {
+					continue;
+				}
+				try {
+					std::regex _regex(std::string("^") + _endpoint->str() + std::string("(.*)$"));
+					this->__index.push_back(std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] })));
+				}
+				catch(std::exception& _e) {}
 			}
 		}
-	}	
+	}
 }
 
 zpt::EventDirectory::~EventDirectory() {

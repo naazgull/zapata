@@ -117,6 +117,10 @@ auto zpt::MutationEmitter::self() const -> zpt::mutation::emitter {
 	return this->__self;
 }
 
+auto zpt::MutationEmitter::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connector) -> void {
 	auto _found = this->__connector.find(_name);
 	if (_found == this->__connector.end()) {

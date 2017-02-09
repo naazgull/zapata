@@ -55,6 +55,7 @@ namespace zpt {
 			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
 			virtual auto mutations() -> zpt::mutation::emitter;
 			virtual auto self() const -> zpt::bridge;
+			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::lisp::object;
 			virtual auto initialize() -> void;
 			virtual auto defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void;

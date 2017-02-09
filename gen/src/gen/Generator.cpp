@@ -269,6 +269,7 @@ auto zpt::Generator::build_data_layer() -> void {
 auto zpt::Generator::build_container() -> void {
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
+		bool _handlers_built = false;
 
 		if (!this->__options["resource-out-lang"]->ok() || std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("c++")) != std::end(this->__options["resource-out-lang"]->arr())) {
 			std::string _container_cxx;
@@ -335,6 +336,7 @@ auto zpt::Generator::build_container() -> void {
 		
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
+				_handlers_built = true;
 				for (auto _resource : _spec["resources"]->arr()) {
 					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
 
@@ -402,13 +404,19 @@ auto zpt::Generator::build_container() -> void {
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				for (auto _resource : _spec["resources"]->arr()) {
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+
 					std::string _include = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".lisp");
 					zpt::replace(_include, std::string(this->__options["prefix-scripts"][0]), "");
 					if (_include.front() == '/') {
 						_include.erase(0, 1);
 					}
 					_includes += std::string("(load \"/usr/share/") + _include + std::string("\")\n");
+					if (!_handlers_built) {
+						zpt::Generator::resources.find(_key)->second->build_handlers(std::string(_spec["name"]), "");
+					}
 				}
+				_handlers_built = true;
 			}		
 			zpt::replace(_container_lisp, "$[resource.path.h]", _includes);
 
@@ -452,12 +460,18 @@ auto zpt::Generator::build_container() -> void {
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				for (auto _resource : _spec["resources"]->arr()) {
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+
 					std::string _include = std::string(zpt::r_replace(_spec["name"]->str(), "-", "_")) + std::string(" import ") + std::string(_resource["type"]) + std::string("s.") + std::string(zpt::r_replace(_resource["name"]->str(), "-", "_")) + std::string("");
 					if (_include.front() == '/') {
 						_include.erase(0, 1);
 					}
 					_includes += std::string("from ") + _include + std::string("\n");
+					if (!_handlers_built) {
+						zpt::Generator::resources.find(_key)->second->build_handlers(std::string(_spec["name"]), "");
+					}
 				}
+				_handlers_built = true;
 			}		
 			zpt::replace(_container_py, "$[resource.path.h]", _includes);
 
@@ -704,17 +718,13 @@ auto zpt::GenDatum::build_insert(std::string _name, zpt::json _field) -> std::st
 	_return += std::string("{\nzpt::mutation::Insert,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");
 	_return += std::string("zpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), zpt::undefined);\n");
 
-	std::string _topic;
 	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
-	zpt::json _splited = zpt::split(std::string(_field["ref"]), "/");
-	for (auto _part : _splited->arr()) {
-		_topic += std::string(", ") + (_part->str().front() == '{' ? std::string("std::string(_r_data[\"") + _part->str().substr(1, _part->str().length() - 2) + std::string("\"])") : std::string("\"") + _part->str() + std::string("\""));
-	}
+	std::string _client = zpt::GenDatum::build_data_client(this->__spec["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, std::string(this->__spec["namespace"]));
+
 
 	std::string _remote_invoke;
 	if (_rel->obj()->size() != 0) {
 		std::string _params = this->build_params(_rel, false);
-		_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n)[\"payload\"];\n");
 	}
 	_return += std::string("}\n}\n");
 	return _return;
@@ -1147,7 +1157,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			}
 
 			std::string _f_name = std::string(this->__spec["name"]) + std::string("-") + std::string(this->__spec["type"]) + std::string("-") + _perf->str();
-			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:authorize envelope)\n   (let* ((t-split (zpt:split topic \"/\"))\n");
+			std::string _function = std::string("(defun ") + _f_name + std::string(" (performative topic envelope)\n   (zpt:authorize envelope)\n   (let* ((t-split (zpt:split topic \"/\"))");
 			_function += zpt::gen::url_pattern_to_vars_lisp(this->__spec["topic"]->str());
 			_function += std::string(")\n     ;; YOUR CODE HERE\n     (json \"status\" 204)))\n");
 
@@ -1771,12 +1781,9 @@ auto zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
 		if (_part->str().find("{") != string::npos) {
-			_return += std::string("	  (tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-") + std::string(" (zpt:topic-var t-split ") + std::to_string(_i) + std::string("))\n");
+			_return += std::string("\n	  (tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-") + std::string(" (zpt:topic-var t-split ") + std::to_string(_i) + std::string("))");
 		}
 		_i++;
-	}
-	if (_return.length() != 0) {
-		_return.erase(_return.length() - 1, 1);
 	}
 	return _return;
 }

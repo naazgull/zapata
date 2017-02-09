@@ -55,6 +55,7 @@ namespace zpt {
 			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
 			virtual auto mutations() -> zpt::mutation::emitter;
 			virtual auto self() const -> zpt::bridge;
+			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::python::object;
 			virtual auto initialize() -> void;
 			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback, int _n_args) -> void;

@@ -170,7 +170,7 @@ namespace zpt {
 		virtual auto mutations() -> zpt::mutation::emitter = 0;
 		virtual auto initialize() -> void = 0;
 		virtual auto self() const -> zpt::bridge = 0;
-
+		virtual auto unbind() -> void = 0;
 
 		template< typename T >
 		inline auto deflbd(zpt::json _conf, std::function< T (int, T[]) > _callback, int _n_args) -> void {
@@ -209,6 +209,7 @@ namespace zpt {
 		
 		virtual auto options() -> zpt::json;
 		virtual auto self() const -> zpt::mutation::emitter;
+		virtual auto unbind() -> void;
 		virtual auto version() -> std::string = 0;
 		
 		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
@@ -253,6 +254,7 @@ namespace zpt {
 		
 		virtual auto options() -> zpt::json;
 		virtual auto self() const -> zpt::ev::emitter;
+		virtual auto unbind() -> void;
 		virtual auto mutations() -> zpt::mutation::emitter;
 		virtual auto version() -> std::string = 0;
 		virtual auto gatekeeper() -> zpt::ev::gatekeeper;
