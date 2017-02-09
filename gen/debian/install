@@ -1,0 +1,11 @@
+src/zapata/gen/Container.cpp /usr/share/zapata/gen/
+src/zapata/gen/Container.lisp /usr/share/zapata/gen/
+src/zapata/gen/Container.py /usr/share/zapata/gen/
+src/zapata/gen/Datum.cpp /usr/share/zapata/gen/
+src/zapata/gen/Datum.h /usr/share/zapata/gen/
+src/zapata/gen/Handlers.cpp /usr/share/zapata/gen/
+src/zapata/gen/Handlers.h /usr/share/zapata/gen/
+src/zapata/gen/Handlers.lisp /usr/share/zapata/gen/
+src/zapata/gen/Handlers.py /usr/share/zapata/gen/
+src/zapata/gen/Mutations.cpp /usr/share/zapata/gen/
+src/zapata/gen/Mutations.h  /usr/share/zapata/gen/

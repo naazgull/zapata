@@ -29,6 +29,12 @@ do
     sed -i "s#developer-name#$dev_name#g" $file
     sed -i "s#developer-email#$dev_email#g" $file
     sed -i "s#distro-version#$distro#g" $file
-    sed -i "s#environment#$environment#g" $file
+    if [[ "$environment" == "master" ]]
+    then
+	sed -i "s#+environment##g" $file
+	sed -i "s#environment##g" $file
+    else
+	sed -i "s#environment#$environment#g" $file
+    fi
     sed -i "s#project-prefix#$path_prefix#g" $file
 done

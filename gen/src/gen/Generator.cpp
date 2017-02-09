@@ -638,12 +638,10 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		std::string _mutation_ons;
 		for (auto _field : this->__spec["fields"]->obj()) {
 			zpt::json _opts = zpt::gen::get_opts(_field.second);
-			zlog(std::string(_field.second), zpt::debug);
 			if (!_field.second["ref"]->ok() || !_opts["publish"]->ok()) {
 				continue;
 			}
 
-			zlog(std::string(_field.second["ref"]), zpt::debug);
 			std::string _mutation_on(_on.data());
 			zpt::replace(_mutation_on, "$[mutation.topic.regex]", zpt::gen::url_pattern_to_regexp(_field.second["ref"]->str()));
 			std::string _mutation;
@@ -707,8 +705,8 @@ auto zpt::GenDatum::build_insert(std::string _name, zpt::json _field) -> std::st
 	_return += std::string("zpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), zpt::undefined);\n");
 
 	std::string _topic;
-	zpt::json _rel = zpt::uri::query::parse(std::string(_field.second["rel"]));
-	zpt::json _splited = zpt::split(std::string(_field.second["ref"]), "/");
+	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
+	zpt::json _splited = zpt::split(std::string(_field["ref"]), "/");
 	for (auto _part : _splited->arr()) {
 		_topic += std::string(", ") + (_part->str().front() == '{' ? std::string("std::string(_r_data[\"") + _part->str().substr(1, _part->str().length() - 2) + std::string("\"])") : std::string("\"") + _part->str() + std::string("\""));
 	}
