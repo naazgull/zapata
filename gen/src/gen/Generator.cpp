@@ -704,6 +704,20 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 auto zpt::GenDatum::build_insert(std::string _name, zpt::json _field) -> std::string {
 	std::string _return;
 	_return += std::string("{\nzpt::mutation::Insert,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");
+	_return += std::string("zpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), zpt::undefined);\n");
+
+	std::string _topic;
+	zpt::json _rel = zpt::uri::query::parse(std::string(_field.second["rel"]));
+	zpt::json _splited = zpt::split(std::string(_field.second["ref"]), "/");
+	for (auto _part : _splited->arr()) {
+		_topic += std::string(", ") + (_part->str().front() == '{' ? std::string("std::string(_r_data[\"") + _part->str().substr(1, _part->str().length() - 2) + std::string("\"])") : std::string("\"") + _part->str() + std::string("\""));
+	}
+
+	std::string _remote_invoke;
+	if (_rel->obj()->size() != 0) {
+		std::string _params = this->build_params(_rel, false);
+		_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n)[\"payload\"];\n");
+	}
 	_return += std::string("}\n}\n");
 	return _return;
 }
