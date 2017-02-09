@@ -63,6 +63,10 @@ auto zpt::python::Bridge::self() const -> zpt::bridge {
 	return this->__self;
 }
 
+auto zpt::python::Bridge::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::python::Bridge::eval(std::string _call) -> zpt::python::object {
 	return zpt::python::object();
 }

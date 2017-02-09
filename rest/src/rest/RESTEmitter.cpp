@@ -26,7 +26,9 @@ SOFTWARE.
 #include <map>
 
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
-	this->mutations((new zpt::ZMQMutationEmitter(_options))->self());
+	if (_options["mutations"]["connect"]->ok()) {
+		this->mutations((new zpt::ZMQMutationEmitter(_options))->self());
+	}
 	
 	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		assertz(false, "Performative is not accepted for the given resource", 405, 0);

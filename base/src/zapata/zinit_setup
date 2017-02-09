@@ -105,6 +105,8 @@ do
 	fi
 done
 
+zcert --email ${dev_email} --name ${dev_name} --org ${name} --priv etc/zapata/certificates/${path_prefix}${abbreviation}/server.crt --pub etc/zapata/certificates/public/${name}.key
+
 git init
 git add --all
 git commit -m "zapata project initialization"

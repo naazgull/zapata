@@ -64,6 +64,10 @@ auto zpt::lisp::Bridge::self() const -> zpt::bridge {
 	return this->__self;
 }
 
+auto zpt::lisp::Bridge::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::lisp::Bridge::eval(std::string _call) -> zpt::lisp::object {
 	return zpt::lisp::object(cl_safe_eval(c_string_to_object(_call.c_str()), Cnil, Cnil));
 }
@@ -280,7 +284,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 			"args", { zpt::array,
 				{ "type", "string", "label", "request performative" },
 				{ "type", "string", "label", "request topic pattern" },
-				{ "type", "object", "label", "payload to send" }
+				{ "type", "object", "label", "envelope to send" }
 			}
 		},
 		(cl_objectfn_fixed) zpt::lisp::route,
