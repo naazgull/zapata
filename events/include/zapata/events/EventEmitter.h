@@ -173,8 +173,8 @@ namespace zpt {
 		virtual auto unbind() -> void = 0;
 
 		template< typename T >
-		inline auto deflbd(zpt::json _conf, std::function< T (int, T[]) > _callback, int _n_args) -> void {
-			return T::bridge()->deflbd(_conf, _callback, _n_args);
+		inline auto deflbd(zpt::json _conf, std::function< T (int, T[]) > _callback) -> void {
+			return T::bridge()->deflbd(_conf, _callback);
 		};
 
 		template< typename T >
@@ -209,6 +209,8 @@ namespace zpt {
 		
 		virtual auto options() -> zpt::json;
 		virtual auto self() const -> zpt::mutation::emitter;
+		virtual auto events() -> zpt::ev::emitter;
+		virtual auto events(zpt::ev::emitter _emitter) -> void;
 		virtual auto unbind() -> void;
 		virtual auto version() -> std::string = 0;
 		
@@ -218,8 +220,8 @@ namespace zpt {
 		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void = 0;
 		virtual auto off(std::string _callback_id) -> void = 0;
 		
-		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json = 0;
-		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json = 0;
+		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
@@ -227,6 +229,7 @@ namespace zpt {
 	private:
 		zpt::json __options;
 		zpt::mutation::emitter __self;
+		zpt::ev::emitter __events;
 		std::map<std::string, zpt::connector> __connector;
 	};
 
@@ -271,8 +274,8 @@ namespace zpt {
 		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void = 0;
 		virtual auto off(std::string _callback_id) -> void = 0;
 
-		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
-		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload) -> zpt::json = 0;
+		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;

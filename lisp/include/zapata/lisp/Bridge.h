@@ -58,8 +58,7 @@ namespace zpt {
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::lisp::object;
 			virtual auto initialize() -> void;
-			virtual auto defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void;
-			virtual auto deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback, int _n_args) -> void;
+			virtual auto deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback) -> void;
 			virtual auto defop(zpt::json _conf) -> void;
 			virtual auto defchk(std::function< bool (const std::string, const std::string) > _callback) -> void;
 			virtual auto defmod(std::string _module) -> void;
@@ -77,6 +76,8 @@ namespace zpt {
 			std::shared_ptr< std::map< std::string, std::string > >__modules;
 			std::shared_ptr< std::map< std::string, std::function< bool (const std::string, const std::string) > > > __consistency;
 			std::string __current;
+
+			virtual auto defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void;
 			
 		};
 
@@ -111,14 +112,7 @@ namespace zpt {
 		extern zpt::lisp::bridge* __instance;
 		
 		auto cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object _args) -> cl_object;
-		auto cpp_check_call(cl_object _op1_name, cl_object _op2_name) -> cl_object;
-		auto logger(cl_object _text, cl_object _level) -> cl_object;
-		auto get_log_level() -> cl_object;
-		auto on(cl_object _cl_topic, cl_object _cl_lambda, cl_object _cl_opts) -> cl_object;
-		auto route(cl_object _cl_performative, cl_object _cl_topic, cl_object _cl_payload) -> cl_object;
-		auto split(cl_object _cl_string, cl_object _cl_separator) -> cl_object;
-		auto topic_var(cl_object _cl_topic, cl_object _cl_index) -> cl_object;
-		auto validate_authorization(cl_object _cl_envelope) -> cl_object;
+		auto builtin_operators(zpt::lisp::bridge* _bridge) -> void;
 		
 		auto from_lisp(cl_object _in) -> zpt::json;
 		auto from_lisp(cl_object _in, zpt::json& _parent) -> void;

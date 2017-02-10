@@ -78,6 +78,7 @@ auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
 		this->__mutant->unbind();
 	}
 	this->__mutant = _emitter;
+	this->__mutant->events(this->self());
 }
 
 auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {

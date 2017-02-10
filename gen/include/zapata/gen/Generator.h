@@ -98,6 +98,9 @@ namespace zpt {
 		virtual auto build() -> std::string;
 		virtual auto build_data_layer() -> std::string;
 		virtual auto build_params(zpt::json _rel, bool _multi) -> std::string;
+		virtual auto build_inverted_params(zpt::json _rel) -> std::string;
+		virtual auto build_topic(zpt::json _topic) -> std::string;
+		virtual auto build_dbms() -> std::string;
 		virtual auto build_get(zpt::json _resource) -> std::string;
 		virtual auto build_post(zpt::json _resource) -> std::string;
 		virtual auto build_put(zpt::json _resource) -> std::string;
@@ -105,10 +108,14 @@ namespace zpt {
 		virtual auto build_delete(zpt::json _resource) -> std::string;
 		virtual auto build_head(zpt::json _resource) -> std::string;
 		virtual auto build_mutations(std::string _parent_name, std::string _child_includes) -> std::string;
-		virtual auto build_insert(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_update(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_remove(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_replace(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_insert() -> std::string;
+		virtual auto build_update() -> std::string;
+		virtual auto build_remove() -> std::string;
+		virtual auto build_replace() -> std::string;
+		virtual auto build_associations_insert(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_get() -> std::string;
 		virtual auto build_associations_query() -> std::string;
 		virtual auto build_associations_insert() -> std::string;

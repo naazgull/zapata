@@ -86,18 +86,12 @@ auto zpt::python::Bridge::initialize() -> void {
 	zlog(std::string("PYTHON bridge initialized"), zpt::info);
 }
 
-auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback, int _n_args) -> void {
+auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void {
+	size_t _n_args = _conf["args"]->type() != zpt::JSArray ? 0 : _conf["args"]->arr()->size();
 	std::string _name(_conf["name"]->str() + std::string("/") + std::to_string(_n_args));
 	auto _found = this->__lambdas->find(_name);
 	if (_found == this->__lambdas->end()) {
 		this->__lambdas->insert(std::make_pair(_name, _callback));
-		std::string _args_string;
-		std::string _coerced_args_string;
-		for (int _i = 0; _i != _n_args; _i++) {
-			_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
-			_coerced_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
-		}
-		std::string _expression = std::string("(defun ") + _conf["name"]->str() + std::string(" (") + _args_string + std::string(") (cpp-lambda-call \"") + _name + std::string("\" ") + std::to_string(_n_args) + std::string(" (make-array ") + std::to_string(_n_args) + std::string(" :initial-contents (list ") + _coerced_args_string + std::string(") ) ) )");
 	}
 }
 

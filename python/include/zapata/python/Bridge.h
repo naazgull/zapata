@@ -58,7 +58,7 @@ namespace zpt {
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::python::object;
 			virtual auto initialize() -> void;
-			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback, int _n_args) -> void;
+			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void;
 			virtual auto defop(zpt::json _conf) -> void;
 			virtual auto call(const char* _c_name, int _n_args, zpt::python::object _args[]) -> zpt::python::object;
 

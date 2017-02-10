@@ -18,6 +18,7 @@ auto $[namespace]::datums::$[datum.name]::insert(std::string _topic, zpt::json _
 	zpt::json _r_data;
 	$[datum.extends.insert]
 	$[datum.relations.insert]
+	_emitter->mutations()->route(zpt::mutation::Insert, _topic, { "performative", "insert", "href", _document["href"], "new", _document });
 	return _r_data;
 }
 
@@ -25,6 +26,7 @@ auto $[namespace]::datums::$[datum.name]::save(std::string _topic, zpt::json _do
 	zpt::json _r_data;
 	$[datum.extends.save]
 	$[datum.relations.save]
+	_emitter->mutations()->route(zpt::mutation::Replace, _topic, { "performative", "save", "href", _topic, "new", _document });
 	return _r_data;
 }
 
@@ -32,6 +34,7 @@ auto $[namespace]::datums::$[datum.name]::set(std::string _topic, zpt::json _doc
 	zpt::json _r_data;
 	$[datum.extends.set.topic]
 	$[datum.relations.set]
+	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document });
 	return _r_data;
 }
 
@@ -39,6 +42,7 @@ auto $[namespace]::datums::$[datum.name]::set(std::string _topic, zpt::json _doc
 	zpt::json _r_data;
 	$[datum.extends.set.pattern]
 	$[datum.relations.set]
+	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document, "filter", _filter });
 	return _r_data;
 }
 
@@ -46,6 +50,7 @@ auto $[namespace]::datums::$[datum.name]::remove(std::string _topic, zpt::ev::em
 	zpt::json _r_data;
 	$[datum.extends.remove.topic]
 	$[datum.relations.remove]
+	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic });
 	return _r_data;
 }
 
@@ -53,6 +58,6 @@ auto $[namespace]::datums::$[datum.name]::remove(std::string _topic, zpt::json _
 	zpt::json _r_data;
 	$[datum.extends.remove.pattern]
 	$[datum.relations.remove]
+	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic, "filter", _filter });
 	return _r_data;
 }
-
