@@ -100,16 +100,22 @@ auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_ar
 	this->defop(_conf);
 }
 
-auto zpt::lisp::Bridge::deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback, int _n_args) -> void {
+
+auto zpt::lisp::Bridge::deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback) -> void {
+	size_t _n_args = _conf["args"]->type() != zpt::JSArray ? 0 : _conf["args"]->arr()->size();
 	std::string _name(_conf["name"]->str() + std::string("/") + std::to_string(_n_args));
 	auto _found = this->__lambdas->find(_name);
 	if (_found == this->__lambdas->end()) {
 		this->__lambdas->insert(make_pair(_name, _callback));
 		std::string _args_string;
 		std::string _coerced_args_string;
-		for (int _i = 0; _i != _n_args; _i++) {
-			_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
-			_coerced_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
+		if (_conf["args"]->type() == zpt::JSArray) {
+			size_t _i = 0;
+			for (auto _arg : _conf["args"]->arr()) {
+				_args_string += (bool(_arg["optional"]) ? "&optional " : "") + std::string("arg") + std::to_string(_i) + std::string(" ");
+				_coerced_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
+				_i++;
+			}
 		}
 		std::string _expression = std::string("(defun ") + _conf["name"]->str() + std::string(" (") + _args_string + std::string(") (cpp-lambda-call \"") + _name + std::string("\" ") + std::to_string(_n_args) + std::string(" (make-array ") + std::to_string(_n_args) + std::string(" :initial-contents (list ") + _coerced_args_string + std::string(") ) ) )");
 		this->eval(_expression);
@@ -204,7 +210,6 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":authorize "
 		"))"
 	);
-
 	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::info);
 	_bridge->defun(
 		{
@@ -221,116 +226,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		(cl_objectfn_fixed) zpt::lisp::cpp_lambda_call,
 		3
 	);
-	_bridge->defun(
-		{
-			"name", "check-consistency",
-			"type", "internal",
-			"access", "r",
-			"label", "Check two function consistency",
-			"args", { zpt::array,
-				{ "type", "string", "label", "left hand side function name" },
-				{ "type", "string", "label", "right hand side function name" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::cpp_check_call,
-		2
-	);
-	_bridge->defun(
-		{
-			"name", "zlog",
-			"type", "internal",
-			"access", "r",
-			"label", "Logging function",
-			"args", { zpt::array,
-				{ "type", "string", "label", "text to be logged" },
-				{ "type", "int", "label", "log level (syslog levels)" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::logger,
-		2
-	);
-	_bridge->defun(
-		{
-			"name", "get-log-level",
-			"type", "internal",
-			"access", "r",
-			"label", "Get current specified log level",
-			"args", zpt::json::array()
-		},
-		(cl_objectfn_fixed) zpt::lisp::get_log_level,
-		0
-	);
-	_bridge->defun(
-		{
-			"name", "zpt:on",
-			"type", "internal",
-			"access", "a",
-			"label", "Registers resource handler",
-			"args", { zpt::array,
-				{ "type", "string", "label", "request topic pattern" },
-				{ "type", "object", "label", "performative <> operator hash table" },
-				{ "type", "object", "label", "options" }				
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::on,
-		3
-	);	
-	_bridge->defun(
-		{
-			"name", "zpt:route",
-			"type", "internal",
-			"access", "a",
-			"label", "Routes RESTful resource requests",
-			"args", { zpt::array,
-				{ "type", "string", "label", "request performative" },
-				{ "type", "string", "label", "request topic pattern" },
-				{ "type", "object", "label", "envelope to send" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::route,
-		3
-	);
-	_bridge->defun(
-		{
-			"name", "zpt:split",
-			"type", "internal",
-			"access", "a",
-			"label", "Splits a string by a given separator",
-			"args", { zpt::array,
-				{ "type", "string", "label", "the string to split" },
-				{ "type", "string", "label", "the separator to split by" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::split,
-		2
-	);
-	_bridge->defun(
-		{
-			"name", "zpt:topic-var",
-			"type", "internal",
-			"access", "a",
-			"label", "Routes RESTful resource requests",
-			"args", { zpt::array,
-				{ "type", "array", "label", "the splited topic" },
-				{ "type", "int", "label", "index for the topic part" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::topic_var,
-		2
-	);
-	_bridge->defun(
-		{
-			"name", "zpt:authorize",
-			"type", "internal",
-			"access", "a",
-			"label", "Validates authorization headers",
-			"args", { zpt::array,
-				{ "type", "object", "label", "the message envelope" }
-			}
-		},
-		(cl_objectfn_fixed) zpt::lisp::validate_authorization,
-		1
-	);
+	zpt::lisp::builtin_operators(_bridge);
 	zlog(std::string("LISP bridge booted"), zpt::alert);
 }
 
@@ -368,7 +264,7 @@ auto zpt::lisp::cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object
 	std::string _coerced_fn_name = (std::string) _ptr;
 	unsigned int _coerced_n_args = ecl_to_unsigned_integer(_n_args);
 	unsigned int _coerced_args_dim = ecl_array_dimension(_args, 0);
-	assertz(_coerced_n_args == _coerced_args_dim, std::string("invalid number of arguments, ") + std::to_string(_coerced_n_args) + std::string(" arguments defined and ") + std::to_string(_coerced_args_dim) + std::string(" arguments passed") , 0, 0);
+	assertz(_coerced_n_args >= _coerced_args_dim, std::string("invalid number of arguments, ") + std::to_string(_coerced_n_args) + std::string(" arguments defined and ") + std::to_string(_coerced_args_dim) + std::string(" arguments passed") , 0, 0);
 
 	zpt::lisp::object _arr[_coerced_n_args];
 	for (unsigned int _i = 0; _i != _coerced_n_args; _i++) {
@@ -377,93 +273,183 @@ auto zpt::lisp::cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object
 	return **((zpt::lisp::bridge*) _bridge.get())->call(_coerced_fn_name.data(), _coerced_n_args, _arr).get();
 }
 
-auto zpt::lisp::cpp_check_call(cl_object _op1_name, cl_object _op2_name) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
+	_bridge->deflbd(
+		{
+			"name", "check-consistency",
+			"type", "internal",
+			"access", "r",
+			"label", "Check two function consistency",
+			"args", { zpt::array,
+				{ "type", "string", "label", "left hand side function name" },
+				{ "type", "string", "label", "right hand side function name" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-	std::string _op1((char*) _op1_name->base_string.self, _op1_name->base_string.fillp);
-	std::string _op2((char*) _op2_name->base_string.self, _op2_name->base_string.fillp);
-	return ecl_make_bool(((zpt::lisp::bridge*) _bridge.get())->check(_op1, _op2));
-}
+			std::string _op1((char*) (*_args[0])->base_string.self, (*_args[0])->base_string.fillp);
+			std::string _op2((char*) (*_args[1])->base_string.self, (*_args[1])->base_string.fillp);
+			return zpt::lisp::object(ecl_make_bool(((zpt::lisp::bridge*) _bridge.get())->check(_op1, _op2)));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zlog",
+			"type", "internal",
+			"access", "r",
+			"label", "Logging function",
+			"args", { zpt::array,
+				{ "type", "string", "label", "text to be logged" },
+				{ "type", "int", "label", "log level (syslog levels)" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-auto zpt::lisp::logger(cl_object _text, cl_object _level) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			zpt::json _arg0 = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _op1((std::string) _arg0);
+			auto _log_level = fix((**_args[1]));
+			zlog(_op1, (zpt::LogLevel) _log_level);
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "get-log-level",
+			"type", "internal",
+			"access", "r",
+			"label", "Get current specified log level"
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-	zpt::json _arg0 = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_text));
-	std::string _op1((std::string) _arg0);
-	auto _log_level = fix(_level);
-	zlog(_op1, (zpt::LogLevel) _log_level);
-	return ecl_make_bool(true);
-}
+			if(_bridge->options()["log-level"]->ok()){
+				return zpt::lisp::object(ecl_make_fixnum(_bridge->options()["log-level"]));
+			}
+			return zpt::lisp::object(ecl_make_bool(false));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:on",
+			"type", "internal",
+			"access", "a",
+			"label", "Registers resource handler",
+			"args", { zpt::array,
+				{ "type", "string", "label", "request topic pattern" },
+				{ "type", "object", "label", "performative / operator hash table" },
+				{ "type", "object", "label", "options", "optional", true }				
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-auto zpt::lisp::get_log_level() -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[0]));
+			zpt::json _lambdas = _bridge->from< zpt::lisp::object >(_args[1]);
+			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[2]);
+			std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
 
-	if(_bridge->options()["log-level"]->ok()){
-		return ecl_make_fixnum(_bridge->options()["log-level"]);
-	}
-	return ecl_make_bool(false);
-}
-
-auto zpt::lisp::on(cl_object _cl_topic, cl_object _cl_lambda, cl_object _cl_opts) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-
-	std::string _topic = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic)));
-	zpt::json _lambdas = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_lambda));
-	zpt::json _opts = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_opts));
-	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
-
-	for (auto _lambda : _lambdas->obj()) {
-		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
-		std::string _name = std::string(_lambda.second);
-		_handlers.insert(
-			std::make_pair(_performative,
-				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-					zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
-					return _bridge->from< zpt::lisp::object >(_ret);
-				}
-			)
-		);
-	}
+			for (auto _lambda : _lambdas->obj()) {
+				zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
+				std::string _name = std::string(_lambda.second);
+				_handlers.insert(
+					std::make_pair(_performative,
+						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+							zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+							zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
+							return _bridge->from< zpt::lisp::object >(_ret);
+						}
+					)
+				);
+			}
 	
-	_bridge->events()->on(_topic, _handlers, _opts);
-	return ecl_make_bool(true);
-}
+			_bridge->events()->on(_topic, _handlers, _opts);
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);	
+	_bridge->deflbd(
+		{
+			"name", "zpt:route",
+			"type", "internal",
+			"access", "a",
+			"label", "Routes RESTful resource requests",
+			"args", { zpt::array,
+				{ "type", "string", "label", "request performative" },
+				{ "type", "string", "label", "request topic pattern" },
+				{ "type", "object", "label", "envelope to send" },
+				{ "type", "object", "label", "send options", "optional", true }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-auto zpt::lisp::route(cl_object _cl_performative, cl_object _cl_topic, cl_object _cl_payload) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-
-	zpt::ev::performative _performative = zpt::ev::from_str(std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_performative))));
-	std::string _topic = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic)));
-	zpt::json _payload = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_payload));
+			zpt::ev::performative _performative = zpt::ev::from_str(std::string(_bridge->from< zpt::lisp::object >(_args[0])));
+			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			zpt::json _payload = _bridge->from< zpt::lisp::object >(_args[2]);
+			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[3]);
 	
-	zpt::json _result = _bridge->events()->route(_performative, _topic, _payload);
-	return **_bridge->to< zpt::lisp::object >(_result);
-}
+			zpt::json _result = _bridge->events()->route(_performative, _topic, _payload, _opts);
+			return _bridge->to< zpt::lisp::object >(_result);
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:split",
+			"type", "internal",
+			"access", "a",
+			"label", "Splits a string by a given separator",
+			"args", { zpt::array,
+				{ "type", "string", "label", "the string to split" },
+				{ "type", "string", "label", "the separator to split by" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-auto zpt::lisp::split(cl_object _cl_string, cl_object _cl_separator) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-
-	std::string _string = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_string)));
-	std::string _separator = std::string(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_separator)));
+			std::string _string = std::string(_bridge->from< zpt::lisp::object >(_args[0]));
+			std::string _separator = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
 	
-	return **_bridge->to< zpt::lisp::object >(zpt::split(_string, _separator));
-}
+			return _bridge->to< zpt::lisp::object >(zpt::split(_string, _separator));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:topic-var",
+			"type", "internal",
+			"access", "a",
+			"label", "Routes RESTful resource requests",
+			"args", { zpt::array,
+				{ "type", "array", "label", "the splited topic" },
+				{ "type", "int", "label", "index for the topic part" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
-auto zpt::lisp::topic_var(cl_object _cl_topic, cl_object _cl_index) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-
-	zpt::json _topic = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_topic));
-	size_t _index = size_t(_bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_index)));
+			zpt::json _topic = _bridge->from< zpt::lisp::object >(_args[0]);
+			size_t _index = size_t(_bridge->from< zpt::lisp::object >(_args[1]));
 	
-	return **_bridge->to< zpt::lisp::object >(_topic[_index]);
-}
-
-auto zpt::lisp::validate_authorization(cl_object _cl_envelope) -> cl_object {
-	zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-	zpt::json _envelope = _bridge->from< zpt::lisp::object >(zpt::lisp::object(_cl_envelope));
-
-	_bridge->events()->authorize(_envelope);
+			return **_bridge->to< zpt::lisp::object >(_topic[_index]);
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:authorize",
+			"type", "internal",
+			"access", "a",
+			"label", "Validates authorization headers",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the message envelope" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _envelope = _bridge->from< zpt::lisp::object >(_args[0]);
+			_bridge->events()->authorize(_envelope);
 	
-	return ecl_make_bool(true);
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
 }

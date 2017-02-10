@@ -201,7 +201,7 @@ auto zpt::RESTEmitter::off(std::string _callback_id) -> void {
 	}
 }
 
-auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope) -> zpt::json {
+auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	zpt::json _return;
 	bool _endpoint_found = false;
 	bool _method_found = false;
@@ -281,7 +281,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 	return _return;
 }
 
-auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope) -> zpt::json {
+auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	zpt::json _in = zpt::json::object() + _envelope;
 	_in <<
 	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<

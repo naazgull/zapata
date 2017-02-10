@@ -48,39 +48,42 @@ auto zpt::Connector::reconnect() -> void {
 
 auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
 	assertz(_record["href"]->ok(), "required fields: 'href'", 412, 0);
-	this->mutations()->route(zpt::mutation::Insert, _href_prefix, { "performative", "insert", "href", _record["href"], "new", _record });
+	this->mutations()->route(zpt::mutation::Insert, std::string("/") + _collection, { "performative", "insert", "href", _record["href"], "new", _record });
 	return std::string(_record["href"]);
 }
 
 auto zpt::Connector::save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->route(zpt::mutation::Replace, _href, { "performative", "save", "href", _href, "new", _record });
+	this->mutations()->route(zpt::mutation::Replace, std::string("/") + _collection, { "performative", "save", "href", _href, "new", _record });
 	return 0;
 }
 
 auto zpt::Connector::set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->route(zpt::mutation::Update, _href, { "performative", "set", "href", _href, "changes", _record });
+	this->mutations()->route(zpt::mutation::Update, std::string("/") + _collection, { "performative", "set", "href", _href, "changes", _record });
 	return 0;
 }
 
 auto zpt::Connector::set(std::string _collection, zpt::json _pattern, zpt::json _record, zpt::json _opts) -> int {
+	this->mutations()->route(zpt::mutation::Update, std::string("/") + _collection, { "performative", "set", "href", _opts["href"], "changes", _record, "filter", _pattern });
 	return 0;
 }
 
 auto zpt::Connector::unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
-	this->mutations()->route(zpt::mutation::Update, _href, { "performative", "unset", "href", _href, "changes", _record });
+	this->mutations()->route(zpt::mutation::Update, std::string("/") + _collection, { "performative", "unset", "href", _href, "changes", _record });
 	return 0;
 }
 
 auto zpt::Connector::unset(std::string _collection, zpt::json _pattern, zpt::json _record, zpt::json _opts) -> int {
+	this->mutations()->route(zpt::mutation::Update, std::string("/") + _collection, { "performative", "unset", "href", _opts["href"], "changes", _record, "filter", _pattern });
 	return 0;
 }
 
 auto zpt::Connector::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
-	this->mutations()->route(zpt::mutation::Remove, _href, { "performative", "remove", "href", _href });
+	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "performative", "remove", "href", _href });
 	return 0;
 }
 
 auto zpt::Connector::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "performative", "remove", "href", _opts["href"], "filter", _pattern });
 	return 0;
 }
 
@@ -100,10 +103,10 @@ auto zpt::Connector::all(std::string _collection, zpt::json _opts) -> zpt::json 
 	return zpt::undefined;
 }
 
-zpt::MutationEmitter::MutationEmitter() : __self( this ) {
+zpt::MutationEmitter::MutationEmitter() : __self(this) {
 }
 
-zpt::MutationEmitter::MutationEmitter(zpt::json _options) :  __options( _options), __self( this ) {
+zpt::MutationEmitter::MutationEmitter(zpt::json _options) :  __options(_options), __self(this), __events(nullptr) {
 }
 
 zpt::MutationEmitter::~MutationEmitter() {
@@ -115,6 +118,14 @@ auto zpt::MutationEmitter::options() -> zpt::json {
 					 
 auto zpt::MutationEmitter::self() const -> zpt::mutation::emitter {
 	return this->__self;
+}
+
+auto zpt::MutationEmitter::events() -> zpt::ev::emitter {
+	return this->__events;
+}
+
+auto zpt::MutationEmitter::events(zpt::ev::emitter _emitter) -> void {
+	this->__events = _emitter;
 }
 
 auto zpt::MutationEmitter::unbind() -> void {

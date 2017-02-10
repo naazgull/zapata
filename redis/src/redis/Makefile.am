@@ -6,4 +6,5 @@ libzapata_redis_la_LDFLAGS = -version-info 9:5:9
 libzapata_redis_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_redis_la_SOURCES = \
+./convert_redis.cpp \
 ./Client.cpp 

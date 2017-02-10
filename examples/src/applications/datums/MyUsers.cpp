@@ -22,6 +22,7 @@ auto zpt::apps::datums::MyUsers::insert(std::string _topic, zpt::json _document,
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Insert, _topic, { "performative", "insert", "href", _document["href"], "new", _document });
 	return _r_data;
 }
 
@@ -29,6 +30,7 @@ auto zpt::apps::datums::MyUsers::save(std::string _topic, zpt::json _document, z
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Replace, _topic, { "performative", "save", "href", _topic, "new", _document });
 	return _r_data;
 }
 
@@ -36,6 +38,7 @@ auto zpt::apps::datums::MyUsers::set(std::string _topic, zpt::json _document, zp
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document });
 	return _r_data;
 }
 
@@ -43,6 +46,7 @@ auto zpt::apps::datums::MyUsers::set(std::string _topic, zpt::json _document, zp
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document, "filter", _filter });
 	return _r_data;
 }
 
@@ -50,6 +54,7 @@ auto zpt::apps::datums::MyUsers::remove(std::string _topic, zpt::ev::emitter _em
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic });
 	return _r_data;
 }
 
@@ -57,7 +62,7 @@ auto zpt::apps::datums::MyUsers::remove(std::string _topic, zpt::json _filter, z
 	zpt::json _r_data;
 	
 	
+	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic, "filter", _filter });
 	return _r_data;
 }
-
 

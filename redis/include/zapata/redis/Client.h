@@ -27,6 +27,7 @@ SOFTWARE.
 #include <zapata/json.h>
 #include <zapata/events.h>
 #include <hiredis/hiredis.h>
+#include <zapata/redis/convert_redis.h>
 #include <ossp/uuid++.hh>
 #include <mutex>
 

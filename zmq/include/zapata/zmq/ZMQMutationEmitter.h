@@ -86,8 +86,8 @@ namespace zpt {
 		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void;
 		virtual auto off(std::string _callback_id) -> void;
 		
-		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json;
-		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record) -> zpt::json;
+		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
 		
 	private:
 		zpt::mutation::HandlerStack __resources;
