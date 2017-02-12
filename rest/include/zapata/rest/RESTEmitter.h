@@ -68,6 +68,7 @@ namespace zpt {
 	namespace rest {
 		typedef zpt::RESTServerPtr server;
 		typedef zpt::RESTClientPtr client;
+		typedef std::map< std::string, std::vector< std::pair<std::regex, zpt::ev::handlers > > > HandlerStack;
 	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
@@ -171,8 +172,11 @@ namespace zpt {
 		zpt::ev::Handler __default_assync_reply;
 		zpt::ev::HandlerStack __resources;
 		zpt::ev::ReplyHandlerStack __replies;
+		zpt::rest::HandlerStack __hashed;
 		zpt::poll __poll;
 		zpt::rest::server __server;
+
+		auto get_hash(std::string _pattern) -> std::string;
 
 	};
 

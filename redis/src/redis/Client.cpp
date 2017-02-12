@@ -34,10 +34,15 @@ zpt::redis::ClientPtr::~ClientPtr() {
 }
 
 zpt::redis::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
-	std::string _bind((std::string) _options->getPath(_conf_path)["bind"]);
-	std::string _address(_bind.substr(0, _bind.find(":")));
-	uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
-	this->connection(_options->getPath(_conf_path) + zpt::json({ "host", _address, "port", _port }));
+	try {
+		std::string _bind((std::string) _options->getPath(_conf_path)["bind"]);
+		std::string _address(_bind.substr(0, _bind.find(":")));
+		uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
+		this->connection(_options->getPath(_conf_path) + zpt::json({ "host", _address, "port", _port }));
+	}
+	catch(std::exception& _e) {
+		assertz(false, std::string("could not connect to Redis server: ") + _e.what(), 500, 0);
+	}
 }
 
 zpt::redis::Client::~Client() {

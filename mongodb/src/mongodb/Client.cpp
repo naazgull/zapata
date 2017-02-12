@@ -303,7 +303,7 @@ auto zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt:
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		this->conn()->resetError();
-		_result.reset(this->conn()->query(_full_collection, BSON( "_id" << _topic ), 0, 0, nullptr, (int) mongo::QueryOption_SlaveOk).get());
+		_result.reset(this->conn()->query(_full_collection, BSON( "_id" << _topic ), 0, 0, nullptr, (int) mongo::QueryOption_SlaveOk).release());
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
 	if (_result->more()) {
@@ -377,7 +377,7 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		this->conn()->resetError();
-		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, nullptr, (int) mongo::QueryOption_SlaveOk).get());
+		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, nullptr, (int) mongo::QueryOption_SlaveOk).release());
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
 	while(_result->more()) {
@@ -457,7 +457,7 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		this->conn()->resetError();
-		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, nullptr, (int) mongo::QueryOption_SlaveOk).get());
+		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, nullptr, (int) mongo::QueryOption_SlaveOk).release());
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
 	while(_result->more()) {
@@ -479,7 +479,7 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 			{
 				"next", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)),
 				"prev", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
-				}
+			}
 		);
 	}
 	return _return;

@@ -157,24 +157,31 @@ auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
 }
 
 auto zpt::conf::dirs(zpt::json _options) -> void {
-	zpt::json _traversable = _options->clone();
-	_traversable->inspect({ "$regexp", "(.*)" },
-		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-			if (_key == "$include") {
-				zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
-				zpt::json _to_include = _options->getPath(_object_path);
-				if (_to_include->type() == zpt::JSArray) {
-					for (auto _file : _to_include->arr()) {
-						zpt::conf::dirs((std::string) _file, _object);
+	bool* _redo = new bool(false);
+	do {
+		*_redo = false;
+		zpt::json _traversable = _options->clone();
+		_traversable->inspect({ "$regexp", "(.*)" },
+			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+				if (_key == "$include") {
+					zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+					zpt::json _to_include = _options->getPath(_object_path);
+					if (_to_include->type() == zpt::JSArray) {
+						for (auto _file : _to_include->arr()) {
+							zpt::conf::dirs((std::string) _file, _object);
+						}
 					}
+					else {
+						zpt::conf::dirs((std::string) _to_include, _object);
+					}
+					_object >> "$include";
+					*_redo = true;
 				}
-				else {
-					zpt::conf::dirs((std::string) _to_include, _object);
-				}
-				_object >> "$include";
 			}
-		}
-	);
+		);
+	}
+	while(*_redo);
+	delete _redo;
 }
 
 auto zpt::conf::env(zpt::json _options) -> void {

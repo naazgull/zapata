@@ -39,11 +39,11 @@ auto zpt::Connector::connection(zpt::json _conn_conf) -> void {
 }
 
 auto zpt::Connector::connect() -> void {
-	this->mutations()->route(zpt::mutation::Connect, this->name(), { "node", this->connection() });	
+	this->mutations()->route(zpt::mutation::Connect, this->name(), { "id", this->name(), "node", this->connection() });	
 }
 
 auto zpt::Connector::reconnect() -> void {
-	this->mutations()->route(zpt::mutation::Reconnect, this->name(), { "node", this->connection() });	
+	this->mutations()->route(zpt::mutation::Reconnect, this->name(), { "id", this->name(), "node", this->connection() });	
 }
 
 auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
@@ -136,12 +136,12 @@ auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connecto
 	auto _found = this->__connector.find(_name);
 	if (_found == this->__connector.end()) {
 		_connector->mutations(this->__self);
-		try {
+		//try {
 			_connector->connect();
-		}
+			/*}
 		catch(std::exception& _e) {
 			zlog(_e.what(), zpt::error);
-		}
+			}*/
 		this->__connector.insert(make_pair(_name, _connector));
 	}
 }
@@ -152,6 +152,42 @@ auto zpt::MutationEmitter::connector(std::string _name) -> zpt::connector {
 		return zpt::connector(nullptr);
 	}
 	return _found->second;
+}
+
+zpt::DefaultMutationEmitter::DefaultMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options) {
+}
+
+zpt::DefaultMutationEmitter::~DefaultMutationEmitter() {
+}
+
+auto zpt::DefaultMutationEmitter::version() -> std::string {
+	return this->options()["rest"]["version"]->str();
+}
+
+auto zpt::DefaultMutationEmitter::on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts) -> std::string {
+	return "";
+}
+
+auto zpt::DefaultMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
+	return "";
+}
+
+auto zpt::DefaultMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
+	return "";
+}
+
+auto zpt::DefaultMutationEmitter::off(zpt::mutation::operation _operation, std::string _callback_id) -> void {
+}
+
+auto zpt::DefaultMutationEmitter::off(std::string _callback_id) -> void {
+}		
+
+auto zpt::DefaultMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	return zpt::undefined;
+}
+
+auto zpt::DefaultMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	return zpt::undefined;
 }
 
 zpt::MutationListener::MutationListener(std::string _data_class_ns) : __namespace(_data_class_ns) {
@@ -174,4 +210,10 @@ auto zpt::MutationListener::updated(std::string _data_class_ns, zpt::json _recor
 }
 
 auto zpt::MutationListener::replaced(std::string _data_class_ns, zpt::json _record, zpt::MutationEmitterPtr _emitter) -> void {
+}
+
+auto zpt::MutationListener::connected(std::string _data_class_ns, zpt::json _record, zpt::MutationEmitterPtr _emitter) -> void {
+}
+
+auto zpt::MutationListener::reconnected(std::string _data_class_ns, zpt::json _record, zpt::MutationEmitterPtr _emitter) -> void {
 }

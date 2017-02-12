@@ -48,10 +48,10 @@ auto zpt::Bridge::options() -> zpt::json {
 	return this->__options;
 }
 
-zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
+zpt::EventEmitter::EventEmitter() : __self(this), __mutant(nullptr), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __mutant(nullptr), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {

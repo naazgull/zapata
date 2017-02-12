@@ -83,7 +83,7 @@ auto zpt::python::Bridge::initialize() -> void {
 			}
 		}
 	}
-	zlog(std::string("PYTHON bridge initialized"), zpt::info);
+	zlog(std::string("PYTHON bridge initialized"), zpt::trace);
 }
 
 auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void {
@@ -121,7 +121,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
 	zpt::python::__instance = _bridge;
 
-	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::info);
+	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::trace);
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_Initialize();
 	

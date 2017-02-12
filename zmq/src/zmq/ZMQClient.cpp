@@ -116,7 +116,7 @@ zpt::json zpt::ZMQ::recv() {
 		std::free(_bytes);
 		zframe_destroy(&_frame2);
 
-		zlog(this->connection() + std::string(" | receiving message <- ") + _directive, zpt::info);
+		zlog(this->connection() + std::string(" | receiving message <- ") + _directive, zpt::trace);
 		return _envelope;
 	}
 	else {
@@ -171,7 +171,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	zlog(this->connection() + std::string(" | sending message -> ") + _directive, zpt::info);
+	zlog(this->connection() + std::string(" | sending message -> ") + _directive, zpt::trace);
 
 	return zpt::undefined;
 }
@@ -447,10 +447,8 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	this->__socket_pub = zsock_new(ZMQ_PUB);
 	assertz(zsock_attach(this->__socket_pub, _connection1.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_pub)) + std::string(" socket to ") + this->connection(), 500, 0);
-	zsock_set_sndhwm(this->__socket_sub, 1000);
-	zsock_set_sndtimeo(this->__socket_sub, 20000);
+	zsock_set_rcvhwm(this->__socket_sub, 1000);
 	zsock_set_sndhwm(this->__socket_pub, 1000);
-	zsock_set_sndtimeo(this->__socket_pub, 20000);
 
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {

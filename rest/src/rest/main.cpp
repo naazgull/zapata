@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 	try {
 		zpt::rest::server::launch(argc, argv);
 	}
-	catch (zpt::AssertionException& _e) {
+	catch (zpt::assertion& _e) {
 		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
 		exit(-10);
 	}

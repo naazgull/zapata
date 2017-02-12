@@ -784,7 +784,11 @@ bool zpt::JSONElementT::operator==(zpt::JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator==(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator==(zpt::json _rhs) {
+	return * this == (*_rhs);
+}
+
+bool zpt::JSONElementT::operator==(zpt::JSONPtr _rhs) {
 	return * this == (*_rhs);
 }
 
@@ -825,7 +829,11 @@ bool zpt::JSONElementT::operator!=(JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator!=(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator!=(zpt::json _rhs) {
+	return * this != * _rhs;
+}
+
+bool zpt::JSONElementT::operator!=(zpt::JSONPtr _rhs) {
 	return * this != * _rhs;
 }
 
@@ -887,7 +895,11 @@ bool zpt::JSONElementT::operator<(zpt::JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator<(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator<(zpt::json _rhs) {
+	return * this < * _rhs;
+}
+
+bool zpt::JSONElementT::operator<(zpt::JSONPtr _rhs) {
 	return * this < * _rhs;
 }
 
@@ -949,7 +961,11 @@ bool zpt::JSONElementT::operator>(zpt::JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator>(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator>(zpt::json _rhs) {
+	return * this > * _rhs;
+}
+
+bool zpt::JSONElementT::operator>(zpt::JSONPtr _rhs) {
 	return * this > * _rhs;
 }
 
@@ -1011,7 +1027,11 @@ bool zpt::JSONElementT::operator<=(zpt::JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator<=(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator<=(zpt::json _rhs) {
+	return * this <= * _rhs;
+}
+
+bool zpt::JSONElementT::operator<=(zpt::JSONPtr _rhs) {
 	return * this <= * _rhs;
 }
 
@@ -1073,8 +1093,16 @@ bool zpt::JSONElementT::operator>=(zpt::JSONElementT& _in) {
 	return false;
 }
 
-bool zpt::JSONElementT::operator>=(zpt::JSONPtr& _rhs) {
+bool zpt::JSONElementT::operator>=(zpt::json _rhs) {
 	return * this >= * _rhs;
+}
+
+bool zpt::JSONElementT::operator>=(zpt::JSONPtr _rhs) {
+	return * this >= * _rhs;
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator+(zpt::json _rhs) {
+	return (* this) + (* _rhs);
 }
 
 zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONPtr _rhs) {
@@ -1196,6 +1224,10 @@ zpt::JSONPtr zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) {
 	return zpt::undefined;
 }
 
+zpt::JSONPtr zpt::JSONElementT::operator-(zpt::json _rhs) {
+	return (* this) - (* _rhs);
+}
+
 zpt::JSONPtr zpt::JSONElementT::operator-(zpt::JSONPtr _rhs) {
 	return (* this) - (* _rhs);
 }
@@ -1313,6 +1345,10 @@ zpt::JSONPtr zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) {
 		}
 	}
 	return zpt::undefined;
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator/(zpt::json _rhs) {
+	return (* this) / (* _rhs);
 }
 
 zpt::JSONPtr zpt::JSONElementT::operator/(zpt::JSONPtr _rhs) {
@@ -1837,7 +1873,7 @@ void zpt::lambda::add(std::string _signature, zpt::symbol _lambda) {
 		zpt::lambda::find(_signature);
 		assertz(true, "lambda already defined", 412, 0);
 	}
-	catch(zpt::AssertionException& _e) {}
+	catch(zpt::assertion& _e) {}
 	std::tuple< std::string, unsigned short > _parsed = zpt::lambda::parse(_signature);
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
@@ -1847,7 +1883,7 @@ void zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _la
 		zpt::lambda::find(_name, _n_args);
 		assertz(true, "lambda already defined", 412, 0);
 	}
-	catch(zpt::AssertionException& _e) {}
+	catch(zpt::assertion& _e) {}
 	std::string _signature(zpt::lambda::stringify(_name, _n_args));
 	zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }

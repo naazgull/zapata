@@ -52,10 +52,6 @@ zpt::ZMQPollPtr::~ZMQPollPtr() {
 }
 
 zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options( _options), __id(0), __poll(nullptr), __self(this), __emitter(_emiter) {
-	zsys_init();
-	zsys_handler_set(nullptr);
-	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
-	
 	for (short _i = 0; _i < 4; _i += 2) {
 		std::string _uuid = zpt::generate::r_uuid();
 		std::string _connection1(std::string("@inproc://") + _uuid);
@@ -68,7 +64,7 @@ zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options(
 
 	this->__poll = zpoller_new(this->__sync[0], nullptr);
 	zpoller_add(this->__poll, this->__sync[2]);
-	zpoller_ignore_interrupts(this->__poll);
+	//zpoller_ignore_interrupts(this->__poll);
 }
 
 zpt::ZMQPoll::~ZMQPoll() {

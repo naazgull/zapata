@@ -26,8 +26,15 @@ SOFTWARE.
 #include <map>
 
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
-	if (_options["mutations"]["connect"]->ok()) {
-		this->mutations((new zpt::ZMQMutationEmitter(_options))->self());
+	zsys_init();
+	zsys_handler_set(nullptr);
+	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	
+	if (this->options()["mutations"]["connect"]->ok()) {
+		this->mutations((new zpt::ZMQMutationEmitter(this->options()))->self());
+	}
+	else {
+		this->mutations((new zpt::DefaultMutationEmitter(this->options()))->self());
 	}
 	
 	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
@@ -98,10 +105,28 @@ auto zpt::RESTEmitter::server() -> zpt::rest::server {
 	return this->__server;
 }
 
+auto zpt::RESTEmitter::get_hash(std::string _pattern) -> std::string {
+	zpt::json _splited = zpt::split(_pattern, "/");
+	std::string _return;
+	for (auto _p : _splited->arr()) {
+		std::string _part = _p->str();
+		if (_part.back() == '$') {
+			_part.erase(_part.length() - 1, 1);
+		}
+		if (zpt::test::ascii(_part, true)) {
+			_return += std::string("/") + _part;
+		}
+		else if (_part != "^") {
+			break;
+		}
+	}
+	return _return;
+}
+
 auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts) -> std::string {
 	std::regex _url_pattern(_regex);
 
-	std::vector< zpt::ev::Handler> _handlers;
+	zpt::ev::handlers _handlers;
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Get? this->__default_get : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Put ? this->__default_put : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Post ? this->__default_post : _handler));
@@ -113,9 +138,22 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	
+	std::string _hash = this->get_hash(_regex);
+	auto _h_found = this->__hashed.find(_hash);
+	if (_h_found == this->__hashed.end()) {
+		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
+		_bag.push_back(std::make_pair(_url_pattern, _handlers));
+		this->__hashed.insert(std::make_pair(_hash, _bag));
+	}
+	else {
+		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
+	}
+
 	this->directory()->notify(_regex, this->options()["zmq"]);
-	zlog(std::string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
+
+	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
 }
 
@@ -123,7 +161,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	std::regex _url_pattern(_regex);
 
 	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
-	std::vector< zpt::ev::Handler> _handlers;
+	zpt::ev::handlers _handlers;
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Get)) == _handler_set.end() ?  this->__default_get : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Put)) == _handler_set.end() ?  this->__default_put : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Post)) == _handler_set.end() ?  this->__default_post : _found->second);
@@ -135,9 +173,22 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	
+	std::string _hash = this->get_hash(_regex);
+	auto _h_found = this->__hashed.find(_hash);
+	if (_h_found == this->__hashed.end()) {
+		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
+		_bag.push_back(std::make_pair(_url_pattern, _handlers));
+		this->__hashed.insert(std::make_pair(_hash, _bag));
+	}
+	else {
+		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
+	}
+
 	this->directory()->notify(_regex, this->options()["zmq"]);
-	zlog(std::string("registered handlers for ") + _regex, zpt::info);
 	this->server()->assync_on(_regex, _opts);
+
+	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
 }
 
@@ -174,16 +225,29 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 		return zpt::undefined;
 	};
 	
-	std::vector< zpt::ev::Handler > _handlers;
+	zpt::ev::handlers _handlers;
 	for (short _idx = zpt::ev::Get; _idx != zpt::ev::Reply + 1; _idx++) {
 		_handlers.push_back(_handler);
 	}
 	
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
+	
+	std::string _hash = this->get_hash(_listener->regex());
+	auto _h_found = this->__hashed.find(_hash);
+	if (_h_found == this->__hashed.end()) {
+		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
+		_bag.push_back(std::make_pair(_url_pattern, _handlers));
+		this->__hashed.insert(std::make_pair(_hash, _bag));
+	}
+	else {
+		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
+	}
+
 	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
-	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::info);
 	this->server()->assync_on(_listener->regex(), _opts);
+
+	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::notice);
 	return _uuid;
 }
 
@@ -205,14 +269,31 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 	zpt::json _return;
 	bool _endpoint_found = false;
 	bool _method_found = false;
-	for (auto _i : this->__resources) {
-		std::regex _regexp = _i.second.first;
+
+	zpt::json _splited = zpt::split(_url, "/");
+	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
+	std::string _hash;
+	for (auto _i : _splited->arr()) {
+		_hash += std::string("/") + _i->str();
+		auto _found = this->__hashed.find(_hash);
+		if (_found != this->__hashed.end()) {
+			_resources = _found->second;
+			break;
+		}
+	}
+	
+// > NO HASH < 	for (auto _i : this->__resources) { 
+	for (auto _i : _resources) { // > HASH <
+// > NO HASH < 		std::regex _regexp = _i.second.first; 
+		std::regex _regexp = _i.first; // > HASH <
 		if (std::regex_match(_url, _regexp)) {
 			_endpoint_found = true;
 			try {
-				if (_i.second.second[_method] != nullptr) {
+// > NO HASH < 				if (_i.second.second[_method] != nullptr) { 
+				if (_i.second[_method] != nullptr) { // > HASH <
 					_method_found = true;
-					zpt::json _result = _i.second.second[_method](_method, _url, _envelope, this->self());
+// > NO HASH < 					zpt::json _result = _i.second.second[_method](_method, _url, _envelope, this->self()); 
+					zpt::json _result = _i.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (_result->ok()) {
 						_result << 
 						"performative" << zpt::ev::Reply <<
@@ -289,13 +370,28 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 	"performative" << _method <<
 	"resource" << _url;
 	
-	for (auto _i : this->__resources) {
-		std::regex _regexp = _i.second.first;
+	zpt::json _splited = zpt::split(_url, "/");
+	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
+	std::string _hash;
+	for (auto _i : _splited->arr()) {
+		_hash += std::string("/") + _i->str();
+		auto _found = this->__hashed.find(_hash);
+		if (_found != this->__hashed.end()) {
+			_resources = _found->second;
+			break;
+		}
+	}
+	
+	for (auto _i : _resources) { // > HASH <
+		std::regex _regexp = _i.first; // > HASH <
 		if (std::regex_match(_url, _regexp)) {
 			try {
-				if (_i.second.second[_method] != nullptr) {
-					zpt::json _out = _i.second.second[_method](_method, _url, _in, this->self());
+				if (_i.second[_method] != nullptr) { // > HASH <
+					zpt::json _out = _i.second[_method](_method, _url, _in, this->self()); // > HASH <
 					if (_out->ok()) {
+						if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+							throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+						}						
 						_out << 
 						"performative" << zpt::ev::Reply <<
 						"headers" << (zpt::ev::init_reply(((std::string) _in["headers"]["X-Cid"])) + _out["headers"]);
@@ -304,7 +400,10 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				}
 			}
 			catch (zpt::assertion& _e) {
-			       return {
+				if (bool(_opts["bubble-exception"])) {
+					throw;
+				}
+				return {
 				       "performative", zpt::ev::Reply,
 				       "status", _e.status(),
 				       "headers", zpt::ev::init_reply((std::string) _in["headers"]["X-Cid"]),
@@ -312,11 +411,13 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 					       "text", _e.what(),
 					       "assertion_failed", _e.description(),
 					       "code", _e.code()
-					       }
+				       }
 			       };
-			       break;
 			}
 			catch(std::exception& _e) {
+				if (bool(_opts["bubble-exception"])) {
+					throw zpt::assertion(_e.what(), 500, 0, _e.what());
+				}						
 				return {
 					"performative", zpt::ev::Reply,
 					"status", 500,
@@ -340,9 +441,12 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				zpt::socket _client = this->__poll->bind(ZMQ_REQ, _container["connect"]->str());
 				zpt::json _out = _client->send(_in);
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
-					_out << "status" << 501;
+					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
 				_client->unbind();
+				if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+					throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+				}						
 				return _out;
 			}
 			case ZMQ_PUB_SUB : {
@@ -359,8 +463,12 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				return zpt::rest::accepted(_url);
 			}
 		}
-	}				
-	return zpt::rest::not_found(_url);
+	}
+	zpt::json _out = zpt::rest::not_found(_url);
+	if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+		throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+	}						
+	return _out;
 }
 
 auto zpt::rest::not_found(std::string _resource) -> zpt::json {
@@ -370,7 +478,9 @@ auto zpt::rest::not_found(std::string _resource) -> zpt::json {
 		"resource", _resource,
 		"status", 404,
 		"payload", {
-			"text", "resource not found"
+			"text", "resource not found",
+			"code", 0,
+			"assertion_failed", "_container->ok()"
 		}
 	};
 }

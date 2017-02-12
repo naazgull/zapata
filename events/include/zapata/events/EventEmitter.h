@@ -233,6 +233,23 @@ namespace zpt {
 		std::map<std::string, zpt::connector> __connector;
 	};
 
+	class DefaultMutationEmitter : public zpt::MutationEmitter {
+	public:
+		DefaultMutationEmitter(zpt::json _options);
+		virtual ~DefaultMutationEmitter();
+
+		virtual auto version() -> std::string;
+		
+		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
+		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
+		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string;
+		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void;
+		virtual auto off(std::string _callback_id) -> void;
+		
+		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
+	};
+	
 	class MutationListener {
 	public:
 		MutationListener(std::string _data_class_ns);
@@ -244,6 +261,8 @@ namespace zpt {
 		virtual auto removed(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
 		virtual auto updated(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
 		virtual auto replaced(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+		virtual auto connected(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
+		virtual auto reconnected(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
 
 	private:
 		std::string __namespace;

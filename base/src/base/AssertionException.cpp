@@ -31,10 +31,12 @@ zpt::AssertionException::AssertionException(string _in, int _http_code, int _cod
 	zpt::replace(this->__what, "\"", "");
 	zpt::replace(this->__description, "\"", "");
 	this->__description.insert(0, "'");
-	this->__description.insert(this->__description.length(), "' failed on file ");
-	this->__description.insert(this->__description.length(), this->__file);
-	this->__description.insert(this->__description.length(),  ", line ");
-	zpt::tostr(this->__description, this->__line);
+	if (this->__line != 0) {
+		this->__description.insert(this->__description.length(), "' failed on file ");
+		this->__description.insert(this->__description.length(), this->__file);
+		this->__description.insert(this->__description.length(),  ", line ");
+		zpt::tostr(this->__description, this->__line);
+	}
 }
 
 zpt::AssertionException::~AssertionException() throw() {

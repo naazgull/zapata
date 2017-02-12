@@ -224,7 +224,7 @@ void zpt::RESTServer::start() {
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok() && this->__options["http"]["port"]->ok()) {
 			std::shared_ptr< std::thread > _http(
 				new std::thread(
-					[ & ] () -> void {
+					[ this ] () -> void {
 						zlog(std::string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
 
 						zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
@@ -240,7 +240,7 @@ void zpt::RESTServer::start() {
 									_cs->close();
 								}
 							}
-							catch(zpt::AssertionException& _e) {
+							catch(zpt::assertion& _e) {
 								zpt::http::rep _reply = zpt::rest::zmq2http(
 									{
 										"performative", zpt::ev::Reply,
@@ -262,6 +262,19 @@ void zpt::RESTServer::start() {
 			);
 			this->__threads.push_back(_http);
 		}
+		
+		if (this->__options["mutations"]["connect"]->ok()) {
+			std::shared_ptr< std::thread > _mutations(
+				new std::thread(
+					[ this ] () -> void {
+						zlog(std::string("starting 0MQ mutation listener"), zpt::notice);
+						((zpt::ZMQMutationEmitter*) this->events()->mutations().get())->loop();
+					}
+				)
+			);
+			this->__threads.push_back(_mutations);
+		}
+
 		this->__poll->loop();
 		for (auto _thread : this->__threads) {
 			_thread->join();
@@ -325,7 +338,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		}
 	}
 	else {
-		zlog(std::string("didn't produce anything for HTTP request"), zpt::info);
+		zlog(std::string("didn't produce anything for HTTP request"), zpt::trace);
 		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_request->url()));
 		(*_cs) << _reply << flush;
 		_return = true;

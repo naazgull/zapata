@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 		_api->start();
 		_sender.join();
 	}
-	catch (zpt::AssertionException& _e) {
+	catch (zpt::assertion& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
 	}
 	

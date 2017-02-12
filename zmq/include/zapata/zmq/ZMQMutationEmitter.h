@@ -69,7 +69,8 @@ namespace zpt {
 	private:
 		zpt::json __options;
 		zpt::mutation::server __self;
-		zactor_t* __socket;
+		zpt::socket __server;
+		zpt::socket __client;
 	};
 
 	class ZMQMutationEmitter : public zpt::MutationEmitter {
@@ -78,8 +79,9 @@ namespace zpt {
 		virtual ~ZMQMutationEmitter();
 
 		virtual auto version() -> std::string;
-		virtual auto socket() -> zpt::socket;
-		
+
+		virtual auto loop() -> void;
+
 		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
 		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
 		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string;
@@ -92,6 +94,7 @@ namespace zpt {
 	private:
 		zpt::mutation::HandlerStack __resources;
 		zpt::socket __socket;
+		std::mutex __mtx;
 		
 	};
 
