@@ -44,7 +44,8 @@ namespace zpt {
 		auto fromsql_r(pqxx::tuple _in) -> zpt::json;
 		auto get_query(zpt::json _in, std::string&  _queryr) -> void;
 		auto get_opts(zpt::json _in, std::string&  _queryr) -> void;
-		auto escape(std::string _to_espace) -> std::string;
+		auto escape_name(std::string _in) -> std::string;
+		auto escape(zpt::json _in) -> std::string;
 
 	}
 }

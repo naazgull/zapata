@@ -282,17 +282,13 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 		}
 	}
 	
-// > NO HASH < 	for (auto _i : this->__resources) { 
 	for (auto _i : _resources) { // > HASH <
-// > NO HASH < 		std::regex _regexp = _i.second.first; 
 		std::regex _regexp = _i.first; // > HASH <
 		if (std::regex_match(_url, _regexp)) {
 			_endpoint_found = true;
 			try {
-// > NO HASH < 				if (_i.second.second[_method] != nullptr) { 
 				if (_i.second[_method] != nullptr) { // > HASH <
 					_method_found = true;
-// > NO HASH < 					zpt::json _result = _i.second.second[_method](_method, _url, _envelope, this->self()); 
 					zpt::json _result = _i.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (_result->ok()) {
 						_result << 

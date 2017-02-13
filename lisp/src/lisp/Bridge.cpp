@@ -227,7 +227,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		3
 	);
 	zpt::lisp::builtin_operators(_bridge);
-	zlog(std::string("LISP bridge booted"), zpt::alert);
+	zlog(std::string("LISP bridge booted"), zpt::warning);
 }
 
 zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type >(new zpt::lisp::Type(_target)) {

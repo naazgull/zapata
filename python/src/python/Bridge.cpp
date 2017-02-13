@@ -125,7 +125,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_Initialize();
 	
-	zlog(std::string("PYTHON bridge booted"), zpt::alert);
+	zlog(std::string("PYTHON bridge booted"), zpt::warning);
 }
 
 zpt::python::Object::Object(PyObject* _target) : std::shared_ptr< zpt::python::Type >(new zpt::python::Type(_target)) {

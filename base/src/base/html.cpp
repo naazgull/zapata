@@ -98,7 +98,7 @@ void zpt::html::entities_decode(string& _out) {
 
 void zpt::html::content_boundary(string& _in, string& _out) {
 	size_t _idx = _in.find("boundary=");
-	if (_idx != string::npos) {
+	if (_idx != std::string::npos) {
 		_out.assign(_in.substr(_idx + 9));
 	}
 }

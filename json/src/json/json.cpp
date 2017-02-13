@@ -164,7 +164,7 @@ auto zpt::conf::dirs(zpt::json _options) -> void {
 		_traversable->inspect({ "$regexp", "(.*)" },
 			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 				if (_key == "$include") {
-					zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+					zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
 					zpt::json _to_include = _options->getPath(_object_path);
 					if (_to_include->type() == zpt::JSArray) {
 						for (auto _file : _to_include->arr()) {

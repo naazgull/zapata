@@ -1279,7 +1279,7 @@ zpt::JSONPtr zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) {
 			else {
 				std::string _lhs(this->__target.__string.get()->data());
 				std::size_t _idx = 0;
-				while ((_idx = _lhs.find(_rhs.str(), _idx)) != string::npos) {
+				while ((_idx = _lhs.find(_rhs.str(), _idx)) != std::string::npos) {
 					_lhs.erase(_idx, _rhs.str().length());
 				}
 				return zpt::mkptr(_lhs);
@@ -1398,7 +1398,7 @@ zpt::JSONPtr zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) {
 			else {
 				std::string _lhs(this->__target.__string.get()->data());
 				std::size_t _idx = 0;
-				while ((_idx = _lhs.find(_rhs.str(), _idx)) != string::npos) {
+				while ((_idx = _lhs.find(_rhs.str(), _idx)) != std::string::npos) {
 					_lhs.erase(_idx, _rhs.str().length());
 				}
 				return zpt::mkptr(_lhs);
@@ -1853,7 +1853,7 @@ std::tuple< std::string, unsigned short > zpt::lambda::parse(std::string _signat
 	size_t _rpar = _signature.find(")");
 	size_t _comma = _signature.find(",");
 
-	assertz(_lpar != string::npos && _rpar != string::npos && _comma != string::npos, "lambda signature format not recognized", 412, 0);
+	assertz(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos, "lambda signature format not recognized", 412, 0);
 
 	std::string _name(_signature.substr(_lpar + 1, _comma - _lpar - 1));
 	std::string _args(_signature.substr(_comma + 1, _rpar - _comma - 1));

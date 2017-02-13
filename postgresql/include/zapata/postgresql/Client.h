@@ -51,7 +51,7 @@ namespace zpt {
 			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
 			virtual auto mutations() -> zpt::mutation::emitter;
 
-			virtual auto connect(zpt::json _opts) -> void;
+			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;
 
 			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;

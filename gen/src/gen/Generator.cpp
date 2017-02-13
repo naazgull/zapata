@@ -142,10 +142,13 @@ auto zpt::Generator::build_data_layer() -> void {
 			for (auto _datum : _spec["datums"]->arr()) {
 				std::string _h_file = std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h");
 				std::string _cxx_file = std::string(this->__options["data-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".cpp");
+				std::string _sql_file = std::string(this->__options["data-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".sql");
 				std::string _datum_h;
 				zpt::load_path("/usr/share/zapata/gen/Datum.h", _datum_h);
 				std::string _datum_cxx;
 				zpt::load_path("/usr/share/zapata/gen/Datum.cpp", _datum_cxx);
+				std::string _datum_sql;
+				zpt::load_path("/usr/share/zapata/gen/Datum.sql", _datum_sql);
 
 				std::string _includes;
 				for (auto _other_datum : _spec["datums"]->arr()) {
@@ -159,6 +162,21 @@ auto zpt::Generator::build_data_layer() -> void {
 					_includes += std::string("#include <") + _include + std::string(">\n");
 				}
 				zpt::replace(_datum_h, "$[data.path.h]", _includes);
+
+				if (_datum["fields"]->type() == zpt::JSObject){
+					std::string _fields;
+					_fields += std::string("id char(36) not null primary key,\n");
+					_fields += std::string("created timestamp not null,\n");
+					_fields += std::string("updated timestamp not null,\n");
+					_fields += std::string("href varchar(1024) not null");
+					for (auto _f : _datum["fields"]->obj()) {
+						if (_f.second["ref"]->ok()) {
+							continue;
+						}
+						_fields += std::string(",\n") + std::string(_f.first) + std::string(" ") + zpt::GenDatum::get_type(_f.second) + std::string(" ") + zpt::GenDatum::get_restrictions(_f.second);
+					}
+					zpt::replace(_datum_sql, "$[datum.fields]", _fields);
+				}
 				
 				auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
 				if (_found != zpt::Generator::datums.end()) {
@@ -191,6 +209,7 @@ auto zpt::Generator::build_data_layer() -> void {
 
 				zpt::replace(_datum_h, "$[datum.name]", std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
 				zpt::replace(_datum_cxx, "$[datum.name]", std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
+				zpt::replace(_datum_sql, "$[datum.name]", std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
 		
 				zpt::json _namespaces = zpt::split(_namespace, "::");
 				std::string _namespaces_begin;
@@ -249,6 +268,7 @@ auto zpt::Generator::build_data_layer() -> void {
 				struct stat _buffer;
 				bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
 				bool _h_exists = stat(_h_file.c_str(), &_buffer) == 0;
+				bool _sql_exists = stat(_sql_file.c_str(), &_buffer) == 0;
 				if (bool(this->__options["force-data"][0]) || (!bool(this->__options["force-data"][0]) && !_h_exists)) {
 					std::ofstream _h_ofs(_h_file.data());
 					_h_ofs << _datum_h << endl << flush;
@@ -260,6 +280,12 @@ auto zpt::Generator::build_data_layer() -> void {
 					_cxx_ofs << _datum_cxx << endl << flush;
 					_cxx_ofs.close();
 					zlog(std::string("processed ") + _cxx_file, zpt::trace);
+				}
+				if (bool(this->__options["force-data"][0]) || (!bool(this->__options["force-data"][0]) && !_sql_exists)) {
+					std::ofstream _sql_ofs(_sql_file.data());
+					_sql_ofs << _datum_sql << endl << flush;
+					_sql_ofs.close();
+					zlog(std::string("processed ") + _sql_file, zpt::trace);
 				}
 			}
 		}
@@ -1281,10 +1307,72 @@ auto zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespa
 auto zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string {
 	for (auto _db : _ordered->arr()) {
 		if (std::find(std::begin(_dbms->arr()), std::end(_dbms->arr()), _db) != std::end(_dbms->arr())) {
-			return std::string("dbms.") + _db->str() + std::string(".") + zpt::r_replace(_namespace, "::", ".");
+			std::string _db_client(_db->str());
+			if (_db->str() == "postgresql") {
+				_db_client.assign("pgsql");
+			}
+			return std::string("dbms.") + _db_client + std::string(".") + zpt::r_replace(_namespace, "::", ".");
 		}
 	}
 	return "";
+}
+
+auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
+	std::string _type(_field["type"]);
+	std::string _return;
+	if (_type == "utf8" || _type == "ascii" || _type == "text") {
+		_return += std::string("text");
+	}
+	else if (_type == "string") {
+		_return += std::string("varchar(1024)");
+	}
+	else if (_type == "token" || _type == "uri") {
+		_return += std::string("varchar(512)");
+	}
+	else if (_type == "uuid") {
+		_return += std::string("char(36)");
+	}
+	else if (_type == "int") {
+		_return += std::string("bigint");
+	}
+	else if (_type == "boolean") {
+		_return += std::string("boolean");
+	}
+	else if (_type == "double") {
+		_return += std::string("decimal");
+	}
+	else if (_type == "timestamp") {
+		_return += std::string("timestamp");
+	}
+	else if (_type == "json") {
+		_return += std::string("json");
+	}
+	return _return;
+}
+
+auto zpt::GenDatum::get_restrictions(zpt::json _field) -> std::string {
+	std::string _return;
+	zpt::json _opts = zpt::gen::get_opts(_field);
+	if (_opts["mandatory"]->ok()) {
+		if (_return.length() != 0) {
+			_return += std::string(" ");
+		}
+		_return += std::string("not null");
+	}
+	if (_opts["index"]->ok()) {
+		if (_return.length() != 0) {
+			_return += std::string(" ");
+		}
+		_return += std::string("index");
+	}
+	if (_opts["foreign"]->ok()) {
+		if (_return.length() != 0) {
+			_return += std::string(" ");
+		}
+		zpt::json _splited = zpt::split(std::string(_opts["foreign"]), ":");
+		_return += std::string("references ") + _splited->arr()->back()->str();
+	}
+	return _return;
 }
 
 zpt::GenResource::GenResource(zpt::json _spec, zpt::json _options) : __spec(_spec), __options(_options) {
@@ -2026,7 +2114,7 @@ auto zpt::gen::url_pattern_to_regexp(std::string _url) -> std::string {
 	std::string _return("^");
 
 	for (auto _part : _splited->arr()) {
-		_return += std::string("/") + (_part->str().find("{") != string::npos ? "([^/]+)" : _part->str());
+		_return += std::string("/") + (_part->str().find("{") != std::string::npos ? "([^/]+)" : _part->str());
 	}
 
 	_return += std::string("$");
@@ -2039,7 +2127,7 @@ auto zpt::gen::url_pattern_to_vars(std::string _url) -> std::string {
 
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
-		if (_part->str().find("{") != string::npos) {
+		if (_part->str().find("{") != std::string::npos) {
 			_return += std::string("zpt::json _tv_") + _part->str().substr(1, _part->str().length() - 2) + std::string(" = _t_split[") + std::to_string(_i) + std::string("];\n");
 		}
 		_i++;
@@ -2054,7 +2142,7 @@ auto zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
-		if (_part->str().find("{") != string::npos) {
+		if (_part->str().find("{") != std::string::npos) {
 			_return += std::string("\n	  (tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-") + std::string(" (zpt:topic-var t-split ") + std::to_string(_i) + std::string("))");
 		}
 		_i++;
@@ -2068,7 +2156,7 @@ auto zpt::gen::url_pattern_to_params(std::string _url) -> zpt::json {
 
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
-		if (_part->str().find("{") != string::npos) {
+		if (_part->str().find("{") != std::string::npos) {
 			_return << _part->str() << (std::string("_tv_") + _part->str().substr(1, _part->str().length() - 2));
 		}
 		_i++;
@@ -2087,7 +2175,7 @@ auto zpt::gen::get_opts(zpt::json _field) -> zpt::json {
 	}
 	zpt::json _opts = zpt::json::object();
 	for (auto _opt : _field["opts"]->arr()) {
-		if (_opt->str().find("=") != string::npos) {
+		if (_opt->str().find("=") != std::string::npos) {
 			zpt::json _pair = zpt::split(_opt->str(), "=");
 			_opts << _pair[0]->str() << _pair[1];
 		}

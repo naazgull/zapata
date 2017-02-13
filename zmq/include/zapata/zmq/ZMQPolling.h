@@ -152,6 +152,8 @@ namespace zpt {
 		virtual auto socket() -> zsock_t* = 0;
 		virtual auto in() -> zsock_t* = 0;
 		virtual auto out() -> zsock_t* = 0;
+		virtual auto in_mtx() -> std::mutex& = 0;
+		virtual auto out_mtx() -> std::mutex& = 0;
 		virtual auto type() -> short int = 0;
 		virtual auto once() -> bool = 0;
 		virtual auto listen(zpt::poll _poll) -> void = 0;
@@ -169,7 +171,7 @@ namespace zpt {
 		static zactor_t* __auth;
 
 	protected:
-		std::mutex __mtx;		
+		std::mutex __mtx;
 		zpt::poll __poll;
 		
 	};
@@ -185,6 +187,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -205,6 +209,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -225,6 +231,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -245,6 +253,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -256,6 +266,7 @@ namespace zpt {
 		zsock_t* __socket_sub;
 		zsock_t* __socket_pub;
 		zpt::socket __self;
+		std::mutex __out_mtx;
 	};
 	
 	class ZMQPub : public zpt::ZMQ {
@@ -269,6 +280,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -291,6 +304,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -314,6 +329,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -336,6 +353,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -356,6 +375,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);
@@ -382,6 +403,8 @@ namespace zpt {
 		virtual zsock_t* socket();
 		virtual zsock_t* in();
 		virtual zsock_t* out();
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
 		virtual short int type();
 		virtual bool once();
 		virtual void listen(zpt::poll _poll);

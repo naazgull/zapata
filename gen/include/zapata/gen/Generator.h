@@ -133,7 +133,9 @@ namespace zpt {
 
 		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
 		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
-		
+		static auto get_type(zpt::json _field) -> std::string;
+		static auto get_restrictions(zpt::json _field) -> std::string;
+
 	private:
 		zpt::json __spec;
 		zpt::json __options;

@@ -1,0 +1,2 @@
+
+export ZAPATA_LOG_DIR=/var/log/zapata/

@@ -32,7 +32,7 @@ bool zpt::ws::handshake(zpt::socketstream& _s) {
 	do {
 		getline(_s, _line);
 		zpt::trim(_line);
-		if (_line.find("Sec-WebSocket-Key:") != string::npos) {
+		if (_line.find("Sec-WebSocket-Key:") != std::string::npos) {
 			_key.assign(_line.substr(19));
 		}
 	}

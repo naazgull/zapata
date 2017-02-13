@@ -6,8 +6,8 @@
 # Required-Stop:     $network $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support
-# Description:       Provides a set of C++ tool libraries for the development of RESTful API's. This package provides an HTTP server, event listening registering support and multi-threading support.
+# Short-Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server daemon
+# Description:       Provides a set of C++ tool libraries for the development of RESTful API's. This script loads every service container described in '/etc/zapata/backend-enabled/'
 ### END INIT INFO
 
 cwd=${BASH_SOURCE%/*}
@@ -20,64 +20,34 @@ else
 	bin_dir=$prefix/bin
 fi
 daemon=$bin_dir/zpt
-cnf_dir=/etc/zapata/backend-enabled
+cnf_file=/etc/zapata/zapata.conf
 run_dir=/var/run
 name="zapata"
 
 start_zapata() {
-    for cnf_file in *.conf
-    do
-	if [ -f $cnf_file ]
+    cur_pid_file="$run_dir/zapata.pid"
+    if [ -f $cur_pid_file ]
+    then
+	cur_pid=$(<"$cur_pid_file")
+	pid_run=$(ps -p $cur_pid | grep $cur_pid | awk '{ print $1 }')
+	if [ -z $pid_run ]
 	then
-	    backend_name=${cnf_file%%.conf}	    
-	    cur_pid_file="$run_dir/zapata.$backend_name.pid"
-	    cnf_file="$cnf_dir/$cnf_file"
-	    
-	    if [ -f $cur_pid_file ]
-	    then
-		cur_pid=$(<"$cur_pid_file")
-		pid_run=$(ps -p $cur_pid | grep $cur_pid | awk '{ print $1 }')
-		if [ -z $pid_run ]
-		then
-		    rm -rf $cur_pid_file
-		else
-		    continue
-		fi
-	    fi
-
-	    [ -f /etc/default/$backend_name.rc ] && source /etc/default/$backend_name.rc
-	    start-stop-daemon --start -b --oknodo --quiet --make-pidfile --pidfile $cur_pid_file --startas $daemon -- -c $cnf_file &> /dev/null
-	    case "$?" in
-		0)
-		    ;;
-		*)
-		    exit 1
-		    ;;
-	    esac
+	    rm -rf $cur_pid_file
+	else
+	    log_daemon_msg "zapata already running, stop before start"
+	    exit -1
 	fi
-    done
+    fi
+
+    [ -f /etc/default/zapata.rc ] && source /etc/default/zapata.rc
+    start-stop-daemon --start -b --oknodo --quiet --make-pidfile --pidfile $cur_pid_file --startas $daemon -- -c $cnf_file &> /dev/null
 }
 
 stop_zapata() {
-    for cnf_file in *.conf
-    do
-	if [ -f $cnf_file ]
-	then
-	    backend_name=${cnf_file%%.conf}
-	    cur_pid_file="$run_dir/zapata.$backend_name.pid"
-	    start-stop-daemon --stop --oknodo --quiet --remove-pidfile --pidfile $cur_pid_file &> /dev/null
-	    case "$?" in
-		0)
-		    ;;
-		*)
-		    exit 1
-		    ;;
-	    esac
-	fi
-    done
+    cur_pid_file="$run_dir/zapata.pid"
+    start-stop-daemon --stop --oknodo --quiet --remove-pidfile --pidfile $cur_pid_file &> /dev/null
 }
 
-pushd $cnf_dir &> /dev/null
 case "$1" in
     start)
 	start_zapata "starting"
@@ -90,6 +60,3 @@ case "$1" in
 	start_zapata "restarting"
 	;;
 esac
-popd &> /dev/null
-
-exit 0

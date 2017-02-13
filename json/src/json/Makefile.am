@@ -12,7 +12,7 @@ libzapata_json_la_SOURCES = \
 ./JSONTokenizer.cpp \
 ./JSONTokenizerLexer.cpp
 
-bin_PROGRAMS = zat zpt-json zinit
+bin_PROGRAMS = zat zjson zinit
 
 zat_LDADD = -lpthread -lzapata-base -lzapata-json
 zat_LDFLAGS= 
@@ -21,11 +21,11 @@ zat_CPPFLAGS = -std=c++14 -Wall -I../../include
 zat_SOURCES = \
 zat.cpp
 
-zpt_json_LDADD = -lpthread -lzapata-base -lzapata-json
-zpt_json_LDFLAGS= 
-zpt_json_CPPFLAGS = -std=c++14 -Wall -I../../include
+zjson_LDADD = -lpthread -lzapata-base -lzapata-json
+zjson_LDFLAGS= 
+zjson_CPPFLAGS = -std=c++14 -Wall -I../../include
 
-zpt_json_SOURCES = \
+zjson_SOURCES = \
 parser.cpp
 
 zinit_LDADD = -lpthread -lzapata-base -lzapata-json

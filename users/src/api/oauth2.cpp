@@ -67,7 +67,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
 					"Set-Cookie", (std::string("deleted; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; expires=Thu, Jan 01 1970 00:00:00 UTC; HttpOnly")), 
-					"Location", (_login_url + (_login_url.find("?") != string::npos ? "&" : "?") + std::string("state=") + _state)
+					"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _state)
 				}
 			};
 		}
@@ -88,7 +88,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
 					"Set-Cookie", (std::string("deleted; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; expires=Thu, Jan 01 1970 00:00:00 UTC; HttpOnly")), 
-					"Location", (_login_url + (_login_url.find("?") != string::npos ? "&" : "?") + std::string("state=") + _state)
+					"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _state)
 				}
 			};
 		}
@@ -109,7 +109,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
 					"Location", (
-						(_redirect_uri + (_redirect_uri.find("?") != string::npos ? std::string("&") : std::string("?")) +
+						(_redirect_uri + (_redirect_uri.find("?") != std::string::npos ? std::string("&") : std::string("?")) +
 							std::string("code=") + _code +
 							(_envelope["payload"]["state"]->ok() ? std::string("&state=") + _envelope["payload"]["state"]->str() : std::string("")))
 					)
@@ -120,7 +120,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
-					"Location", (_redirect_uri + (_redirect_uri.find("?") != string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
+					"Location", (_redirect_uri + (_redirect_uri.find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
 				}
 			};
 		}
@@ -162,7 +162,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 					"headers", {
 						"Set-Cookie", (_token["access_token"]->str() + std::string("; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; HttpOnly")), 
 						"Location", (
-							(_redirect_uri + (_redirect_uri.find("?") != string::npos ? "&" : "?") +
+							(_redirect_uri + (_redirect_uri.find("?") != std::string::npos ? "&" : "?") +
 								std::string("access_token=") + _token["access_token"]->str() +
 								std::string("&refresh_token=") + _token["refresh_token"]->str() +
 								std::string("&expires=") + ((std::string) _token["expires"]) +
@@ -177,7 +177,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			"status", (_performative == zpt::ev::Post ? 303 : 307),
 			"headers", {
 				"Set-Cookie", (std::string("deleted; name=oauth_session; domain=") + _emitter->options()["domain"]->str() + std::string("; path=/; expires=Thu, Jan 01 1970 00:00:00 UTC; HttpOnly")), 
-				"Location", (_login_url + (_login_url.find("?") != string::npos ? "&" : "?") + std::string("error=incorrect+credentials&state=") + ((std::string) _envelope["payload"]["state"]))
+				"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("error=incorrect+credentials&state=") + ((std::string) _envelope["payload"]["state"]))
 			}
 		};
 	}					

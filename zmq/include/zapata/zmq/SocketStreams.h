@@ -465,7 +465,7 @@ namespace zpt {
 				zpt::trim(_line);
 				string _header(_line);
 				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
-				if (_header.find("sec-websocket-key:") != string::npos) {
+				if (_header.find("sec-websocket-key:") != std::string::npos) {
 					_key.assign(_line.substr(19));
 				}
 			}
@@ -586,7 +586,7 @@ namespace zpt {
 				zpt::trim(_line);
 				string _header(_line);
 				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
-				if (_header.find("sec-websocket-key:") != string::npos) {
+				if (_header.find("sec-websocket-key:") != std::string::npos) {
 					_key.assign(_line.substr(19));
 				}
 			}

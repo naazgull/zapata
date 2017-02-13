@@ -112,7 +112,7 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _href_prefi
 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["href"]->str().data(), ((std::string) _document).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 			this->reconnect();
 		}
 	}
@@ -139,7 +139,7 @@ auto zpt::redis::Client::save(std::string _collection, std::string _href, zpt::j
 			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _document).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 		if (!_success) {
-			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 			this->reconnect();
 		}
 	}
@@ -169,7 +169,7 @@ auto zpt::redis::Client::set(std::string _collection, std::string _href, zpt::js
  			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
  		if (!_success) {
- 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+ 			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
  			this->reconnect();
  		}
   	}
@@ -200,7 +200,7 @@ auto zpt::redis::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 				redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _new_record).data());
 				_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 			if (!_success) {
-				zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+				zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 				this->reconnect();
 			}
 		}
@@ -234,7 +234,7 @@ auto zpt::redis::Client::unset(std::string _collection, std::string _href, zpt::
  			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
  		if (!_success) {
- 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+ 			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
  			this->reconnect();
  		}
   	}
@@ -268,7 +268,7 @@ auto zpt::redis::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 				redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _new_record).data());
 				_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 			if (!_success) {
-				zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+				zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 				this->reconnect();
 			}
 		}
@@ -294,7 +294,7 @@ auto zpt::redis::Client::remove(std::string _collection, std::string _href, zpt:
  			redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _href.data());
  			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
  		if (!_success) {
- 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+ 			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
  			this->reconnect();
  		}
   	}
@@ -322,7 +322,7 @@ auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt
 				redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _record["href"]->str().data());
 				_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 			if (!_success) {
-				zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+				zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 				this->reconnect();
 			}
 		}
@@ -354,7 +354,7 @@ auto zpt::redis::Client::get(std::string _collection, std::string _href, zpt::js
  			if (_reply != nullptr) {
  				freeReplyObject(_reply);
  			}
- 			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+ 			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
  			this->reconnect();
  		}
   	}
@@ -431,7 +431,7 @@ auto zpt::redis::Client::query(std::string _collection, std::string _regexp, zpt
  				if (_reply != nullptr) {
  					freeReplyObject(_reply);
  				}
- 				zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+ 				zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
  				this->reconnect();
  			}
 		}
@@ -517,7 +517,7 @@ auto zpt::redis::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 			if (_reply != nullptr) {
 				freeReplyObject(_reply);
 			}
-			zlog("disconnected from Redis server, going to reconnect...", zpt::warning);
+			zlog("disconnected from Redis server, going to reconnect...", zpt::critical);
 			this->reconnect();
 		}
 	}

@@ -1,0 +1,12 @@
+
+RUNNING_SHELL=$(readlink /proc/$$/exe)
+if [[ $RUNNING_SHELL == /bin/zsh* ]]
+then
+	BASH_SOURCE=${(%):-%x}
+fi
+ZAPATA_ENV_CWD=${BASH_SOURCE%/*}
+
+for rc_file in /etc/zapata/rc.d/*.rc
+do
+	echo "[ -f ${rc_file} ] && source ${rc_file}"
+done

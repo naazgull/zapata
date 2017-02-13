@@ -48,8 +48,8 @@ auto zpt::ZMQMutationEmitter::loop() -> void {
 }
 
 auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts) -> std::string {
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	std::vector< zpt::mutation::Handler> _handlers;
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Insert ? nullptr : _handler));
@@ -61,13 +61,13 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::strin
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::notice);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	std::map< zpt::mutation::operation, zpt::mutation::Handler >::iterator _found;
 	vector< zpt::mutation::Handler> _handlers;
@@ -80,14 +80,13 @@ auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mut
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::notice);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
-	std::string _data_class_ns = _listener->ns();
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_listener->ns(), std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	zpt::mutation::Handler _handler = [ _listener ] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {
 		switch (_performative) {
@@ -113,7 +112,6 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _o
 			}
 		}
 	};
-
 	
 	vector< zpt::mutation::Handler > _handlers;
 	for (short _idx = zpt::mutation::Insert; _idx != zpt::mutation::Reconnect + 1; _idx++) {
@@ -122,7 +120,7 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _o
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _listener->ns(), zpt::notice);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
@@ -143,13 +141,12 @@ auto zpt::ZMQMutationEmitter::off(std::string _callback_id) -> void {
 auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	std::string _op = zpt::mutation::to_str(_operation);
 	std::transform(std::begin(_op), std::end(_op), std::begin(_op), ::tolower);
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	_data_class_ns.insert(0, std::string("/") + this->version() + std::string("/mutations/") + _op + std::string("/"));
+	std::string _uri(std::string("/") + this->version() + std::string("/mutations/") + _op + zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""));
 	
 	zpt::json _envelope = {
-		"channel", _data_class_ns,
+		"channel", _uri,
 		"performative", (int) _operation,
-		"resource", _data_class_ns, 
+		"resource", _uri, 
 		"payload", _record
 	};
 
@@ -199,7 +196,7 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 
 	zpt::json _ptr;
 	if (_conf_file.length() == 0) {
-		zlog("must provide a configuration file", zpt::alert);
+		zlog("must provide a configuration file", zpt::warning);
 	}
 	else {
 		std::ifstream _in;
@@ -229,7 +226,7 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
 	}
 
-	zlog("starting Mutation container", zpt::alert);
+	zlog("starting Mutation container", zpt::warning);
 	zpt::mutation::server _server = zpt::mutation::server::setup(_ptr);
 	_server->start();
 	return 0;
