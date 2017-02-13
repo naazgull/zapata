@@ -113,19 +113,6 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 auto zpt::conf::setup(zpt::json _options) -> void {
 	zpt::conf::dirs(_options);
 	zpt::conf::env(_options);
-	if (_options["log"]->ok()) {
-		if (_options["log"]["file"]->ok()) {
-			zpt::log_fd = new ofstream();
-			std::string _log_file((std::string) _options["log"]["file"]);
-			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
-		}
-		if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
-			zpt::log_lvl = (int) _options["log"]["level"];
-		}
-	}
-	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 4;
-	}
 }
 
 auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
@@ -186,15 +173,22 @@ auto zpt::conf::dirs(zpt::json _options) -> void {
 
 auto zpt::conf::env(zpt::json _options) -> void {
 	zpt::json _traversable = _options->clone();
-	_traversable->inspect({ "$regexp", "\\$\\{([^}]+)\\}" }, [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-		std::string _var = _options->getPath(_object_path);
-		_var = _var.substr(2, _var.length() - 3);
-		const char * _valuec = std::getenv(_var.data());
-		if (_valuec != nullptr) {
-			std::string _value(_valuec);
-			_options->setPath(_object_path, zpt::mkptr(_value));
+	_traversable->inspect({ "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
+		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+			std::string _value = std::string(_options->getPath(_object_path));
+			std::string _found = std::string(_value.data());
+
+			for (size_t _idx = _found.find("$"); _idx != std::string::npos; _idx = _found.find("$", _idx + 1)) {
+				std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
+				
+				const char * _var_val = std::getenv(_var.data());
+				if (_var_val != nullptr) {
+					zpt::replace(_value, std::string("${") + _var + std::string("}"), zpt::r_trim(_var_val));
+				}
+			}
+			_options->setPath(_object_path, zpt::json::string(_value));
 		}
-	});
+	);
 }
 
 auto zpt::uri::parse(std::string _uri) -> zpt::json {

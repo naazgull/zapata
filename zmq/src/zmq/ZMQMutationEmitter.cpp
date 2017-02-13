@@ -23,9 +23,10 @@ SOFTWARE.
 */
 
 #include <zapata/zmq/ZMQMutationEmitter.h>
+#include <sys/sem.h>
 #include <map>
 
-zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["mutations"]["connect"]), _options)) {
+zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
@@ -182,7 +183,7 @@ zpt::mutation::server zpt::ZMQMutationServerPtr::setup(zpt::json _options) {
 	return _server;
 }
 
-int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
+int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::log_fd = &std::cout;
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new std::string(argv[0]);
@@ -191,7 +192,7 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
 	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
 	
-	zpt::log_format = !bool(_args["r"]);
+	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
 	zpt::log_lvl = _log_level;
 
 	zpt::json _ptr;
@@ -215,24 +216,33 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 		_ptr << "argv" << _args;
 	}
 
-	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
-		zpt::log_lvl = (int) _ptr["log"]["level"];
+	if (!bool(_ptr["$mutations"]["run"])) {
+		exit(0);
+	}
+
+	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
+		zpt::log_lvl = (int) _ptr["$log"]["level"];
 	}
 	if (zpt::log_lvl == -1) {
 		zpt::log_lvl = 8;
 	}
-	if (!!_ptr["log"]["file"]) {
+	if (_ptr["$log"]["format"]->ok()) {
+		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw") ? 0 : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
+	}
+	if (_ptr["$log"]["file"]->ok()) {
 		zpt::log_fd = new std::ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
+		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
 	}
 
-	zlog("starting Mutation container", zpt::warning);
+	zlog("starting mutations container", zpt::warning);
 	zpt::mutation::server _server = zpt::mutation::server::setup(_ptr);
+	struct sembuf _unlock[1] = { { (short unsigned int) 0, -1 } };
+	semop(_semaphore, _unlock, 1);	
 	_server->start();
 	return 0;
 }
 
-zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["mutations"]["connect"]), _options)) {
+zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["$mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);

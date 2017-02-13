@@ -8,5 +8,5 @@ ZAPATA_ENV_CWD=${BASH_SOURCE%/*}
 
 for rc_file in /etc/zapata/rc.d/*.rc
 do
-	echo "[ -f ${rc_file} ] && source ${rc_file}"
+	[ -f ${rc_file} ] && source ${rc_file}
 done

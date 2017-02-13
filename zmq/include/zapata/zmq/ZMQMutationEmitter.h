@@ -54,7 +54,7 @@ namespace zpt {
 		virtual ~ZMQMutationServerPtr();
 
 		static zpt::mutation::server setup(zpt::json _options);
-		static int launch(int argc, char* argv[]);
+		static int launch(int argc, char* argv[], int _semaphore);
 	};
 
 	class ZMQMutationServer {

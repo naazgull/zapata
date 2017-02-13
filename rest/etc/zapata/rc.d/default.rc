@@ -1,2 +1,3 @@
 
 export ZAPATA_LOG_DIR=/var/log/zapata/
+export ZAPATA_IP_ADDR=$(hostname --all-ip-addresses)

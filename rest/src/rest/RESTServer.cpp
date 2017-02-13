@@ -39,6 +39,13 @@ SOFTWARE.
 #include <zapata/python.h>
 #include <zapata/lisp.h>
 
+namespace zpt {
+	namespace rest {
+		pid_t* pids = nullptr;
+		size_t n_pid = 0;
+	}
+}
+
 zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::json _options) : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {
 }
 
@@ -56,10 +63,18 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 	return _server;
 }
 
-int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
+auto zpt::rest::terminate(int _signal) -> void {
+	for (size_t _i = zpt::rest::n_pid; _i != 0; _i--) {
+		zlog(std::string("terminating process ") + std::to_string(zpt::rest::pids[_i - 1]), zpt::warning);
+		::kill(zpt::rest::pids[_i - 1], _signal);
+	}
+	delete [] zpt::rest::pids;
+}
+
+int zpt::RESTServerPtr::launch(int argc, char* argv[]) {	
 	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::conf::setup(_ptr);
-	
+
 	zpt::json _to_spawn = zpt::json::object();
 	for (auto _spawn : _ptr->obj()) {
 		if (_spawn.first.find("$") != std::string::npos) {
@@ -69,8 +84,40 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			continue;
 		}
 		_to_spawn << _spawn.first << _spawn.second;
-	}		
+	}
+
+	zpt::rest::n_pid = 0;
+	zpt::rest::pids = new pid_t[_to_spawn->obj()->size()];
 		
+	if (bool(_ptr["$mutations"]["run"])) {
+		key_t _key = ftok("/usr/bin/zpt", 1);
+		int _semaphore = semget(_key, 1, IPC_CREAT | 0777);
+		struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
+		semop(_semaphore, _inc, 1);	
+		
+		pid_t _pid = fork();
+		if (_pid == 0) {
+			try {
+				zpt::mutation::server::launch(argc, argv, _semaphore);
+			}
+			catch (zpt::assertion& _e) {
+				zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
+				return -1;
+			}
+			catch (std::exception& _e) {
+				zlog(_e.what(), zpt::emergency);
+				return -1;
+			}
+			return 0;
+		}
+		else {
+			struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
+			semop(_semaphore, _block, 1);	
+			semctl(_semaphore, 0, IPC_RMID);
+			zpt::rest::pids[zpt::rest::n_pid++] = _pid;
+		}
+	}
+	
 	size_t _spawned = 0;
 	std::string _name;
 	zpt::json _options;
@@ -78,6 +125,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		if (_spawned == _to_spawn->obj()->size() - 1) {
 			_name.assign(_spawn.first.data());
 			_options = _spawn.second;
+			::signal(SIGINT, zpt::rest::terminate);
+			::signal(SIGTERM, zpt::rest::terminate);
 		}
 		else {
 			pid_t _pid = fork();
@@ -87,9 +136,14 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 				break;
 			}
 			else {
+				zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 				_spawned++;
 			}
 		}
+	}
+
+	if (_ptr["$mutations"]->ok()) {
+		_options << "$mutations" << _ptr["$mutations"];
 	}
 
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
@@ -114,7 +168,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	if (_options["log"]["file"]->ok()) {
 		zpt::log_fd = new std::ofstream();
 		((std::ofstream *) zpt::log_fd)->open(((std::string) _options["log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
-	}	
+	}
 	
 	zlog(std::string("starting RESTful service container: ") + _name, zpt::warning);
 	zpt::rest::server _server = zpt::rest::server::setup(_options, _name);
@@ -281,7 +335,7 @@ void zpt::RESTServer::start() {
 			this->__threads.push_back(_http);
 		}
 		
-		if (this->__options["mutations"]["connect"]->ok()) {
+		if (bool(this->__options["$mutations"]["enabled"])) {
 			std::shared_ptr< std::thread > _mutations(
 				new std::thread(
 					[ this ] () -> void {
@@ -433,7 +487,7 @@ void zpt::RESTClient::start() {
 	}
 }
 
-zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
+auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 	zpt::json _return = zpt::json::object();
 	_return <<
 		"channel" << _request->url() <<
@@ -475,7 +529,7 @@ zpt::json zpt::rest::http2zmq(zpt::http::req _request) {
 	return _return;
 }
 
-zpt::http::rep zpt::rest::zmq2http(zpt::json _out) {
+auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	

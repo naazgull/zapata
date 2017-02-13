@@ -30,7 +30,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	
-	if (this->options()["mutations"]["connect"]->ok()) {
+	if (bool(this->options()["$mutations"]["enabled"])) {
 		this->mutations((new zpt::ZMQMutationEmitter(this->options()))->self());
 	}
 	else {
