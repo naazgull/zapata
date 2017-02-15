@@ -154,7 +154,7 @@ auto zpt::test::uri(std::string _uri) -> bool {
 		_uri = std::string("zpt:") + _uri; 
 	}
 	static const std::regex _uri_rgx(
-		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([@>]{0,1}[a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
 		"([^?#]*)"                    // authority and path
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment

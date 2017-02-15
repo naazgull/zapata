@@ -2,7 +2,7 @@
 nobase_dist_sysconf_DATA = \
 ./default/zapata.rc \
 ./zapata/rc.d/default.rc \
-./zapata/backend-enabled/default.conf \
+./zapata/backend-enabled/.dir \
 ./zapata/backend-available/default.conf \
 ./zapata/certificates/public/.default \
 ./zapata/conf.d/default.conf \

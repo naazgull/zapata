@@ -68,7 +68,10 @@ namespace zpt {
 	namespace rest {
 		typedef zpt::RESTServerPtr server;
 		typedef zpt::RESTClientPtr client;
+		typedef zpt::RESTEmitter emitter;
 		typedef std::map< std::string, std::vector< std::pair<std::regex, zpt::ev::handlers > > > HandlerStack;
+
+		extern zpt::rest::emitter* __emitter;
 	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
@@ -160,6 +163,8 @@ namespace zpt {
 		virtual auto poll() -> zpt::poll;
 		virtual auto server(zpt::rest::server _server) -> void;
 		virtual auto server() -> zpt::rest::server;
+
+		static auto instance() -> zpt::ev::emitter;
 		
 	private:
 		zpt::ev::Handler __default_get;
@@ -177,6 +182,7 @@ namespace zpt {
 		zpt::rest::server __server;
 
 		auto get_hash(std::string _pattern) -> std::string;
+		auto add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void;
 
 	};
 

@@ -82,6 +82,7 @@ namespace zpt {
 
 		auto init_request(std::string _cid = "") -> zpt::json;
 		auto init_reply(std::string _cid = "") -> zpt::json;
+
 	}
 
 	namespace mutation {
@@ -335,10 +336,10 @@ namespace zpt {
 		virtual ~EventDirectory();
 		
 		virtual auto options() -> zpt::json;
-		virtual auto unbind() -> void;
+		virtual auto unbind() -> void final;
 		virtual auto self() const -> zpt::ev::directory;
-		virtual auto events() -> zpt::ev::emitter;
-		virtual auto events(zpt::ev::emitter _emitter) -> void;
+		virtual auto events() -> zpt::ev::emitter final;
+		virtual auto events(zpt::ev::emitter _emitter) -> void final;
 		virtual auto lookup(std::string _topic) -> zpt::json;
 		virtual auto notify(std::string _topic, zpt::json _connection = zpt::undefined) -> void;
 		
@@ -346,7 +347,10 @@ namespace zpt {
 		zpt::json __options;
 		zpt::ev::directory __self;
 		zpt::ev::emitter __emitter;
+		
+	protected:
 		std::vector< std::pair< std::regex, zpt::json > > __index;
+		std::mutex __mtx;
 	};
 	
 	class EventListener {
@@ -368,6 +372,11 @@ namespace zpt {
 	private:
 		std::string __regex;
 	};
+
+	template< typename T >
+	inline auto emitter() -> decltype(T::instance()) {
+		return T::instance();
+	}
 
 }
 

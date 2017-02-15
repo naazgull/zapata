@@ -294,7 +294,7 @@ auto zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::ev::em
 	return _token;
 }
 
-extern "C" auto restify(zpt::ev::emitter _emitter) -> void {
+extern "C" auto _zpt_load_() -> void {
 	assertz(_emitter->options()["redis"]["oauth"]->ok(), "no 'redis.oauth' object found in provided configuration", 500, 0);
 	zpt::kb _redis(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
 	_emitter->add_kb("redis.oauth", _redis);

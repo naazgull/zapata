@@ -28,20 +28,23 @@ SOFTWARE.
 #include <zapata/exceptions/SyntaxErrorException.h>
 #include <regex>
 
-zpt::json zpt::split(std::string _to_split, std::string _separator) {
+auto zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::json {
 	std::istringstream _iss(_to_split);
 	std::string _part;
 	zpt::json _ret = zpt::json::array();
 	while(_iss.good()) {
 		std::getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
+			if (_trim) {
+				zpt::trim(_part);
+			}
 			_ret << _part;
 		}
 	}
 	return _ret;
 }
 
-std::string zpt::join(zpt::json _to_join, std::string _separator) {
+auto zpt::join(zpt::json _to_join, std::string _separator) -> std::string {
 	assertz(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject, "JSON to join must be an array", 412, 0);
 	std::string _return;
 	if (_to_join->type() == zpt::JSArray) {
@@ -63,11 +66,11 @@ std::string zpt::join(zpt::json _to_join, std::string _separator) {
 	return _return;
 }
 
-zpt::json zpt::path::split(std::string _to_split) {
-	return zpt::split(_to_split, "/");
+auto zpt::path::split(std::string _to_split) -> zpt::json {
+	return zpt::split(_to_split, "/", true);
 }
 
-std::string zpt::path::join(zpt::json _to_join) {
+auto zpt::path::join(zpt::json _to_join) -> std::string {
 	return std::string("/") + zpt::join(_to_join, "/");
 }
 
@@ -196,7 +199,7 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 		_uri = std::string("zpt://127.0.0.1") + _uri;
 	}
 	static const std::regex _uri_rgx(
-		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"[@>]{0,1}([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
 		"([/]{1,2})([^/]+)"           // authority
 		"([^?#]*)"                    // path
 		"(?:\\?([^#]*))?"             // ?query

@@ -43,6 +43,7 @@ namespace zpt {
 	namespace rest {
 		pid_t* pids = nullptr;
 		size_t n_pid = 0;
+		int m_sem = -1;
 	}
 }
 
@@ -64,11 +65,16 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 }
 
 auto zpt::rest::terminate(int _signal) -> void {
+	if (zpt::rest::pids == nullptr) {
+		return;
+	}
+	semctl(zpt::rest::m_sem, 0, IPC_RMID);
 	for (size_t _i = zpt::rest::n_pid; _i != 0; _i--) {
 		zlog(std::string("terminating process ") + std::to_string(zpt::rest::pids[_i - 1]), zpt::warning);
-		::kill(zpt::rest::pids[_i - 1], _signal);
+		::kill(zpt::rest::pids[_i - 1], (_signal == SIGSEGV ? SIGTERM : _signal));
 	}
 	delete [] zpt::rest::pids;
+	zpt::rest::pids = nullptr;
 }
 
 int zpt::RESTServerPtr::launch(int argc, char* argv[]) {	
@@ -91,30 +97,34 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		
 	if (bool(_ptr["$mutations"]["run"])) {
 		key_t _key = ftok("/usr/bin/zpt", 1);
-		int _semaphore = semget(_key, 1, IPC_CREAT | 0777);
-		struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
-		semop(_semaphore, _inc, 1);	
+		zpt::rest::m_sem = semget(_key, 1, IPC_CREAT | IPC_EXCL | 0777);
+		if (zpt::rest::m_sem != -1) {
+			struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
+			semop(zpt::rest::m_sem, _inc, 1);	
 		
-		pid_t _pid = fork();
-		if (_pid == 0) {
-			try {
-				zpt::mutation::server::launch(argc, argv, _semaphore);
+			pid_t _pid = fork();
+			if (_pid == 0) {
+				try {
+					zpt::mutation::server::launch(argc, argv, zpt::rest::m_sem);
+				}
+				catch (zpt::assertion& _e) {
+					zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
+					return -1;
+				}
+				catch (std::exception& _e) {
+					zlog(_e.what(), zpt::emergency);
+					return -1;
+				}
+				return 0;
 			}
-			catch (zpt::assertion& _e) {
-				zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
-				return -1;
+			else {
+				struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
+				semop(zpt::rest::m_sem, _block, 1);	
+				zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 			}
-			catch (std::exception& _e) {
-				zlog(_e.what(), zpt::emergency);
-				return -1;
-			}
-			return 0;
 		}
 		else {
-			struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
-			semop(_semaphore, _block, 1);	
-			semctl(_semaphore, 0, IPC_RMID);
-			zpt::rest::pids[zpt::rest::n_pid++] = _pid;
+			zlog("mutation server already runing", zpt::notice);
 		}
 	}
 	
@@ -127,6 +137,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			_options = _spawn.second;
 			::signal(SIGINT, zpt::rest::terminate);
 			::signal(SIGTERM, zpt::rest::terminate);
+			::signal(SIGABRT, zpt::rest::terminate);
+			::signal(SIGSEGV, zpt::rest::terminate);
 		}
 		else {
 			pid_t _pid = fork();
@@ -232,9 +244,9 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					zlog(std::string(dlerror()), zpt::error);
 				}
 				else {
-					void (*_populate)(zpt::ev::emitter);
-					_populate = (void (*)(zpt::ev::emitter)) dlsym(hndl, "restify");
-					_populate(this->__emitter);
+					void (*_populate)();
+					_populate = (void (*)()) dlsym(hndl, "_zpt_load_");
+					_populate();
 				}
 			}
 		}
@@ -368,7 +380,6 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		assertz(false, "error parsing HTTP data", 500, 0);
 	}
 
-	zlog("processing HTTP request", zpt::debug);
 	bool _return = false;
 	zpt::json _container = this->__emitter->lookup(_request->url());
 	if (_container->ok()) {

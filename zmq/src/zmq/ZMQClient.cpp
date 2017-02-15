@@ -58,7 +58,6 @@ auto zpt::ZMQ::connection() -> std::string{
 
 auto zpt::ZMQ::connection(std::string _connection) -> void{
 	this->__connection.assign(_connection);
-	zpt::replace(this->__connection, "tcp://*:", std::string("tcp://") + zpt::net::getip() + std::string(":"));
 }
 
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){

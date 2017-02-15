@@ -26,10 +26,24 @@ SOFTWARE.
 #include <sys/sem.h>
 #include <map>
 
+namespace zpt {
+	namespace mutation {
+		namespace zmq {
+			emitter* __emitter = nullptr;
+		}
+	}
+}
+
 zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	if (zpt::mutation::zmq::__emitter != nullptr) {
+		delete zpt::mutation::zmq::__emitter;
+		zlog("something is definitely wrong, ZMQMutationEmitter already initialized", zpt::emergency);
+	}
+	zpt::mutation::zmq::__emitter = this;
+	
 	
 	zsock_set_subscribe(this->__socket->in(), "");
 }
@@ -166,6 +180,11 @@ auto zpt::ZMQMutationEmitter::trigger(zpt::mutation::operation _operation, std::
 		}
 	}
 	return zpt::undefined;
+}
+
+auto zpt::ZMQMutationEmitter::instance() -> zpt::mutation::emitter {
+	assertz(zpt::mutation::zmq::__emitter != nullptr, "ZMQ mutation emitter has not been initialized", 500, 0);
+	return zpt::mutation::zmq::__emitter->self();
 }
 
 zpt::ZMQMutationServerPtr::ZMQMutationServerPtr(zpt::json _options) : std::shared_ptr<zpt::ZMQMutationServer>(new zpt::ZMQMutationServer(_options)) {

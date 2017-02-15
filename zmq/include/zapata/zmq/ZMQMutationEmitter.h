@@ -45,6 +45,12 @@ namespace zpt {
 
 	namespace mutation {
 		typedef zpt::ZMQMutationServerPtr server;
+
+		namespace zmq {
+			typedef zpt::ZMQMutationEmitter emitter;
+
+			extern zpt::mutation::zmq::emitter* __emitter;
+		}
 	}
 
 	class ZMQMutationServerPtr : public std::shared_ptr<zpt::ZMQMutationServer> {
@@ -90,6 +96,8 @@ namespace zpt {
 		
 		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
 		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
+
+		static auto instance() -> zpt::mutation::emitter;
 		
 	private:
 		zpt::mutation::HandlerStack __resources;

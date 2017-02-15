@@ -25,10 +25,21 @@ SOFTWARE.
 #include <zapata/rest/RESTEmitter.h>
 #include <map>
 
+namespace zpt {
+	namespace rest {
+		emitter* __emitter = nullptr;
+	}
+}
+
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	if (zpt::rest::__emitter != nullptr) {
+		delete zpt::rest::__emitter;
+		zlog("something is definitely wrong, RESTEmitter already initialized", zpt::emergency);
+	}
+	zpt::rest::__emitter = this;
 	
 	if (bool(this->options()["$mutations"]["enabled"])) {
 		this->mutations((new zpt::ZMQMutationEmitter(this->options()))->self());
@@ -123,6 +134,27 @@ auto zpt::RESTEmitter::get_hash(std::string _pattern) -> std::string {
 	return _return;
 }
 
+auto zpt::RESTEmitter::add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void {
+	std::string _possible_hash = this->get_hash(_topic);
+	zpt::json _splited = zpt::split(_possible_hash, "/");
+	std::string _hash;
+	for (auto _i : _splited->arr()) {
+		_hash += std::string("/") + _i->str();
+		if (this->__hashed.find(_hash) != this->__hashed.end()) {
+			break;
+		}
+	}
+	auto _h_found = this->__hashed.find(_hash);
+	if (_h_found == this->__hashed.end()) {
+		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
+		_bag.push_back(std::make_pair(_url_pattern, _handlers));
+		this->__hashed.insert(std::make_pair(_hash, _bag));
+	}
+	else {
+		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
+	}
+}
+
 auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts) -> std::string {
 	std::regex _url_pattern(_regex);
 
@@ -138,17 +170,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	
-	std::string _hash = this->get_hash(_regex);
-	auto _h_found = this->__hashed.find(_hash);
-	if (_h_found == this->__hashed.end()) {
-		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
-		_bag.push_back(std::make_pair(_url_pattern, _handlers));
-		this->__hashed.insert(std::make_pair(_hash, _bag));
-	}
-	else {
-		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
-	}
+	this->add_by_hash(_regex, _url_pattern, _handlers);
 
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->assync_on(_regex, _opts);
@@ -169,21 +191,11 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Head)) == _handler_set.end() ?  this->__default_head : _found->second);
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Patch)) == _handler_set.end() ?  this->__default_patch : _found->second);
-	_handlers.push_back(this->__default_assync_reply);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Reply)) == _handler_set.end() ?  this->__default_assync_reply : _found->second);
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	
-	std::string _hash = this->get_hash(_regex);
-	auto _h_found = this->__hashed.find(_hash);
-	if (_h_found == this->__hashed.end()) {
-		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
-		_bag.push_back(std::make_pair(_url_pattern, _handlers));
-		this->__hashed.insert(std::make_pair(_hash, _bag));
-	}
-	else {
-		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
-	}
+	this->add_by_hash(_regex, _url_pattern, _handlers);
 
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->assync_on(_regex, _opts);
@@ -232,17 +244,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 	
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	
-	std::string _hash = this->get_hash(_listener->regex());
-	auto _h_found = this->__hashed.find(_hash);
-	if (_h_found == this->__hashed.end()) {
-		std::vector< std::pair< std::regex, zpt::ev::handlers > > _bag;
-		_bag.push_back(std::make_pair(_url_pattern, _handlers));
-		this->__hashed.insert(std::make_pair(_hash, _bag));
-	}
-	else {
-		_h_found->second.push_back(std::make_pair(_url_pattern, _handlers));
-	}
+	this->add_by_hash(_listener->regex(), _url_pattern, _handlers);
 
 	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
 	this->server()->assync_on(_listener->regex(), _opts);
@@ -281,7 +283,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 			break;
 		}
 	}
-	
+
 	for (auto _i : _resources) { // > HASH <
 		std::regex _regexp = _i.first; // > HASH <
 		if (std::regex_match(_url, _regexp)) {
@@ -385,7 +387,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				if (_i.second[_method] != nullptr) { // > HASH <
 					zpt::json _out = _i.second[_method](_method, _url, _in, this->self()); // > HASH <
 					if (_out->ok()) {
-						if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+						if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 							throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
 						}						
 						_out << 
@@ -396,7 +398,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				}
 			}
 			catch (zpt::assertion& _e) {
-				if (bool(_opts["bubble-exception"])) {
+				if (bool(_opts["bubble-error"])) {
 					throw;
 				}
 				return {
@@ -411,7 +413,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			       };
 			}
 			catch(std::exception& _e) {
-				if (bool(_opts["bubble-exception"])) {
+				if (bool(_opts["bubble-error"])) {
 					throw zpt::assertion(_e.what(), 500, 0, _e.what());
 				}						
 				return {
@@ -440,7 +442,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
 				_client->unbind();
-				if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 					throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
 				}						
 				return _out;
@@ -461,10 +463,15 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		}
 	}
 	zpt::json _out = zpt::rest::not_found(_url);
-	if (bool(_opts["bubble-exception"]) && int(_out["status"]) > 399) {
+	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 		throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
 	}						
 	return _out;
+}
+
+auto zpt::RESTEmitter::instance() -> zpt::ev::emitter {
+	assertz(zpt::rest::__emitter != nullptr, "REST emitter has not been initialized", 500, 0);
+	return zpt::rest::__emitter->self();
 }
 
 auto zpt::rest::not_found(std::string _resource) -> zpt::json {

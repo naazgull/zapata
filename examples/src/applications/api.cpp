@@ -10,7 +10,8 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-extern "C" void restify(zpt::ev::emitter _emitter) {
+extern "C" void _zpt_load_() {
+zpt::ev::emitter _emitter = zpt::emitter< zpt::rest::emitter >();
 _emitter->connector({ { "dbms.mongodb.zpt.apps", zpt::connector(new zpt::mongodb::Client(_emitter->options(), "mongodb.zpt.apps")) }, { "dbms.pgsql.zpt.apps", zpt::connector(new zpt::pgsql::Client(_emitter->options(), "pgsql.zpt.apps")) }, { "dbms.redis.zpt.apps", zpt::connector(new zpt::redis::Client(_emitter->options(), "redis.zpt.apps")) }, });
 
 zpt::apps::mutations::ResourceOwners::mutify(_emitter->mutations());
