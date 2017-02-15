@@ -330,25 +330,25 @@ namespace zpt {
 		 */
 		operator timestamp_t();
 		/**
-		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::assertion is thrown.
 		 *
 		 * @return the *zpt::JSONObj* representation of *this* instance JSON typed object
 		 */
 		operator JSONObj();
 		/**
-		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::assertion is thrown.
 		 *
 		 * @return the *zpt::JSONArr* representation of *this* instance JSON typed object
 		 */
 		operator JSONArr();
 		/**
-		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONObj* class. If *this* instance object is not of type zpt::JSONType::JSObject or zpt::JSONType::JSNil, a zpt::assertion is thrown.
 		 *
 		 * @return the *zpt::JSONObj* representation of *this* instance JSON typed object
 		 */
 		operator JSONObj&();
 		/**
-		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::AssertionException is thrown.
+		 * \brief Casting operator for *zpt::JSONArr* class. If *this* instance object is not of type zpt::JSONType::JSArray or zpt::JSONType::JSNil, a zpt::assertion is thrown.
 		 *
 		 * @return the *zpt::JSONArr* representation of *this* instance JSON typed object
 		 */
@@ -1537,14 +1537,16 @@ namespace zpt {
 			return zpt::undefined;
 		};
 		bool operator==(JSONElementT& _in);
-		bool operator==(JSONPtr& _rhs);
+		bool operator==(zpt::json _rhs);
+		bool operator==(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator==(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
 		};
 		bool operator!=(JSONElementT& _in);
-		bool operator!=(JSONPtr& _rhs);
+		bool operator!=(zpt::json _rhs);
+		bool operator!=(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator!=(T _in) {
 			if (_in == nullptr) {
@@ -1554,38 +1556,45 @@ namespace zpt {
 			return (* this) == _rhs;
 		};
 		bool operator<(JSONElementT& _in);
-		bool operator<(JSONPtr& _rhs);
+		bool operator<(zpt::json _rhs);
+		bool operator<(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator<(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) < _rhs;
 		};
 		bool operator>(JSONElementT& _in);
-		bool operator>(JSONPtr& _rhs);
+		bool operator>(zpt::json _rhs);
+		bool operator>(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator>(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) > _rhs;
 		};
 		bool operator<=(JSONElementT& _in);
-		bool operator<=(JSONPtr& _rhs);
+		bool operator<=(zpt::json _rhs);
+		bool operator<=(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator<=(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) <= _rhs;
 		};
 		bool operator>=(JSONElementT& _in);
-		bool operator>=(JSONPtr& _rhs);
+		bool operator>=(zpt::json _rhs);
+		bool operator>=(zpt::JSONPtr _rhs);
 		template <typename T>
 		bool operator>=(T _in) {
 			JSONElementT _rhs(_in);
 			return (* this) >= _rhs;
 		};
 
+		JSONPtr operator+(zpt::json _rhs);
 		JSONPtr operator+(zpt::JSONPtr _rhs);
 		JSONPtr operator+(zpt::JSONElementT& _rhs);
+		JSONPtr operator-(zpt::json _rhs);
 		JSONPtr operator-(zpt::JSONPtr _rhs);
 		JSONPtr operator-(zpt::JSONElementT& _rhs);
+		JSONPtr operator/(zpt::json _rhs);
 		JSONPtr operator/(zpt::JSONPtr _rhs);
 		JSONPtr operator/(zpt::JSONElementT& _rhs);
 

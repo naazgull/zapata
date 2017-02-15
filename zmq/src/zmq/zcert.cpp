@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
 		zcert_destroy(&_cert);
 	}
-	catch (zpt::AssertionException& _e) {
+	catch (zpt::assertion& _e) {
 		std::cout << _e.what() << ": " << _e.description() << endl << flush;
 		exit(-10);
 	}

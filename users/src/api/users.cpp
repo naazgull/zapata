@@ -182,7 +182,7 @@ zpt::json zpt::Users::remove(std::string _resource, zpt::json _envelope) {
 	};
 }
 
-extern "C" void restify(zpt::ev::emitter _emitter) {
+extern "C" void _zpt_load_() {
 	assertz(_emitter->options()["mongodb"]["users"]->ok(), "no 'mongodb.users' object found in provided configuration", 500, 0);
 	_emitter->add_kb("mongodb.users", zpt::kb(new zpt::mongodb::Client(_emitter->options(), "mongodb.users")));
 	_emitter->add_kb("users.broker", zpt::kb(new zpt::users::broker(_emitter)));

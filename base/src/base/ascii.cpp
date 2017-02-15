@@ -129,10 +129,16 @@ auto zpt::test::utf8(std::string _uri) -> bool {
 	return true;
 }
 
-auto zpt::test::ascii(std::string _ascii) -> bool {
+auto zpt::test::ascii(std::string _ascii, bool _with_dash) -> bool {
 	static const std::regex _ascii_rgx(
-		"^([a-zA-Z])([a-zA-Z0-9_]*)$"
+		"^([a-zA-Z0-9_]+)$"
 	);
+	static const std::regex _ascii_dash_rgx(
+		"^([a-zA-Z0-9_\\-]+)$"
+	);
+	if (_with_dash) {
+	return std::regex_match(_ascii, _ascii_dash_rgx);
+	}
 	return std::regex_match(_ascii, _ascii_rgx);
 }
 
@@ -148,7 +154,7 @@ auto zpt::test::uri(std::string _uri) -> bool {
 		_uri = std::string("zpt:") + _uri; 
 	}
 	static const std::regex _uri_rgx(
-		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([@>]{0,1}[a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
 		"([^?#]*)"                    // authority and path
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment

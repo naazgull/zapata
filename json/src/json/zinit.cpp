@@ -60,11 +60,11 @@ int main(int _argc, char* _argv[]) {
 		do {
 			std::cout << "Project name: " << flush;
 			std::getline(std::cin, _input);
-			if (_input.find(" ") != string::npos) {
+			if (_input.find(" ") != std::string::npos) {
 				std::cout << "   * Project name can't have spaces" << endl << flush;
 			}
 		}
-		while(_input.length() == 0 || _input.find(" ") != string::npos);
+		while(_input.length() == 0 || _input.find(" ") != std::string::npos);
 		_project_name.assign(_input.data());
 	}
 	
@@ -76,11 +76,11 @@ int main(int _argc, char* _argv[]) {
 		do {
 			std::cout << "Project abbreviation: " << flush;
 			std::getline(std::cin, _input);
-			if (_input.find(" ") != string::npos) {
+			if (_input.find(" ") != std::string::npos) {
 				std::cout << "   * Project abbreviation can't have spaces" << endl << flush;
 			}
 		}
-		while(_input.length() == 0 || _input.find(" ") != string::npos);
+		while(_input.length() == 0 || _input.find(" ") != std::string::npos);
 		_project_abbr.assign(_input.data());
 	}
 	
@@ -118,11 +118,11 @@ int main(int _argc, char* _argv[]) {
 		do {
 			std::cout << "Developer e-mail address: " << flush;
 			std::getline(std::cin, _input);
-			if (_input.find(" ") != string::npos) {
+			if (_input.find(" ") != std::string::npos) {
 				std::cout << "   * E-mail can't have spaces" << endl << flush;
 			}
 		}
-		while(_input.length() == 0 || _input.find(" ") != string::npos);
+		while(_input.length() == 0 || _input.find(" ") != std::string::npos);
 		_dev_email.assign(_input.data());
 	}
 

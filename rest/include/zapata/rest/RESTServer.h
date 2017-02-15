@@ -43,8 +43,13 @@ namespace zpt {
 	}
 
 	namespace rest {
-		zpt::json http2zmq(zpt::http::req _request);
-		zpt::HTTPRep zmq2http(zpt::json _out);
+		extern int* pids;
+		extern size_t n_pid;
+		extern int m_sem;
+		
+		auto http2zmq(zpt::http::req _request) -> zpt::json;
+		auto zmq2http(zpt::json _out) -> zpt::HTTPRep;
+		auto terminate(int _signal) -> void;
 
 		namespace http {
 			zpt::json deserialize(std::string _body);

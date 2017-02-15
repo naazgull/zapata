@@ -64,7 +64,7 @@ int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string
 
 	std::string _log;
 	if (zpt::log_format == 1) {
-		(* zpt::log_fd) << zpt::log_lvl_names[_level] << "\033[1;37m" << zpt::tostr(time(nullptr), "%Y-%m-%dT%H:%M:%S") << "\033[0m | " << _text << " | \033[1;30m" << *zpt::log_pname << ":" << zpt::log_pid << " " << _file << ":" << _line << "\033[0m" << endl << flush;
+		(* zpt::log_fd) << zpt::log_lvl_names[_level] << "\033[1;37m" << zpt::tostr(time(nullptr), "%Y-%m-%dT%H:%M:%S") << "\033[0m | " << _text << " | " << *zpt::log_pname << ":" << zpt::log_pid << " " << _file << ":" << _line << endl << flush;
 	}
 	else {
 		zpt::replace(_text, "\n", "\\n");

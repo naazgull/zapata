@@ -321,7 +321,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 		}
 		
 		string value = (string) _value;
-		if (value.length() > 3 && value.find('/') != string::npos) {
+		if (value.length() > 3 && value.find('/') != std::string::npos) {
 			int bar_count = 0;
 
 			istringstream lss(value);
@@ -395,7 +395,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 				string comp("$");
 				comp.insert(comp.length(), command);
 
-				if (_VALID_OPS.find(comp + string("^")) != string::npos) {
+				if (_VALID_OPS.find(comp + string("^")) != std::string::npos) {
 					if (bar_count == 2) {
 						_queryr.append(key, BSON(comp << expression));
 					}

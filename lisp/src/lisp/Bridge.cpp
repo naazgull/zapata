@@ -92,7 +92,7 @@ auto zpt::lisp::Bridge::initialize() -> void {
 			}
 		}
 	}
-	zlog(std::string("LISP bridge initialized"), zpt::info);
+	zlog(std::string("LISP bridge initialized"), zpt::trace);
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -210,7 +210,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":authorize "
 		"))"
 	);
-	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::info);
+	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::trace);
 	_bridge->defun(
 		{
 			"name", "cpp-lambda-call",
@@ -227,7 +227,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		3
 	);
 	zpt::lisp::builtin_operators(_bridge);
-	zlog(std::string("LISP bridge booted"), zpt::alert);
+	zlog(std::string("LISP bridge booted"), zpt::warning);
 }
 
 zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type >(new zpt::lisp::Type(_target)) {

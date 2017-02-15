@@ -220,7 +220,7 @@ namespace zpt {
 	namespace test {
 		auto uuid(std::string _uuid) -> bool;
 		auto utf8(std::string _uri) -> bool;
-		auto ascii(std::string _ascii) -> bool;
+		auto ascii(std::string _ascii, bool _with_dash = false) -> bool;
 		auto token(std::string _token) -> bool;
 		auto uri(std::string _uri) -> bool;
 	}

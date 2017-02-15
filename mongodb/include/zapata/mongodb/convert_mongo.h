@@ -42,7 +42,7 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define assertz_close(x,y,z,c) if (! (x)) { _conn.done(); throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__); }
+#define assertz_close(x,y,z,c) if (! (x)) { _conn.done(); throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__); }
 
 namespace zpt {
 

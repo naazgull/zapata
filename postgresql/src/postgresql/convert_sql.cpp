@@ -1001,8 +1001,59 @@ auto zpt::pgsql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	}
 }
 
-auto zpt::pgsql::escape(std::string _in) -> std::string {
-	//return pqxx::transaction_base::esc(_in);
-	//return pqxx::sqlesc(_in);
-	return _in;
+auto zpt::pgsql::escape_name(std::string _in) -> std::string {
+	std::string _out(_in);
+	//_out.insert(0, "\"");
+	//_out.push_back('"');
+	return _out;
+}
+
+auto zpt::pgsql::escape(zpt::json _in) -> std::string {
+	std::string _out;
+	
+	switch (_in->type()) {
+		case zpt::JSObject: {
+			_out.assign(std::string("'") + std::string(_in) + std::string("'"));
+			break;
+		}
+		case zpt::JSArray: {
+			_out.assign(std::string("'") + std::string(_in) + std::string("'"));
+			break;
+		}
+		case zpt::JSString: {
+			_out.assign(std::string(_in));
+			zpt::replace(_out, "'", "''");
+			_out.insert(0, "'");
+			_out.push_back('\'');
+			break;
+		}
+		case zpt::JSBoolean: {
+			_out.assign(std::string(_in));
+			break;
+		}
+		case zpt::JSDouble: {
+			_out.assign(std::string(_in));
+			break;
+		}
+		case zpt::JSInteger: {
+			_out.assign(std::string(_in));
+			break;
+		}
+		case zpt::JSNil: {
+			_out.assign("NIL");
+			break;
+		}
+		case zpt::JSDate : {
+			_out.assign(std::string("TIMESTAMP '") + std::string(_in) + std::string("'"));
+			break;
+		}
+		case zpt::JSLambda : {
+			_out.assign(std::string(_in));
+			break;
+		}
+		default: {
+		}
+	}
+	
+	return _out;
 }

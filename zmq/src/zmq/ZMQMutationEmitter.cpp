@@ -23,10 +23,29 @@ SOFTWARE.
 */
 
 #include <zapata/zmq/ZMQMutationEmitter.h>
+#include <sys/sem.h>
 #include <map>
 
-zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket((new zpt::ZMQPubSub(std::string(_options["mutations"]["connect"]), _options))->self()) {
-	((zpt::ZMQPubSub*) this->__socket.get())->subscribe("/v2/mutations");
+namespace zpt {
+	namespace mutation {
+		namespace zmq {
+			emitter* __emitter = nullptr;
+		}
+	}
+}
+
+zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
+	zsys_init();
+	zsys_handler_set(nullptr);
+	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
+	if (zpt::mutation::zmq::__emitter != nullptr) {
+		delete zpt::mutation::zmq::__emitter;
+		zlog("something is definitely wrong, ZMQMutationEmitter already initialized", zpt::emergency);
+	}
+	zpt::mutation::zmq::__emitter = this;
+	
+	
+	zsock_set_subscribe(this->__socket->in(), "");
 }
 
 zpt::ZMQMutationEmitter::~ZMQMutationEmitter() {
@@ -36,29 +55,34 @@ auto zpt::ZMQMutationEmitter::version() -> std::string {
 	return this->options()["rest"]["version"]->str();
 }
 
-auto zpt::ZMQMutationEmitter::socket() -> zpt::socket {
-	return this->__socket;
+auto zpt::ZMQMutationEmitter::loop() -> void {
+	for (; true; ) {
+		zpt::json _envelope = this->__socket->recv();
+		this->trigger((zpt::mutation::operation) int(_envelope["performative"]), std::string(_envelope["resource"]), _envelope);
+	}
 }
 
 auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts) -> std::string {
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	std::vector< zpt::mutation::Handler> _handlers;
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Insert ? nullptr : _handler));
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Remove ? nullptr : _handler));
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Update ? nullptr : _handler));
 	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Replace ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Connect ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _operation != zpt::mutation::Reconnect ? nullptr : _handler));
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::info);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	std::map< zpt::mutation::operation, zpt::mutation::Handler >::iterator _found;
 	vector< zpt::mutation::Handler> _handlers;
@@ -66,17 +90,18 @@ auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mut
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Remove)) == _handler_set.end() ?  nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Update)) == _handler_set.end() ?  nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Replace)) == _handler_set.end() ?  nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Connect)) == _handler_set.end() ?  nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Reconnect)) == _handler_set.end() ?  nullptr : _found->second);
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _data_class_ns, zpt::info);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
 auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
-	std::string _data_class_ns = _listener->ns();
-	zpt::replace(_data_class_ns, std::string("/") + this->version(), "");
-	std::regex _url_pattern(std::string("/") + this->version() + std::string("/mutations/([^/]+)") + _data_class_ns);
+	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_listener->ns(), std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
+	std::regex _url_pattern(_uri);
 
 	zpt::mutation::Handler _handler = [ _listener ] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {
 		switch (_performative) {
@@ -92,20 +117,25 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _o
 			case zpt::mutation::Replace : {
 				_listener->replaced(_resource, _envelope, _emitter);
 			}
+			case zpt::mutation::Connect : {
+				_listener->connected(_resource, _envelope, _emitter);
+			}
+			case zpt::mutation::Reconnect : {
+				_listener->reconnected(_resource, _envelope, _emitter);
+			}
 			default : {
 			}
 		}
 	};
-
 	
 	vector< zpt::mutation::Handler > _handlers;
-	for (short _idx = zpt::mutation::Insert; _idx != zpt::mutation::Replace + 1; _idx++) {
+	for (short _idx = zpt::mutation::Insert; _idx != zpt::mutation::Reconnect + 1; _idx++) {
 		_handlers.push_back(_handler);
 	}
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _listener->ns(), zpt::info);
+	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
@@ -126,7 +156,17 @@ auto zpt::ZMQMutationEmitter::off(std::string _callback_id) -> void {
 auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	std::string _op = zpt::mutation::to_str(_operation);
 	std::transform(std::begin(_op), std::end(_op), std::begin(_op), ::tolower);
-	this->__socket->send((zpt::ev::performative) _operation, _data_class_ns, _record);
+	std::string _uri(std::string("/") + this->version() + std::string("/mutations/") + _op + zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""));
+	
+	zpt::json _envelope = {
+		"channel", _uri,
+		"performative", (int) _operation,
+		"resource", _uri, 
+		"payload", _record
+	};
+
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		this->__socket->send(_envelope); }
 	return zpt::undefined;
 }
 
@@ -140,6 +180,11 @@ auto zpt::ZMQMutationEmitter::trigger(zpt::mutation::operation _operation, std::
 		}
 	}
 	return zpt::undefined;
+}
+
+auto zpt::ZMQMutationEmitter::instance() -> zpt::mutation::emitter {
+	assertz(zpt::mutation::zmq::__emitter != nullptr, "ZMQ mutation emitter has not been initialized", 500, 0);
+	return zpt::mutation::zmq::__emitter->self();
 }
 
 zpt::ZMQMutationServerPtr::ZMQMutationServerPtr(zpt::json _options) : std::shared_ptr<zpt::ZMQMutationServer>(new zpt::ZMQMutationServer(_options)) {
@@ -157,7 +202,7 @@ zpt::mutation::server zpt::ZMQMutationServerPtr::setup(zpt::json _options) {
 	return _server;
 }
 
-int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
+int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::log_fd = &std::cout;
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new std::string(argv[0]);
@@ -166,14 +211,12 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
 	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
 	
-	zpt::log_format = !bool(_args["r"]);
+	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
 	zpt::log_lvl = _log_level;
-
-	zlog(zpt::json::pretty(_args), zpt::alert);
 
 	zpt::json _ptr;
 	if (_conf_file.length() == 0) {
-		zlog("must provide a configuration file", zpt::alert);
+		zlog("must provide a configuration file", zpt::warning);
 	}
 	else {
 		std::ifstream _in;
@@ -192,42 +235,41 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[]) {
 		_ptr << "argv" << _args;
 	}
 
-	if (zpt::log_lvl == -1 && _ptr["log"]["level"]->ok()) {
-		zpt::log_lvl = (int) _ptr["log"]["level"];
+	if (!bool(_ptr["$mutations"]["run"])) {
+		exit(0);
+	}
+
+	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
+		zpt::log_lvl = (int) _ptr["$log"]["level"];
 	}
 	if (zpt::log_lvl == -1) {
 		zpt::log_lvl = 8;
 	}
-	if (!!_ptr["log"]["file"]) {
+	if (_ptr["$log"]["format"]->ok()) {
+		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw") ? 0 : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
+	}
+	if (_ptr["$log"]["file"]->ok()) {
 		zpt::log_fd = new std::ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["log"]["file"]).data());
+		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
 	}
 
-	zlog("starting Mutation container", zpt::alert);
+	zlog("starting mutations container", zpt::warning);
 	zpt::mutation::server _server = zpt::mutation::server::setup(_ptr);
+	struct sembuf _unlock[1] = { { (short unsigned int) 0, -1 } };
+	semop(_semaphore, _unlock, 1);	
 	_server->start();
 	return 0;
 }
 
-zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_options), __self(this), __socket(nullptr) {
+zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["$mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 
-	std::string _connection = this->__options["mutations"]["bind"]->str();
-	std::string _connection1(_connection.substr(0, _connection.find(",")));
-	std::string _connection2(_connection.substr(_connection.find(",") + 1));
-	this->__socket = zactor_new(zproxy, nullptr);
-	zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr);
-	zsock_wait(this->__socket);
-	zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr);
-	zsock_wait(this->__socket);
-	zlog(std::string("attaching XSUB/XPUB socket to ") + _connection, zpt::notice);
+	zsock_set_subscribe(this->__client->in(), "");
 }
 
 zpt::ZMQMutationServer::~ZMQMutationServer(){
-	zlog(std::string("dettaching XPUB/XSUB from ") + std::string(this->__options["mutations"]["bind"]), zpt::notice);
-	zactor_destroy(&this->__socket);
 	this->__self.reset();
 }
 
@@ -236,42 +278,8 @@ zpt::json zpt::ZMQMutationServer::options() {
 }
 
 void zpt::ZMQMutationServer::start() {
-	try {
-		//zpt::socket _sub(new zpt::ZMQSub(_connection2, this->__options));
-		std::string _sub_connection = this->__options["mutations"]["connect"]->str();
-		std::string _sub_connection1(_sub_connection.substr(0, _sub_connection.find(",")));
-		std::string _sub_connection2(_sub_connection.substr(_sub_connection.find(",") + 1));
-		zsock_t* _sub = zsock_new(ZMQ_SUB);
-		assertz(zsock_attach(_sub, _sub_connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(_sub)) + std::string(" socket to ") + _sub_connection2, 500, 0);
-		zsock_set_sndhwm(_sub, 1000);	
-		zsock_set_sndtimeo(_sub, 20000);
-		zpoller_t* _poll = zpoller_new(_sub, nullptr);
-		for(; true; ) {
-			zsock_t* _awaken = (zsock_t*) zpoller_wait(_poll, -1);
-
-			if (_awaken == nullptr) {
-				continue;
-			}
-					
-			zframe_t* _frame1;
-			zframe_t* _frame2;
-			if (zsock_recv(_sub, "ff", &_frame1, &_frame2) == 0) {
-				char* _bytes = nullptr;
-
-				_bytes = zframe_strdup(_frame1);
-				std::string _directive(std::string(_bytes, zframe_size(_frame1)));
-				std::free(_bytes);
-				zframe_destroy(&_frame1);
-
-				_bytes = zframe_strdup(_frame2);
-				zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
-				std::free(_bytes);
-				zframe_destroy(&_frame2);
-				zlog(std::string(_envelope), zpt::info);
-			}
-		}
+	for(; true; ) {
+		this->__client->recv();
 	}
-	catch (zpt::InterruptedException& e) {
-		return;
-	}
+	
 }

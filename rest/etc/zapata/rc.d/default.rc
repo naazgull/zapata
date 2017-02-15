@@ -1,0 +1,4 @@
+
+export ZAPATA_LOG_DIR=/var/log/zapata/
+export ZAPATA_IP_ADDR=$(hostname --all-ip-addresses | awk '{print $1}')
+export ZAPATA_MUTATIONS_ADDR=localhost

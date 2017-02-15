@@ -48,10 +48,10 @@ auto zpt::Bridge::options() -> zpt::json {
 	return this->__options;
 }
 
-zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
+zpt::EventEmitter::EventEmitter() : __self(this), __mutant(nullptr), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __mutant(nullptr), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
@@ -77,8 +77,8 @@ auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
 	if (this->__mutant.get() != nullptr) {
 		this->__mutant->unbind();
 	}
+	_emitter->events(this->self());
 	this->__mutant = _emitter;
-	this->__mutant->events(this->self());
 }
 
 auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {
@@ -96,6 +96,7 @@ auto zpt::EventEmitter::directory() -> zpt::ev::directory {
 
 auto zpt::EventEmitter::directory(zpt::ev::directory _directory) -> void {
 	this->__directory->unbind();
+	_directory->events(this->self());
 	this->__directory = _directory;
 }
 
@@ -358,8 +359,10 @@ auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void {
 }
 
 auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	for (auto _service : this->__index) {
 		if (std::regex_match(_topic, _service.first)) {
+			zlog(zpt::json::pretty(_service.second), zpt::debug);
 			return _service.second;
 		}
 	}
@@ -367,6 +370,9 @@ auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
 }
 
 auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> void {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::regex _regex(_topic);
-	this->__index.push_back(std::make_pair(_regex, (_connection->type() == zpt::JSArray ? _connection[0] : _connection)));
+	zpt::json _record = (_connection->type() == zpt::JSArray ? _connection[0] : _connection);
+	_record << "connect" << zpt::r_replace(_record["connect"]->str(), "tcp://*:", std::string("tcp://127.0.0.1:"));
+	this->__index.push_back(std::make_pair(_regex, _record));
 }

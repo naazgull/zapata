@@ -45,6 +45,12 @@ namespace zpt {
 
 	namespace mutation {
 		typedef zpt::ZMQMutationServerPtr server;
+
+		namespace zmq {
+			typedef zpt::ZMQMutationEmitter emitter;
+
+			extern zpt::mutation::zmq::emitter* __emitter;
+		}
 	}
 
 	class ZMQMutationServerPtr : public std::shared_ptr<zpt::ZMQMutationServer> {
@@ -54,7 +60,7 @@ namespace zpt {
 		virtual ~ZMQMutationServerPtr();
 
 		static zpt::mutation::server setup(zpt::json _options);
-		static int launch(int argc, char* argv[]);
+		static int launch(int argc, char* argv[], int _semaphore);
 	};
 
 	class ZMQMutationServer {
@@ -69,7 +75,8 @@ namespace zpt {
 	private:
 		zpt::json __options;
 		zpt::mutation::server __self;
-		zactor_t* __socket;
+		zpt::socket __server;
+		zpt::socket __client;
 	};
 
 	class ZMQMutationEmitter : public zpt::MutationEmitter {
@@ -78,8 +85,9 @@ namespace zpt {
 		virtual ~ZMQMutationEmitter();
 
 		virtual auto version() -> std::string;
-		virtual auto socket() -> zpt::socket;
-		
+
+		virtual auto loop() -> void;
+
 		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
 		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
 		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string;
@@ -88,10 +96,13 @@ namespace zpt {
 		
 		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
 		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
+
+		static auto instance() -> zpt::mutation::emitter;
 		
 	private:
 		zpt::mutation::HandlerStack __resources;
 		zpt::socket __socket;
+		std::mutex __mtx;
 		
 	};
 

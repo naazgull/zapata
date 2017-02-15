@@ -28,20 +28,23 @@ SOFTWARE.
 #include <zapata/exceptions/SyntaxErrorException.h>
 #include <regex>
 
-zpt::json zpt::split(std::string _to_split, std::string _separator) {
+auto zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::json {
 	std::istringstream _iss(_to_split);
 	std::string _part;
 	zpt::json _ret = zpt::json::array();
 	while(_iss.good()) {
 		std::getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
+			if (_trim) {
+				zpt::trim(_part);
+			}
 			_ret << _part;
 		}
 	}
 	return _ret;
 }
 
-std::string zpt::join(zpt::json _to_join, std::string _separator) {
+auto zpt::join(zpt::json _to_join, std::string _separator) -> std::string {
 	assertz(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject, "JSON to join must be an array", 412, 0);
 	std::string _return;
 	if (_to_join->type() == zpt::JSArray) {
@@ -63,11 +66,11 @@ std::string zpt::join(zpt::json _to_join, std::string _separator) {
 	return _return;
 }
 
-zpt::json zpt::path::split(std::string _to_split) {
-	return zpt::split(_to_split, "/");
+auto zpt::path::split(std::string _to_split) -> zpt::json {
+	return zpt::split(_to_split, "/", true);
 }
 
-std::string zpt::path::join(zpt::json _to_join) {
+auto zpt::path::join(zpt::json _to_join) -> std::string {
 	return std::string("/") + zpt::join(_to_join, "/");
 }
 
@@ -113,19 +116,6 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 auto zpt::conf::setup(zpt::json _options) -> void {
 	zpt::conf::dirs(_options);
 	zpt::conf::env(_options);
-	if (_options["log"]->ok()) {
-		if (_options["log"]["file"]->ok()) {
-			zpt::log_fd = new ofstream();
-			std::string _log_file((std::string) _options["log"]["file"]);
-			((std::ofstream *) zpt::log_fd)->open(_log_file.data(), (std::ios_base::out | std::ios_base::app) & ~std::ios_base::ate);
-		}
-		if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
-			zpt::log_lvl = (int) _options["log"]["level"];
-		}
-	}
-	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 4;
-	}
 }
 
 auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
@@ -157,37 +147,51 @@ auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
 }
 
 auto zpt::conf::dirs(zpt::json _options) -> void {
-	zpt::json _traversable = _options->clone();
-	_traversable->inspect({ "$regexp", "(.*)" },
-		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-			if (_key == "$include") {
-				zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
-				zpt::json _to_include = _options->getPath(_object_path);
-				if (_to_include->type() == zpt::JSArray) {
-					for (auto _file : _to_include->arr()) {
-						zpt::conf::dirs((std::string) _file, _object);
+	bool* _redo = new bool(false);
+	do {
+		*_redo = false;
+		zpt::json _traversable = _options->clone();
+		_traversable->inspect({ "$regexp", "(.*)" },
+			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+				if (_key == "$include") {
+					zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
+					zpt::json _to_include = _options->getPath(_object_path);
+					if (_to_include->type() == zpt::JSArray) {
+						for (auto _file : _to_include->arr()) {
+							zpt::conf::dirs((std::string) _file, _object);
+						}
 					}
+					else {
+						zpt::conf::dirs((std::string) _to_include, _object);
+					}
+					_object >> "$include";
+					*_redo = true;
 				}
-				else {
-					zpt::conf::dirs((std::string) _to_include, _object);
-				}
-				_object >> "$include";
 			}
-		}
-	);
+		);
+	}
+	while(*_redo);
+	delete _redo;
 }
 
 auto zpt::conf::env(zpt::json _options) -> void {
 	zpt::json _traversable = _options->clone();
-	_traversable->inspect({ "$regexp", "\\$\\{([^}]+)\\}" }, [ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-		std::string _var = _options->getPath(_object_path);
-		_var = _var.substr(2, _var.length() - 3);
-		const char * _valuec = std::getenv(_var.data());
-		if (_valuec != nullptr) {
-			std::string _value(_valuec);
-			_options->setPath(_object_path, zpt::mkptr(_value));
+	_traversable->inspect({ "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
+		[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
+			std::string _value = std::string(_options->getPath(_object_path));
+			std::string _found = std::string(_value.data());
+
+			for (size_t _idx = _found.find("$"); _idx != std::string::npos; _idx = _found.find("$", _idx + 1)) {
+				std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
+				
+				const char * _var_val = std::getenv(_var.data());
+				if (_var_val != nullptr) {
+					zpt::replace(_value, std::string("${") + _var + std::string("}"), zpt::r_trim(_var_val));
+				}
+			}
+			_options->setPath(_object_path, zpt::json::string(_value));
 		}
-	});
+	);
 }
 
 auto zpt::uri::parse(std::string _uri) -> zpt::json {
@@ -195,7 +199,7 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 		_uri = std::string("zpt://127.0.0.1") + _uri;
 	}
 	static const std::regex _uri_rgx(
-		"([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"[@>]{0,1}([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
 		"([/]{1,2})([^/]+)"           // authority
 		"([^?#]*)"                    // path
 		"(?:\\?([^#]*))?"             // ?query

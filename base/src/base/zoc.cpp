@@ -54,12 +54,12 @@ int main(int _argc, char* _argv[]) {
 			size_t _to_trim = 0;
 			while (std::getline(_iss, _line)) {
 				if (_state == OUTSIDE) {
-					if ((_to_trim = _line.find("/***")) != string::npos) {
+					if ((_to_trim = _line.find("/***")) != std::string::npos) {
 						_to_trim += 3;
 						_state = PARAGRAPH;
 					}
 				}
-				else if (_line.find("***/") != string::npos) {
+				else if (_line.find("***/") != std::string::npos) {
 					_state = OUTSIDE;
 				}
 				else {

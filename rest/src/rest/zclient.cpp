@@ -61,12 +61,18 @@ int main(int argc, char* argv[]) {
 				"payload", (_opts["d"]->ok() ? zpt::json(std::string(_opts["d"][0])) : zpt::undefined)
 			};
 			if (_opts["H"]->ok()) {
-				//_envelope << "headers" << zpt::json({ "Authorization", std::string("OAuth2.0 ") + _api->options()["rest"]["token"]->str() });
+				zpt::json _headers = zpt::json::object();
+				for (auto _header : _opts["H"]->arr()) {
+					zpt::json _splited = zpt::split(_header->str(), ":");
+					_headers << zpt::r_trim(_splited[0]->str()) << zpt::r_trim(_splited[1]->str());
+				}
+				_envelope << "headers" << _headers;
 			}
+			zlog(zpt::json::pretty(_envelope), zpt::debug);
 			zpt::json _reply = _socket.send(_envelope);
-			zlog(std::string("STATUS  ") + std::string(zpt::status_names[int(_reply["status"])]), zpt::notice);
-			zlog(std::string("HEADERS ") + zpt::json::pretty(_reply["headers"]) + (_reply["payload"]->ok() && _reply["payload"]->obj()->size() != 0 ? zpt::json::pretty(_reply["payload"]) : ""), zpt::notice);
-			zlog(std::string("PAYLOAD ") + std::string(_reply["payload"]), zpt::notice);
+			zlog(std::string("status  | ") + std::string(zpt::status_names[int(_reply["status"])]), zpt::trace);
+			zlog(std::string("headers | ") + zpt::json::pretty(_reply["headers"]), zpt::trace);
+			zlog(std::string("payload | ") + zpt::json::pretty(_reply["payload"]), zpt::trace);
 			exit(0);
 		}
 		else if (std::string(_opts["N"][0]) == "pub-sub") {
@@ -74,7 +80,7 @@ int main(int argc, char* argv[]) {
 		else if (std::string(_opts["N"][0]) == "pull") {
 		}
 	}
-	catch (zpt::AssertionException& _e) {
+	catch (zpt::assertion& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
 		throw;
 	}

@@ -46,6 +46,7 @@ int main(int argc, char* argv[]) {
 			exit(-10);
 		}
 		_in >> _ptr;
+		zpt::conf::setup(_ptr);
 		std::cout << zpt::pretty(_ptr) << endl << flush;
 	}
 	return 0;

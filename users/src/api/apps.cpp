@@ -28,7 +28,7 @@ SOFTWARE.
 #include <ossp/uuid++.hh>
 #include <python3.5m/Python.h>
 
-extern "C" void restify(zpt::ev::emitter _emitter) {
+extern "C" void _zpt_load_() {
 	Py_Initialize();
 	PyRun_SimpleString("name = raw_input('Who are you? ')n"
 		"print 'Hi there, %s!' % namen");
