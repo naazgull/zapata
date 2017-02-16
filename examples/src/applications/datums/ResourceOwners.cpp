@@ -20,7 +20,7 @@ _r_data = _c->query("ResourceOwners", _filter, _filter + zpt::json({ "href", _to
 
 auto zpt::apps::datums::ResourceOwners::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "created" << zpt::json::date() <<
@@ -35,7 +35,7 @@ _r_data = { "href", (_topic + std::string("/") + _c->insert("ResourceOwners", _t
 
 auto zpt::apps::datums::ResourceOwners::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -49,7 +49,7 @@ _r_data = { "href", _topic, "n_updated", _c->save("ResourceOwners", _topic, _doc
 
 auto zpt::apps::datums::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -63,7 +63,7 @@ _r_data = { "href", _topic, "n_updated", _c->set("ResourceOwners", _topic, _docu
 
 auto zpt::apps::datums::ResourceOwners::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -77,7 +77,7 @@ _r_data = { "href", _topic, "n_updated", _c->set("ResourceOwners", _filter, _doc
 
 auto zpt::apps::datums::ResourceOwners::remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 _r_data = { "href", _topic, "n_deleted", _c->remove("ResourceOwners", _topic, { "href", _topic }) };
 
 	
@@ -87,7 +87,7 @@ _r_data = { "href", _topic, "n_deleted", _c->remove("ResourceOwners", _topic, { 
 
 auto zpt::apps::datums::ResourceOwners::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 _r_data = { "href", _topic, "n_deleted", _c->remove("ResourceOwners", _filter, _filter + zpt::json({ "href", _topic })) };
 
 	

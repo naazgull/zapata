@@ -36,7 +36,7 @@ _d_element << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_toke
 
 auto zpt::apps::datums::Applications::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "created" << zpt::json::date() <<
@@ -51,7 +51,7 @@ _r_data = { "href", (_topic + std::string("/") + _c->insert("Applications", _top
 
 auto zpt::apps::datums::Applications::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -65,7 +65,7 @@ _r_data = { "href", _topic, "n_updated", _c->save("Applications", _topic, _docum
 
 auto zpt::apps::datums::Applications::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -79,7 +79,7 @@ _r_data = { "href", _topic, "n_updated", _c->set("Applications", _topic, _docume
 
 auto zpt::apps::datums::Applications::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
 "updated" << zpt::json::date();
@@ -93,7 +93,7 @@ _r_data = { "href", _topic, "n_updated", _c->set("Applications", _filter, _docum
 
 auto zpt::apps::datums::Applications::remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 _r_data = { "href", _topic, "n_deleted", _c->remove("Applications", _topic, { "href", _topic }) };
 
 	
@@ -103,7 +103,7 @@ _r_data = { "href", _topic, "n_deleted", _c->remove("Applications", _topic, { "h
 
 auto zpt::apps::datums::Applications::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
-	zpt::connector _c = _emitter->connector("dbms.postgresql.zpt.apps");
+	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 _r_data = { "href", _topic, "n_deleted", _c->remove("Applications", _filter, _filter + zpt::json({ "href", _topic })) };
 
 	

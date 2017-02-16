@@ -223,6 +223,7 @@ namespace zpt {
 		auto ascii(std::string _ascii, bool _with_dash = false) -> bool;
 		auto token(std::string _token) -> bool;
 		auto uri(std::string _uri) -> bool;
+		auto email(std::string _email) -> bool;
 	}
 
 }

@@ -16,5 +16,6 @@ libzapata_apps_datum_la_SOURCES = \
 ./collections/applications.cpp \
 ./documents/applications.cpp \
 ./collections/channels.cpp \
+./collections/roles.cpp \
 ./api.cpp
 

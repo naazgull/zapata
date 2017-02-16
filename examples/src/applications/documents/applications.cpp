@@ -26,6 +26,7 @@ return { "status", (_r_body->ok() ? 200 : 204), "payload", _r_body  };
 {
 zpt::ev::Put,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+assertz_object(_envelope["payload"], "admin", 412);
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] << "app_secret" << zpt::generate::r_key(24);
 _envelope["payload"] >> "cloud_secret";
@@ -38,6 +39,8 @@ assertz_mandatory(_envelope["payload"], "name", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_mandatory(_envelope["payload"], "namespace", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
+assertz_object(_envelope["payload"], "token", 412);
+assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
@@ -57,6 +60,7 @@ return { "status", 200, "payload", _r_body };
 {
 zpt::ev::Patch,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+assertz_object(_envelope["payload"], "admin", 412);
 _envelope["payload"] >> "app_secret";
 _envelope["payload"] << "app_secret" << zpt::generate::r_key(24);
 _envelope["payload"] >> "cloud_secret";
@@ -67,6 +71,8 @@ assertz_uri(_envelope["payload"], "icon", 412);
 assertz_uri(_envelope["payload"], "image", 412);
 assertz_utf8(_envelope["payload"], "name", 412);
 assertz_ascii(_envelope["payload"], "namespace", 412);
+assertz_object(_envelope["payload"], "token", 412);
+assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];

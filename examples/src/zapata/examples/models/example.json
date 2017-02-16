@@ -30,9 +30,23 @@
 			"topic" : "/v2/datums/applications/{app_id}/users/{user_id}/channels",
 			"type" : "collection",
 			"name" : "channels",
-			"performatives" : [ "get", "head" ],
+			"performatives" : [ "get", "post", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
 			"datum" : { "ref" : "/v2/datums/users/{user_id}/channels", "rel" : "app_id={app_id}&user_id={user_id}" }
+		},
+		{
+			"topic" : "/v2/datum/roles",
+			"type" : "collection",
+			"name" : "roles",
+			"performatives" : [ "get", "post", "patch", "delete", "head" ],
+			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
+			"datum" : {
+				"fields" : {
+					"type" : { "type" : "ascii", "opts" : [ "mandatory", "index" ] },
+					"created" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] },
+					"updated" : { "type" : "timestamp", "opts" : [ "auto", "mandatory" ] }
+				}
+			}
 		}
 	],
 	"datums" : [
@@ -64,7 +78,7 @@
 		{
 			"name" : "MyApplications",
 			"dbms" : [ "mongodb", "redis" ],
-			"extends" : { "ref" : "/v2/datums/applications",  "rel" : "namespace=m/engie/i", "opts" : [ "on-demand" ] },
+			"extends" : { "name" : "zpt::apps::Applications" },
 			"fields" : {
 				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "on-demand" ] }
 			}
@@ -72,7 +86,7 @@
 		{
 			"name" : "MyUsers",
 			"dbms" : [ "mongodb", "redis" ],
-			"extends" : { "ref" : "/v2/datums/users",  "rel" : "email=m/muzzley.com/i", "opts" : [ "publish" ] },
+			"extends" : { "name" : "zpt::users:Users" },
 			"fields" : {
 				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "publish" ] }
 			}

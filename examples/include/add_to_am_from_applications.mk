@@ -9,4 +9,5 @@
 ./zapata/applications/collections/applications.h \
 ./zapata/applications/documents/applications.h \
 ./zapata/applications/collections/channels.h \
+./zapata/applications/collections/roles.h \
 

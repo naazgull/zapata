@@ -15,5 +15,4 @@ $[resource.handler.head]
       $[resource.handler.delete.name]
       $[resource.handler.head.name]
       )
-    (json $[resource.opts])
-    )
+    (json $[resource.opts]))

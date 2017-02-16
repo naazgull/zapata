@@ -3,6 +3,7 @@
 #include <zapata/applications/collections/applications.h>
 #include <zapata/applications/documents/applications.h>
 #include <zapata/applications/collections/channels.h>
+#include <zapata/applications/collections/roles.h>
 
 
 using namespace std;
@@ -21,6 +22,7 @@ zpt::apps::mutations::MyUsers::mutify(_emitter->mutations());
 zpt::apps::collections::applications::restify(_emitter);
 zpt::apps::documents::applications::restify(_emitter);
 zpt::apps::collections::channels::restify(_emitter);
+zpt::apps::collections::roles::restify(_emitter);
 
 }
 

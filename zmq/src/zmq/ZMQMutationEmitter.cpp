@@ -154,6 +154,8 @@ auto zpt::ZMQMutationEmitter::off(std::string _callback_id) -> void {
 }		
 
 auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	if (bool(_opts["mutated-event"])) return zpt::undefined;
+	
 	std::string _op = zpt::mutation::to_str(_operation);
 	std::transform(std::begin(_op), std::end(_op), std::begin(_op), ::tolower);
 	std::string _uri(std::string("/") + this->version() + std::string("/mutations/") + _op + zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""));
@@ -171,6 +173,8 @@ auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::st
 }
 
 auto zpt::ZMQMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	if (bool(_opts["mutated-event"])) return zpt::undefined;
+
 	for (auto _i : this->__resources) {
 		std::regex _regexp = _i.second.first;
 		if (std::regex_match(_data_class_ns, _regexp)) {

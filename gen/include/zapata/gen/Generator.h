@@ -50,6 +50,7 @@ namespace zpt {
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
 		auto url_pattern_to_params(std::string _url) -> zpt::json;
+		auto url_pattern_to_params_lisp(std::string _url) -> zpt::json;
 
 		auto get_opts(zpt::json _field) -> zpt::json;
 	}
@@ -149,10 +150,12 @@ namespace zpt {
 
 		virtual auto spec() -> zpt::json;
 		virtual auto build() -> std::string;
-		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
-		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
 		virtual auto build_data_layer() -> std::string;
 		virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;
+		virtual auto build_mutations() -> std::string;
+
+		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
+		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
 		virtual auto build_get() -> std::string;
 		virtual auto build_post() -> std::string;
 		virtual auto build_put() -> std::string;
@@ -160,8 +163,27 @@ namespace zpt {
 		virtual auto build_delete() -> std::string;
 		virtual auto build_head() -> std::string;
 		virtual auto build_reply() -> std::string;
-		virtual auto build_mutations() -> std::string;
 
+		virtual auto build_lisp_validation(zpt::ev::performative _performative) -> std::string;
+		virtual auto build_lisp_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+		virtual auto build_lisp_get() -> std::string;
+		virtual auto build_lisp_post() -> std::string;
+		virtual auto build_lisp_put() -> std::string;
+		virtual auto build_lisp_patch() -> std::string;
+		virtual auto build_lisp_delete() -> std::string;
+		virtual auto build_lisp_head() -> std::string;
+		virtual auto build_lisp_reply() -> std::string;
+		
+		virtual auto build_python_validation(zpt::ev::performative _performative) -> std::string;
+		virtual auto build_python_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+		virtual auto build_python_get() -> std::string;
+		virtual auto build_python_post() -> std::string;
+		virtual auto build_python_put() -> std::string;
+		virtual auto build_python_patch() -> std::string;
+		virtual auto build_python_delete() -> std::string;
+		virtual auto build_python_head() -> std::string;
+		virtual auto build_python_reply() -> std::string;
+		
 	private:
 		zpt::json __spec;
 		zpt::json __options;

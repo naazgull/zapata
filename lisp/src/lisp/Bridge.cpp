@@ -206,8 +206,30 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":on "
 		":route "
 		":split "
+		":join "
+		":merge"
 		":topic-var "
 		":authorize "
+		":authorization-headers "
+		":assertz-mandatory "
+		":assertz-string "
+		":assertz-integer "
+		":assertz-double "
+		":assertz-timestamp "
+		":assertz-boolean "
+		":assertz-complex "
+		":assertz-object "
+		":assertz-array "
+		":assertz-int "
+		":assertz-uuid "
+		":assertz-utf8 "
+		":assertz-ascii "
+		":assertz-token "
+		":assertz-uri "
+		":assertz-email "
+		":generate-key "
+		":generate-uuid "
+		":json-date "
 		"))"
 	);
 	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::trace);
@@ -415,6 +437,46 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 	);
 	_bridge->deflbd(
 		{
+			"name", "zpt:join",
+			"type", "internal",
+			"access", "a",
+			"label", "Joins a list with a given separator",
+			"args", { zpt::array,
+				{ "type", "list", "label", "the list to be joined" },
+				{ "type", "string", "label", "the separator to join by" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+			zpt::json _list = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _separator = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+	
+			return _bridge->to< zpt::lisp::object >(zpt::join(_list, _separator));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:merge",
+			"type", "internal",
+			"access", "a",
+			"label", "Merges two JSON objects",
+			"args", { zpt::array,
+				{ "type", "any", "label", "the first object to be merged" },
+				{ "type", "any", "label", "the first second to be merged" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+			zpt::json _lhs = _bridge->from< zpt::lisp::object >(_args[0]);
+			zpt::json _rhs = _bridge->from< zpt::lisp::object >(_args[1]);
+	
+			return _bridge->to< zpt::lisp::object >(_lhs + _rhs);
+		}
+	);
+	_bridge->deflbd(
+		{
 			"name", "zpt:topic-var",
 			"type", "internal",
 			"access", "a",
@@ -430,7 +492,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::json _topic = _bridge->from< zpt::lisp::object >(_args[0]);
 			size_t _index = size_t(_bridge->from< zpt::lisp::object >(_args[1]));
 	
-			return **_bridge->to< zpt::lisp::object >(_topic[_index]);
+			return _bridge->to< zpt::lisp::object >(_topic[_index]);
 		}
 	);
 	_bridge->deflbd(
@@ -452,4 +514,463 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			return zpt::lisp::object(ecl_make_bool(true));
 		}
 	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:authorization-headers",
+			"type", "internal",
+			"access", "a",
+			"label", "Given the authorization identity, returns an authorization header",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the authorized identity" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _identity = _bridge->from< zpt::lisp::object >(_args[0]);
+			zpt::json _return = { "Authorization", (std::string(_identity["scheme"]) + std::string(_identity["access_token"])) };
+	
+			return _bridge->to< zpt::lisp::object >(_return);
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-mandatory",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is present in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test presence for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_mandatory(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-string",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type string in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_string(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-integer",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type integer in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_integer(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-double",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type double in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_double(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-timestamp",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type timestamp in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_timestamp(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-boolean",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type boolean in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_boolean(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-complex",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type complex in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_complex(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-object",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type object in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_object(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-array",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type array in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_array(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-int",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type int in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_int(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-uuid",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type uuid in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_uuid(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-utf8",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type utf8 in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_utf8(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-ascii",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type ascii in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_ascii(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-token",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type token in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_token(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-uri",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type uri in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_uri(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-email",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type email in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_email(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:generate-key",
+			"type", "internal",
+			"access", "a",
+			"label", "Generates an alpha-numeric key with the provide length",
+			"args", { zpt::array,
+				{ "type", "int", "label", "the resulting key length" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			int _length = int(_bridge->from< zpt::lisp::object >(_args[0]));
+
+			return _bridge->to< zpt::lisp::object >(zpt::generate::r_key(_length));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:generate-uuid",
+			"type", "internal",
+			"access", "a",
+			"label", "Generates a UUID"
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			return _bridge->to< zpt::lisp::object >(zpt::generate::r_uuid());
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:json-date",
+			"type", "internal",
+			"access", "a",
+			"label", "Returns a string with a timestamp format",
+			"args", { zpt::array,
+				{ "type", "timestamp", "label", "The micro-second based timestamp to be transforme into a string (optional)", "optional", true }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			zpt::json _arg = _bridge->from< zpt::lisp::object >(_args[0]);
+			if (_arg->type() == zpt::JSString) {
+				return _bridge->to< zpt::lisp::object >(zpt::json::date(std::string(_arg)));
+			}
+			else if (_arg->ok()) {	
+				unsigned long long int _ts = (unsigned long long int) _arg;
+				return _bridge->to< zpt::lisp::object >(zpt::json::date((zpt::timestamp_t) _ts));
+			}
+			return _bridge->to< zpt::lisp::object >(zpt::json::date());				
+			
+		}
+	);
+
 }

@@ -154,10 +154,18 @@ auto zpt::test::uri(std::string _uri) -> bool {
 		_uri = std::string("zpt:") + _uri; 
 	}
 	static const std::regex _uri_rgx(
-		"([@>]{0,1}[a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]+):"  // scheme:
 		"([^?#]*)"                    // authority and path
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment
 	);
 	return std::regex_match(_uri, _uri_rgx);
+}
+
+auto zpt::test::email(std::string _email) -> bool {
+	static const std::regex _email_rgx(
+		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)@"
+		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)"
+	);
+	return std::regex_match(_email, _email_rgx);
 }
