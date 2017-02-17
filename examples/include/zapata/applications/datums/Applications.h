@@ -6,9 +6,10 @@
 #include <zapata/mariadb.h>
 #include <zapata/mongodb.h>
 #include <zapata/redis.h>
+#include <zapata/applications/datums/ResourceOwners.h>
 #include <zapata/applications/datums/Applications.h>
-#include <zapata/applications/datums/Applications.h>
-#include <zapata/applications/datums/Applications.h>
+#include <zapata/applications/datums/MyApplications.h>
+#include <zapata/applications/datums/MyUsers.h>
 
 
 using namespace std;

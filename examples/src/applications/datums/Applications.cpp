@@ -36,6 +36,7 @@ _d_element << "token" << (_d_token["elements"]->type() == zpt::JSArray ? _d_toke
 
 auto zpt::apps::datums::Applications::insert(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
@@ -45,12 +46,13 @@ _document <<
 _r_data = { "href", (_topic + std::string("/") + _c->insert("Applications", _topic, _document, { "href", _topic })) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Insert, _topic, { "performative", "insert", "href", _document["href"], "new", _document });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Insert, _topic, { "performative", "insert", "href", _document["href"], "new", _document });
 	return _r_data;
 }
 
 auto zpt::apps::datums::Applications::save(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
@@ -59,12 +61,13 @@ _document <<
 _r_data = { "href", _topic, "n_updated", _c->save("Applications", _topic, _document, { "href", _topic }) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Replace, _topic, { "performative", "save", "href", _topic, "new", _document });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Replace, _topic, { "performative", "save", "href", _topic, "new", _document });
 	return _r_data;
 }
 
 auto zpt::apps::datums::Applications::set(std::string _topic, zpt::json _document, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
@@ -73,12 +76,13 @@ _document <<
 _r_data = { "href", _topic, "n_updated", _c->set("Applications", _topic, _document, { "href", _topic }) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document });
 	return _r_data;
 }
 
 auto zpt::apps::datums::Applications::set(std::string _topic, zpt::json _document, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
 
 _document <<
@@ -87,27 +91,31 @@ _document <<
 _r_data = { "href", _topic, "n_updated", _c->set("Applications", _filter, _document, { "href", _topic }) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document, "filter", _filter });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Update, _topic, { "performative", "set", "href", _topic, "changes", _document, "filter", _filter });
 	return _r_data;
 }
 
 auto zpt::apps::datums::Applications::remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
+
 _r_data = { "href", _topic, "n_deleted", _c->remove("Applications", _topic, { "href", _topic }) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic });
 	return _r_data;
 }
 
 auto zpt::apps::datums::Applications::remove(std::string _topic, zpt::json _filter, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope) -> zpt::json {
 	zpt::json _r_data;
+	bool _r_extends = false;
 	zpt::connector _c = _emitter->connector("dbms.pgsql.zpt.apps");
+
 _r_data = { "href", _topic, "n_deleted", _c->remove("Applications", _filter, _filter + zpt::json({ "href", _topic })) };
 
 	
-	_emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic, "filter", _filter });
+	if (!_r_extends) _emitter->mutations()->route(zpt::mutation::Remove, _topic, { "performative", "remove", "href", _topic, "filter", _filter });
 	return _r_data;
 }
 

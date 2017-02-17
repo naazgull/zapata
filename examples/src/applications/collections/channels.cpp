@@ -10,7 +10,7 @@ zpt::ev::Get,
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_app_id = _t_split[3];
 zpt::json _tv_user_id = _t_split[5];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{app_id}/users/{user_id}/channels", _envelope, _emitter);
 
 zpt::json _r_body;
 return _emitter->route(
@@ -30,7 +30,7 @@ zpt::ev::Post,
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_app_id = _t_split[3];
 zpt::json _tv_user_id = _t_split[5];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{app_id}/users/{user_id}/channels", _envelope, _emitter);
 
 zpt::json _r_body;
 return _emitter->route(
@@ -51,7 +51,7 @@ zpt::ev::Patch,
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_app_id = _t_split[3];
 zpt::json _tv_user_id = _t_split[5];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{app_id}/users/{user_id}/channels", _envelope, _emitter);
 
 zpt::json _r_body;
 return _emitter->route(
@@ -71,7 +71,7 @@ zpt::ev::Delete,
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_app_id = _t_split[3];
 zpt::json _tv_user_id = _t_split[5];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{app_id}/users/{user_id}/channels", _envelope, _emitter);
 
 zpt::json _r_body;
 return _emitter->route(
@@ -91,7 +91,7 @@ zpt::ev::Head,
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_app_id = _t_split[3];
 zpt::json _tv_user_id = _t_split[5];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{app_id}/users/{user_id}/channels", _envelope, _emitter);
 
 zpt::json _r_body;
 return _emitter->route(

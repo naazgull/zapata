@@ -9,7 +9,7 @@ zpt::ev::Get,
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{id}", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::get(_topic, _emitter, _identity, _envelope);
@@ -44,7 +44,7 @@ assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{id}", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::save(_topic, _envelope["payload"], _emitter, _identity, _envelope);
@@ -76,7 +76,7 @@ assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{id}", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::set(_topic, _envelope["payload"], _emitter, _identity, _envelope);
@@ -95,7 +95,7 @@ zpt::ev::Delete,
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{id}", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::remove(_topic, _emitter, _identity, _envelope);
@@ -111,7 +111,7 @@ zpt::ev::Head,
 
 zpt::json _t_split = zpt::split(_topic, "/");
 zpt::json _tv_id = _t_split[3];
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications/{id}", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::get(_topic, _emitter, _identity, _envelope);

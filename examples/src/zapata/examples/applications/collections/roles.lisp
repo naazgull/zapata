@@ -1,6 +1,6 @@
 
 (defun roles-collection-get (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datum/roles" envelope))
          (t-split (zpt:split topic "/")))
     ;; ---> YOUR CODE HERE <--- ;;
     (json "status" 204)))
@@ -12,7 +12,7 @@
   (zpt:assertz-ascii (gethash "payload" envelope) "type" 412)
   (zpt:assertz-timestamp (gethash "payload" envelope) "updated" 412)
   (add-to-object (gethash "payload" envelope) "updated" (zpt:json-date))
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datum/roles" envelope))
          (t-split (zpt:split topic "/")))
     ;; ---> YOUR CODE HERE <--- ;;
     (json "status" 201)))
@@ -21,19 +21,19 @@
   (zpt:assertz-timestamp (gethash "payload" envelope) "created" 412)
   (zpt:assertz-ascii (gethash "payload" envelope) "type" 412)
   (zpt:assertz-timestamp (gethash "payload" envelope) "updated" 412)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datum/roles" envelope))
          (t-split (zpt:split topic "/")))
     ;; ---> YOUR CODE HERE <--- ;;
     (json "status" 200)))
 
 (defun roles-collection-delete (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datum/roles" envelope))
          (t-split (zpt:split topic "/")))
     ;; ---> YOUR CODE HERE <--- ;;
     (json "status" 200)))
 
 (defun roles-collection-head (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datum/roles" envelope))
          (t-split (zpt:split topic "/")))
     ;; ---> YOUR CODE HERE <--- ;;
     (json "status" 200 "headers" (json "Content-Length" body-length) )))

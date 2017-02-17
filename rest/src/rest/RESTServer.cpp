@@ -680,8 +680,8 @@ auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
 	return { "Authorization", (std::string("OAuth2.0 ") + _token) };
 }
 
-auto zpt::rest::authorization::validate(zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-	return _emitter->authorize(_envelope);
+auto zpt::rest::authorization::validate(std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+	return _emitter->authorize(_topic, _envelope);
 }
 
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {

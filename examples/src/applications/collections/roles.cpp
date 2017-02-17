@@ -8,7 +8,7 @@ zpt::ev::Get,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datum/roles", _envelope, _emitter);
 
 zpt::json _r_body;
 /* ---> YOUR CODE HERE <---*/
@@ -28,7 +28,7 @@ assertz_timestamp(_envelope["payload"], "updated", 412);
 _envelope["payload"] << "updated" << zpt::json::date();
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datum/roles", _envelope, _emitter);
 
 zpt::json _r_body;
 /* ---> YOUR CODE HERE <---*/
@@ -46,7 +46,7 @@ assertz_ascii(_envelope["payload"], "type", 412);
 assertz_timestamp(_envelope["payload"], "updated", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datum/roles", _envelope, _emitter);
 
 zpt::json _r_body;
 /* ---> YOUR CODE HERE <---*/
@@ -60,7 +60,7 @@ zpt::ev::Delete,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datum/roles", _envelope, _emitter);
 
 zpt::json _r_body;
 /* ---> YOUR CODE HERE <---*/
@@ -74,7 +74,7 @@ zpt::ev::Head,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datum/roles", _envelope, _emitter);
 
 zpt::json _r_body;
 /* ---> YOUR CODE HERE <---*/

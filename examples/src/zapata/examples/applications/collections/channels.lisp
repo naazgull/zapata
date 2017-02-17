@@ -1,6 +1,6 @@
 
 (defun channels-collection-get (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datums/applications/{app_id}/users/{user_id}/channels" envelope))
          (t-split (zpt:split topic "/"))
 	  (tv-app-id (zpt:topic-var t-split 3))
 	  (tv-user-id (zpt:topic-var t-split 5)))
@@ -9,7 +9,7 @@
                    (json "headers" (zpt:authorization-headers identity) "params" (zpt:merge (gethash "params" envelope) (json "app_id" tv-app-id "user_id" tv-user-id))))
 
 (defun channels-collection-post (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datums/applications/{app_id}/users/{user_id}/channels" envelope))
          (t-split (zpt:split topic "/"))
 	  (tv-app-id (zpt:topic-var t-split 3))
 	  (tv-user-id (zpt:topic-var t-split 5)))
@@ -19,7 +19,7 @@
 
 
 (defun channels-collection-patch (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datums/applications/{app_id}/users/{user_id}/channels" envelope))
          (t-split (zpt:split topic "/"))
 	  (tv-app-id (zpt:topic-var t-split 3))
 	  (tv-user-id (zpt:topic-var t-split 5)))
@@ -28,7 +28,7 @@
                    (json "headers" (zpt:authorization-headers identity) "params" (zpt:merge (gethash "params" envelope) (json "app_id" tv-app-id "user_id" tv-user-id))))
 
 (defun channels-collection-delete (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datums/applications/{app_id}/users/{user_id}/channels" envelope))
          (t-split (zpt:split topic "/"))
 	  (tv-app-id (zpt:topic-var t-split 3))
 	  (tv-user-id (zpt:topic-var t-split 5)))
@@ -37,7 +37,7 @@
                    (json "headers" (zpt:authorization-headers identity) "params" (zpt:merge (gethash "params" envelope) (json "app_id" tv-app-id "user_id" tv-user-id))))
 
 (defun channels-collection-head (performative topic envelope)
-  (let* ((indentity (zpt:authorize envelope))
+  (let* ((indentity (zpt:authorize "/v2/datums/applications/{app_id}/users/{user_id}/channels" envelope))
          (t-split (zpt:split topic "/"))
 	  (tv-app-id (zpt:topic-var t-split 3))
 	  (tv-user-id (zpt:topic-var t-split 5)))

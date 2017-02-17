@@ -100,8 +100,8 @@ auto zpt::EventEmitter::directory(zpt::ev::directory _directory) -> void {
 	this->__directory = _directory;
 }
 
-auto zpt::EventEmitter::authorize(zpt::json _envelope) -> zpt::json {
-	return this->__keeper->authorize(_envelope);
+auto zpt::EventEmitter::authorize(std::string _topic, zpt::json _envelope) -> zpt::json {
+	return this->__keeper->authorize(_topic, _envelope);
 }
 
 auto zpt::EventEmitter::lookup(std::string _topic) -> zpt::json {
@@ -311,7 +311,7 @@ auto zpt::EventGatekeeper::events(zpt::ev::emitter _emitter) -> void {
 	this->__emitter = _emitter;
 }
 
-auto zpt::EventGatekeeper::authorize(zpt::json _envelope) -> zpt::json {
+auto zpt::EventGatekeeper::authorize(std::string _topic, zpt::json _envelope) -> zpt::json {
 	return { "identity", "anyone", "access_token", "--blank--" };
 }
 

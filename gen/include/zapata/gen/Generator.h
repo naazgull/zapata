@@ -74,6 +74,7 @@ namespace zpt {
 	public:
 		static std::map<std::string, zpt::gen::datum> datums;
 		static std::map<std::string, zpt::gen::resource> resources;
+		static std::string datum_includes;
 
 		Generator(zpt::json _options);
 		virtual ~Generator();

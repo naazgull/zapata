@@ -86,7 +86,6 @@
 		{
 			"name" : "MyUsers",
 			"dbms" : [ "mongodb", "redis" ],
-			"extends" : { "name" : "zpt::users:Users" },
 			"fields" : {
 				"channels" : { "type" : "array", "ref" : "/v2/datums/channel-subscriptions", "rel" : "app_id={id}", "opts" : [ "publish" ] }
 			}

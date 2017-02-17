@@ -36,6 +36,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
+std::string zpt::Generator::datum_includes;
 std::map<std::string, zpt::gen::datum> zpt::Generator::datums;
 std::map<std::string, zpt::gen::resource> zpt::Generator::resources;
 
@@ -94,7 +95,7 @@ auto zpt::Generator::load() -> void {
 			this->__specs << std::string(_spec["lib"]) << _spec;
 		}
 		_spec << "dbms" << zpt::json::object();
-		
+
 		if (_spec["resources"]->type() == zpt::JSArray) {
 			for (auto _resource : _spec["resources"]->arr()) {
 				_resource << "namespace" << _spec["namespace"];
@@ -103,13 +104,20 @@ auto zpt::Generator::load() -> void {
 		}
 		if (_spec["datums"]->type() == zpt::JSArray) {
 			for (auto _datum : _spec["datums"]->arr()) {
-				_datum << "namespace" << _spec["namespace"];
+				_datum << "namespace" << _spec["namespace"] << "lib" << _spec["lib"];
 				zpt::Generator::datums.insert(std::make_pair(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]), zpt::gen::datum(new zpt::GenDatum(_datum, this->__options))));
 				if (_datum["dbms"]->type() == zpt::JSArray) {
 					for (auto _dbms : _datum["dbms"]->arr()) {
 						_spec["dbms"] << std::string(_dbms) << true;
 					}
 				}
+
+				std::string _h_file = std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h");
+				std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
+				if (_include.front() == '/') {
+					_include.erase(0, 1);
+				}
+				zpt::Generator::datum_includes += std::string("#include <") + _include + std::string(">\n");
 			}
 		}
 	}
@@ -150,18 +158,7 @@ auto zpt::Generator::build_data_layer() -> void {
 				std::string _datum_sql;
 				zpt::load_path("/usr/share/zapata/gen/Datum.sql", _datum_sql);
 
-				std::string _includes;
-				for (auto _other_datum : _spec["datums"]->arr()) {
-					if (_other_datum["name"] == _datum["name"]) {
-						continue;
-					}
-					std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
-					if (_include.front() == '/') {
-						_include.erase(0, 1);
-					}
-					_includes += std::string("#include <") + _include + std::string(">\n");
-				}
-				zpt::replace(_datum_h, "$[data.path.h]", _includes);
+				zpt::replace(_datum_h, "$[data.path.h]", zpt::Generator::datum_includes);
 
 				if (_datum["fields"]->type() == zpt::JSObject){
 					std::string _fields;
@@ -319,6 +316,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _make_files;
 			std::string _child_includes;
 			std::string _registry;
+			std::string _dyn_link;
 			if (_spec["datums"]->type() == zpt::JSArray) {
 				for (auto _datum : _spec["datums"]->arr()) {
 					if (_datum["name"]->ok()) {
@@ -342,6 +340,9 @@ auto zpt::Generator::build_container() -> void {
 						_make_files += _make_file;
 						_make_file.assign(std::string("./mutations/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
 						_make_files += _make_file;
+						if (_datum["dynlink"]->ok()) {
+							_dyn_link += std::string(_datum["dynlink"]);
+						}
 					}
 				}
 				for (auto _datum : _spec["datums"]->arr()) {
@@ -391,7 +392,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _make;
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis") + _dyn_link + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
@@ -1249,14 +1250,27 @@ auto zpt::GenDatum::build_extends_insert() -> std::string{
 	if (this->__spec["extends"]["name"]->ok()) {
 		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
 		if (_found != zpt::Generator::datums.end()) {
+			if (this->__spec["lib"] != _found->second->spec()["lib"]) {
+				if (this->__spec["dynlink"]->ok()) {
+					this->__spec << "dynlink" << (this->__spec["dynlink"]->str() + std::string(" -l") + _found->second->spec()["lib"]->str());
+				}
+				else {
+					this->__spec << "dynlink" << (std::string(" -l") + _found->second->spec()["lib"]->str());
+				}
+			}
+			
+			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
+			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+
 			_return += std::string("\nzpt::json _r_parent = zpt::json::object();\n");
 			for (auto _field : _found->second->spec()["fields"]->obj()) {
-				_return += std::string("\n_r_parent << \"") + _field["name"]->str() + std::string("\" << _document[\"") + _field["name"]->str() + std::string("\"];\n");
+				_return += std::string("if (_document[\"") + _field.first + std::string("\"]->ok()) _r_parent << \"") + _field.first + std::string("\" << _document[\"") + _field.first + std::string("\"];\n");
 			}
 			_return += std::string("\nstd::string _r_id = _c->insert(\"$[datum.collection]\", _topic, _document - _r_parent, { \"href\", _topic });\n");
 			_return += std::string("_r_data = { \"href\", (_topic + std::string(\"/\") + _r_id) };\n");
 			_return += std::string("_r_parent << \"id\" << _r_id;\n");
-			_return += std::string("") + zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_") + std::string("::insert(_topic, _r_parent, { \"mutated-event\", true })) };\n");
+			_return += _class + std::string("::insert(_topic, _r_parent, _emitter, _identity, _envelope);\n");
+			_return += std::string("\n_r_extends = true;\n");
 		}
 	}
 	else {
@@ -1270,12 +1284,16 @@ auto zpt::GenDatum::build_extends_save() -> std::string {
 	if (this->__spec["extends"]["name"]->ok()) {
 		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
 		if (_found != zpt::Generator::datums.end()) {
+			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
+			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+
 			_return += std::string("\nzpt::json _r_parent = zpt::json::object();\n");
 			for (auto _field : _found->second->spec()["fields"]->obj()) {
-				_return += std::string("\n_r_parent << \"") + _field["name"]->str() + std::string("\" << _document[\"") + _field["name"]->str() + std::string("\"];\n");
+				_return += std::string("if (_document[\"") + _field.first + std::string("\"]->ok()) _r_parent << \"") + _field.first + std::string("\" << _document[\"") + _field.first + std::string("\"];\n");
 			}
-			_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->save(\"$[datum.collection]\", _topic, _document - _r_parent, { \"href\", _topic }) };\n");
-			_return += std::string("\n_c->save(\"") + _found->second->spec()["name"]->str() + std::string("\", _topic, _r_parent, { \"mutated-event\", true })) };\n");
+			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->save(\"$[datum.collection]\", _topic, _document - _r_parent, { \"href\", _topic }) };\n");
+			_return += _class + std::string("::save(_topic, _r_parent, _emitter, _identity, _envelope);\n");
+			_return += std::string("\n_r_extends = true;\n");
 		}
 	}
 	else {
@@ -1285,22 +1303,82 @@ auto zpt::GenDatum::build_extends_save() -> std::string {
 }
 
 auto zpt::GenDatum::build_extends_set_topic() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic }) };\n");
+	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
+		if (_found != zpt::Generator::datums.end()) {
+			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
+			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+
+			_return += std::string("\nzpt::json _r_parent = zpt::json::object();\n");
+			for (auto _field : _found->second->spec()["fields"]->obj()) {
+				_return += std::string("if (_document[\"") + _field.first + std::string("\"]->ok()) _r_parent << \"") + _field.first + std::string("\" << _document[\"") + _field.first + std::string("\"];\n");
+			}
+			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _topic, _document - _r_parent, { \"href\", _topic }) };\n");
+			_return += _class + std::string("::set(_topic, _r_parent, _emitter, _identity, _envelope);\n");
+			_return += std::string("\n_r_extends = true;\n");
+		}
+	}
+	else {
+		_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic }) };\n");
+	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_set_pattern() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic }) };\n");
+	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
+		std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
+		
+		_return += std::string("zpt::json _r_elements = ") + _class + std::string("::query(_topic, _filter, _emitter, _identity, _envelope);\n");
+		_return += std::string("for (auto _r_element : _r_elements[\"elements\"]->arr()) {\n");
+		_return += _class + std::string("::set(_r_element[\"href\"]->str(), _document, _emitter, _identity, _envelope);\n");
+		_return += std::string("}\n");
+		_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _r_elements[\"size\"] };\n");
+		_return += std::string("\n_r_extends = true;\n");
+	}
+	else {
+		_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic }) };\n");
+	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_remove_topic() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic }) };\n");
+	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
+		if (_found != zpt::Generator::datums.end()) {
+			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
+			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+			
+			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic }) };\n");
+			_return += _class + std::string("::remove(_topic, _emitter, _identity, _envelope);\n");
+			_return += std::string("\n_r_extends = true;\n");
+		}
+	}
+	else {
+		_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic }) };\n");
+	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_remove_pattern() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _filter, _filter + zpt::json({ \"href\", _topic })) };\n");
+	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
+		std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
+		
+		_return += std::string("zpt::json _r_elements = ") + _class + std::string("::query(_topic, _filter, _emitter, _identity, _envelope);\n");
+		_return += std::string("for (auto _r_element : _r_elements[\"elements\"]->arr()) {\n");
+		_return += _class + std::string("::remove(_r_element[\"href\"]->str(), _emitter, _identity, _envelope);\n");
+		_return += std::string("}\n");
+		_return += std::string("_r_data = { \"href\", _topic, \"n_deleted\", _r_elements[\"size\"] };\n");
+		_return += std::string("\n_r_extends = true;\n");
+	}
+	else {
+		_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _filter, _filter + zpt::json({ \"href\", _topic })) };\n");
+	}
 	return _return;
 }
 
@@ -1747,7 +1825,7 @@ auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std:
 	_return += this->build_validation(_perf);
 	_return += std::string("\nzpt::json _t_split = zpt::split(_topic, \"/\");\n");
 	_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
-	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);\n");
+	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(\"") + std::string(this->__spec["topic"]) + std::string("\", _envelope, _emitter);\n");
 	_return += std::string("\nzpt::json _r_body;\n");
 	_return += std::string("/* ---> YOUR CODE HERE <---*/\n");
 	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->type() == zpt::JSArray) {
@@ -2240,7 +2318,7 @@ auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std
 auto zpt::GenResource::build_lisp_handler_header(zpt::ev::performative _perf) -> std::string {
 	std::string _return;	
 	_return += this->build_lisp_validation(_perf);
-	_return += std::string("  (let* ((indentity (zpt:authorize envelope))\n         (t-split (zpt:split topic \"/\"))");
+	_return += std::string("  (let* ((indentity (zpt:authorize \"") + std::string(this->__spec["topic"]) + std::string("\" envelope))\n         (t-split (zpt:split topic \"/\"))");
 	_return += zpt::gen::url_pattern_to_vars_lisp(std::string(this->__spec["topic"]));
 	_return += std::string(")\n");
 	_return += std::string("    ;; ---> YOUR CODE HERE <--- ;;\n");
@@ -2753,7 +2831,7 @@ auto zpt::GenResource::build_python_handler_header(zpt::ev::performative _perf) 
 	_return += this->build_validation(_perf);
 	_return += std::string("\nzpt::json _t_split = zpt::split(_topic, \"/\");\n");
 	_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
-	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);\n");
+	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(\"") + std::string(this->__spec["topic"]) + std::string("\", _envelope, _emitter);\n");
 	_return += std::string("\nzpt::json _r_body;\n");
 	_return += std::string("/* ---> YOUR CODE HERE <---*/\n");
 	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->type() == zpt::JSArray) {

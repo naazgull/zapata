@@ -502,14 +502,16 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			"access", "a",
 			"label", "Validates authorization headers",
 			"args", { zpt::array,
+				{ "type", "string", "label", "the topic pattern" },
 				{ "type", "object", "label", "the message envelope" }
 			}
 		},
 		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
 			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-			
-			zpt::json _envelope = _bridge->from< zpt::lisp::object >(_args[0]);
-			_bridge->events()->authorize(_envelope);
+
+			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[0]));
+			zpt::json _envelope = _bridge->from< zpt::lisp::object >(_args[1]);
+			_bridge->events()->authorize(_topic, _envelope);
 	
 			return zpt::lisp::object(ecl_make_bool(true));
 		}

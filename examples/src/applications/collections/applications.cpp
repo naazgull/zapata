@@ -8,7 +8,7 @@ zpt::ev::Get,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::query(_topic, _envelope["params"], _emitter, _identity, _envelope);
@@ -38,7 +38,7 @@ assertz_object(_envelope["payload"], "token", 412);
 assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::insert(_topic, _envelope["payload"], _emitter, _identity, _envelope);
@@ -64,7 +64,7 @@ assertz_object(_envelope["payload"], "token", 412);
 assertz_array(_envelope["payload"], "users", 412);
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::set(_topic, _envelope["payload"], _envelope["params"], _emitter, _identity, _envelope);
@@ -79,7 +79,7 @@ zpt::ev::Delete,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::remove(_topic, _envelope["params"], _emitter, _identity, _envelope);
@@ -94,7 +94,7 @@ zpt::ev::Head,
 [] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 
 zpt::json _t_split = zpt::split(_topic, "/");
-zpt::json _identity = zpt::rest::authorization::validate(_envelope, _emitter);
+zpt::json _identity = zpt::rest::authorization::validate("/v2/datums/applications", _envelope, _emitter);
 
 zpt::json _r_body;
 _r_body = zpt::apps::datums::Applications::query(_topic, _envelope["params"], _emitter, _identity, _envelope);
