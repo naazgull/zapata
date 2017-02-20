@@ -224,9 +224,11 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":assertz-uuid "
 		":assertz-utf8 "
 		":assertz-ascii "
+		":assertz-hash "
 		":assertz-token "
 		":assertz-uri "
 		":assertz-email "
+		":assertz-location "
 		":generate-key "
 		":generate-uuid "
 		":json-date "
@@ -849,6 +851,30 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 	);
 	_bridge->deflbd(
 		{
+			"name", "zpt:assertz-hash",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type hash in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_hash(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
 			"name", "zpt:assertz-token",
 			"type", "internal",
 			"access", "a",
@@ -915,6 +941,30 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
 
 			assertz_email(_object, _field, _code);
+			
+			return zpt::lisp::object(ecl_make_bool(true));
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:assertz-location",
+			"type", "internal",
+			"access", "a",
+			"label", "Tests whether or not the given field is of type location in the given object",
+			"args", { zpt::array,
+				{ "type", "object", "label", "the parent object to use" },
+				{ "type", "string", "label", "the field to test type for" },
+				{ "type", "int", "label", "the error code to return" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			
+			zpt::json _object = _bridge->from< zpt::lisp::object >(_args[0]);
+			std::string _field = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
+			int _code = int(_bridge->from< zpt::lisp::object >(_args[2]));
+
+			assertz_location(_object, _field, _code);
 			
 			return zpt::lisp::object(ecl_make_bool(true));
 		}
