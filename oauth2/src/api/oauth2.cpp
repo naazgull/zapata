@@ -41,7 +41,7 @@ auto zpt::authenticator::OAuth2::name() -> std::string {
 	return "oauth2.0";
 }
 
-auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::connector _connector) -> zpt::json {
 	assertz(
 		_envelope["payload"]->ok() &&
 		_envelope["payload"]["scope"]->ok() &&
@@ -49,7 +49,6 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		"required fields: 'response_type', 'scope'", 412, 0);
 
 	std::string _response_type((std::string) _envelope["payload"]["response_type"]);
-	zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
 	
 	if (_response_type == "code") {
 		assertz(
@@ -129,10 +128,9 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		assertz(
 			_envelope["payload"]->ok() &&
 			_envelope["payload"]["client_id"]->ok() &&
-			//_envelope["payload"]["redirect_uri"]->ok() &&
 			_envelope["payload"]["username"]->ok() &&
 			_envelope["payload"]["password"]->ok(),
-			"required fields: 'client_id', 'redirect_uri', 'username' & 'password'", 412, 0);
+			"required fields: 'client_id', 'username' & 'password'", 412, 0);
 
 		std::string _user_uri(std::string("/") + _emitter->version() + std::string("/auth/me"));
 		zpt::json _user = _emitter->route(zpt::ev::Get, _user_uri, {
@@ -292,94 +290,4 @@ auto zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::ev::em
 	}
 	assertz(_expires > _now, "token has expired", 403, 0);
 	return _token;
-}
-
-extern "C" auto _zpt_load_() -> void {
-	assertz(_emitter->options()["redis"]["oauth"]->ok(), "no 'redis.oauth' object found in provided configuration", 500, 0);
-	zpt::kb _redis(new zpt::redis::Client(_emitter->options(), "redis.oauth"));
-	_emitter->add_kb("redis.oauth", _redis);
-	zpt::kb _oauth(new zpt::authenticator::OAuth2(_emitter->options()));
-	_emitter->add_kb("authenticator.oauth", _oauth);
-
-	zpt::json _default_authorization = ((zpt::redis::Client*) _redis.get())->get("tokens/default", "root/default");
-	if (_default_authorization["access_token"]->type() == zpt::JSString) {
-		zpt::ev::set_default_authorization(std::string("OAuth2.0 ") + _default_authorization["access_token"]->str());
-	}
-
-	/*
-	  4.1.  Authorization Code Grant
-	  4.2.  Implicit Grant
-	  4.3.  Resource Owner Password Credentials Grant
-	  4.4.  Client Credentials Grant
-	*/
-	zpt::ev::callback _authorize = 	[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-		zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-		return _oauth->authorize(_performative, _envelope, _emitter);
-	};
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "authorize" }), { { zpt::ev::Post, _authorize }, { zpt::ev::Get, _authorize } } );
-	
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "token" }),
-		{
-			{
-				zpt::ev::Post,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-					return _oauth->token(_performative, _envelope, _emitter);
-				}
-			}
-		}
-	);
-
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "token", "refresh" }),
-		{
-			{
-				zpt::ev::Post,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-					return _oauth->refresh(_performative, _envelope, _emitter);
-				}
-			}
-		}
-	);
-
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "validate" }),
-		{
-			{
-				zpt::ev::Post,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					assertz(
-						_envelope["payload"]->ok() &&
-						_envelope["payload"]["access_token"]->ok(),
-						"required fields: 'access_token'", 412, 0);
-				
-					zpt::authenticator::OAuth2* _oauth = (zpt::authenticator::OAuth2*) _emitter->get_kb("authenticator.oauth").get();
-					zpt::json _validation = _oauth->validate(_envelope["payload"]["access_token"]->str(), _emitter);
-					return {
-						"status", 200,
-						"payload", _validation
-					};
-				}
-			}
-		}
-	);
-
-	_emitter->on(zpt::rest::url_pattern({ _emitter->version(), "oauth2.0", "tokens", "(.+)" }),
-		{
-			{
-				zpt::ev::Get,
-				[] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
-					zpt::redis::Client* _db = (zpt::redis::Client*) _emitter->get_kb("redis.oauth").get();
-					zpt::json _document = _db->get("tokens", _resource);
-					if (!_document->ok()) {
-						return { "status", 404 };
-					}
-					return {
-						"status", 200,
-						"payload", _document
-					};
-				}
-			}
-		}
-	);
-
 }

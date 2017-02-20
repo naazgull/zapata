@@ -12,8 +12,7 @@ namespace zpt
 
 inline void JSONTokenizer::error(char const *msg)
 {
-    std::cout << msg << '\n';
-   throw zpt::SyntaxErrorException(string(msg));
+	throw zpt::SyntaxErrorException(std::string("Syntax error in line ") + std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex

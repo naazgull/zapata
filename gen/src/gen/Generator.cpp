@@ -98,13 +98,13 @@ auto zpt::Generator::load() -> void {
 
 		if (_spec["resources"]->type() == zpt::JSArray) {
 			for (auto _resource : _spec["resources"]->arr()) {
-				_resource << "namespace" << _spec["namespace"];
+				_resource << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
 				zpt::Generator::resources.insert(std::make_pair(std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]), zpt::gen::resource(new zpt::GenResource(_resource, this->__options))));
 			}
 		}
 		if (_spec["datums"]->type() == zpt::JSArray) {
 			for (auto _datum : _spec["datums"]->arr()) {
-				_datum << "namespace" << _spec["namespace"] << "lib" << _spec["lib"];
+				_datum << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
 				zpt::Generator::datums.insert(std::make_pair(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]), zpt::gen::datum(new zpt::GenDatum(_datum, this->__options))));
 				if (_datum["dbms"]->type() == zpt::JSArray) {
 					for (auto _dbms : _datum["dbms"]->arr()) {
@@ -317,6 +317,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _child_includes;
 			std::string _registry;
 			std::string _dyn_link;
+			std::string _dyn_dir;
 			if (_spec["datums"]->type() == zpt::JSArray) {
 				for (auto _datum : _spec["datums"]->arr()) {
 					if (_datum["name"]->ok()) {
@@ -342,6 +343,9 @@ auto zpt::Generator::build_container() -> void {
 						_make_files += _make_file;
 						if (_datum["dynlink"]->ok()) {
 							_dyn_link += std::string(_datum["dynlink"]);
+						}
+						if (_datum["dyndir"]->ok()) {
+							_dyn_dir += std::string(_datum["dyndir"]);
 						}
 					}
 				}
@@ -393,7 +397,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis") + _dyn_link + std::string("\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info 0:1:0") + _dyn_dir + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
 			_make += _make_files;
@@ -1196,52 +1200,11 @@ auto zpt::GenDatum::build_associations_remove() -> std::string{
 
 auto zpt::GenDatum::build_extends_get() -> std::string{
 	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.get.client]\");\n_r_data = _c->get(\"$[datum.collection]\", _topic, { \"href\", _topic });\n");
-	
-	/*if (this->__spec["extends"]["ref"]->ok()) {
-		zpt::json _opts = zpt::gen::get_opts(this->__spec["extends"]);
-		if (_opts["on-demand"]->ok()) {
-			std::string _topic;
-			zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["extends"]["rel"]));
-			zpt::json _splited = zpt::split(std::string(this->__spec["extends"]["ref"]), "/");
-			for (auto _part : _splited->arr()) {
-				_topic += std::string(", ") + (_part->str().front() == '{' ? std::string("std::string(_r_data[\"") + _part->str().substr(1, _part->str().length() - 2) + std::string("\"])") : std::string("\"") + _part->str() + std::string("\""));
-			}
-
-			if (_rel->obj()->size() != 0) {
-				std::string _params = this->build_params(_rel, false);
-				_return += std::string("_r_data = _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n)[\"payload\"] + _r_data;\n");
-			}
-			else {
-				_return += std::string("_r_data = _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n)[\"payload\"] + _r_data;\n");
-			}
-		}
-	}*/
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_query() -> std::string{
 	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.query.client]\");\n_r_data = _c->query(\"$[datum.collection]\", _filter, _filter + zpt::json({ \"href\", _topic }));\n");
-	
-	/*if (this->__spec["extends"]["ref"]->ok()) {
-		zpt::json _opts = zpt::gen::get_opts(this->__spec["extends"]);
-		if (_opts["on-demand"]->ok()) {
-			std::string _topic;
-			zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["extends"]["rel"]));
-			zpt::json _splited = zpt::split(std::string(this->__spec["extends"]["ref"]), "/");
-			for (auto _part : _splited->arr()) {
-				_topic += std::string(", ") + (_part->str().front() == '{' ? std::string("std::string(_r_data[\"") + _part->str().substr(1, _part->str().length() - 2) + std::string("\"])") : std::string("\"") + _part->str() + std::string("\""));
-			}
-
-			if (_rel->obj()->size() != 0) {
-				std::string _params = this->build_params(_rel, true);
-				_return += std::string("_r_data = _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n)[\"payload\"];\n");
-			}
-			else {
-				_return += std::string("_r_data = _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n)[\"payload\"];\n");
-			}
-			_return += std::string("_r_data << \"payload\" << (_r_data[\"payload\"][\"elements\"]->ok() ? _r_data[\"payload\"] : zpt::json({ \"size\", 1, \"elements\", _r_data[\"payload\"] }));\n");
-		}
-       }*/
 	return _return;
 }
 
@@ -1256,6 +1219,12 @@ auto zpt::GenDatum::build_extends_insert() -> std::string{
 				}
 				else {
 					this->__spec << "dynlink" << (std::string(" -l") + _found->second->spec()["lib"]->str());
+				}
+				if (this->__spec["dyndir"]->ok()) {
+					this->__spec << "dyndir" << (this->__spec["dyndir"]->str() + std::string(" -L../") + _found->second->spec()["spec_name"]->str() + std::string("/.libs"));
+				}
+				else {
+					this->__spec << "dyndir" << (std::string(" -L../") + _found->second->spec()["spec_name"]->str() + std::string("/.libs"));
 				}
 			}
 			
@@ -1698,6 +1667,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 			
 			if (_opts["mandatory"]->ok() && 
 				(
+					(std::string(this->__spec["type"]) == "controller") ||
 					(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
 					(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put) ||
 					(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
@@ -1884,7 +1854,7 @@ auto zpt::GenResource::build_get() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
@@ -1946,7 +1916,7 @@ auto zpt::GenResource::build_post() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
@@ -1996,7 +1966,7 @@ auto zpt::GenResource::build_put() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
@@ -2046,7 +2016,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
@@ -2108,7 +2078,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
@@ -2170,7 +2140,7 @@ auto zpt::GenResource::build_head() -> std::string {
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
 		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
 		
-		zpt::json _splited = zpt::split(std::string(this->__spec["topic"]), "/");
+		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}

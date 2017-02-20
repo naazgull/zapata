@@ -1534,7 +1534,7 @@ void zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
 zpt::JSONPtr zpt::JSONElementT::flatten() {
 	if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
 		zpt::JSONPtr _return = zpt::json::object();
-		this->inspect({ "$regexp", "(.*)" },
+		this->inspect({ "$any", "type" },
 			[ & ] (std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
 				zpt::JSONPtr _self = this->getPath(_object_path);
 				if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
@@ -1559,13 +1559,8 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				}
 				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$regexp"]->ok()) {
-				std::regex _rgx(((std::string) _pattern["$regexp"]));
-				std::string _exp;
-				this->stringify(_exp);
-				if (std::regex_match(_exp, _rgx)) {
-					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
-				}
+			if (_pattern["$any"]->ok()) {
+				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 			}
 			else {
 				if (*this == _pattern) {
@@ -1578,13 +1573,8 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$regexp"]->ok()) {
-				std::regex _rgx(((std::string) _pattern["$regexp"]));
-				std::string _exp;
-				this->stringify(_exp);
-				if (std::regex_match(_exp, _rgx)) {
-					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
-				}
+			if (_pattern["$any"]->ok()) {
+				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 			}
 			else {
 				if (*this == _pattern) {
@@ -1601,6 +1591,9 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				if (std::regex_match(_exp, _rgx)) {
 					_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 				}
+			}
+			else if (_pattern["$any"]->ok()) {
+				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 			}
 			else {
 				if (*this == _pattern) {

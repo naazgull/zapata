@@ -51,9 +51,11 @@ SOFTWARE.
 #define assertz_uuid(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UUID."), z, 0)
 #define assertz_utf8(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UTF-8 string."), z, 0)
 #define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9 and '_' characters."), z, 0)
+#define assertz_hash(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9."), z, 0)
 #define assertz_token(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9."), z, 0)
 #define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an URI."), z, 0)
 #define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an e-mail address."), z, 0)
+#define assertz_location(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSObject && zpt::test::location(x[y])), std::string("field '") + std::string(y) + std::string("' must be GPS location."), z, 0)
 
 typedef struct epoll_event epoll_event_t;
 

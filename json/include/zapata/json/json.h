@@ -131,4 +131,7 @@ namespace zpt {
 		auto env(zpt::json _options) -> void;
 	}
 
+	namespace test {
+		auto location(zpt::json _location) -> bool;
+	}
 }
