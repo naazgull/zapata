@@ -9,7 +9,7 @@
 			"name" : "applications",
 			"performatives" : [ "get", "post", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : { "name" : "zpt::apps::Applications" }
+			"datum" : { "name" : "zpt::apps::Applications", "href" : "/v3/applications" }
 		},
 		{
 			"topic" : "/v2/datums/applications/{id}",
@@ -17,7 +17,7 @@
 			"name" : "applications",
 			"performatives" : [ "get", "put", "patch", "delete", "head" ],
 			"protocols" : [ "http", "mqtt", "0mq", "amqp" ],
-			"datum" : { "name" : "zpt::apps::Applications" },
+			"datum" : { "name" : "zpt::apps::Applications", "href" : "/v3/applications/{id}" },
 			"links" : [
 				{ "ref" : "/v2/datums/applications/{id}/users", "rel" : "users" },
 				{ "ref" : "/v2/datums/applications/{id}/channel-templates", "rel" : "templates" },

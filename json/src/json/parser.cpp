@@ -38,7 +38,7 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	if (argc > 1) {
-		for (size_t _i = 1; _i != argc; _i++) {
+		for (int _i = 1; _i != argc; _i++) {
 			zpt::json _ptr;
 			std::ifstream _in;
 			_in.open(argv[_i]);

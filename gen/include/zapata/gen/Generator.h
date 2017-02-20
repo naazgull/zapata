@@ -72,9 +72,10 @@ namespace zpt {
 
 	class Generator {
 	public:
-		static std::map<std::string, zpt::gen::datum> datums;
-		static std::map<std::string, zpt::gen::resource> resources;
+		static std::map< std::string, zpt::gen::datum > datums;
+		static std::map< std::string, zpt::gen::resource > resources;
 		static std::string datum_includes;
+		static std::map< std::string, std::string > alias;
 
 		Generator(zpt::json _options);
 		virtual ~Generator();

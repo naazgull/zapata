@@ -39,6 +39,7 @@ SOFTWARE.
 std::string zpt::Generator::datum_includes;
 std::map<std::string, zpt::gen::datum> zpt::Generator::datums;
 std::map<std::string, zpt::gen::resource> zpt::Generator::resources;
+std::map<std::string, std::string> zpt::Generator::alias;
 
 zpt::GeneratorPtr::GeneratorPtr(zpt::json _options) : std::shared_ptr<zpt::Generator>(new zpt::Generator(_options)) {
 }
@@ -100,6 +101,9 @@ auto zpt::Generator::load() -> void {
 			for (auto _resource : _spec["resources"]->arr()) {
 				_resource << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
 				zpt::Generator::resources.insert(std::make_pair(std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]), zpt::gen::resource(new zpt::GenResource(_resource, this->__options))));
+				if (_resource["datum"]["href"]->ok()) {
+					zpt::Generator::alias.insert(std::make_pair(zpt::gen::url_pattern_to_regexp(std::string(_resource["topic"])), zpt::gen::url_pattern_to_regexp(std::string(_resource["datum"]["href"]))));
+				}
 			}
 		}
 		if (_spec["datums"]->type() == zpt::JSArray) {
@@ -745,7 +749,10 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 			}
 
 			std::string _mutation_on(_on.data());
-			zpt::replace(_mutation_on, "$[mutation.topic.regex]", zpt::gen::url_pattern_to_regexp(_field.second["ref"]->str()));
+			std::string _topic = zpt::gen::url_pattern_to_regexp(_field.second["ref"]->str());
+			auto _found = zpt::Generator::alias.find(_topic);
+			_topic = (_found != zpt::Generator::alias.end() ? _found->second : _topic);
+			zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
 			std::string _mutation;
 			bool _first = true;
 			_mutation.assign(this->build_associations_insert(_field.first, _field.second));
@@ -1692,6 +1699,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 			
 				if (_opts["default"]->ok() && 
 					(
+						(std::string(this->__spec["type"]) == "controller") ||
 						(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
 						(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put) ||
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
@@ -1774,6 +1782,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 					}
 					else if (_opts["mandatory"]->ok() && 
 						(
+							(std::string(this->__spec["type"]) == "controller") ||
 							(std::string(this->__spec["type"]) == "collection" && _perf == zpt::ev::Post) ||
 							(std::string(this->__spec["type"]) == "store" && _perf == zpt::ev::Put) ||
 							(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
@@ -1845,7 +1854,17 @@ auto zpt::GenResource::build_get() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_get(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_get(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -1907,7 +1926,17 @@ auto zpt::GenResource::build_post() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_post(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_post(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -1957,7 +1986,17 @@ auto zpt::GenResource::build_put() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_put(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_put(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -2007,7 +2046,17 @@ auto zpt::GenResource::build_patch() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_patch(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_patch(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -2069,7 +2118,17 @@ auto zpt::GenResource::build_delete() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_delete(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_delete(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {
@@ -2131,7 +2190,17 @@ auto zpt::GenResource::build_head() -> std::string {
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
 		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_head(this->__spec));
+			std::string _topic_transform;
+			if (this->__spec["datum"]["href"]->ok()) {
+				std::string _topic;
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
+				for (auto _part : _splited->arr()) {
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				}
+				_topic_transform = std::string("\n_topic = zpt::join({ zpt::array") + _topic + std::string(" }, \"/\");\n");
+			}
+			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _topic_transform + _found->second->build_head(this->__spec));
 		}
 	}
 	else if (this->__spec["datum"]["ref"]->ok()) {

@@ -333,14 +333,14 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
-	size_t _page_size = size_t(_opts["page-size"]);
-	size_t _page_start_index = size_t(_opts["page-start-index"]);
+	size_t _page_size = size_t(_opts["page_size"]);
+	size_t _page_start_index = size_t(_opts["page_start_index"]);
 	mongo::BSONObjBuilder _order_b;
 	mongo::BSONObjBuilder _query_b;
 	zpt::mongodb::get_query(_pattern, _query_b);
 
-	if (_opts["order-by"]->ok()) {
-		std::istringstream lss(((std::string) _opts["order-by"]).data());
+	if (_opts["order_by"]->ok()) {
+		std::istringstream lss(((std::string) _opts["order_by"]).data());
 		std::string _part;
 		while (std::getline(lss, _part, ',')) {
 			if (_part.length() > 0) {
@@ -397,8 +397,8 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	if (_page_size != 0) {
 		_return << "links" << zpt::json(
 			{
-				"next", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)),
-				"prev", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
+				"next", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_start_index + _page_size)),
+				"prev", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
 				}
 		);
 	}
@@ -414,13 +414,13 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
-	size_t _page_size = size_t(_opts["page-size"]);
-	size_t _page_start_index = size_t(_opts["page-start-index"]);
+	size_t _page_size = size_t(_opts["page_size"]);
+	size_t _page_start_index = size_t(_opts["page_start_index"]);
 	mongo::BSONObjBuilder _order_b;
 	mongo::BSONObjBuilder _query_b;
 
-	if (_opts["order-by"]->ok()) {
-		std::istringstream lss(((std::string) _opts["order-by"]).data());
+	if (_opts["order_by"]->ok()) {
+		std::istringstream lss(((std::string) _opts["order_by"]).data());
 		std::string _part;
 		while (std::getline(lss, _part, ',')) {
 			if (_part.length() > 0) {
@@ -477,8 +477,8 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	if (_page_size != 0) {
 		_return << "links" << zpt::json(
 			{
-				"next", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_start_index + _page_size)),
-				"prev", (std::string("?page-size=") + std::to_string(_page_size) + std::string("&page-start-index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
+				"next", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_start_index + _page_size)),
+				"prev", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
 			}
 		);
 	}

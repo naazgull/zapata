@@ -971,15 +971,15 @@ auto zpt::pgsql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 		return;
 	}
 
-	if (_in["page-size"]) {
-		_queryr += std::string(" LIMIT ") + std::to_string(int(_in["page-size"]));
+	if (_in["page_size"]) {
+		_queryr += std::string(" LIMIT ") + std::to_string(int(_in["page_size"]));
 	}
-	if (_in["page-start-index"]) {
-		_queryr += std::string(" OFFSET ") + std::to_string(int(_in["page-start-index"]));
+	if (_in["page_start_index"]) {
+		_queryr += std::string(" OFFSET ") + std::to_string(int(_in["page_start_index"]));
 	}
-	if (_in["order-by"]) {
+	if (_in["order_by"]) {
 		_queryr += std::string(" ORDER BY ");
-		std::istringstream lss(((std::string) _in["order-by"]).data());
+		std::istringstream lss(((std::string) _in["order_by"]).data());
 		std::string _part;
 		bool _first = true;
 		while (std::getline(lss, _part, ',')) {
