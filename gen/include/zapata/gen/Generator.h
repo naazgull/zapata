@@ -115,6 +115,7 @@ namespace zpt {
 		virtual auto build_update() -> std::string;
 		virtual auto build_remove() -> std::string;
 		virtual auto build_replace() -> std::string;
+		virtual auto build_validation() -> std::string;
 		virtual auto build_associations_insert(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;

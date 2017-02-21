@@ -172,10 +172,9 @@ auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
 		}
 		catch(zpt::SyntaxErrorException& _e) {
 			_conf = zpt::undefined;
+			assertz(_conf->ok(), std::string("syntax error parsing file: ") + _file + std::string(": ") + _e.what(), 500, 0);
 		}
 		_ifs.close();
-
-		assertz(_conf->ok(), std::string("syntax error parsing file: ") + _file, 500, 0);
 
 		for (auto _new_field : _conf->obj()) {
 			_options << _new_field.first << (_options[_new_field.first] + _new_field.second);
