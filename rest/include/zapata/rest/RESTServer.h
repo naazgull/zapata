@@ -60,7 +60,7 @@ namespace zpt {
 			auto deserialize(std::string _token) -> zpt::json;
 			auto extract(zpt::json _envelope) -> std::string;
 			auto headers(std::string _token) -> zpt::json;
-			auto validate(std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+			auto validate(std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter, zpt::json _roles_needed = zpt::undefined) -> zpt::json;
 		}
 
 		namespace scopes {

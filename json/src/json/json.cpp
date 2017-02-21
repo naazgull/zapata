@@ -80,16 +80,50 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 	std::string _last("");
 	for (int _i = 1; _i != _argc; _i++) {
 		std::string _arg(_argv[_i]);
-		if (_arg.find("--") == 0) {
+		if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 || _arg.find("--force") == 0) {
 			if (_last.length() != 0) {
-				_return << std::string(_last.data()) << true;
+				if (!_return[_last]->ok()) {
+					_return << _last << zpt::json::array();
+				}
+				_return[_last] << true;
+			}
+			_arg.erase(0, 2);
+			if (!_return[_arg]->ok()) {
+				_return << _arg << zpt::json::array();
+			}
+			_return[_arg] << true;
+			_last.assign("");
+		}
+		else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 || _arg.find("-force") == 0) {
+			if (_last.length() != 0) {
+				if (!_return[_last]->ok()) {
+					_return << _last << zpt::json::array();
+				}
+				_return[_last] << true;
+			}
+			_arg.erase(0, 1);
+			if (!_return[_arg]->ok()) {
+				_return << _arg << zpt::json::array();
+			}
+			_return[_arg] << true;
+			_last.assign("");
+		}
+		else if (_arg.find("--") == 0) {
+			if (_last.length() != 0) {
+				if (!_return[_last]->ok()) {
+					_return << _last << zpt::json::array();
+				}
+				_return[_last] << true;
 			}
 			_arg.erase(0, 2);
 			_last.assign(_arg);
 		}
 		else if (_arg.find("-") == 0) {
 			if (_last.length() != 0) {
-				_return << std::string(_last.data()) << true;
+				if (!_return[_last]->ok()) {
+					_return << _last << zpt::json::array();
+				}
+				_return[_last] << true;
 			}
 			_arg.erase(0, 1);
 			_last.assign(_arg);
@@ -97,7 +131,7 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 		else {
 			if (_last.length() != 0) {
 				if (!_return[_last]->ok()) {
-					_return << std::string(_last.data()) << zpt::json::array();
+					_return << _last << zpt::json::array();
 				}
 				_return[_last] << _arg;
 				_last.assign("");
@@ -108,7 +142,10 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
 		}
 	}
 	if (_last.length() != 0) {
-		_return << std::string(_last.data()) << true;
+		if (!_return[_last]->ok()) {
+			_return << _last << zpt::json::array();
+		}
+		_return[_last] << true;
 	}
 	return _return;
 }

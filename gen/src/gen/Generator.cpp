@@ -62,6 +62,7 @@ auto zpt::GeneratorPtr::launch(int argc, char* argv[]) -> int {
 	if (_ifs.is_open()) {
 		zpt::json _conf_options;
 		_ifs >> _conf_options;
+		_conf_options = _conf_options - _options;
 		_options = _conf_options + _options;
 	}
 	zpt::conf::setup(_options);
@@ -166,17 +167,54 @@ auto zpt::Generator::build_data_layer() -> void {
 
 				if (_datum["fields"]->type() == zpt::JSObject){
 					std::string _fields;
-					_fields += std::string("id char(36) not null primary key,\n");
-					_fields += std::string("created timestamp not null,\n");
-					_fields += std::string("updated timestamp not null,\n");
-					_fields += std::string("href varchar(1024) not null");
+					std::string _pk_constraint(",\n\tprimary key(id");
+					int _pks = 0;
+					_fields += std::string("\tid char(36) not null,\n");
+					_fields += std::string("\tcreated timestamp not null,\n");
+					_fields += std::string("\tupdated timestamp not null,\n");
+					_fields += std::string("\thref varchar(1024) not null");
 					for (auto _f : _datum["fields"]->obj()) {
 						if (_f.second["ref"]->ok()) {
 							continue;
 						}
-						_fields += std::string(",\n") + std::string(_f.first) + std::string(" ") + zpt::GenDatum::get_type(_f.second) + std::string(" ") + zpt::GenDatum::get_restrictions(_f.second);
+						_fields += std::string(",\n\t") + std::string(_f.first) + std::string(" ") + zpt::GenDatum::get_type(_f.second) + std::string(" ") + zpt::GenDatum::get_restrictions(_f.second);
+						zpt::json _opts = zpt::gen::get_opts(_f.second);
+						if (_opts["primary-key"]->ok()) {
+							_pk_constraint += std::string(", ") + _f.first;
+							_pks++;
+						}
 					}
+					_pk_constraint += std::string(")");
+					_fields += _pk_constraint;
 					zpt::replace(_datum_sql, "$[datum.fields]", _fields);
+
+					std::string _constraints;
+					std::string _unq_constraint;
+					std::string _idx_constraint;
+					_pk_constraint.assign(std::string("create unique index on ") + std::string(_datum["name"]) + std::string("("));
+					_pks = 0;
+					for (auto _f : _datum["fields"]->obj()) {
+						if (_f.second["ref"]->ok()) {
+							continue;
+						}
+						zpt::json _opts = zpt::gen::get_opts(_f.second);
+						if (_opts["primary-key"]->ok()) {
+							if (_pks != 0) {
+								_pk_constraint += std::string(", ");
+							}
+							_pk_constraint += _f.first;
+							_pks++;
+						}
+						if (_opts["unique"]->ok()) {
+							_unq_constraint += std::string("create unique index on ") + std::string(_datum["name"]) + std::string("(") + _f.first + std::string(");\n");
+						}
+						else if (_opts["index"]->ok() && !_opts["primary-key"]->ok()) {
+							_idx_constraint += std::string("create index on ") + std::string(_datum["name"]) + std::string("(") + _f.first + std::string(");\n");
+						}
+					}
+					_pk_constraint += std::string(");\n");
+					_constraints += (_pks > 1 ? _pk_constraint : std::string("")) + _unq_constraint + _idx_constraint;
+					zpt::replace(_datum_sql, "$[datum.constraints]", _constraints);
 				}
 				
 				auto _found = zpt::Generator::datums.find(std::string(_datum["namespace"]) + std::string("::") + std::string(zpt::r_replace(_datum["name"]->str(), "-", "_")));
@@ -1396,7 +1434,7 @@ auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	else if (_type == "string") {
 		_return += std::string("varchar(1024)");
 	}
-	else if (_type == "token" || _type == "uri" || _type == "email") {
+	else if (_type == "token" || _type == "hash" || _type == "uri" || _type == "email") {
 		_return += std::string("varchar(512)");
 	}
 	else if (_type == "uuid") {
@@ -1417,6 +1455,9 @@ auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	else if (_type == "json") {
 		_return += std::string("json");
 	}
+	else if (_type == "location") {
+		_return += std::string("point");
+	}
 	return _return;
 }
 
@@ -1428,12 +1469,6 @@ auto zpt::GenDatum::get_restrictions(zpt::json _field) -> std::string {
 			_return += std::string(" ");
 		}
 		_return += std::string("not null");
-	}
-	if (_opts["index"]->ok()) {
-		if (_return.length() != 0) {
-			_return += std::string(" ");
-		}
-		_return += std::string("index");
 	}
 	if (_opts["foreign"]->ok()) {
 		if (_return.length() != 0) {
@@ -1950,7 +1985,19 @@ auto zpt::GenResource::build_post() -> std::string {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
 
-		_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+		if (_rel->obj()->size() != 0) {
+			std::string _params;
+			for (auto _param : _rel->obj()) {
+				if (_params.length() != 0) {
+					_params += std::string(", ");
+				}
+				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("zpt::undefined"));
+			}
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+		}
+		else {
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
 	
@@ -2010,7 +2057,19 @@ auto zpt::GenResource::build_put() -> std::string {
 			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
 		}
 
-		_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+		if (_rel->obj()->size() != 0) {
+			std::string _params;
+			for (auto _param : _rel->obj()) {
+				if (_params.length() != 0) {
+					_params += std::string(", ");
+				}
+				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("zpt::undefined"));
+			}
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+		}
+		else {
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
 	
@@ -2150,10 +2209,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("zpt::undefined"));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}

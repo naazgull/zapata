@@ -505,7 +505,8 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			"label", "Validates authorization headers",
 			"args", { zpt::array,
 				{ "type", "string", "label", "the topic pattern" },
-				{ "type", "object", "label", "the message envelope" }
+				{ "type", "object", "label", "the message envelope" },
+				{ "type", "array", "label", "aditional required scope (roles list)", "optional", true }
 			}
 		},
 		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
@@ -513,7 +514,8 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 
 			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[0]));
 			zpt::json _envelope = _bridge->from< zpt::lisp::object >(_args[1]);
-			_bridge->events()->authorize(_topic, _envelope);
+			zpt::json _roles = _bridge->from< zpt::lisp::object >(_args[2]);
+			_bridge->events()->authorize(_topic, _envelope, _roles);
 	
 			return zpt::lisp::object(ecl_make_bool(true));
 		}

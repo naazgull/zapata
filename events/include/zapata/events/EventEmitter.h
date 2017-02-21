@@ -285,7 +285,7 @@ namespace zpt {
 		virtual auto directory() -> zpt::ev::directory;
 		virtual auto directory(zpt::ev::directory _directory) -> void;
 
-		virtual auto authorize(std::string _topic, zpt::json _envelope) -> zpt::json;
+		virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed = zpt::undefined) -> zpt::json;
 		virtual auto lookup(std::string _topic) -> zpt::json;
 		
 		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
@@ -322,7 +322,7 @@ namespace zpt {
 		virtual auto self() const -> zpt::ev::gatekeeper;
 		virtual auto events() -> zpt::ev::emitter;
 		virtual auto events(zpt::ev::emitter _emitter) -> void;
-		virtual auto authorize(std::string _topic, zpt::json _envelope) -> zpt::json;
+		virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed = zpt::undefined) -> zpt::json;
 		
 	private:
 		zpt::json __options;

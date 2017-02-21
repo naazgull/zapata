@@ -40,7 +40,7 @@ using namespace __gnu_cxx;
 namespace zpt {
 	namespace authenticator {
 		
-		class OAuth2 : public zpt::Connector {
+		class OAuth2 {
 		public:
 			OAuth2(zpt::json _options);
 			virtual ~OAuth2();

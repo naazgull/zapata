@@ -57,6 +57,8 @@ SOFTWARE.
 #define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an e-mail address."), z, 0)
 #define assertz_location(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSObject && zpt::test::location(x[y])), std::string("field '") + std::string(y) + std::string("' must be GPS location."), z, 0)
 
+#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string("provided list doesn't have required elements: ") + std::string(y) + std::string("."), z, 0); }
+
 typedef struct epoll_event epoll_event_t;
 
 namespace zpt {
