@@ -1442,7 +1442,7 @@ auto zpt::GenDatum::build_extends_remove_topic() -> std::string {
 			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
 			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
 			
-			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic }) };\n");
+			_return += std::string("_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic }) };\n");
 			_return += _class + std::string("::remove(_topic, _emitter, _identity, _envelope + zpt::json({ \"params\", { \"extension\", true } }));\n");
 		}
 	}

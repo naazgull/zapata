@@ -226,7 +226,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
 }
 
@@ -295,7 +295,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
 }
 
