@@ -37,6 +37,7 @@ do
 	    mkdir -p ../upstream/$distro/
 	    mkdir -p ../packages/$distro/binary-amd64/
 	    rm -rfv ../upstream/$distro/*
+	    rm -rfv ../packages/$distro/binary-amd64/*
 	    for f in *.tar.gz
 	    do
 		fullname=${f%.tar.gz}
@@ -66,9 +67,5 @@ do
 	    done
 	    ;;
     esac
-    if [[ $? != 0 ]]
-    then
-	exit -1
-    fi
     popd
 done
