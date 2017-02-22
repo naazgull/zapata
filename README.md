@@ -56,7 +56,7 @@ b) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
-### 4) MariaDB support ####
+### 4) MariaDB support ###
 
 a) Install Zapata's MariaDB support packages:
 
