@@ -2,6 +2,15 @@
 
 source .packages.rc
 
+distro=$(lsb_release -c -s)
+if [[ "$1" == "package" ]]
+then
+    mkdir -p upstream/$distro/
+    mkdir -p packages/$distro/binary-amd64/
+    rm -rfv upstream/$distro/*
+    rm -rfv packages/$distro/binary-amd64/*
+fi
+
 for package in ${projects[@]}
 do
     pushd $package
@@ -33,11 +42,6 @@ do
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    ;;
 	package)
-	    distro=$(lsb_release -c -s)
-	    mkdir -p ../upstream/$distro/
-	    mkdir -p ../packages/$distro/binary-amd64/
-	    rm -rfv ../upstream/$distro/*
-	    rm -rfv ../packages/$distro/binary-amd64/*
 	    for f in *.tar.gz
 	    do
 		fullname=${f%.tar.gz}
