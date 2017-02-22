@@ -234,7 +234,7 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
 }
 
@@ -305,7 +305,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
 }
 

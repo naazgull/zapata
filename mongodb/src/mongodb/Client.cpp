@@ -192,7 +192,7 @@ auto zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
 }
 
@@ -247,7 +247,7 @@ auto zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zp
 		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
 }
 

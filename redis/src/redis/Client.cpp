@@ -208,7 +208,7 @@ auto zpt::redis::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 		freeReplyObject(_reply);
 	}
 	
-	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && int(_selected["size"]) != 0) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return int(_selected["size"]);
 }
 
@@ -276,7 +276,7 @@ auto zpt::redis::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 		freeReplyObject(_reply);
 	}
 	
-	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
+	if (!bool(_opts["mutated-event"]) && int(_selected["size"]) != 0) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return int(_selected["size"]);
 }
 
