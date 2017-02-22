@@ -110,6 +110,11 @@ namespace zpt {
 		void decode(istream& _in, ostream& _out);
 		void url_encode(string& _out);
 		void url_decode(string& _out);
+
+		auto r_encode(std::string _in) -> std::string;
+		auto r_decode(std::string _in) -> std::string;
+		auto r_url_encode(std::string _in) -> std::string;
+		auto r_url_decode(std::string _in) -> std::string;
 		
 	}
 
@@ -152,7 +157,7 @@ namespace zpt {
 			MD5_Final((unsigned char*)&hash[0], &context);
 		}
 		template<class type>
-		type MD5(const type& input) {
+		type MD5(const type input) {
 			type hash;
 			MD5(input, hash);
 			return hash;
@@ -168,7 +173,7 @@ namespace zpt {
 			SHA1_Final((unsigned char*)&hash[0], &context);
 		}
 		template<class type>
-		type SHA1(const type& input) {
+		type SHA1(const type input) {
 			type hash;
 			SHA1(input, hash);
 			return hash;
@@ -184,7 +189,7 @@ namespace zpt {
 			SHA256_Final((unsigned char*)&hash[0], &context);
 		}
 		template<class type>
-		type SHA256(const type& input) {
+		type SHA256(const type input) {
 			type hash;
 			SHA256(input, hash);
 			return hash;
@@ -200,7 +205,7 @@ namespace zpt {
 			SHA512_Final((unsigned char*)&hash[0], &context);
 		}
 		template<class type>
-		type SHA512(const type& input) {
+		type SHA512(const type input) {
 			type hash;
 			SHA512(input, hash);
 			return hash;

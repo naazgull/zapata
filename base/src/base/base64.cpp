@@ -30,6 +30,12 @@ SOFTWARE.
 using namespace std;
 using namespace __gnu_cxx;
 
+auto zpt::base64::r_encode(std::string _in) -> std::string {
+	std::string _out(_in.data());
+	zpt::base64::encode(_out);
+	return _out;
+}
+
 void zpt::base64::encode(string& _out) {
 	istringstream in;
 	char buff1[3];
@@ -63,6 +69,12 @@ void zpt::base64::encode(string& _out) {
 		while (i++ < 3)
 			_out.push_back('=');
 	}
+}
+
+auto zpt::base64::r_decode(std::string _in) -> std::string {
+	std::string _out(_in.data());
+	zpt::base64::decode(_out);
+	return _out;
 }
 
 void zpt::base64::decode(string& _out) {
@@ -167,6 +179,12 @@ void zpt::base64::decode(istream& _in, ostream& _out) {
 	}
 }
 
+auto zpt::base64::r_url_encode(std::string _in) -> std::string {
+	std::string _out(_in.data());
+	zpt::base64::url_encode(_out);
+	return _out;
+}
+
 void zpt::base64::url_encode(string& _out) {
 	istringstream in;
 	ostringstream out;
@@ -202,6 +220,12 @@ void zpt::base64::url_encode(string& _out) {
 	}
 	out << flush;
 	_out.assign(out.str());
+}
+
+auto zpt::base64::r_url_decode(std::string _in) -> std::string {
+	std::string _out(_in.data());
+	zpt::base64::url_decode(_out);
+	return _out;
 }
 
 void zpt::base64::url_decode(string& _out) {
