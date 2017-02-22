@@ -26,7 +26,7 @@ SOFTWARE.
 #include <ctime>
 #include <memory>
 #include <ossp/uuid++.hh>
-#include <python3.5m/Python.h>
+#include <python3.6m/Python.h>
 
 extern "C" void _zpt_load_() {
 	Py_Initialize();

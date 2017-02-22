@@ -21,8 +21,8 @@
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
 #define HAVE_LIBOSSP_UUID__ 1
 
-/* Define to 1 if you have the `python3.5m' library (-lpython3.5m). */
-#define HAVE_LIBPYTHON3_5M 1
+/* Define to 1 if you have the `python3.6m' library (-lpython3.6m). */
+/* #undef HAVE_LIBPYTHON3_5M */
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1

@@ -445,16 +445,18 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			"label", "Joins a list with a given separator",
 			"args", { zpt::array,
 				{ "type", "list", "label", "the list to be joined" },
-				{ "type", "string", "label", "the separator to join by" }
+				{ "type", "string", "label", "the separator to join by", "optional", true }
 			}
 		},
 		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
 			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 
 			zpt::json _list = _bridge->from< zpt::lisp::object >(_args[0]);
-			std::string _separator = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
-	
-			return _bridge->to< zpt::lisp::object >(zpt::join(_list, _separator));
+			zpt::json _separator = _bridge->from< zpt::lisp::object >(_args[1]);
+			if (_separator->ok()) {
+				return _bridge->to< zpt::lisp::object >(zpt::join(_list, std::string(_separator)));
+			}
+			return _bridge->to< zpt::lisp::object >(zpt::path::join(_list));
 		}
 	);
 	_bridge->deflbd(
