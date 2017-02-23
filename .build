@@ -3,14 +3,6 @@
 source .packages.rc
 
 distro=$(lsb_release -c -s)
-if [[ "$1" == "package" ]]
-then
-    mkdir -p upstream/$distro/
-    mkdir -p packages/$distro/binary-amd64/
-    rm -rfv upstream/$distro/*
-    rm -rfv packages/$distro/binary-amd64/*
-fi
-
 for package in ${projects[@]}
 do
     pushd $package
@@ -42,6 +34,8 @@ do
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    ;;
 	package)
+	    mkdir -p upstream
+	    rm -rfv upstream/*
 	    for f in *.tar.gz
 	    do
 		fullname=${f%.tar.gz}
@@ -50,10 +44,10 @@ do
 		no_revision_prefix=${prefix%-*}
 		version=${no_revision_prefix##*-}
 		no_version_prefix=${no_revision_prefix%-*}
-		orig=../upstream/$distro/$no_version_prefix\_$version.orig.tar.gz
+		orig=upstream/$no_version_prefix\_$version.orig.tar.gz
 		echo "processing $orig"
 		cp -rf $f $orig
-		pushd ../upstream/$distro
+		pushd upstream/
 		tar xvzf $no_version_prefix\_$version.orig.tar.gz
 		pushd $prefix/
 		debuild -us -uc
@@ -61,7 +55,7 @@ do
 		then
 		    exit -1
 		fi
-		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../../packages/$distro/binary-amd64/
+		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../
 		if [[ $? != 0 ]]
 		then
 		    exit -1
@@ -69,6 +63,7 @@ do
 		popd
 		popd
 	    done
+	    rm -rfv upstream/
 	    ;;
     esac
     popd
