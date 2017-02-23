@@ -22,7 +22,7 @@
 #define HAVE_LIBOSSP_UUID__ 1
 
 /* Define to 1 if you have the `python3.6m' library (-lpython3.6m). */
-/* #undef HAVE_LIBPYTHON3_5M */
+#define HAVE_LIBPYTHON3_6M 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
@@ -76,7 +76,7 @@
 #define PACKAGE_NAME "zapata-python"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-python 0.9.5-1yakkety14"
+#define PACKAGE_STRING "zapata-python 0.9.5-1yakkety15"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-python"
@@ -85,10 +85,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.5-1yakkety14"
+#define PACKAGE_VERSION "0.9.5-1yakkety15"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.5-1yakkety14"
+#define VERSION "0.9.5-1yakkety15"

@@ -133,5 +133,7 @@ namespace zpt {
 
 	namespace test {
 		auto location(zpt::json _location) -> bool;
+		auto timestamp(zpt::json _timestamp) -> bool;
 	}
+
 }

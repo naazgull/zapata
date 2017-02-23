@@ -1473,6 +1473,17 @@ namespace zpt {
 		 */
 		JSONPtr clone();
 
+		virtual auto is_object() -> bool;
+		virtual auto is_array() -> bool;
+		virtual auto is_string() -> bool;
+		virtual auto is_integer() -> bool;
+		virtual auto is_double() -> bool;
+		virtual auto is_number() -> bool;
+		virtual auto is_bool() -> bool;
+		virtual auto is_date() -> bool;
+		virtual auto is_lambda() -> bool;
+		virtual auto is_nil() -> bool;
+		
 		virtual JSONObj& obj();
 		virtual JSONArr& arr();
 		virtual std::string str();

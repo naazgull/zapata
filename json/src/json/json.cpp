@@ -279,3 +279,23 @@ auto zpt::uri::query::parse(std::string _query) -> zpt::json {
 auto zpt::test::location(zpt::json _location) -> bool {
 	return _location->type() == zpt::JSObject && _location["longitude"]->type() == zpt::JSDouble && _location["latitude"]->type() == zpt::JSDouble;
 }
+
+auto zpt::test::timestamp(zpt::json _timestamp) -> bool {
+	if (_timestamp->type() == zpt::JSDate) {
+		return true;
+	}
+	if (_timestamp->type() != zpt::JSString) {
+		return false;
+	}
+	static const std::regex _timestamp_rgx(
+		"^([0-9]{4})-"
+		"([0-9]{2})-"
+		"([0-9]{2})T"
+		"([0-9]{2}):"
+		"([0-9]{2}):"
+		"([0-9]{2})."
+		"([0-9]{3})([+-])"
+		"([0-9]{4})$"
+	);
+	return std::regex_match(_timestamp->str(), _timestamp_rgx);
+}

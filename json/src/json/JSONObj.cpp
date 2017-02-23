@@ -544,6 +544,46 @@ void zpt::JSONElementT::parent(JSONElementT* _parent) {
 	this->__parent = _parent;
 }
 
+auto zpt::JSONElementT::is_object() -> bool {
+	return this->__target.__type == zpt::JSObject;
+}
+
+auto zpt::JSONElementT::is_array() -> bool {
+	return this->__target.__type == zpt::JSArray;
+}
+
+auto zpt::JSONElementT::is_string() -> bool {
+	return this->__target.__type == zpt::JSString;
+}
+
+auto zpt::JSONElementT::is_integer() -> bool {
+	return this->__target.__type == zpt::JSInteger;
+}
+
+auto zpt::JSONElementT::is_double() -> bool {
+	return this->__target.__type == zpt::JSDouble;
+}
+
+auto zpt::JSONElementT::is_number() -> bool {
+	return this->__target.__type == zpt::JSInteger ||  this->__target.__type == zpt::JSDouble;
+}
+
+auto zpt::JSONElementT::is_bool() -> bool {
+	return this->__target.__type == zpt::JSBoolean;
+}
+
+auto zpt::JSONElementT::is_date() -> bool {
+	return this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString;
+}
+
+auto zpt::JSONElementT::is_lambda() -> bool {
+	return this->__target.__type == zpt::JSLambda;
+}
+
+auto zpt::JSONElementT::is_nil() -> bool {
+	return this->__target.__type == zpt::JSNil;
+}
+
 zpt::JSONObj& zpt::JSONElementT::obj() {
 	assertz(this->__target.__type == zpt::JSObject, std::string("this element is not of type JSObject: ") + this->stringify(), 0, 0);
 	return this->__target.__object;

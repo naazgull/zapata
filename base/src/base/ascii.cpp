@@ -169,3 +169,8 @@ auto zpt::test::email(std::string _email) -> bool {
 	);
 	return std::regex_match(_email, _email_rgx);
 }
+
+auto zpt::test::regex(std::string _target, std::string _regex) -> bool {
+	std::regex _rgx(_regex);
+	return std::regex_match(_target, _rgx);
+}

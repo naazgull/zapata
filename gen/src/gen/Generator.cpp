@@ -101,9 +101,9 @@ auto zpt::Generator::load() -> void {
 		if (_spec["resources"]->type() == zpt::JSArray) {
 			for (auto _resource : _spec["resources"]->arr()) {
 				_resource << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
-				zpt::Generator::resources.insert(std::make_pair(std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]), zpt::gen::resource(new zpt::GenResource(_resource, this->__options))));
+				zpt::Generator::resources.insert(std::make_pair(std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]), zpt::gen::resource(new zpt::GenResource(_resource, this->__options))));
 				if (_resource["datum"]["href"]->ok()) {
-					zpt::Generator::alias.insert(std::make_pair(zpt::gen::url_pattern_to_regexp(std::string(_resource["topic"])), zpt::gen::url_pattern_to_regexp(std::string(_resource["datum"]["href"]))));
+					zpt::Generator::alias.insert(std::make_pair(zpt::gen::url_pattern_to_regexp(_resource["topic"]), zpt::gen::url_pattern_to_regexp(_resource["datum"]["href"])));
 				}
 			}
 		}
@@ -403,7 +403,7 @@ auto zpt::Generator::build_container() -> void {
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				_handlers_built = true;
 				for (auto _resource : _spec["resources"]->arr()) {
-					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
 
 					std::string _include(std::string(this->__options["resource-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".h"));
 					zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
@@ -469,7 +469,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				for (auto _resource : _spec["resources"]->arr()) {
-					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
 
 					std::string _include = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/") + std::string(_resource["type"]) + std::string("s/") + std::string(_resource["name"]) + std::string(".lisp");
 					zpt::replace(_include, std::string(this->__options["prefix-scripts"][0]), "");
@@ -525,7 +525,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _includes;
 			if (_spec["resources"]->type() == zpt::JSArray) {
 				for (auto _resource : _spec["resources"]->arr()) {
-					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]);
+					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
 
 					std::string _include = std::string(zpt::r_replace(_spec["name"]->str(), "-", "_")) + std::string(" import ") + std::string(_resource["type"]) + std::string("s.") + std::string(zpt::r_replace(_resource["name"]->str(), "-", "_")) + std::string("");
 					if (_include.front() == '/') {
@@ -749,7 +749,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_h, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
-		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["name"]->str()));
+		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["name"]));
 		std::string _mutation;
 		bool _first = true;
 		_mutation.assign(this->build_insert());
@@ -787,7 +787,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 			}
 
 			std::string _mutation_on(_on.data());
-			std::string _topic = zpt::gen::url_pattern_to_regexp(_field.second["ref"]->str());
+			std::string _topic = zpt::gen::url_pattern_to_regexp(_field.second["ref"]);
 			auto _found = zpt::Generator::alias.find(_topic);
 			_topic = (_found != zpt::Generator::alias.end() ? _found->second : _topic);
 			zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
@@ -1912,8 +1912,22 @@ auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std:
 	
 	_return += this->build_validation(_perf);
 	_return += std::string("\nzpt::json _t_split = zpt::split(_topic, \"/\");\n");
-	_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
-	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(\"") + std::string(this->__spec["topic"]) + std::string("\", _envelope, _emitter);\n");
+	if (this->__spec["topic"]->is_array()) {
+		_return += std::string("zpt::json _identity;\n");
+		_return += zpt::gen::url_pattern_to_var_decl(this->__spec["topic"]);
+		bool _first = true;;
+		for (auto _topic : this->__spec["topic"]->arr()) {
+			_return += (!_first ? std::string("else ") : std::string("")) + std::string("if (zpt::test::regex(_topic, \"") + zpt::gen::url_pattern_to_regexp(_topic) + std::string("\")) {\n");
+			_return += zpt::r_replace(zpt::gen::url_pattern_to_vars(std::string(_topic)), "zpt::json ", "");
+			_return += std::string("_identity = zpt::rest::authorization::validate(\"") + std::string(_topic) + std::string("\", _envelope, _emitter);\n");
+			_return += std::string("}\n");
+			_first = false;
+		}
+	}
+	else {
+		_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
+		_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(\"") + std::string(this->__spec["topic"]) + std::string("\", _envelope, _emitter);\n");
+	}
 	_return += std::string("\nzpt::json _r_body;\n");
 	_return += std::string("/* ---> YOUR CODE HERE <---*/\n");
 	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->type() == zpt::JSArray) {
@@ -1922,7 +1936,7 @@ auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std:
 		
 		for (auto _link : this->__spec["links"]->arr()) {
 			std::string _topic;
-			zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(_link["ref"]));		
+			zpt::json _url_params = zpt::gen::url_pattern_to_params(_link["ref"]);		
 			zpt::json _splited = zpt::split(std::string(_link["ref"]), "/");
 			for (auto _part : _splited->arr()) {
 				_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -1966,7 +1980,7 @@ auto zpt::GenResource::build_get() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -1980,7 +1994,7 @@ auto zpt::GenResource::build_get() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2038,7 +2052,7 @@ auto zpt::GenResource::build_post() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -2052,7 +2066,7 @@ auto zpt::GenResource::build_post() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2110,7 +2124,7 @@ auto zpt::GenResource::build_put() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -2124,7 +2138,7 @@ auto zpt::GenResource::build_put() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2182,7 +2196,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -2196,7 +2210,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2254,7 +2268,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -2268,7 +2282,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2326,7 +2340,7 @@ auto zpt::GenResource::build_head() -> std::string {
 			std::string _topic_transform;
 			if (this->__spec["datum"]["href"]->ok()) {
 				std::string _topic;
-				zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
 					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -2340,7 +2354,7 @@ auto zpt::GenResource::build_head() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2526,7 +2540,7 @@ auto zpt::GenResource::build_lisp_get() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2583,7 +2597,7 @@ auto zpt::GenResource::build_lisp_post() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2640,7 +2654,7 @@ auto zpt::GenResource::build_lisp_put() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2697,7 +2711,7 @@ auto zpt::GenResource::build_lisp_patch() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2754,7 +2768,7 @@ auto zpt::GenResource::build_lisp_delete() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -2803,7 +2817,7 @@ auto zpt::GenResource::build_lisp_head() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_lisp(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3019,7 +3033,7 @@ auto zpt::GenResource::build_python_handler_header(zpt::ev::performative _perf) 
 		
 		for (auto _link : this->__spec["links"]->arr()) {
 			std::string _topic;
-			zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(_link["ref"]));		
+			zpt::json _url_params = zpt::gen::url_pattern_to_params(_link["ref"]);	
 			zpt::json _splited = zpt::split(std::string(_link["ref"]), "/");
 			for (auto _part : _splited->arr()) {
 				_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
@@ -3067,7 +3081,7 @@ auto zpt::GenResource::build_python_get() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3129,7 +3143,7 @@ auto zpt::GenResource::build_python_post() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3179,7 +3193,7 @@ auto zpt::GenResource::build_python_put() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3229,7 +3243,7 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3291,7 +3305,7 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3353,7 +3367,7 @@ auto zpt::GenResource::build_python_head() -> std::string {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(std::string(this->__spec["topic"]));
+		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
@@ -3401,15 +3415,54 @@ auto zpt::GenResource::build_mutations() -> std::string {
 	return _return;
 }
 
-auto zpt::gen::url_pattern_to_regexp(std::string _url) -> std::string {
-	zpt::json _splited = zpt::split(_url, "/");
-	std::string _return("^");
+auto zpt::gen::url_pattern_to_regexp(zpt::json _url) -> std::string {
+	zpt::json _url_list;
+	if (!_url->is_array()) {
+		_url_list = { zpt::array, _url };
+	}
+	else {
+		_url_list = _url;
+	}
+	std::string _return;
+	for (auto _u : _url_list->arr()) {
+		if (_return.length() != 0) {
+			_return += "|";
+		}
+		_return += std::string("^");		
 
-	for (auto _part : _splited->arr()) {
-		_return += std::string("/") + (_part->str().find("{") != std::string::npos ? "([^/]+)" : _part->str());
+		zpt::json _splited = zpt::split(std::string(_u), "/");
+		for (auto _part : _splited->arr()) {
+			_return += std::string("/") + (_part->str().find("{") != std::string::npos ? "([^/]+)" : _part->str());
+		}
+		
+		_return += std::string("$");
+	}
+	return _return;
+}
+
+auto zpt::gen::url_pattern_to_var_decl(zpt::json _url) -> std::string {
+	zpt::json _url_list;
+	if (!_url->is_array()) {
+		_url_list = { zpt::array, _url };
+	}
+	else {
+		_url_list = _url;
+	}
+	std::map< std::string, std::string > _defined;
+	std::string _return;
+	for (auto _u : _url_list->arr()) {
+		zpt::json _splited = zpt::split(_u, "/");
+		for (auto _part : _splited->arr()) {
+			if (_part->str().find("{") != std::string::npos) {
+				std::string _name = std::string("_tv_") + _part->str().substr(1, _part->str().length() - 2);
+				if (_defined.find(_name) == _defined.end()) {
+					_return += std::string("zpt::json ") + _name + std::string(";\n");
+					_defined.insert(std::make_pair(_name, _name));
+				}
+			}
+		}
 	}
 
-	_return += std::string("$");
 	return _return;
 }
 
@@ -3423,6 +3476,32 @@ auto zpt::gen::url_pattern_to_vars(std::string _url) -> std::string {
 			_return += std::string("zpt::json _tv_") + _part->str().substr(1, _part->str().length() - 2) + std::string(" = _t_split[") + std::to_string(_i) + std::string("];\n");
 		}
 		_i++;
+	}
+
+	return _return;
+}
+
+auto zpt::gen::url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string {
+	zpt::json _url_list;
+	if (!_url->is_array()) {
+		_url_list = { zpt::array, _url };
+	}
+	else {
+		_url_list = _url;
+	}
+	std::map< std::string, std::string > _defined;
+	std::string _return;
+	for (auto _u : _url_list->arr()) {
+		zpt::json _splited = zpt::split(_u, "/");
+		for (auto _part : _splited->arr()) {
+			if (_part->str().find("{") != std::string::npos) {
+				std::string _name = std::string("_tv_") + _part->str().substr(1, _part->str().length() - 2);
+				if (_defined.find(_name) == _defined.end()) {
+					_return += std::string("zpt::json ") + _name + std::string(";\n");
+					_defined.insert(std::make_pair(_name, _name));
+				}
+			}
+		}
 	}
 
 	return _return;
@@ -3442,33 +3521,49 @@ auto zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 	return _return;
 }
 
-auto zpt::gen::url_pattern_to_params(std::string _url) -> zpt::json {
-	zpt::json _splited = zpt::split(_url, "/");
-	zpt::json _return = zpt::json::object();
-
-	short _i = 0;
-	for (auto _part : _splited->arr()) {
-		if (_part->str().find("{") != std::string::npos) {
-			_return << _part->str() << (std::string("_tv_") + _part->str().substr(1, _part->str().length() - 2));
-		}
-		_i++;
+auto zpt::gen::url_pattern_to_params(zpt::json _url) -> zpt::json {
+	zpt::json _url_list;
+	if (_url->is_array()) {
+		_url_list = _url;
 	}
+	else {
+		_url_list = { zpt::array, _url };
+	}
+	zpt::json _return = zpt::json::object();
+	for (auto _u : _url_list->arr()) {
+		zpt::json _splited = zpt::split(std::string(_u), "/");
 
+		short _i = 0;
+		for (auto _part : _splited->arr()) {
+			if (_part->str().find("{") != std::string::npos) {
+				_return << _part->str() << (std::string("_tv_") + _part->str().substr(1, _part->str().length() - 2));
+			}
+			_i++;
+		}
+	}
 	return _return;
 }
 
-auto zpt::gen::url_pattern_to_params_lisp(std::string _url) -> zpt::json {
-	zpt::json _splited = zpt::split(_url, "/");
-	zpt::json _return = zpt::json::object();
-
-	short _i = 0;
-	for (auto _part : _splited->arr()) {
-		if (_part->str().find("{") != std::string::npos) {
-			_return << _part->str() << (std::string("tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-"));
-		}
-		_i++;
+auto zpt::gen::url_pattern_to_params_lisp(zpt::json _url) -> zpt::json {
+	zpt::json _url_list;
+	if (_url->is_array()) {
+		_url_list = _url;
 	}
+	else {
+		_url_list = { zpt::array, _url };
+	}
+	zpt::json _return = zpt::json::object();
+	for (auto _u : _url_list->arr()) {
+		zpt::json _splited = zpt::split(std::string(_u), "/");
 
+		short _i = 0;
+		for (auto _part : _splited->arr()) {
+			if (_part->str().find("{") != std::string::npos) {
+				_return << _part->str() << (std::string("tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-"));
+			}
+			_i++;
+		}
+	}
 	return _return;
 }
 
