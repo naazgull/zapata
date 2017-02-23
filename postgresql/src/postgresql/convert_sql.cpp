@@ -1001,6 +1001,59 @@ auto zpt::pgsql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	}
 }
 
+auto zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
+	std::string _columns;
+	if (_opts["fields"]->ok()) {
+		if (!_document->ok()) {
+			for (auto _c : _opts["fields"]->arr()){
+				if (_columns.length() != 0) {
+					_columns += std::string(",");
+				}
+				_columns += zpt::pgsql::escape_name(std::string(_c));
+			}			
+		}
+		else {
+			for (auto _c : _opts["fields"]->arr()){
+				if (!_document[_c->str()]->ok()) {
+					continue;
+				}
+				if (_columns.length() != 0) {
+					_columns += std::string(",");
+				}
+				_columns += zpt::pgsql::escape_name(_c.first);
+			}			
+		}
+	}
+	else {
+		if (!_document->ok()) {
+			return "*";
+		}
+		for (auto _c : _document->obj()){
+			if (_columns.length() != 0) {
+				_columns += std::string(",");
+			}
+			_columns += zpt::pgsql::escape_name(_c.first);
+		}
+	}
+	return _columns;
+}
+
+auto zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
+	std::string _values;
+	if (_opts["fields"]->ok()) {
+	}
+	else {
+		for (auto _c : _document->obj()){
+			if (_values.length() != 0) {
+				_values += std::string(",");
+			}
+			std::string _val = zpt::pgsql::escape(_c.second);
+			_values += _val;
+		}
+	}
+	return _values
+}
+
 auto zpt::pgsql::escape_name(std::string _in) -> std::string {
 	std::string _out(_in);
 	//_out.insert(0, "\"");
@@ -1012,12 +1065,9 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 	std::string _out;
 	
 	switch (_in->type()) {
-		case zpt::JSObject: {
-			_out.assign(std::string("'") + std::string(_in) + std::string("'"));
-			break;
-		}
+		case zpt::JSObject:
 		case zpt::JSArray: {
-			_out.assign(std::string("'") + std::string(_in) + std::string("'"));
+			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in)));
 			break;
 		}
 		case zpt::JSString: {

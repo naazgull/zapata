@@ -50,6 +50,8 @@ namespace zpt {
 		auto fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json;
 		auto get_query(zpt::json _in, std::string&  _queryr) -> void;
 		auto get_opts(zpt::json _in, std::string&  _queryr) -> void;
+		auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
+		auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
 		auto escape(std::string _to_espace) -> std::string;
 
 	}
