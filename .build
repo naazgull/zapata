@@ -25,6 +25,7 @@ do
 	    sudo make uninstall
 	    ;;
 	distcheck)
+	    rm -rfv *.tar.gz
 	    sudo make distcheck
 	    ;;
 	config)
@@ -34,6 +35,7 @@ do
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    ;;
 	package)
+	    rm -rfv *.deb
 	    mkdir -p upstream
 	    rm -rfv upstream/*
 	    for f in *.tar.gz
