@@ -207,7 +207,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":route "
 		":split "
 		":join "
-		":merge"
+		":merge "
 		":topic-var "
 		":authorize "
 		":authorization-headers "
