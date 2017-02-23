@@ -73,7 +73,7 @@ auto zpt::lisp::Bridge::eval(std::string _call) -> zpt::lisp::object {
 }
 
 auto zpt::lisp::Bridge::initialize() -> void {
-	this->eval(
+	/*this->eval(
 		"(defmacro json (&rest args)\n"
 		"(let ((temphash (gensym))\n"
 		"(tempkey (gensym))\n"
@@ -82,8 +82,18 @@ auto zpt::lisp::Bridge::initialize() -> void {
 		"(loop for (,tempkey ,tempval) on ',args by #'cddr do\n"
 		"(setf (gethash (eval ,tempkey) ,temphash) (eval ,tempval)))\n"
 		",temphash)))"
+		);*/
+
+	this->eval(
+		"	(defmacro json (&rest args)"
+		"		(let* ((temphash (gensym))"
+		"			(size (/ (length args) 2))"
+		"			(forms (loop for (key val) on args by #'cddr"
+		"                  collect `(setf (gethash ,key ,temphash) ,val))))"
+		"    `(let ((,temphash (make-hash-table :test #'equal :size ,size)))"
+		"			,@forms"
+		"			,temphash)))"
 	);
-	
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
 			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
@@ -381,7 +391,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 					std::make_pair(_performative,
 						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 							zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-							zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
+							zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
 							return _bridge->from< zpt::lisp::object >(_ret);
 						}
 					)
@@ -412,7 +422,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
 			zpt::json _payload = _bridge->from< zpt::lisp::object >(_args[2]);
 			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[3]);
-	
+
 			zpt::json _result = _bridge->events()->route(_performative, _topic, _payload, _opts);
 			return _bridge->to< zpt::lisp::object >(_result);
 		}
@@ -517,9 +527,9 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[0]));
 			zpt::json _envelope = _bridge->from< zpt::lisp::object >(_args[1]);
 			zpt::json _roles = _bridge->from< zpt::lisp::object >(_args[2]);
-			_bridge->events()->authorize(_topic, _envelope, _roles);
-	
-			return zpt::lisp::object(ecl_make_bool(true));
+			zpt::json _identity = _bridge->events()->authorize(_topic, _envelope, _roles);
+
+			return _bridge->to< zpt::lisp::object >(_identity);
 		}
 	);
 	_bridge->deflbd(

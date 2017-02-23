@@ -374,9 +374,9 @@ auto zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
 	std::string _ret;
 	switch (_json->type()) {
 		case zpt::JSObject : {
-			_ret += std::string("(create-hash ");
+			_ret += std::string("(json ");
 			for (auto _o : _json->obj()) {
-				_ret += std::string(" (cons \"") + _o.first + std::string("\" ") + zpt::lisp::to_lisp_string(_o.second) + std::string(") ");
+				_ret += std::string(" \"") + _o.first + std::string("\" ") + zpt::lisp::to_lisp_string(_o.second);
 			}
 			_ret += std::string(")");
 			break;
