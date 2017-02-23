@@ -150,7 +150,7 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -185,7 +185,7 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -258,7 +258,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -316,7 +316,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	zpt::json _splited = zpt::split(_href, "/");
-	std::string _expression = std::string("DELETE FROM ") +  _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	std::string _expression = std::string("DELETE FROM ") +  _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -337,7 +337,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
 	for (auto _record : _selected["elements"]->arr()) {
-		std::string _expression = std::string("DELETE FROM ") + _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_record["id"]->str());	
+		std::string _expression = std::string("DELETE FROM ") + _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_record["id"]);	
 		try {
 			{ std::lock_guard< std::mutex > _lock(this->__mtx);
 				std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
@@ -354,7 +354,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 auto zpt::mariadb::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back()->str());
+	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 	return this->query(_collection, _expression, _opts)[0];
 }
 

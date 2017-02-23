@@ -247,6 +247,80 @@ auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	}
 }
 
-auto zpt::mariadb::escape(std::string _in) -> std::string {
+auto zpt::mariadb::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
+	std::string _columns;
+	if (_opts["fields"]->ok()) {
+		if (!_document->ok()) {
+			for (auto _c : _opts["fields"]->arr()){
+				if (_columns.length() != 0) {
+					_columns += std::string(",");
+				}
+				_columns += zpt::mariadb::escape_name(std::string(_c));
+			}			
+		}
+		else {
+			for (auto _c : _opts["fields"]->arr()){
+				if (!_document[std::string(_c)]->ok()) {
+					continue;
+				}
+				if (_columns.length() != 0) {
+					_columns += std::string(",");
+				}
+				_columns += zpt::mariadb::escape_name(std::string(_c));
+			}			
+		}
+	}
+	else {
+		if (!_document->ok()) {
+			return "*";
+		}
+		for (auto _c : _document->obj()){
+			if (_columns.length() != 0) {
+				_columns += std::string(",");
+			}
+			_columns += zpt::mariadb::escape_name(_c.first);
+		}
+	}
+	return _columns;
+}
+
+auto zpt::mariadb::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
+	std::string _values;
+	if (_opts["fields"]->ok()) {
+		if (!_document->ok()) {
+			return "";
+		}
+		else {
+			for (auto _c : _opts["fields"]->arr()){
+				if (!_document[std::string(_c)]->ok()) {
+					continue;
+				}
+				if (_values.length() != 0) {
+					_values += std::string(",");
+				}
+				_values += zpt::mariadb::escape(_document[std::string(_c)]);
+			}			
+		}
+	}
+	else {
+		if (!_document->ok()) {
+			return "";
+		}
+		for (auto _c : _document->obj()){
+			if (_values.length() != 0) {
+				_values += std::string(",");
+			}
+			std::string _val = zpt::mariadb::escape(_c.second);
+			_values += _val;
+		}
+	}
+	return _values;
+}
+
+auto zpt::mariadb::escape_name(std::string _in) -> std::string {
 	return _in;
+}
+
+auto zpt::mariadb::escape(zpt::json _in) -> std::string {
+	return std::string(_in);
 }

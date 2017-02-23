@@ -97,20 +97,8 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 	std::string _expression("INSERT INTO ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" (");
-	std::string _columns;
-	std::string _values;
-	for (auto _c : _document->obj()){
-		if (_columns.length() != 0) {
-			_columns += std::string(",");
-		}
-		_columns += zpt::pgsql::escape_name(_c.first);
-		if (_values.length() != 0) {
-			_values += std::string(",");
-		}
-		std::string _val = zpt::pgsql::escape(_c.second);
-		_values += _val;
-	}
-
+	std::string _columns = zpt::pgsql::get_column_names(_document, _opts);
+	std::string _values = zpt::pgsql::get_column_values(_document, _opts);
 	_expression += _columns + std::string(") VALUES (") + _values + (")");
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -134,14 +122,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	std::string _expression("UPDATE ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" SET ");
-	std::string _sets;
-	for (auto _c : _document->obj()){
-		if (_sets.length() != 0) {
-			_sets += std::string(",");
-		}
-		std::string _val = zpt::pgsql::escape(_c.second);
-		_sets += zpt::pgsql::escape_name(_c.first) + std::string("=") + _val;
-	}
+	std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
@@ -167,14 +148,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	std::string _expression("UPDATE ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" SET ");
-	std::string _sets;
-	for (auto _c : _document->obj()){
-		if (_sets.length() != 0) {
-			_sets += std::string(",");
-		}
-		std::string _val = zpt::pgsql::escape(_c.second);
-		_sets += zpt::pgsql::escape_name(_c.first) + std::string("=") + _val;
-	}
+	std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
@@ -200,14 +174,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 	std::string _expression("UPDATE ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" SET ");
-	std::string _sets;
-	for (auto _c : _document->obj()){
-		if (_sets.length() != 0) {
-			_sets += std::string(",");
-		}
-		std::string _val = zpt::pgsql::escape(_c.second);
-		_sets += zpt::pgsql::escape_name(_c.first) + std::string("=") + _val;
-	}
+	std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
 	_expression += _sets;
 
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
@@ -238,13 +205,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	std::string _expression("UPDATE ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" SET ");
-	std::string _sets;
-	for (auto _c : _document->obj()){
-		if (_sets.length() != 0) {
-			_sets += std::string(",");
-		}
-		_sets += zpt::pgsql::escape_name(_c.first) + std::string("=NULL");
-	}
+	std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
@@ -270,13 +231,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 	std::string _expression("UPDATE ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_expression += std::string(" SET ");
-	std::string _sets;
-	for (auto _c : _document->obj()){
-		if (_sets.length() != 0) {
-			_sets += std::string(",");
-		}
-		_sets += zpt::pgsql::escape_name(_c.first) + std::string("=NULL");
-	}
+	std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
 	_expression += _sets;
 
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
@@ -343,7 +298,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 }
 
 auto zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
-	std::string _expression("SELECT * FROM ");
+	std::string _expression("SELECT ");
+	_expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
+	_expression += std::string(" FROM ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
@@ -366,7 +323,9 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
-	std::string _expression("SELECT * FROM ");
+	std::string _expression("SELECT ");
+	_expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
+	_expression += std::string(" FROM ");
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_count_expression += zpt::pgsql::escape_name(_collection);
@@ -386,7 +345,9 @@ auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 }
 
 auto zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
-	std::string _expression("SELECT * FROM ");
+	std::string _expression("SELECT ");
+	_expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
+	_expression += std::string(" FROM ");
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_count_expression += zpt::pgsql::escape_name(_collection);

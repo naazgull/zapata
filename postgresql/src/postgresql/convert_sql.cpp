@@ -1014,13 +1014,13 @@ auto zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::
 		}
 		else {
 			for (auto _c : _opts["fields"]->arr()){
-				if (!_document[_c->str()]->ok()) {
+				if (!_document[std::string(_c)]->ok()) {
 					continue;
 				}
 				if (_columns.length() != 0) {
 					_columns += std::string(",");
 				}
-				_columns += zpt::pgsql::escape_name(_c.first);
+				_columns += zpt::pgsql::escape_name(std::string(_c));
 			}			
 		}
 	}
@@ -1040,19 +1040,68 @@ auto zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::
 
 auto zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
 	std::string _values;
-	if (_opts["fields"]->ok()) {
+	if (_opts["fields"]->is_array()) {
+		if (!_document->ok()) {
+			return "";
+		}
+		else {
+			for (auto _c : _opts["fields"]->arr()){
+				if (!_document[std::string(_c)]->ok()) {
+					continue;
+				}
+				if (_values.length() != 0) {
+					_values += std::string(",");
+				}
+				_values += zpt::pgsql::escape(_document[std::string(_c)]);
+			}			
+		}
 	}
 	else {
+		if (!_document->ok()) {
+			return "";
+		}
 		for (auto _c : _document->obj()){
 			if (_values.length() != 0) {
 				_values += std::string(",");
 			}
-			std::string _val = zpt::pgsql::escape(_c.second);
-			_values += _val;
+			_values += zpt::pgsql::escape(_c.second);
 		}
 	}
-	return _values
+	return _values;
 }
+
+auto zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string {
+	std::string _values;
+	if (_opts["fields"]->is_array()) {
+		if (!_document->ok()) {
+			return "";
+		}
+		else {
+			for (auto _c : _opts["fields"]->arr()){
+				if (!_document[std::string(_c)]->ok()) {
+					continue;
+				}
+				if (_values.length() != 0) {
+					_values += std::string(",");
+				}
+				_values += zpt::pgsql::escape_name(std::string(_c)) + std::string("=") + zpt::pgsql::escape(_document[std::string(_c)]);
+			}			
+		}
+	}
+	else {
+		if (!_document->ok()) {
+			return "";
+		}
+		for (auto _c : _document->obj()){
+			if (_values.length() != 0) {
+				_values += std::string(",");
+			}
+			_values += zpt::pgsql::escape_name(_c.first) + std::string("=") + zpt::pgsql::escape(_c.second);
+		}
+	}
+	return _values;
+}
+
 
 auto zpt::pgsql::escape_name(std::string _in) -> std::string {
 	std::string _out(_in);
@@ -1067,7 +1116,7 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 	switch (_in->type()) {
 		case zpt::JSObject:
 		case zpt::JSArray: {
-			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in)));
+			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in))));
 			break;
 		}
 		case zpt::JSString: {

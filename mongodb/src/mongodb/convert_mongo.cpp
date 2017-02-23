@@ -459,3 +459,14 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 		_queryr.append(key, value);
 	}
 }
+
+auto zpt::mongodb::get_fields(zpt::json _opts) -> zpt::json {
+	zpt::json _return;
+	if (_opts["fields"]->is_array()) {
+		_return = zpt::json::object();
+		for (auto _f : _opts["fields"]->arr()) {
+			_return << std::string(_f) << true;
+		}
+	}
+	return _return;
+}

@@ -11,31 +11,67 @@ do
     case "$1" in
 	j4)
 	    make -j4 && sudo make install
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	all)
 	    make && sudo make install
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	clean)
 	    make clean
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	install)
 	    sudo make install
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	uninstall)
 	    sudo make uninstall
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	distcheck)
 	    sudo make distcheck
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	distclean)
 	    rm -rfv *.tar.gz
 	    sudo make distclean
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	config)
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	debug)
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
 	package)
 	    rm -rfv *.deb
@@ -61,10 +97,6 @@ do
 		    exit -1
 		fi
 		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../
-		if [[ $? != 0 ]]
-		then
-		    exit -1
-		fi
 		popd
 		popd
 	    done

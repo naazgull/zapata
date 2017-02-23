@@ -57,7 +57,9 @@ namespace zpt {
 		void tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix);
 
 		void get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr);
+		auto get_fields(zpt::json _opts) -> zpt::json;
 
 		float valid_mongo_version();
+
 	}
 }

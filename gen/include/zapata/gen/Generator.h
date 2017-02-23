@@ -55,6 +55,7 @@ namespace zpt {
 		auto url_pattern_to_params_lisp(zpt::json _url) -> zpt::json;
 
 		auto get_opts(zpt::json _field) -> zpt::json;
+		auto get_fields_array(zpt::json _fields) -> std::string;
 	}
 
 	namespace conf {
