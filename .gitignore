@@ -3,6 +3,7 @@
 *.la
 *.so
 *.so.*
+*.deb
 autom4te.cache
 .sublime-project
 .sublime-project.sublime-workspace
