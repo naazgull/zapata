@@ -25,8 +25,11 @@ do
 	    sudo make uninstall
 	    ;;
 	distcheck)
-	    rm -rfv *.tar.gz
 	    sudo make distcheck
+	    ;;
+	distclean)
+	    rm -rfv *.tar.gz
+	    sudo make distclean
 	    ;;
 	config)
 	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"

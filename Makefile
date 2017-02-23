@@ -14,8 +14,10 @@ uninstall:
 	./.build uninstall
 
 distcheck:
-	sudo rm -rfv */zapata-*.tar.gz
 	./.build distcheck
+
+distclean:
+	./.build distclean
 
 config:
 	./.build config
