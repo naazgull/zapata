@@ -3,6 +3,7 @@ $[mutation.path.self.h]
 auto $[namespace]::mutations::$[mutation.name]::mutify(zpt::mutation::emitter _emitter) -> void {
 zpt::mutation::callback _h_on_change;
  
+$[mutation.self.handler.begin]
 _emitter->on("$[mutation.topic.self.regex]",
 {
 $[mutation.handler.self.insert]
@@ -11,6 +12,7 @@ $[mutation.handler.self.remove]
 $[mutation.handler.self.replace]
 }
 );
+$[mutation.self.handler.end]
 
 $[mutation.handler.begin]
 _emitter->on("$[mutation.topic.regex]",

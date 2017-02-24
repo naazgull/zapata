@@ -1,13 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-lisp, 0.9.6-1yakkety2, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-lisp, 0.9.6-1yakkety3, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 
+AC_LANG_CPLUSPLUS
 AC_ENABLE_SHARED(yes)
-AC_ENABLE_STATIC(no)
+AC_ENABLE_STATIC(yes)
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)

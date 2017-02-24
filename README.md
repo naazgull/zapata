@@ -40,7 +40,7 @@ a) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
 	$ cd libcurve
 	$ sh autogen.sh
 	$ ./autogen.sh
-	$ ./configure && make check
+	$ ./configure --prefix=/usr && make check
 	$ sudo make install
 	$ sudo ldconfig
 	$ cd ..

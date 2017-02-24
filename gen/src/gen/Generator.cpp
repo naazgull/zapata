@@ -750,29 +750,38 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
 		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["name"]));
-		std::string _mutation;
-		bool _first = true;
-		_mutation.assign(this->build_insert());
-		zpt::replace(_mutation_cxx, "$[mutation.handler.self.insert]", _mutation);
-		_first = _mutation.length() == 0;
-		_mutation.assign(this->build_update());
-		if (_mutation.length() != 0 && !_first) {
-			_first = false;
-			_mutation = std::string(",\n") + _mutation;
+		if (this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
+			std::string _mutation;
+			bool _first = true;
+			_mutation.assign(this->build_insert());
+			zpt::replace(_mutation_cxx, "$[mutation.handler.self.insert]", _mutation);
+			_first = _mutation.length() == 0;
+			_mutation.assign(this->build_update());
+			if (_mutation.length() != 0 && !_first) {
+				_first = false;
+				_mutation = std::string(",\n") + _mutation;
+			}
+			zpt::replace(_mutation_cxx, "$[mutation.handler.self.update]", _mutation);
+			_mutation.assign(this->build_remove());
+			if (_mutation.length() != 0 && !_first) {
+				_first = false;
+				_mutation = std::string(",\n") + _mutation;
+			}		
+			zpt::replace(_mutation_cxx, "$[mutation.handler.self.remove]", _mutation);
+			_mutation.assign(this->build_replace());
+			if (_mutation.length() != 0 && !_first) {
+				_first = false;
+				_mutation = std::string(",\n") + _mutation;
+			}		
+			zpt::replace(_mutation_cxx, "$[mutation.handler.self.replace]", _mutation);
+			zpt::replace(_mutation_cxx, "$[mutation.self.handler.begin]", "");
+			zpt::replace(_mutation_cxx, "$[mutation.self.handler.end]", "");
 		}
-		zpt::replace(_mutation_cxx, "$[mutation.handler.self.update]", _mutation);
-		_mutation.assign(this->build_remove());
-		if (_mutation.length() != 0 && !_first) {
-			_first = false;
-			_mutation = std::string(",\n") + _mutation;
-		}		
-		zpt::replace(_mutation_cxx, "$[mutation.handler.self.remove]", _mutation);
-		_mutation.assign(this->build_replace());
-		if (_mutation.length() != 0 && !_first) {
-			_first = false;
-			_mutation = std::string(",\n") + _mutation;
-		}		
-		zpt::replace(_mutation_cxx, "$[mutation.handler.self.replace]", _mutation);
+		else {
+			size_t _begin = _mutation_cxx.find("$[mutation.self.handler.begin]");
+			size_t _end = _mutation_cxx.find("$[mutation.self.handler.end]") + 28;
+			_mutation_cxx.erase(_begin, _end - _begin);
+		}
 		
 		size_t _begin = _mutation_cxx.find("$[mutation.handler.begin]") + 25;
 		size_t _end = _mutation_cxx.find("$[mutation.handler.end]");

@@ -304,6 +304,7 @@ auto zpt::lisp::cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object
 	for (unsigned int _i = 0; _i != _coerced_n_args; _i++) {
 		_arr[_i] = zpt::lisp::object(ecl_aref1(_args, _i));
 	}
+	ztrace(_coerced_fn_name);
 	return **((zpt::lisp::bridge*) _bridge.get())->call(_coerced_fn_name.data(), _coerced_n_args, _arr).get();
 }
 
@@ -464,9 +465,10 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::json _list = _bridge->from< zpt::lisp::object >(_args[0]);
 			zpt::json _separator = _bridge->from< zpt::lisp::object >(_args[1]);
 			if (_separator->ok()) {
-				return _bridge->to< zpt::lisp::object >(zpt::join(_list, std::string(_separator)));
+				return _bridge->to< zpt::lisp::object >(zpt::json::string(zpt::join(_list, std::string(_separator))));
 			}
-			return _bridge->to< zpt::lisp::object >(zpt::path::join(_list));
+			zpt::lisp::object _return = _bridge->to< zpt::lisp::object >(zpt::json::string(zpt::path::join(_list)));
+			return _return;
 		}
 	);
 	_bridge->deflbd(
@@ -998,7 +1000,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			
 			int _length = int(_bridge->from< zpt::lisp::object >(_args[0]));
 
-			return _bridge->to< zpt::lisp::object >(zpt::generate::r_key(_length));
+			return _bridge->to< zpt::lisp::object >(zpt::json::string(zpt::generate::r_key(_length)));
 		}
 	);
 	_bridge->deflbd(
@@ -1011,7 +1013,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
 			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 			
-			return _bridge->to< zpt::lisp::object >(zpt::generate::r_uuid());
+			return _bridge->to< zpt::lisp::object >(zpt::json::string(zpt::generate::r_uuid()));
 		}
 	);
 	_bridge->deflbd(

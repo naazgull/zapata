@@ -6,6 +6,10 @@ AC_INIT(zapata-oauth2, 0.9.1-4, n@zgul <naazgull@dfz.pt>)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
 
+AC_LANG_CPLUSPLUS
+AC_ENABLE_SHARED(yes)
+AC_ENABLE_STATIC(yes)
+
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
 AC_HAVE_LIBRARY(magic)
