@@ -45,7 +45,7 @@ do
 	    fi
 	    ;;
 	distcheck)
-	    sudo make distcheck
+	    sudo make distcheck && sudo make install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1

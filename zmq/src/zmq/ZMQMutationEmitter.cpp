@@ -43,8 +43,6 @@ zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationE
 		zlog("something is definitely wrong, ZMQMutationEmitter already initialized", zpt::emergency);
 	}
 	zpt::mutation::zmq::__emitter = this;
-	
-	
 	zsock_set_subscribe(this->__socket->in(), "");
 }
 

@@ -388,7 +388,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 					zpt::json _out = _i.second[_method](_method, _url, _in, this->self()); // > HASH <
 					if (_out->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-							throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+							throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 						}						
 						_out << 
 						"performative" << zpt::ev::Reply <<
@@ -443,7 +443,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				}
 				_client->unbind();
 				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-					throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+					throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 				}						
 				return _out;
 			}
@@ -464,7 +464,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 	}
 	zpt::json _out = zpt::rest::not_found(_url);
 	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-		throw zpt::assertion(std::string(_out["payload"]["text"]), int(_out["status"]), int(_out["payload"]["code"]), std::string(_out["payload"]["assertion_failed"]));
+		throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 	}						
 	return _out;
 }
