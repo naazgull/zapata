@@ -110,7 +110,7 @@ auto zpt::mongodb::Client::insert(std::string _collection, std::string _href_pre
 	}
 	_document << "_id" << _document["href"];
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -131,7 +131,7 @@ auto zpt::mongodb::Client::save(std::string _collection, std::string _href, zpt:
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -152,7 +152,7 @@ auto zpt::mongodb::Client::set(std::string _collection, std::string _href, zpt::
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -186,7 +186,7 @@ auto zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -207,7 +207,7 @@ auto zpt::mongodb::Client::unset(std::string _collection, std::string _href, zpt
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -241,7 +241,7 @@ auto zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zp
 		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
 		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
-	zpt::json _exclude = _document - zpt::mongodb::get_fields(_opts);
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -332,7 +332,7 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	if (!_pattern->ok()) {
 		_pattern = zpt::json::object();
 	}
-
+	
 	zpt::JSONArr _elements;
 
 	std::string _full_collection(_collection);

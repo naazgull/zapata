@@ -115,7 +115,7 @@ zpt::json zpt::ZMQ::recv() {
 		std::free(_bytes);
 		zframe_destroy(&_frame2);
 
-		zlog(this->connection() + std::string(" | receiving message <- ") + _directive, zpt::trace);
+		ztrace(std::string("[recv] <- ") + _directive + std::string(" |"));// + this->connection());
 		return _envelope;
 	}
 	else {
@@ -170,7 +170,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	zlog(this->connection() + std::string(" | sending message -> ") + _directive, zpt::trace);
+	ztrace(std::string("[send] -> ") + _directive + std::string(" | "));// + this->connection());
 
 	return zpt::undefined;
 }

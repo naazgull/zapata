@@ -1967,7 +1967,7 @@ auto zpt::GenResource::build_get() -> std::string {
 			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  };\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  };\n");
+			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 404), \"payload\", _r_body  };\n");
 		}
 	}
 	_return += std::string("\n}\n}");

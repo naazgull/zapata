@@ -36,7 +36,8 @@ using namespace __gnu_cxx;
 #endif
 
 #define __HOST__ string(zpt::log_hostname())
-#define zlog(x,y) (y <= zpt::log_lvl ? zpt::log(x, y, __HOST__, __LINE__, __FILE__) : 0)
+#define zlog(x,y) (y <= zpt::log_lvl ? zpt::log(std::string(x), y, __HOST__, __LINE__, __FILE__) : 0)
+#define ztrace(x) zlog(std::string(x) + std::string(" ") + std::string(__PRETTY_FUNCTION__), zpt::trace)
 
 namespace zpt {
 	extern short int log_lvl;

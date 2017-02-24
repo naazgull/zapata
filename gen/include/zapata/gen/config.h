@@ -73,7 +73,7 @@
 #define PACKAGE_NAME "zapata-gen"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-gen 0.9.5-1yakkety18"
+#define PACKAGE_STRING "zapata-gen 0.9.6-1yakkety1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-gen"
@@ -82,10 +82,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.5-1yakkety18"
+#define PACKAGE_VERSION "0.9.6-1yakkety1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.5-1yakkety18"
+#define VERSION "0.9.6-1yakkety1"
