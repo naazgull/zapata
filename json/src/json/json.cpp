@@ -299,3 +299,7 @@ auto zpt::test::timestamp(zpt::json _timestamp) -> bool {
 	);
 	return std::regex_match(_timestamp->str(), _timestamp_rgx);
 }
+
+extern "C" auto zpt_json() -> int {
+	return 1;
+}

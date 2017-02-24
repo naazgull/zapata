@@ -98,3 +98,6 @@ void zpt::tostr(ostream& _out, HTTPReq& _in)  {
 	_out << flush;
 }
 
+extern "C" auto zpt_http() -> int {
+	return 1;
+}

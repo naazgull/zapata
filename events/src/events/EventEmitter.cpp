@@ -376,3 +376,7 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> v
 	_record << "connect" << zpt::r_replace(_record["connect"]->str(), "tcp://*:", std::string("tcp://127.0.0.1:"));
 	this->__index.push_back(std::make_pair(_regex, _record));
 }
+
+extern "C" auto zpt_events() -> int {
+	return 1;
+}

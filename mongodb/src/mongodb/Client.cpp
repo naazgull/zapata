@@ -498,3 +498,7 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	}
 	return _return;
 }
+
+extern "C" auto zpt_mongodb() -> int {
+	return 1;
+}

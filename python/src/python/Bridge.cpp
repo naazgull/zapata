@@ -231,3 +231,7 @@ namespace zpt {
 	}
 }
 
+extern "C" auto zpt_python() -> int {
+	return 1;
+}
+

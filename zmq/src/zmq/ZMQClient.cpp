@@ -1225,3 +1225,7 @@ auto zpt::net::getip() -> std::string {
 	if (_if_addr != nullptr) freeifaddrs(_if_addr);
 	return _out;
 }
+
+extern "C" auto zpt_zmq() -> int {
+	return 1;
+}

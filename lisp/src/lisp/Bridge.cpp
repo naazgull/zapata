@@ -1040,3 +1040,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 	);
 
 }
+
+extern "C" auto zpt_lisp() -> int {
+	return 1;
+}

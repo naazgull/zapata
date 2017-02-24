@@ -1,10 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-mongodb, 0.9.6-1yakkety1, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-mongodb, 0.9.6-1yakkety2, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
+
+AC_ENABLE_SHARED(yes)
+AC_ENABLE_STATIC(no)
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
@@ -18,8 +21,11 @@ AC_HAVE_LIBRARY(boost_program_options)
 AC_HAVE_LIBRARY(boost_thread)
 AC_HAVE_LIBRARY(boost_filesystem)
 AC_HAVE_LIBRARY(ossp-uuid++)
-AC_HAVE_LIBRARY(zapata-base)
-AC_HAVE_LIBRARY(zapata-json)
+AC_CHECK_LIB(zapata-base, zpt_base)
+AC_CHECK_LIB(zapata-json, zpt_json)
+AC_CHECK_LIB(zapata-events, zpt_events)
+AC_CHECK_LIB(zapata-zmq, zpt_zmq)
+AC_CHECK_LIB(zapata-http, zpt_http)
 
 AC_CANONICAL_SYSTEM
 

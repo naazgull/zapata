@@ -359,3 +359,7 @@ auto zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	};
 	return _return;
 }
+
+extern "C" auto zpt_postgresql() -> int {
+	return 1;
+}

@@ -566,3 +566,7 @@ auto zpt::redis::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	if (!bool(_opts["mutated-event"])) zpt::Connector::all(_collection, _opts);	
 	return zpt::undefined;
 }
+
+extern "C" auto zpt_redis() -> int {
+	return 1;
+}

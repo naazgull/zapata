@@ -60,47 +60,25 @@ do
 	    fi
 	    ;;
 	config)
-	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	debug)
-	    autoreconf -vfi && ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	package)
-	    rm -rfv *.deb
-	    mkdir -p upstream
-	    rm -rfv upstream/*
-	    for f in *.tar.gz
-	    do
-		fullname=${f%.tar.gz}
-		prefix=${fullname##*/}
-		revision=${prefix##*-}
-		no_revision_prefix=${prefix%-*}
-		version=${no_revision_prefix##*-}
-		no_version_prefix=${no_revision_prefix%-*}
-		orig=upstream/$no_version_prefix\_$version.orig.tar.gz
-		echo "processing $orig"
-		cp -rf $f $orig
-		pushd upstream/
-		tar xvzf $no_version_prefix\_$version.orig.tar.gz
-		pushd $prefix/
-		debuild -us -uc
-		if [[ $? != 0 ]]
-		then
-		    exit -1
-		fi
-		sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../
-		popd
-		popd
-	    done
-	    rm -rfv upstream/
+	    ./make_deb
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
 	    ;;
     esac
     popd

@@ -110,3 +110,7 @@ char* zpt::log_hostname() {
 	}
 	return zpt::log_hname;
 }
+
+extern "C" auto zpt_base() -> int{
+	return 1;
+}

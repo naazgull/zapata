@@ -3597,3 +3597,8 @@ auto zpt::gen::get_fields_array(zpt::json _fields) -> std::string {
 	_return += std::string(" }");
 	return _return;
 }
+
+
+extern "C" auto zpt_gen() -> int {
+	return 1;
+}

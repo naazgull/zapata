@@ -37,13 +37,13 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+/* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+/* #undef HAVE_LIBZAPATA_EVENTS */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* #undef HAVE_LIBZAPATA_JSON */
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
 #define HAVE_LIBZMQ 1
@@ -85,7 +85,7 @@
 #define PACKAGE_NAME "zapata-zmq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-zmq 0.9.6-1yakkety1"
+#define PACKAGE_STRING "zapata-zmq 0.9.6-1yakkety2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-zmq"
@@ -94,10 +94,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.6-1yakkety1"
+#define PACKAGE_VERSION "0.9.6-1yakkety2"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.6-1yakkety1"
+#define VERSION "0.9.6-1yakkety2"

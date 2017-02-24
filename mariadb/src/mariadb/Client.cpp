@@ -410,3 +410,7 @@ auto zpt::mariadb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	};
 	return _return;
 }
+
+extern "C" auto zpt_mariadb() -> int {
+	return 1;
+}
