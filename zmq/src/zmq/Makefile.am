@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-zmq.la
 
 libzapata_zmq_la_LIBADD = -lzapata-base -lzapata-json -lzapata-events -lzmq -lczmq -lsodium -lcurve
-libzapata_zmq_la_LDFLAGS = -version-info 9:5:9
+libzapata_zmq_la_LDFLAGS = -version-info 9:6:9
 libzapata_zmq_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_zmq_la_SOURCES = \
