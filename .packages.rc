@@ -6,6 +6,7 @@ export projects=(
        events
        http
        zmq
+       mqtt
        gen
        mongodb
        redis

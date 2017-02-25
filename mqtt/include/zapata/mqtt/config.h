@@ -1,7 +1,7 @@
-/* include/zapata/rest/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/rest/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/mqtt/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/mqtt/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/rest/unconfig.h>
+#include <zapata/http/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -18,8 +18,8 @@
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
 
-/* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-#define HAVE_LIBOSSP_UUID__ 1
+/* Define to 1 if you have the `mosquitto' library (-lmosquitto). */
+#define HAVE_LIBMOSQUITTO 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
@@ -30,26 +30,8 @@
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 #define HAVE_LIBZAPATA_BASE 1
 
-/* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
-
-/* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-#define HAVE_LIBZAPATA_HTTP 1
-
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
 #define HAVE_LIBZAPATA_JSON 1
-
-/* Define to 1 if you have the `zapata-lisp' library (-lzapata-lisp). */
-#define HAVE_LIBZAPATA_LISP 1
-
-/* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
-#define HAVE_LIBZAPATA_PYTHON 1
-
-/* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-#define HAVE_LIBZAPATA_ZMQ 1
-
-/* Define to 1 if you have the `zmq' library (-lzmq). */
-#define HAVE_LIBZMQ 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -79,19 +61,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-rest"
+#define PACKAGE "zapata-http"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-rest"
+#define PACKAGE_NAME "zapata-http"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-rest 0.9.6-1yakkety3"
+#define PACKAGE_STRING "zapata-http 0.9.6-1yakkety3"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-rest"
+#define PACKAGE_TARNAME "zapata-http"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

@@ -28,6 +28,7 @@ SOFTWARE.
 #include <zapata/json.h>
 #include <zapata/events.h>
 #include <zapata/zmq.h>
+#include <zapata/mqtt.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -107,9 +108,9 @@ namespace zpt {
 		virtual zpt::mutation::emitter mutations();
 
 		virtual bool route_http(zpt::socketstream_ptr _cs);
-		virtual bool route_mqtt(std::iostream& _cs);
+		virtual bool route_mqtt(zpt::mqtt::data _data);
 
-		virtual auto assync_on(std::string _regex, zpt::json _opts) -> void;
+		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		
 	private:
 		std::string __name;
@@ -120,6 +121,9 @@ namespace zpt {
 		std::vector< zpt::socket > __router_dealer;
 		std::vector< std::shared_ptr< std::thread > > __threads;
 		zpt::rest::server __self;
+		zpt::mqtt::broker __mqtt;
+
+		auto get_hash(std::string _pattern) -> std::string;
 	};
 
 	class RESTClient {

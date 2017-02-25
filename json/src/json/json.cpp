@@ -29,9 +29,12 @@ SOFTWARE.
 #include <regex>
 
 auto zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::json {
+	zpt::json _ret = zpt::json::array();
+	if (_to_split.length() == 0 || _separator.length() == 0) {
+		return _ret;
+	}
 	std::istringstream _iss(_to_split);
 	std::string _part;
-	zpt::json _ret = zpt::json::array();
 	while(_iss.good()) {
 		std::getline(_iss, _part, _separator[0]);
 		if (_part.length() != 0) {
@@ -247,10 +250,14 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 
 	std::string _q_str = (std::string) _uri_matches[5];
 	zpt::json _query = zpt::uri::query::parse(_q_str);
+	std::string _authority = (std::string) _uri_matches[3];
+	zpt::json _domain_port = zpt::split(_authority, ":");
 
 	return {
 		"scheme", (std::string) _uri_matches[1],
-		"authority", (std::string) _uri_matches[3],
+		"authority", _authority,
+		"domain", _domain_port[0],
+		"port", _domain_port[1],
 		"path", (std::string) _uri_matches[4],
 		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
 		"fragment", zpt::url::r_decode((std::string) _uri_matches[6])

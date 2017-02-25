@@ -47,8 +47,6 @@ int main(int _argc, char* _argv[]) {
 	if (_initialized) {
 		zpt::json _conf_options;
 		_ifs >> _conf_options;
-		_options = _conf_options + _options;
-
 		if (_options["version"]->ok()) {
 			_ifs.close();
 			_conf_options << "version" << zpt::json({ zpt::array, int(_options["version"][0]), int(_options["files"][0]), int(_options["files"][1]) });
@@ -56,13 +54,14 @@ int main(int _argc, char* _argv[]) {
 			_ofs.open(".zpt_rc");
 			_ofs << zpt::json::pretty(_conf_options) << flush;
 			_ofs.close();
+			return 0;
 		}
+		_options = _conf_options + _options;
 	}
-	if (_options["version"]->ok()) {
+	else if (_options["version"]->ok()) {
 		return 0;
 	}
-	
-	
+		
 	std::string _input;
 
 	std::string _project_name;

@@ -189,7 +189,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()) {
 	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 	((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
@@ -305,14 +305,37 @@ zpt::json zpt::RESTServer::options() {
 
 void zpt::RESTServer::start() {
 	try {
-		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok() && this->__options["http"]["port"]->ok()) {
+		if (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()) {
+			zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]));
+			if (!_uri["port"]->ok()) {
+				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+			}
+			
+			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
+			this->__mqtt->on("message",
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					this->route_mqtt(_data);
+				}
+			);
+			this->__mqtt->start();
+			zlog(std::string("starting MQTT listener for ") + std::string(this->__options["mqtt"]["bind"]), zpt::notice);
+		}
+		
+		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
 			std::shared_ptr< std::thread > _http(
 				new std::thread(
 					[ this ] () -> void {
-						zlog(std::string("starting HTTP listener on port ") + std::to_string((uint) this->__options["http"]["port"]), zpt::notice);
-
+						zpt::json _uri = zpt::uri::parse(std::string(this->__options["http"]["bind"]));
+						if (!_uri["port"]->ok()) {
+							_uri << "port" << 80;
+						}
+						
 						zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
-						_ss->bind((uint) this->__options["http"]["port"]);
+						if (!_ss->bind((uint) _uri["port"])) {
+							zlog(std::string("couldn't bind HTTP listener to ") + std::string(this->__options["http"]["bind"]), zpt::alert);
+							return;
+						}
+						zlog(std::string("starting HTTP listener for ") + std::string(this->__options["http"]["bind"]), zpt::notice);
 
 						for (; true; ) {
 							int _fd = -1;
@@ -429,11 +452,46 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 	return _return;
 }
 
-bool zpt::RESTServer::route_mqtt(std::iostream& _cs) {
+bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
+	assertz_mandatory(_data->__message, "performative", 400);
+	zpt::json _result;
+	zpt::ev::performative _performative;
+	if (_data->__message["performative"]->is_string()) {
+		_performative = zpt::ev::from_str(std::string(_data->__message["performative"]));
+	}
+	else {
+		_performative = zpt::ev::performative(int(_data->__message["performative"]));
+	}
+	if ((_result = this->events()->trigger(_performative, std::string(_data->__topic), _data->__message["payload"]))->ok()) {
+		this->__mqtt->publish(std::string(_data->__topic), _result);
+	}
 	return true;
 }
 
-auto zpt::RESTServer::assync_on(std::string _regex, zpt::json _opts) -> void {
+auto zpt::RESTServer::get_hash(std::string _pattern) -> std::string {
+	zpt::json _splited = zpt::split(_pattern, "/");
+	std::string _return;
+	for (auto _p : _splited->arr()) {
+		std::string _part = _p->str();
+		if (_part.back() == '$') {
+			_part.erase(_part.length() - 1, 1);
+		}
+		if (zpt::test::ascii(_part, true)) {
+			_return += std::string("/") + _part;
+		}
+		else if (_part != "^") {
+			_return += std::string("/+");			
+		}
+	}
+	return _return;
+}
+
+auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
+	if (bool(_opts["mqtt"])) {
+		std::string _hash = this->get_hash(_topic) + std::string("#");;
+		this->__mqtt->subscribe(_topic);
+		zdbg(std::string("subscribing to ") + _hash);
+	}
 }
 
 zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {

@@ -173,7 +173,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
 	this->directory()->notify(_regex, this->options()["zmq"]);
-	this->server()->assync_on(_regex, _opts);
+	this->server()->subscribe(_regex, _opts);
 
 	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
@@ -198,7 +198,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
 	this->directory()->notify(_regex, this->options()["zmq"]);
-	this->server()->assync_on(_regex, _opts);
+	this->server()->subscribe(_regex, _opts);
 
 	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
@@ -247,7 +247,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 	this->add_by_hash(_listener->regex(), _url_pattern, _handlers);
 
 	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
-	this->server()->assync_on(_listener->regex(), _opts);
+	this->server()->subscribe(_listener->regex(), _opts);
 
 	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::notice);
 	return _uuid;
@@ -361,6 +361,8 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 }
 
 auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	
 	zpt::json _in = zpt::json::object() + _envelope;
 	_in <<
 	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<
@@ -379,7 +381,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			break;
 		}
 	}
-	
+
 	for (auto _i : _resources) { // > HASH <
 		std::regex _regexp = _i.first; // > HASH <
 		if (std::regex_match(_url, _regexp)) {
