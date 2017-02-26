@@ -9,8 +9,7 @@ libzapata_zmq_la_SOURCES = \
 ./SSLSocketStreams.cpp \
 ./WebSocket.cpp \
 ./ZMQPoll.cpp \
-./ZMQClient.cpp \
-./ZMQMutationEmitter.cpp
+./ZMQClient.cpp
 
 bin_PROGRAMS = zcert
 

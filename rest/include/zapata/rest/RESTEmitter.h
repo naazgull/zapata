@@ -122,8 +122,8 @@ namespace zpt {
 		std::vector< std::shared_ptr< std::thread > > __threads;
 		zpt::rest::server __self;
 		zpt::mqtt::broker __mqtt;
-
-		auto get_hash(std::string _pattern) -> std::string;
+	
+		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 
 	class RESTClient {

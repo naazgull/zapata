@@ -219,11 +219,11 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		this->auth();
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQReq::~ZMQReq() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(& this->__socket);
 }
 
@@ -308,11 +308,11 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::warning);
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQRep::~ZMQRep() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket);
 }
 
@@ -412,11 +412,11 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt
 		zsock_wait(this->__socket);
 	}
 	this->connection(_connection1 + std::string(",") + _connection2);
-	zlog(std::string("attaching XSUB/XPUB socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching XSUB/XPUB socket to ") + this->connection());
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
-	zlog(std::string("dettaching XPUB/XSUB from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching XPUB/XSUB from ") + this->connection());
 	zactor_destroy(&this->__socket);
 }
 
@@ -483,11 +483,11 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket_pub);		
 		zsock_set_curve_serverkey(this->__socket_pub, _peer_key.data());
 	}	
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket_pub);
 	zsock_destroy(&this->__socket_sub);
 }
@@ -576,11 +576,11 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPub::~ZMQPub() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket);
 }
 
@@ -664,17 +664,11 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
 
-	/*{
-		std::lock_guard< std::mutex > _lock(this->__mtx);
-		for (size_t _p = 0; _p != 8; _p++) {
-			zsock_set_subscribe(this->in(), (zpt::ev::to_str((zpt::ev::performative) _p) + std::string(" /")).data());
-		}
-	}*/
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQSub::~ZMQSub() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket);
 }
 
@@ -766,12 +760,12 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 
 zpt::ZMQPush::~ZMQPush() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket);
 }
 
@@ -854,11 +848,11 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 	}
-	zlog(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPull::~ZMQPull() {
-	zlog(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
 	zsock_destroy(&this->__socket);
 }
 
@@ -970,11 +964,11 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 		zsock_set_curve_server(this->__socket, true);
 	}
 
-	zlog(std::string("attaching ROUTER/DEALER socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ROUTER/DEALER socket to ") + this->connection());
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
-	zlog(std::string("dettaching ROUTER/DEALER from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ROUTER/DEALER from ") + this->connection());
 	zactor_destroy(&this->__socket);
 }
 
@@ -1023,26 +1017,7 @@ auto zpt::ZMQRouterDealer::unbind() -> void {
 
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __type(-1), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	/*if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
-		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
-		}
-		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
-			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
-				break;
-			}
-			_available++;
-		}
-		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}
-	else {*/
-		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-		//}	
+	assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 	zsock_set_rcvtimeo(this->__socket, 20000);
@@ -1055,11 +1030,11 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : z
 		zsock_set_curve_serverkey(this->__socket, zcert_public_txt(this->certificate(ZPT_PEER_CERTIFICATE)));
 		this->auth();
 	}
-	zlog(std::string("attaching ASSYNC_REQ socket to ") + this->connection(), zpt::notice);
+	ztrace(std::string("attaching ASSYNC_REQ socket to ") + this->connection());
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
-	zlog(std::string("dettaching ASSYNC_REQ from ") + this->connection(), zpt::notice);
+	ztrace(std::string("dettaching ASSYNC_REQ from ") + this->connection());
 	zsock_destroy(&this->__socket);
 	switch (this->__type) {
 		case 1 : {

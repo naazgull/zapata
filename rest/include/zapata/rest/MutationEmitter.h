@@ -27,7 +27,7 @@ SOFTWARE.
 #include <zapata/http.h>
 #include <zapata/json.h>
 #include <zapata/events.h>
-#include <zapata/zmq/ZMQPolling.h>
+#include <zapata/zmq.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -39,34 +39,34 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class ZMQMutationEmitter;
-	class ZMQMutationServer;
-	class ZMQMutationServerPtr;
+	class RESTMutationEmitter;
+	class RESTMutationServer;
+	class RESTMutationServerPtr;
 
 	namespace mutation {
-		typedef zpt::ZMQMutationServerPtr server;
+		typedef zpt::RESTMutationServerPtr server;
 
 		namespace zmq {
-			typedef zpt::ZMQMutationEmitter emitter;
+			typedef zpt::RESTMutationEmitter emitter;
 
 			extern zpt::mutation::zmq::emitter* __emitter;
 		}
 	}
 
-	class ZMQMutationServerPtr : public std::shared_ptr<zpt::ZMQMutationServer> {
+	class RESTMutationServerPtr : public std::shared_ptr<zpt::RESTMutationServer> {
 	public:
-		ZMQMutationServerPtr(zpt::json _options);
-		ZMQMutationServerPtr(zpt::ZMQMutationServer* _ptr);
-		virtual ~ZMQMutationServerPtr();
+		RESTMutationServerPtr(zpt::json _options);
+		RESTMutationServerPtr(zpt::RESTMutationServer* _ptr);
+		virtual ~RESTMutationServerPtr();
 
 		static zpt::mutation::server setup(zpt::json _options);
 		static int launch(int argc, char* argv[], int _semaphore);
 	};
 
-	class ZMQMutationServer {
+	class RESTMutationServer {
 	public:
-		ZMQMutationServer(zpt::json _options);
-		virtual ~ZMQMutationServer();
+		RESTMutationServer(zpt::json _options);
+		virtual ~RESTMutationServer();
 
 		virtual void start();
 
@@ -79,10 +79,10 @@ namespace zpt {
 		zpt::socket __client;
 	};
 
-	class ZMQMutationEmitter : public zpt::MutationEmitter {
+	class RESTMutationEmitter : public zpt::MutationEmitter {
 	public:
-		ZMQMutationEmitter(zpt::json _options);
-		virtual ~ZMQMutationEmitter();
+		RESTMutationEmitter(zpt::json _options);
+		virtual ~RESTMutationEmitter();
 
 		virtual auto version() -> std::string;
 

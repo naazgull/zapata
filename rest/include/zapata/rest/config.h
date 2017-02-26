@@ -42,6 +42,9 @@
 /* Define to 1 if you have the `zapata-lisp' library (-lzapata-lisp). */
 #define HAVE_LIBZAPATA_LISP 1
 
+/* Define to 1 if you have the `zapata-mqtt' library (-lzapata-mqtt). */
+#define HAVE_LIBZAPATA_MQTT 1
+
 /* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
 #define HAVE_LIBZAPATA_PYTHON 1
 

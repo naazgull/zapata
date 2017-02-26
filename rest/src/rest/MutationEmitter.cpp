@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/zmq/ZMQMutationEmitter.h>
+#include <zapata/rest/MutationEmitter.h>
 #include <sys/sem.h>
 #include <map>
+#include <zapata/mqtt.h>
 
 namespace zpt {
 	namespace mutation {
@@ -34,33 +35,33 @@ namespace zpt {
 	}
 }
 
-zpt::ZMQMutationEmitter::ZMQMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
+zpt::RESTMutationEmitter::RESTMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	if (zpt::mutation::zmq::__emitter != nullptr) {
 		delete zpt::mutation::zmq::__emitter;
-		zlog("something is definitely wrong, ZMQMutationEmitter already initialized", zpt::emergency);
+		zlog("something is definitely wrong, RESTMutationEmitter already initialized", zpt::emergency);
 	}
 	zpt::mutation::zmq::__emitter = this;
 	zsock_set_subscribe(this->__socket->in(), "");
 }
 
-zpt::ZMQMutationEmitter::~ZMQMutationEmitter() {
+zpt::RESTMutationEmitter::~RESTMutationEmitter() {
 }
 
-auto zpt::ZMQMutationEmitter::version() -> std::string {
+auto zpt::RESTMutationEmitter::version() -> std::string {
 	return this->options()["rest"]["version"]->str();
 }
 
-auto zpt::ZMQMutationEmitter::loop() -> void {
+auto zpt::RESTMutationEmitter::loop() -> void {
 	for (; true; ) {
 		zpt::json _envelope = this->__socket->recv();
 		this->trigger((zpt::mutation::operation) int(_envelope["performative"]), std::string(_envelope["resource"]), _envelope);
 	}
 }
 
-auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts) -> std::string {
+auto zpt::RESTMutationEmitter::on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts) -> std::string {
 	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
 	std::regex _url_pattern(_uri);
 
@@ -78,7 +79,7 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::operation _operation, std::strin
 	return _uuid;
 }
 
-auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
+auto zpt::RESTMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handler_set, zpt::json _opts) -> std::string {
 	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
 	std::regex _url_pattern(_uri);
 
@@ -97,7 +98,7 @@ auto zpt::ZMQMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mut
 	return _uuid;
 }
 
-auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
+auto zpt::RESTMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _opts) -> std::string {
 	std::string _uri(std::string("^/") + this->version() + std::string("/mutations/([^/]+)") + zpt::r_replace(zpt::r_replace(zpt::r_replace(_listener->ns(), std::string("/") + this->version(), ""), "^", ""), "$", "") + std::string("$"));
 	std::regex _url_pattern(_uri);
 
@@ -137,21 +138,21 @@ auto zpt::ZMQMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _o
 	return _uuid;
 }
 
-auto zpt::ZMQMutationEmitter::off(zpt::mutation::operation _operation, std::string _callback_id) -> void {
+auto zpt::RESTMutationEmitter::off(zpt::mutation::operation _operation, std::string _callback_id) -> void {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
 		this->__resources.erase(_callback_id);
 	}
 }
 
-auto zpt::ZMQMutationEmitter::off(std::string _callback_id) -> void {
+auto zpt::RESTMutationEmitter::off(std::string _callback_id) -> void {
 	auto _found = this->__resources.find(_callback_id);
 	if (_found != this->__resources.end()) {
 		this->__resources.erase(_callback_id);
 	}
 }		
 
-auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+auto zpt::RESTMutationEmitter::route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	if (bool(_opts["mutated-event"])) return zpt::undefined;
 	
 	std::string _op = zpt::mutation::to_str(_operation);
@@ -170,7 +171,7 @@ auto zpt::ZMQMutationEmitter::route(zpt::mutation::operation _operation, std::st
 	return zpt::undefined;
 }
 
-auto zpt::ZMQMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+auto zpt::RESTMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	if (bool(_opts["mutated-event"])) return zpt::undefined;
 
 	for (auto _i : this->__resources) {
@@ -184,27 +185,27 @@ auto zpt::ZMQMutationEmitter::trigger(zpt::mutation::operation _operation, std::
 	return zpt::undefined;
 }
 
-auto zpt::ZMQMutationEmitter::instance() -> zpt::mutation::emitter {
-	assertz(zpt::mutation::zmq::__emitter != nullptr, "ZMQ mutation emitter has not been initialized", 500, 0);
+auto zpt::RESTMutationEmitter::instance() -> zpt::mutation::emitter {
+	assertz(zpt::mutation::zmq::__emitter != nullptr, "REST mutation emitter has not been initialized", 500, 0);
 	return zpt::mutation::zmq::__emitter->self();
 }
 
-zpt::ZMQMutationServerPtr::ZMQMutationServerPtr(zpt::json _options) : std::shared_ptr<zpt::ZMQMutationServer>(new zpt::ZMQMutationServer(_options)) {
+zpt::RESTMutationServerPtr::RESTMutationServerPtr(zpt::json _options) : std::shared_ptr<zpt::RESTMutationServer>(new zpt::RESTMutationServer(_options)) {
 }
 
-zpt::ZMQMutationServerPtr::ZMQMutationServerPtr(zpt::ZMQMutationServer * _ptr) : std::shared_ptr<zpt::ZMQMutationServer>(_ptr) {
+zpt::RESTMutationServerPtr::RESTMutationServerPtr(zpt::RESTMutationServer * _ptr) : std::shared_ptr<zpt::RESTMutationServer>(_ptr) {
 }
 
-zpt::ZMQMutationServerPtr::~ZMQMutationServerPtr() {
+zpt::RESTMutationServerPtr::~RESTMutationServerPtr() {
 }
 
-zpt::mutation::server zpt::ZMQMutationServerPtr::setup(zpt::json _options) {
+zpt::mutation::server zpt::RESTMutationServerPtr::setup(zpt::json _options) {
 	zpt::conf::setup(_options);
 	zpt::mutation::server _server(_options);
 	return _server;
 }
 
-int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
+int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::log_fd = &std::cout;
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new std::string(argv[0]);
@@ -263,7 +264,7 @@ int zpt::ZMQMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	return 0;
 }
 
-zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["$mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
+zpt::RESTMutationServer::RESTMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["$mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
 	zsys_init();
 	zsys_handler_set(nullptr);
 	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
@@ -271,17 +272,38 @@ zpt::ZMQMutationServer::ZMQMutationServer(zpt::json _options) : __options(_optio
 	zsock_set_subscribe(this->__client->in(), "");
 }
 
-zpt::ZMQMutationServer::~ZMQMutationServer(){
+zpt::RESTMutationServer::~RESTMutationServer(){
 	this->__self.reset();
 }
 
-zpt::json zpt::ZMQMutationServer::options() {
+zpt::json zpt::RESTMutationServer::options() {
 	return this->__options;
 }
 
-void zpt::ZMQMutationServer::start() {
+void zpt::RESTMutationServer::start() {
+	bool _has_mqtt = this->__options["$mutations"]["forward"]["mqtt"]->is_string();
+	zpt::mqtt::broker _mqtt(new zpt::MQTT());
+	if (_has_mqtt) {
+		zpt::json _uri = zpt::uri::parse(this->__options["$mutations"]["forward"]["mqtt"]->str());
+		if (!_uri["port"]->ok()) {
+			_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+		}
+		if (_uri["user"]->ok() && _uri["password"]->ok()) {
+			_mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
+		}
+		_mqtt->on("connect",
+			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+				zlog(std::string("mutations listener forwarding to ") + std::string(this->__options["$mutations"]["forward"]["mqtt"]), zpt::warning);
+			}
+		);
+		_mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
+		_mqtt->start();
+	}
 	for(; true; ) {
-		this->__client->recv();
+		zpt::json _mutation = this->__client->recv();
+		if (_has_mqtt) {
+			_mqtt->publish(std::string(_mutation["resource"]), _mutation);
+		}
 	}
 	
 }

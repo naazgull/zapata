@@ -121,6 +121,9 @@ namespace zpt {
 		namespace query {
 			auto parse(std::string _query) -> zpt::json;
 		}
+		namespace authority {
+			auto parse(std::string _authority) -> zpt::json;
+		}
 	}
 	
 	namespace conf {

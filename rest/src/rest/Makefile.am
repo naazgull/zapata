@@ -5,6 +5,7 @@ libzapata_rest_la_LDFLAGS = -version-info 9:6:9
 libzapata_rest_la_CPPFLAGS = -O3 -std=c++14 -I../../include -I/usr/include/python3.6 -fwrapv
 
 libzapata_rest_la_SOURCES = \
+./MutationEmitter.cpp \
 ./RESTEmitter.cpp \
 ./RESTServer.cpp 
 

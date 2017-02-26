@@ -137,7 +137,7 @@ auto zpt::test::ascii(std::string _ascii, bool _with_dash) -> bool {
 		"^([a-zA-Z0-9_\\-]+)$"
 	);
 	if (_with_dash) {
-	return std::regex_match(_ascii, _ascii_dash_rgx);
+		return std::regex_match(_ascii, _ascii_dash_rgx);
 	}
 	return std::regex_match(_ascii, _ascii_rgx);
 }

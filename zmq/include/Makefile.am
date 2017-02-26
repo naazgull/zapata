@@ -6,5 +6,4 @@ nobase_include_HEADERS = \
 ./zapata/zmq/SSLSocketStreams.h \
 ./zapata/zmq/WebSocket.h \
 ./zapata/zmq/ZMQPolling.h \
-./zapata/zmq/ZMQMutationEmitter.h \
 ./zapata/zmq.h

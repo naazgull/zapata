@@ -250,14 +250,15 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 
 	std::string _q_str = (std::string) _uri_matches[5];
 	zpt::json _query = zpt::uri::query::parse(_q_str);
-	std::string _authority = (std::string) _uri_matches[3];
-	zpt::json _domain_port = zpt::split(_authority, ":");
+	zpt::json _authority = zpt::uri::authority::parse((std::string) _uri_matches[3]);
 
 	return {
 		"scheme", (std::string) _uri_matches[1],
-		"authority", _authority,
-		"domain", _domain_port[0],
-		"port", _domain_port[1],
+		"authority", (std::string) _uri_matches[3],
+		"domain", _authority["domain"],
+		"port", _authority["port"],
+		"user", _authority["user"],
+		"password", _authority["password"],
 		"path", (std::string) _uri_matches[4],
 		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
 		"fragment", zpt::url::r_decode((std::string) _uri_matches[6])
@@ -280,6 +281,28 @@ auto zpt::uri::query::parse(std::string _query) -> zpt::json {
 		_return << (std::string) _match[2] << zpt::url::r_decode((std::string) _match[3]);
 	}
 	
+	return _return;
+}
+
+auto zpt::uri::authority::parse(std::string _authority) -> zpt::json {
+	static const std::regex _auth_rgx(
+		"(([^:]+):([^@]+)@)?"           //username and password
+		"([^:]+):?" 			//domain
+		"(.*)" 			        //port
+	);
+
+	std::smatch _match;
+	std::regex_match(_authority, _match, _auth_rgx);	
+	std::string _port = ((std::string) _match[5]);
+	std::string _user = ((std::string) _match[2]);
+	std::string _password = ((std::string) _match[3]);
+
+	zpt::json _return {
+		"domain", ((std::string) _match[4]),
+		"port", (_port.length() != 0 ? zpt::json::string(_port) : zpt::undefined),
+		"user", (_user.length() != 0 ? zpt::json::string(_user) : zpt::undefined),
+		"password", (_password.length() != 0 ? zpt::json::string(_password) : zpt::undefined)
+	};
 	return _return;
 }
 

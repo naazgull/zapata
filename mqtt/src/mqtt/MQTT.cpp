@@ -75,10 +75,12 @@ auto zpt::MQTT::self() const -> zpt::mqtt::broker {
 
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	
-	mosquitto_tls_insecure_set(this->__mosq, false);
-	mosquitto_tls_opts_set(this->__mosq, 1, nullptr, nullptr);
-	mosquitto_tls_set(this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
+
+	if (_tls) {
+		mosquitto_tls_insecure_set(this->__mosq, false);
+		mosquitto_tls_opts_set(this->__mosq, 1, nullptr, nullptr);
+		mosquitto_tls_set(this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
+	}
 
 	/**
 	 * Connects to the MQTT server.
@@ -94,11 +96,7 @@ auto zpt::MQTT::reconnect() -> void {
 	 * Connects to the MQTT server.
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 	 */
-	while (true) {
-		if (mosquitto_reconnect(this->__mosq) != MOSQ_ERR_SUCCESS) {
-			break;
-		}
-		sleep(10);
+	if (mosquitto_reconnect(this->__mosq) != MOSQ_ERR_SUCCESS) {
 	}
 }
 
@@ -154,14 +152,15 @@ auto zpt::MQTT::trigger(std::string _event, zpt::mqtt::data _data) -> void {
 	/**
 	 * Searches for and executes registered callbacks under the event type *_event*.
 	 */
+	std::vector<zpt::mqtt::handler> _callbacks;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		auto _found = this->__callbacks.find(_event);
 		if (_found != this->__callbacks.end()) {
-			std::vector<zpt::mqtt::handler> _callbacks = _found->second; 
-			for( auto _c : _callbacks) {
-				_c(_data, this->self());
-			}
+			_callbacks = _found->second; 
 		} }
+	for( auto _c : _callbacks) {
+		_c(_data, this->self());
+	}
 }
 
 auto zpt::MQTT::start() -> void {
@@ -170,6 +169,7 @@ auto zpt::MQTT::start() -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
 	 */
 	mosquitto_loop_start(this->__mosq);
+	//mosquitto_loop_forever(this->__mosq, -1, 1);
 }
 
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {

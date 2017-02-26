@@ -258,13 +258,13 @@ auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt
 	if (_envelope["headers"]["Origin"]->ok()) {
 		return {
 			"status", 413,
-			"headers", zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"]))
+			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]))
 		};
 	}
 	string _origin = _envelope["headers"]["Origin"];
 	return {
 		"status", 200,
-		"headers", (zpt::ev::init_reply(((string) _envelope["headers"]["X-Cid"])) + zpt::json(
+		"headers", (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + zpt::json(
 				{
 					"Access-Control-Allow-Origin", _envelope["headers"]["Origin"],
 					"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
