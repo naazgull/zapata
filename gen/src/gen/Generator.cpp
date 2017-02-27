@@ -859,7 +859,7 @@ auto zpt::GenDatum::build_insert() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{\nzpt::mutation::Insert,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Insert,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -904,7 +904,7 @@ auto zpt::GenDatum::build_update() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{\nzpt::mutation::Update,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Update,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -926,7 +926,7 @@ auto zpt::GenDatum::build_remove() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{\nzpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -948,7 +948,7 @@ auto zpt::GenDatum::build_replace() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{\nzpt::mutation::Replace,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Replace,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -994,7 +994,7 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
 		zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
-		_return += std::string("{\nzpt::mutation::Insert,\n(_h_on_change = [] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Insert,\n(_h_on_change = [] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("zpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), (_envelope[\"payload\"][\"filter\"]->ok() ? zpt::json({ \"params\", _envelope[\"payload\"][\"filter\"] }) : zpt::undefined))[\"payload\"];\n");
 		_return += std::string("if (_r_base[\"elements\"]->type() != zpt::JSArray) {\n_r_base = { \"elements\", { zpt::array, _r_base } };\n}\n");
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
@@ -1056,7 +1056,7 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
 		zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
-		_return += std::string("{\nzpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("{ zpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
 		_return += std::string("if (_envelope[\"payload\"][\"filter\"]->ok()) return;\n");
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
@@ -1965,7 +1965,7 @@ auto zpt::GenResource::build_get() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Get);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2040,7 +2040,7 @@ auto zpt::GenResource::build_post() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Post);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2112,7 +2112,7 @@ auto zpt::GenResource::build_put() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Put);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2181,7 +2181,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Patch);
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2253,7 +2253,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Delete);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2325,7 +2325,7 @@ auto zpt::GenResource::build_head() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2397,7 +2397,7 @@ auto zpt::GenResource::build_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 	_return += std::string("return zpt::undefined;\n");
 	_return += std::string("\n}\n}");
@@ -2860,7 +2860,7 @@ auto zpt::GenResource::build_lisp_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 	_return += std::string("return zpt::undefined;\n");
 	_return += std::string("\n}\n}");
@@ -3062,7 +3062,7 @@ auto zpt::GenResource::build_python_get() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Get);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3127,7 +3127,7 @@ auto zpt::GenResource::build_python_post() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Post);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3177,7 +3177,7 @@ auto zpt::GenResource::build_python_put() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Put);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3224,7 +3224,7 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Patch);
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3286,7 +3286,7 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Delete);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3348,7 +3348,7 @@ auto zpt::GenResource::build_python_head() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3410,7 +3410,7 @@ auto zpt::GenResource::build_python_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{\nzpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
+	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 	_return += std::string("return zpt::undefined;\n");
 	_return += std::string("\n}\n}");
