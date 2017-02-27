@@ -26,8 +26,7 @@ SOFTWARE.
 
 #include <zapata/base.h>
 #include <zapata/json.h>
-#include <zapata/events.h>
-#include <zapata/rest.h>
+#include <zapata/oauth2/config.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -48,17 +47,26 @@ namespace zpt {
 			virtual auto options() -> zpt::json;
 			virtual auto name() -> std::string;
 
-			virtual auto authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-			virtual auto token(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-			virtual auto validate(std::string _access_token, zpt::ev::emitter _emitter) -> zpt::json;
+			virtual auto authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+			virtual auto token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+			virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
+
+			virtual auto retrieve_user(zpt::json _headers) -> zpt::json = 0;
+			virtual auto retrieve_user(std::string _user, std::string password) -> zpt::json = 0;
+			virtual auto retrieve_application(zpt::json _envelope) -> zpt::json = 0;
+			virtual auto store_code(zpt::json _code) -> std::string = 0;
+			virtual auto store_token(zpt::json _token) -> std::string = 0;
+			virtual auto get_code(std::string _code) -> zpt::json = 0;
+			virtual auto get_token(std::string _access_token) -> zpt::json = 0;
+			virtual auto get_refresh_token(std::string _refresh_token) -> zpt::json = 0;
+			virtual auto remove_code(zpt::json _code) -> void = 0;
+			virtual auto remove_token(zpt::json _token) -> void = 0;
 			
 		private:
 			zpt::json __options;
 
-			auto generate_token(zpt::json _owner, zpt::json _application, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) ->zpt::json;
-			auto generate_token(zpt::json _owner, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json;
-			auto generate_token(std::string _owner_url, std::string _application_url, std::string _client_id, std::string _client_secret, std::string _scope, std::string _grant_type, zpt::ev::emitter _emitter) -> zpt::json;
+			auto generate_token(zpt::json _data) ->zpt::json;
 		};
 		
 	}

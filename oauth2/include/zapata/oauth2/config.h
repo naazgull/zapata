@@ -1,27 +1,13 @@
-/* include/zapata/auth/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/auth/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/oauth2/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/oauth2/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/auth/unconfig.h>
+#include <zapata/oauth2/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `boost_filesystem' library
-   (-lboost_filesystem). */
-#define HAVE_LIBBOOST_FILESYSTEM 1
-
-/* Define to 1 if you have the `boost_program_options' library
-   (-lboost_program_options). */
-#define HAVE_LIBBOOST_PROGRAM_OPTIONS 1
-
-/* Define to 1 if you have the `boost_system' library (-lboost_system). */
-#define HAVE_LIBBOOST_SYSTEM 1
-
-/* Define to 1 if you have the `boost_thread' library (-lboost_thread). */
-#define HAVE_LIBBOOST_THREAD 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
@@ -31,9 +17,6 @@
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
-
-/* Define to 1 if you have the `mongoclient' library (-lmongoclient). */
-#define HAVE_LIBMONGOCLIENT 1
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
 #define HAVE_LIBOSSP_UUID__ 1
@@ -55,12 +38,6 @@
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
 #define HAVE_LIBZAPATA_JSON 1
-
-/* Define to 1 if you have the `zapata-rest' library (-lzapata-rest). */
-#define HAVE_LIBZAPATA_REST 1
-
-/* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-#define HAVE_LIBZAPATA_ZMQ 1
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
 #define HAVE_LIBZMQ 1
@@ -93,28 +70,28 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-auth"
+#define PACKAGE "zapata-oauth2"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-auth"
+#define PACKAGE_NAME "zapata-oauth2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-auth 0.9.1-4"
+#define PACKAGE_STRING "zapata-oauth2 0.9.6-1yakkety5"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-auth"
+#define PACKAGE_TARNAME "zapata-oauth2"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.1-4"
+#define PACKAGE_VERSION "0.9.6-1yakkety5"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.1-4"
+#define VERSION "0.9.6-1yakkety5"

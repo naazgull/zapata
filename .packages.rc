@@ -5,6 +5,7 @@ export projects=(
        json
        events
        http
+       oauth2
        mqtt
        zmq
        gen
