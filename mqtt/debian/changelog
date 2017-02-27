@@ -1,179 +1,23 @@
-zapata-http (0.9.6-1yakkety3) yakkety; urgency=medium
+zapata-mqtt (0.9.6-1yakkety4) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Mon, 27 Feb 2017 01:06:03 +0000
+
+zapata-mqtt (0.9.6-1yakkety3) yakkety; urgency=medium
 
   * Version bump
 
  -- n@zgul <naazgull@dfz.pt>  Fri, 24 Feb 2017 16:02:27 +0000
 
-zapata-http (0.9.6-1yakkety2) yakkety; urgency=medium
+zapata-mqtt (0.9.6-1yakkety2) yakkety; urgency=medium
 
   * Version bump
 
  -- n@zgul <naazgull@dfz.pt>  Fri, 24 Feb 2017 12:37:22 +0000
 
-zapata-http (0.9.6-1yakkety1) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Fri, 24 Feb 2017 00:12:15 +0000
-
-zapata-http (0.9.5-1yakkety19) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 23 Feb 2017 22:57:44 +0000
-
-zapata-http (0.9.5-1yakkety18) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 23 Feb 2017 19:35:00 +0000
-
-zapata-http (0.9.5-1yakkety17) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 23 Feb 2017 17:15:55 +0000
-
-zapata-http (0.9.5-1yakkety16) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 23 Feb 2017 15:49:31 +0000
-
-zapata-http (0.9.5-1yakkety15) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Wed, 22 Feb 2017 19:25:03 +0000
-
-zapata-http (0.9.5-1yakkety14) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Wed, 22 Feb 2017 12:25:48 +0000
-
-zapata-http (0.9.5-1yakkety13) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 21 Feb 2017 23:45:20 +0000
-
-zapata-http (0.9.5-1yakkety12) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 21 Feb 2017 16:08:19 +0000
-
-zapata-http (0.9.5-1yakkety11) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Mon, 20 Feb 2017 14:22:39 +0000
-
-zapata-http (0.9.5-1yakkety10) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Mon, 20 Feb 2017 11:18:31 +0000
-
-zapata-http (0.9.5-1yakkety9) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Fri, 10 Feb 2017 12:17:28 +0000
-
-zapata-http (0.9.5-1yakkety8) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 09 Feb 2017 17:12:04 +0000
-
-zapata-http (0.9.5-1yakkety7) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Thu, 09 Feb 2017 13:03:36 +0000
-
-zapata-http (0.9.5-1yakkety6) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Wed, 08 Feb 2017 11:26:06 +0000
-
-zapata-http (0.9.5-1yakkety5) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 14:41:43 +0000
-
-zapata-http (0.9.5-1yakkety4) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 09:48:11 +0000
-
-zapata-http (0.9.5-1yakkety3) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 09:44:23 +0000
-
-zapata-http (0.9.5-1yakkety2) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 02:57:20 +0000
-
-zapata-http (0.9.5-1yakkety1) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:20:54 +0000
-
-zapata-http (0.9.4-1) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:08:57 +0000
-
-zapata-http (0.9.3-1) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:08:25 +0000
-
-zapata-http (0.9.2-1) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 07 Feb 2017 00:04:30 +0000
-
-zapata-http (0.9.1-4) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Mon, 17 Oct 2016 18:46:16 +0100
-
-zapata-http (0.9.1-3) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Sun, 12 Jun 2016 16:04:27 +0100
-
-zapata-http (0.9.1-2) yakkety; urgency=medium
-
-  * Version bump
-
- -- n@zgul <naazgull@dfz.pt>  Sat, 21 May 2016 00:41:06 +0100
-
-zapata-http (0.9.1-1) yakkety; urgency=medium
-
-  * Clean up and refactoring
-
- -- n@zgul <naazgull@dfz.pt>  Tue, 08 Mar 2016 13:06:51 +0000
-
-zapata-http (0.0.8-1) yakkety; urgency=medium
+zapata-mqtt (0.9.6-1yakkety1) yakkety; urgency=medium
 
   * Initial release.
 
- -- n@zgul <naazgull@dfz.pt>  Mon, 09 Nov 2013 14:06:51 +0000
+ -- n@zgul <naazgull@dfz.pt>  Fri, 24 Feb 2017 00:12:15 +0000

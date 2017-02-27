@@ -1,7 +1,7 @@
 /* include/zapata/mqtt/config.h.  Generated from config.h.in by configure.  */
 /* include/zapata/mqtt/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/http/unconfig.h>
+#include <zapata/mqtt/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -61,28 +61,28 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-http"
+#define PACKAGE "zapata-mqtt"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-http"
+#define PACKAGE_NAME "zapata-mqtt"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-http 0.9.6-1yakkety3"
+#define PACKAGE_STRING "zapata-mqtt 0.9.6-1yakkety4"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-http"
+#define PACKAGE_TARNAME "zapata-mqtt"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.6-1yakkety3"
+#define PACKAGE_VERSION "0.9.6-1yakkety4"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.6-1yakkety3"
+#define VERSION "0.9.6-1yakkety4"

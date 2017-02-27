@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-http, 0.9.6-1yakkety3, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-mqtt, 0.9.6-1yakkety4, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -23,7 +23,7 @@ AC_CHECK_LIB(zapata-json, zpt_json)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/http/unconfig.h>])
+AH_TOP([#include <zapata/mqtt/unconfig.h>])
 AC_CONFIG_HEADERS([include/zapata/mqtt/config.h])
 
 dnl Initialize automake
