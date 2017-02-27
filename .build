@@ -45,6 +45,7 @@ do
 	    fi
 	    ;;
 	distcheck)
+	    rm -rfv *.tar.gz
 	    sudo make distcheck && sudo make install
 	    if [[ $? != 0 ]]
 	    then
