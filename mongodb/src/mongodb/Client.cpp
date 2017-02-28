@@ -379,7 +379,7 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	if (!_order.isEmpty()) {
 		_query.sort(_order);
 	}
-	
+	zdbg(_query.obj.jsonString(mongo::JS));
 	zpt::json _fields = zpt::mongodb::get_fields(_opts);
 	mongo::BSONObjBuilder _bb_fields;
 	zpt::mongodb::tomongo(_fields, _bb_fields);
