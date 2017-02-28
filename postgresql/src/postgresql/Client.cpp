@@ -330,6 +330,7 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 		pqxx::result _result;
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
+			zdbg(_pattern);
 			_result = _stmt.exec(_pattern); }
 		for (auto _r : _result) {
 			_elements << zpt::pgsql::fromsql_r(_r);
