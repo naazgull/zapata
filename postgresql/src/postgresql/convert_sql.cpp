@@ -887,7 +887,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 
 			if (_command == "m") {
-				_queryr += zpt::pgsql::escape(_key) + std::string("=") + zpt::pgsql::escape(_expression);
+				_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_expression);
 				continue;
 			}
 			else if (_command == "n") {
@@ -903,18 +903,18 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 							std::string _bexpr(_expression.data());
 							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr += zpt::pgsql::escape(_key) + std::string("=") + zpt::pgsql::escape(_expression);
+								_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_expression);
 							}
 							else {
-								_queryr += zpt::pgsql::escape(_key) + std::string("=") + _bexpr;
+								_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + _bexpr;
 							}
 						}
 						else {
-							_queryr += zpt::pgsql::escape(_key) + std::string("=") + std::to_string(d);
+							_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + std::to_string(d);
 						}
 					}
 					else {
-						_queryr += zpt::pgsql::escape(_key) + std::string("=") + std::to_string(i);
+						_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + std::to_string(i);
 					}
 					continue;
 				}
@@ -923,7 +923,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 				std::map<std::string, std::string>::iterator _found = zpt::pgsql::OPS.find(_command);
 				if (_found != zpt::pgsql::OPS.end()) {
 					if (_bar_count == 2) {
-						_queryr += zpt::pgsql::escape(_key) + _found->second + zpt::pgsql::escape(_expression);
+						_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(_expression);
 					}
 					else if (_options == "n") {
 						std::istringstream iss(_expression);
@@ -937,24 +937,43 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 								std::string _bexpr(_expression.data());
 								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += zpt::pgsql::escape(_key) + _found->second + zpt::pgsql::escape(_expression);
+									_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(_expression);
 								}
 								else {
-									_queryr += zpt::pgsql::escape(_key) + _found->second + _bexpr;
+									_queryr += zpt::pgsql::escape_name(_key) + _found->second + _bexpr;
 								}
 							}
 							else {
-								_queryr += zpt::pgsql::escape(_key) + _found->second + std::to_string(d);
+								_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::to_string(d);
 							}
 						}
 						else {
-							_queryr += zpt::pgsql::escape(_key) + _found->second + std::to_string(i);
+							_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::to_string(i);
 						}
 					}
 					else if (_options == "j") {
+						istringstream iss(_expression);
+						zpt::json _json;
+						try {
+							iss >> _json;
+							if (_json->is_object()) {
+							}
+							else if (_json->is_array()) {
+								std::string _v;
+								for (auto _e : _json->arr()) {
+									if (_v.length() != 0) {
+										_v += ", ";
+									}
+									_v += zpt::pgsql::escape(std::string(_e));
+								}
+								_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::string("(") + _v + std::string(")");
+							}
+						}
+						catch(std::exception& _e) {}
+						
 					}
 					else if (_options == "d") {
-						_queryr += zpt::pgsql::escape(_key) + _found->second + std::string("TIMESTAMP('") + zpt::pgsql::escape(_expression) + std::string("')");
+						_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::string("TIMESTAMP('") + zpt::pgsql::escape(_expression) + std::string("')");
 					}
 					continue;
 				}
@@ -962,7 +981,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 		}
 
-		_queryr += zpt::pgsql::escape(_key) + std::string("=") + zpt::pgsql::escape(_value);
+		_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_value);
 	}
 }
 
