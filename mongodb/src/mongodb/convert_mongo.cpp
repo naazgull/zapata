@@ -300,10 +300,14 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 		return;
 	}
 	for (auto _i : _in->obj()) {
-		string _key = _i.first;
+		std::string _key = _i.first;
 		JSONElement _value = _i.second;
 
-		ostringstream oss;
+		if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" || _key == "embed") {
+			continue;
+		}
+
+		std::ostringstream oss;
 		oss << _key << flush;
 
 		string key = oss.str();

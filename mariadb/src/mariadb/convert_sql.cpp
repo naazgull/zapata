@@ -93,6 +93,10 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 		std::string _key = _i.first;
 		zpt::json _v = _i.second;
 
+		if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" || _key == "embed") {
+			continue;
+		}
+
 		if (_queryr.length() != 0) {
 			_queryr += std::string(" AND ");
 		}
