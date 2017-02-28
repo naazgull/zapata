@@ -131,10 +131,10 @@ auto zpt::test::utf8(std::string _uri) -> bool {
 
 auto zpt::test::ascii(std::string _ascii, bool _with_dash) -> bool {
 	static const std::regex _ascii_rgx(
-		"^([a-zA-Z0-9_]+)$"
+		"^([a-zA-Z0-9_./+*|]+)$"
 	);
 	static const std::regex _ascii_dash_rgx(
-		"^([a-zA-Z0-9_\\-]+)$"
+		"^([a-zA-Z0-9_./+*|\\-]+)$"
 	);
 	if (_with_dash) {
 		return std::regex_match(_ascii, _ascii_dash_rgx);

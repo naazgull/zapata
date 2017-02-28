@@ -3,3 +3,4 @@ src/zapata/zinit_setup /usr/share/zapata/
 src/zapata/zinit_version /usr/share/zapata/
 src/zapata/changelog /usr/share/zapata/
 src/zapata/configure.ac /usr/share/zapata/
+src/zapata/zapata.rc /usr/share/zapata/

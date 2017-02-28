@@ -874,9 +874,15 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	if (_ptr["$log"]["format"]->ok()) {
 		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw") ? 0 : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
 	}
-	if (_ptr["$log"]["file"]->ok()) {
-		zpt::log_fd = new std::ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
+	if (_ptr["$log"]["file"]->is_string() && _ptr["$log"]["file"]->str().length() != 0) {
+		std::ofstream* _lf = new std::ofstream();
+		_lf->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
+		if (_lf->is_open()) {
+			zpt::log_fd = _lf;
+		}
+		else {
+			delete _lf;
+		}
 	}
 
 	return _ptr;

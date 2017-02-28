@@ -1509,11 +1509,14 @@ auto zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::
 auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	std::string _type(_field["type"]);
 	std::string _return;
-	if (_type == "utf8" || _type == "ascii" || _type == "text") {
+	if (_type == "utf8" || _type == "text") {
 		_return += std::string("text");
 	}
 	else if (_type == "string") {
 		_return += std::string("varchar(1024)");
+	}
+	else if (_type == "ascii") {
+		_return += std::string("varchar(128)");
 	}
 	else if (_type == "token" || _type == "hash" || _type == "uri" || _type == "email") {
 		_return += std::string("varchar(512)");
