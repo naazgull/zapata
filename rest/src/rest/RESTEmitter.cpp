@@ -125,7 +125,7 @@ auto zpt::RESTEmitter::get_hash(std::string _pattern) -> std::string {
 		if (_part.back() == '$') {
 			_part.erase(_part.length() - 1, 1);
 		}
-		if (zpt::test::ascii(_part, true)) {
+		if (zpt::test::ascii(_part)) {
 			_return += std::string("/") + _part;
 		}
 		else if (_part != "^") {
