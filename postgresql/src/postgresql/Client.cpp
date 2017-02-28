@@ -302,8 +302,8 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 				_stmt.commit(); }
 		}
 		catch(std::exception& _e) {
-		assertz(false, _e.what(), 412, 0);
-	}
+			assertz(false, _e.what(), 412, 0);
+		}
 
 		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
 	}
@@ -326,12 +326,17 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	zpt::json _elements = zpt::json::array();
 	
-	pqxx::result _result;
-	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		pqxx::work _stmt(this->conn());
-		_result = _stmt.exec(_pattern); }
-	for (auto _r : _result) {
-		_elements << zpt::pgsql::fromsql_r(_r);
+	try {
+		pqxx::result _result;
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_result = _stmt.exec(_pattern); }
+		for (auto _r : _result) {
+			_elements << zpt::pgsql::fromsql_r(_r);
+		}
+	}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
 	}
 	return _elements;
 }
