@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 				"channel", std::string(_uri["path"]),
 				"performative", zpt::ev::from_str(std::string(_opts["X"][0])),
 				"resource", std::string(_uri["path"]),
+				"params", _uri["query"],
 				"payload", (_opts["d"]->ok() ? zpt::json(std::string(_opts["d"][0])) : zpt::undefined)
 			};
 			if (_opts["H"]->ok()) {

@@ -134,7 +134,9 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 			_stmt.exec(_expression);
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
@@ -160,7 +162,9 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 			_stmt.exec(_expression);
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
@@ -191,7 +195,9 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
@@ -217,7 +223,9 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 			_stmt.exec(_expression);
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
 	return 1;
@@ -248,7 +256,9 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
@@ -270,7 +280,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 			_stmt.exec(_expression);
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {}
+	catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
 	return 1;
@@ -289,7 +301,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 				_stmt.exec(_expression);
 				_stmt.commit(); }
 		}
-		catch(std::exception& _e) {}
+		catch(std::exception& _e) {
+		assertz(false, _e.what(), 412, 0);
+	}
 
 		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
 	}

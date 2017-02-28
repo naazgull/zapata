@@ -40,30 +40,41 @@ auto zpt::authenticator::OAuth2::name() -> std::string {
 }
 
 auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json {
-	assertz_mandatory(_envelope["payload"], "scope", 412);
-	assertz_mandatory(_envelope["payload"], "response_type", 412);
+	std::string _param;
+	if (_performative == zpt::ev::Post) {
+		_param.assign("payload");
+	}
+	else {
+		_param.assign("params");
+	}
 
-	std::string _response_type((std::string) _envelope["payload"]["response_type"]);
+	assertz_mandatory(_envelope[_param], "scope", 412);
+	assertz_mandatory(_envelope[_param], "response_type", 412);
+	std::string _response_type = (std::string) _envelope[_param]["response_type"];
+	zpt::json _scope = _envelope[_param]["scope"];
 	
 	if (_response_type == "code") {
-		assertz_mandatory(_envelope["payload"], "client_id", 412);
-		assertz_mandatory(_envelope["payload"], "redirect_uri", 412);
-		zpt::json _redirect_uri = _envelope["payload"]["redirect_uri"];
+		assertz_mandatory(_envelope[_param], "client_id", 412);
+		assertz_mandatory(_envelope[_param], "redirect_uri", 412);
+		
+		zpt::json _redirect_uri = _envelope[_param]["redirect_uri"];
+		zpt::json _client_id = _envelope[_param]["client_id"];
+		zpt::json _state = _envelope[_param]["state"];
 
 		zpt::json _user;
 		try {
-			_user = this->retrieve_user(_envelope["headers"]);
+			_user = this->retrieve_user(_envelope);
 		}
 		catch(zpt::assertion& _e) {
-			std::string _state(std::string("response_type=code") + std::string("&scope=") + (_envelope["payload"]["scope"]->ok() ? _envelope["payload"]["scope"]->str() : "defaults") + std::string("&client_id=") + _envelope["payload"]["client_id"]->str() + std::string("&redirect_uri=") + _envelope["payload"]["redirect_uri"]->str() + std::string("&state=") + ((std::string) _envelope["payload"]["state"]));
-			zpt::base64::encode(_state);
-			zpt::url::encode(_state);
+			std::string _l_state(std::string("response_type=code") + std::string("&scope=") + (_scope->ok() ? _scope->str() : "defaults") + std::string("&client_id=") + _client_id->str() + std::string("&redirect_uri=") + _redirect_uri->str() + std::string("&state=") + ((std::string) _state));
+			zpt::base64::encode(_l_state);
+			zpt::url::encode(_l_state);
 			std::string _login_url = std::string(_opts["url"]["login"]);	
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
 					"Set-Cookie", (std::string("deleted; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; expires=Thu, Jan 01 1970 00:00:00 UTC; HttpOnly")), 
-					"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _state)
+					"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _l_state)
 				}
 			};
 		}
@@ -80,46 +91,53 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				}
 			};
 		}
-		
-		std::string _code = this->store_code({
+
+		zpt::json _token = this->generate_token(
+			{
 				"response_type", _response_type,
-				"client_id", _envelope["payload"]["client_id"],
-				"scope", _envelope["payload"]["scope"],
+				"client_id", _client_id,
+				"scope", _scope,
 				"owner_id", _user["id"]
 			}
 		);
+		this->store_token(_token);
 		return {
 			"status", (_performative == zpt::ev::Post ? 303 : 307),
 			"headers", {
 				"Location", (
 					(std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) +
-						std::string("code=") + _code +
-						(_envelope["payload"]["state"]->ok() ? std::string("&state=") + _envelope["payload"]["state"]->str() : std::string("")))
+						std::string("code=") + std::string(_token["code"]) +
+						(_state->ok() ? std::string("&state=") + _state->str() : std::string("")))
 				)
 			}
 		};
 	}
 	else if (_response_type == "password") {
-		assertz_mandatory(_envelope["payload"], "client_id", 412);
-		assertz_mandatory(_envelope["payload"], "username", 412);
-		assertz_mandatory(_envelope["payload"], "password", 412);
-		zpt::json _redirect_uri = _envelope["payload"]["redirect_uri"];
+		assertz_mandatory(_envelope[_param], "client_id", 412);
+		assertz_mandatory(_envelope[_param], "username", 412);
+		assertz_mandatory(_envelope[_param], "password", 412);
+		
+		zpt::json _redirect_uri = _envelope[_param]["redirect_uri"];
+		zpt::json _client_id = _envelope[_param]["client_id"];
+		zpt::json _username = _envelope[_param]["username"];
+		zpt::json _password = _envelope[_param]["password"];
+		zpt::json _state = _envelope[_param]["state"];
 
 		zpt::json _user;
 		try {
-			_user = this->retrieve_user(std::string(_envelope["payload"]["username"]), std::string(_envelope["payload"]["password"]));;
+			_user = this->retrieve_user(std::string(_username), std::string(_password));
 		}
 		catch(zpt::assertion& _e) {
 			if (_redirect_uri->is_string()) {
-				std::string _state(std::string("response_type=code") + std::string("&scope=") + (_envelope["payload"]["scope"]->ok() ? _envelope["payload"]["scope"]->str() : "defaults") + std::string("&client_id=") + _envelope["payload"]["client_id"]->str() + std::string("&redirect_uri=") + _envelope["payload"]["redirect_uri"]->str() + std::string("&state=") + ((std::string) _envelope["payload"]["state"]));
-				zpt::base64::encode(_state);
-				zpt::url::encode(_state);
+				std::string _l_state(std::string("response_type=code") + std::string("&scope=") + (_scope->ok() ? _scope->str() : "defaults") + std::string("&client_id=") + _client_id->str() + std::string("&redirect_uri=") + _redirect_uri->str() + std::string("&state=") + ((std::string) _state));
+				zpt::base64::encode(_l_state);
+				zpt::url::encode(_l_state);
 				std::string _login_url = std::string(_opts["url"]["login"]);	
 				return {
 					"status", (_performative == zpt::ev::Post ? 303 : 307),
 					"headers", {
 						"Set-Cookie", (std::string("deleted; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; expires=Thu, Jan 01 1970 00:00:00 UTC; HttpOnly")), 
-						"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _state)
+						"Location", (_login_url + (_login_url.find("?") != std::string::npos ? "&" : "?") + std::string("state=") + _l_state)
 					}
 				};
 			}
@@ -145,8 +163,8 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		zpt::json _token = this->generate_token(
 			{
 				"response_type", _response_type,
-				"client_id", _envelope["payload"]["client_id"],
-				"scope", _envelope["payload"]["scope"],
+				"client_id", _client_id,
+				"scope", _scope,
 				"owner_id", _user["id"]
 			}
 		);
@@ -155,13 +173,13 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
-					"Set-Cookie", (_token["access_token"]->str() + std::string("; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; HttpOnly")), 
+					"Set-Cookie", (_token["access_token"]->str() + std::string("; owner=") + std::string(_user["id"]) + std::string("; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; HttpOnly")), 
 					"Location", (
 						(std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? "&" : "?") +
 							std::string("access_token=") + _token["access_token"]->str() +
 							std::string("&refresh_token=") + _token["refresh_token"]->str() +
 							std::string("&expires=") + ((std::string) _token["expires"]) +
-							std::string("&state=") + ((std::string) _envelope["payload"]["state"]))
+							std::string("&state=") + ((std::string) _state))
 					)
 				}
 			};
@@ -177,9 +195,13 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		return zpt::undefined;
 	}					
 	else if (_response_type == "client_credentials") {
-		assertz_mandatory(_envelope["payload"], "client_id", 412);
-		assertz_mandatory(_envelope["payload"], "client_secret", 412);
+		assertz_mandatory(_envelope[_param], "client_id", 412);
+		assertz_mandatory(_envelope[_param], "client_secret", 412);
+
 		zpt::json _redirect_uri = _envelope["payload"]["redirect_uri"];
+		zpt::json _client_id = _envelope[_param]["client_id"];
+		zpt::json _client_secret = _envelope[_param]["client_secret"];
+		zpt::json _state = _envelope[_param]["state"];
 
 		zpt::json _application;
 		try {
@@ -197,9 +219,9 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		zpt::json _token = this->generate_token(
 			{
 				"response_type", _response_type,
-				"client_id", _envelope["payload"]["client_id"],
-				"client_secret", _envelope["payload"]["client_secret"],
-				"scope", _envelope["payload"]["scope"]
+				"client_id", _client_id,
+				"client_secret", _client_secret,
+				"scope", _scope
 			}
 		);
 		this->store_token(_token);
@@ -212,7 +234,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 							std::string("access_token=") + _token["access_token"]->str() +
 							std::string("&refresh_token=") + _token["refresh_token"]->str() +
 							std::string("&expires=") + ((std::string) _token["expires"]) +
-							std::string("&state=") + ((std::string) _envelope["payload"]["state"]))
+							std::string("&state=") + ((std::string) _state))
 					)
 				}
 			};
@@ -232,10 +254,7 @@ auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt:
 	assertz_mandatory(_envelope["payload"], "client_secret", 412);
 	assertz_mandatory(_envelope["payload"], "code", 412);
 
-	zpt::json _code = this->get_code(std::string(_envelope["payload"]["code"]));
-	zpt::json _token = this->generate_token(_code);
-	this->store_token(_token);
-	this->remove_code({ "code", std::string(_envelope["payload"]["code"]) });
+	zpt::json _token = this->get_code(std::string(_envelope["payload"]["code"]));
 	return {
 		"status", 200,
 		"payload", _token
@@ -247,9 +266,10 @@ auto zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zp
 	assertz_mandatory(_envelope["payload"], "refresh_token", 412);
 
 	zpt::json _refresh_token = this->get_refresh_token(std::string(_envelope["payload"]["refresh_token"]));
+	assertz_mandatory(_refresh_token, "access_token", 412);
+	this->remove_token(_refresh_token);
 	zpt::json _token = this->generate_token(_refresh_token);
 	this->store_token(_token);
-	this->remove_token(_refresh_token);
 	return {
 		"status", 200,
 		"payload", _token
@@ -271,23 +291,22 @@ auto zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::json _
 auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 	std::string _client_id = std::string(_data["client_id"]);
 	std::string _scope = std::string(_data["scope"]);
-	std::string _grant_type = std::string(_data["repsonse_type"]);
+	std::string _grant_type = std::string(_data["response_type"]);
 	std::string _owner_id = std::string(_data["owner"]);
 	std::string _client_secret = std::string(_data["client_secret"]);
+	std::string _access_token = zpt::generate::r_key(128);
 	
-	std::string _access_token(zpt::generate::r_key(128));
-	std::string _refresh_token(zpt::generate::r_key(64));
-	zpt::timestamp_t _expires = (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 90L * 24L * 3600L * 1000L;
 	zpt::json _token = {
 		"id", _access_token,
 		"access_token", _access_token,
-		"refresh_token", _refresh_token,
-		"expires", _expires,
+		"refresh_token", zpt::generate::r_key(64),
+		"code", zpt::generate::r_key(64),
+		"expires", (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 90L * 24L * 3600L * 1000L,
 		"scope", zpt::split(_scope, ",", true),
 		"grant_type", _grant_type,
 		"client_id", _client_id,
-		"owner_id", _owner_id
+		"owner_id", (_owner_id.length() != 0 ? zpt::json::string(_owner_id) : zpt::undefined)
 	};
 	
-	return _token;
+	return _token + this->get_roles_permissions(_token);
 }

@@ -139,4 +139,10 @@ namespace zpt {
 		auto timestamp(zpt::json _timestamp) -> bool;
 	}
 
+	namespace http {
+		namespace cookies {
+			auto deserialize(std::string _cookie_header) -> zpt::json;
+			auto serialize(zpt::json _info) -> std::string;
+		}
+	}
 }

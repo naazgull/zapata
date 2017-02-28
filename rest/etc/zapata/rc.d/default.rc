@@ -2,3 +2,10 @@
 export ZAPATA_LOG_DIR=/var/log/zapata/
 export ZAPATA_IP_ADDR=$(hostname --all-ip-addresses | awk '{print $1}')
 export ZAPATA_MUTATIONS_ADDR=localhost
+
+export ZAPATA_MUTATIONS_ENABLED=true
+export ZAPATA_MUTATIONS_RUN=false
+
+export ZAPATA_LOG_LEVEL=5
+export ZAPATA_LOG_FILE=/var/log/zapata/default.log
+export ZAPATA_LOG_FORMAT=pretty

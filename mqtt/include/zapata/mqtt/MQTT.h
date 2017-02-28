@@ -85,6 +85,8 @@ namespace zpt {
 		 */
 		virtual ~MQTT();
 		
+		auto unbind() -> void;
+		
 		/**
 		 * Sets MQTT server access credentials.
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_username_pw_set

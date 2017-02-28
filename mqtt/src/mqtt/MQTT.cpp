@@ -51,6 +51,10 @@ zpt::MQTT::~MQTT() {
 	 mosquitto_lib_cleanup();
 }
 
+auto zpt::MQTT::unbind() -> void {
+	this->__self.reset();
+}
+
 auto zpt::MQTT::credentials(std::string _user, std::string _passwd) -> void {
 	this->__user = _user;
 	this->__passwd = _passwd;

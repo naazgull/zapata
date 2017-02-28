@@ -150,7 +150,7 @@ auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connecto
 		}
 		catch(std::exception& _e) {
 			zlog(_e.what(), zpt::error);
-			throw;
+			return;
 		}
 		this->__connector.insert(make_pair(_name, _connector));
 	}

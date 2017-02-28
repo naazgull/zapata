@@ -200,10 +200,6 @@ namespace zpt {
 
 		auto url_pattern(zpt::json _to_join) -> std::string;
 
-		namespace cookies {
-			auto deserialize(std::string _cookie_header) -> zpt::json;
-			auto serialize(zpt::json _credentials) -> std::string;
-		}
 	}
 
 }

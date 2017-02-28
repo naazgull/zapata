@@ -52,12 +52,32 @@ zpt::json zpt::ZMQ::options() {
 	return this->__options;
 }
 
-auto zpt::ZMQ::connection() -> std::string{
+auto zpt::ZMQ::connection() -> std::string {
 	return this->__connection;
 }
 
 auto zpt::ZMQ::connection(std::string _connection) -> void{
 	this->__connection.assign(_connection);
+}
+
+auto zpt::ZMQ::uri(size_t _idx) -> zpt::json {
+	return this->__uri[_idx];
+}
+
+auto zpt::ZMQ::uri(std::string _uris) -> void{
+	this->__uri = zpt::json::array();
+
+	zpt::json _addresses = zpt::split(_uris, ",", true);
+	for (auto _address : _addresses->arr()) {
+		zpt::json _uri = zpt::uri::parse(std::string(_address));
+		if (!_uri["type"]->is_string()) {
+			_uri << "type" << ">";
+		}
+		if (!_uri["port"]->is_string()) {
+			_uri << "port" << "*";
+		}
+		this->__uri << _uri;
+	}
 }
 
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
@@ -143,7 +163,7 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	_envelope <<
 	"channel" << _uri["path"] <<
 	"resource" << _uri["path"] <<
-	"params" << _uri["query"];
+	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
@@ -187,15 +207,15 @@ auto zpt::ZMQ::unlisten() -> void {
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
@@ -205,8 +225,9 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
-		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
-	}	
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
+		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 	zsock_set_rcvtimeo(this->__socket, 20000);
@@ -277,15 +298,15 @@ auto zpt::ZMQReq::unbind() -> void {
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REP);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
@@ -295,8 +316,9 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}	
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -363,17 +385,17 @@ auto zpt::ZMQRep::unbind() -> void {
 
 zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zactor_new(zproxy, nullptr);
-	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
-	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
-	if (_connection2.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection2.find(":", 5);
-		std::string _port_part = _connection2.substr(_port_sep + 1);
+	this->uri(_connection);
+	std::string _connection1;
+	std::string _connection2;
+	if (this->uri(1)["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri(1)["port"] != zpt::json::string("*")) {
+			_available = int(this->uri(1)["port"]);
 		}
 		do {
-			_connection2.assign(_connection2.substr(0, _port_sep + 1) + std::to_string(_available));
+			_connection2.assign(std::string("@tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri(1) << "port" << std::to_string(_available);
 			if (zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr) != -1) {
 				if (zsock_wait(this->__socket) != -1) {
 					break;
@@ -385,18 +407,18 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt
 		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
 	}
 	else {
+		_connection2.assign(std::string(this->uri(1)["type"]) + std::string("tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::string(this->uri(1)["port"]));
 		zstr_sendx(this->__socket, "FRONTEND", "XPUB", _connection2.data(), nullptr);
 		zsock_wait(this->__socket);
-	}	
-	if (_connection1.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection1.find(":", 5);
-		std::string _port_part = _connection1.substr(_port_sep + 1);
+	}
+	if (this->uri(0)["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri(0)["port"] != zpt::json::string("*")) {
+			_available = int(this->uri(0)["port"]);
 		}
 		do {
-			_connection1.assign(_connection1.substr(0, _port_sep + 1) + std::to_string(_available));
+			_connection1.assign(std::string("@tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri(0) << "port" << std::to_string(_available);
 			if (zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr) != -1) {
 				if (zsock_wait(this->__socket) != -1) {
 					break;
@@ -408,6 +430,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt
 		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
 	}
 	else {
+		_connection1.assign(std::string(this->uri(0)["type"]) + std::string("tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::string(this->uri(0)["port"]));
 		zstr_sendx(this->__socket, "BACKEND", "XSUB", _connection1.data(), nullptr);
 		zsock_wait(this->__socket);
 	}
@@ -464,8 +487,9 @@ auto zpt::ZMQXPubXSub::unbind() -> void {
 }
 
 zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
-	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
-	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
+	this->uri(_connection);
+	std::string _connection1(std::string(this->uri(0)["type"]) + std::string("tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::string(this->uri(0)["port"]));
+	std::string _connection2(std::string(this->uri(1)["type"]) + std::string("tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::string(this->uri(1)["port"]));
 	this->__socket_sub = zsock_new(ZMQ_SUB);
 	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	this->__socket_pub = zsock_new(ZMQ_PUB);
@@ -546,26 +570,27 @@ void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUB);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}	
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -633,26 +658,27 @@ auto zpt::ZMQPub::unbind() -> void {
 
 zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options) {
 	this->__socket = zsock_new(ZMQ_SUB);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}	
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -730,26 +756,27 @@ void zpt::ZMQSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUSH);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}	
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -818,26 +845,27 @@ auto zpt::ZMQPush::unbind() -> void {
 
 zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PULL);
-	if (_connection.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection.find(":", 5);
-		std::string _port_part = _connection.substr(_port_sep + 1);
+	this->uri(_connection);
+	if (this->uri()["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri()["port"] != zpt::json::string("*")) {
+			_available = int(this->uri()["port"]);
 		}
 		do {
-			this->connection(_connection.substr(0, _port_sep + 1) + std::to_string(_available));
+			this->connection(std::string("@tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri() << "port" << std::to_string(_available);
 			if(zsock_attach(this->__socket, this->connection().data(), false) == 0) {
 				break;
 			}
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
+		assertz(_available < 60999, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + _connection, 500, 0);
 	}
 	else {
+		this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	}	
+	}
 	zsock_set_sndhwm(this->__socket, 1000);	
 	zsock_set_sndtimeo(this->__socket, 20000);
 
@@ -907,17 +935,17 @@ auto zpt::ZMQPull::unbind() -> void {
 
 zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zactor_new(zproxy, nullptr);
-	std::string _connection1(this->connection().substr(0, this->connection().find(",")));
-	std::string _connection2(this->connection().substr(this->connection().find(",") + 1));
-	if (_connection1.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection1.find(":", 5);
-		std::string _port_part = _connection1.substr(_port_sep + 1);
+	this->uri(_connection);
+	std::string _connection1;
+	std::string _connection2;
+	if (this->uri(0)["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri(0)["port"] != zpt::json::string("*")) {
+			_available = int(this->uri(0)["port"]);
 		}
 		do {
-			_connection1.assign(_connection1.substr(0, _port_sep + 1) + std::to_string(_available));
+			_connection1.assign(std::string("@tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri(0) << "port" << std::to_string(_available);
 			if (zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr) != -1) {
 				if (zsock_wait(this->__socket) != -1) {
 					break;
@@ -926,21 +954,21 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+		assertz(_available < 60999, std::string("could not attach ROUTER/DEALER socket to ") + _connection, 500, 0);
 	}
 	else {
+		_connection1.assign(std::string(this->uri(0)["type"]) + std::string("tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::string(this->uri(0)["port"]));
 		zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
 		zsock_wait(this->__socket);
 	}
-	if (_connection2.find("@tcp:") != std::string::npos) {
-		size_t _port_sep = _connection2.find(":", 5);
-		std::string _port_part = _connection2.substr(_port_sep + 1);
+	if (this->uri(1)["type"] == zpt::json::string("@")) {
 		int _available = 32769;
-		if (_port_part != "*") {
-			_available = (int) zpt::json::string(_port_part);
+		if (this->uri(1)["port"] != zpt::json::string("*")) {
+			_available = int(this->uri(1)["port"]);
 		}
 		do {
-			_connection2.assign(_connection2.substr(0, _port_sep + 1) + std::to_string(_available));
+			_connection2.assign(std::string("@tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::to_string(_available));
+			this->uri(1) << "port" << std::to_string(_available);
 			if (zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr) != -1) {
 				if (zsock_wait(this->__socket) != -1) {
 					break;
@@ -949,12 +977,13 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 			_available++;
 		}
 		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach XPUB/XSUB socket to ") + _connection, 500, 0);
+		assertz(_available < 60999, std::string("could not attach ROUTER/DEALER socket to ") + _connection, 500, 0);
 	}
 	else {
+		_connection2.assign(std::string(this->uri(1)["type"]) + std::string("tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::string(this->uri(1)["port"]));
 		zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
 		zsock_wait(this->__socket);
-	}	
+	}
 	this->connection(_connection1);
 	if (_options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
@@ -1017,8 +1046,11 @@ auto zpt::ZMQRouterDealer::unbind() -> void {
 
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __type(-1), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
+	this->uri(_connection);
+	assertz(this->uri()["type"] == zpt::json::string(">"), "ASSYNC_REQ socket type must be '>'", 500, 0);
+	this->connection(std::string(this->uri()["type"]) + std::string("tcp://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
 	assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	zsock_set_sndhwm(this->__socket, 1000);	
+	zsock_set_sndhwm(this->__socket, 1000);
 	zsock_set_sndtimeo(this->__socket, 20000);
 	zsock_set_rcvtimeo(this->__socket, 20000);
 

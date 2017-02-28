@@ -52,15 +52,14 @@ namespace zpt {
 			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 			virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
 
-			virtual auto retrieve_user(zpt::json _headers) -> zpt::json = 0;
+			virtual auto retrieve_user(zpt::json _envelope) -> zpt::json = 0;
 			virtual auto retrieve_user(std::string _user, std::string password) -> zpt::json = 0;
 			virtual auto retrieve_application(zpt::json _envelope) -> zpt::json = 0;
-			virtual auto store_code(zpt::json _code) -> std::string = 0;
 			virtual auto store_token(zpt::json _token) -> std::string = 0;
 			virtual auto get_code(std::string _code) -> zpt::json = 0;
 			virtual auto get_token(std::string _access_token) -> zpt::json = 0;
 			virtual auto get_refresh_token(std::string _refresh_token) -> zpt::json = 0;
-			virtual auto remove_code(zpt::json _code) -> void = 0;
+			virtual auto get_roles_permissions(zpt::json _token) -> zpt::json = 0;
 			virtual auto remove_token(zpt::json _token) -> void = 0;
 			
 		private:

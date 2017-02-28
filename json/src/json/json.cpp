@@ -238,7 +238,7 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 		_uri = std::string("zpt://127.0.0.1") + _uri;
 	}
 	static const std::regex _uri_rgx(
-		"[@>]{0,1}([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
+		"([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
 		"([/]{1,2})([^/]+)"           // authority
 		"([^?#]*)"                    // path
 		"(?:\\?([^#]*))?"             // ?query
@@ -248,20 +248,21 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 	std::smatch _uri_matches;
 	std::regex_match(_uri, _uri_matches, _uri_rgx);
 
-	std::string _q_str = (std::string) _uri_matches[5];
+	std::string _q_str = (std::string) _uri_matches[6];
 	zpt::json _query = zpt::uri::query::parse(_q_str);
-	zpt::json _authority = zpt::uri::authority::parse((std::string) _uri_matches[3]);
+	zpt::json _authority = zpt::uri::authority::parse((std::string) _uri_matches[4]);
 
 	return {
-		"scheme", (std::string) _uri_matches[1],
-		"authority", (std::string) _uri_matches[3],
+		"type", (((std::string) _uri_matches[1]).length() == 0 ? zpt::undefined :  zpt::json::string((std::string) _uri_matches[1])),
+		"scheme", (std::string) _uri_matches[2],
+		"authority", (std::string) _uri_matches[4],
 		"domain", _authority["domain"],
 		"port", _authority["port"],
 		"user", _authority["user"],
 		"password", _authority["password"],
-		"path", (std::string) _uri_matches[4],
+		"path", (std::string) _uri_matches[5],
 		"query", (_query->obj()->size() != 0 ? _query : zpt::undefined),
-		"fragment", zpt::url::r_decode((std::string) _uri_matches[6])
+		"fragment", zpt::url::r_decode((std::string) _uri_matches[7])
 	};
 }
 
@@ -329,6 +330,39 @@ auto zpt::test::timestamp(zpt::json _timestamp) -> bool {
 	);
 	return std::regex_match(_timestamp->str(), _timestamp_rgx);
 }
+
+auto zpt::http::cookies::deserialize(std::string _cookie_header) -> zpt::json {
+	zpt::json _splitted = zpt::split(_cookie_header, ";");
+	zpt::json _return = zpt::json::object();
+	bool _first = true;
+	for (auto _part : _splitted->arr()){
+		std::string _value = std::string(_part);
+		zpt::trim(_value);
+		if (_first) {
+			_return << "value" << zpt::json::string(_value); 
+			_first = false;
+		}
+		else {
+			zpt::json _pair = zpt::split(_value, "=");
+			if (_pair->arr()->size() == 2) {
+				_return << _pair[0]->str() << _pair[1];
+			}
+		}
+	}
+	return _return;
+}
+
+auto zpt::http::cookies::serialize(zpt::json _info) -> std::string {
+	std::string _return((std::string) _info["value"]);
+	for (auto _field : _info->obj()) {
+		if (_field.first == "value") {
+			continue;
+		}
+		_return += std::string("; ") + _field.first + std::string("=") + std::string(_field.second);
+	}
+	return _return;
+}
+
 
 extern "C" auto zpt_json() -> int {
 	return 1;

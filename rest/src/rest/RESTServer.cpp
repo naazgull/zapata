@@ -206,17 +206,20 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
 				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
 				this->__router_dealer.push_back(_socket);
+				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
 			case ZMQ_PUB_SUB : {
 				zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
 				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
 				this->__pub_sub.push_back(_socket);
+				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
 			default : {
 				zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
 				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
+				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
 		}
@@ -309,9 +312,8 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 }
 
 zpt::RESTServer::~RESTServer(){
-	zpt::ZMQPoll* _poll = this->__poll.get();
-	this->__poll.reset();
-	_poll->unbind();
+	this->__poll->unbind();
+	this->__mqtt->unbind();
 	this->__self.reset();
 }
 
@@ -656,11 +658,16 @@ auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 	else {
 		_payload = zpt::json::object();
 	}
-	for (auto _param : _request->params()) {
-		_payload << _param.first << _param.second;
-	}
 	_return << "payload" << _payload;
 
+	if (_request->params().size() != 0) {
+		zpt::json _params = zpt::json::object();
+		for (auto _param : _request->params()) {
+			_params << _param.first << _param.second;
+		}
+		_return << "params" << _params;
+	}
+	
 	zpt::json _headers = zpt::json::object();
 	for (auto _header : _request->headers()) {
 		_headers << _header.first << _header.second;

@@ -566,36 +566,4 @@ auto zpt::rest::options(std::string _resource, std::string _origin) -> zpt::json
 
 auto zpt::rest::url_pattern(zpt::json _to_join) -> std::string {
 	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
-}
-		
-auto zpt::rest::cookies::deserialize(std::string _cookie_header) -> zpt::json {
-	zpt::json _splitted = zpt::split(_cookie_header, ";");
-	zpt::json _return = zpt::json::object();
-	bool _first = true;
-	for (auto _part : _splitted->arr()){
-		std::string _value = std::string(_part);
-		zpt::trim(_value);
-		if (_first) {
-			_return << "value" << zpt::json::string(_value); 
-			_first = false;
-		}
-		else {
-			zpt::json _pair = zpt::split(_value, "=");
-			if (_pair->arr()->size() == 2) {
-				_return << _pair[0]->str() << _pair[1];
-			}
-		}
-	}
-	return _return;
-}
-
-auto zpt::rest::cookies::serialize(zpt::json _info) -> std::string {
-	std::string _return((std::string) _info["value"]);
-	for (auto _field : _info->obj()) {
-		if (_field.first == "value") {
-			continue;
-		}
-		_return += std::string("; ") + _field.first + std::string("=") + std::string(_field.second);
-	}
-	return _return;
-}
+}		

@@ -144,7 +144,7 @@ auto zpt::test::ascii(std::string _ascii, bool _with_dash) -> bool {
 
 auto zpt::test::token(std::string _token) -> bool {
 	static const std::regex _token_rgx(
-		"^([a-zA-Z])([a-zA-Z0-9]*)$"
+		"^([a-zA-Z0-9])([a-zA-Z0-9]*)$"
 	);
 	return std::regex_match(_token, _token_rgx);
 }
