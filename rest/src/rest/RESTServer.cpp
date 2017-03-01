@@ -230,14 +230,13 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		if (!_uri["port"]->ok()) {
 			_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
 		}
-		zdbg(_uri);
 		if (_uri["user"]->ok() && _uri["password"]->ok()) {
 			this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
 		}
 			
 		this->__mqtt->on("connect",
 			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				zlog(std::string("MQTT server is available at ") + std::string(this->__options["mqtt"]["bind"]), zpt::notice);
+				zlog(std::string("MQTT server is up"), zpt::notice);
 			}
 		);
 		this->__mqtt->on("disconnect",
@@ -341,7 +340,11 @@ void zpt::RESTServer::start() {
 	try {
 		if (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()) {
 			this->__mqtt->start();
-			zlog(std::string("starting MQTT listener for ") + std::string(this->__options["mqtt"]["bind"]), zpt::notice);
+			zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]));
+			if (!_uri["port"]->ok()) {
+				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+			}
+			zlog(std::string("starting MQTT listener for ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
 		}
 		
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
@@ -358,7 +361,7 @@ void zpt::RESTServer::start() {
 							zlog(std::string("couldn't bind HTTP listener to ") + std::string(this->__options["http"]["bind"]), zpt::alert);
 							return;
 						}
-						zlog(std::string("starting HTTP listener for ") + std::string(this->__options["http"]["bind"]), zpt::notice);
+						zlog(std::string("starting HTTP listener for ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
 
 						for (; true; ) {
 							int _fd = -1;

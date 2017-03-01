@@ -169,7 +169,7 @@ auto zpt::Generator::build_data_layer() -> void {
 					std::string _fields;
 					std::string _pk_constraint(",\n\tprimary key(id");
 					int _pks = 0;
-					_fields += std::string("\tid char(36) not null,\n");
+					_fields += std::string("\tid ") + (_datum["index_type"]->is_string() ? zpt::GenDatum::get_type({ "type", _datum["index_type"] }) : std::string("char(36)"))  + std::string(" not null,\n");
 					_fields += std::string("\tcreated timestamp not null,\n");
 					_fields += std::string("\tupdated timestamp not null,\n");
 					_fields += std::string("\thref varchar(1024) not null");
@@ -1507,8 +1507,14 @@ auto zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::
 }
 
 auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
+	zpt::json _opts = zpt::gen::get_opts(_field);
 	std::string _type(_field["type"]);
 	std::string _return;
+	
+	if (_opts["serial"]->ok()) {
+		return "serial";
+	}
+	
 	if (_type == "utf8" || _type == "text") {
 		_return += std::string("text");
 	}

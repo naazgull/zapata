@@ -86,7 +86,7 @@ auto zpt::mariadb::fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json {
 }
 
 auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
-	if (_in->ok() && _in->type() == zpt::JSObject) {
+	if (!_in->is_object()) {
 		return;
 	}
 	for (auto _i : _in->obj()) {
@@ -217,7 +217,7 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 }
 
 auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
-	if (_in->ok() && _in->type() == zpt::JSObject) {
+	if (!_in->is_object()) {
 		return;
 	}
 

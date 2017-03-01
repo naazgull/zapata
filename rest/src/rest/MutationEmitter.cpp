@@ -75,7 +75,7 @@ auto zpt::RESTMutationEmitter::on(zpt::mutation::operation _operation, std::stri
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
+	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
@@ -94,7 +94,7 @@ auto zpt::RESTMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mu
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
+	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
@@ -134,7 +134,7 @@ auto zpt::RESTMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation listener for ") + _uri, zpt::notice);
+	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
 	return _uuid;
 }
 
@@ -293,11 +293,12 @@ void zpt::RESTMutationServer::start() {
 		}
 		_mqtt->on("connect",
 			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				zlog(std::string("mutations listener forwarding to ") + std::string(this->__options["$mutations"]["forward"]["mqtt"]), zpt::warning);
+				zlog(std::string("MQTT connected"), zpt::warning);
 			}
 		);
 		_mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
 		_mqtt->start();
+		zlog(std::string("starting MQTT forwarding to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
 	}
 	for(; true; ) {
 		zpt::json _mutation = this->__client->recv();

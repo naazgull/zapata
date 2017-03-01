@@ -296,7 +296,7 @@ void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out,
 }
 
 void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
-	if (!_in->ok()) {
+	if (!_in->is_object()) {
 		return;
 	}
 	for (auto _i : _in->obj()) {

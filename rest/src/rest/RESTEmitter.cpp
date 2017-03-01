@@ -343,7 +343,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 			"status", 404,
 			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
 			"payload", {
-				"text", "the requrested resource was not found"
+				"text", "the requested resource was not found"
 			}
 		};
 	}
@@ -353,7 +353,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 			"status", 405,
 			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
 			"payload", {
-				"text", "the requrested performative is not allowed to be used with the requested resource"
+				"text", "the requested performative is not allowed to be used with the requested resource"
 			}
 		};
 	}

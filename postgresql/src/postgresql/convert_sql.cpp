@@ -34,6 +34,10 @@ namespace zpt {
 auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 	for (auto _f : _in) {
 		_out << std::string(_f.name());
+		if (_f.is_null()) {
+			_out << zpt::undefined;
+			continue;
+		}
 		switch(_f.type()) {
 			// T_bool            
 			case 16 : {
@@ -432,52 +436,52 @@ auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 			} 
 			// T_date            
 			case 1082 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T_time            
 			case 1083 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T_timestamp       
 			case 1114 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__timestamp      
 			case 1115 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__date           
 			case 1182 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__time           
 			case 1183 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T_timestamptz     
 			case 1184 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__timestamptz    
 			case 1185 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T_interval        
 			case 1186 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__interval       
 			case 1187 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__numeric        
@@ -497,12 +501,12 @@ auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 			} 
 			// T_timetz          
 			case 1266 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T__timetz         
 			case 1270 : {
-				_out << zpt::json::date(_f.as<zpt::timestamp_t>());
+				_out << zpt::json::date(zpt::r_replace(_f.as<std::string>(), " ", "T"));
 				break;
 			} 
 			// T_bit             
@@ -840,7 +844,7 @@ auto zpt::pgsql::fromsql_r(pqxx::tuple _in) -> zpt::json {
 }
 
 auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
-	if (_in->ok() && _in->type() == zpt::JSObject) {
+	if (!_in->is_object()) {
 		return;
 	}
 	for (auto _i : _in->obj()) {
@@ -891,7 +895,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 
 			if (_command == "m") {
-				_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_expression);
+				_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(zpt::json::string(_expression));
 				continue;
 			}
 			else if (_command == "n") {
@@ -907,7 +911,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 							std::string _bexpr(_expression.data());
 							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_expression);
+								_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(zpt::json::string(_expression));
 							}
 							else {
 								_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + _bexpr;
@@ -927,7 +931,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 				std::map<std::string, std::string>::iterator _found = zpt::pgsql::OPS.find(_command);
 				if (_found != zpt::pgsql::OPS.end()) {
 					if (_bar_count == 2) {
-						_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(_expression);
+						_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(zpt::json::string(_expression));
 					}
 					else if (_options == "n") {
 						std::istringstream iss(_expression);
@@ -941,7 +945,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 								std::string _bexpr(_expression.data());
 								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(_expression);
+									_queryr += zpt::pgsql::escape_name(_key) + _found->second + zpt::pgsql::escape(zpt::json::string(_expression));
 								}
 								else {
 									_queryr += zpt::pgsql::escape_name(_key) + _found->second + _bexpr;
@@ -968,7 +972,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 									if (_v.length() != 0) {
 										_v += ", ";
 									}
-									_v += zpt::pgsql::escape(std::string(_e));
+									_v += zpt::pgsql::escape(_e);
 								}
 								_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::string("(") + _v + std::string(")");
 							}
@@ -977,7 +981,7 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 						
 					}
 					else if (_options == "d") {
-						_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::string("TIMESTAMP('") + zpt::pgsql::escape(_expression) + std::string("')");
+						_queryr += zpt::pgsql::escape_name(_key) + _found->second + std::string("TIMESTAMP('") + zpt::pgsql::escape(zpt::json::string(_expression)) + std::string("')");
 					}
 					continue;
 				}
@@ -985,12 +989,12 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 		}
 
-		_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_value);
+		_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_v);
 	}
 }
 
 auto zpt::pgsql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
-	if (_in->ok() && _in->type() == zpt::JSObject) {
+	if (!_in->is_object()) {
 		return;
 	}
 
@@ -1013,7 +1017,7 @@ auto zpt::pgsql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 					_dir = "DESC";
 				}
 				_part.erase(0, 1);
-				_queryr += (!_first ? ", " : "") + zpt::pgsql::escape(_part) + std::string(" ") + _dir;
+				_queryr += (!_first ? ", " : "") + zpt::pgsql::escape(zpt::json::string(_part)) + std::string(" ") + _dir;
 				_first = false;
 			}
 		}

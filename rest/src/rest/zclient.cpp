@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new string(argv[0]);
 	zpt::log_format = 1;
+	zpt::log_lvl = 0;
 
 	try {
 		// z0mqc tcp://platform.muzzley.com:993/v2/channels/74885d26-e15b-11e6 -N req -X GET -H 'Authorization: q2093rnw98n0f8iquwefqwuef980wnj98f0ufj9842uf9n08j2'
@@ -53,6 +54,7 @@ int main(int argc, char* argv[]) {
 		zpt::json _uri = zpt::uri::parse(std::string(_opts["files"][0]));
 		
 		if (std::string(_opts["N"][0]) == "req") {
+			std::cout << "* connecting to " << (std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"])) << "..." << endl << flush;
 			zpt::ZMQReq _socket(std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]), _opts);
 			zpt::json _envelope = {
 				"channel", std::string(_uri["path"]),
@@ -69,11 +71,9 @@ int main(int argc, char* argv[]) {
 				}
 				_envelope << "headers" << _headers;
 			}
-			zlog(zpt::json::pretty(_envelope), zpt::debug);
 			zpt::json _reply = _socket.send(_envelope);
-			zlog(std::string("status  | ") + std::string(zpt::status_names[int(_reply["status"])]), zpt::trace);
-			zlog(std::string("headers | ") + zpt::json::pretty(_reply["headers"]), zpt::trace);
-			zlog(std::string("payload | ") + zpt::json::pretty(_reply["payload"]), zpt::trace);
+			std::cout << "> " << zpt::r_replace(zpt::json::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
+			std::cout << "< " << zpt::r_replace(zpt::json::pretty(_reply), "\n", "\n< ") << endl << flush;
 			exit(0);
 		}
 		else if (std::string(_opts["N"][0]) == "pub-sub") {

@@ -348,11 +348,13 @@ auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += zpt::pgsql::escape_name(_collection);
 	_count_expression += zpt::pgsql::escape_name(_collection);
-	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
+	if (_pattern->is_object()) {
 		std::string _where;
 		zpt::pgsql::get_query(_pattern, _where);
-		_expression += std::string(" WHERE ") + _where;
-		_count_expression += std::string(" WHERE ") + _where;
+		if (_where.length() != 0) {
+			_expression += std::string(" WHERE ") + _where;
+			_count_expression += std::string(" WHERE ") + _where;
+		}
 	}
 	zpt::pgsql::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);

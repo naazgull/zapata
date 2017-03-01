@@ -87,6 +87,7 @@ auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {
 
 auto zpt::EventEmitter::gatekeeper(zpt::ev::gatekeeper _gatekeeper) -> void {
 	this->__keeper->unbind();
+	_gatekeeper->events(this->self());
 	this->__keeper = _gatekeeper;
 }
 
