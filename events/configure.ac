@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-events, 0.9.6-1yakkety6, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-events, 0.9.6-1yakkety7, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])

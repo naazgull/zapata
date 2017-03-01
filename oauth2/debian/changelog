@@ -1,3 +1,9 @@
+zapata-oauth2 (0.9.6-1yakkety7) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 01 Mar 2017 04:48:33 +0000
+
 zapata-oauth2 (0.9.6-1yakkety6) yakkety; urgency=medium
 
   * Version bump
