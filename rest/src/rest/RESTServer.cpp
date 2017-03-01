@@ -85,6 +85,23 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::conf::setup(_ptr);
 
+	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
+		zpt::log_lvl = (int) _ptr["$log"]["level"];
+	}
+	if (_ptr["$log"]["format"]->ok()) {
+		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw") ? 0 : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
+	}
+	if (_ptr["$log"]["file"]->is_string() && _ptr["$log"]["file"]->str().length() != 0) {
+		std::ofstream* _lf = new std::ofstream();
+		_lf->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
+		if (_lf->is_open()) {
+			zpt::log_fd = _lf;
+		}
+		else {
+			delete _lf;
+		}
+	}
+	
 	zpt::json _to_spawn = zpt::json::object();
 	for (auto _spawn : _ptr->obj()) {
 		if (_spawn.first.find("$") != std::string::npos) {
@@ -181,9 +198,15 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	if (_options["log"]["format"]->ok()) {
 		zpt::log_format = (_options["log"]["format"] == zpt::json::string("raw") ? 0 : (_options["log"]["format"] == zpt::json::string("json") ? 2 : 1));
 	}
-	if (_options["log"]["file"]->ok()) {
-		zpt::log_fd = new std::ofstream();
-		((std::ofstream *) zpt::log_fd)->open(((std::string) _options["log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
+	if (_options["log"]["file"]->is_string() && _options["log"]["file"]->str().length() != 0) {
+		std::ofstream* _lf = new std::ofstream();
+		_lf->open(((std::string) _options["log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
+		if (_lf->is_open()) {
+			zpt::log_fd = _lf;
+		}
+		else {
+			delete _lf;
+		}
 	}
 	
 	zlog(std::string("starting RESTful service container: ") + _name, zpt::warning);
@@ -868,25 +891,5 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	}
 
 	zpt::log_lvl = _log_level;
-	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
-		zpt::log_lvl = (int) _ptr["$log"]["level"];
-	}
-	if (zpt::log_lvl == -1) {
-		zpt::log_lvl = 8;
-	}
-	if (_ptr["$log"]["format"]->ok()) {
-		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw") ? 0 : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
-	}
-	if (_ptr["$log"]["file"]->is_string() && _ptr["$log"]["file"]->str().length() != 0) {
-		std::ofstream* _lf = new std::ofstream();
-		_lf->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
-		if (_lf->is_open()) {
-			zpt::log_fd = _lf;
-		}
-		else {
-			delete _lf;
-		}
-	}
-
 	return _ptr;
 }

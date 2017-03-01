@@ -1,11 +1,11 @@
 
 nobase_dist_sysconf_DATA = \
 ./default/zapata.rc \
-./zapata/rc.d/default.rc \
+./zapata/rc.d/.dir \
 ./zapata/backend-enabled/.dir \
-./zapata/backend-available/default.conf \
-./zapata/certificates/public/.default \
-./zapata/conf.d/default.conf \
+./zapata/backend-available/.dir \
+./zapata/certificates/public/.dir \
+./zapata/conf.d/auth/.dir \
 ./zapata/zapata.conf \
 ./init.d/zapata \
 ./logrotate.d/zapata
