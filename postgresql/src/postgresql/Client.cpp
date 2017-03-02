@@ -166,7 +166,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 		assertz(false, _e.what(), 412, 0);
 	}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
+	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
 }
 

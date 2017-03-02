@@ -194,7 +194,7 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
+	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
 }
 
