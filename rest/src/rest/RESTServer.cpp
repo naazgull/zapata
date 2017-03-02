@@ -102,19 +102,18 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		}
 	}
 	
-	zpt::json _to_spawn = zpt::json::object();
-	for (auto _spawn : _ptr->obj()) {
-		if (_spawn.first.find("$") != std::string::npos) {
-			continue;
+	zpt::json _to_spawn = zpt::json::array();
+	if (_ptr["boot"]->is_array()) {
+		for (auto _spawn : _ptr["boot"]->arr()) {
+			if (!((bool) _spawn["enabled"])) {
+				continue;
+			}
+			_to_spawn << _spawn;
 		}
-		if (_spawn.second["enabled"]->ok() && !((bool) _spawn.second["enabled"])) {
-			continue;
-		}
-		_to_spawn << _spawn.first << _spawn.second;
 	}
 
 	zpt::rest::n_pid = 0;
-	zpt::rest::pids = new pid_t[_to_spawn->obj()->size()];
+	zpt::rest::pids = new pid_t[_to_spawn->arr()->size()];
 		
 	if (bool(_ptr["$mutations"]["run"])) {
 		key_t _key = ftok("/usr/bin/zpt", 1);
@@ -152,10 +151,10 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	size_t _spawned = 0;
 	std::string _name;
 	zpt::json _options;
-	for (auto _spawn : _to_spawn->obj()) {
-		if (_spawned == _to_spawn->obj()->size() - 1) {
-			_name.assign(_spawn.first.data());
-			_options = _spawn.second;
+	for (auto _spawn : _to_spawn->arr()) {
+		if (_spawned == _to_spawn->arr()->size() - 1) {
+			_name.assign((_spawn["name"]->is_string() ? std::string(_spawn["name"]) : std::string("container-") + std::to_string(_spawned)));
+			_options = _spawn;
 			::signal(SIGINT, zpt::rest::terminate);
 			::signal(SIGTERM, zpt::rest::terminate);
 			::signal(SIGABRT, zpt::rest::terminate);
@@ -164,8 +163,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		else {
 			pid_t _pid = fork();
 			if (_pid == 0) {
-				_name.assign(_spawn.first.data());
-				_options = _spawn.second;
+				_name.assign((_spawn["name"]->is_string() ? std::string(_spawn["name"]) : std::string("container-") + std::to_string(_spawned)));
+				_options = _spawn;
 				break;
 			}
 			else {
@@ -174,11 +173,11 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			}
 		}
 	}
-
+	
 	if (_ptr["$mutations"]->ok()) {
 		_options << "$mutations" << _ptr["$mutations"];
 	}
-
+	
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 	size_t _i = 0;
 	for (; _i != _n_workers - 1; _i++) {
@@ -188,7 +187,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		}
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
-
+	
 	if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
 		zpt::log_lvl = (int) _options["log"]["level"];
 	}
@@ -858,28 +857,28 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	zpt::log_pname = new string(argv[0]);
 
 	zpt::json _args = zpt::conf::getopt(argc, argv);
+
+	if (!_args["c"]->ok()) {
+		zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+		exit(-10);
+	}
 	
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
-	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
+	std::string _conf_file = std::string(_args["c"][0]);
 	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
 
 	zpt::json _ptr;
-	if (_conf_file.length() == 0) {
-		zlog("loading default configuration file '/etc/zapata/zapata.conf'", zpt::warning);
-		_conf_file.assign("/etc/zapata/zapata.conf");
-	}
-
 	std::ifstream _in;
 	_in.open(_conf_file.data());
 	if (!_in.is_open()) {
-		zlog("unable to start client: a valid configuration file must be provided", zpt::error);
+		zlog("unable to start: a valid configuration file must be provided", zpt::error);
 		exit(-10);
 	}
 	try {
 		_in >> _ptr;
 	}
 	catch(zpt::SyntaxErrorException& _e) {
-		zlog("unable to start client: syntax error when parsing configuration file", zpt::error);
+		zlog("unable to start: syntax error when parsing configuration file", zpt::error);
 		exit(-10);
 	}
 	if (_ptr->type() == zpt::JSObject) {

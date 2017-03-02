@@ -363,7 +363,6 @@ auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	for (auto _service : this->__index) {
 		if (std::regex_match(_topic, _service.first)) {
-			zlog(zpt::json::pretty(_service.second), zpt::debug);
 			return _service.second;
 		}
 	}

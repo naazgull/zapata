@@ -166,6 +166,7 @@ auto zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
 	else {
 		_files.push_back(_dir);
 	}
+	std::sort(_files.begin(), _files.end());
 	for (auto _file : _files) {
 		zpt::json _conf;
 		std::ifstream _ifs;
@@ -195,7 +196,7 @@ auto zpt::conf::dirs(zpt::json _options) -> void {
 				if (_key == "$include") {
 					zpt::json _object = (_object_path.rfind(".") != std::string::npos ? _options->getPath(_object_path.substr(0, _object_path.rfind("."))) : _options);
 					zpt::json _to_include = _options->getPath(_object_path);
-					if (_to_include->type() == zpt::JSArray) {
+					if (_to_include->is_array()) {
 						for (auto _file : _to_include->arr()) {
 							zpt::conf::dirs((std::string) _file, _object);
 						}
