@@ -48,12 +48,16 @@ int main(int argc, char* argv[]) {
 			}
 			try {
 				_in >> _ptr;
+				zpt::conf::setup(_ptr);
+			}
+			catch(zpt::assertion& _e) {
+				std::cout << _e.what() << endl << flush;
+				return -1;
 			}
 			catch(zpt::SyntaxErrorException& _e) {
 				std::cout << argv[_i] << ": " << _e.what() << endl << flush;
 				return -1;
 			}
-			zpt::conf::setup(_ptr);
 			std::cout << zpt::pretty(_ptr) << endl << flush;
 		}
 	}
