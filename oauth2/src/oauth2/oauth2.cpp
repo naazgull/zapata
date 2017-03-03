@@ -61,9 +61,9 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		zpt::json _client_id = _envelope[_param]["client_id"];
 		zpt::json _state = _envelope[_param]["state"];
 
-		zpt::json _user;
+		zpt::json _owner;
 		try {
-			_user = this->retrieve_user(_envelope);
+			_owner = this->retrieve_owner(_envelope);
 		}
 		catch(zpt::assertion& _e) {
 			std::string _l_state(std::string("response_type=code") + std::string("&scope=") + (_scope->ok() ? _scope->str() : "defaults") + std::string("&client_id=") + _client_id->str() + std::string("&redirect_uri=") + _redirect_uri->str() + std::string("&state=") + ((std::string) _state));
@@ -79,15 +79,15 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			};
 		}
 		
-		zpt::json _application;
+		zpt::json _client;
 		try {
-			_application = this->retrieve_application(_envelope);
+			_client = this->retrieve_client(_envelope);
 		}
 		catch(zpt::assertion& _e) {
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
-					"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
+					"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+client"))
 				}
 			};
 		}
@@ -97,7 +97,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				"response_type", _response_type,
 				"client_id", _client_id,
 				"scope", _scope,
-				"owner_id", _user["id"]
+				"owner_id", _owner["id"]
 			}
 		);
 		this->store_token(_token);
@@ -119,13 +119,13 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		
 		zpt::json _redirect_uri = _envelope[_param]["redirect_uri"];
 		zpt::json _client_id = _envelope[_param]["client_id"];
-		zpt::json _username = _envelope[_param]["username"];
+		zpt::json _ownername = _envelope[_param]["username"];
 		zpt::json _password = _envelope[_param]["password"];
 		zpt::json _state = _envelope[_param]["state"];
 
-		zpt::json _user;
+		zpt::json _owner;
 		try {
-			_user = this->retrieve_user(std::string(_username), std::string(_password));
+			_owner = this->retrieve_owner(std::string(_ownername), std::string(_password));
 		}
 		catch(zpt::assertion& _e) {
 			if (_redirect_uri->is_string()) {
@@ -144,16 +144,16 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			throw;
 		}
 		
-		zpt::json _application;
+		zpt::json _client;
 		try {
-			_application = this->retrieve_application(_envelope);
+			_client = this->retrieve_client(_envelope);
 		}
 		catch(zpt::assertion& _e) {
 			if (_redirect_uri->is_string()) {
 				return {
 					"status", (_performative == zpt::ev::Post ? 303 : 307),
 					"headers", {
-						"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
+						"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+client"))
 					}
 				};
 			}
@@ -165,7 +165,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 				"response_type", _response_type,
 				"client_id", _client_id,
 				"scope", _scope,
-				"owner_id", _user["id"]
+				"owner_id", _owner["id"]
 			}
 		);
 		this->store_token(_token);
@@ -173,7 +173,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
-					"Set-Cookie", (_token["access_token"]->str() + std::string("; owner=") + std::string(_user["id"]) + std::string("; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; HttpOnly")), 
+					"Set-Cookie", (_token["access_token"]->str() + std::string("; owner=") + std::string(_owner["id"]) + std::string("; name=oauth_session; domain=") + std::string(_opts["domain"]) + std::string("; path=/; HttpOnly")), 
 					"Location", (
 						(std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? "&" : "?") +
 							std::string("access_token=") + _token["access_token"]->str() +
@@ -203,15 +203,15 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		zpt::json _client_secret = _envelope[_param]["client_secret"];
 		zpt::json _state = _envelope[_param]["state"];
 
-		zpt::json _application;
+		zpt::json _client;
 		try {
-			_application = this->retrieve_application(_envelope);
+			_client = this->retrieve_client(_envelope);
 		}
 		catch(zpt::assertion& _e) {
 			return {
 				"status", (_performative == zpt::ev::Post ? 303 : 307),
 				"headers", {
-					"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+application"))
+					"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+client"))
 				}
 			};
 		}

@@ -52,9 +52,9 @@ namespace zpt {
 			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 			virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
 
-			virtual auto retrieve_user(zpt::json _envelope) -> zpt::json = 0;
-			virtual auto retrieve_user(std::string _user, std::string password) -> zpt::json = 0;
-			virtual auto retrieve_application(zpt::json _envelope) -> zpt::json = 0;
+			virtual auto retrieve_owner(zpt::json _envelope) -> zpt::json = 0;
+			virtual auto retrieve_owner(std::string _owner, std::string password) -> zpt::json = 0;
+			virtual auto retrieve_client(zpt::json _envelope) -> zpt::json = 0;
 			virtual auto store_token(zpt::json _token) -> std::string = 0;
 			virtual auto get_code(std::string _code) -> zpt::json = 0;
 			virtual auto get_token(std::string _access_token) -> zpt::json = 0;
