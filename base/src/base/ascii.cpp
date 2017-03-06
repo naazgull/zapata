@@ -131,7 +131,7 @@ auto zpt::test::utf8(std::string _uri) -> bool {
 
 auto zpt::test::ascii(std::string _ascii) -> bool {
 	static const std::regex _ascii_rgx(
-		"^([a-zA-Z0-9_./+*|\\-]+)$"
+		"^([a-zA-Z0-9_@:;./+*|\\-]+)$"
 	);
 	return std::regex_match(_ascii, _ascii_rgx);
 }

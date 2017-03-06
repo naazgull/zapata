@@ -198,14 +198,14 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 		assertz_mandatory(_envelope[_param], "client_id", 412);
 		assertz_mandatory(_envelope[_param], "client_secret", 412);
 
-		zpt::json _redirect_uri = _envelope["payload"]["redirect_uri"];
+		zpt::json _redirect_uri = _envelope[_param]["redirect_uri"];
 		zpt::json _client_id = _envelope[_param]["client_id"];
 		zpt::json _client_secret = _envelope[_param]["client_secret"];
 		zpt::json _state = _envelope[_param]["state"];
 
 		zpt::json _client;
 		try {
-			_client = this->retrieve_client(_envelope);
+			_client = this->retrieve_client(std::string(_client_id), std::string(_client_secret));
 		}
 		catch(zpt::assertion& _e) {
 			return {
