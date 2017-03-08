@@ -185,6 +185,8 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			};
 		}
 		else {
+			_token >> "roles";
+			_token >> "permissions";
 			return {
 				"status", 200,
 				"payload", _token
@@ -240,6 +242,8 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			};
 		}
 		else {
+			_token >> "roles";
+			_token >> "permissions";
 			return {
 				"status", 200,
 				"payload", _token
@@ -292,7 +296,7 @@ auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 	std::string _client_id = std::string(_data["client_id"]);
 	std::string _scope = std::string(_data["scope"]);
 	std::string _grant_type = std::string(_data["response_type"]);
-	std::string _owner_id = std::string(_data["owner"]);
+	std::string _owner_id = std::string(_data["owner_id"]);
 	std::string _client_secret = std::string(_data["client_secret"]);
 	std::string _access_token = zpt::generate::r_key(128);
 	

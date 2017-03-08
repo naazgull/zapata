@@ -36,9 +36,10 @@ namespace zpt {
 		"POST",
 		"DELETE",
 		"HEAD",
-		"TRACE",
 		"OPTIONS",
 		"PATCH",
+		"REPLY",
+		"TRACE",
 		"CONNECT"
 	};
 

@@ -1,3 +1,9 @@
+zapata-mongodb (0.9.6-1yakkety14) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 08 Mar 2017 22:00:46 +0000
+
 zapata-mongodb (0.9.6-1yakkety13) yakkety; urgency=medium
 
   * Version bump

@@ -247,7 +247,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 
 zpt::ZMQReq::~ZMQReq() {
 	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(& this->__socket);
+	zsock_destroy(&this->__socket);
 }
 
 auto zpt::ZMQReq::self() const -> zpt::socket {
