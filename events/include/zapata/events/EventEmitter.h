@@ -74,6 +74,9 @@ namespace zpt {
 		typedef std::map< std::string, std::pair<std::regex, zpt::ev::handlers > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::handler > ReplyHandlerStack;
 
+		typedef std::function<void (zpt::ev::emitter)> initializer;
+		typedef std::vector< zpt::ev::initializer > OnStartStack;
+
 		auto split(std::string _url, zpt::json _orphans) -> zpt::json;
 		auto join(zpt::json _info, std::size_t _orphans) -> std::string;
 
@@ -294,9 +297,14 @@ namespace zpt {
 		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void = 0;
 		virtual auto off(std::string _callback_id) -> void = 0;
 
+		virtual auto credentials() -> zpt::json = 0;
+		virtual auto credentials(zpt::json _credentials) -> void = 0;
+		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
-		
+
+		virtual auto hook(zpt::ev::initializer _callback) -> void = 0;
+
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
@@ -323,6 +331,7 @@ namespace zpt {
 		virtual auto events() -> zpt::ev::emitter;
 		virtual auto events(zpt::ev::emitter _emitter) -> void;
 		virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed = zpt::undefined) -> zpt::json;
+		virtual auto get_credentials(zpt::json _client_id, zpt::json _client_secret, zpt::json _address, zpt::json _grant_type, zpt::json _scope) -> zpt::json;
 		
 	private:
 		zpt::json __options;

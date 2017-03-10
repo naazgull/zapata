@@ -276,11 +276,11 @@ zpt::RESTMutationServer::~RESTMutationServer(){
 	this->__self.reset();
 }
 
-zpt::json zpt::RESTMutationServer::options() {
+auto zpt::RESTMutationServer::options() -> zpt::json {
 	return this->__options;
 }
 
-void zpt::RESTMutationServer::start() {
+auto zpt::RESTMutationServer::start() -> void {
 	bool _has_mqtt = this->__options["$mutations"]["forward"]["mqtt"]->is_string();
 	zpt::mqtt::broker _mqtt(new zpt::MQTT());
 	if (_has_mqtt) {

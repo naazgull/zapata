@@ -1166,7 +1166,7 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 			break;
 		}
 		case zpt::JSNil: {
-			_out.assign("NIL");
+			_out.assign("NULL");
 			break;
 		}
 		case zpt::JSDate : {

@@ -77,6 +77,11 @@ auto zpt::MQTT::self() const -> zpt::mqtt::broker {
 	return this->__self;
 }
 
+auto zpt::MQTT::connected() -> bool {
+	std::lock_guard< std::mutex > _lock(this->__mtx);
+	return this->__connected;
+}
+
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 
@@ -111,7 +116,12 @@ auto zpt::MQTT::subscribe(std::string _topic) -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
 	 */
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0); }
+		if (this->__connected) {
+			mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0);
+		}
+		else {
+			this->__postponed.push_back(_topic);
+		} }
 }
 
 auto zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
@@ -121,8 +131,10 @@ auto zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
 	 */
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		std::string _payload_str = (std::string) _payload;
-		mosquitto_publish(this->__mosq, & _return, _topic.data(), _payload_str.length(), (const uint8_t *) _payload_str.data(), 0, false); }
+		if (this->__connected) {
+			std::string _payload_str = (std::string) _payload;
+			mosquitto_publish(this->__mosq, & _return, _topic.data(), _payload_str.length(), (const uint8_t *) _payload_str.data(), 0, false);
+		} } 
 }
 
 auto zpt::MQTT::on(std::string _event, zpt::mqtt::handler _callback) -> void {
@@ -178,6 +190,13 @@ auto zpt::MQTT::start() -> void {
 
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
+	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
+		int _return;
+		for (auto _topic : _self->__postponed) {
+			mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
+		}
+		_self->__connected = true;
+	}
 	zpt::mqtt::data _data(new MQTTData());
 	_data->__rc = _rc;
 	_self->trigger("connect", _data);
@@ -185,6 +204,8 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 
 auto zpt::MQTT::on_disconnect(struct mosquitto * _mosq, void * _ptr, int _reason) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
+	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
+		_self->__connected = false; }
 	zpt::mqtt::data _data(new MQTTData());
 	_self->trigger("disconnect", _data);
 }

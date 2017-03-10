@@ -68,9 +68,8 @@ namespace zpt {
 		RESTMutationServer(zpt::json _options);
 		virtual ~RESTMutationServer();
 
-		virtual void start();
-
-		virtual zpt::json options();
+		virtual auto start() -> void;
+		virtual auto options() -> zpt::json;
 		
 	private:
 		zpt::json __options;

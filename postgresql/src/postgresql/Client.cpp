@@ -109,7 +109,6 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
 	}
-
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }

@@ -247,33 +247,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		}
 	}
 
-	if (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()) {
-		zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]));
-		if (!_uri["port"]->ok()) {
-			_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
-		}
-		if (_uri["user"]->ok() && _uri["password"]->ok()) {
-			this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
-		}
-			
-		this->__mqtt->on("connect",
-			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				zlog(std::string("MQTT server is up"), zpt::notice);
-			}
-		);
-		this->__mqtt->on("disconnect",
-			[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				_mqtt->reconnect();
-			}
-		);
-		this->__mqtt->on("message",
-			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				this->route_mqtt(_data);
-			}
-		);
-		this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
-	}
-	
 	if (this->__options["rest"]["modules"]->ok()) {
 		for (auto _i : this->__options["rest"]["modules"]->arr()) {
 			if (_i->str().find(".py") != std::string::npos) {
@@ -308,27 +281,41 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		}
 	}
 
-	if (!!this->__options["rest"]["uploads"]["upload_controller"]) {
-		/*
-		 *  definition of handlers for the file upload controller
-		 *  registered as a Controller
-		 */
-		this->__emitter->on(zpt::ev::Post, zpt::rest::url_pattern({ this->__emitter->version(), "files" }),
-			[] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
-				return zpt::undefined;
+	if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
+		zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::notice);
+		this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
+	}	
+	if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
+		zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
+		if (!_uri["port"]->ok()) {
+			_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+		}
+		if (_uri["user"]->ok() && _uri["password"]->ok()) {
+			this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
+		}
+		else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
+			this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
+		}
+			
+		this->__mqtt->on("connect",
+			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+				zlog(std::string("MQTT server is up"), zpt::warning);
 			}
 		);
-
-		/*
-		 *  definition of handlers for the file upload removal controller
-		 *  registered as a Controller
-		 */
-		this->__emitter->on(zpt::ev::Delete, zpt::rest::url_pattern({ this->__emitter->version(), "files", "(.+)" }),
-			[] (zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zpt::ev::emitter _pool) -> zpt::json {
-				return zpt::undefined;
+		this->__mqtt->on("disconnect",
+			[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+				_mqtt->reconnect();
 			}
 		);
+		this->__mqtt->on("message",
+			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+				this->route_mqtt(_data);
+			}
+		);
+		this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
+		zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
 	}
+	
 
 }
 
@@ -338,35 +325,42 @@ zpt::RESTServer::~RESTServer(){
 	this->__self.reset();
 }
 
-std::string zpt::RESTServer::name() {
+auto zpt::RESTServer::name() -> std::string {
 	return this->__name;
 }
 
-zpt::poll zpt::RESTServer::poll() {
+auto zpt::RESTServer::poll() -> zpt::poll {
 	return this->__poll;
 }
 
-zpt::ev::emitter zpt::RESTServer::events() {
+auto zpt::RESTServer::events() -> zpt::ev::emitter {
 	return this->__emitter;
 }
 
-zpt::mutation::emitter zpt::RESTServer::mutations() {
+auto zpt::RESTServer::mutations() -> zpt::mutation::emitter {
 	return this->__emitter->mutations();
 }
 
-zpt::json zpt::RESTServer::options() {
+auto zpt::RESTServer::options() -> zpt::json {
 	return this->__options;
+}
+
+auto zpt::RESTServer::credentials() -> zpt::json {
+	return this->__emitter->credentials();
+}
+
+auto zpt::RESTServer::credentials(zpt::json _credentials) -> void {
+	this->__emitter->credentials(_credentials);
+}
+
+auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
+	this->__initializers.push_back(_callback);
 }
 
 void zpt::RESTServer::start() {
 	try {
-		if (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()) {
+		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 			this->__mqtt->start();
-			zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]));
-			if (!_uri["port"]->ok()) {
-				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
-			}
-			zlog(std::string("starting MQTT listener for ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
 		}
 		
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
@@ -430,6 +424,10 @@ void zpt::RESTServer::start() {
 			this->__threads.push_back(_mutations);
 		}
 
+		for (auto _callback : this->__initializers) {
+			_callback(this->__emitter);
+		}
+		
 		this->__poll->loop();
 		for (auto _thread : this->__threads) {
 			_thread->join();
@@ -501,19 +499,53 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 }
 
 bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
-	assertz_mandatory(_data->__message, "performative", 400);
-	zpt::ev::performative _performative;
-	if (_data->__message["performative"]->is_string()) {
-		_performative = zpt::ev::from_str(std::string(_data->__message["performative"]));
+	zpt::json _envelope = zpt::json::object();
+	if (!_data->__message["performative"]->ok()) {
+		_envelope << "performative" << int(zpt::ev::Reply);
 	}
 	else {
-		_performative = zpt::ev::performative(int(_data->__message["performative"]));
+		if (_data->__message["performative"]->is_string()) {
+			_envelope << "performative" << zpt::ev::from_str(std::string(_data->__message["performative"]));
+		}
+		else {
+			_envelope << "performative" << zpt::ev::performative(int(_data->__message["performative"]));
+		}
 	}
-	zpt::json _result = this->events()->trigger(_performative, std::string(_data->__topic), _data->__message["payload"]);
+	if (!_data->__message["channel"]->ok()) {
+		_envelope << "channel" << _data->__topic;
+	}
+	else {
+		_envelope << "channel" << _data->__message["channel"];
+	}
+	if (!_data->__message["resource"]->ok()) {
+		_envelope << "resource" << _data->__topic;
+	}
+	else {
+		_envelope << "resource" << _data->__message["resource"];
+	}
+	if (!_data->__message["payload"]->ok()) {
+		_envelope << "payload" << _data->__message;
+	}
+	else {
+		_envelope << "payload" << _data->__message["payload"];
+	}
+	if (_data->__message["headers"]->ok()) {
+		_envelope << "headers" << _data->__message["headers"];
+	}
+	if (_data->__message["params"]->ok()) {
+		_envelope << "params" << _data->__message["params"];
+	}
+
+	zpt::ev::performative _performative = (zpt::ev::performative) int(_envelope["performative"]);
+	zpt::json _result = this->events()->trigger(_performative, std::string(_data->__topic), _envelope);
 	if (_result->ok()) {
 		this->__mqtt->publish(std::string(_data->__topic), _result);
 	}
 	return true;
+}
+
+auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {
+	this->__mqtt->publish(_topic, _payload);
 }
 
 auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
@@ -589,6 +621,9 @@ auto zpt::RESTServer::get_subscription_topics(std::string _pattern) -> zpt::json
 					}
 				}
 			}		
+		}
+		if (_regex) {
+			_return.push_back('#');
 		}
 		_topics << _return;
 	}
@@ -688,7 +723,7 @@ auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 	if (_request->params().size() != 0) {
 		zpt::json _params = zpt::json::object();
 		for (auto _param : _request->params()) {
-			_params << _param.first << _param.second;
+			_params << _param.first << zpt::url::r_decode(_param.second);
 		}
 		_return << "params" << _params;
 	}

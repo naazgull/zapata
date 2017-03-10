@@ -312,6 +312,10 @@ auto zpt::EventGatekeeper::events(zpt::ev::emitter _emitter) -> void {
 	this->__emitter = _emitter;
 }
 
+auto zpt::EventGatekeeper::get_credentials(zpt::json _client_id, zpt::json _client_secret, zpt::json _address, zpt::json _grant_type, zpt::json _scope) -> zpt::json {
+	return { "access_token", "--blank--" };
+}
+
 auto zpt::EventGatekeeper::authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json {
 	return { "client_id", "anyone", "access_token", "--blank--", "roles", zpt::json::array() };
 }

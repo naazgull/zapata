@@ -995,7 +995,7 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 	if (_dbms.length() != 0) {
 		zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
 		_return += std::string("{ zpt::mutation::Insert,\n(_h_on_change = [] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
-		_return += std::string("zpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), (_envelope[\"payload\"][\"filter\"]->ok() ? zpt::json({ \"params\", _envelope[\"payload\"][\"filter\"] }) : zpt::undefined))[\"payload\"];\n");
+		_return += std::string("try {\nzpt::json _r_base = _emitter->events()->route(zpt::ev::Get, _envelope[\"payload\"][\"href\"]->str(), (_envelope[\"payload\"][\"filter\"]->ok() ? zpt::json({ \"params\", _envelope[\"payload\"][\"filter\"] }) : zpt::undefined))[\"payload\"];\n");
 		_return += std::string("if (_r_base[\"elements\"]->type() != zpt::JSArray) {\n_r_base = { \"elements\", { zpt::array, _r_base } };\n}\n");
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
@@ -1037,6 +1037,7 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 		_return += std::string("}\n");
 		_return += std::string("}\n");
 		_return += std::string("}\n");	
+		_return += std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + _e.description(), zpt::error); }\n");
 		_return += std::string("})\n}\n");
 	}
 	return _return;
@@ -1057,7 +1058,7 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 	if (_dbms.length() != 0) {
 		zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
 		_return += std::string("{ zpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
-		_return += std::string("if (_envelope[\"payload\"][\"filter\"]->ok()) return;\n");
+		_return += std::string("try {\nif (_envelope[\"payload\"][\"filter\"]->ok()) return;\n");
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -1088,6 +1089,7 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 		
 		_return += std::string("}\n");
 		_return += std::string("}\n");
+		_return += std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + _e.description(), zpt::error); }\n");
 		_return += std::string("}\n}\n");
 	}
 	return _return;

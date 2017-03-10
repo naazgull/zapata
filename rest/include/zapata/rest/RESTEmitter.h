@@ -101,16 +101,21 @@ namespace zpt {
 
 		virtual void start();
 
-		virtual std::string name();
-		virtual zpt::json options();
-		virtual zpt::poll poll();
-		virtual zpt::ev::emitter events();
-		virtual zpt::mutation::emitter mutations();
+		virtual auto name() -> std::string;
+		virtual auto options() -> zpt::json;
+		virtual auto poll() -> zpt::poll;
+		virtual auto events() -> zpt::ev::emitter;
+		virtual auto mutations() -> zpt::mutation::emitter;
+		virtual auto credentials() -> zpt::json;
+		virtual auto credentials(zpt::json _credentials) -> void;
 
+		virtual auto hook(zpt::ev::initializer _callback) -> void;
+		
 		virtual bool route_http(zpt::socketstream_ptr _cs);
 		virtual bool route_mqtt(zpt::mqtt::data _data);
 
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
+		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
 		
 	private:
 		std::string __name;
@@ -122,7 +127,8 @@ namespace zpt {
 		std::vector< std::shared_ptr< std::thread > > __threads;
 		zpt::rest::server __self;
 		zpt::mqtt::broker __mqtt;
-	
+		zpt::ev::OnStartStack __initializers;
+		
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 
@@ -153,6 +159,8 @@ namespace zpt {
 		virtual ~RESTEmitter();
 
 		virtual auto version() -> std::string;
+		virtual auto credentials() -> zpt::json;
+		virtual auto credentials(zpt::json _credentials) -> void;
 		
 		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
 		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
@@ -162,6 +170,8 @@ namespace zpt {
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
+
+		virtual auto hook(zpt::ev::initializer _callback) -> void;
 
 		virtual auto poll(zpt::poll _poll) -> void;
 		virtual auto poll() -> zpt::poll;
@@ -184,6 +194,7 @@ namespace zpt {
 		zpt::rest::HandlerStack __hashed;
 		zpt::poll __poll;
 		zpt::rest::server __server;
+		zpt::json __credentials;
 
 		auto get_hash(std::string _pattern) -> std::string;
 		auto add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void;

@@ -96,13 +96,14 @@ namespace zpt {
 		virtual auto user() -> std::string;
 		virtual auto passwd() -> std::string;
 		virtual auto self() const -> zpt::mqtt::broker;
+		virtual auto connected() -> bool;
 
 		/**
 		 * Connects to the MQTT server.
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 		 */
 		virtual auto connect(std::string _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) ->  void;
-		virtual auto reconnect() ->  void;
+		virtual auto reconnect() -> void;
 
 		/**
 		 * Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic subscription patterns.
@@ -152,5 +153,7 @@ namespace zpt {
 		std::string __passwd;
 		std::mutex __mtx;
 		zpt::mqtt::broker __self;
+		bool __connected;
+		std::vector< std::string > __postponed;
 	};
 }

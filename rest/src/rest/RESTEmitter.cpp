@@ -101,6 +101,14 @@ auto zpt::RESTEmitter::version() -> std::string {
 	return this->options()["rest"]["version"]->str();
 }
 
+auto zpt::RESTEmitter::credentials() -> zpt::json {
+	return this->__credentials;
+}
+
+auto zpt::RESTEmitter::credentials(zpt::json _credentials) -> void {
+	this->__credentials = _credentials;
+}
+
 auto zpt::RESTEmitter::poll(zpt::poll _poll) -> void {
 	this->__poll = _poll;
 }
@@ -115,6 +123,10 @@ auto zpt::RESTEmitter::server(zpt::rest::server _server) -> void {
 
 auto zpt::RESTEmitter::server() -> zpt::rest::server {
 	return this->__server;
+}
+
+auto zpt::RESTEmitter::hook(zpt::ev::initializer _callback) -> void {
+	this->__server->hook(_callback);
 }
 
 auto zpt::RESTEmitter::get_hash(std::string _pattern) -> std::string {
@@ -370,6 +382,16 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 	"channel" << _url <<
 	"performative" << _method <<
 	"resource" << _url;
+
+	if (bool(_opts["mqtt"])) {
+		if (bool(_opts["no-envelope"])) {
+			this->__server->publish(_url, _envelope);
+		}
+		else {
+			this->__server->publish(_url, _in);
+		}
+		return zpt::undefined;
+	}
 	
 	zpt::json _splited = zpt::split(_url, "/");
 	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
