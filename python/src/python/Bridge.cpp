@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/python/Bridge.h>
+#include <datetime.h>
 
 namespace zpt {
 
@@ -76,10 +77,9 @@ auto zpt::python::Bridge::initialize() -> void {
 		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
 			if (_python_script->str().find(".py") != std::string::npos) {
 				zlog(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"), zpt::notice);
-				PyObject* _name = PyUnicode_DecodeFSDefault(_python_script->str().data());				
-				PyObject* _module = PyImport_Import(_name);
-				Py_DECREF(_name);
-				this->__modules->insert(std::make_pair(_python_script->str(), _module));
+				FILE* _fp = ::fopen(_python_script->str().data(), "r");
+				PyRun_SimpleFileEx(_fp, _python_script->str().data(), true);
+				//this->__modules->insert(std::make_pair(_python_script->str(), _module));
 			}
 		}
 	}
@@ -123,9 +123,12 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 
 	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::trace);
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
+	Py_SetProgramName((wchar_t*) "zpt");
 	Py_Initialize();
+	PyDateTime_IMPORT;
+	PyImport_ImportModule("zpt");
 	
-	zlog(std::string("PYTHON bridge booted"), zpt::warning);
+	zlog(std::string("PYTHON bridge booted"), zpt::notice);
 }
 
 zpt::python::Object::Object(PyObject* _target) : std::shared_ptr< zpt::python::Type >(new zpt::python::Type(_target)) {
@@ -168,25 +171,23 @@ auto zpt::python::module::init() -> PyObject* {
 auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 
-	std::string _topic;
-	zpt::json _lambdas;
-	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
+	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
 
-	for (auto _lambda : _lambdas->obj()) {
+	/*for (auto _lambda : _lambdas->obj()) {
 		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
 		std::string _name = std::string(_lambda.second);
 		_handlers.insert(
 			std::make_pair(_performative,
 				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-					zpt::python::object _ret = _bridge->eval< zpt::python::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" `") + zpt::python::to_python_string(_envelope) + std::string(")"));
+					zpt::python::object _ret;
 					return _bridge->from< zpt::python::object >(_ret);
 				}
 			)
 		);
 	}
 	
-	_bridge->events()->on(_topic, _handlers);
+	_bridge->events()->on(_topic, _handlers);*/
 	Py_RETURN_TRUE;
 }
 
@@ -224,8 +225,7 @@ namespace zpt {
 			};
 
 			PyModuleDef spec = {
-				PyModuleDef_HEAD_INIT, "zpt", nullptr, -1, zpt::python::module::methods,
-				nullptr, nullptr, nullptr, nullptr
+				PyModuleDef_HEAD_INIT, "zpt", nullptr, -1, zpt::python::module::methods
 			};
 		}
 	}

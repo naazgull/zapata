@@ -28,6 +28,7 @@ SOFTWARE.
 #include <ctime>
 #include <cstring>
 #include <zapata/exceptions/AssertionException.h>
+#include <execinfo.h>
 
 /**
  * Compact form for throwing exceptions when validating logical requirements and input/output validation
@@ -35,7 +36,8 @@ SOFTWARE.
  * @param y the error message
  * @param z the HTTP status code to be replied to the invoking HTTP client
  */
-#define assertz(x,y,z,c) if (! (x)) { throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__); }
+//#define assertz(x,y,z,c) if (! (x)) { throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__); }
+#define assertz(x,y,z,c) if (! (x)) { void *__backtrace_array__[10]; size_t __backtrace__size__ = backtrace(__backtrace_array__, 10); throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__, backtrace_symbols(__backtrace_array__, __backtrace__size__), __backtrace__size__); }
 
 #define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string("field '") + std::string(y) + std::string("' is mandatory."), z, 0)
 #define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)

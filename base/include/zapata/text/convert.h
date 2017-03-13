@@ -53,46 +53,46 @@ using namespace __gnu_cxx;
 namespace zpt {
 	extern uuid uuid_gen;
 
-	void tostr(std::string& s, int i);
-	void tostr(std::string& s, bool i);
-	void tostr(std::string&, int, std::ios_base& (&)(std::ios_base&));
+	auto tostr(std::string& s, int i) -> void;
+	auto tostr(std::string& s, bool i) -> void;
+	auto tostr(std::string&, int, std::ios_base& (&)(std::ios_base&)) -> void;
 #ifdef __LP64__
-	void tostr(std::string& s, unsigned int i);
+	auto tostr(std::string& s, unsigned int i) -> void;
 #endif
-	void tostr(std::string& s, size_t i);
-	void tostr(std::string& s, long i);
-	void tostr(std::string& s, long long i);
-	void tostr(std::string& s, float i);
-	void tostr(std::string& s, double i);
-	void tostr(std::string& s, char i);
-	void tostr(std::string& s, time_t i, const char* f);
+	auto tostr(std::string& s, size_t i) -> void;
+	auto tostr(std::string& s, long i) -> void;
+	auto tostr(std::string& s, long long i) -> void;
+	auto tostr(std::string& s, float i) -> void;
+	auto tostr(std::string& s, double i) -> void;
+	auto tostr(std::string& s, char i) -> void;
+	auto tostr(std::string& s, time_t i, const char* f) -> void;
 
-	std::string tostr(int i);
-	std::string tostr(bool i);
-	std::string tostr(int, std::ios_base& (&)(std::ios_base&));
+	auto tostr(int i) -> std::string;
+	auto tostr(bool i) -> std::string;
+	auto tostr(int, std::ios_base& (&)(std::ios_base&)) -> std::string;
 #ifdef __LP64__
-	std::string tostr(unsigned int i);
+	auto tostr(unsigned int i) -> std::string;
 #endif
-	std::string tostr(size_t i);
-	std::string tostr(long i);
-	std::string tostr(long long i);
-	std::string tostr(float i);
-	std::string tostr(double i);
-	std::string tostr(char i);
-	std::string tostr(time_t i, const char* f);
+	auto tostr(size_t i) -> std::string;
+	auto tostr(long i) -> std::string;
+	auto tostr(long long i) -> std::string;
+	auto tostr(float i) -> std::string;
+	auto tostr(double i) -> std::string;
+	auto tostr(char i) -> std::string;
+	auto tostr(time_t i, const char* f) -> std::string;
 
-	void fromstr(std::string s, int* i);
+	auto fromstr(std::string s, int* i) -> void;
 #ifdef __LP64__
-	void fromstr(std::string s, unsigned int* i);
+	auto fromstr(std::string s, unsigned int* i) -> void;
 #endif
-	void fromstr(std::string s, size_t* i);
-	void fromstr(std::string s, long* i);
-	void fromstr(std::string s, long long* i);
-	void fromstr(std::string s, float* i);
-	void fromstr(std::string s, double* i);
-	void fromstr(std::string s, char* i);
-	void fromstr(std::string s, bool* i);
-	void fromstr(std::string s, time_t* i, const char* f, bool _no_timezone = false);
+	auto fromstr(std::string s, size_t* i) -> void;
+	auto fromstr(std::string s, long* i) -> void;
+	auto fromstr(std::string s, long long* i) -> void;
+	auto fromstr(std::string s, float* i) -> void;
+	auto fromstr(std::string s, double* i) -> void;
+	auto fromstr(std::string s, char* i) -> void;
+	auto fromstr(std::string s, bool* i) -> void;
+	auto fromstr(std::string s, time_t* i, const char* f, bool _no_timezone = false) -> void;
 	
 	const char encodeCharacterTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	const char decodeCharacterTable[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };

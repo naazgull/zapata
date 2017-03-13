@@ -931,53 +931,18 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 	this->uri(_connection);
 	std::string _connection1;
 	std::string _connection2;
-	if (this->uri(0)["type"] == zpt::json::string("@")) {
-		int _available = 32769;
-		if (this->uri(0)["port"] != zpt::json::string("*")) {
-			_available = int(this->uri(0)["port"]);
-		}
-		do {
-			_connection1.assign(std::string("@tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::to_string(_available));
-			this->uri(0) << "port" << std::to_string(_available);
-			if (zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr) != -1) {
-				if (zsock_wait(this->__socket) != -1) {
-					break;
-				}
-			}
-			_available++;
-		}
-		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ROUTER/DEALER socket to ") + _connection, 500, 0);
-	}
-	else {
-		_connection1.assign(std::string(this->uri(0)["type"]) + std::string("tcp://") + std::string(this->uri(0)["domain"]) + std::string(":") + std::string(this->uri(0)["port"]));
-		zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
-		zsock_wait(this->__socket);
-	}
-	if (this->uri(1)["type"] == zpt::json::string("@")) {
-		int _available = 32769;
-		if (this->uri(1)["port"] != zpt::json::string("*")) {
-			_available = int(this->uri(1)["port"]);
-		}
-		do {
-			_connection2.assign(std::string("@tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::to_string(_available));
-			this->uri(1) << "port" << std::to_string(_available);
-			if (zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr) != -1) {
-				if (zsock_wait(this->__socket) != -1) {
-					break;
-				}
-			}
-			_available++;
-		}
-		while(_available < 60999);
-		assertz(_available < 60999, std::string("could not attach ROUTER/DEALER socket to ") + _connection, 500, 0);
-	}
-	else {
-		_connection2.assign(std::string(this->uri(1)["type"]) + std::string("tcp://") + std::string(this->uri(1)["domain"]) + std::string(":") + std::string(this->uri(1)["port"]));
-		zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
-		zsock_wait(this->__socket);
-	}
-	this->connection(_connection1);
+	assertz(this->uri(0)["port"] != zpt::json::string("*"), "can't use ephemerous ports with router/dealer sockets", 500, 0);
+	_connection1.assign(std::string(this->uri(0)["type"]) + std::string("tcp://*:") + std::string(this->uri(0)["port"]));
+	zstr_sendx(this->__socket, "FRONTEND", "ROUTER", _connection1.data(), nullptr);
+	zsock_wait(this->__socket);
+
+	assertz(this->uri(1)["port"] != zpt::json::string("*"), "can't use ephemerous ports with router/dealer sockets", 500, 0);
+	_connection2.assign(std::string(this->uri(1)["type"]) + std::string("tcp://*:") + std::string(this->uri(1)["port"]));
+	zstr_sendx(this->__socket, "BACKEND", "DEALER", _connection2.data(), nullptr);
+	zsock_wait(this->__socket);
+	ztrace(std::string("attaching ROUTER/DEALER backend to ") + _connection2);
+
+	this->connection(_connection);
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);

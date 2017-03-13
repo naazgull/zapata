@@ -27,67 +27,67 @@ SOFTWARE.
 #include <time.h>
 #include <sys/time.h>
 
-void zpt::tostr(std::string& s, int i){
+auto zpt::tostr(std::string& s, int i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, bool b){
+auto zpt::tostr(std::string& s, bool b) -> void {
 	s.insert(s.length(), b ? "true" : "false");
 }
 
-void zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) {
+auto zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) -> void {
 	char oss[512];
 	sprintf(oss,"%x", i);
 	s.insert(s.length(), oss);
 }
 
 #ifdef __LP64__
-void zpt::tostr(std::string& s, unsigned int i){
+auto zpt::tostr(std::string& s, unsigned int i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 #endif
 
-void zpt::tostr(std::string& s, size_t i){
+auto zpt::tostr(std::string& s, size_t i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, long i){
+auto zpt::tostr(std::string& s, long i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, long long i){
+auto zpt::tostr(std::string& s, long long i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, float i){
+auto zpt::tostr(std::string& s, float i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, double i){
+auto zpt::tostr(std::string& s, double i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(std::string& s, char i){
+auto zpt::tostr(std::string& s, char i) -> void {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	s.insert(s.length(), _oss.str());
 }
 
-void zpt::tostr(string& s, time_t i, const char* f){
+auto zpt::tostr(string& s, time_t i, const char* f) -> void {
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
@@ -96,67 +96,67 @@ void zpt::tostr(string& s, time_t i, const char* f){
 	s.insert(s.length(), _buffer_date);
 }
 
-std::string zpt::tostr(int i){
+auto zpt::tostr(int i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(bool b){
+auto zpt::tostr(bool b) -> std::string {
 	return b ? "true" : "false";
 }
 
-std::string zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) {
+auto zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) -> std::string {
 	char oss[512];
 	sprintf(oss,"%x", i);
 	return string(oss);
 }
 
 #ifdef __LP64__
-std::string zpt::tostr(unsigned int i){
+auto zpt::tostr(unsigned int i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 #endif
 
-std::string zpt::tostr(size_t i){
+auto zpt::tostr(size_t i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(long i){
+auto zpt::tostr(long i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(long long i){
+auto zpt::tostr(long long i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(float i){
+auto zpt::tostr(float i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(double i){
+auto zpt::tostr(double i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(char i){
+auto zpt::tostr(char i) -> std::string {
 	std::ostringstream _oss;
 	_oss << i << flush;
 	return _oss.str();
 }
 
-std::string zpt::tostr(time_t i, const char* f){
+auto zpt::tostr(time_t i, const char* f) -> std::string {
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);
@@ -165,21 +165,21 @@ std::string zpt::tostr(time_t i, const char* f){
 	return string(_buffer_date);
 }
 
-void zpt::fromstr(std::string s, int* i){
+auto zpt::fromstr(std::string s, int* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
 #ifdef __LP64__
-void zpt::fromstr(std::string s, unsigned int* i){
+auto zpt::fromstr(std::string s, unsigned int* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 #endif
 
-void zpt::fromstr(std::string s, size_t* i){
+auto zpt::fromstr(std::string s, size_t* i) -> void {
 #ifdef __LP64__
 	std::istringstream _in;
 	_in.str(s);
@@ -191,41 +191,41 @@ void zpt::fromstr(std::string s, size_t* i){
 #endif
 }
 
-void zpt::fromstr(std::string s, long* i){
+auto zpt::fromstr(std::string s, long* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zpt::fromstr(std::string s, long long* i){
+auto zpt::fromstr(std::string s, long long* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zpt::fromstr(std::string s, float* i){
+auto zpt::fromstr(std::string s, float* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zpt::fromstr(std::string s, double* i){
+auto zpt::fromstr(std::string s, double* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zpt::fromstr(std::string s, char* i){
+auto zpt::fromstr(std::string s, char* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
 	_in >> (* i);
 }
 
-void zpt::fromstr(std::string s, bool* i){
+auto zpt::fromstr(std::string s, bool* i) -> void {
 	*i = s == string("true");
 }
 
-void zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone){
+auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void {
 	/*
 	  setenv("TZ", "UTC", 1);
 	  tzset();
@@ -248,7 +248,7 @@ void zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone){
 	}
 }
 
-time_t zpt::timezone_offset() {
+auto zpt::timezone_offset() -> time_t {
 	time_t t;
 	tm *ptr;
 	int day;

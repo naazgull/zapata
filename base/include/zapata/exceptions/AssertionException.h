@@ -35,22 +35,25 @@ using namespace __gnu_cxx;
 namespace zpt {
 
 	class AssertionException: public std::exception {
-		private:
-			string __what;
-			int __http_code;
-			int __code;
-			string __description;
-			int __line;
-			string __file;
+	private:
+		string __what;
+		int __http_code;
+		int __code;
+		string __description;
+		int __line;
+		string __file;
+		string __backtrace;
 
-		public:
-			AssertionException(string _what,  int _http_code, int _code, string _desc, int _line = 0, string _file = "");
-			virtual ~AssertionException() throw();
+	public:
+		AssertionException(string _what,  int _http_code, int _code, string _desc, int _line = 0, string _file = "");
+		AssertionException(string _in, int _http_code, int _code, string _desc, int _line, string _file, char** _backtrace, size_t _backtrace_size);
+		virtual ~AssertionException() throw();
 
-			virtual const char* what();
-			virtual const char* description();
-			virtual int code();
-			virtual int status();
+		virtual const char* what();
+		virtual const char* description();
+		virtual const char* backtrace();
+		virtual int code();
+		virtual int status();
 	};
 
 	typedef AssertionException assertion;

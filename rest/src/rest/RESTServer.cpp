@@ -209,8 +209,19 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	
 	zlog(std::string("starting RESTful service container: ") + _name, zpt::warning);
-	zpt::rest::server _server = zpt::rest::server::setup(_options, _name);
-	_server->start();
+	zpt::rest::server _server(nullptr);
+	try {
+		_server = zpt::rest::server::setup(_options, _name);
+		_server->start();
+	}
+	catch (zpt::assertion& _e) {
+		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		exit(-1);
+	}
+	catch (std::exception& _e) {
+		zlog(_e.what(), zpt::emergency);
+		exit(-1);
+	}
 
 	return 0;
 }
