@@ -414,6 +414,9 @@ auto zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
 			_ret += (std::string) _json;
 			break;
 		}
+		case zpt::JSLambda : {
+			break;
+		}
 		case zpt::JSNil: {
 			_ret += "nil";
 			break;

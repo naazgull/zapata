@@ -108,6 +108,7 @@ namespace zpt {
 		virtual auto mutations() -> zpt::mutation::emitter;
 		virtual auto credentials() -> zpt::json;
 		virtual auto credentials(zpt::json _credentials) -> void;
+		virtual auto unbind() -> void;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 		

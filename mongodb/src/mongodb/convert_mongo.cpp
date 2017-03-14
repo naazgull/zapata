@@ -156,6 +156,9 @@ void zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 				_out << _key << (int) _value;
 				break;
 			}
+			case zpt::JSLambda : {
+				break;
+			}
 			case zpt::JSNil: {
 				_out.appendNull(_key);
 				break;
@@ -200,6 +203,9 @@ void zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 				_out << (int) _value;
 				break;
 			}
+			case zpt::JSLambda : {
+				break;
+			}
 			case zpt::JSNil: {
 				_out.appendNull();
 				break;
@@ -241,6 +247,9 @@ void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out,
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (int) _value;
 				break;
 			}
+			case zpt::JSLambda : {
+				break;
+			}
 			case zpt::JSNil: {
 				_out.appendNull((_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
 				break;
@@ -280,6 +289,9 @@ void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out,
 			}
 			case zpt::JSInteger: {
 				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (int) _value;
+				break;
+			}
+			case zpt::JSLambda : {
 				break;
 			}
 			case zpt::JSNil: {

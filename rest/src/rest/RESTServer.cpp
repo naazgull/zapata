@@ -60,9 +60,19 @@ zpt::RESTServerPtr::~RESTServerPtr() {
 zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _name) {
 	if (_name.length() == 0){
 		_name = _options->obj()->begin()->first;
+	}	
+	try {
+		zpt::rest::server _server(_name, _options);
+		return _server;
 	}
-	zpt::rest::server _server(_name, _options);
-	return _server;
+	catch (zpt::assertion& _e) {
+		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		throw;
+	}
+	catch (std::exception& _e) {
+		zlog(_e.what(), zpt::emergency);
+		throw;
+	}
 }
 
 auto zpt::rest::terminate(int _signal) -> void {
@@ -114,7 +124,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 
 	zpt::rest::n_pid = 0;
 	zpt::rest::pids = new pid_t[_to_spawn->arr()->size()];
-		
+
 	if (bool(_ptr["$mutations"]["run"])) {
 		key_t _key = ftok("/usr/bin/zpt", 1);
 		zpt::rest::m_sem = semget(_key, 1, IPC_CREAT | IPC_EXCL | 0777);
@@ -170,6 +180,9 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			else {
 				zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 				_spawned++;
+				if (_spawn["sleep"]->is_integer()) {
+					sleep(int(_spawn["sleep"]));
+				}
 			}
 		}
 	}
@@ -215,13 +228,16 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		_server->start();
 	}
 	catch (zpt::assertion& _e) {
+		_server->unbind();
 		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
 		exit(-1);
 	}
 	catch (std::exception& _e) {
+		_server->unbind();
 		zlog(_e.what(), zpt::emergency);
 		exit(-1);
 	}
+	_server->unbind();
 
 	return 0;
 }
@@ -237,21 +253,21 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		switch(_type) {
 			case ZMQ_ROUTER_DEALER : {
 				zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
-				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
+				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
 				this->__router_dealer.push_back(_socket);
 				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
 			case ZMQ_PUB_SUB : {
 				zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
-				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
+				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
 				this->__pub_sub.push_back(_socket);
 				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
 			default : {
 				zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
-				_definition << "connect" << zpt::r_replace(_socket->connection(), "@tcp", ">tcp");
+				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
 				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
@@ -295,7 +311,8 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 	if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 		zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::notice);
 		this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
-	}	
+	}
+	
 	if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 		zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 		if (!_uri["port"]->ok()) {
@@ -333,6 +350,9 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 zpt::RESTServer::~RESTServer(){
 	this->__poll->unbind();
 	this->__mqtt->unbind();
+}
+
+auto zpt::RESTServer::unbind() -> void {
 	this->__self.reset();
 }
 

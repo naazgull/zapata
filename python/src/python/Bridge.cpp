@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include <zapata/python/Bridge.h>
-#include <datetime.h>
 
 namespace zpt {
 
@@ -125,8 +124,8 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	PyImport_AppendInittab("zpt", &zpt::python::module::init);
 	Py_SetProgramName((wchar_t*) "zpt");
 	Py_Initialize();
-	PyDateTime_IMPORT;
 	PyImport_ImportModule("zpt");
+	//PyDateTime_IMPORT;
 	
 	zlog(std::string("PYTHON bridge booted"), zpt::notice);
 }
@@ -170,30 +169,40 @@ auto zpt::python::module::init() -> PyObject* {
 
 auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
+	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
+	zpt::json _lambdas = _params[1];
+	std::string _topic = std::string(_params[0]);
 
-	/*for (auto _lambda : _lambdas->obj()) {
+	for (auto _lambda : _lambdas->obj()) {
 		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
-		std::string _name = std::string(_lambda.second);
+		PyObject* _func = **_bridge->to< zpt::python::object >(_lambda.second);
+		Py_INCREF(_func);
 		_handlers.insert(
 			std::make_pair(_performative,
-				[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[ _func ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-					zpt::python::object _ret;
+					PyObject* _args = PyTuple_Pack(3, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_performative).data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope));
+					PyObject* _ret = PyObject_CallObject(_func, _args);					
 					return _bridge->from< zpt::python::object >(_ret);
 				}
 			)
 		);
 	}
 	
-	_bridge->events()->on(_topic, _handlers);*/
+	_bridge->events()->on(_topic, _handlers);
 	Py_RETURN_TRUE;
 }
 
 auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-	Py_RETURN_TRUE;
+	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
+	zpt::json _performative = _params[0];
+	zpt::json _topic = _params[1];
+	zpt::json _envelope = _params[2];
+	
+	zpt::json _ret = _bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope);
+	return **_bridge->to< zpt::python::object >(_ret);
 }
 
 auto zpt::python::module::split(PyObject* _self, PyObject* _args) -> PyObject* {

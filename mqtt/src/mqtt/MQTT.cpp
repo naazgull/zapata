@@ -47,8 +47,12 @@ zpt::MQTT::~MQTT() {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_destroy
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_lib_cleanup
 	 */
-	 mosquitto_destroy(this->__mosq);
-	 mosquitto_lib_cleanup();
+	this->__self.reset();
+	if (this->__mosq != nullptr) {
+		mosquitto_destroy(this->__mosq);
+		mosquitto_lib_cleanup();
+		this->__mosq = nullptr;
+	}
 }
 
 auto zpt::MQTT::unbind() -> void {

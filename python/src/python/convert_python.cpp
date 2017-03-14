@@ -76,9 +76,6 @@ auto zpt::python::from_python(PyObject* _in) -> zpt::json {
   p (bool) [int]
 **/
 
-//zpt::json _formats = { zpt::array,  "s",  "s*",  "s#",  "z",  "z*",  "z#",  "y",  "y*",  "y#",  "S",  "Y",  "u",  "u#",  "Z",  "Z#",  "U",  "w*",  "es",  "et",  "es#",  "et#",  "b",  "B",  "h",  "H",  "i",  "I",  "l",  "k",  "L",  "K",  "n",  "c",  "C",  "f",  "d",  "D",  "O",  "O!",  "O&",  "p"};
-
-
 auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 	if (_exp == Py_None) {
 		if (_parent->is_object() || _parent->is_array()) {
@@ -205,7 +202,7 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 			_parent = _value;
 		}
 	}
-	else if (PyDate_CheckExact(_exp)) {
+	/*else if (PyDate_CheckExact(_exp)) {
 		zpt::json _value = zpt::json::date(std::to_string(PyDateTime_GET_YEAR(_exp)) + std::string("-") + std::to_string(PyDateTime_GET_MONTH(_exp)) + std::string("-") + std::to_string(PyDateTime_GET_DAY(_exp)) + std::string("T00:00:00.000") + zpt::tostr(0, "%z"));
 		if (_parent->is_object() || _parent->is_array()) {
 			_parent << _value;
@@ -240,7 +237,7 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 		else {
 			_parent = _value;
 		}
-	}
+	}*/
 	else if (Py_TYPE(_exp) == &PyFilter_Type) {
 		assertz(Py_TYPE(_exp) != &PyFilter_Type, std::string("unmanaged python type PyFilter"), 500, 0);
 	}
@@ -320,7 +317,15 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 		assertz(Py_TYPE(_exp) != &PyCode_Type, std::string("unmanaged python type PyCode"), 500, 0);
 	}
 	else if (PyFunction_Check(_exp)) {
-		assertz(Py_TYPE(_exp) != &PyFunction_Type, std::string("unmanaged python type PyFunction"), 500, 0);
+		std::ostringstream _oss;
+		_oss << _exp << flush;
+		zpt::json _value = zpt::json::lambda(_oss.str(), 0);
+		if (_parent->is_object() || _parent->is_array()) {
+			_parent << _value;
+		}
+		else {
+			_parent = _value;
+		}		
 	}
 	else if (Py_TYPE(_exp) == &PyClassMethod_Type) {
 		assertz(Py_TYPE(_exp) != &PyClassMethod_Type, std::string("unmanaged python type PyClassMethod"), 500, 0);
@@ -386,7 +391,6 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 		assertz(Py_TYPE(_exp) != &PyType_Type, std::string("unmanaged python type PyType"), 500, 0);
 	}
 	else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
-		zdbg("PyBaseObject");
 		assertz(Py_TYPE(_exp) != &PyBaseObject_Type, std::string("unmanaged python type PyBaseObject"), 500, 0);
 	}
 	else if (Py_TYPE(_exp) == &PySuper_Type) {
@@ -446,9 +450,9 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 	else if (Py_TYPE(_exp) == &PyUnicodeIter_Type) {
 		assertz(Py_TYPE(_exp) != &PyUnicodeIter_Type, std::string("unmanaged python type PyUnicodeIter"), 500, 0);
 	}	 
-	else if (PyTZInfo_CheckExact(_exp)) {
+	/*else if (PyTZInfo_CheckExact(_exp)) {
 		assertz(!PyTZInfo_Check(_exp), std::string("unmanaged python type PyTZInfo"), 500, 0);
-	}
+	}*/
 }
 
 auto zpt::python::to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt::python::object {
@@ -503,6 +507,14 @@ auto zpt::python::to_python(zpt::json _in) -> PyObject* {
 		case zpt::JSDouble: {
 			_ret = PyFloat_FromDouble((double) _in);
 			Py_INCREF(_ret);
+			break;
+		}
+		case zpt::JSLambda : {
+			unsigned long _ref = 0;
+			std::istringstream _iss;
+			_iss.str(_in->lbd()->name());
+			_iss >> std::hex >> _ref;
+			_ret = (PyObject*) _ref;
 			break;
 		}
 		case zpt::JSNil: {
