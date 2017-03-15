@@ -1,3 +1,15 @@
+zapata-redis (0.9.6-1yakkety18) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 15 Mar 2017 21:58:16 +0000
+
+zapata-redis (0.9.6-1yakkety17) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Tue, 14 Mar 2017 11:57:58 +0000
+
 zapata-redis (0.9.6-1yakkety16) yakkety; urgency=medium
 
   * Version bump

@@ -254,9 +254,17 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 }
 
 auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json {
-	assertz_mandatory(_envelope["payload"], "client_id", 412);
-	assertz_mandatory(_envelope["payload"], "client_secret", 412);
-	assertz_mandatory(_envelope["payload"], "code", 412);
+	std::string _param;
+	if (_performative == zpt::ev::Post) {
+		_param.assign("payload");
+	}
+	else {
+		_param.assign("params");
+	}
+
+	assertz_mandatory(_envelope[_param], "client_id", 412);
+	assertz_mandatory(_envelope[_param], "client_secret", 412);
+	assertz_mandatory(_envelope[_param], "code", 412);
 
 	zpt::json _token = this->get_code(std::string(_envelope["payload"]["code"]));
 	return {
@@ -266,8 +274,16 @@ auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt:
 }
 
 auto zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json {
-	assertz_mandatory(_envelope["payload"], "grant_type", 412);
-	assertz_mandatory(_envelope["payload"], "refresh_token", 412);
+	std::string _param;
+	if (_performative == zpt::ev::Post) {
+		_param.assign("payload");
+	}
+	else {
+		_param.assign("params");
+	}
+
+	assertz_mandatory(_envelope[_param], "grant_type", 412);
+	assertz_mandatory(_envelope[_param], "refresh_token", 412);
 
 	zpt::json _refresh_token = this->get_refresh_token(std::string(_envelope["payload"]["refresh_token"]));
 	assertz_mandatory(_refresh_token, "access_token", 412);

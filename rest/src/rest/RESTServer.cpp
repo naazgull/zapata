@@ -124,6 +124,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 
 	zpt::rest::n_pid = 0;
 	zpt::rest::pids = new pid_t[_to_spawn->arr()->size()];
+	key_t _key = ftok("/usr/bin/zjson", 1);
+	int _sync_sem = semget(_key, 1, IPC_CREAT | 0777);
 
 	if (bool(_ptr["$mutations"]["run"])) {
 		key_t _key = ftok("/usr/bin/zpt", 1);
@@ -169,8 +171,11 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			::signal(SIGTERM, zpt::rest::terminate);
 			::signal(SIGABRT, zpt::rest::terminate);
 			::signal(SIGSEGV, zpt::rest::terminate);
+			semctl(_sync_sem, 0, IPC_RMID);
 		}
 		else {
+			struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
+			semop(_sync_sem, _inc, 1);	
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				_name.assign((_spawn["name"]->is_string() ? std::string(_spawn["name"]) : std::string("container-") + std::to_string(_spawned)));
@@ -178,10 +183,12 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 				break;
 			}
 			else {
+				struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
+				semop(_sync_sem, _block, 1);	
 				zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 				_spawned++;
 				if (_spawn["sleep"]->is_integer()) {
-					sleep(int(_spawn["sleep"]));
+					//sleep(int(_spawn["sleep"]) * (_spawn["spawn"]->ok() ? int(_spawn["spawn"]) : 1));
 				}
 			}
 		}
@@ -194,9 +201,14 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 	size_t _i = 0;
 	for (; _i != _n_workers - 1; _i++) {
+		struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
+		semop(_sync_sem, _inc, 1);	
 		pid_t _pid = fork();
 		if (_pid == 0) {
 			break;
+		}
+		if (_options["sleep"]->is_integer()) {
+			//sleep(int(_options["sleep"]));
 		}
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
@@ -225,6 +237,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::rest::server _server(nullptr);
 	try {
 		_server = zpt::rest::server::setup(_options, _name);
+		struct sembuf _dec[1] = { { (short unsigned int) 0, -1 } };
+		semop(_sync_sem, _dec, 1);	
 		_server->start();
 	}
 	catch (zpt::assertion& _e) {
@@ -312,7 +326,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::notice);
 		this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
 	}
-	
+	//zdbg(this->credentials());
 	if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 		zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 		if (!_uri["port"]->ok()) {
@@ -900,6 +914,11 @@ auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 	}
 	if (_envelope["payload"]["access_token"]->ok()) {
 		std::string _param(_envelope["payload"]["access_token"]);
+		zpt::url::decode(_param);
+		return _param;
+	}
+	if (_envelope["params"]["access_token"]->ok()) {
+		std::string _param(_envelope["params"]["access_token"]);
 		zpt::url::decode(_param);
 		return _param;
 	}
