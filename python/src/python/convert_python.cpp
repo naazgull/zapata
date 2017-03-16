@@ -453,10 +453,33 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 	/*else if (PyTZInfo_CheckExact(_exp)) {
 		assertz(!PyTZInfo_Check(_exp), std::string("unmanaged python type PyTZInfo"), 500, 0);
 	}*/
+	else {
+		zpt::json _value = zpt::python::to_ref(_exp);
+		if (_parent->is_object() || _parent->is_array()) {
+			_parent << _value;
+		}
+		else {
+			_parent = _value;
+		}		
+	}
 }
 
 auto zpt::python::to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt::python::object {
 	return zpt::python::object(zpt::python::to_python(_in));
+}
+
+auto zpt::python::from_ref(zpt::json _in) -> PyObject* {
+	unsigned long _ref = 0;
+	std::istringstream _iss;
+	_iss.str(std::string(_in));
+	_iss >> std::hex >> _ref;
+	return (PyObject*) _ref;
+}
+
+auto zpt::python::to_ref(PyObject* _in) -> zpt::json {
+	std::ostringstream _oss;
+	_oss << _in << flush;
+	return zpt::json::string(_oss.str());
 }
 
 auto zpt::python::to_python(zpt::json _in) -> PyObject* {
