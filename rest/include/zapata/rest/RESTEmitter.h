@@ -99,7 +99,7 @@ namespace zpt {
 		RESTServer(std::string _name, zpt::json _options);
 		virtual ~RESTServer();
 
-		virtual void start();
+		virtual void start(zpt::json _sems = zpt::undefined);
 
 		virtual auto name() -> std::string;
 		virtual auto options() -> zpt::json;

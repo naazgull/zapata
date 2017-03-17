@@ -127,17 +127,18 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
 
+	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_stmt.exec(_expression);
+			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
 	}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
 }
 
@@ -155,17 +156,18 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
 
+	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_stmt.exec(_expression);
+			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
 	}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
 }
 
@@ -216,17 +218,18 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
 
+	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_stmt.exec(_expression);
+			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
 	}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
 	return 1;
 }
 
@@ -273,17 +276,18 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
 
+	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_stmt.exec(_expression);
+			_size = _stmt.exec(_expression)[0][0].as<int>();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
 		assertz(false, _e.what(), 412, 0);
 	}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
 	return 1;
 }
 
@@ -294,17 +298,18 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
 	for (auto _record : _selected["elements"]->arr()) {
 		std::string _expression = std::string("DELETE FROM ") + zpt::pgsql::escape_name(_collection) + std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_record["id"]);
+		int _size = 0;
 		try {
 			{ std::lock_guard< std::mutex > _lock(this->__mtx);
 				pqxx::work _stmt(this->conn());
-				_stmt.exec(_expression);
+				_size = _stmt.exec(_expression)[0][0].as<int>();
 				_stmt.commit(); }
 		}
 		catch(std::exception& _e) {
 			assertz(false, _e.what(), 412, 0);
 		}
 
-		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
+		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
 	}
 	
 	return int(_selected["size"]);

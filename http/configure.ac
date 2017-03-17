@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-http, 0.9.6-1yakkety19, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-http, 0.9.6-1yakkety21, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])

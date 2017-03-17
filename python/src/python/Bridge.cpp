@@ -204,7 +204,7 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 					PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_performative).data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
 					PyObject* _ret = PyObject_CallObject(_func, _args);
 					if (_ret == nullptr) {
-						return zpt::undefined;
+						return { "status", 204 };
 					}				
 					return _bridge->from< zpt::python::object >(_ret);
 				}
@@ -265,6 +265,15 @@ auto zpt::python::module::hook(PyObject* _self, PyObject* _args) -> PyObject* {
 	Py_RETURN_TRUE;
 }
 
+auto zpt::python::module::log(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
+	std::string _text = std::string(_params[0]);
+	int _level = int(_params[0]);
+	zlog(_text, (zpt::LogLevel) _level);
+	Py_RETURN_TRUE;
+}
+
 namespace zpt {
 	namespace python {
 		namespace module {
@@ -276,6 +285,7 @@ namespace zpt {
 				{"authorize", zpt::python::module::validate_authorization, METH_VARARGS, "Validates the received message authorization."},
 				{"options", zpt::python::module::options, METH_VARARGS, "Returns the present configuration."},
 				{"hook", zpt::python::module::hook, METH_VARARGS, "Callbacks to be executed upon initialization."},
+				{"log", zpt::python::module::log, METH_VARARGS, "Logging function."},
 				{nullptr, nullptr, 0, nullptr}
 			};
 

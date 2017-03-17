@@ -266,7 +266,7 @@ auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt:
 	assertz_mandatory(_envelope[_param], "client_secret", 412);
 	assertz_mandatory(_envelope[_param], "code", 412);
 
-	zpt::json _token = this->get_code(std::string(_envelope["payload"]["code"]));
+	zpt::json _token = this->get_code(std::string(_envelope[_param]["code"]));
 	return {
 		"status", 200,
 		"payload", _token
@@ -285,7 +285,7 @@ auto zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zp
 	assertz_mandatory(_envelope[_param], "grant_type", 412);
 	assertz_mandatory(_envelope[_param], "refresh_token", 412);
 
-	zpt::json _refresh_token = this->get_refresh_token(std::string(_envelope["payload"]["refresh_token"]));
+	zpt::json _refresh_token = this->get_refresh_token(std::string(_envelope[_param]["refresh_token"]));
 	assertz_mandatory(_refresh_token, "access_token", 412);
 	this->remove_token(_refresh_token);
 	zpt::json _token = this->generate_token(_refresh_token);

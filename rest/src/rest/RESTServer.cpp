@@ -113,21 +113,26 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	
 	zpt::json _to_spawn = zpt::json::array();
+	size_t _n_spawn = 0;
 	if (_ptr["boot"]->is_array()) {
 		for (auto _spawn : _ptr["boot"]->arr()) {
 			if (!((bool) _spawn["enabled"])) {
 				continue;
 			}
+			_n_spawn += (_spawn["spawn"]->ok() ? (size_t) _spawn["spawn"] : 1);
 			_to_spawn << _spawn;
 		}
 	}
 
+	std::string _f_key = std::string("/proc/") + std::to_string(::getpid()) + std::string("/");
+	
 	zpt::rest::n_pid = 0;
-	zpt::rest::pids = new pid_t[_to_spawn->arr()->size()];
-	key_t _key = ftok("/usr/bin/zjson", 1);
-	int _sync_sem = semget(_key, 1, IPC_CREAT | 0777);
+	zpt::rest::pids = new pid_t[_n_spawn];
+	key_t _s_key = ftok((_f_key + std::string("stat")).data(), 1);
+	int _sync_sem = semget(_s_key, 2, IPC_CREAT | 0777);
+	assertz(_sync_sem != -1, "unabled to attach sem to /proc/{pid}/stat", 500, 0);
 
-	if (bool(_ptr["$mutations"]["run"])) {
+	if (std::string(_ptr["$mutations"]["run"]) == "true") {
 		key_t _key = ftok("/usr/bin/zpt", 1);
 		zpt::rest::m_sem = semget(_key, 1, IPC_CREAT | IPC_EXCL | 0777);
 		if (zpt::rest::m_sem != -1) {
@@ -171,11 +176,10 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			::signal(SIGTERM, zpt::rest::terminate);
 			::signal(SIGABRT, zpt::rest::terminate);
 			::signal(SIGSEGV, zpt::rest::terminate);
-			semctl(_sync_sem, 0, IPC_RMID);
 		}
 		else {
 			struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
-			semop(_sync_sem, _inc, 1);	
+			semop(_sync_sem, _inc, 1);
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				_name.assign((_spawn["name"]->is_string() ? std::string(_spawn["name"]) : std::string("container-") + std::to_string(_spawned)));
@@ -184,12 +188,9 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			}
 			else {
 				struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
-				semop(_sync_sem, _block, 1);	
+				semop(_sync_sem, _block, 1);
 				zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 				_spawned++;
-				if (_spawn["sleep"]->is_integer()) {
-					//sleep(int(_spawn["sleep"]) * (_spawn["spawn"]->ok() ? int(_spawn["spawn"]) : 1));
-				}
 			}
 		}
 	}
@@ -201,15 +202,19 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 	size_t _i = 0;
 	for (; _i != _n_workers - 1; _i++) {
-		struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
-		semop(_sync_sem, _inc, 1);	
+		struct sembuf _inc[2] = { { (short unsigned int) 0, 1 }, { (short unsigned int) 1, 1 } };
+		semop(_sync_sem, _inc, 2);
 		pid_t _pid = fork();
 		if (_pid == 0) {
+			zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 			break;
 		}
-		if (_options["sleep"]->is_integer()) {
-			//sleep(int(_options["sleep"]));
-		}
+		struct sembuf _block[1] = { { (short unsigned int) 1, 0 } };
+		semop(_sync_sem, _block, 1);	
+	}
+	if (_i == _n_workers - 1) {
+		struct sembuf _inc[1] = { { (short unsigned int) 1, 1 } };
+		semop(_sync_sem, _inc, 1);
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
 	
@@ -237,9 +242,13 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::rest::server _server(nullptr);
 	try {
 		_server = zpt::rest::server::setup(_options, _name);
-		struct sembuf _dec[1] = { { (short unsigned int) 0, -1 } };
-		semop(_sync_sem, _dec, 1);	
-		_server->start();
+		if (_spawned == _to_spawn->arr()->size() - 1) {
+			semctl(_sync_sem, 0, IPC_RMID);
+			_server->start();
+		}
+		else {
+			_server->start({ zpt::array, _sync_sem });
+		}
 	}
 	catch (zpt::assertion& _e) {
 		_server->unbind();
@@ -402,7 +411,7 @@ auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
 	this->__initializers.push_back(_callback);
 }
 
-void zpt::RESTServer::start() {
+void zpt::RESTServer::start(zpt::json _sems) {
 	try {
 		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 			this->__mqtt->start();
@@ -472,7 +481,11 @@ void zpt::RESTServer::start() {
 		for (auto _callback : this->__initializers) {
 			_callback(this->__emitter);
 		}
-		
+
+		if (_sems->ok()) {
+			struct sembuf _dec[2] = { { (short unsigned int) 0, -1 }, { (short unsigned int) 1, -1 } };
+			semop(int(_sems[0]), _dec, 2);	
+		}
 		this->__poll->loop();
 		for (auto _thread : this->__threads) {
 			_thread->join();

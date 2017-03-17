@@ -121,6 +121,7 @@ namespace zpt {
 			auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto options(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto hook(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto log(PyObject* _self, PyObject* _args) -> PyObject*;
 			
 			extern PyMethodDef methods[];
 			extern PyModuleDef spec;
