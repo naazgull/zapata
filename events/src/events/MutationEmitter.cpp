@@ -143,7 +143,7 @@ auto zpt::MutationEmitter::unbind() -> void {
 auto zpt::MutationEmitter::connector(std::string _name, zpt::connector _connector) -> void {
 	auto _found = this->__connector.find(_name);
 	if (_found == this->__connector.end()) {
-		zlog(std::string("registering connector ") + _name + std::string("@") + _connector->name(), zpt::notice);
+		ztrace(std::string("registering connector ") + _name + std::string("@") + _connector->name());
 		_connector->mutations(this->__self);
 		try {
 			_connector->connect();

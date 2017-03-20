@@ -276,7 +276,7 @@ auto zpt::ZMQPoll::loop() -> void {
 							"channel" << _envelope["headers"]["X-Cid"] <<
 							"performative" << zpt::ev::Reply <<
 							"resource" << _envelope["resource"];
-						
+									
 							_socket->send(_result);
 						}
 						catch(zpt::assertion& _e) {}

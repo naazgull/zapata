@@ -42,7 +42,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 	}
 	zpt::rest::__emitter = this;
 	
-	if (bool(this->options()["$mutations"]["enabled"])) {
+	if (this->options()["$mutations"]["enabled"] == zpt::json::string("true")) {
 		this->mutations((new zpt::RESTMutationEmitter(this->options()))->self());
 	}
 	else {
@@ -188,7 +188,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->subscribe(_regex, _opts);
 
-	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
+	ztrace(std::string("registered handlers for ") + _regex);
 	return _uuid;
 }
 
@@ -213,7 +213,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->subscribe(_regex, _opts);
 
-	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
+	ztrace(std::string("registered handlers for ") + _regex);
 	return _uuid;
 }
 
@@ -262,7 +262,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
 	this->server()->subscribe(_listener->regex(), _opts);
 
-	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::notice);
+	ztrace(std::string("registered handlers for ") + _listener->regex());
 	return _uuid;
 }
 

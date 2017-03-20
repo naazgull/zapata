@@ -75,7 +75,7 @@ auto zpt::RESTMutationEmitter::on(zpt::mutation::operation _operation, std::stri
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
+	ztrace(string("registered mutation handler for ") + _uri);
 	return _uuid;
 }
 
@@ -94,7 +94,7 @@ auto zpt::RESTMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mu
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
+	ztrace(string("registered mutation handler for ") + _uri);
 	return _uuid;
 }
 
@@ -134,7 +134,7 @@ auto zpt::RESTMutationEmitter::on(zpt::mutation::listener _listener, zpt::json _
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	zlog(string("registered mutation handler for ") + _uri, zpt::notice);
+	ztrace(string("registered mutation handler for ") + _uri);
 	return _uuid;
 }
 

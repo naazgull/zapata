@@ -100,10 +100,11 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 	std::string _columns = zpt::pgsql::get_column_names(_document, _opts);
 	std::string _values = zpt::pgsql::get_column_values(_document, _opts);
 	_expression += _columns + std::string(") VALUES (") + _values + (")");
+	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_stmt.exec(_expression);
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -131,7 +132,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -160,7 +161,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -193,7 +194,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -222,7 +223,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -255,7 +256,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -280,7 +281,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			pqxx::work _stmt(this->conn());
-			_size = _stmt.exec(_expression)[0][0].as<int>();
+			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
@@ -302,7 +303,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 		try {
 			{ std::lock_guard< std::mutex > _lock(this->__mtx);
 				pqxx::work _stmt(this->conn());
-				_size = _stmt.exec(_expression)[0][0].as<int>();
+				_size = _stmt.exec(_expression).affected_rows();
 				_stmt.commit(); }
 		}
 		catch(std::exception& _e) {

@@ -300,19 +300,19 @@ auto zpt::Generator::build_data_layer() -> void {
 					std::ofstream _h_ofs(_h_file.data());
 					_h_ofs << _datum_h << endl << flush;
 					_h_ofs.close();
-					zlog(std::string("processed ") + _h_file, zpt::trace);
+					ztrace(std::string("processed ") + _h_file);
 				}
 				if (bool(this->__options["force-data"][0]) || (!bool(this->__options["force-data"][0]) && !_cxx_exists)) {
 					std::ofstream _cxx_ofs(_cxx_file.data());
 					_cxx_ofs << _datum_cxx << endl << flush;
 					_cxx_ofs.close();
-					zlog(std::string("processed ") + _cxx_file, zpt::trace);
+					ztrace(std::string("processed ") + _cxx_file);
 				}
 				if (bool(this->__options["force-data"][0]) || (!bool(this->__options["force-data"][0]) && !_sql_exists)) {
 					std::ofstream _sql_ofs(_sql_file.data());
 					_sql_ofs << _datum_sql << endl << flush;
 					_sql_ofs.close();
-					zlog(std::string("processed ") + _sql_file, zpt::trace);
+					ztrace(std::string("processed ") + _sql_file);
 				}
 			}
 		}
@@ -429,7 +429,7 @@ auto zpt::Generator::build_container() -> void {
 				std::ofstream _cxx_ofs(_cxx_file.data());
 				_cxx_ofs << _container_cxx << endl << flush;
 				_cxx_ofs.close();
-				zlog(std::string("processed ") + _cxx_file, zpt::trace);	
+				ztrace(std::string("processed ") + _cxx_file);	
 			}
 
 			size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + zpt::split(std::string(_spec["name"]), "/")->arr()->size();
@@ -448,7 +448,7 @@ auto zpt::Generator::build_container() -> void {
 				std::ofstream _am_ofs(_am_file.data());
 				_am_ofs << _make << endl << flush;
 				_am_ofs.close();
-				zlog(std::string("processed ") + _am_file, zpt::trace);
+				ztrace(std::string("processed ") + _am_file);
 				std::ofstream _h_am_ofs(_h_am_file.data());
 				_h_am_ofs << _h_make_files << endl << flush;
 				_h_am_ofs.close();
@@ -491,7 +491,7 @@ auto zpt::Generator::build_container() -> void {
 				std::ofstream _lisp_ofs(_lisp_file.data());
 				_lisp_ofs << _container_lisp << endl << flush;
 				_lisp_ofs.close();
-				zlog(std::string("processed ") + _lisp_file, zpt::trace);	
+				ztrace(std::string("processed ") + _lisp_file);	
 			}
 		}
 		if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
@@ -546,12 +546,12 @@ auto zpt::Generator::build_container() -> void {
 				_py_ofs.open(_py_file.data());
 				_py_ofs << _container_py << endl << flush;
 				_py_ofs.close();
-				zlog(std::string("processed ") + _py_file, zpt::trace);	
+				ztrace(std::string("processed ") + _py_file);	
 			}
 		}
 	}
 	
-	//zlog(_handler_cxx, zpt::trace);
+	//ztrace(_handler_cxx);
 }
 
 auto zpt::Generator::build_mutations() -> void {
@@ -842,13 +842,13 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 			std::ofstream _h_ofs(_h_file.data());
 			_h_ofs << _mutation_h << endl << flush;
 			_h_ofs.close();
-			zlog(std::string("processed ") + _h_file, zpt::trace);
+			ztrace(std::string("processed ") + _h_file);
 		}
 		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
 			std::ofstream _cxx_ofs(_cxx_file.data());
 			_cxx_ofs << _mutation_cxx << endl << flush;
 			_cxx_ofs.close();
-			zlog(std::string("processed ") + _cxx_file, zpt::trace);
+			ztrace(std::string("processed ") + _cxx_file);
 		}
 		return std::string(this->__spec["namespace"]) + std::string("::mutations::") + std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")) + std::string("::mutify(_emitter->mutations());\n");
 	}
@@ -1692,13 +1692,13 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::ofstream _h_ofs(_h_file.data());
 			_h_ofs << _handler_h << endl << flush;
 			_h_ofs.close();
-			zlog(std::string("processed ") + _h_file, zpt::trace);
+			ztrace(std::string("processed ") + _h_file);
 		}
 		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_cxx_exists)) {
 			std::ofstream _cxx_ofs(_cxx_file.data());
 			_cxx_ofs << _handler_cxx << endl << flush;
 			_cxx_ofs.close();
-			zlog(std::string("processed ") + _cxx_file, zpt::trace);
+			ztrace(std::string("processed ") + _cxx_file);
 		}
 	}		
 	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("lisp")) != std::end(this->__options["resource-out-lang"]->arr())) {
@@ -1755,7 +1755,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::ofstream _lisp_ofs(_lisp_file.data());
 			_lisp_ofs << _handler_lisp << endl << flush;
 			_lisp_ofs.close();
-			zlog(std::string("processed ") + _lisp_file, zpt::trace);
+			ztrace(std::string("processed ") + _lisp_file);
 		}
 	}
 	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
@@ -1769,7 +1769,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			std::ofstream _py_ofs(_py_file.data());
 			_py_ofs << _handler_py << endl << flush;
 			_py_ofs.close();
-			zlog(std::string("processed ") + _py_file, zpt::trace);
+			ztrace(std::string("processed ") + _py_file);
 		}
 	}
 

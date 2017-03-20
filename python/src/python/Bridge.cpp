@@ -74,13 +74,13 @@ auto zpt::python::Bridge::initialize() -> void {
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
 			if (_python_script->str().find(".py") != std::string::npos) {
-				zlog(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"), zpt::notice);
+				ztrace(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"));
 				FILE* _fp = ::fopen(_python_script->str().data(), "r");
 				PyRun_SimpleFileEx(_fp, _python_script->str().data(), true);
 			}
 		}
 	}
-	zlog(std::string("PYTHON bridge initialized"), zpt::trace);
+	ztrace(std::string("PYTHON bridge initialized"));
 }
 
 auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void {
@@ -112,12 +112,12 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
 	zpt::python::__instance = _bridge;
 
-	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::trace);
+	ztrace(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"));
 	Py_SetProgramName((wchar_t*) "zpt");
 	
 	struct _inittab _initt[zpt::python::__modules->size() + 1];
 	for (size_t _k = 0; _k != zpt::python::__modules->size(); _k++) {
-		zlog(std::string("PYTHON registering module '") + zpt::python::__modules->at(_k).first + std::string("'"), zpt::notice);
+		ztrace(std::string("PYTHON registering module '") + zpt::python::__modules->at(_k).first + std::string("'"));
 		_initt[_k].name = zpt::python::__modules->at(_k).first.data();
 		_initt[_k].initfunc = zpt::python::__modules->at(_k).second;
 	}
@@ -136,7 +136,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	std::string _sys_path = zpt::join(_new_sys_path, ":");
 	PySys_SetPath(zpt::utf8::utf8_to_wstring(_sys_path));
 		
-	zlog(std::string("PYTHON bridge booted"), zpt::notice);
+	ztrace(std::string("PYTHON bridge booted"));
 }
 
 zpt::python::Object::Object(PyObject* _target) : std::shared_ptr< zpt::python::Type >(new zpt::python::Type(_target)) {
@@ -201,12 +201,25 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 			std::make_pair(_performative,
 				[ _func, _context ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-					PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_performative).data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
-					PyObject* _ret = PyObject_CallObject(_func, _args);
-					if (_ret == nullptr) {
-						return { "status", 204 };
-					}				
-					return _bridge->from< zpt::python::object >(_ret);
+					std::string _s_performative = zpt::ev::to_str(_performative);
+					std::transform(_s_performative.begin(), _s_performative.end(), _s_performative.begin(), ::tolower);
+					PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(_s_performative.data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
+					try {
+						PyObject* _result = PyObject_CallObject(_func, _args);
+						zpt::json _ret;
+						if (_result == nullptr) {
+							_ret = { "status", 204 };
+						}
+						else {
+							_ret = _bridge->from< zpt::python::object >(_result);
+						}
+						if (!_ret["status"]->ok()) {
+							_ret = { "status", 500, "payload", { "text", "something went terribly wrong with Python listeners invokation" } };
+						}
+						return _ret;
+					}
+					catch(...) {}
+					return { "status", 500, "payload", { "text", "something went terribly wrong with Python listeners invokation" } };
 				}
 			)
 		);
@@ -269,8 +282,18 @@ auto zpt::python::module::log(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
 	std::string _text = std::string(_params[0]);
-	int _level = int(_params[0]);
+	int _level = int(_params[1]);
 	zlog(_text, (zpt::LogLevel) _level);
+	Py_RETURN_TRUE;
+}
+
+auto zpt::python::module::assertion(PyObject* _self, PyObject* _args) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
+	bool _guard = bool(_params[0]);
+	std::string _message = std::string(_params[1]);
+	int _status = int(_params[2]);
+	assertz(_guard, _message, _status, 0);
 	Py_RETURN_TRUE;
 }
 
@@ -286,6 +309,7 @@ namespace zpt {
 				{"options", zpt::python::module::options, METH_VARARGS, "Returns the present configuration."},
 				{"hook", zpt::python::module::hook, METH_VARARGS, "Callbacks to be executed upon initialization."},
 				{"log", zpt::python::module::log, METH_VARARGS, "Logging function."},
+				{"assertz", zpt::python::module::assertion, METH_VARARGS, "Assertion function."},
 				{nullptr, nullptr, 0, nullptr}
 			};
 

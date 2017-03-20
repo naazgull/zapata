@@ -288,6 +288,69 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::notice);
 				break;
 			}
+			case ZMQ_REP : {
+				if (this->__options["threads"]->ok()) {
+					zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
+					if (_uri["type"] == zpt::json::string("@")) {
+						uint _available = 32769;
+						if (_uri["port"] != zpt::json::string("*")) {
+							_available = (uint) _uri["port"];
+						}
+						else {
+							zpt::serversocketstream _ss;
+							do {
+								if (_ss.bind(_available)) {
+									break;
+								}
+								_available++;
+							}
+							while(_available < 60999);
+							_ss.close();
+						}
+
+						std::string _socket_id = zpt::generate::r_uuid();
+						_definition << "uuid" << _socket_id;
+						std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
+						zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
+						_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
+						this->__router_dealer.push_back(_socket);
+						zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::notice);
+
+						std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
+						size_t _n_threads = size_t(this->__options["threads"]);;
+					
+						for (size_t _k = 0; _k != _n_threads; _k++) {
+							std::shared_ptr< std::thread > _worker(
+								new std::thread(
+									[ this, _in_connection ] () -> void {
+										zpt::ZMQ* _socket = new zpt::ZMQRep(_in_connection, this->__options);
+										for (;true;) {
+											zpt::json _envelope = _socket->recv();
+											if (_envelope->ok()) {
+												zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+												zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+												if (_result->ok()) {
+													try {
+														_result << 
+														"channel" << _envelope["headers"]["X-Cid"] <<
+														"performative" << zpt::ev::Reply <<
+														"resource" << _envelope["resource"];
+														_socket->send(_result);
+													}
+													catch(zpt::assertion& _e) {}
+												}
+											}
+										}
+								
+									}
+								)
+							);
+							this->__threads.push_back(_worker);
+						}
+						break;
+					}
+				}
+			}
 			default : {
 				zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
 				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
@@ -317,7 +380,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			_lib_file.append(".so");
 
 			if (_lib_file.length() > 6) {
-				zlog(std::string("loading module '") + _lib_file + std::string("'"), zpt::notice);
+				ztrace(std::string("loading module '") + _lib_file + std::string("'"));
 				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 				if (hndl == nullptr) {
 					zlog(std::string(dlerror()), zpt::error);
@@ -466,7 +529,7 @@ void zpt::RESTServer::start(zpt::json _sems) {
 			this->__threads.push_back(_http);
 		}
 		
-		if (bool(this->__options["$mutations"]["enabled"])) {
+		if (this->__options["$mutations"]["enabled"] == zpt::json::string("true")) {
 			std::shared_ptr< std::thread > _mutations(
 				new std::thread(
 					[ this ] () -> void {
@@ -548,7 +611,7 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		}
 	}
 	else {
-		zlog(std::string("didn't produce anything for HTTP request"), zpt::trace);
+		ztrace(std::string("didn't produce anything for HTTP request"));
 		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_request->url()));
 		(*_cs) << _reply << flush;
 		_return = true;

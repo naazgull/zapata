@@ -97,12 +97,12 @@ auto zpt::lisp::Bridge::initialize() -> void {
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
 			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
-				zlog(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
+				ztrace(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"));
 				this->eval(std::string("(load \"") + ((std::string) _lisp_script) + std::string("\")"));
 			}
 		}
 	}
-	zlog(std::string("LISP bridge initialized"), zpt::trace);
+	ztrace(std::string("LISP bridge initialized"));
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -244,7 +244,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":json-date "
 		"))"
 	);
-	zlog(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"), zpt::trace);
+	ztrace(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"));
 	_bridge->defun(
 		{
 			"name", "cpp-lambda-call",
