@@ -48,6 +48,7 @@ namespace zpt {
 		extern int m_sem;
 		
 		auto http2zmq(zpt::http::req _request) -> zpt::json;
+		auto http2zmq(zpt::http::rep _reply) -> zpt::json;
 		auto zmq2http(zpt::json _out) -> zpt::HTTPRep;
 		auto terminate(int _signal) -> void;
 

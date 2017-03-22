@@ -326,6 +326,13 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 										zpt::ZMQ* _socket = new zpt::ZMQRep(_in_connection, this->__options);
 										for (;true;) {
 											zpt::json _envelope = _socket->recv();
+											if (bool(_envelope["error"])) {
+												_envelope << 
+												"channel" << "/bad-request" <<
+												"performative" << zpt::ev::Reply <<
+												"resource" << "/bad-request";
+												_socket->send(_envelope);
+											}
 											if (_envelope->ok()) {
 												zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 												zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
@@ -567,7 +574,10 @@ bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
 		(*_cs) >> _request;
 	}
 	catch(zpt::SyntaxErrorException& _e) {
-		assertz(false, "error parsing HTTP data", 500, 0);
+		ztrace(std::string("didn't produce anything for HTTP request"));
+		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_request->url()));
+		(*_cs) << _reply << flush;
+		return true;
 	}
 
 	bool _return = false;
@@ -656,7 +666,6 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	if (_data->__message["params"]->ok()) {
 		_envelope << "params" << _data->__message["params"];
 	}
-
 	zpt::ev::performative _performative = (zpt::ev::performative) int(_envelope["performative"]);
 	zpt::json _result = this->events()->trigger(_performative, std::string(_data->__topic), _envelope);
 	if (_result->ok()) {
@@ -851,6 +860,46 @@ auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 	
 	zpt::json _headers = zpt::json::object();
 	for (auto _header : _request->headers()) {
+		_headers << _header.first << _header.second;
+	}
+	if (_headers->obj()->size() != 0) {
+		_return << "headers" << _headers;
+	}
+	
+	return _return;
+}
+
+auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+	_return <<
+	"status" << (int) _reply->status() <<
+	"channel" << zpt::generate::r_uuid() <<
+	"performative" << zpt::ev::Reply <<
+	"resource" << zpt::generate::r_uuid();
+	
+	zpt::json _payload;
+	if (_reply->body() != "") {
+		if (_reply->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
+			_payload = zpt::rest::http::deserialize(_reply->body());
+		}
+		else if (_reply->header("Content-Type").find("application/json") != std::string::npos) {
+			try {
+				_payload = zpt::json(_reply->body());
+			}
+			catch(zpt::SyntaxErrorException& _e) {
+			}
+		}
+		else {
+			_payload = { "text", _reply->body() };
+		}
+	}
+	else {
+		_payload = zpt::json::object();
+	}
+	_return << "payload" << _payload;
+
+	zpt::json _headers = zpt::json::object();
+	for (auto _header : _reply->headers()) {
 		_headers << _header.first << _header.second;
 	}
 	if (_headers->obj()->size() != 0) {

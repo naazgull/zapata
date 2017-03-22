@@ -133,16 +133,21 @@ zpt::json zpt::ZMQ::recv() {
 		std::free(_bytes);
 		zframe_destroy(&_frame1);
 
-		_bytes = zframe_strdup(_frame2);
-		zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
-		std::free(_bytes);
-		zframe_destroy(&_frame2);
+		try {
+			_bytes = zframe_strdup(_frame2);
+			zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
+			std::free(_bytes);
+			zframe_destroy(&_frame2);
 
-		ztrace(std::string("[recv] <- ") + _directive + std::string(" | ") + this->connection());
-		return _envelope;
+			ztrace(std::string("[recv] <- ") + _directive + std::string(" | ") + this->connection());
+			return _envelope;
+		}
+		catch(zpt::SyntaxErrorException& _e) {
+			return { "error", true, "status", 400, "payload", { "text", _e.what() } };
+		}
 	}
 	else {
-		return { "status", 503 };
+		return { "error", true, "status", 503 };
 	}
 }
 

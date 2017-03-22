@@ -431,6 +431,8 @@ auto zpt::redis::Client::query(std::string _collection, zpt::json _regexp, zpt::
  	assertz(_regexp->ok() && _regexp->type() == zpt::JSObject, "'_regexp' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn != nullptr, std::string("connection to Redis at ") + this->name() + std::string(" has not been established."), 500, 0); }
+	zdbg(_regexp);
+	zdbg(zpt::redis::to_regex(_regexp));
 	return this->query(_collection, zpt::redis::to_regex(_regexp), _opts);
 }
 

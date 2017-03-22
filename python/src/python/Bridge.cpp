@@ -180,41 +180,47 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
 	std::map< zpt::ev::performative, zpt::ev::Handler > _handlers;
-	zpt::json _lambdas = _params[1];
+	zpt::json _callbacks = _params[1];
 	std::string _topic = std::string(_params[0]);
 	zpt::json _opts;
-	PyObject* _context = nullptr;;
+	std::string _instance;
+	PyObject* _context = nullptr;
 	if (_params->arr()->size() == 3) {
-		_context = zpt::python::from_ref(_params[2]);;
+		_context = zpt::python::from_ref(_params[2]);
+		_instance = std::string(_params[2]);
 	}
 	else if (_params->arr()->size() == 4) {
 		_opts = _params[2];
-		_context = zpt::python::from_ref(_params[3]);;
+		_context = zpt::python::from_ref(_params[3]);
+		_instance = std::string(_params[3]);
 	}
 	Py_INCREF(_context);
 	
-	for (auto _lambda : _lambdas->obj()) {
-		zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
-		PyObject* _func = **_bridge->to< zpt::python::object >(_lambda.second);
+	for (auto _handler : _callbacks->obj()) {
+		zpt::ev::performative _performative = zpt::ev::from_str(_handler.first);
+		PyObject* _func = **_bridge->to< zpt::python::object >(_handler.second);
+		std::string _lambda = std::string(zpt::python::to_ref(_func));
 		Py_INCREF(_func);
 		_handlers.insert(
 			std::make_pair(_performative,
-				[ _func, _context ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[ _lambda, _instance ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 					std::string _s_performative = zpt::ev::to_str(_performative);
 					std::transform(_s_performative.begin(), _s_performative.end(), _s_performative.begin(), ::tolower);
+					PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
+					PyObject* _context = zpt::python::from_ref(zpt::json::string(_instance));
 					PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(_s_performative.data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
 					try {
+						PyErr_Clear();
 						PyObject* _result = PyObject_CallObject(_func, _args);
-						zpt::json _ret;
+						zpt::json _ret = zpt::undefined;
 						if (_result == nullptr) {
-							_ret = { "status", 204 };
+							if (PyErr_Occurred() != nullptr) {
+								PyErr_Print();
+							}
 						}
 						else {
 							_ret = _bridge->from< zpt::python::object >(_result);
-						}
-						if (!_ret["status"]->ok()) {
-							_ret = { "status", 500, "payload", { "text", "something went terribly wrong with Python listeners invokation" } };
 						}
 						return _ret;
 					}

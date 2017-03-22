@@ -267,6 +267,13 @@ auto zpt::ZMQPoll::loop() -> void {
 				zpt::socket _socket = this->get_by_zsock(_awaken);
 				zpt::json _envelope = _socket->recv();
 
+				if (bool(_envelope["error"])) {
+					_envelope << 
+					"channel" << "/bad-request" <<
+					"performative" << zpt::ev::Reply <<
+					"resource" << "/bad-request";
+					_socket->send(_envelope);
+				}
 				if (_envelope->ok()) {
 					zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 					zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);

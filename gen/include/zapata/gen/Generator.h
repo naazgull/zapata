@@ -90,6 +90,9 @@ namespace zpt {
 		virtual auto build_container() -> void;
 		virtual auto build_mutations() -> void;
 
+		static auto get_datum(std::string _ref) -> std::string;
+
+		
 	private:
 		zpt::json __options;
 		zpt::json __specs;
@@ -106,6 +109,7 @@ namespace zpt {
 		virtual auto build_params(zpt::json _rel, bool _multi) -> std::string;
 		virtual auto build_inverted_params(zpt::json _rel) -> std::string;
 		virtual auto build_topic(zpt::json _topic) -> std::string;
+		virtual auto build_dbms_source() -> std::string;
 		virtual auto build_dbms() -> std::string;
 		virtual auto build_get(zpt::json _resource) -> std::string;
 		virtual auto build_post(zpt::json _resource) -> std::string;
