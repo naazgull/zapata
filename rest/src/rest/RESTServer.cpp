@@ -142,6 +142,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				try {
+					zdbg("stating mutations");
 					zpt::mutation::server::launch(argc, argv, zpt::rest::m_sem);
 				}
 				catch (zpt::assertion& _e) {

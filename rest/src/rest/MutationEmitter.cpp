@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/rest/MutationEmitter.h>
+#include <zapata/rest/RESTServer.h>
 #include <sys/sem.h>
 #include <map>
 #include <zapata/mqtt.h>
@@ -210,35 +211,11 @@ int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::log_pid = ::getpid();
 	zpt::log_pname = new std::string(argv[0]);
 
-	zpt::json _args = zpt::conf::getopt(argc, argv);
-	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
-	std::string _conf_file = (_args["c"]->ok() ? std::string(_args["c"][0]) : "");
-	
-	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));
-	zpt::log_lvl = _log_level;
+	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
+	zpt::conf::setup(_ptr);
 
-	zpt::json _ptr;
-	if (_conf_file.length() == 0) {
-		zlog("must provide a configuration file", zpt::warning);
-	}
-	else {
-		std::ifstream _in;
-		_in.open(_conf_file.data());
-		if (!_in.is_open()) {
-			zlog("unable to start client: a valid configuration file must be provided", zpt::error);
-			exit(-10);
-		}
-		try {
-			_in >> _ptr;
-		}
-		catch(zpt::SyntaxErrorException& _e) {
-			zlog("unable to start client: syntax error when parsing configuration file", zpt::error);
-			exit(-10);
-		}
-		_ptr << "argv" << _args;
-	}
-
-	if (!bool(_ptr["$mutations"]["run"])) {
+	zdbg(_ptr["$mutations"]["run"]);
+	if (std::string(_ptr["$mutations"]["run"]) != "true") {
 		exit(0);
 	}
 
