@@ -341,11 +341,11 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 	zsock_set_sndtimeo(this->__socket, 20000);
 
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
-		zlog(std::string("curve: private ") + _options["curve"]["certificates"]["self"]->str(), zpt::warning);
+		zlog(std::string("curve: private ") + _options["curve"]["certificates"]["self"]->str(), zpt::notice);
 		this->certificate(_options["curve"]["certificates"]["self"]->str(), ZPT_SELF_CERTIFICATE);		
 		zcert_apply(this->certificate(ZPT_SELF_CERTIFICATE), this->__socket);
 		zsock_set_curve_server(this->__socket, true);
-		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::warning);
+		zlog(std::string("curve: public ") + _options["curve"]["certificates"]["client_dir"]->str(), zpt::notice);
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
 	}
 	ztrace(std::string("attaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection());

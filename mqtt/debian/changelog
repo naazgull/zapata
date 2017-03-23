@@ -1,3 +1,15 @@
+zapata-mqtt (0.9.6-1yakkety26) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 22 Mar 2017 23:17:53 +0000
+
+zapata-mqtt (0.9.6-1yakkety25) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 22 Mar 2017 19:39:58 +0000
+
 zapata-mqtt (0.9.6-1yakkety24) yakkety; urgency=medium
 
   * Version bump

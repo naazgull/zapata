@@ -38,15 +38,15 @@ namespace zpt {
 	short log_format = 0;
 
 	const char* log_lvl_names[] = {
-		"\033[1;37;41m emergency \033[0m | ",
-		"\033[1;37;41m   alert   \033[0m | ",
-		"\033[1;37;45m critical  \033[0m | ",
-		"\033[1;37;45m   error   \033[0m | ",
-		"\033[1;37;43m  warning  \033[0m | ",
-		"\033[1;37;46m  notice   \033[0m | ",
-		"\033[1;37;40m   info    \033[0m | ",
-		"\033[1;30;47m   debug   \033[0m | ",
-		"\033[4;37m   trace   \033[0m | "
+		"\033[4;31m emergency \033[0m | ",
+		"\033[4;31m   alert   \033[0m | ",
+		"\033[4;35m critical  \033[0m | ",
+		"\033[4;35m   error   \033[0m | ",
+		"\033[4;35m  warning  \033[0m | ",
+		"\033[4;36m  notice   \033[0m | ",
+		"\033[4;37m   info    \033[0m | ",
+		"\033[4;33m   debug   \033[0m | ",
+		"\033[0;30m   trace   \033[0m | "
 	};
 }
 

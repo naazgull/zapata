@@ -256,7 +256,7 @@ int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 		((std::ofstream *) zpt::log_fd)->open(((std::string) _ptr["$log"]["file"]).data(), std::ofstream::out | std::ofstream::app | std::ofstream::ate);
 	}
 
-	zlog("starting mutations container", zpt::warning);
+	zlog("starting mutations container", zpt::notice);
 	zpt::mutation::server _server = zpt::mutation::server::setup(_ptr);
 	struct sembuf _unlock[1] = { { (short unsigned int) 0, -1 } };
 	semop(_semaphore, _unlock, 1);	
@@ -293,12 +293,14 @@ auto zpt::RESTMutationServer::start() -> void {
 		}
 		_mqtt->on("connect",
 			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				zlog(std::string("MQTT connected"), zpt::warning);
+				if (_data->__rc == 0) {
+					zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
+				}
 			}
 		);
 		_mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
 		_mqtt->start();
-		zlog(std::string("starting MQTT forwarding to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::notice);
+		zlog(std::string("starting MQTT forwarding to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 	}
 	for(; true; ) {
 		zpt::json _mutation = this->__client->recv();
