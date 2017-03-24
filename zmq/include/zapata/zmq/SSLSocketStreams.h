@@ -236,12 +236,14 @@ namespace zpt {
 			_sin.sin_family = AF_INET;
 			_sin.sin_port = htons(_port);
 
+			// fcntl(_sd, F_SETFL, O_NONBLOCK);
 			if (::connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 				__stream_type::setstate(std::ios::failbit);
 				__buf.set_socket(0);
 				return false;
 			}
 			else {
+				// fcntl(_sd, F_SETFL, fcntl(_sd, F_GETFL, 0) & ~O_NONBLOCK);
 				SSL_library_init();
 				OpenSSL_add_all_algorithms();
 				SSL_load_error_strings();

@@ -192,8 +192,9 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	std::string _buffer(_envelope);
 	zframe_t* _frame2 = zframe_new(_buffer.data(), _buffer.size());
 
-	std::lock_guard< std::mutex > _lock(this->out_mtx());
-	bool _message_sent = (zsock_send(this->out(), "ff", _frame1, _frame2) == 0);
+	bool _message_sent = false;
+	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
+		_message_sent = (zsock_send(this->out(), "ff", _frame1, _frame2) == 0); }
 	zframe_destroy(&_frame1);
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
@@ -242,8 +243,8 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		this->connection(std::string(this->uri()["type"]) + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
-	zsock_set_sndtimeo(this->__socket, 20000);
-	zsock_set_rcvtimeo(this->__socket, 20000);
+	// zsock_set_sndtimeo(this->__socket, 2000);
+	// zsock_set_rcvtimeo(this->__socket, 2000);
 
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
@@ -338,7 +339,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		this->connection(std::string(this->uri()["type"]) + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
-	zsock_set_sndtimeo(this->__socket, 20000);
+	// zsock_set_sndtimeo(this->__socket, 2000);
 
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		zlog(std::string("curve: private ") + _options["curve"]["certificates"]["self"]->str(), zpt::notice);
@@ -808,7 +809,7 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
 	zsock_set_sndhwm(this->__socket, 100000);	
-	zsock_set_sndtimeo(this->__socket, 20000);
+	// zsock_set_sndtimeo(this->__socket, 2000);
 
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
@@ -1059,8 +1060,8 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : z
 	assertz(this->uri()["type"] == zpt::json::string(">"), "ASSYNC_REQ socket type must be '>'", 500, 0);
 	this->connection(std::string(">") + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 	assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	zsock_set_sndtimeo(this->__socket, 20000);
-	zsock_set_rcvtimeo(this->__socket, 20000);
+	// zsock_set_sndtimeo(this->__socket, 2000);
+	// zsock_set_rcvtimeo(this->__socket, 2000);
 
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {

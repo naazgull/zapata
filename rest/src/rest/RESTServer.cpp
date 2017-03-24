@@ -142,7 +142,6 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			pid_t _pid = fork();
 			if (_pid == 0) {
 				try {
-					zdbg("stating mutations");
 					zpt::mutation::server::launch(argc, argv, zpt::rest::m_sem);
 				}
 				catch (zpt::assertion& _e) {
@@ -405,8 +404,9 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 	if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 		zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
 		this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
+		//zdbg(zpt::json::pretty(this->credentials()));
 	}
-	//zdbg(this->credentials());
+
 	if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 		zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 		if (!_uri["port"]->ok()) {
