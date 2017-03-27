@@ -3184,28 +3184,30 @@ zpt::timestamp_t zpt::timestamp(std::string _json_date) {
 	time_t _n = 0;
 	int _ms = 0;
 	std::string _s(_json_date.data());
-	size_t _idx = _s.rfind(".");	      
+	size_t _idx = _s.rfind(".");
 	std::string _mss;
-	bool _prev_is_zero = true;
-	if (_s[_idx + 1] != '0') {
-		_mss.push_back(_s[_idx + 1]);
-		_prev_is_zero = false;
+	if (_idx != std::string::npos) {
+		bool _prev_is_zero = true;
+		if (_s[_idx + 1] != '0') {
+			_mss.push_back(_s[_idx + 1]);
+			_prev_is_zero = false;
+		}
+		if (!_prev_is_zero || _s[_idx + 2] != '0') {
+			_mss.push_back(_s[_idx + 2]);
+		}
+		_mss.push_back(_s[_idx + 3]);
+		_s.erase(_idx, 4);
+		if (_s.length() < 20) {
+			zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true);
+		}
+		else if (_s[_idx] == '+' || _s[_idx] == '-') {
+			zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
+		}
+		else {
+			zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z");
+		}
+		zpt::fromstr(_mss, &_ms);
 	}
-	if (!_prev_is_zero || _s[_idx + 2] != '0') {
-		_mss.push_back(_s[_idx + 2]);
-	}
-	_mss.push_back(_s[_idx + 3]);
-	_s.erase(_idx, 4);
-	if (_s.length() < 20) {
-		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true);
-	}
-	else if (_s[_idx] == '+' || _s[_idx] == '-') {
-		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
-	}
-	else {
-		zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z");
-	}
-	zpt::fromstr(_mss, &_ms);
 	return _n * 1000 + _ms;
 
 }

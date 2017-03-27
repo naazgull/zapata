@@ -330,7 +330,7 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 	zpt::json _elements = zpt::json::array();
-	
+
 	try {
 		pqxx::result _result;
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);

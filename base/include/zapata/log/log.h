@@ -40,6 +40,7 @@ using namespace __gnu_cxx;
 #define zdbg(x) zlog(std::string(x), zpt::debug)
 #define ztrace(x) zlog(std::string(x), zpt::trace)
 #define ztrace_v(x) zlog(std::string(x) + std::string(" | ") + std::string(__PRETTY_FUNCTION__), zpt::trace)
+#define zverbose(x) zlog(std::string(x), zpt::verbose)
 
 namespace zpt {
 	extern short int log_lvl;
@@ -60,7 +61,8 @@ namespace zpt {
 		notice = 5,
 		info = 6,
 		debug = 7,
-		trace = 8
+		trace = 8,
+		verbose = 9
 	};
 
 	int log(string _text, zpt::LogLevel _level, string _host, int _line, string _file);

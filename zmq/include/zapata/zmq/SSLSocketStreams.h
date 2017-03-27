@@ -38,6 +38,7 @@ SOFTWARE.
 #include <openssl/ssl.h>
 #include <openssl/tls1.h>
 #include <openssl/err.h>
+#include <zapata/base/assert.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
@@ -118,7 +119,7 @@ namespace zpt {
 				this->__sock = 0;
 				this->__sslstream = nullptr;
 				this->__context = nullptr;
-				return __traits_type::eof();
+				assertz(_actually_written > 0, "write operation failed", 503, 0);
 			}
 			__buf_type::pbump(-_actually_written);
 			return _actually_written;
@@ -152,9 +153,9 @@ namespace zpt {
 				return __traits_type::eof();
 			}
 
-			int num;
-			if ((num = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
-				cout << zpt::ssl_error_print(this->__sslstream, num) << endl << flush;
+			int _actually_read;
+			if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
+				cout << zpt::ssl_error_print(this->__sslstream, _actually_read) << endl << flush;
 				SSL_free(this->__sslstream);
 				SSL_CTX_free(this->__context);
 				::shutdown(this->__sock, SHUT_RDWR);
@@ -162,10 +163,12 @@ namespace zpt {
 				this->__sock = 0;
 				this->__sslstream = nullptr;
 				this->__context = nullptr;
+				assertz(_actually_read > 0, "read operation failed", 503, 0);
+			}
+			if (_actually_read == 0) {
 				return __traits_type::eof();
 			}
-
-			__buf_type::setg(ibuf, ibuf, ibuf + num);
+			__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
 			return *__buf_type::gptr();
 		}
 	};
@@ -255,6 +258,18 @@ namespace zpt {
 				else {
 					this->assign(_sd, _context);
 				}
+			}
+			struct timeval _timeout;
+			_timeout.tv_sec = 10;
+			_timeout.tv_usec = 0;
+
+			if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+				this->close();
+				return false;
+			}
+			if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+				this->close();
+				return false;
 			}
 			return true;
 		}

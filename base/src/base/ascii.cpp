@@ -137,10 +137,7 @@ auto zpt::test::ascii(std::string _ascii) -> bool {
 }
 
 auto zpt::test::token(std::string _token) -> bool {
-	static const std::regex _token_rgx(
-		"^([a-zA-Z0-9])([a-zA-Z0-9]*)$"
-	);
-	return std::regex_match(_token, _token_rgx);
+	return true;
 }
 
 auto zpt::test::uri(std::string _uri) -> bool {

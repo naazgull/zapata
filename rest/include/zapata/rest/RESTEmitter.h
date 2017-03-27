@@ -125,11 +125,15 @@ namespace zpt {
 		zpt::json __options;
 		std::vector< zpt::socket > __pub_sub;
 		std::vector< zpt::socket > __router_dealer;
-		std::vector< std::shared_ptr< std::thread > > __threads;
 		zpt::rest::server __self;
 		zpt::mqtt::broker __mqtt;
 		zpt::ev::OnStartStack __initializers;
+		size_t __max_threads;
+		size_t __alloc_threads;
+		size_t __n_threads;
+		std::mutex __thread_mtx;
 		
+		auto alloc_thread(std::string _in_connection, bool _temp) -> void;
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 
@@ -204,6 +208,7 @@ namespace zpt {
 
 	namespace rest {
 		auto not_found(std::string _resource) -> zpt::json;
+		auto bad_request() -> zpt::json;
 		auto accepted(std::string _resource) -> zpt::json;
 		auto no_content(std::string _resource) -> zpt::json;
 		auto temporary_redirect(std::string _resource, std::string _target_resource) -> zpt::json;

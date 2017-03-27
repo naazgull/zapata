@@ -199,15 +199,20 @@ std::string zpt::r_trim(std::string _in_out) {
 
 std::string zpt::r_replace(std::string str, std::string find, std::string replace) {
 	std::string _return(str.data());
-	if (_return.length() == 0) {
-		return _return;
+	try {
+		if (_return.length() == 0) {
+			return _return;
+		}
+		
+		size_t start = 0;
+		
+		while ((start = _return.find(find, start)) != std::string::npos) {
+			_return.replace(start, find.size(), replace);
+			start += replace.length();
+		}
 	}
-
-	size_t start = 0;
-
-	while ((start = _return.find(find, start)) != std::string::npos) {
-		_return.replace(start, find.size(), replace);
-		start += replace.length();
+	catch (std::exception& _e) {
+		std::cout << (_e.what()) << endl << flush;
 	}
 	return _return;
 }

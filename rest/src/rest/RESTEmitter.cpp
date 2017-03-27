@@ -306,6 +306,9 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 					_method_found = true;
 					zpt::json _result = _i.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (_result->ok()) {
+						if (int(_result["status"]) > 399) {
+							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
+						}
 						_result << 
 						"performative" << zpt::ev::Reply <<
 						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + _result["headers"]);
@@ -326,11 +329,13 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 							"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS <<
 							"Access-Control-Max-Age" << "1728000";
 						}
+						
 						_return = _result;
 					}
 				}
 			}
 			catch (zpt::assertion& _e) {
+				zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
 				_return = {
 					"performative", zpt::ev::Reply,
 					"status", _e.status(),
@@ -350,6 +355,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 		}
 	}
 	if (!_endpoint_found) {
+		zlog(std::string("error processing '") + _url + std::string("': listener not found"), zpt::error);
 		_return = {
 			"performative", zpt::ev::Reply,
 			"status", 404,
@@ -360,6 +366,7 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 		};
 	}
 	else if (!_method_found) {
+		zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
 		_return = {
 			"performative", zpt::ev::Reply,
 			"status", 405,
@@ -410,7 +417,9 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		if (std::regex_match(_url, _regexp)) {
 			try {
 				if (_i.second[_method] != nullptr) { // > HASH <
-					zpt::json _out = _i.second[_method](_method, _url, _in, this->self()); // > HASH <
+					ztrace(std::string("") + zpt::ev::to_str(_method) + std::string(" ") + _url + std::string(" | @self"));
+					zverbose(zpt::json::pretty(_in));
+					zpt::json _out = _i.second[_method](_method, _url, _in, this->self()); // > HASH <						
 					if (_out->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 							throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
@@ -418,6 +427,8 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 						_out << 
 						"performative" << zpt::ev::Reply <<
 						"headers" << (zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])) + _out["headers"]);
+						ztrace(std::string("REPLY ") + _url + std::string(" ")  + std::string(_out["stauts"]) + std::string(" | @self"));
+						zverbose(zpt::json::pretty(_out));
 						return _out;
 					}
 				}
@@ -426,7 +437,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 				if (bool(_opts["bubble-error"])) {
 					throw;
 				}
-				return {
+				zpt::json _out = {
 				       "performative", zpt::ev::Reply,
 				       "status", _e.status(),
 				       "headers", zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])),
@@ -436,12 +447,15 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 					       "code", _e.code()
 				       }
 			       };
+				ztrace(std::string("REPLY ") + _url + std::string(" ")  + std::to_string(_e.status()) + std::string(" | @self"));
+				zverbose(zpt::json::pretty(_out));
+				return _out;
 			}
 			catch(std::exception& _e) {
 				if (bool(_opts["bubble-error"])) {
 					throw zpt::assertion(_e.what(), 500, 0, _e.what());
 				}						
-				return {
+				zpt::json _out = {
 					"performative", zpt::ev::Reply,
 					"status", 500,
 					"headers", zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])),
@@ -450,6 +464,9 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 						"code", 0
 					}
 				};
+				ztrace(std::string("REPLY ") + _url + std::string(" 500 | @self"));
+				zverbose(zpt::json::pretty(_out));
+				return _out;
 			}
 		}
 	}
@@ -509,6 +526,20 @@ auto zpt::rest::not_found(std::string _resource) -> zpt::json {
 			"text", "resource not found",
 			"code", 0,
 			"assertion_failed", "_container->ok()"
+		}
+	};
+}
+
+auto zpt::rest::bad_request() -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", zpt::generate::r_uuid(),
+		"status", 400,
+		"payload", {
+			"text", "bad request",
+			"code", 0,
+			"assertion_failed", "_socket >> _req"
 		}
 	};
 }

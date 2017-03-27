@@ -80,6 +80,15 @@ auto zpt::ZMQ::uri(std::string _uris) -> void{
 	}
 }
 
+auto zpt::ZMQ::detach() -> void {
+	if (this->uri()["type"] == zpt::json::string("@")) {
+		zsock_unbind(this->in(), "%s", this->connection().data());
+	}
+	else {
+		zsock_disconnect(this->in(), "%s", this->connection().data());
+	}
+}
+
 zactor_t* zpt::ZMQ::auth(std::string _client_cert_dir){
 	/*if (zpt::ZMQ::__auth == nullptr) {
 		zpt::ZMQ::__auth = zactor_new(zauth, nullptr);
@@ -139,7 +148,8 @@ zpt::json zpt::ZMQ::recv() {
 			std::free(_bytes);
 			zframe_destroy(&_frame2);
 
-			ztrace(std::string("[recv] <- ") + _directive + std::string(" | ") + this->connection());
+			ztrace(std::string("") + _directive + std::string(" | ") + this->connection());
+			zverbose(zpt::json::pretty(_envelope));
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
@@ -199,8 +209,8 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	ztrace(std::string("[send] -> ") + _directive + std::string(" | ") + this->connection());
-
+	ztrace(std::string("") + _directive + std::string(" | ") + this->connection());
+	zverbose(zpt::json::pretty(_envelope));
 	return zpt::undefined;
 }
 
@@ -243,8 +253,6 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		this->connection(std::string(this->uri()["type"]) + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
-	// zsock_set_sndtimeo(this->__socket, 2000);
-	// zsock_set_rcvtimeo(this->__socket, 2000);
 
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
@@ -258,8 +266,11 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 }
 
 zpt::ZMQReq::~ZMQReq() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQReq::self() const -> zpt::socket {
@@ -339,7 +350,6 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		this->connection(std::string(this->uri()["type"]) + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
-	// zsock_set_sndtimeo(this->__socket, 2000);
 
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		zlog(std::string("curve: private ") + _options["curve"]["certificates"]["self"]->str(), zpt::notice);
@@ -353,8 +363,11 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 }
 
 zpt::ZMQRep::~ZMQRep() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQRep::self() const -> zpt::socket {
@@ -458,8 +471,11 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
-	ztrace(std::string("dettaching XPUB/XSUB from ") + this->connection());
-	zactor_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching XPUB/XSUB from ") + this->connection());
+		zactor_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQXPubXSub::self() const -> zpt::socket {
@@ -528,9 +544,13 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket_pub);
-	zsock_destroy(&this->__socket_sub);
+	if (this->__socket_pub != nullptr && this->__socket_sub != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket_pub)) + std::string("/") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket_pub);
+		zsock_destroy(&this->__socket_sub);
+		this->__socket_pub = nullptr;
+		this->__socket_sub = nullptr;
+	}
 }
 
 auto zpt::ZMQPubSub::self() const -> zpt::socket {
@@ -626,8 +646,11 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 }
 
 zpt::ZMQPub::~ZMQPub() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQPub::self() const -> zpt::socket {
@@ -719,8 +742,11 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 }
 
 zpt::ZMQSub::~ZMQSub() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQSub::self() const -> zpt::socket {
@@ -809,7 +835,6 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
 	}
 	zsock_set_sndhwm(this->__socket, 100000);	
-	// zsock_set_sndtimeo(this->__socket, 2000);
 
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["client_dir"]->ok()) {
 		this->auth(_options["curve"]["certificates"]["client_dir"]->str());
@@ -823,8 +848,11 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 
 
 zpt::ZMQPush::~ZMQPush() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQPush::self() const -> zpt::socket {
@@ -915,8 +943,11 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 }
 
 zpt::ZMQPull::~ZMQPull() {
-	ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
-	zsock_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ") + std::string(zsock_type_str(this->__socket)) + std::string(" from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQPull::self() const -> zpt::socket {
@@ -1007,8 +1038,11 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
-	ztrace(std::string("dettaching ROUTER/DEALER from ") + this->connection());
-	zactor_destroy(&this->__socket);
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ROUTER/DEALER from ") + this->connection());
+		zactor_destroy(&this->__socket);
+		this->__socket = nullptr;
+	}
 }
 
 auto zpt::ZMQRouterDealer::self() const -> zpt::socket {
@@ -1060,8 +1094,6 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : z
 	assertz(this->uri()["type"] == zpt::json::string(">"), "ASSYNC_REQ socket type must be '>'", 500, 0);
 	this->connection(std::string(">") + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));
 	assertz(zsock_attach(this->__socket, this->connection().data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket)) + std::string(" socket to ") + this->connection(), 500, 0);
-	// zsock_set_sndtimeo(this->__socket, 2000);
-	// zsock_set_rcvtimeo(this->__socket, 2000);
 
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
 	if (false && _options["curve"]["certificates"]->ok() && _options["curve"]["certificates"]["self"]->ok() && _options["curve"]["certificates"]["peers"][_peer]->ok()) {
@@ -1075,17 +1107,20 @@ zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : z
 }
 
 zpt::ZMQAssyncReq::~ZMQAssyncReq() {
-	ztrace(std::string("dettaching ASSYNC_REQ from ") + this->connection());
-	zsock_destroy(&this->__socket);
-	switch (this->__type) {
-		case 1 : {
-			this->__raw_socket->close();
-			break;
+	if (this->__socket != nullptr) {
+		ztrace(std::string("dettaching ASSYNC_REQ from ") + this->connection());
+		zsock_destroy(&this->__socket);
+		switch (this->__type) {
+			case 1 : {
+				this->__raw_socket->close();
+				break;
+			}
+			case 2 : {
+				this->__zmq_socket->unbind();
+				break;
+			}
 		}
-		case 2 : {
-			this->__zmq_socket->unbind();
-			break;
-		}
+		this->__socket = nullptr;
 	}
 }
 

@@ -139,6 +139,7 @@ namespace zpt {
 		virtual auto connection(std::string _connection) -> void;
 		virtual auto uri(size_t _idx = 0) -> zpt::json;
 		virtual auto uri(std::string _connection) -> void;
+		virtual auto detach() -> void;
 		virtual zactor_t* auth(std::string _client_cert_dir = "");
 		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);

@@ -37,6 +37,7 @@ SOFTWARE.
 #include <cstring>
 #include <unistd.h>
 #include <errno.h>
+#include <zapata/base/assert.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
@@ -124,12 +125,10 @@ namespace zpt {
 					int _num = __buf_type::pptr() - __buf_type::pbase();
 					int _actually_written = -1;
 					if ((_actually_written = ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
-						if (_actually_written < 0) {
-							::shutdown(this->__sock, SHUT_RDWR);
-							::close(this->__sock);
-							this->__sock = 0;
-						}
-						return __traits_type::eof();
+						::shutdown(this->__sock, SHUT_RDWR);
+						::close(this->__sock);
+						this->__sock = 0;
+						assertz(_actually_written > 0, "write operation failed", 503, 0);
 					}
 					__buf_type::pbump(-_actually_written);
 					return _actually_written;
@@ -142,6 +141,7 @@ namespace zpt {
 							::shutdown(this->__sock, SHUT_RDWR);
 							::close(this->__sock);
 							this->__sock = 0;
+							assertz(_actually_written > 0, "write operation failed", 503, 0);
 						}
 						return __traits_type::eof();
 					}
@@ -182,16 +182,17 @@ namespace zpt {
 				return __traits_type::eof();
 			}
 
-			int num = -1;
-			if ((num = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, MSG_NOSIGNAL)) <= 0) {
-				if (num < 0) {
-					::shutdown(this->__sock, SHUT_RDWR);
-					::close(this->__sock);
-					this->__sock = 0;
-				}
+			int _actually_read = -1;
+			if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, MSG_NOSIGNAL)) < 0) {
+				::shutdown(this->__sock, SHUT_RDWR);
+				::close(this->__sock);
+				this->__sock = 0;
+				assertz(_actually_read > 0, "read operation failed", 503, 0);
+			}
+			if (_actually_read == 0) {
 				return __traits_type::eof();
 			}
-			__buf_type::setg(ibuf, ibuf, ibuf + num);
+			__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
 			return *__buf_type::gptr();
 		}
 	};
@@ -280,6 +281,19 @@ namespace zpt {
 					}
 					else {
 						__buf.set_socket(_sd);
+					}
+
+					struct timeval _timeout;
+					_timeout.tv_sec = 10;
+					_timeout.tv_usec = 0;
+
+					if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+						this->close();
+						return false;
+					}
+					if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+						this->close();
+						return false;
 					}
 					return true;
 				}

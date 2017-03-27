@@ -3663,6 +3663,9 @@ auto zpt::gen::get_fields_array(zpt::json _fields) -> std::string {
 	}
 	std::string _return("{ zpt::array, \"id\", \"href\", \"created\", \"updated\"");
 	for (auto _field : _fields->obj()) {
+		if (_field.second["type"] == zpt::json::string("object") || _field.second["type"] == zpt::json::string("array")) {
+			continue;
+		}
 		_return += std::string(", \"") + _field.first + std::string("\"");;
 	}
 	_return += std::string(" }");
