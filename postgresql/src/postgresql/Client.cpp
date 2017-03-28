@@ -108,9 +108,10 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in insert: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
-	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
 
@@ -136,6 +137,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in save: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -165,6 +167,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -198,6 +201,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -227,6 +231,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in unset: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -260,6 +265,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in unset: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -285,6 +291,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 			_stmt.commit(); }
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in remove: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 
@@ -307,6 +314,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 				_stmt.commit(); }
 		}
 		catch(std::exception& _e) {
+			zlog(std::string("pgsql: error in query: ") + _e.what(), zpt::error);
 			assertz(false, _e.what(), 412, 0);
 		}
 
@@ -341,6 +349,7 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 		}
 	}
 	catch(std::exception& _e) {
+		zlog(std::string("pgsql: error in query: ") + _e.what(), zpt::error);
 		assertz(false, _e.what(), 412, 0);
 	}
 	return _elements;
