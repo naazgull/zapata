@@ -42,7 +42,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 	}
 	zpt::rest::__emitter = this;
 	
-	if (this->options()["$mutations"]["enabled"] == zpt::json::string("true")) {
+	if (std::string(this->options()["$mutations"]["enabled"]) == "true") {
 		this->mutations((new zpt::RESTMutationEmitter(this->options()))->self());
 	}
 	else {

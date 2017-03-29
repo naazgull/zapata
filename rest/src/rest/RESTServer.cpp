@@ -559,8 +559,8 @@ void zpt::RESTServer::start(zpt::json _sems) {
 			);
 			_http.detach();
 		}
-		
-		if (this->__options["$mutations"]["enabled"] == zpt::json::string("true")) {
+
+		if (std::string(this->__options["$mutations"]["enabled"]) == "true") {
 			std::thread _mutations(
 				[ this ] () -> void {
 					zlog(std::string("starting 0MQ mutation listener"), zpt::info);
@@ -578,6 +578,9 @@ void zpt::RESTServer::start(zpt::json _sems) {
 			struct sembuf _dec[2] = { { (short unsigned int) 0, -1 }, { (short unsigned int) 1, -1 } };
 			semop(int(_sems[0]), _dec, 2);	
 		}
+		std::string _NAME(this->__name.data());
+		std::transform(_NAME.begin(), _NAME.end(), _NAME.begin(), ::toupper);
+		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 		this->__poll->loop();
 	}
 	catch (zpt::InterruptedException& e) {

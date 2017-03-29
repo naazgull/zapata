@@ -197,6 +197,7 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
 		int _return;
 		for (auto _topic : _self->__postponed) {
+			ztrace(std::string("subscribing MQTT topic ") + _topic);
 			mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
 		}
 		_self->__connected = true;
