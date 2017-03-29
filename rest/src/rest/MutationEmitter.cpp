@@ -179,7 +179,17 @@ auto zpt::RESTMutationEmitter::trigger(zpt::mutation::operation _operation, std:
 		std::regex _regexp = _i.second.first;
 		if (std::regex_match(_data_class_ns, _regexp)) {
 			if (_i.second.second[_operation] != nullptr) {
-				_i.second.second[_operation](_operation, _data_class_ns, _record, this->self());
+				try {
+					_i.second.second[_operation](_operation, _data_class_ns, _record, this->self());
+				}
+				catch(zpt::assertion& _e) {
+					zlog(_e.what() + std::string(", ") + _e.description(), zpt::error);
+					return zpt::undefined;
+				}
+				catch(std::exception& _e) {
+					zlog(_e.what(), zpt::error);
+					return zpt::undefined;
+				}
 			}
 		}
 	}

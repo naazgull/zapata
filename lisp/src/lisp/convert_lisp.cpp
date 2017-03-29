@@ -37,24 +37,17 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 			break;
 		}
 		case t_list: {
-			if (Null(_exp)) {
-				if (_parent->ok()) {
-					_parent << zpt::undefined;
-				}
+			zpt::json _ret = zpt::json::array();
+			cl_object _list = _exp;
+			for (; !Null(_list); _list = ecl_cdr(_list)) {
+				auto _item = ecl_car(_list);
+				zpt::lisp::from_lisp(_item, _ret);
+			}
+			if (_parent->ok()) {
+				_parent << _ret;
 			}
 			else {
-				zpt::json _ret = zpt::json::array();
-				cl_object _list = _exp;
-				for (; !Null(_list); _list = ecl_cdr(_list)) {
-					auto _item = ecl_car(_list);
-					zpt::lisp::from_lisp(_item, _ret);
-				}
-				if (_parent->ok()) {
-					_parent << _ret;
-				}
-				else {
-					_parent = _ret;
-				}
+				_parent = _ret;
 			}
 			break;
 		}
@@ -143,16 +136,25 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 						_str.push_back((char) ecl_char(_exp->symbol.name, _i));
 					}
 					if(_str == "FALSE"){
-						_o = false;
+						if (_parent->ok()) {
+							_parent << false;
+						}
+						else {
+							_parent = zpt::json::boolean(false);
+						}
 					}
-					else{
-						_o = true;
-					}
-					if (_parent->ok()) {
-						_parent << _o;
+					else if(_str == "NULL"){
+						if (_parent->ok()) {
+							_parent << zpt::undefined;
+						}
 					}
 					else {
-						_parent = zpt::json::boolean(_o);
+						if (_parent->ok()) {
+							_parent << true;
+						}
+						else {
+							_parent = zpt::json::boolean(true);
+						}
 					}
 				}
 				else {
@@ -418,7 +420,7 @@ auto zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
 			break;
 		}
 		case zpt::JSNil: {
-			_ret += "nil";
+			_ret += ":null";
 			break;
 		}
 		default : {
