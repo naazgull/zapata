@@ -429,7 +429,7 @@ auto zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
 			break;
 		}
 		case zpt::JSNil: {
-			_ret += ":null";
+			_ret += "nil";
 			break;
 		}
 		default : {
