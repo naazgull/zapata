@@ -590,6 +590,29 @@ auto zpt::GenDatum::build_data_layer() -> std::string {
 	return _return;
 }
 
+auto zpt::GenDatum::build_query(zpt::json _field) -> std::string {
+	std::string _base = zpt::Generator::get_datum(std::string(_field["ref"]));
+	std::string _query(std::string("std::string(\"SELECT ") + _base + std::string(".* FROM "));
+	_query +=  _base + std::string(" JOIN ");
+	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
+
+	auto _second = _rel->obj()->begin();
+	_second++;
+	std::string _other_ref = std::string(_second->second);
+	std::string _on_field = _other_ref.substr(_other_ref.rfind("/") + 1);
+	_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
+	std::string _join_with = zpt::Generator::get_datum(_other_ref);
+	_query += _join_with + std::string(" ON ") + _base + std::string(".") + _second->first + std::string("=") + _join_with + std::string(".") + _on_field;
+
+	auto _first = _rel->obj()->begin();
+	_other_ref = std::string(_first->first);
+	std::string _where_field = _other_ref.substr(_other_ref.rfind("/") + 1);
+	_query += std::string(" WHERE ") + _join_with + std::string(".") + _where_field + std::string("='\") + std::string(");
+	_query += (_first->second->str().front() == '{' ? std::string("_r_data[\"") + _first->second->str().substr(1, _first->second->str().length() - 2) + std::string("\"]") : std::string("\"") + _first->second->str() + std::string("\""));
+	_query += std::string(") + std::string(\"'\")");
+	return _query;
+}
+
 auto zpt::GenDatum::build_params(zpt::json _rel, bool _multi) -> std::string {
 	std::string _params;
 	for (auto _param : _rel->obj()) {
@@ -902,23 +925,16 @@ auto zpt::GenDatum::build_insert() -> std::string {
 			std::string _name = _r.first;
 			if (_field["ref"]->ok() && !bool(_opts["on-demand"])) {
 				zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
-				/*_return += std::string("zpt::json _r_") + _name + std::string(" = _emitter->events()->route(zpt::ev::Get, zpt::path::join({ zpt::array, ");
-				_return += this->build_topic(zpt::split(std::string(_field["ref"]), "/"));
-				if (_rel->ok() && _rel->obj()->size() != 0) {
-					_return += std::string(" }), { \"params\", { ");
-					_return += this->build_params(_rel, false);
-					_return += std::string(" } }");
-				}
-				else {
-					_return += std::string(" }), zpt::undefined");
-				}
-				_return += std::string(")[\"payload\"];\n");*/
-
 				_return += std::string("zpt::json _r_") + _name + std::string(" = _s->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
 				if (_rel->ok() && _rel->obj()->size() != 0) {
-					_return += std::string("{ ");
-					_return += this->build_params(_rel, false);
-					_return += std::string(" }");
+					if (std::string(_field["rel"]).find("/") != std::string::npos) {
+						_return += this->build_query(_field);
+					}
+					else {
+						_return += std::string("{ ");
+						_return += this->build_params(_rel, false);
+						_return += std::string(" }");
+					}
 				}
 				else {
 					_return += std::string("zpt::json::object()");
@@ -1010,9 +1026,14 @@ auto zpt::GenDatum::build_replace() -> std::string {
 				zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
 				_return += std::string("zpt::json _r_") + _name + std::string(" = _s->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
 				if (_rel->ok() && _rel->obj()->size() != 0) {
-					_return += std::string("{ ");
-					_return += this->build_params(_rel, false);
-					_return += std::string(" }");
+					if (std::string(_field["rel"]).find("/") != std::string::npos) {
+						_return += this->build_query(_field);
+					}
+					else {
+						_return += std::string("{ ");
+						_return += this->build_params(_rel, false);
+						_return += std::string(" }");
+					}
 				}
 				else {
 					_return += std::string("zpt::json::object()");
@@ -1068,9 +1089,14 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 		_return += std::string("for (auto _r_data : _r_targets[\"elements\"]->arr()) {\n");
 		_return += std::string("zpt::json _r_") + _name + std::string(" = _s->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
 		if (_rel->ok() && _rel->obj()->size() != 0) {
-			_return += std::string("{ ");
-			_return += this->build_params(_rel, false);
-			_return += std::string(" }");
+			if (std::string(_field["rel"]).find("/") != std::string::npos) {
+				_return += this->build_query(_field);
+			}
+			else {
+				_return += std::string("{ ");
+				_return += this->build_params(_rel, false);
+				_return += std::string(" }");
+			}
 		}
 		else {
 			_return += std::string("zpt::json::object()");
@@ -1122,9 +1148,14 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 		_return += std::string(" }), ");
 		std::string _params = this->build_params(_rel, false);
 		if (_params.length() != 0) {
-			_return += std::string("{ \"params\", { ");
-			_return += _params;
-			_return += std::string(" } }");
+			if (std::string(_field["rel"]).find("/") != std::string::npos) {
+				_return += this->build_query(_field);
+			}
+			else {
+				_return += std::string("{ \"params\", { ");
+				_return += _params;
+				_return += std::string(" } }");
+			}
 		}
 		else {
 			_return += std::string("zpt::undefined");

@@ -37,17 +37,24 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 			break;
 		}
 		case t_list: {
-			zpt::json _ret = zpt::json::array();
-			cl_object _list = _exp;
-			for (; !Null(_list); _list = ecl_cdr(_list)) {
-				auto _item = ecl_car(_list);
-				zpt::lisp::from_lisp(_item, _ret);
-			}
-			if (_parent->ok()) {
-				_parent << _ret;
+			if (Null(_exp)) {
+				if (_parent->ok()) {
+					_parent << zpt::undefined;
+				}
 			}
 			else {
-				_parent = _ret;
+				zpt::json _ret = zpt::json::array();
+				cl_object _list = _exp;
+				for (; !Null(_list); _list = ecl_cdr(_list)) {
+					auto _item = ecl_car(_list);
+					zpt::lisp::from_lisp(_item, _ret);
+				}
+				if (_parent->ok()) {
+					_parent << _ret;
+				}
+				else {
+					_parent = _ret;
+				}
 			}
 			break;
 		}
@@ -130,7 +137,6 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 		case t_symbol: {
 			if(_exp->symbol.value != nullptr) {
 				if (ecl_t_of(_exp->symbol.value) == t_symbol) {
-					bool _o;
 					std::string _str;
 					for (size_t _i = 0; _i != _exp->symbol.name->base_string.fillp; _i++) {
 						_str.push_back((char) ecl_char(_exp->symbol.name, _i));
@@ -143,9 +149,12 @@ auto zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 							_parent = zpt::json::boolean(false);
 						}
 					}
-					else if(_str == "NULL"){
+					else if(_str == "ARRAY"){
 						if (_parent->ok()) {
-							_parent << zpt::undefined;
+							_parent << zpt::json::array();
+						}
+						else {
+							_parent = zpt::json::array();
 						}
 					}
 					else {
