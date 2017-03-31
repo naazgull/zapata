@@ -358,7 +358,7 @@ namespace zpt {
 		zpt::ev::emitter __emitter;
 		
 	protected:
-		std::vector< std::pair< std::regex, zpt::json > > __index;
+		std::map< std::string, std::pair< std::regex, zpt::json > > __index;
 		std::mutex __mtx;
 	};
 	

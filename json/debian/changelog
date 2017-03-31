@@ -1,3 +1,9 @@
+zapata-json (0.9.6-1yakkety32) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Fri, 31 Mar 2017 10:11:44 +0100
+
 zapata-json (0.9.6-1yakkety31) yakkety; urgency=medium
 
   * Version bump

@@ -332,7 +332,7 @@ zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), _
 				}
 				try {
 					std::regex _regex(std::string("^") + _endpoint->str() + std::string("(.*)$"));
-					this->__index.push_back(std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] })));
+					this->__index.insert(std::make_pair(std::string("^") + _endpoint->str() + std::string("(.*)$"), std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] }))));
 				}
 				catch(std::exception& _e) {}
 			}
@@ -366,8 +366,8 @@ auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void {
 auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	for (auto _service : this->__index) {
-		if (std::regex_match(_topic, _service.first)) {
-			return _service.second;
+		if (std::regex_match(_topic, _service.second.first)) {
+			return _service.second.second;
 		}
 	}
 	return zpt::undefined;
@@ -378,7 +378,7 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> v
 	std::regex _regex(_topic);
 	zpt::json _record = (_connection->type() == zpt::JSArray ? _connection[0] : _connection);
 	_record << "connect" << zpt::r_replace(_record["connect"]->str(), "tcp://*:", std::string("tcp://127.0.0.1:"));
-	this->__index.push_back(std::make_pair(_regex, _record));
+	this->__index.insert(std::make_pair(_topic, std::make_pair(_regex, _record)));
 }
 
 extern "C" auto zpt_events() -> int {

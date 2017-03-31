@@ -453,14 +453,7 @@ auto zpt::RESTServer::alloc_thread(std::string _in_connection, bool _temp) -> vo
 					}
 
 					{ std::lock_guard< std::mutex > _lock(this->__thread_mtx);
-						this->__alloc_threads--;
-						/*if (_temp && this->__alloc_threads <= this->__max_threads) {
-							zlog(std::string("thread ") + std::to_string(pthread_self()) + std::string(" going to commit suicide to keep allocated thread number at ") + std::to_string(this->__alloc_threads), zpt::alert);
-							_socket->detach();
-							_socket->unbind();
-							this->__n_threads--;
-							break;
-							} */}
+						this->__alloc_threads--; }
 				}
 			}
 		}

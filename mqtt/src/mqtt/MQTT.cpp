@@ -225,10 +225,15 @@ auto zpt::MQTT::on_publish(struct mosquitto * _mosq, void * _ptr, int _mid) -> v
 auto zpt::MQTT::on_message(struct mosquitto * _mosq, void * _ptr, const struct mosquitto_message * _message) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
 	zpt::mqtt::data _data(new MQTTData());
-	ztrace("zpt::MQTT::on_message");
-	_data->__message = zpt::json(std::string((char*) _message->payload, _message->payloadlen));
-	_data->__topic = zpt::json::string(_message->topic);
-	_self->trigger("message", _data);
+	try {
+		_data->__message = zpt::json(std::string((char*) _message->payload, _message->payloadlen));
+		ztrace("zpt::MQTT::on_message");
+		_data->__topic = zpt::json::string(_message->topic);
+		_self->trigger("message", _data);
+	}
+	catch(std::exception& _e) {
+		zlog(std::string("zpt::MQTT::on_message error: ") + _e.what(), zpt::error);
+	}
 }
 
 auto zpt::MQTT::on_subscribe(struct mosquitto * _mosq, void * _ptr, int _mid, int _qos_count, const int * _granted_qos) -> void {
