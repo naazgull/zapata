@@ -242,6 +242,11 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::rest::server _server(nullptr);
 	try {
 		_server = zpt::rest::server::setup(_options, _name);
+		if (_server->suicidal()) {
+			zlog("server initialization gone wrong, server is now in 'suicidal' state", zpt::emergency);
+			semctl(_sync_sem, 0, IPC_RMID);
+			exit(-1);
+		}
 		if (_spawned == _to_spawn->arr()->size() - 1) {
 			semctl(_sync_sem, 0, IPC_RMID);
 			_server->start();
@@ -265,149 +270,158 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0) {
-	assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
-	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
-	((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
+	try {
+		assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
+		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
+		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
 
-	for (auto _definition : this->__options["zmq"]->arr()) {
-		short int _type = zpt::str2type(_definition["type"]->str());
+		for (auto _definition : this->__options["zmq"]->arr()) {
+			short int _type = zpt::str2type(_definition["type"]->str());
 
-		switch(_type) {
-			case ZMQ_ROUTER_DEALER : {
-				zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
-				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-				this->__router_dealer.push_back(_socket);
-				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
-				break;
-			}
-			case ZMQ_PUB_SUB : {
-				zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
-				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-				this->__pub_sub.push_back(_socket);
-				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
-				break;
-			}
-			case ZMQ_REP : {
-				if (((size_t) this->__options["threads"]) != 0) {
-					this->__max_threads = ((size_t) this->__options["threads"]);
-					zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
-					if (_uri["type"] == zpt::json::string("@")) {
-						uint _available = 32769;
-						if (_uri["port"] != zpt::json::string("*")) {
-							_available = (uint) _uri["port"];
-						}
-						else {
-							zpt::serversocketstream _ss;
-							do {
-								if (_ss.bind(_available)) {
-									break;
-								}
-								_available++;
+			switch(_type) {
+				case ZMQ_ROUTER_DEALER : {
+					zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
+					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
+					this->__router_dealer.push_back(_socket);
+					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					break;
+				}
+				case ZMQ_PUB_SUB : {
+					zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
+					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
+					this->__pub_sub.push_back(_socket);
+					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					break;
+				}
+				case ZMQ_REP : {
+					if (((size_t) this->__options["threads"]) != 0) {
+						this->__max_threads = ((size_t) this->__options["threads"]);
+						zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
+						if (_uri["type"] == zpt::json::string("@")) {
+							uint _available = 32769;
+							if (_uri["port"] != zpt::json::string("*")) {
+								_available = (uint) _uri["port"];
 							}
-							while(_available < 60999);
-							_ss.close();
-						}
+							else {
+								zpt::serversocketstream _ss;
+								do {
+									if (_ss.bind(_available)) {
+										break;
+									}
+									_available++;
+								}
+								while(_available < 60999);
+								_ss.close();
+							}
 
-						std::string _socket_id = zpt::generate::r_uuid();
-						_definition << "uuid" << _socket_id;
-						std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
-						zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
-						_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
-						this->__router_dealer.push_back(_socket);
-						zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::info);
+							std::string _socket_id = zpt::generate::r_uuid();
+							_definition << "uuid" << _socket_id;
+							std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
+							zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
+							_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
+							this->__router_dealer.push_back(_socket);
+							zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::info);
 
-						zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
-						std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
-						for (size_t _k = 0; _k != this->__max_threads; _k++) {
-							this->alloc_thread(_in_connection, false);
+							zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
+							std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
+							for (size_t _k = 0; _k != this->__max_threads; _k++) {
+								this->alloc_thread(_in_connection, false);
+							}
+							break;
 						}
-						break;
+					}
+				}
+				default : {
+					zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
+					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
+					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					break;
+				}
+			}
+		}
+
+		if (this->__options["rest"]["modules"]->ok()) {
+			for (auto _i : this->__options["rest"]["modules"]->arr()) {
+				if (_i->str().find(".py") != std::string::npos) {
+					if (!zpt::bridge::is_booted< zpt::python::bridge >()) {
+						zpt::bridge::boot< zpt::python::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
+					}
+					continue;
+				}
+				if (_i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
+					if (!zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+						zpt::bridge::boot< zpt::lisp::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
+					}
+					continue;
+				}
+			
+				std::string _lib_file("lib");
+				_lib_file.append((std::string) _i);
+				_lib_file.append(".so");
+
+				if (_lib_file.length() > 6) {
+					ztrace(std::string("loading module '") + _lib_file + std::string("'"));
+					void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
+					if (hndl == nullptr) {
+						zlog(std::string(dlerror()), zpt::error);
+					}
+					else {
+						void (*_populate)();
+						_populate = (void (*)()) dlsym(hndl, "_zpt_load_");
+						_populate();
 					}
 				}
 			}
-			default : {
-				zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
-				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-				zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
-				break;
-			}
 		}
-	}
 
-	if (this->__options["rest"]["modules"]->ok()) {
-		for (auto _i : this->__options["rest"]["modules"]->arr()) {
-			if (_i->str().find(".py") != std::string::npos) {
-				if (!zpt::bridge::is_booted< zpt::python::bridge >()) {
-					zpt::bridge::boot< zpt::python::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
-				}
-				continue;
+		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
+			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
+			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
+			//zdbg(zpt::json::pretty(this->credentials()));
+		}
+
+		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
+			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
+			if (!_uri["port"]->ok()) {
+				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
 			}
-			if (_i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
-				if (!zpt::bridge::is_booted< zpt::lisp::bridge >()) {
-					zpt::bridge::boot< zpt::lisp::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
-				}
-				continue;
+			if (_uri["user"]->ok() && _uri["password"]->ok()) {
+				this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
+			}
+			else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
+				this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
 			}
 			
-			std::string _lib_file("lib");
-			_lib_file.append((std::string) _i);
-			_lib_file.append(".so");
-
-			if (_lib_file.length() > 6) {
-				ztrace(std::string("loading module '") + _lib_file + std::string("'"));
-				void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
-				if (hndl == nullptr) {
-					zlog(std::string(dlerror()), zpt::error);
+			this->__mqtt->on("connect",
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					if (_data->__rc == 0) {
+						zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
+					}
 				}
-				else {
-					void (*_populate)();
-					_populate = (void (*)()) dlsym(hndl, "_zpt_load_");
-					_populate();
+			);
+			this->__mqtt->on("disconnect",
+				[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					_mqtt->reconnect();
 				}
-			}
+			);
+			this->__mqtt->on("message",
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					this->route_mqtt(_data);
+				}
+			);
+			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
+			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 		}
 	}
-
-	if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
-		zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
-		this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
-		//zdbg(zpt::json::pretty(this->credentials()));
+	catch (zpt::assertion& _e) {
+		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		this->__suicidal = true;
 	}
-
-	if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
-		zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
-		if (!_uri["port"]->ok()) {
-			_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
-		}
-		if (_uri["user"]->ok() && _uri["password"]->ok()) {
-			this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
-		}
-		else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
-			this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
-		}
-			
-		this->__mqtt->on("connect",
-			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				if (_data->__rc == 0) {
-					zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
-				}
-			}
-		);
-		this->__mqtt->on("disconnect",
-			[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				_mqtt->reconnect();
-			}
-		);
-		this->__mqtt->on("message",
-			[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				this->route_mqtt(_data);
-			}
-		);
-		this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
-		zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+	catch (std::exception& _e) {
+		zlog(_e.what(), zpt::emergency);
+		this->__suicidal = true;
 	}
-	
 
 }
 
@@ -462,6 +476,10 @@ auto zpt::RESTServer::alloc_thread(std::string _in_connection, bool _temp) -> vo
 	{ std::lock_guard< std::mutex > _lock(this->__thread_mtx);
 		this->__n_threads++; }
 	_worker.detach();
+}
+
+auto zpt::RESTServer::suicidal() -> bool {
+	return this->__suicidal;
 }
 
 auto zpt::RESTServer::unbind() -> void {

@@ -117,6 +117,8 @@ namespace zpt {
 
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
+
+		virtual auto suicidal() -> bool;
 		
 	private:
 		std::string __name;
@@ -132,6 +134,7 @@ namespace zpt {
 		size_t __alloc_threads;
 		size_t __n_threads;
 		std::mutex __thread_mtx;
+		bool __suicidal;
 		
 		auto alloc_thread(std::string _in_connection, bool _temp) -> void;
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
