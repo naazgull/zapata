@@ -14,7 +14,7 @@ Copyright (c) 2014, Muzzley
 // zpt::MQTTPtr::~MQTTPtr() {
 // }
 
-zpt::MQTT::MQTT() : __self(this) {
+zpt::MQTT::MQTT() : __self(this), __connected(false) {
 	/**
 	 * Init mosquitto.
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_lib_init
@@ -121,6 +121,7 @@ auto zpt::MQTT::subscribe(std::string _topic) -> void {
 	 */
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		if (this->__connected) {
+			zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
 			mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0);
 		}
 		else {
@@ -197,11 +198,11 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
 		int _return;
 		for (auto _topic : _self->__postponed) {
-			ztrace(std::string("subscribing MQTT topic ") + _topic);
+			zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
 			mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
 		}
-		_self->__connected = true;
-	}
+		_self->__connected = true; }
+	_self->publish("/mqtt/status", { "user", _self->__user, "status", "connected" });
 	zpt::mqtt::data _data(new MQTTData());
 	_data->__rc = _rc;
 	_self->trigger("connect", _data);

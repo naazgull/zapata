@@ -245,7 +245,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		if (_server->suicidal()) {
 			zlog("server initialization gone wrong, server is now in 'suicidal' state", zpt::emergency);
 			semctl(_sync_sem, 0, IPC_RMID);
-			exit(-1);
+			return -1;
 		}
 		if (_spawned == _to_spawn->arr()->size() - 1) {
 			semctl(_sync_sem, 0, IPC_RMID);
@@ -258,12 +258,12 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	catch (zpt::assertion& _e) {
 		_server->unbind();
 		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
-		exit(-1);
+		return -1;
 	}
 	catch (std::exception& _e) {
 		_server->unbind();
 		zlog(_e.what(), zpt::emergency);
-		exit(-1);
+		return -1;
 	}
 	_server->unbind();
 
@@ -378,7 +378,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
 			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
-			//zdbg(zpt::json::pretty(this->credentials()));
+			// zdbg(zpt::json::pretty(this->credentials()));
 		}
 
 		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {

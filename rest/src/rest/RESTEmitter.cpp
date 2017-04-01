@@ -188,7 +188,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->subscribe(_regex, _opts);
 
-	ztrace(std::string("registered handlers for ") + _regex);
+	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
 }
 
@@ -213,7 +213,7 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	this->directory()->notify(_regex, this->options()["zmq"]);
 	this->server()->subscribe(_regex, _opts);
 
-	ztrace(std::string("registered handlers for ") + _regex);
+	zlog(std::string("registered handlers for ") + _regex, zpt::notice);
 	return _uuid;
 }
 
@@ -262,7 +262,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
 	this->server()->subscribe(_listener->regex(), _opts);
 
-	ztrace(std::string("registered handlers for ") + _listener->regex());
+	zlog(std::string("registered handlers for ") + _listener->regex(), zpt::notice);
 	return _uuid;
 }
 

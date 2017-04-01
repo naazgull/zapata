@@ -209,13 +209,14 @@ namespace zpt {
 
 	protected:
 		__buf_type __buf;
+		bool __is_error;
 
 	public:
 		basic_socketstream() :
-		__stream_type(&__buf) {
+			__stream_type(&__buf), __is_error(false) {
 		};
 
-		basic_socketstream(int s) : __stream_type(&__buf) {
+		basic_socketstream(int s) : __stream_type(&__buf), __is_error(false) {
 			__buf.set_socket(s);
 		}
 		virtual ~basic_socketstream() {
@@ -241,8 +242,7 @@ namespace zpt {
 		}
 
 		bool is_open() {
-			bool _return = (__buf.get_socket() != 0 && __buf.__good());
-			return _return;
+			return (!__is_error && __buf.get_socket() != 0 && __buf.__good());
 		}
 
 		bool ready() {
@@ -277,6 +277,7 @@ namespace zpt {
 					if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof(__buf.server())) < 0) {
 						__stream_type::setstate(std::ios::failbit);
 						__buf.set_socket(0);
+						__is_error = true;
 						return false;
 					}
 					else {
@@ -289,10 +290,12 @@ namespace zpt {
 
 					if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
 						this->close();
+						__is_error = true;
 						return false;
 					}
 					if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
 						this->close();
+						__is_error = true;
 						return false;
 					}
 					return true;
@@ -310,6 +313,7 @@ namespace zpt {
 						if (_ret) {
 							__stream_type::setstate(std::ios::failbit);
 							__buf.set_socket(0);
+							__is_error = true;
 							return false;
 						}
 						struct sockaddr_in* _host_addr = (struct sockaddr_in *) _result->ai_addr;

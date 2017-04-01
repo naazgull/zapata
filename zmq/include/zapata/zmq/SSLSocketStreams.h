@@ -155,7 +155,6 @@ namespace zpt {
 
 			int _actually_read;
 			if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
-				cout << zpt::ssl_error_print(this->__sslstream, _actually_read) << endl << flush;
 				SSL_free(this->__sslstream);
 				SSL_CTX_free(this->__context);
 				::shutdown(this->__sock, SHUT_RDWR);
@@ -185,12 +184,13 @@ namespace zpt {
 
 	protected:
 		__buf_type __buf;
+		bool __is_error;
 
 	public:
 		basic_sslsocketstream() :
-		__stream_type(&__buf) {
+			__stream_type(&__buf), __is_error(false) {
 		};
-		basic_sslsocketstream(int s, SSL_CTX* _ctx) : __stream_type(&__buf) {
+		basic_sslsocketstream(int s, SSL_CTX* _ctx) : __stream_type(&__buf), __is_error(false) {
 			__buf.set_socket(s);
 			__buf.set_context(_ctx);
 		}
@@ -212,7 +212,7 @@ namespace zpt {
 		}
 
 		bool is_open() {
-			return __buf.get_socket() != 0 && __buf.__good();
+			return !__is_error && __buf.get_socket() != 0 && __buf.__good();
 		}
 
 		bool ready() {
@@ -243,6 +243,7 @@ namespace zpt {
 			if (::connect(_sd, reinterpret_cast<sockaddr*>(&_sin), sizeof(_sin)) < 0) {
 				__stream_type::setstate(std::ios::failbit);
 				__buf.set_socket(0);
+				__is_error = true;
 				return false;
 			}
 			else {
@@ -254,6 +255,8 @@ namespace zpt {
 				if (_context == nullptr) {
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
+					__is_error = true;
+					return false;
 				}
 				else {
 					this->assign(_sd, _context);
@@ -265,10 +268,12 @@ namespace zpt {
 
 			if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
 				this->close();
+				__is_error = true;
 				return false;
 			}
 			if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
 				this->close();
+				__is_error = true;
 				return false;
 			}
 			return true;
