@@ -544,6 +544,7 @@ void zpt::RESTServer::start(zpt::json _sems) {
 						_ss->accept(& _fd);
 				
 						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
+						zdbg("received HTTP connection");
 						try {
 							if (this->route_http(_cs)) {
 								_cs->close();

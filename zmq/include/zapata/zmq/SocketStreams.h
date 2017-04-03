@@ -183,7 +183,7 @@ namespace zpt {
 			}
 
 			int _actually_read = -1;
-			if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, MSG_NOSIGNAL)) < 0) {
+			if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) < 0) {
 				::shutdown(this->__sock, SHUT_RDWR);
 				::close(this->__sock);
 				this->__sock = 0;
@@ -284,20 +284,20 @@ namespace zpt {
 						__buf.set_socket(_sd);
 					}
 
-					struct timeval _timeout;
-					_timeout.tv_sec = 10;
-					_timeout.tv_usec = 0;
+					// struct timeval _timeout;
+					// _timeout.tv_sec = 20;
+					// _timeout.tv_usec = 0;
 
-					if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-						this->close();
-						__is_error = true;
-						return false;
-					}
-					if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-						this->close();
-						__is_error = true;
-						return false;
-					}
+					// if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+					// 	this->close();
+					// 	__is_error = true;
+					// 	return false;
+					// }
+					// if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+					// 	this->close();
+					// 	__is_error = true;
+					// 	return false;
+					// }
 					return true;
 				}
 				case IPPROTO_UDP: {

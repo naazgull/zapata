@@ -202,6 +202,8 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	std::string _buffer(_envelope);
 	zframe_t* _frame2 = zframe_new(_buffer.data(), _buffer.size());
 
+	zverbose(std::string("> ") + _directive + std::string(" | ") + this->connection());
+	zverbose(zpt::json::pretty(_envelope));
 	bool _message_sent = false;
 	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
 		_message_sent = (zsock_send(this->out(), "ff", _frame1, _frame2) == 0); }
@@ -209,8 +211,6 @@ zpt::json zpt::ZMQ::send(zpt::json _envelope) {
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
 
-	zverbose(std::string("> ") + _directive + std::string(" | ") + this->connection());
-	zverbose(zpt::json::pretty(_envelope));
 	return zpt::undefined;
 }
 
@@ -1162,6 +1162,7 @@ zpt::json zpt::ZMQAssyncReq::send(zpt::json _envelope) {
 }
 
 zpt::json zpt::ZMQAssyncReq::recv() {
+	zdbg("received assync request");
 	zpt::json _envelope = zpt::ZMQ::recv();
 	if (!_envelope["status"]->ok() || ((int) _envelope["status"]) < 100) {
 		_envelope << "status" << 501;
@@ -1170,6 +1171,7 @@ zpt::json zpt::ZMQAssyncReq::recv() {
 		case 1 : {
 			std::string _reply = this->__raw_transformer(_envelope);
 			(* this->__raw_socket) << _reply << flush;
+			zdbg("closing HTTP socket");
 			this->__raw_socket->close();
 			break;
 		}

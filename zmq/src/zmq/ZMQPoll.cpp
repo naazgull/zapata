@@ -211,6 +211,9 @@ auto zpt::ZMQPoll::loop() -> void {
 		for(; true; ) {
 			zsock_t* _awaken = (zsock_t*) zpoller_wait(this->__poll, -1);
 			assertz(zpoller_expired(this->__poll) == false, "zpoller_expired is true", 500, 0);
+			// if (zpoller_expired(this->__poll)) {
+			// 	continue;
+			// }
 			assertz(zpoller_terminated(this->__poll) == false, "zpoller_terminated is true", 500, 0);
 
 			if (_awaken == nullptr) {

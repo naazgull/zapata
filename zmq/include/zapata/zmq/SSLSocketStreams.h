@@ -262,20 +262,20 @@ namespace zpt {
 					this->assign(_sd, _context);
 				}
 			}
-			struct timeval _timeout;
-			_timeout.tv_sec = 10;
-			_timeout.tv_usec = 0;
+			// struct timeval _timeout;
+			// _timeout.tv_sec = 20;
+			// _timeout.tv_usec = 0;
 
-			if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-				this->close();
-				__is_error = true;
-				return false;
-			}
-			if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-				this->close();
-				__is_error = true;
-				return false;
-			}
+			// if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+			// 	this->close();
+			// 	__is_error = true;
+			// 	return false;
+			// }
+			// if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+			// 	this->close();
+			// 	__is_error = true;
+			// 	return false;
+			// }
 			return true;
 		}
 	};
