@@ -185,7 +185,6 @@ auto zpt::ev::init_request(std::string _cid) -> zpt::json {
 			"Accept-Charset", "utf-8",
 			"Cache-Control", "no-cache",
 			"Date", string(_buffer_date),
-			"Expires", string(_buffer_expires),
 			"User-Agent", "zapata RESTful server"
 		}
 	);
@@ -214,6 +213,7 @@ auto zpt::ev::init_reply(std::string _uuid) -> zpt::json {
 
 	zpt::json _return = {
 		"Server", "zapata RESTful server",
+		"Connection", "close",
 		"Cache-Control", "max-age=3600",
 		"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
 		"Date", std::string(_buffer_date),

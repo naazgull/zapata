@@ -136,7 +136,6 @@ namespace zpt {
 		std::mutex __thread_mtx;
 		bool __suicidal;
 		
-		auto alloc_thread(std::string _in_connection, bool _temp) -> void;
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 

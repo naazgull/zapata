@@ -1162,7 +1162,7 @@ zpt::json zpt::ZMQAssyncReq::send(zpt::json _envelope) {
 }
 
 zpt::json zpt::ZMQAssyncReq::recv() {
-	zdbg("received assync request");
+	zdbg("going to receive assync req");
 	zpt::json _envelope = zpt::ZMQ::recv();
 	if (!_envelope["status"]->ok() || ((int) _envelope["status"]) < 100) {
 		_envelope << "status" << 501;
@@ -1170,8 +1170,8 @@ zpt::json zpt::ZMQAssyncReq::recv() {
 	switch (this->__type) {
 		case 1 : {
 			std::string _reply = this->__raw_transformer(_envelope);
+			zdbg("going to send HTTP message");
 			(* this->__raw_socket) << _reply << flush;
-			zdbg("closing HTTP socket");
 			this->__raw_socket->close();
 			break;
 		}

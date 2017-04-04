@@ -196,7 +196,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	
 	if (_ptr["$mutations"]->ok()) {
-		_options << "$mutations" << _ptr["$mutations"];
+		_options << "$mutations" << _ptr["$mutations"]->clone();
 	}
 	
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
@@ -204,6 +204,9 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	for (; _i != _n_workers - 1; _i++) {
 		struct sembuf _inc[2] = { { (short unsigned int) 0, 1 }, { (short unsigned int) 1, 1 } };
 		semop(_sync_sem, _inc, 2);
+		if (_i != 0) {
+			_options["$mutations"] << "enabled" << "false";
+		}
 		pid_t _pid = fork();
 		if (_pid == 0) {
 			zpt::rest::pids[zpt::rest::n_pid++] = _pid;
@@ -294,44 +297,44 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
 					break;
 				}
-				case ZMQ_REP : {
-					if (((size_t) this->__options["threads"]) != 0) {
-						this->__max_threads = ((size_t) this->__options["threads"]);
-						zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
-						if (_uri["type"] == zpt::json::string("@")) {
-							uint _available = 32769;
-							if (_uri["port"] != zpt::json::string("*")) {
-								_available = (uint) _uri["port"];
-							}
-							else {
-								zpt::serversocketstream _ss;
-								do {
-									if (_ss.bind(_available)) {
-										break;
-									}
-									_available++;
-								}
-								while(_available < 60999);
-								_ss.close();
-							}
+				// case ZMQ_REP : {
+				// 	if (((size_t) this->__options["threads"]) != 0) {
+				// 		this->__max_threads = ((size_t) this->__options["threads"]);
+				// 		zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
+				// 		if (_uri["type"] == zpt::json::string("@")) {
+				// 			uint _available = 32769;
+				// 			if (_uri["port"] != zpt::json::string("*")) {
+				// 				_available = (uint) _uri["port"];
+				// 			}
+				// 			else {
+				// 				zpt::serversocketstream _ss;
+				// 				do {
+				// 					if (_ss.bind(_available)) {
+				// 						break;
+				// 					}
+				// 					_available++;
+				// 				}
+				// 				while(_available < 60999);
+				// 				_ss.close();
+				// 			}
 
-							std::string _socket_id = zpt::generate::r_uuid();
-							_definition << "uuid" << _socket_id;
-							std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
-							zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
-							_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
-							this->__router_dealer.push_back(_socket);
-							zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::info);
+				// 			std::string _socket_id = zpt::generate::r_uuid();
+				// 			_definition << "uuid" << _socket_id;
+				// 			std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
+				// 			zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
+				// 			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
+				// 			this->__router_dealer.push_back(_socket);
+				// 			zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::info);
 
-							zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
-							std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
-							for (size_t _k = 0; _k != this->__max_threads; _k++) {
-								this->alloc_thread(_in_connection, false);
-							}
-							break;
-						}
-					}
-				}
+				// 			zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
+				// 			std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
+				// 			for (size_t _k = 0; _k != this->__max_threads; _k++) {
+				// 				this->alloc_thread(_in_connection, false);
+				// 			}
+				// 			break;
+				// 		}
+				// 	}
+				// }
 				default : {
 					zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
 					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
@@ -430,54 +433,6 @@ zpt::RESTServer::~RESTServer(){
 	this->__mqtt->unbind();
 }
 
-auto zpt::RESTServer::alloc_thread(std::string _in_connection, bool _temp) -> void {
-	std::thread _worker(
-		[ this ] (std::string _in_connection, bool _temp) -> void {
-			zpt::ZMQRep* _socket = new zpt::ZMQRep(_in_connection, this->__options);
-			for (;true;) {
-				zpt::json _envelope = _socket->recv();
-				if (bool(_envelope["error"])) {
-					_envelope << 
-					"channel" << "/bad-request" <<
-					"performative" << zpt::ev::Reply <<
-					"resource" << "/bad-request";
-					_socket->send(_envelope);
-				}
-				if (_envelope->ok()) {
-					zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-
-					bool _spawn = false;
-					{ std::lock_guard< std::mutex > _lock(this->__thread_mtx);
-						this->__alloc_threads++;
-						_spawn = (this->__alloc_threads >= this->__max_threads - 1) && (this->__n_threads < 2 * this->__max_threads); }
-					if (_spawn) {
-						this->alloc_thread(_in_connection, true);
-					}
-						
-					zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-					if (_result->ok()) {
-						try {
-							_result << 
-							"channel" << _envelope["headers"]["X-Cid"] <<
-							"performative" << zpt::ev::Reply <<
-							"resource" << _envelope["resource"];
-							_socket->send(_result);
-						}
-						catch(zpt::assertion& _e) {}
-					}
-
-					{ std::lock_guard< std::mutex > _lock(this->__thread_mtx);
-						this->__alloc_threads--; }
-				}
-			}
-		}
-		, _in_connection, _temp
-	);
-	{ std::lock_guard< std::mutex > _lock(this->__thread_mtx);
-		this->__n_threads++; }
-	_worker.detach();
-}
-
 auto zpt::RESTServer::suicidal() -> bool {
 	return this->__suicidal;
 }
@@ -544,7 +499,7 @@ void zpt::RESTServer::start(zpt::json _sems) {
 						_ss->accept(& _fd);
 				
 						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
-						zdbg("received HTTP connection");
+						// zdbg("received HTTP connection");
 						try {
 							if (this->route_http(_cs)) {
 								_cs->close();
@@ -560,7 +515,7 @@ void zpt::RESTServer::start(zpt::json _sems) {
 										"text", _e.what(),
 										"assertion_failed", _e.description(),
 										"code", _e.code()
-										}
+									}
 								}
 							);
 							(*_cs) << _reply << flush;
