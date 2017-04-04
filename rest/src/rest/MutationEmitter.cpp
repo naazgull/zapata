@@ -224,7 +224,6 @@ int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::conf::setup(_ptr);
 
-	zdbg(_ptr["$mutations"]["run"]);
 	if (std::string(_ptr["$mutations"]["run"]) != "true") {
 		exit(0);
 	}

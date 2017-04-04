@@ -425,7 +425,6 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[3]);
 
 			zpt::json _result = _bridge->events()->route(_performative, _topic, _payload, _opts);
-			zdbg(_result);
 			return _bridge->to< zpt::lisp::object >(_result);
 		}
 	);

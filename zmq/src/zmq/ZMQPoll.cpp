@@ -229,7 +229,7 @@ auto zpt::ZMQPoll::loop() -> void {
 					zframe_destroy(&_frame);
 					try {
 						zpt::socket _socket = this->get_by_uuid(_uuid);
-						zdbg(std::string("adding new socket ") + std::string(zsock_type_str(_socket->in())) + std::string(" ") + _socket->connection());
+						//zdbg(std::string("adding new socket ") + std::string(zsock_type_str(_socket->in())) + std::string(" ") + _socket->connection());
 						zpoller_add(this->__poll, _socket->in());
 					}
 					catch(zpt::assertion& _e) {
@@ -252,7 +252,7 @@ auto zpt::ZMQPoll::loop() -> void {
 					zframe_destroy(&_frame);
 					try {
 						zpt::socket _socket = this->get_by_uuid(_uuid);
-						zdbg(std::string("removing socket ") + std::string(zsock_type_str(_socket->in())) + std::string(" ") + _socket->connection());
+						// zdbg(std::string("removing socket ") + std::string(zsock_type_str(_socket->in())) + std::string(" ") + _socket->connection());
 						zpoller_remove(this->__poll, _socket->in());
 						this->remove_by_uuid(_socket);
 					}

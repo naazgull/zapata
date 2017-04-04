@@ -198,29 +198,28 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	if (_ptr["$mutations"]->ok()) {
 		_options << "$mutations" << _ptr["$mutations"]->clone();
 	}
+	_options << "proc" << zpt::json({ "directory_register", "off", "mqtt_register", "off", "mutations_listener", "off" });
 	
 	size_t _n_workers = _options["spawn"]->ok() ? (size_t) _options["spawn"] : 1;
 	size_t _i = 0;
 	for (; _i != _n_workers - 1; _i++) {
 		struct sembuf _inc[2] = { { (short unsigned int) 0, 1 }, { (short unsigned int) 1, 1 } };
 		semop(_sync_sem, _inc, 2);
-		if (_i != 0) {
-			_options["$mutations"] << "enabled" << "false";
-		}
 		pid_t _pid = fork();
 		if (_pid == 0) {
-			zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 			break;
 		}
+		zpt::rest::pids[zpt::rest::n_pid++] = _pid;
 		struct sembuf _block[1] = { { (short unsigned int) 1, 0 } };
 		semop(_sync_sem, _block, 1);	
 	}
 	if (_i == _n_workers - 1) {
+		_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on", "mutations_listener", "on" });
 		struct sembuf _inc[1] = { { (short unsigned int) 1, 1 } };
 		semop(_sync_sem, _inc, 1);
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
-	
+
 	if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
 		zpt::log_lvl = (int) _options["log"]["level"];
 	}
@@ -240,8 +239,9 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			delete _lf;
 		}
 	}
-	
-	zlog(std::string("starting RESTful service container: ") + _name, zpt::notice);
+	std::string _u_name(_name.data());
+	std::transform(_u_name.begin(), _u_name.end(), _u_name.begin(), ::toupper);
+	zlog(std::string("starting RESTful service container *") + _u_name + std::string("*"), zpt::notice);
 	zpt::rest::server _server(nullptr);
 	try {
 		_server = zpt::rest::server::setup(_options, _name);
@@ -287,14 +287,14 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
 					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
 					this->__router_dealer.push_back(_socket);
-					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 					break;
 				}
 				case ZMQ_PUB_SUB : {
 					zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
 					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
 					this->__pub_sub.push_back(_socket);
-					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 					break;
 				}
 				// case ZMQ_REP : {
@@ -324,7 +324,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				// 			zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
 				// 			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
 				// 			this->__router_dealer.push_back(_socket);
-				// 			zlog(std::string("starting 0mq listener for @tcp://*:") + std::to_string(_available), zpt::info);
+				// 			zlog(std::string("starting 0MQ listener for @tcp://*:") + std::to_string(_available), zpt::info);
 
 				// 			zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
 				// 			std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
@@ -338,7 +338,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				default : {
 					zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
 					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-					zlog(std::string("starting 0mq listener for ") + _socket->connection(), zpt::info);
+					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 					break;
 				}
 			}
@@ -384,7 +384,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			// zdbg(zpt::json::pretty(this->credentials()));
 		}
 
-		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
+		if (std::string(this->__options["mqtt_register"]) != "false" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
 			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 			if (!_uri["port"]->ok()) {
 				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
@@ -527,10 +527,10 @@ void zpt::RESTServer::start(zpt::json _sems) {
 			_http.detach();
 		}
 
-		if (std::string(this->__options["$mutations"]["enabled"]) == "true") {
+		if (std::string(this->__options["proc"]["mutations_listener"]) != "off") {
+			zlog(std::string("starting 0MQ mutation listener"), zpt::info);
 			std::thread _mutations(
 				[ this ] () -> void {
-					zlog(std::string("starting 0MQ mutation listener"), zpt::info);
 					((zpt::RESTMutationEmitter*) this->events()->mutations().get())->loop();
 				}
 			);

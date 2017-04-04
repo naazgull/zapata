@@ -41,7 +41,6 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 		zlog("something is definitely wrong, RESTEmitter already initialized", zpt::emergency);
 	}
 	zpt::rest::__emitter = this;
-	
 	if (std::string(this->options()["$mutations"]["enabled"]) == "true") {
 		this->mutations((new zpt::RESTMutationEmitter(this->options()))->self());
 	}
@@ -185,8 +184,12 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
-	this->directory()->notify(_regex, this->options()["zmq"]);
-	this->server()->subscribe(_regex, _opts);
+	if (std::string(this->options()["proc"]["directory_register"]) != "off") {
+		this->directory()->notify(_regex, this->options()["zmq"]);
+	}
+	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
+		this->server()->subscribe(_regex, _opts);
+	}
 
 	ztrace(std::string("registered handlers for ") + _regex);
 	return _uuid;
@@ -210,8 +213,12 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
-	this->directory()->notify(_regex, this->options()["zmq"]);
-	this->server()->subscribe(_regex, _opts);
+	if (std::string(this->options()["proc"]["directory_register"]) != "off") {
+		this->directory()->notify(_regex, this->options()["zmq"]);
+	}
+	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
+		this->server()->subscribe(_regex, _opts);
+	}
 
 	ztrace(std::string("registered handlers for ") + _regex);
 	return _uuid;
@@ -259,8 +266,12 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	this->add_by_hash(_listener->regex(), _url_pattern, _handlers);
 
-	this->directory()->notify(_listener->regex(), this->options()["zmq"]);
-	this->server()->subscribe(_listener->regex(), _opts);
+	if (std::string(this->options()["proc"]["directory_register"]) != "off") {
+		this->directory()->notify(_listener->regex(), this->options()["zmq"]);
+	}
+	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
+		this->server()->subscribe(_listener->regex(), _opts);
+	}
 
 	ztrace(std::string("registered handlers for ") + _listener->regex());
 	return _uuid;
