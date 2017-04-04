@@ -195,7 +195,9 @@ namespace zpt {
 			__buf.set_context(_ctx);
 		}
 		virtual ~basic_sslsocketstream() {
-			this->close();
+			__stream_type::flush();
+			__stream_type::clear();
+			__buf.set_socket(0);
 		}
 
 		void assign(int _sockfd, SSL_CTX* _ctx) {
@@ -204,11 +206,12 @@ namespace zpt {
 		}
 
 		void close() {
+			__stream_type::flush();
+			__stream_type::clear();
 			if (__buf.get_socket() != 0) {
 				::shutdown(__buf.get_socket(), SHUT_RDWR);
 				::close(__buf.get_socket());
 			}
-			__stream_type::clear();
 		}
 
 		bool is_open() {

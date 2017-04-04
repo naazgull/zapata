@@ -502,7 +502,6 @@ void zpt::RESTServer::start(zpt::json _sems) {
 						// zdbg("received HTTP connection");
 						try {
 							if (this->route_http(_cs)) {
-								_cs->close();
 							}
 						}
 						catch(zpt::assertion& _e) {
@@ -519,7 +518,6 @@ void zpt::RESTServer::start(zpt::json _sems) {
 								}
 							);
 							(*_cs) << _reply << flush;
-							_cs->close();				
 						}
 					}
 				}

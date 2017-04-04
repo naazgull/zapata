@@ -220,7 +220,9 @@ namespace zpt {
 			__buf.set_socket(s);
 		}
 		virtual ~basic_socketstream() {
-			this->close();
+			__stream_type::flush();
+			__stream_type::clear();
+			__buf.set_socket(0);
 		}
 
 		void assign(int _sockfd) {

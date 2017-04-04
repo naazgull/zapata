@@ -1172,7 +1172,7 @@ zpt::json zpt::ZMQAssyncReq::recv() {
 			std::string _reply = this->__raw_transformer(_envelope);
 			// zdbg("going to send HTTP message");
 			(* this->__raw_socket) << _reply << flush;
-			this->__raw_socket->close();
+			// this->__raw_socket->close();
 			break;
 		}
 		case 2 : {
