@@ -48,10 +48,7 @@ using namespace __gnu_cxx;
 #define ZPT_PEER_CERTIFICATE 1
 
 namespace zpt {
-	namespace threads {
-		extern bool interrupted;
-	}
-	
+
 	short str2type(std::string _type);
 	
 	class ZMQPoll;
@@ -97,13 +94,16 @@ namespace zpt {
 
 		auto get_by_name(std::string _name) -> zpt::socket;
 		auto get_by_uuid(std::string _uuid) -> zpt::socket;
+		auto get_by_zsock(zsock_t* _sock) -> zpt::socket;
 		auto add_by_name(zpt::socket _socket) -> void;
 		auto add_by_uuid(zpt::socket _socket) -> void;
+		auto add_by_zsock(zpt::socket _socket) -> void;
 		auto remove_by_name(zpt::socket _socket) -> void;
 		auto remove_by_uuid(zpt::socket _socket) -> void;
+		auto remove_by_zsock(zpt::socket _socket) -> void;
 
 		
-		virtual auto poll(zpt::socket _socket, bool _signal = true) -> void;
+		virtual auto poll(zpt::socket _socket) -> void;
 		virtual auto unpoll(zpt::socket _socket, bool _signal = true) -> void;
 		virtual auto loop() -> void;
 		virtual auto bind(short _type, std::string _connection) -> zpt::socket;
@@ -114,20 +114,17 @@ namespace zpt {
 		zpt::json __options;
 		std::map< std::string, zpt::socket > __by_name;
 		std::map< std::string, zpt::socket > __by_uuid;
+		std::map< zsock_t*, zpt::socket > __by_socket;
 		::pthread_t __id;
-		zpt::socket __sync[4];
+		zpoller_t* __poll;
+		zsock_t* __sync[4];
 		std::mutex __mtx[2];
 		zpt::ZMQPollPtr __self;
 		zpt::ev::emitter __emitter;
-		std::vector< zpt::socket > __poll_sockets;
-		zmq_pollitem_t* __poll_set;
-		size_t __poll_set_size;
-		bool __need_rebuild;		
 		
 		auto signal(std::string _message, int _idx_send) -> void;
 		auto notify(std::string _message, int _idx_send) -> void;
 		auto wait(int _idx_send) -> void;
-		auto repoll() -> void;
 
 	};
 
@@ -137,24 +134,22 @@ namespace zpt {
 		virtual ~ZMQ();
 		
 		virtual std::string id();
-		virtual auto poll_index(long _index) -> void;
-		virtual auto poll_index() -> long;
-		virtual auto options() -> zpt::json;
+		virtual zpt::json options();
 		virtual auto connection() -> std::string;
 		virtual auto connection(std::string _connection) -> void;
 		virtual auto uri(size_t _idx = 0) -> zpt::json;
 		virtual auto uri(std::string _connection) -> void;
 		virtual auto detach() -> void;
-		virtual auto auth(std::string _client_cert_dir = "") -> zactor_t*;
-		virtual auto certificate(int _which = ZPT_SELF_CERTIFICATE) -> zcert_t*;
-		virtual auto certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE) -> void;
+		virtual zactor_t* auth(std::string _client_cert_dir = "");
+		virtual zcert_t* certificate(int _which = ZPT_SELF_CERTIFICATE);
+		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
 		
-		virtual auto recv() -> zpt::json;
-		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
-		virtual auto send(zpt::json _envelope) -> zpt::json;
+		virtual zpt::json recv();
+		virtual zpt::json send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload);
+		virtual zpt::json send(zpt::json _envelope);
 		
-		virtual auto relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform) -> void;
-		virtual auto relay_for(zpt::socket _socket) -> void;
+		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
+		virtual void relay_for(zpt::socket _socket);
 
 		virtual auto self() const -> zpt::socket = 0;
 		virtual auto socket() -> zsock_t* = 0;
@@ -176,7 +171,6 @@ namespace zpt {
 		zcert_t* __self_cert;
 		zcert_t* __peer_cert;
 		zpt::json __uri;
-		long __poll_index;
 
 		static zactor_t* __auth;
 

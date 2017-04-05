@@ -31,7 +31,7 @@ SOFTWARE.
 
 zactor_t* zpt::ZMQ::__auth = nullptr;
 
-zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options) : __options( _options ), __connection(_connection.data()), __self_cert(nullptr), __peer_cert(nullptr), __poll_index(-1), __poll(nullptr) {
+zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options) : __options( _options ), __connection(_connection.data()), __self_cert(nullptr), __peer_cert(nullptr), __poll(nullptr) {
 	this->__id.assign(zpt::generate::r_uuid());
 }
 
@@ -46,14 +46,6 @@ zpt::ZMQ::~ZMQ() {
 
 auto zpt::ZMQ::id() -> std::string {
 	return this->__id;
-}
-
-auto zpt::ZMQ::poll_index(long _index) -> void {
-	this->__poll_index = _index;
-}
-
-auto zpt::ZMQ::poll_index() -> long {
-	return this->__poll_index;
 }
 
 auto zpt::ZMQ::options() -> zpt::json {
@@ -234,8 +226,6 @@ auto zpt::ZMQ::unlisten() -> void {
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	zsock_set_linger(this->__socket, 1);
-	zsock_set_sndtimeo(this->__socket, 1000);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -333,8 +323,6 @@ auto zpt::ZMQReq::unbind() -> void {
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_REP);
-	zsock_set_linger(this->__socket, 1);
-	zsock_set_sndtimeo(this->__socket, 1000);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -538,10 +526,8 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 	std::string _connection1(std::string(this->uri(0)["type"]) + std::string(this->uri(0)["scheme"]) + std::string("://") + std::string(this->uri(0)["authority"]));
 	std::string _connection2(std::string(this->uri(1)["type"]) + std::string(this->uri(1)["scheme"]) + std::string("://") + std::string(this->uri(1)["authority"]));
 	this->__socket_sub = zsock_new(ZMQ_SUB);
-	zsock_set_linger(this->__socket_sub, 1);
 	assertz(zsock_attach(this->__socket_sub, _connection2.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_sub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	this->__socket_pub = zsock_new(ZMQ_PUB);
-	zsock_set_linger(this->__socket_pub, 1);
 	assertz(zsock_attach(this->__socket_pub, _connection1.data(), false) == 0, std::string("could not attach ") + std::string(zsock_type_str(this->__socket_pub)) + std::string(" socket to ") + this->connection(), 500, 0);
 	
 	std::string _peer(_connection.substr(_connection.find(":") + 3));
@@ -621,7 +607,6 @@ void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUB);
-	zsock_set_linger(this->__socket, 1);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -717,7 +702,6 @@ auto zpt::ZMQPub::unbind() -> void {
 
 zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options) {
 	this->__socket = zsock_new(ZMQ_SUB);
-	zsock_set_linger(this->__socket, 1);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -823,7 +807,6 @@ void zpt::ZMQSub::subscribe(std::string _prefix) {
 
 zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PUSH);
-	zsock_set_linger(this->__socket, 1);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -921,7 +904,6 @@ auto zpt::ZMQPush::unbind() -> void {
 
 zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __self(this) {
 	this->__socket = zsock_new(ZMQ_PULL);
-	zsock_set_linger(this->__socket, 1);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -1108,7 +1090,6 @@ auto zpt::ZMQRouterDealer::unbind() -> void {
 
 zpt::ZMQAssyncReq::ZMQAssyncReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __type(-1), __self(this) {
 	this->__socket = zsock_new(ZMQ_REQ);
-	zsock_set_linger(this->__socket, 1);
 	this->uri(_connection);
 	assertz(this->uri()["type"] == zpt::json::string(">"), "ASSYNC_REQ socket type must be '>'", 500, 0);
 	this->connection(std::string(">") + std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["authority"]));

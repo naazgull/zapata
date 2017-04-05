@@ -47,6 +47,7 @@ namespace zpt {
 		extern pid_t* pids;
 		extern size_t n_pid;
 		extern int m_sem;
+		extern bool interrupted;
 		
 		auto http2zmq(zpt::http::req _request) -> zpt::json;
 		auto http2zmq(zpt::http::rep _reply) -> zpt::json;

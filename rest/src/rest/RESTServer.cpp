@@ -46,6 +46,7 @@ namespace zpt {
 		pid_t* pids = nullptr;
 		size_t n_pid = 0;
 		int m_sem = -1;
+		bool interrupted = false;
 	}
 }
 
@@ -81,10 +82,10 @@ auto zpt::rest::terminate(int _signal) -> void {
 		zlog(std::to_string(::getpid()) + std::string(" in 'suicidal' state"), zpt::emergency);
 		exit(0);
 	}
-	if (zpt::threads::interrupted) {
+	if (zpt::rest::interrupted) {
 		exit(0);
 	}
-	zpt::threads::interrupted = true;
+	zpt::rest::interrupted = true;
 	if (zpt::rest::pids == nullptr) {
 		return;
 	}
