@@ -242,6 +242,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":generate-key "
 		":generate-uuid "
 		":json-date "
+		":credentials "
 		"))"
 	);
 	ztrace(std::string("LISP bridge loading basic operators (cpp-lambda-call, check-consistency, zlog, get-log-level, zpt:on, zpt:route, zpt:split, zpt:topic-var, zpt:authorize)"));
@@ -1037,6 +1038,19 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				return _bridge->to< zpt::lisp::object >(zpt::json::date((zpt::timestamp_t) _ts));
 			}
 			return _bridge->to< zpt::lisp::object >(zpt::json::date());				
+			
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:credentials",
+			"type", "internal",
+			"access", "a",
+			"label", "Returns the container credentials"
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+			return _bridge->to< zpt::lisp::object >(_bridge->events()->credentials());				
 			
 		}
 	);
