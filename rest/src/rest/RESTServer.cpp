@@ -42,6 +42,7 @@ SOFTWARE.
 
 namespace zpt {
 	namespace rest {
+		pid_t root = 0;
 		pid_t* pids = nullptr;
 		size_t n_pid = 0;
 		int m_sem = -1;
@@ -76,6 +77,14 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 }
 
 auto zpt::rest::terminate(int _signal) -> void {
+	if (zpt::rest::root != ::getpid()) {
+		zlog(std::to_string(::getpid()) + std::string(" in 'suicidal' state"), zpt::emergency);
+		exit(0);
+	}
+	if (zpt::threads::interrupted) {
+		exit(0);
+	}
+	zpt::threads::interrupted = true;
 	if (zpt::rest::pids == nullptr) {
 		return;
 	}
@@ -172,10 +181,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		if (_spawned == _to_spawn->arr()->size() - 1) {
 			_name.assign((_spawn["name"]->is_string() ? std::string(_spawn["name"]) : std::string("container-") + std::to_string(_spawned)));
 			_options = _spawn;
-			::signal(SIGINT, zpt::rest::terminate);
-			::signal(SIGTERM, zpt::rest::terminate);
-			::signal(SIGABRT, zpt::rest::terminate);
-			::signal(SIGSEGV, zpt::rest::terminate);
+			zpt::rest::root = ::getpid();
 		}
 		else {
 			struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
@@ -219,6 +225,11 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		semop(_sync_sem, _inc, 1);
 	}
 	_name += std::string("-") + std::to_string(_i + 1);
+
+	::signal(SIGINT, zpt::rest::terminate);
+	::signal(SIGTERM, zpt::rest::terminate);
+	::signal(SIGABRT, zpt::rest::terminate);
+	::signal(SIGSEGV, zpt::rest::terminate);
 
 	if (zpt::log_lvl == -1 && _options["log"]["level"]->ok()) {
 		zpt::log_lvl = (int) _options["log"]["level"];
@@ -297,44 +308,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 					break;
 				}
-				// case ZMQ_REP : {
-				// 	if (((size_t) this->__options["threads"]) != 0) {
-				// 		this->__max_threads = ((size_t) this->__options["threads"]);
-				// 		zpt::json _uri = zpt::uri::parse(_definition["bind"]->str());
-				// 		if (_uri["type"] == zpt::json::string("@")) {
-				// 			uint _available = 32769;
-				// 			if (_uri["port"] != zpt::json::string("*")) {
-				// 				_available = (uint) _uri["port"];
-				// 			}
-				// 			else {
-				// 				zpt::serversocketstream _ss;
-				// 				do {
-				// 					if (_ss.bind(_available)) {
-				// 						break;
-				// 					}
-				// 					_available++;
-				// 				}
-				// 				while(_available < 60999);
-				// 				_ss.close();
-				// 			}
-
-				// 			std::string _socket_id = zpt::generate::r_uuid();
-				// 			_definition << "uuid" << _socket_id;
-				// 			std::string _connection = std::string("@tcp://*:") + std::to_string(_available) + std::string(",@inproc://") + _socket_id;
-				// 			zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _connection);
-				// 			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : std::string(">tcp://*:") + std::to_string(_available));
-				// 			this->__router_dealer.push_back(_socket);
-				// 			zlog(std::string("starting 0MQ listener for @tcp://*:") + std::to_string(_available), zpt::info);
-
-				// 			zlog(std::string("allocating ") + std::to_string(this->__max_threads) + std::string(" thread(s)"), zpt::info);
-				// 			std::string _in_connection = std::string(">inproc://") + std::string(_definition["uuid"]);
-				// 			for (size_t _k = 0; _k != this->__max_threads; _k++) {
-				// 				this->alloc_thread(_in_connection, false);
-				// 			}
-				// 			break;
-				// 		}
-				// 	}
-				// }
 				default : {
 					zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
 					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
