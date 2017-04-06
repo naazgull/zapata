@@ -258,16 +258,13 @@ auto zpt::ZMQPoll::loop() -> void {
 					zpt::socket _socket;
 					while (ZMQ_POLLIN & zsock_events(_awaken)) {
 						_socket = this->get_by_zsock(_awaken);
-						//zpt::json _envelope = zpt::ZMQ::recv(_awaken);
 						zpt::json _envelope = _socket->recv();
-						zdbg(_envelope);
 
 						if (bool(_envelope["error"])) {
 							_envelope << 
 							"channel" << "/bad-request" <<
 							"performative" << zpt::ev::Reply <<
 							"resource" << "/bad-request";
-							//_socket->send(_envelope);
 							zpt::ZMQ::send(_envelope, _awaken);
 						}
 						else if (_envelope->ok()) {
@@ -279,7 +276,6 @@ auto zpt::ZMQPoll::loop() -> void {
 									"channel" << _envelope["headers"]["X-Cid"] <<
 									"performative" << zpt::ev::Reply <<
 									"resource" << _envelope["resource"];					
-									//_socket->send(_result);
 									zpt::ZMQ::send(_result, _awaken);
 								}
 								catch(zpt::assertion& _e) {}
