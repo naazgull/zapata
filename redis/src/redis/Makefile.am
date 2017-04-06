@@ -7,4 +7,5 @@ libzapata_redis_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_redis_la_SOURCES = \
 ./convert_redis.cpp \
-./Client.cpp 
+./Client.cpp \
+./ZList.cpp

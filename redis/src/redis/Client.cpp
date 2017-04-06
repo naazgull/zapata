@@ -424,7 +424,7 @@ auto zpt::redis::Client::query(std::string _collection, std::string _regexp, zpt
 	return {
 		"size", _return->size(),
 		"elements", _return
-		};
+	};
 }
 
 auto zpt::redis::Client::query(std::string _collection, zpt::json _regexp, zpt::json _opts) -> zpt::json {
