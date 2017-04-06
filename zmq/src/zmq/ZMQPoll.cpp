@@ -110,7 +110,7 @@ auto zpt::ZMQPoll::get_by_uuid(std::string _uuid) -> zpt::socket {
 
 auto zpt::ZMQPoll::get_by_zsock(zsock_t* _sock) -> zpt::socket {
 	std::lock_guard< std::mutex > _lock(this->__mtx[0]);
-	auto _found = this->__by_socket.find(_sock);
+	auto _found = this->__by_socket.find(zsock_fd(_sock));
 	assertz(_found != this->__by_socket.end(), "socket not found", 406, 0);
 	return _found->second;
 }
@@ -130,7 +130,7 @@ auto zpt::ZMQPoll::add_by_uuid(zpt::socket _socket) -> void {
 
 auto zpt::ZMQPoll::add_by_zsock(zpt::socket _socket) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx[0]);
-	this->__by_socket.insert(std::make_pair(_socket->in(), _socket));
+	this->__by_socket.insert(std::make_pair(zsock_fd(_socket->in()), _socket));
 }
 
 auto zpt::ZMQPoll::remove_by_name(zpt::socket _socket) -> void {
@@ -154,7 +154,7 @@ auto zpt::ZMQPoll::remove_by_uuid(zpt::socket _socket) -> void {
 
 auto zpt::ZMQPoll::remove_by_zsock(zpt::socket _socket) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx[0]);
-	auto _found = this->__by_socket.find(_socket->in());
+	auto _found = this->__by_socket.find(zsock_fd(_socket->in()));
 	if (_found != this->__by_socket.end()) {
 		this->__by_socket.erase(_found);
 	}
@@ -210,8 +210,6 @@ auto zpt::ZMQPoll::loop() -> void {
 
 		for(; true; ) {
 			zsock_t* _awaken = (zsock_t*) zpoller_wait(this->__poll, -1);
-			assertz(zpoller_expired(this->__poll) == false, "zpoller_expired is true", 500, 0);
-			assertz(zpoller_terminated(this->__poll) == false, "zpoller_terminated is true", 500, 0);
 
 			if (_awaken == this->__sync[0]) {
 				while (ZMQ_POLLIN & zsock_events(_awaken)) {
@@ -257,17 +255,20 @@ auto zpt::ZMQPoll::loop() -> void {
 			}
 			else {
 				try {
-					zpt::socket _socket = this->get_by_zsock(_awaken);
-
+					zpt::socket _socket;
 					while (ZMQ_POLLIN & zsock_events(_awaken)) {
+						_socket = this->get_by_zsock(_awaken);
+						//zpt::json _envelope = zpt::ZMQ::recv(_awaken);
 						zpt::json _envelope = _socket->recv();
+						zdbg(_envelope);
 
 						if (bool(_envelope["error"])) {
 							_envelope << 
 							"channel" << "/bad-request" <<
 							"performative" << zpt::ev::Reply <<
 							"resource" << "/bad-request";
-							_socket->send(_envelope);
+							//_socket->send(_envelope);
+							zpt::ZMQ::send(_envelope, _awaken);
 						}
 						else if (_envelope->ok()) {
 							zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
@@ -278,16 +279,17 @@ auto zpt::ZMQPoll::loop() -> void {
 									"channel" << _envelope["headers"]["X-Cid"] <<
 									"performative" << zpt::ev::Reply <<
 									"resource" << _envelope["resource"];					
-									_socket->send(_result);
+									//_socket->send(_result);
+									zpt::ZMQ::send(_result, _awaken);
 								}
 								catch(zpt::assertion& _e) {}
 							}
 						}
 					}
 					if (_socket->once()) {
-						this->unpoll(_socket, false);
-						_socket->unlisten();
-						_socket->unbind();
+					 	this->unpoll(_socket, false);
+					 	_socket->unlisten();
+					 	_socket->unbind();
 					}
 				}
 				catch (zpt::assertion& _e) {

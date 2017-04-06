@@ -129,8 +129,6 @@ auto zpt::ZMQ::certificate(std::string _cert_file, int _which) -> void {
 }
 
 auto zpt::ZMQ::recv() -> zpt::json {
-	std::vector< std::string > _parts;
-	
 	std::lock_guard< std::mutex > _lock(this->in_mtx());
 	zframe_t* _frame1;
 	zframe_t* _frame2;
@@ -149,6 +147,36 @@ auto zpt::ZMQ::recv() -> zpt::json {
 			zframe_destroy(&_frame2);
 
 			zverbose(std::string("< ") + _directive + std::string(" | ") + this->connection());
+			zverbose(zpt::json::pretty(_envelope));
+			return _envelope;
+		}
+		catch(zpt::SyntaxErrorException& _e) {
+			return { "error", true, "status", 400, "payload", { "text", _e.what() } };
+		}
+	}
+	else {
+		return { "error", true, "status", 503 };
+	}
+}
+
+auto zpt::ZMQ::recv(zsock_t* _socket) -> zpt::json {
+	zframe_t* _frame1;
+	zframe_t* _frame2;
+	if (zsock_recv(_socket, "ff", &_frame1, &_frame2) == 0) {
+		char* _bytes = nullptr;
+
+		_bytes = zframe_strdup(_frame1);
+		std::string _directive(std::string(_bytes, zframe_size(_frame1)));
+		std::free(_bytes);
+		zframe_destroy(&_frame1);
+
+		try {
+			_bytes = zframe_strdup(_frame2);
+			zpt::json _envelope(std::string(_bytes, zframe_size(_frame2)));
+			std::free(_bytes);
+			zframe_destroy(&_frame2);
+
+			zverbose(std::string("< ") + _directive);
 			zverbose(zpt::json::pretty(_envelope));
 			return _envelope;
 		}
@@ -210,6 +238,59 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	zframe_destroy(&_frame1);
 	zframe_destroy(&_frame2);
 	assertz(_message_sent, std::string("unable to send message to ") + this->connection(), 500, 0);
+
+	return zpt::undefined;
+}
+
+auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zsock_t* _socket) -> zpt::json {
+	return zpt::ZMQ::send(
+		{
+			"channel", _resource,
+			"performative", _performative,
+			"resource", _resource, 
+			"payload", _payload
+		},
+		_socket
+	);
+}
+
+auto zpt::ZMQ::send(zpt::json _envelope, zsock_t* _socket) -> zpt::json {
+	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
+	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
+	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
+
+	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
+	_envelope <<
+	"channel" << _uri["path"] <<
+	"resource" << _uri["path"] <<
+	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
+	
+	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+	if (_performative != zpt::ev::Reply) {
+		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
+	}
+	else {
+		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
+		_envelope << "headers" << (zpt::ev::init_reply() + _envelope["headers"]);
+		_envelope["headers"] << "X-Status" << _envelope["status"];
+	}		
+	if (!_envelope["payload"]->ok()) {
+		_envelope << "payload" << zpt::json::object();
+	}
+	int _status = (int) _envelope["headers"]["X-Status"];
+
+	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));// + std::string(" ") + zpt::generate::r_uuid());
+	zframe_t* _frame1 = zframe_new(_directive.data(), _directive.size());
+	std::string _buffer(_envelope);
+	zframe_t* _frame2 = zframe_new(_buffer.data(), _buffer.size());
+
+	zverbose(std::string("> ") + _directive);
+	zverbose(zpt::json::pretty(_envelope));
+	bool _message_sent = false;
+	_message_sent = (zsock_send(_socket, "ff", _frame1, _frame2) == 0);
+	zframe_destroy(&_frame1);
+	zframe_destroy(&_frame2);
+	assertz(_message_sent, std::string("unable to send message"), 500, 0);
 
 	return zpt::undefined;
 }

@@ -114,7 +114,7 @@ namespace zpt {
 		zpt::json __options;
 		std::map< std::string, zpt::socket > __by_name;
 		std::map< std::string, zpt::socket > __by_uuid;
-		std::map< zsock_t*, zpt::socket > __by_socket;
+		std::map< int, zpt::socket > __by_socket;
 		::pthread_t __id;
 		zpoller_t* __poll;
 		zsock_t* __sync[4];
@@ -145,8 +145,11 @@ namespace zpt {
 		virtual void certificate(std::string cert_file, int _which = ZPT_SELF_CERTIFICATE);
 		
 		virtual zpt::json recv();
+		static zpt::json recv(zsock_t* _socket);
 		virtual zpt::json send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload);
 		virtual zpt::json send(zpt::json _envelope);
+		static zpt::json send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zsock_t* _socket);
+		static zpt::json send(zpt::json _envelope, zsock_t* _socket);
 		
 		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
 		virtual void relay_for(zpt::socket _socket);
