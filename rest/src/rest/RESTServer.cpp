@@ -156,7 +156,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	if (_ptr["$mutations"]->ok()) {
 		_options << "$mutations" << _ptr["$mutations"]->clone();
 	}
-	_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on", "mutations_listener", "on" });
+	_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on", "mutations_listener", (_options["$mutations"]->ok() ? "on" : "off") });
 
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);

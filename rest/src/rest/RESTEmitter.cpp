@@ -391,39 +391,24 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		}
 	}
 
-	if (bool(_opts["broker"])) {
+	if (!_endpoint_found) {
 		_return = this->resolve_remotely(_method, _url, _envelope, _opts);
 	}
-	else {
-		if (!_endpoint_found) {
-			zlog(std::string("error processing '") + _url + std::string("': listener not found"), zpt::error);
-			if (bool(_opts["bubble-error"])) {
-				assertz(_endpoint_found, "the requested resource was not found", 404, 0);
-			}
-			_return = {
-				"performative", zpt::ev::Reply,
-				"status", 404,
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
-				"payload", {
-					"text", "the requested resource was not found"
-				}
-			};
+	else if (!_method_found) {
+		zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
+		if (bool(_opts["bubble-error"])) {
+			assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 0);
 		}
-		else if (!_method_found) {
-			zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
-			if (bool(_opts["bubble-error"])) {
-				assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 0);
+		_return = {
+			"performative", zpt::ev::Reply,
+			"status", 405,
+			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+			"payload", {
+				"text", "the requested performative is not allowed to be used with the requested resource"
 			}
-			_return = {
-				"performative", zpt::ev::Reply,
-				"status", 405,
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
-				"payload", {
-					"text", "the requested performative is not allowed to be used with the requested resource"
-				}
-			};
-		}
-	}	
+		};
+	}
+	
 	return _return;
 }
 

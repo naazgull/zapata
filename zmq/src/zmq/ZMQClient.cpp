@@ -230,7 +230,7 @@ auto zpt::ZMQ::relay_for(zpt::socket_ref _socket) -> void {
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options)/*, __context(0)*/, __socket(nullptr)/*, __self(this)*/ {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REQ));
-	this->__socket->setsockopt(ZMQ_SNDTIMEO, 10000);
+	// this->__socket->setsockopt(ZMQ_SNDTIMEO, 10000);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
@@ -321,6 +321,7 @@ zpt::json zpt::ZMQReq::send(zpt::json _envelope) {
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options)/*, __context(0)*/, __socket(nullptr)/*, __self(this)*/ {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
+	// this->__socket->setsockopt(ZMQ_RCVTIMEO, 10000);
 	this->uri(_connection);
 	if (this->uri()["scheme"] == zpt::json::string("tcp")) {
 		if (this->uri()["type"] == zpt::json::string("@")) {
