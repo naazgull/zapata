@@ -364,7 +364,6 @@ auto zpt::http::cookies::serialize(zpt::json _info) -> std::string {
 	return _return;
 }
 
-
 extern "C" auto zpt_json() -> int {
 	return 1;
 }

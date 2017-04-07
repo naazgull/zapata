@@ -2,7 +2,7 @@ FROM ubuntu:16.10
 
 WORKDIR /root
 RUN apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
-RUN apt-get install -y apt-transport-https wget lsb-release git g++ build-essential autoconf libtool pkg-config sed scons libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libczmq-dev libsodium-dev libpython3.6-dev ecl libhiredis-dev libpqxx-dev libmysqlcppconn-dev 
+RUN apt-get install -y apt-transport-https wget lsb-release git g++ build-essential autoconf libtool pkg-config sed scons libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libsodium-dev libpython3.6-dev ecl libhiredis-dev libpqxx-dev libmysqlcppconn-dev 
 
 RUN git clone git://github.com/mongodb/mongo-cxx-driver.git
 WORKDIR /root/mongo-cxx-driver

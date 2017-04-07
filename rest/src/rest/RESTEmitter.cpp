@@ -33,9 +33,6 @@ namespace zpt {
 }
 
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
-	zsys_init();
-	zsys_handler_set(nullptr);
-	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	if (zpt::rest::__emitter != nullptr) {
 		delete zpt::rest::__emitter;
 		zlog("something is definitely wrong, RESTEmitter already initialized", zpt::emergency);
@@ -500,12 +497,12 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			case ZMQ_ROUTER_DEALER :
 			case ZMQ_REP :
 			case ZMQ_REQ : {
-				zpt::socket _client = this->__poll->bind(ZMQ_REQ, _container["connect"]->str());
+				zpt::socket _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
 				zpt::json _out = _client->send(_in);
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
-				_client->unbind();
+				this->__poll->remove(_client);
 				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 					throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 				}						
@@ -513,15 +510,15 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			}
 			case ZMQ_PUB_SUB : {
 				std::string _connect = _container["connect"]->str();
-				zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+				zpt::socket _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
 				_client->send(_in);
-				_client->unbind();
+				this->__poll->remove(_client);
 				return zpt::rest::accepted(_url);
 			}
 			case ZMQ_PUSH : {
-				zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _container["connect"]->str());
+				zpt::socket _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
 				_client->send(_in);
-				_client->unbind();
+				this->__poll->remove(_client);
 				return zpt::rest::accepted(_url);
 			}
 		}

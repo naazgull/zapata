@@ -37,15 +37,12 @@ namespace zpt {
 }
 
 zpt::RESTMutationEmitter::RESTMutationEmitter(zpt::json _options) : zpt::MutationEmitter(_options), __socket(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
-	zsys_init();
-	zsys_handler_set(nullptr);
-	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
 	if (zpt::mutation::zmq::__emitter != nullptr) {
 		delete zpt::mutation::zmq::__emitter;
 		zlog("something is definitely wrong, RESTMutationEmitter already initialized", zpt::emergency);
 	}
 	zpt::mutation::zmq::__emitter = this;
-	zsock_set_subscribe(this->__socket->in(), "");
+	this->__socket->in()->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 }
 
 zpt::RESTMutationEmitter::~RESTMutationEmitter() {
@@ -251,11 +248,7 @@ int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 }
 
 zpt::RESTMutationServer::RESTMutationServer(zpt::json _options) : __options(_options), __self(this), __server(new ZMQXPubXSub(std::string(_options["$mutations"]["bind"]), _options)), __client(new ZMQPubSub(std::string(_options["$mutations"]["connect"]), _options)) {
-	zsys_init();
-	zsys_handler_set(nullptr);
-	assertz(zsys_has_curve(), "no security layer for 0mq. Is libcurve (https://github.com/zeromq/libcurve) installed?", 500, 0);
-
-	zsock_set_subscribe(this->__client->in(), "");
+	this->__client->in()->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 }
 
 zpt::RESTMutationServer::~RESTMutationServer(){

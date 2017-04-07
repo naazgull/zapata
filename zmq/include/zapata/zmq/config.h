@@ -15,9 +15,6 @@
 /* Define to 1 if you have the `curve' library (-lcurve). */
 #define HAVE_LIBCURVE 1
 
-/* Define to 1 if you have the `czmq' library (-lczmq). */
-#define HAVE_LIBCZMQ 1
-
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 

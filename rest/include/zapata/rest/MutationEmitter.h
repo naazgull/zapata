@@ -74,8 +74,8 @@ namespace zpt {
 	private:
 		zpt::json __options;
 		zpt::mutation::server __self;
-		zpt::socket __server;
-		zpt::socket __client;
+		zpt::ZMQ* __server;
+		zpt::ZMQ* __client;
 	};
 
 	class RESTMutationEmitter : public zpt::MutationEmitter {
@@ -100,7 +100,7 @@ namespace zpt {
 		
 	private:
 		zpt::mutation::HandlerStack __resources;
-		zpt::socket __socket;
+		zpt::ZMQ* __socket;
 		std::mutex __mtx;
 		
 	};

@@ -291,33 +291,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
 
-		for (auto _definition : this->__options["zmq"]->arr()) {
-			short int _type = zpt::str2type(_definition["type"]->str());
-
-			switch(_type) {
-				case ZMQ_ROUTER_DEALER : {
-					zpt::socket _socket = this->__poll->bind(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
-					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-					this->__router_dealer.push_back(_socket);
-					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
-					break;
-				}
-				case ZMQ_PUB_SUB : {
-					zpt::socket _socket = this->__poll->bind(ZMQ_XPUB_XSUB, _definition["bind"]->str());
-					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-					this->__pub_sub.push_back(_socket);
-					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
-					break;
-				}
-				default : {
-					zpt::socket _socket = this->__poll->bind(_type, _definition["bind"]->str());
-					_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
-					zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
-					break;
-				}
-			}
-		}
-
 		if (this->__options["rest"]["modules"]->ok()) {
 			for (auto _i : this->__options["rest"]["modules"]->arr()) {
 				if (_i->str().find(".py") != std::string::npos) {
@@ -351,45 +324,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				}
 			}
 		}
-
-		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
-			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
-			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
-			// zdbg(zpt::json::pretty(this->credentials()));
-		}
-
-		if (std::string(this->__options["mqtt_register"]) != "false" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
-			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
-			if (!_uri["port"]->ok()) {
-				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
-			}
-			if (_uri["user"]->ok() && _uri["password"]->ok()) {
-				this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
-			}
-			else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
-				this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
-			}
-			
-			this->__mqtt->on("connect",
-				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-					if (_data->__rc == 0) {
-						zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
-					}
-				}
-			);
-			this->__mqtt->on("disconnect",
-				[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-					_mqtt->reconnect();
-				}
-			);
-			this->__mqtt->on("message",
-				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-					this->route_mqtt(_data);
-				}
-			);
-			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
-			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
-		}
 	}
 	catch (zpt::assertion& _e) {
 		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
@@ -403,7 +337,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 }
 
 zpt::RESTServer::~RESTServer(){
-	this->__poll->unbind();
 	this->__mqtt->unbind();
 }
 
@@ -449,10 +382,70 @@ auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
 
 void zpt::RESTServer::start(zpt::json _sems) {
 	try {
-		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
+		for (auto _definition : this->__options["zmq"]->arr()) {
+			short int _type = zpt::str2type(_definition["type"]->str());
+			zpt::socket _socket;
+			switch(_type) {
+				case ZMQ_ROUTER_DEALER : {
+					_socket = this->__poll->add(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
+					break;
+				}
+				case ZMQ_PUB_SUB : {
+					_socket = this->__poll->add(ZMQ_XPUB_XSUB, _definition["bind"]->str());
+					break;
+				}
+				default : {
+					_socket = this->__poll->add(_type, _definition["bind"]->str());
+					this->__poll->poll(_socket);
+					break;
+				}
+			}
+			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
+			zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
+		}
+
+
+		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
+			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
+			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
+			// zdbg(zpt::json::pretty(this->credentials()));
+		}
+
+		if (std::string(this->__options["mqtt_register"]) != "false" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
+			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
+			if (!_uri["port"]->ok()) {
+				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+			}
+			if (_uri["user"]->ok() && _uri["password"]->ok()) {
+				this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
+			}
+			else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
+				this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
+			}
+			
+			this->__mqtt->on("connect",
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					if (_data->__rc == 0) {
+						zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
+					}
+				}
+			);
+			this->__mqtt->on("disconnect",
+				[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					_mqtt->reconnect();
+				}
+			);
+			this->__mqtt->on("message",
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					this->route_mqtt(_data);
+				}
+			);
+			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
+			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+			
 			this->__mqtt->start();
 		}
-		
+
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
 			std::thread _http(
 				[ this ] () -> void {
@@ -475,8 +468,10 @@ void zpt::RESTServer::start(zpt::json _sems) {
 						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
 						// zdbg("received HTTP connection");
 						try {
-							if (this->route_http(_cs)) {
-							}
+							// if (this->route_http(_cs)) {
+							// }
+							zpt::socket _socket = this->__poll->add(new ZMQHttp(_cs, this->__options));
+							this->__poll->poll(_socket);
 						}
 						catch(zpt::assertion& _e) {
 							zpt::http::rep _reply = zpt::rest::zmq2http(
@@ -528,73 +523,74 @@ void zpt::RESTServer::start(zpt::json _sems) {
 }
 
 bool zpt::RESTServer::route_http(zpt::socketstream_ptr _cs) {
-	zpt::http::rep _reply;
-	_reply->status(zpt::HTTP200);
-	zpt::http::req _request;
-	try {
-		(*_cs) >> _request;
-	}
-	catch(zpt::SyntaxErrorException& _e) {
-		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
-		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::bad_request());
-		zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
-		(*_cs) << _reply << flush;
-		return true;
-	}
-	zverbose(std::string("received HTTP request:\n") + std::string(_request));
+	// zpt::http::rep _reply;
+	// _reply->status(zpt::HTTP200);
+	// zpt::http::req _request;
+	// try {
+	// 	(*_cs) >> _request;
+	// }
+	// catch(zpt::SyntaxErrorException& _e) {
+	// 	zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
+	// 	zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::bad_request());
+	// 	zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
+	// 	(*_cs) << _reply << flush;
+	// 	return true;
+	// }
+	// zverbose(std::string("received HTTP request:\n") + std::string(_request));
 
-	bool _return = false;
-	zpt::json _container = this->__emitter->lookup(_request->url());
-	if (_container->ok()) {
-		short _type = zpt::str2type(_container["type"]->str());
-		zpt::json _in = zpt::rest::http2zmq(_request);
-		switch(_type) {
-			case ZMQ_REP :
-			case ZMQ_REQ :
-			case ZMQ_ROUTER_DEALER : {
-				zpt::socket _client = this->__poll->bind(ZMQ_ASSYNC_REQ, _container["connect"]->str());
-				_client->relay_for(_cs,
-					[] (zpt::json _envelope) -> std::string {
-						std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
-						zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
-						return _reply;
-					}
-				);
-				_client->send(_in);
-				_return = false;
-				break;
-			}
-			case ZMQ_PUB_SUB : {
-				std::string _connect = _container["connect"]->str();
-				zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
-				_client->send(_in);
-				zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_request->url()));
-				zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
-				(*_cs) << _reply << flush;
-				_return = true;
-				_client->unbind();
-				break;
-			}
-			case ZMQ_PUSH : {
-				zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _container["connect"]->str());
-				_client->send(_in);
-				zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_request->url()));
-				zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
-				(*_cs) << _reply << flush;
-				_return = true;
-				_client->unbind();
-				break;
-			}
-		}
-	}
-	else {
-		zlog(std::string("error processing '") + _request->url() + std::string("': listener not found"), zpt::error);
-		zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_request->url()));
-		zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
-		(*_cs) << _reply << flush;
-		_return = true;
-	}
-	return _return;
+	// bool _return = false;
+	// zpt::json _container = this->__emitter->lookup(_request->url());
+	// if (_container->ok()) {
+	// 	short _type = zpt::str2type(_container["type"]->str());
+	// 	zpt::json _in = zpt::rest::http2zmq(_request);
+	// 	switch(_type) {
+	// 		case ZMQ_REP :
+	// 		case ZMQ_REQ :
+	// 		case ZMQ_ROUTER_DEALER : {
+	// 			zpt::socket _client = this->__poll->bind(ZMQ_ASSYNC_REQ, _container["connect"]->str());
+	// 			_client->relay_for(_cs,
+	// 				[] (zpt::json _envelope) -> std::string {
+	// 					std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
+	// 					zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
+	// 					return _reply;
+	// 				}
+	// 			);
+	// 			_client->send(_in);
+	// 			_return = false;
+	// 			break;
+	// 		}
+	// 		case ZMQ_PUB_SUB : {
+	// 			std::string _connect = _container["connect"]->str();
+	// 			zpt::socket _client = this->__poll->bind(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+	// 			_client->send(_in);
+	// 			zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_request->url()));
+	// 			zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
+	// 			(*_cs) << _reply << flush;
+	// 			_return = true;
+	// 			_client->unbind();
+	// 			break;
+	// 		}
+	// 		case ZMQ_PUSH : {
+	// 			zpt::socket _client = this->__poll->bind(ZMQ_PUSH, _container["connect"]->str());
+	// 			_client->send(_in);
+	// 			zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::accepted(_request->url()));
+	// 			zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
+	// 			(*_cs) << _reply << flush;
+	// 			_return = true;
+	// 			_client->unbind();
+	// 			break;
+	// 		}
+	// 	}
+	// }
+	// else {
+	// 	zlog(std::string("error processing '") + _request->url() + std::string("': listener not found"), zpt::error);
+	// 	zpt::http::rep _reply = zpt::rest::zmq2http(zpt::rest::not_found(_request->url()));
+	// 	zverbose(std::string("sending HTTP reply:\n") + std::string(_reply));
+	// 	(*_cs) << _reply << flush;
+	// 	_return = true;
+	// }
+	// return _return;
+	return true;
 }
 
 bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
@@ -784,7 +780,7 @@ zpt::socket zpt::RESTClient::bind(std::string _object_path) {
 }
 
 zpt::socket zpt::RESTClient::bind(short _type, std::string _connection) {
-	return this->__poll->bind(_type, _connection);
+	return this->__poll->add(_type, _connection);
 }
 
 void zpt::RESTClient::start() {
@@ -794,145 +790,6 @@ void zpt::RESTClient::start() {
 	catch (zpt::InterruptedException& e) {
 		return;
 	}
-}
-
-auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
-	zpt::json _return = zpt::json::object();
-	_return <<
-		"channel" << _request->url() <<
-		"performative" << _request->method() <<
-		"resource" << _request->url();
-	
-	zpt::json _payload;
-	if (_request->body() != "") {
-		if (_request->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
-			_payload = zpt::rest::http::deserialize(_request->body());
-		}
-		else if (_request->header("Content-Type").find("application/json") != std::string::npos) {
-			try {
-				_payload = zpt::json(_request->body());
-			}
-			catch(zpt::SyntaxErrorException& _e) {
-			}
-		}
-		else {
-			_payload = { "text", _request->body() };
-		}
-	}
-	else {
-		_payload = zpt::json::object();
-	}
-	_return << "payload" << _payload;
-
-	if (_request->params().size() != 0) {
-		zpt::json _params = zpt::json::object();
-		for (auto _param : _request->params()) {
-			_params << _param.first << zpt::url::r_decode(_param.second);
-		}
-		_return << "params" << _params;
-	}
-	
-	zpt::json _headers = zpt::json::object();
-	for (auto _header : _request->headers()) {
-		_headers << _header.first << _header.second;
-	}
-	if (_headers->obj()->size() != 0) {
-		_return << "headers" << _headers;
-	}
-	
-	return _return;
-}
-
-auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
-	zpt::json _return = zpt::json::object();
-	_return <<
-	"status" << (int) _reply->status() <<
-	"channel" << zpt::generate::r_uuid() <<
-	"performative" << zpt::ev::Reply <<
-	"resource" << zpt::generate::r_uuid();
-	
-	zpt::json _payload;
-	if (_reply->body() != "") {
-		if (_reply->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
-			_payload = zpt::rest::http::deserialize(_reply->body());
-		}
-		else if (_reply->header("Content-Type").find("application/json") != std::string::npos) {
-			try {
-				_payload = zpt::json(_reply->body());
-			}
-			catch(zpt::SyntaxErrorException& _e) {
-			}
-		}
-		else {
-			_payload = { "text", _reply->body() };
-		}
-	}
-	else {
-		_payload = zpt::json::object();
-	}
-	_return << "payload" << _payload;
-
-	zpt::json _headers = zpt::json::object();
-	for (auto _header : _reply->headers()) {
-		_headers << _header.first << _header.second;
-	}
-	if (_headers->obj()->size() != 0) {
-		_return << "headers" << _headers;
-	}
-	
-	return _return;
-}
-
-auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
-	zpt::http::rep _return;
-	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
-	
-	_out << "headers" << (zpt::ev::init_reply() + _out["headers"]);
-	for (auto _header : _out["headers"]->obj()) {
-		_return->header(_header.first, ((std::string) _header.second));
-	}
-	
-	if (_out["payload"]->ok()) {
-		if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
-			_return->header("Content-Type", "application/json");
-		}
-		else {
-			_return->header("Content-Type", "text/plain");
-		}
-		std::string _body = (std::string) _out["payload"];
-		_return->body(_body);
-		_return->header("Content-Length", std::to_string(_body.length()));
-	}
-	
-	return _return;
-}
-
-zpt::json zpt::rest::http::deserialize(std::string _body) {
-	zpt::json _return = zpt::json::object();
-	std::string _name;
-	std::string _collected;
-	for (const auto& _c : _body) {
-		switch(_c) {
-			case '=' : {
-				_name.assign(_collected.data());
-				_collected.assign("");
-				break;
-			}
-			case '&' : {
-				zpt::url::decode(_collected);
-				_return << _name << _collected;
-				_name.assign("");
-				_collected.assign("");
-				break;
-			}
-			default : {
-				_collected.push_back(_c);
-			}
-		}
-	}
-	zpt::url::decode(_collected);
-	_return << _name << _collected;
-	return _return;
 }
 
 std::string zpt::rest::scopes::serialize(zpt::json _info) {

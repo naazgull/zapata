@@ -49,14 +49,7 @@ namespace zpt {
 		extern int m_sem;
 		extern bool interrupted;
 		
-		auto http2zmq(zpt::http::req _request) -> zpt::json;
-		auto http2zmq(zpt::http::rep _reply) -> zpt::json;
-		auto zmq2http(zpt::json _out) -> zpt::HTTPRep;
 		auto terminate(int _signal) -> void;
-
-		namespace http {
-			zpt::json deserialize(std::string _body);
-		}
 
 		namespace authorization {
 			auto serialize(zpt::json _info) -> std::string;
