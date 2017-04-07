@@ -370,7 +370,6 @@ void zpt::RESTServer::start() {
 					for (; true; ) {
 						int _fd = -1;
 						_ss->accept(& _fd);
-
 						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
 						this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
 					}

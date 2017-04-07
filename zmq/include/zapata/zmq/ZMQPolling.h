@@ -120,7 +120,6 @@ namespace zpt {
 		std::mutex __mtx[2];
 		zpt::ZMQPollPtr __self;
 		zpt::ev::emitter __emitter;
-		bool __need_rebuild;
 		
 		auto bind(short _type, std::string _connection) -> zpt::ZMQ*;
 		auto signal(std::string _message) -> void;
@@ -151,10 +150,6 @@ namespace zpt {
 		static auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zmq::socket_ptr _socket) -> zpt::json;
 		static auto send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json;
 		
-		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
-		virtual void relay_for(zpt::socket_ref _socket);
-
-		//virtual auto self() const -> zpt::socket_ref = 0;
 		virtual auto socket() -> zmq::socket_ptr = 0;
 		virtual auto in() -> zmq::socket_ptr = 0;
 		virtual auto out() -> zmq::socket_ptr = 0;

@@ -45,7 +45,6 @@ zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options(
 	this->__sync[1] = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REQ));
 	this->__sync[1]->connect(_connection);
 
-	this->__need_rebuild = true;
 }
 
 zpt::ZMQPoll::~ZMQPoll() {
@@ -83,6 +82,11 @@ auto zpt::ZMQPoll::relay(std::string _key) -> zpt::ZMQ* {
 auto zpt::ZMQPoll::add(short _type, std::string _connection) -> zpt::socket_ref {
 	std::string _key(_connection.data());
 	zpt::replace(_key, "*", ((string) this->__options["host"]));
+	
+	if (this->relay(_key) != nullptr) {
+		return zpt::socket_ref(_key, this->self());
+	}
+
 	zpt::ZMQ* _underlying = this->bind(_type, _connection);
 	if (_underlying == nullptr) {
 		return zpt::socket_ref();
@@ -94,7 +98,11 @@ auto zpt::ZMQPoll::add(short _type, std::string _connection) -> zpt::socket_ref 
 }
 
 auto zpt::ZMQPoll::add(zpt::ZMQ* _underlying) -> zpt::socket_ref {
-	std::string _key = _underlying->id();;
+	std::string _key = _underlying->id();
+	
+	if (this->relay(_key) != nullptr) {
+		return zpt::socket_ref(_key, this->self());
+	}
 
 	{ std::lock_guard< std::mutex > _lock(this->__mtx[0]);
 		this->__by_refs.insert(std::make_pair(_key, _underlying)); }
@@ -138,12 +146,11 @@ auto zpt::ZMQPoll::poll(zpt::socket_ref _socket) -> void {
 	}
 	else {
 		this->__by_socket.push_back(_socket);
-		this->__need_rebuild = true;
 	}
 }
 
 auto zpt::ZMQPoll::repoll() -> void {
-	if (!this->__need_rebuild) {
+	if (this->__items.size() == this->__by_socket.size() + 1) {
 		return;
 	}
 	// zdbg("rebuilding");
@@ -158,8 +165,6 @@ auto zpt::ZMQPoll::repoll() -> void {
 		}
 	}
 	this->__items.push_back({ (void*)(*this->__sync[0]), 0, ZMQ_POLLIN, 0 });
-	
-	this->__need_rebuild = false;
 }
 
 auto zpt::ZMQPoll::loop() -> void {
@@ -175,38 +180,69 @@ auto zpt::ZMQPoll::loop() -> void {
 			zmq::poll(this->__items, -1);
 			// zdbg("got something");
 
-			for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
+			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
-					// zdbg("its a read on a socket FD");
+					//zdbg("its a read on a socket FD");
 					try {
 						zpt::socket_ref _socket = this->__by_socket[_k];
 						zpt::json _envelope = _socket->recv();
 
 						if (bool(_envelope["error"])) {
-							_envelope << 
-							"channel" << "/bad-request" <<
-							"performative" << zpt::ev::Reply <<
-							"resource" << "/bad-request";
-							_socket->send(_envelope);
+							_socket->send(_envelope +
+								zpt::json{
+									"channel", "/bad-request", 
+									"performative", zpt::ev::Reply,
+									"resource", "/bad-request"
+								}
+							);
 						}
 						if (_envelope->ok()) {
-							zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-							zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-							if (_result->ok()) {
-								try {
-									_result << 
-									"channel" << _envelope["headers"]["X-Cid"] <<
-									"performative" << zpt::ev::Reply <<
-									"resource" << _envelope["resource"];
-									_socket->send(_result);
+							try {
+								zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+								zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
+								if (_result->ok()) {
+									_socket->send(_result +
+										zpt::json{ 
+											"channel", _envelope["headers"]["X-Cid"],
+											"performative", zpt::ev::Reply,
+											"resource", _envelope["resource"]
+										}
+									);
 								}
-								catch(zpt::assertion& _e) {}
+							}
+							catch(zpt::assertion& _e) {
+								_socket->send(
+									{
+										"performative", zpt::ev::Reply,
+										"status", _e.status(),
+										"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope),
+										"payload", {
+											"text", _e.what(),
+											"assertion_failed", _e.description(),
+											"code", _e.code()
+										}
+									}
+								);
+							}
+							catch(std::exception& _e) {
+								_socket->send(
+									{
+										"performative", zpt::ev::Reply,
+										"status", 500,
+										"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope),
+										"payload", {
+											"text", _e.what(),
+											"code", 0
+										}
+									}
+								);
 							}
 						}
 					}
 					catch (zpt::assertion& _e) {
 						_to_remove.push_back(this->__by_socket[_k]);
 					}
+					this->__items[_k].revents = 0;
 				}
 			}
 
@@ -215,7 +251,7 @@ auto zpt::ZMQPoll::loop() -> void {
 				this->__sync[0]->recv(&_frame);
 				
 				std::string _uuid(std::string(static_cast<char*>(_frame.data()), _frame.size()));
-				// zdbg(std::string("its the add FD ") + _uuid);
+				//zdbg(std::string("its the add FD ") + _uuid);
 				try {
 					zpt::socket_ref _socket = this->get(_uuid);
 					_to_add.push_back(_socket);
@@ -223,10 +259,11 @@ auto zpt::ZMQPoll::loop() -> void {
 				catch(zpt::assertion& _e) {
 				}
 				this->notify(_uuid);
+				this->__items[this->__items.size() - 1].revents = 0;
 			}
 
 			for (auto _socket : _to_remove) {
-				// zdbg(std::string("removing socket ") + _socket);
+				//zdbg(std::string("removing socket ") + _socket);
 				for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 					if (this->__by_socket[_k] == _socket) {
 						// zdbg("FOUND IT");
@@ -236,22 +273,19 @@ auto zpt::ZMQPoll::loop() -> void {
 				}
 				_socket->close();
 				this->remove(_socket);
-				this->__need_rebuild = true;
 			}
 			_to_remove.clear();
 
 			if (this->__by_socket.size() < 200) {
 				for (; _to_add.size() != 0; ) {
-					// zdbg(std::string("adding new socket ") + _to_add[0]);
+					//zdbg(std::string("adding new socket ") + _to_add[0]);
 					this->__by_socket.push_back(_to_add[0]);
 					_to_add.erase(_to_add.begin());
-					this->__need_rebuild = true;
 					if (this->__by_socket.size() > 200) {
 						break;
 					}
 				}
 			}
-			
 		}
 	}
 	catch(zpt::assertion& _e) {

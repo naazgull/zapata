@@ -213,7 +213,6 @@ auto zpt::ev::init_reply(std::string _uuid, zpt::json _request) -> zpt::json {
 
 	zpt::json _return = {
 		"Server", "zapata RESTful server",
-		"Connection", "close",
 		"Cache-Control", "max-age=3600",
 		"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
 		"Date", std::string(_buffer_date),

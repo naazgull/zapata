@@ -222,12 +222,6 @@ auto zpt::ZMQ::send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json {
 	return zpt::undefined;
 }
 
-auto zpt::ZMQ::relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform) -> void {
-}
-
-auto zpt::ZMQ::relay_for(zpt::socket_ref _socket) -> void {
-}
-
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options)/*, __context(0)*/, __socket(nullptr)/*, __self(this)*/ {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REQ));
 	// this->__socket->setsockopt(ZMQ_SNDTIMEO, 10000);
@@ -1149,6 +1143,7 @@ auto zpt::ZMQHttp::type() -> short int {
 }
 
 auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->out_mtx());
 	assertz(_envelope["resource"]->ok(), "''resource' attributes are required", 412, 0);
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
@@ -1176,6 +1171,7 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 }
 
 auto zpt::ZMQHttp::recv() -> zpt::json {
+	std::lock_guard< std::mutex > _lock(this->in_mtx());
 	zpt::http::req _request;
 	try {
 		char _c;
