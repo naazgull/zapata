@@ -34,28 +34,28 @@ namespace zpt {
 	zmq::context_t __context(1);
 }
 
-zpt::socket::socket() : std::string(), __poll(nullptr) {
+zpt::socket_ref::socket_ref() : std::string(), __poll(nullptr) {
 }
 
-zpt::socket::socket(const zpt::socket& _rhs) : std::string(_rhs.data()), __poll(_rhs.__poll) {
+zpt::socket_ref::socket_ref(const zpt::socket_ref& _rhs) : std::string(_rhs.data()), __poll(_rhs.__poll) {
 }
 
-zpt::socket::socket(std::string _rhs, zpt::poll _poll) : std::string(_rhs), __poll(_poll) {
+zpt::socket_ref::socket_ref(std::string _rhs, zpt::poll _poll) : std::string(_rhs), __poll(_poll) {
 }
 
-auto zpt::socket::poll(zpt::poll _poll) {
+auto zpt::socket_ref::poll(zpt::poll _poll) {
 	this->__poll = _poll;
 }
 
-auto zpt::socket::poll() -> zpt::poll {
+auto zpt::socket_ref::poll() -> zpt::poll {
 	return this->__poll;
 }
 
-auto zpt::socket::operator->() -> zpt::ZMQ* {
+auto zpt::socket_ref::operator->() -> zpt::ZMQ* {
 	return this->__poll->relay(this->data());
 }
 
-auto zpt::socket::operator*() -> zpt::ZMQ* {
+auto zpt::socket_ref::operator*() -> zpt::ZMQ* {
 	return this->__poll->relay(this->data());
 }
 
@@ -64,7 +64,7 @@ zpt::ZMQ::ZMQ(std::string _connection, zpt::json _options) : __options( _options
 }
 
 zpt::ZMQ::~ZMQ() {
-	zdbg(std::string("disposing of ") + this->id());
+	//zdbg(std::string("disposing of ") + this->id());
 }
 
 auto zpt::ZMQ::id() -> std::string {
@@ -225,7 +225,7 @@ auto zpt::ZMQ::send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json {
 auto zpt::ZMQ::relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform) -> void {
 }
 
-auto zpt::ZMQ::relay_for(zpt::socket _socket) -> void {
+auto zpt::ZMQ::relay_for(zpt::socket_ref _socket) -> void {
 }
 
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options)/*, __context(0)*/, __socket(nullptr)/*, __self(this)*/ {
@@ -508,7 +508,7 @@ zpt::ZMQXPubXSub::~ZMQXPubXSub() {
 	}
 }
 
-// auto zpt::ZMQXPubXSub::self() const -> zpt::socket {
+// auto zpt::ZMQXPubXSub::self() const -> zpt::socket_ref {
 // 	return this->__self;
 // }
 
@@ -936,7 +936,7 @@ zpt::ZMQPull::~ZMQPull() {
 	}
 }
 
-// auto zpt::ZMQPull::self() const -> zpt::socket {
+// auto zpt::ZMQPull::self() const -> zpt::socket_ref {
 // 	return this->__self;
 // }
 
@@ -1117,19 +1117,22 @@ zpt::ZMQHttp::~ZMQHttp() {
 }
 
 auto zpt::ZMQHttp::socket() -> zmq::socket_ptr {
-	return zmq::socket_ptr(nullptr);;
+	return zmq::socket_ptr(nullptr);
 }
 
 auto zpt::ZMQHttp::in() -> zmq::socket_ptr {
-	return zmq::socket_ptr(nullptr);;
+	return zmq::socket_ptr(nullptr);
 }
 
 auto zpt::ZMQHttp::out() -> zmq::socket_ptr {
-	return zmq::socket_ptr(nullptr);;
+	return zmq::socket_ptr(nullptr);
 }
 
 auto zpt::ZMQHttp::fd() -> int {
 	return this->__underlying->buffer().get_socket();;
+}
+
+auto zpt::ZMQHttp::close() -> void {
 }
 
 auto zpt::ZMQHttp::in_mtx() -> std::mutex& {
@@ -1145,9 +1148,7 @@ auto zpt::ZMQHttp::type() -> short int {
 }
 
 auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
-	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
-	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
-	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
+	assertz(_envelope["resource"]->ok(), "''resource' attributes are required", 412, 0);
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
@@ -1168,6 +1169,7 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 		_envelope << "payload" << zpt::json::object();
 	}
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
+	//zdbg(_reply);
 	(*this->__underlying) << _reply << flush;
 	return zpt::undefined;
 }
@@ -1175,6 +1177,8 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 auto zpt::ZMQHttp::recv() -> zpt::json {
 	zpt::http::req _request;
 	try {
+		char _c;
+		assertz(::recv(this->fd(), &_c, 1, MSG_PEEK) > 0, "the underlying socket was closed by peer", 503, 0);
 		(*this->__underlying) >> _request;
 	}
 	catch(zpt::SyntaxErrorException& _e) {

@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
 			zpt::json _reply = _socket.send(_envelope);
 			std::cout << "> " << zpt::r_replace(zpt::json::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
 			std::cout << "< " << zpt::r_replace(zpt::json::pretty(_reply), "\n", "\n< ") << endl << flush;
-			exit(0);
+			return 0;
 		}
 		else if (std::string(_opts["N"][0]) == "pub-sub") {
 		}

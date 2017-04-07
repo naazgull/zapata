@@ -37,6 +37,8 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+#define REST_ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
+
 namespace zpt {
 
 	class MutationEmitter;
@@ -84,7 +86,7 @@ namespace zpt {
 		auto get_default_authorization() -> std::string;
 
 		auto init_request(std::string _cid = "") -> zpt::json;
-		auto init_reply(std::string _cid = "") -> zpt::json;
+		auto init_reply(std::string _cid = "", zpt::json _request = zpt::undefined) -> zpt::json;
 
 	}
 

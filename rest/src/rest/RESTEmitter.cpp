@@ -289,6 +289,32 @@ auto zpt::RESTEmitter::off(std::string _callback_id) -> void {
 }
 
 auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true") });
+}
+
+auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	
+	if (bool(_opts["mqtt"])) {
+		if (bool(_opts["no-envelope"])) {
+			this->__server->publish(_url, _envelope);
+		}
+		else {
+			zpt::json _in = _envelope + zpt::json{ 
+				"headers", (zpt::ev::init_request() + _envelope["headers"]),
+				"channel", _url,
+				"performative", _method,
+				"resource", _url
+			};
+			this->__server->publish(_url, _in);
+		}
+		return zpt::undefined;
+	}
+	
+	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true });
+}
+
+auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	zpt::json _return;
 	bool _endpoint_found = false;
 	bool _method_found = false;
@@ -316,35 +342,25 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 				try {
 					zpt::json _result = _endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (_result->ok()) {
-						if (int(_result["status"]) > 399) {
+						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
 							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
-						}
+							if (bool(_opts["bubble-error"])) {
+								throw zpt::assertion(_result["payload"]["text"]->ok() ? std::string(_result["payload"]["text"]) : std::string(zpt::status_names[int(_result["status"])]), int(_result["status"]), int(_result["payload"]["code"]), _result["payload"]["assertion_failed"]->ok() ? std::string(_result["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_result["status"])]));
+							}
+						}						
+
 						_result << 
 						"performative" << zpt::ev::Reply <<
-						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + _result["headers"]);
-						
-						if (_envelope["headers"]["X-No-Redirection"]->ok() && std::string(_envelope["headers"]["X-No-Redirection"]) == "true") {
-							if (((int) _result["status"]) > 299 && ((int) _result["status"]) < 400) {
-								_result << "status" << 200;
-								_result["headers"] << "X-Redirect-To" << _result["headers"]["Location"];
-							}
-						}
-
-						if (_envelope["headers"]["Origin"]->ok()) {
-							_result["headers"] <<
-							"Access-Control-Allow-Origin" << _envelope["headers"]["Origin"] <<
-							"Access-Control-Allow-Credentials" << "true" <<
-							"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
-							"Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS <<
-							"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS <<
-							"Access-Control-Max-Age" << "1728000";
-						}
-						
+						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + _result["headers"]);
+												
 						_return = _result;
 					}
 				}
 				catch (zpt::assertion& _e) {
 					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+					if (bool(_opts["bubble-error"])) {
+						throw;
+					}
 					_return = {
 						"performative", zpt::ev::Reply,
 						"status", _e.status(),
@@ -358,6 +374,9 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 				}
 				catch(std::exception& _e) {
 					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
+					if (bool(_opts["bubble-error"])) {
+						throw;
+					}
 					_return = {
 						"performative", zpt::ev::Reply,
 						"status", 500,
@@ -371,124 +390,52 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, 
 			}
 		}
 	}
-	if (!_endpoint_found) {
-		zlog(std::string("error processing '") + _url + std::string("': listener not found"), zpt::error);
-		_return = {
-			"performative", zpt::ev::Reply,
-			"status", 404,
-			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
-			"payload", {
-				"text", "the requested resource was not found"
-			}
-		};
+
+	if (bool(_opts["broker"])) {
+		_return = this->resolve_remotely(_method, _url, _envelope, _opts);
 	}
-	else if (!_method_found) {
-		zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
-		_return = {
-			"performative", zpt::ev::Reply,
-			"status", 405,
-			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
-			"payload", {
-				"text", "the requested performative is not allowed to be used with the requested resource"
+	else {
+		if (!_endpoint_found) {
+			zlog(std::string("error processing '") + _url + std::string("': listener not found"), zpt::error);
+			if (bool(_opts["bubble-error"])) {
+				assertz(_endpoint_found, "the requested resource was not found", 404, 0);
 			}
-		};
-	}
-	
+			_return = {
+				"performative", zpt::ev::Reply,
+				"status", 404,
+				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+				"payload", {
+					"text", "the requested resource was not found"
+				}
+			};
+		}
+		else if (!_method_found) {
+			zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
+			if (bool(_opts["bubble-error"])) {
+				assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 0);
+			}
+			_return = {
+				"performative", zpt::ev::Reply,
+				"status", 405,
+				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+				"payload", {
+					"text", "the requested performative is not allowed to be used with the requested resource"
+				}
+			};
+		}
+	}	
 	return _return;
 }
 
-auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
 	
-	zpt::json _in = zpt::json::object() + _envelope;
-	_in <<
-	"headers" << (zpt::ev::init_request() + _envelope["headers"]) <<
-	"channel" << _url <<
-	"performative" << _method <<
-	"resource" << _url;
-
-	if (bool(_opts["mqtt"])) {
-		if (bool(_opts["no-envelope"])) {
-			this->__server->publish(_url, _envelope);
-		}
-		else {
-			this->__server->publish(_url, _in);
-		}
-		return zpt::undefined;
-	}
-	
-	 zpt::json _splited = zpt::split(_url, "/");
-	 std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
-	 std::string _hash;
-	 for (auto _i : _splited->arr()) {
-	 	_hash += std::string("/") + _i->str();
-	 	auto _found = this->__hashed.find(_hash);
-	 	if (_found != this->__hashed.end()) {
-	 		_resources = _found->second;
-	 		break;
-	 	}
-	 }
-
-	 // for (auto _i : this->__resources) {
-	 // 	auto _endpoint = _i.second;
-	 for (auto _endpoint : _resources) {
-		std::regex _regexp = _endpoint.first;
-		if (std::regex_match(_url, _regexp)) {
-			try {
-				if (_endpoint.second[_method] != nullptr) {
-					ztrace(std::string("") + zpt::ev::to_str(_method) + std::string(" ") + _url + std::string(" | @self"));
-					zverbose(zpt::json::pretty(_in));
-					zpt::json _out = _endpoint.second[_method](_method, _url, _in, this->self());
-					if (_out->ok()) {
-						if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-							throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
-						}						
-						_out << 
-						"performative" << zpt::ev::Reply <<
-						"headers" << (zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])) + _out["headers"]);
-						ztrace(std::string("REPLY ") + _url + std::string(" ")  + std::string(_out["stauts"]) + std::string(" | @self"));
-						zverbose(zpt::json::pretty(_out));
-						return _out;
-					}
-				}
-			}
-			catch (zpt::assertion& _e) {
-				if (bool(_opts["bubble-error"])) {
-					throw;
-				}
-				zpt::json _out = {
-				       "performative", zpt::ev::Reply,
-				       "status", _e.status(),
-				       "headers", zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])),
-				       "payload", {
-					       "text", _e.what(),
-					       "assertion_failed", _e.description(),
-					       "code", _e.code()
-				       }
-			       };
-				ztrace(std::string("REPLY ") + _url + std::string(" ")  + std::to_string(_e.status()) + std::string(" | @self"));
-				zverbose(zpt::json::pretty(_out));
-				return _out;
-			}
-			catch(std::exception& _e) {
-				if (bool(_opts["bubble-error"])) {
-					throw zpt::assertion(_e.what(), 500, 0, _e.what());
-				}						
-				zpt::json _out = {
-					"performative", zpt::ev::Reply,
-					"status", 500,
-					"headers", zpt::ev::init_reply(std::string(_in["headers"]["X-Cid"])),
-					"payload", {
-						"text", _e.what(),
-						"code", 0
-					}
-				};
-				ztrace(std::string("REPLY ") + _url + std::string(" 500 | @self"));
-				zverbose(zpt::json::pretty(_out));
-				return _out;
-			}
-		}
-	}
+	zpt::json _in = _envelope + zpt::json{ 
+		"headers", (zpt::ev::init_request() + _envelope["headers"]),
+		"channel", _url,
+		"performative", _method,
+		"resource", _url
+	};
 
 	zpt::json _container = this->lookup(_url);
 	if (_container->ok()) {
@@ -497,7 +444,8 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			case ZMQ_ROUTER_DEALER :
 			case ZMQ_REP :
 			case ZMQ_REQ : {
-				zpt::socket _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
+				//zdbg(std::string("sending to ") + _container["connect"]->str());
+				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
 				zpt::json _out = _client->send(_in);
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
@@ -510,13 +458,13 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			}
 			case ZMQ_PUB_SUB : {
 				std::string _connect = _container["connect"]->str();
-				zpt::socket _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+				zpt::socket_ref _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
 				_client->send(_in);
 				this->__poll->remove(_client);
 				return zpt::rest::accepted(_url);
 			}
 			case ZMQ_PUSH : {
-				zpt::socket _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
+				zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
 				_client->send(_in);
 				this->__poll->remove(_client);
 				return zpt::rest::accepted(_url);
@@ -526,7 +474,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 	zpt::json _out = zpt::rest::not_found(_url);
 	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 		throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
-	}						
+	}
 	return _out;
 }
 

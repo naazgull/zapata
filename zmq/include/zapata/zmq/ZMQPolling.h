@@ -70,16 +70,17 @@ namespace zpt {
 	};
 	
 	typedef zpt::ZMQPollPtr poll;
+	typedef std::shared_ptr< zpt::ZMQ > socket;
 
 	namespace assync {
 		typedef std::function< std::string (zpt::json _envelope) > reply_fn;
 	}
 
-	class socket : public std::string {
+	class socket_ref : public std::string {
 	public:
-		socket();
-		socket(std::string _rhs, zpt::poll _poll);
-		socket(const zpt::socket& _rhs);
+		socket_ref();
+		socket_ref(std::string _rhs, zpt::poll _poll);
+		socket_ref(const zpt::socket_ref& _rhs);
 		
 		auto poll(zpt::poll _poll);
 		auto poll() -> zpt::poll;
@@ -99,20 +100,20 @@ namespace zpt {
 		virtual auto emitter() -> zpt::ev::emitter;
 		virtual auto self() const -> zpt::ZMQPollPtr;
 
-		virtual auto get(std::string _uuid) -> zpt::socket;
+		virtual auto get(std::string _uuid) -> zpt::socket_ref;
 		virtual auto relay(std::string _key) -> zpt::ZMQ*;
-		virtual auto add(short _type, std::string _connection) -> zpt::socket;
-		virtual auto add(zpt::ZMQ* _underlying) -> zpt::socket;
-		virtual auto remove(zpt::socket _socket) -> void;
+		virtual auto add(short _type, std::string _connection) -> zpt::socket_ref;
+		virtual auto add(zpt::ZMQ* _underlying) -> zpt::socket_ref;
+		virtual auto remove(zpt::socket_ref _socket) -> void;
 
-		virtual auto poll(zpt::socket _socket) -> void;
+		virtual auto poll(zpt::socket_ref _socket) -> void;
 		
 		virtual auto loop() -> void;
 			
 	private:
 		zpt::json __options;
 		std::map< std::string, zpt::ZMQ* > __by_refs;
-		std::vector< zpt::socket > __by_socket;
+		std::vector< zpt::socket_ref > __by_socket;
 		std::vector< zmq::pollitem_t > __items;
 		::pthread_t __id;
 		zmq::socket_ptr __sync[2];
@@ -125,7 +126,6 @@ namespace zpt {
 		auto signal(std::string _message) -> void;
 		auto notify(std::string _message) -> void;
 		auto wait() -> void;
-		auto unpoll(zpt::socket _socket) -> void;
 		auto repoll() -> void;
 	};
 
@@ -146,14 +146,15 @@ namespace zpt {
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
+		
 		static auto recv(zmq::socket_ptr _socket) -> zpt::json;
 		static auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zmq::socket_ptr _socket) -> zpt::json;
 		static auto send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json;
 		
 		virtual void relay_for(zpt::socketstream_ptr _socket, zpt::assync::reply_fn _transform);
-		virtual void relay_for(zpt::socket _socket);
+		virtual void relay_for(zpt::socket_ref _socket);
 
-		//virtual auto self() const -> zpt::socket = 0;
+		//virtual auto self() const -> zpt::socket_ref = 0;
 		virtual auto socket() -> zmq::socket_ptr = 0;
 		virtual auto in() -> zmq::socket_ptr = 0;
 		virtual auto out() -> zmq::socket_ptr = 0;
@@ -188,13 +189,13 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 	
 	class ZMQRep : public zpt::ZMQ {
@@ -209,13 +210,13 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 	
 	class ZMQXPubXSub : public zpt::ZMQ {
@@ -230,14 +231,14 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket_sub;
 		zmq::socket_ptr __socket_pub;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 	
 	class ZMQPubSub : public zpt::ZMQ {
@@ -252,7 +253,7 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		virtual void subscribe(std::string _prefix);
 		
@@ -260,7 +261,7 @@ namespace zpt {
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket_sub;
 		zmq::socket_ptr __socket_pub;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 		std::mutex __out_mtx;
 	};
 	
@@ -278,13 +279,13 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 	
 	class ZMQSub : public zpt::ZMQ {
@@ -301,14 +302,14 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		virtual void subscribe(std::string _prefix);
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 	
 	class ZMQPush : public zpt::ZMQ {
@@ -325,13 +326,13 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 
 	class ZMQPull : public zpt::ZMQ {
@@ -348,13 +349,13 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 
 	class ZMQRouterDealer : public zpt::ZMQ {
@@ -369,14 +370,14 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket_router;
 		zmq::socket_ptr __socket_dealer;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 
 	class ZMQHttp : public zpt::ZMQ {
@@ -394,14 +395,15 @@ namespace zpt {
 		virtual auto fd() -> int;
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
-		virtual short int type();
+		virtual auto type() -> short int;
+		virtual auto close() -> void;
 
 		
 	private:
 		// zmq::context_t __context;
 		zmq::socket_ptr __socket;
 		zpt::socketstream_ptr __underlying;
-		// zpt::socket __self;
+		// zpt::socket_ref __self;
 	};
 
 	namespace net {

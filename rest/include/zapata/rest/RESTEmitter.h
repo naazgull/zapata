@@ -38,8 +38,6 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define REST_ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
-
 #define no_get nullptr
 #define no_put nullptr
 #define no_post nullptr
@@ -99,7 +97,7 @@ namespace zpt {
 		RESTServer(std::string _name, zpt::json _options);
 		virtual ~RESTServer();
 
-		virtual void start(zpt::json _sems = zpt::undefined);
+		virtual void start();
 
 		virtual auto name() -> std::string;
 		virtual auto options() -> zpt::json;
@@ -112,9 +110,7 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 		
-		virtual bool route_http(zpt::socketstream_ptr _cs);
 		virtual bool route_mqtt(zpt::mqtt::data _data);
-
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
 
@@ -125,8 +121,8 @@ namespace zpt {
 		zpt::ev::emitter __emitter;
 		zpt::poll __poll;
 		zpt::json __options;
-		std::vector< zpt::socket > __pub_sub;
-		std::vector< zpt::socket > __router_dealer;
+		std::vector< zpt::socket_ref > __pub_sub;
+		std::vector< zpt::socket_ref > __router_dealer;
 		zpt::rest::server __self;
 		zpt::mqtt::broker __mqtt;
 		zpt::ev::OnStartStack __initializers;
@@ -151,8 +147,8 @@ namespace zpt {
 		virtual zpt::ev::emitter events();
 		virtual zpt::mutation::emitter mutations();
 
-		virtual zpt::socket bind(short _type, std::string _connection);
-		virtual zpt::socket bind(std::string _object_path);
+		virtual zpt::socket_ref bind(short _type, std::string _connection);
+		virtual zpt::socket_ref bind(std::string _object_path);
 
 	private:
 		zpt::ev::emitter __emitter;
@@ -205,6 +201,8 @@ namespace zpt {
 
 		auto get_hash(std::string _pattern) -> std::string;
 		auto add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void;
+		auto resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+		auto resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 
 	};
 

@@ -200,7 +200,7 @@ auto zpt::ev::init_request(std::string _cid) -> zpt::json {
 	return _return;
 }
 
-auto zpt::ev::init_reply(std::string _uuid) -> zpt::json {
+auto zpt::ev::init_reply(std::string _uuid, zpt::json _request) -> zpt::json {
 	time_t _rawtime = time(nullptr);
 	struct tm _ptm;
 	char _buffer_date[80];
@@ -222,6 +222,26 @@ auto zpt::ev::init_reply(std::string _uuid) -> zpt::json {
 	if (_uuid != "") {
 		_return << "X-Cid" << _uuid;
 	}
+
+	if (_request->ok()) {
+		if (_request["headers"]["X-No-Redirection"]->ok() && std::string(_request["headers"]["X-No-Redirection"]) == "true") {
+			if (((int) _return["status"]) > 299 && ((int) _return["status"]) < 400) {
+				_return << "status" << 200;
+				_return["headers"] << "X-Redirect-To" << _return["headers"]["Location"];
+			}
+		}
+
+		if (_request["headers"]["Origin"]->ok()) {
+			_return["headers"] <<
+			"Access-Control-Allow-Origin" << _request["headers"]["Origin"] <<
+			"Access-Control-Allow-Credentials" << "true" <<
+			"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
+			"Access-Control-Allow-Headers" << REST_ACCESS_CONTROL_HEADERS <<
+			"Access-Control-Expose-Headers" << REST_ACCESS_CONTROL_HEADERS <<
+			"Access-Control-Max-Age" << "1728000";
+		}
+	}
+	
 	return _return;
 }
 

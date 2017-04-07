@@ -44,8 +44,7 @@ namespace zpt {
 
 	namespace rest {
 		extern pid_t root;
-		extern pid_t* pids;
-		extern size_t n_pid;
+		extern pid_t m_pid;
 		extern int m_sem;
 		extern bool interrupted;
 		

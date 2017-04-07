@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 				return zpt::undefined;
 			}
 		);
-		zpt::socket _client = _api->bind("zmq");
+		zpt::socket_ref _client = _api->bind("zmq");
 		zpt::json _message({ "name", "m/(.*)/i" });
 		std::thread _sender(
 			[ & ] () -> void {
