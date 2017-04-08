@@ -319,6 +319,13 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 	bool _endpoint_found = false;
 	bool _method_found = false;
 
+	_envelope = _envelope + zpt::json{ 
+		"headers", (zpt::ev::init_request() + _envelope["headers"]),
+		"channel", _url,
+		"performative", _method,
+		"resource", _url
+	};
+	
 	zpt::json _splited = zpt::split(_url, "/");
 	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
 	std::string _hash;
@@ -331,8 +338,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		}
 	}
 
-	// for (auto _i : this->__resources) {
-	// 	auto _endpoint = _i.second;
 	for (auto _endpoint : _resources) {
 		std::regex _regexp = _endpoint.first;
 		if (std::regex_match(_url, _regexp)) {
@@ -415,13 +420,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
 	
-	zpt::json _in = _envelope + zpt::json{ 
-		"headers", (zpt::ev::init_request() + _envelope["headers"]),
-		"channel", _url,
-		"performative", _method,
-		"resource", _url
-	};
-
 	zpt::json _container = this->lookup(_url);
 	if (_container->ok()) {
 		short _type = zpt::str2type(_container["type"]->str());
@@ -430,7 +428,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 			case ZMQ_REP :
 			case ZMQ_REQ : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
-				zpt::json _out = _client->send(_in);
+				zpt::json _out = _client->send(_envelope);
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
@@ -442,12 +440,12 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 			case ZMQ_PUB_SUB : {
 				std::string _connect = _container["connect"]->str();
 				zpt::socket_ref _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
-				_client->send(_in);
+				_client->send(_envelope);
 				return zpt::rest::accepted(_url);
 			}
 			case ZMQ_PUSH : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
-				_client->send(_in);
+				_client->send(_envelope);
 				return zpt::rest::accepted(_url);
 			}
 		}

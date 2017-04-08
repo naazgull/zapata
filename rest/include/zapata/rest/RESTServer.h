@@ -50,6 +50,10 @@ namespace zpt {
 		
 		auto terminate(int _signal) -> void;
 
+		namespace uri {
+			auto get_simplified_topics(std::string _pattern) -> zpt::json;
+		}
+		
 		namespace authorization {
 			auto serialize(zpt::json _info) -> std::string;
 			auto deserialize(std::string _token) -> zpt::json;

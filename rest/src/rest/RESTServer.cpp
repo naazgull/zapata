@@ -317,7 +317,7 @@ void zpt::RESTServer::start() {
 			// zdbg(zpt::json::pretty(this->credentials()));
 		}
 
-		if (std::string(this->__options["mqtt_register"]) != "false" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
+		if (std::string(this->__options["mqtt_register"]) != "off" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
 			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 			if (!_uri["port"]->ok()) {
 				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
@@ -459,84 +459,11 @@ auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {
 
 auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 	if (bool(_opts["mqtt"])) {
-		zpt::json _topics = this->get_subscription_topics(_topic);
+		zpt::json _topics = zpt::rest::uri::get_simplified_topics(_topic);
 		for (auto _t : _topics->arr()) {
 			this->__mqtt->subscribe(_t->str());
 		}
 	}
-}
-
-auto zpt::RESTServer::get_subscription_topics(std::string _pattern) -> zpt::json {
-	zpt::json _aliases = zpt::split(_pattern, "|");
-	zpt::json _topics = zpt::json::array();
-	for (auto _alias : _aliases->arr()) {
-		std::string _return;
-		short _state = 0;
-		bool _regex = false;
-		bool _escaped = false;
-		for (auto _c : _alias->str()) {
-			switch (_c) {
-				case '/' : {
-					if (_state == 0) {
-						if (_regex) {
-							_return.push_back('+');
-							_regex = false;
-						}
-						_return.push_back(_c);
-					}
-					break;
-				}
-				case ')' : 
-				case ']' : {
-					if (!_escaped) {
-						_state--;
-					}
-					else {
-						_escaped = false;
-					}
-					_regex = true;
-					break;
-				}
-				case '(' :
-				case '[' : {
-					if (!_escaped) {
-						_state++;
-					}
-					else {
-						_escaped = false;
-					}
-					_regex = true;
-					break;
-				}
-				case '{' :
-				case '}' :
-				case '.' :
-				case '+' :
-				case '*' : {
-					_regex = true;
-					break;
-				}
-				case '$' :
-				case '^' : {
-					break;
-				}
-				case '\\' : {
-					_escaped = !_escaped;
-					break;
-				}
-				default : {
-					if (_state == 0) {
-						_return.push_back(_c);
-					}
-				}
-			}		
-		}
-		if (_regex) {
-			_return.push_back('#');
-		}
-		_topics << _return;
-	}
-	return _topics;
 }
 
 zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
@@ -699,6 +626,79 @@ auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
 
 auto zpt::rest::authorization::validate(std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter, zpt::json _roles_needed) -> zpt::json {
 	return _emitter->authorize(_topic, _envelope, _roles_needed);
+}
+
+auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
+	zpt::json _aliases = zpt::split(_pattern, "|");
+	zpt::json _topics = zpt::json::array();
+	for (auto _alias : _aliases->arr()) {
+		std::string _return;
+		short _state = 0;
+		bool _regex = false;
+		bool _escaped = false;
+		for (auto _c : _alias->str()) {
+			switch (_c) {
+				case '/' : {
+					if (_state == 0) {
+						if (_regex) {
+							_return.push_back('+');
+							_regex = false;
+						}
+						_return.push_back(_c);
+					}
+					break;
+				}
+				case ')' : 
+				case ']' : {
+					if (!_escaped) {
+						_state--;
+					}
+					else {
+						_escaped = false;
+					}
+					_regex = true;
+					break;
+				}
+				case '(' :
+				case '[' : {
+					if (!_escaped) {
+						_state++;
+					}
+					else {
+						_escaped = false;
+					}
+					_regex = true;
+					break;
+				}
+				case '{' :
+				case '}' :
+				case '.' :
+				case '+' :
+				case '*' : {
+					_regex = true;
+					break;
+				}
+				case '$' :
+				case '^' : {
+					break;
+				}
+				case '\\' : {
+					_escaped = !_escaped;
+					break;
+				}
+				default : {
+					if (_state == 0) {
+						_return.push_back(_c);
+					}
+				}
+			}		
+		}
+		if (_regex) {
+			_return.push_back('#');
+		}
+		_topics << _return;
+	}
+	return _topics;
 }
 
 auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
