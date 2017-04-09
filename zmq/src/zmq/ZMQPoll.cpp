@@ -304,6 +304,22 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 			zpt::ZMQ* _socket = new zpt::ZMQRouterDealer(_connection, this->__options);
 			return _socket;
 		}
+		case ZMQ_ROUTER : {
+			zpt::socket_ref _found = this->get(_connection);
+			if ((*_found) != nullptr) {
+				return *_found;
+			}			
+			zpt::ZMQ* _socket = new zpt::ZMQRouter(_connection, this->__options);
+			return _socket;
+		}
+		case ZMQ_DEALER : {
+			zpt::socket_ref _found = this->get(_connection);
+			if ((*_found) != nullptr) {
+				return *_found;
+			}			
+			zpt::ZMQ* _socket = new zpt::ZMQDealer(_connection, this->__options);
+			return _socket;
+		}
 		case ZMQ_REQ : {
 			zpt::ZMQ* _socket = new zpt::ZMQReq(_connection, this->__options);
 			return _socket;
