@@ -127,6 +127,7 @@ namespace zpt {
 		auto notify(std::string _message) -> void;
 		auto wait() -> void;
 		auto repoll() -> void;
+		auto reply(zpt::json _envelope, zpt::socket_ref _socket) -> void;
 	};
 
 	class ZMQ {
@@ -368,6 +369,8 @@ namespace zpt {
 		
 	private:
 		zmq::socket_ptr __socket;
+		std::map< std::string, zmq::message_t* > __sock_id;
+		std::mutex __sock_mtx;
 	};
 	
 	class ZMQDealer : public zpt::ZMQ {

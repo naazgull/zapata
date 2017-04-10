@@ -409,7 +409,7 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 			{
 				"next", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_start_index + _page_size)),
 				"prev", (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") + std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0))
-				}
+			}
 		);
 	}
 	return _return;
