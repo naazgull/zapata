@@ -426,17 +426,17 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 		switch(_type) {
 			case ZMQ_ROUTER_DEALER :
 			case ZMQ_ROUTER :
-			case ZMQ_DEALER :
 			case ZMQ_REP :
 			case ZMQ_REQ : {
-				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
+				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);
 				zpt::json _out = _client->send(_envelope);
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
 				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 					throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
-				}						
+				}
+				this->__poll->remove(_client);
 				return _out;
 			}
 			case ZMQ_PUB_SUB : {

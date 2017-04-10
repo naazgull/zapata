@@ -79,17 +79,23 @@ auto zpt::ZMQPoll::relay(std::string _key) -> zpt::ZMQ* {
 	return nullptr;
 }
 
-auto zpt::ZMQPoll::add(short _type, std::string _connection) -> zpt::socket_ref {
-	std::string _key(_connection.data());
-	zpt::replace(_key, "*", ((string) this->__options["host"]));
-	
-	if (this->relay(_key) != nullptr) {
-		return zpt::socket_ref(_key, this->self());
+auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connection) -> zpt::socket_ref {
+	std::string _key;
+	if (!_new_connection) {
+		if (this->relay(_key) != nullptr) {
+			return zpt::socket_ref(_key, this->self());
+		}
+		_key.assign(_connection.data());
+		zpt::replace(_key, "*", ((string) this->__options["host"]));		
 	}
+	
 
 	zpt::ZMQ* _underlying = this->bind(_type, _connection);
 	if (_underlying == nullptr) {
 		return zpt::socket_ref();
+	}
+	if (_new_connection) {
+		_key.assign(_underlying->id());
 	}
 	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx[0]);

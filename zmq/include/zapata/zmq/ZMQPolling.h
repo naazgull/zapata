@@ -103,7 +103,7 @@ namespace zpt {
 
 		virtual auto get(std::string _uuid) -> zpt::socket_ref;
 		virtual auto relay(std::string _key) -> zpt::ZMQ*;
-		virtual auto add(short _type, std::string _connection) -> zpt::socket_ref;
+		virtual auto add(short _type, std::string _connection, bool _new_connection = false) -> zpt::socket_ref;
 		virtual auto add(zpt::ZMQ* _underlying) -> zpt::socket_ref;
 		virtual auto remove(zpt::socket_ref _socket) -> void;
 
