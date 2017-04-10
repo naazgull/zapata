@@ -195,14 +195,16 @@ auto zpt::MQTT::start() -> void {
 
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
-	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
-		int _return;
-		for (auto _topic : _self->__postponed) {
-			zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
-			mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
-		}
-		_self->__connected = true; }
-	_self->publish("/mqtt/status", { "user", _self->__user, "status", "connected" });
+	if (_rc == 0) {
+		{ std::lock_guard< std::mutex > _lock(_self->__mtx);
+			int _return;
+			for (auto _topic : _self->__postponed) {
+				zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
+				mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
+			}
+			_self->__connected = true; }
+		_self->publish("/mqtt/status", { "user", _self->__user, "status", "connected" });
+	}
 	zpt::mqtt::data _data(new MQTTData());
 	_data->__rc = _rc;
 	_self->trigger("connect", _data);

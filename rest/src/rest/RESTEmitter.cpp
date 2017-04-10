@@ -425,6 +425,8 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 		short _type = zpt::str2type(_container["type"]->str());
 		switch(_type) {
 			case ZMQ_ROUTER_DEALER :
+			case ZMQ_ROUTER :
+			case ZMQ_DEALER :
 			case ZMQ_REP :
 			case ZMQ_REQ : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str());
