@@ -87,8 +87,7 @@ auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connectio
 		}
 		_key.assign(_connection.data());
 		zpt::replace(_key, "*", ((string) this->__options["host"]));		
-	}
-	
+	}	
 
 	zpt::ZMQ* _underlying = this->bind(_type, _connection);
 	if (_underlying == nullptr) {
@@ -248,7 +247,7 @@ auto zpt::ZMQPoll::loop() -> void {
 							);
 						}
 						if (_envelope->ok()) {
-							if (_socket->type() == ZMQ_REP) {
+							if (std::string(this->__options["is_lisp_booted"]) == "on" || _socket->type() == ZMQ_REP) {
 								this->reply(_envelope, _socket);
 							}
 							else {

@@ -154,6 +154,7 @@ auto zpt::test::uri(std::string _uri) -> bool {
 }
 
 auto zpt::test::email(std::string _email) -> bool {
+	std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower);
 	static const std::regex _email_rgx(
 		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)@"
 		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)"

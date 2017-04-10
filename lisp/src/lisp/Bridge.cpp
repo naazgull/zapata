@@ -208,6 +208,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 	assertz(zpt::lisp::__instance == nullptr, "bridge instance isn't null, 'zpt::bridge::boot< zpt::lisp::bridge >' already invoked", 500, 0);
 	zpt::lisp::bridge* _bridge = new zpt::lisp::bridge(_options);
 	zpt::lisp::__instance = _bridge;
+	zpt::lisp::__instance->options() << "is_lisp_booted" << "on";
 	_bridge->eval("(defparameter *defined-operators* (make-hash-table))");
 	_bridge->eval(
 		"(defpackage :zpt "
