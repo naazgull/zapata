@@ -1439,7 +1439,20 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 	zpt::http::req _request;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
-			(*this->__underlying) >> _request; }
+			(*this->__underlying) >> _request;
+			bool _blank_space = false;
+			do {
+				char _c = 0;
+				int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK | MSG_DONTWAIT);
+				if (_read > 0 && ((int) _c) < 33) {
+					::recv(this->fd(), &_c, 1, 0);
+					_blank_space = true;
+					continue;
+				}
+				_blank_space = false;
+			}
+			while(_blank_space);
+		}
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);

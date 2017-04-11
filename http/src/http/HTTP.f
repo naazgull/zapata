@@ -28,7 +28,7 @@ string	d_chunked;
 
 %namespace = "zpt"
 
-%debug
+//%debug
 %no-lines
 
 %x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
@@ -273,16 +273,7 @@ string	d_chunked;
 }
 
 <plain_body>{
-	"\n" {
-		more();
-		if (matched().length() == d_content_length - 1) {
-			string _out(matched());
-			_out.push_back(get__());
-			setMatched(_out);
-			leave(-1);
-		}
-	}
-	[^\n] {
+	. {
 		more();
 		if (matched().length() == d_content_length - 1) {
 			string _out(matched());
