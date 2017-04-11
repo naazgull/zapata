@@ -29,8 +29,6 @@ SOFTWARE.
 #include <zapata/events.h>
 #include <zapata/zmq.h>
 #include <zapata/mqtt.h>
-#include <zapata/lisp.h>
-#include <zapata/python.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -160,8 +158,8 @@ namespace zpt {
 
 	class RESTThreadContext : public zpt::ThreadContext {
 	public:
-		PyGILState_STATE python_state;
-		PyThreadState* python_thread_state = nullptr;
+		//PyGILState_STATE python_state;
+		void* python_thread_state = nullptr;
 	};
 	
 	class RESTEmitter : public zpt::EventEmitter {
