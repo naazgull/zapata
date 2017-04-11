@@ -273,7 +273,7 @@ string	d_chunked;
 }
 
 <plain_body>{
-	. {
+	.|\n {
 		more();
 		if (matched().length() == d_content_length - 1) {
 			string _out(matched());
