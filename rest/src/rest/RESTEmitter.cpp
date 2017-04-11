@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/MutationEmitter.h>
-#include <zapata/lisp.h>
 #include <map>
 
 namespace zpt {
@@ -126,15 +125,25 @@ auto zpt::RESTEmitter::hook(zpt::ev::initializer _callback) -> void {
 	this->__server->hook(_callback);
 }
 
-auto zpt::RESTEmitter::init_thread() -> void {
+auto zpt::RESTEmitter::init_thread() -> zpt::thread::context {
+	zpt::RESTThreadContext* _context = new zpt::RESTThreadContext();
 	if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
 		ecl_import_current_thread(ECL_NIL, ECL_NIL);
 	}
+	if (zpt::bridge::is_booted< zpt::python::bridge >()) {
+		_context->python_state = PyGILState_Ensure();
+		//_context->python_thread_state = PyEval_SaveThread();
+	}
+	return zpt::thread::context(_context);
 }
 
-auto zpt::RESTEmitter::dispose_thread() -> void {
+auto zpt::RESTEmitter::dispose_thread(zpt::thread::context _context) -> void {
 	if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
 		ecl_release_current_thread();
+	}
+	if (zpt::bridge::is_booted< zpt::python::bridge >()) {
+		PyGILState_Release(((zpt::RESTThreadContext*) _context.get())->python_state);
+		//PyEval_RestoreThread(((zpt::RESTThreadContext*) _context.get())->python_thread_state);
 	}
 }
 

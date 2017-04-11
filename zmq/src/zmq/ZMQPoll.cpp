@@ -177,43 +177,49 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 		zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
 		if (_result->ok()) {
-			_socket->send(_result +
-				zpt::json{ 
+			if (*_socket != nullptr) {
+				_socket->send(_result +
+					zpt::json{ 
+						"channel", _envelope["channel"],
+						"performative", zpt::ev::Reply,
+						"resource", _envelope["resource"]
+						}
+				);
+			}
+		}
+	}
+	catch(zpt::assertion& _e) {
+		if (*_socket != nullptr) {
+			_socket->send(
+				{
 					"channel", _envelope["channel"],
 					"performative", zpt::ev::Reply,
-					"resource", _envelope["resource"]
+					"status", _e.status(),
+					"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
+					"payload", {
+						"text", _e.what(),
+						"assertion_failed", _e.description(),
+						"code", _e.code()
+						}
 				}
 			);
 		}
 	}
-	catch(zpt::assertion& _e) {
-		_socket->send(
-			{
-				"channel", _envelope["channel"],
-				"performative", zpt::ev::Reply,
-				"status", _e.status(),
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
-				"payload", {
-					"text", _e.what(),
-					"assertion_failed", _e.description(),
-					"code", _e.code()
-					}
-			}
-		);
-	}
 	catch(std::exception& _e) {
-		_socket->send(
-			{
-				"channel", _envelope["channel"],
-				"performative", zpt::ev::Reply,
-				"status", 500,
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
-				"payload", {
-					"text", _e.what(),
-					"code", 0
-					}
-			}
-		);
+		if (*_socket != nullptr) {
+			_socket->send(
+				{
+					"channel", _envelope["channel"],
+					"performative", zpt::ev::Reply,
+					"status", 500,
+					"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
+					"payload", {
+						"text", _e.what(),
+						"code", 0
+						}
+				}
+			);
+		}
 	}
 			
 }
@@ -261,24 +267,26 @@ auto zpt::ZMQPoll::loop() -> void {
 					}
 
 					if (bool(_envelope["error"])) {
-						_socket->send(_envelope +
-							zpt::json{
-								"channel", _envelope["channel"],
-								"performative", zpt::ev::Reply,
-								"resource", "/bad-request"
-							}
-						);
+						if (*_socket != nullptr) {
+							_socket->send(_envelope +
+								zpt::json{
+									"channel", _envelope["channel"],
+									"performative", zpt::ev::Reply,
+									"resource", "/bad-request"
+								}
+							);
+						}
 					}
 					if (_envelope->ok()) {
-						if (_socket->type() == ZMQ_REP) {
+						if (std::string(this->options()["$defaults"]["threads"]) == "off" || _socket->type() == ZMQ_REP) {
 							this->reply(_envelope, _socket);
 						}
 						else {
 							std::thread _worker(
 								[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
-									_poll->emitter()->init_thread();
+									zpt::thread::context _context = _poll->emitter()->init_thread();
 									_poll->reply(_envelope, _socket);
-									_poll->emitter()->dispose_thread();
+									_poll->emitter()->dispose_thread(_context);
 								},
 								_envelope, _socket, this->self()
 							);

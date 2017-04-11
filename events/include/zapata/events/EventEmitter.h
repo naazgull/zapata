@@ -49,6 +49,7 @@ namespace zpt {
 	class EventDirectory;
 	class Bridge;
 	class BridgePtr;
+	class ThreadContext;
 
 	typedef std::shared_ptr< zpt::MutationEmitter > MutationEmitterPtr;
 	typedef std::shared_ptr< zpt::MutationListener > MutationListenerPtr;
@@ -102,6 +103,10 @@ namespace zpt {
 		typedef std::map< std::string, zpt::mutation::handler > ReplyHandlerStack;
 	}
 
+	namespace thread {
+		typedef std::shared_ptr< zpt::ThreadContext > context;
+	}
+		
 	class Connector {
 	public:
 		Connector();
@@ -307,8 +312,8 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void = 0;
 
-		virtual auto init_thread() -> void = 0;
-		virtual auto dispose_thread() -> void = 0;
+		virtual auto init_thread() -> zpt::thread::context = 0;
+		virtual auto dispose_thread(zpt::thread::context _context) -> void = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
@@ -385,6 +390,9 @@ namespace zpt {
 
 	private:
 		std::string __regex;
+	};
+
+	class ThreadContext {
 	};
 
 	template< typename T >

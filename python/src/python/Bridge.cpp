@@ -126,7 +126,10 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	assertz(PyImport_ExtendInittab(_initt) != -1, std::string("could not import modules"), 500, 0);
 	
 	Py_Initialize();
-
+	if (!PyEval_ThreadsInitialized()){
+		PyEval_InitThreads();
+	}
+	
 	for (auto _module : (*zpt::python::__modules)) {
 		PyImport_ImportModule(_module.first.data());
 	}

@@ -29,6 +29,8 @@ SOFTWARE.
 #include <zapata/events.h>
 #include <zapata/zmq.h>
 #include <zapata/mqtt.h>
+#include <zapata/lisp.h>
+#include <zapata/python.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -156,6 +158,12 @@ namespace zpt {
 		zpt::json __options;
 	};
 
+	class RESTThreadContext : public zpt::ThreadContext {
+	public:
+		PyGILState_STATE python_state;
+		PyThreadState* python_thread_state = nullptr;
+	};
+	
 	class RESTEmitter : public zpt::EventEmitter {
 	public:
 		RESTEmitter(zpt::json _options);
@@ -176,8 +184,8 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 
-		virtual auto init_thread() -> void;
-		virtual auto dispose_thread() -> void;
+		virtual auto init_thread() -> zpt::thread::context;
+		virtual auto dispose_thread(zpt::thread::context _context) -> void;
 		
 		virtual auto poll(zpt::poll _poll) -> void;
 		virtual auto poll() -> zpt::poll;
