@@ -550,7 +550,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 			
 			zpt::json _identity = _bridge->from< zpt::lisp::object >(_args[0]);
-			zpt::json _return = { "Authorization", (std::string(_identity["scheme"]) + std::string(_identity["access_token"])) };
+			zpt::json _return = { "Authorization", (std::string("OAuth2.0 ") + std::string(_identity["access_token"])) };
 	
 			return _bridge->to< zpt::lisp::object >(_return);
 		}
