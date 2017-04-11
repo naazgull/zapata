@@ -143,15 +143,12 @@ namespace zpt {
 		virtual auto uri(std::string _connection) -> void;
 		virtual auto detach() -> void;
 		virtual auto close() -> void;
+		virtual auto available() -> bool;
 		
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
-		
-		static auto recv(zmq::socket_ptr _socket) -> zpt::json;
-		static auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zmq::socket_ptr _socket) -> zpt::json;
-		static auto send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json;
-		
+				
 		virtual auto socket() -> zmq::socket_ptr = 0;
 		virtual auto in() -> zmq::socket_ptr = 0;
 		virtual auto out() -> zmq::socket_ptr = 0;
@@ -371,6 +368,8 @@ namespace zpt {
 		zmq::socket_ptr __socket;
 		std::map< std::string, zmq::message_t* > __sock_id;
 		std::mutex __sock_mtx;
+		std::mutex __in_mtx;
+		std::mutex __out_mtx;
 	};
 	
 	class ZMQDealer : public zpt::ZMQ {
@@ -410,7 +409,7 @@ namespace zpt {
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
 		virtual auto close() -> void;
-
+		virtual auto available() -> bool;
 		
 	private:
 		zmq::socket_ptr __socket;

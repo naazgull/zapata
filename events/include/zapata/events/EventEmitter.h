@@ -307,6 +307,9 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void = 0;
 
+		virtual auto init_thread() -> void = 0;
+		virtual auto dispose_thread() -> void = 0;
+		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;

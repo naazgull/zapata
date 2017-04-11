@@ -118,12 +118,11 @@ auto zpt::ZMQ::close() -> void {
 	this->out()->close();
 }
 
-auto zpt::ZMQ::recv() -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->in_mtx());
-	return zpt::ZMQ::recv(this->in());
+auto zpt::ZMQ::available() -> bool {
+	return true;
 }
 
-auto zpt::ZMQ::recv(zmq::socket_ptr _socket) -> zpt::json {
+auto zpt::ZMQ::recv() -> zpt::json {
 	zmq::message_t _frame1;
 	zmq::message_t _frame2;
 
@@ -131,11 +130,12 @@ auto zpt::ZMQ::recv(zmq::socket_ptr _socket) -> zpt::json {
 		int64_t _more = 0;
 		size_t _more_size = sizeof(_more);
 
-		_socket->recv(&_frame1);
-		_socket->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-		if (_more != 0) {
-			_socket->recv(&_frame2);
-		}
+		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
+			this->in()->recv(&_frame1);
+			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
+			if (_more != 0) {
+				this->in()->recv(&_frame2);
+			} }
 	
 		std::string _directive(static_cast<char*>(_frame1.data()), _frame1.size());
 		std::string _raw(static_cast<char*>(_frame2.data()), _frame2.size());
@@ -150,7 +150,7 @@ auto zpt::ZMQ::recv(zmq::socket_ptr _socket) -> zpt::json {
 		}
 	}
 	catch(zmq::error_t& _e) {
-		zlog(_e.what(), zpt::error);
+		zlog(zpt::type2str(this->type()) + std::string(" ") + this->connection() + std::string(": ") + _e.what(), zpt::error);
 		throw;
 	}
 	return { "error", true, "status", 503 };	
@@ -168,23 +168,6 @@ auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, 
 }
 
 auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->out_mtx());
-	return zpt::ZMQ::send(_envelope, this->out());
-}
-
-auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload, zmq::socket_ptr _socket) -> zpt::json {
-	return zpt::ZMQ::send(
-		{
-			"channel", _resource,
-			"performative", _performative,
-			"resource", _resource, 
-			"payload", _payload
-		},
-		_socket
-	);
-}
-
-auto zpt::ZMQ::send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json {
 	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
@@ -197,11 +180,11 @@ auto zpt::ZMQ::send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json {
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
 	}
 	else {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
@@ -217,8 +200,9 @@ auto zpt::ZMQ::send(zpt::json _envelope, zmq::socket_ptr _socket) -> zpt::json {
 	memcpy(_frame1.data(), _directive.data(), _directive.length());
 	memcpy(_frame2.data(), _buffer.data(), _buffer.length());
 
-	assertz(_socket->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-	assertz(_socket->send(_frame2), std::string("unable to send message"), 500, 0);
+	std::lock_guard< std::mutex > _lock(this->out_mtx());
+	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
 
 	return zpt::undefined;
 }
@@ -1207,11 +1191,11 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
 	}
 	else {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
@@ -1249,20 +1233,21 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		int64_t _more = 0;
 		size_t _more_size = sizeof(_more);
 
-		std::lock_guard< std::mutex > _lock(this->in_mtx());
-		this->in()->recv(_frame1);
-		this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-		if (_more != 0) {
-			this->in()->recv(&_frame2);
-		}
-		this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-		if (_more != 0) {
-			this->in()->recv(&_frame3);
-		}
-		this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-		if (_more != 0) {
-			this->in()->recv(&_frame4);
-		}
+		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
+			this->in()->recv(_frame1);
+			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
+			if (_more != 0) {
+				this->in()->recv(&_frame2);
+			}
+			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
+			if (_more != 0) {
+				this->in()->recv(&_frame3);
+			}
+			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
+			if (_more != 0) {
+				this->in()->recv(&_frame4);
+			} }
+		
 		std::string _uuid = zpt::generate::r_uuid();
 		std::string _empty(static_cast<char*>(_frame2.data()), _frame2.size());
 		std::string _directive(static_cast<char*>(_frame3.data()), _frame3.size());
@@ -1405,6 +1390,12 @@ auto zpt::ZMQHttp::fd() -> int {
 auto zpt::ZMQHttp::close() -> void {
 }
 
+auto zpt::ZMQHttp::available() -> bool {
+	char _c;
+	int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK);
+	return _read > 0;
+}
+
 auto zpt::ZMQHttp::in_mtx() -> std::mutex& {
 	return this->__mtx;
 }
@@ -1418,7 +1409,6 @@ auto zpt::ZMQHttp::type() -> short int {
 }
 
 auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->out_mtx());
 	assertz(_envelope["resource"]->ok(), "''resource' attributes are required", 412, 0);
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
@@ -1429,29 +1419,27 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
 	}
 	else {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + _envelope["headers"]);
+		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::json::object();
 	}
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
-	//zdbg(_reply);
-	(*this->__underlying) << _reply << flush;
+	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
+		(*this->__underlying) << _reply << flush; }
 	return zpt::undefined;
 }
 
 auto zpt::ZMQHttp::recv() -> zpt::json {
-	std::lock_guard< std::mutex > _lock(this->in_mtx());
 	zpt::http::req _request;
 	try {
-		char _c;
-		assertz(::recv(this->fd(), &_c, 1, MSG_PEEK) > 0, "the underlying socket was closed by peer", 503, 0);
-		(*this->__underlying) >> _request;
+		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
+			(*this->__underlying) >> _request; }
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);

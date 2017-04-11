@@ -180,10 +180,9 @@ auto zpt::ev::init_request(std::string _cid) -> zpt::json {
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 	
 	zpt::json _return(
-		{
+		zpt::json{
 			"Accept", "application/json",
 			"Accept-Charset", "utf-8",
-			"Cache-Control", "no-cache",
 			"Date", string(_buffer_date),
 			"User-Agent", "zapata RESTful server"
 		}
@@ -211,13 +210,13 @@ auto zpt::ev::init_reply(std::string _uuid, zpt::json _request) -> zpt::json {
 	_ptm.tm_hour += 1;
 	strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-	zpt::json _return = {
-		"Server", "zapata RESTful server",
-		"Cache-Control", "max-age=3600",
-		"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
-		"Date", std::string(_buffer_date),
-		"Expires", std::string(_buffer_expires)
-	};
+	zpt::json _return(
+		zpt::json{
+			"Server", "zapata RESTful server",
+			"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
+			"Date", std::string(_buffer_date),
+		}
+	);
 	if (_uuid != "") {
 		_return << "X-Cid" << _uuid;
 	}

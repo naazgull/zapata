@@ -192,12 +192,12 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 				"channel", _envelope["channel"],
 				"performative", zpt::ev::Reply,
 				"status", _e.status(),
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope),
+				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
 				"payload", {
 					"text", _e.what(),
 					"assertion_failed", _e.description(),
 					"code", _e.code()
-				}
+					}
 			}
 		);
 	}
@@ -207,14 +207,15 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 				"channel", _envelope["channel"],
 				"performative", zpt::ev::Reply,
 				"status", 500,
-				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope),
+				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
 				"payload", {
 					"text", _e.what(),
 					"code", 0
-				}
+					}
 			}
 		);
 	}
+			
 }
 
 auto zpt::ZMQPoll::loop() -> void {
@@ -226,46 +227,65 @@ auto zpt::ZMQPoll::loop() -> void {
 		for(; true; ) {
 			this->repoll();
 			
-			//zlog(std::string("polling for ") + std::to_string(this->__items.size()) + std::string(" sockets"), zpt::notice);
+			// zlog(std::string("polling for ") + std::to_string(this->__items.size()) + std::string(" sockets"), zpt::notice);
 			zmq::poll(this->__items, -1);
 			// zdbg("got something");
 
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
-					//zdbg("its a read on a socket FD");
-					try {
-						zpt::socket_ref _socket = this->__by_socket[_k];
-						zpt::json _envelope = _socket->recv();
+					zpt::socket_ref _socket = this->__by_socket[_k];
+					if (!_socket->available()) {
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						_to_remove.push_back(this->__by_socket[_k]);
+						continue;
+					}
 
-						if (bool(_envelope["error"])) {
-							_socket->send(_envelope +
-								zpt::json{
-									"channel", _envelope["channel"],
-									"performative", zpt::ev::Reply,
-									"resource", "/bad-request"
-								}
-							);
-						}
-						if (_envelope->ok()) {
-							if (std::string(this->__options["is_lisp_booted"]) == "on" || _socket->type() == ZMQ_REP) {
-								this->reply(_envelope, _socket);
-							}
-							else {
-								std::thread _worker(
-									[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
-										_poll->reply(_envelope, _socket);
-									},
-									_envelope, _socket, this->self()
-								);
-								_worker.detach();
-							}
-						}
+					zpt::json _envelope;
+					try {
+						_envelope = _socket->recv();
 					}
 					catch (zpt::assertion& _e) {
-						zlog(std::string("error consuming socket: ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
 						_to_remove.push_back(this->__by_socket[_k]);
+						continue;
 					}
-					this->__items[_k].revents = 0;
+					catch (zmq::error_t& _e) {
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						_to_remove.push_back(this->__by_socket[_k]);
+						continue;
+					}
+					catch (std::exception& _e) {
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						_to_remove.push_back(this->__by_socket[_k]);
+						continue;
+					}
+
+					if (bool(_envelope["error"])) {
+						_socket->send(_envelope +
+							zpt::json{
+								"channel", _envelope["channel"],
+								"performative", zpt::ev::Reply,
+								"resource", "/bad-request"
+							}
+						);
+					}
+					if (_envelope->ok()) {
+						if (_socket->type() == ZMQ_REP) {
+							this->reply(_envelope, _socket);
+						}
+						else {
+							std::thread _worker(
+								[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
+									_poll->emitter()->init_thread();
+									_poll->reply(_envelope, _socket);
+									_poll->emitter()->dispose_thread();
+								},
+								_envelope, _socket, this->self()
+							);
+							_worker.detach();
+						}
+					}
+					// this->__items[_k].revents = 0;
 				}
 			}
 
@@ -282,7 +302,7 @@ auto zpt::ZMQPoll::loop() -> void {
 				catch(zpt::assertion& _e) {
 				}
 				this->notify(_uuid);
-				this->__items[this->__items.size() - 1].revents = 0;
+				// this->__items[this->__items.size() - 1].revents = 0;
 			}
 
 			for (auto _socket : _to_remove) {

@@ -28,14 +28,14 @@ string	d_chunked;
 
 %namespace = "zpt"
 
-//%debug
+%debug
 %no-lines
 
 %x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
 %%
 
-[\f\t\n\r ]+                  // skip white space
-<<EOF>>
+//[\f\t\n\r ]+                  // skip white space
+//<<EOF>>
 "GET" {
 	begin(StartCondition__::request);
 	return 257;

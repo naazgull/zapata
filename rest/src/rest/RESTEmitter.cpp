@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/MutationEmitter.h>
+#include <zapata/lisp.h>
 #include <map>
 
 namespace zpt {
@@ -123,6 +124,18 @@ auto zpt::RESTEmitter::server() -> zpt::rest::server {
 
 auto zpt::RESTEmitter::hook(zpt::ev::initializer _callback) -> void {
 	this->__server->hook(_callback);
+}
+
+auto zpt::RESTEmitter::init_thread() -> void {
+	if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+		ecl_import_current_thread(ECL_NIL, ECL_NIL);
+	}
+}
+
+auto zpt::RESTEmitter::dispose_thread() -> void {
+	if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+		ecl_release_current_thread();
+	}
 }
 
 auto zpt::RESTEmitter::get_hash(std::string _pattern) -> std::string {
@@ -301,7 +314,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		}
 		else {
 			zpt::json _in = _envelope + zpt::json{ 
-				"headers", (zpt::ev::init_request() + _envelope["headers"]),
+				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
 				"channel", _url,
 				"performative", _method,
 				"resource", _url
@@ -320,7 +333,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 	bool _method_found = false;
 
 	_envelope = _envelope + zpt::json{ 
-		"headers", (zpt::ev::init_request() + _envelope["headers"]),
+		"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
 		"channel", _url,
 		"performative", _method,
 		"resource", _url
@@ -356,7 +369,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 
 						_result << 
 						"performative" << zpt::ev::Reply <<
-						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + _result["headers"]);
+						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"]);
 												
 						_return = _result;
 					}
@@ -369,7 +382,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 					_return = {
 						"performative", zpt::ev::Reply,
 						"status", _e.status(),
-						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
 						"payload", {
 							"text", _e.what(),
 							"assertion_failed", _e.description(),
@@ -385,7 +398,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 					_return = {
 						"performative", zpt::ev::Reply,
 						"status", 500,
-						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
 						"payload", {
 							"text", _e.what(),
 							"code", 0
@@ -407,7 +420,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		_return = {
 			"performative", zpt::ev::Reply,
 			"status", 405,
-			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])),
+			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
 			"payload", {
 				"text", "the requested performative is not allowed to be used with the requested resource"
 			}

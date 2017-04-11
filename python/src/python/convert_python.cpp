@@ -529,6 +529,7 @@ auto zpt::python::to_python(zpt::json _in) -> PyObject* {
 			break;
 		}
 		case zpt::JSString: {
+			zdbg(_in);
 			_ret = PyUnicode_DecodeFSDefault(std::string(_in).data());
 			//Py_INCREF(_ret);
 			break;

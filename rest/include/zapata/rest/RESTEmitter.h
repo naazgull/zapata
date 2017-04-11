@@ -176,6 +176,9 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 
+		virtual auto init_thread() -> void;
+		virtual auto dispose_thread() -> void;
+		
 		virtual auto poll(zpt::poll _poll) -> void;
 		virtual auto poll() -> zpt::poll;
 		virtual auto server(zpt::rest::server _server) -> void;
