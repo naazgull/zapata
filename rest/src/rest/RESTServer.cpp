@@ -385,7 +385,13 @@ void zpt::RESTServer::start() {
 			zlog(std::string("starting 0MQ mutation listener"), zpt::info);
 			std::thread _mutations(
 				[ this ] () -> void {
+					if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+						ecl_import_current_thread(ECL_NIL, ECL_NIL);
+					}
 					((zpt::RESTMutationEmitter*) this->events()->mutations().get())->loop();
+					if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+						ecl_release_current_thread();
+					}
 				}
 			);
 			_mutations.detach();
