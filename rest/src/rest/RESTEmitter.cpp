@@ -181,7 +181,12 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	this->add_by_hash(_regex, _url_pattern, _handlers);
+	if (_event != zpt::ev::Reply) {
+		this->add_by_hash(_regex, _url_pattern, _handlers);
+	}
+	else {
+		this->add_by_hash("/___reply___", _url_pattern, _handlers);
+	}
 
 	if (_event != zpt::ev::Reply && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
@@ -214,7 +219,12 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
-	this->add_by_hash(_regex, _url_pattern, _handlers);
+	if (_to_register) {
+		this->add_by_hash(_regex, _url_pattern, _handlers);
+	}
+	else {
+		this->add_by_hash("/___reply___", _url_pattern, _handlers);
+	}
 
 	if (_to_register && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
@@ -334,16 +344,24 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		"performative", _method,
 		"resource", _url
 	};
-	
-	zpt::json _splited = zpt::split(_url, "/");
+
 	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
-	std::string _hash;
-	for (auto _i : _splited->arr()) {
-		_hash += std::string("/") + _i->str();
-		auto _found = this->__hashed.find(_hash);
+	if (_method != zpt::ev::Reply) {
+		zpt::json _splited = zpt::split(_url, "/");
+		std::string _hash;
+		for (auto _i : _splited->arr()) {
+			_hash += std::string("/") + _i->str();
+			auto _found = this->__hashed.find(_hash);
+			if (_found != this->__hashed.end()) {
+				_resources = _found->second;
+				break;
+			}
+		}
+	}
+	else {
+		auto _found = this->__hashed.find("/___reply___");
 		if (_found != this->__hashed.end()) {
 			_resources = _found->second;
-			break;
 		}
 	}
 
