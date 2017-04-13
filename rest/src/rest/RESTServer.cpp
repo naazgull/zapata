@@ -317,7 +317,6 @@ void zpt::RESTServer::start() {
 		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
 			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
-			// zdbg(zpt::json::pretty(this->credentials()));
 		}
 
 		if (std::string(this->__options["mqtt_register"]) != "off" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
@@ -387,13 +386,7 @@ void zpt::RESTServer::start() {
 			zlog(std::string("starting 0MQ mutation listener"), zpt::info);
 			std::thread _mutations(
 				[ this ] () -> void {
-					if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
-						ecl_import_current_thread(ECL_NIL, ECL_NIL);
-					}
 					((zpt::RESTMutationEmitter*) this->events()->mutations().get())->loop();
-					if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
-						ecl_release_current_thread();
-					}
 				}
 			);
 			_mutations.detach();
