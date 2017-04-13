@@ -114,9 +114,7 @@ auto zpt::mongodb::Client::insert(std::string _collection, std::string _href_pre
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->insert(_full_collection, _mongo_document.obj());
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->insert(_full_collection, _mongo_document.obj()); }
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
@@ -135,9 +133,7 @@ auto zpt::mongodb::Client::save(std::string _collection, std::string _href, zpt:
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false); }
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
@@ -156,9 +152,7 @@ auto zpt::mongodb::Client::set(std::string _collection, std::string _href, zpt::
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false); }
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
@@ -182,17 +176,13 @@ auto zpt::mongodb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 
 	unsigned long _size = 0;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk); }
 
 	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"])); }
 
 	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
@@ -211,9 +201,7 @@ auto zpt::mongodb::Client::unset(std::string _collection, std::string _href, zpt
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false); }
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
 	return 1;
@@ -237,17 +225,13 @@ auto zpt::mongodb::Client::unset(std::string _collection, zpt::json _pattern, zp
 
 	unsigned long _size = 0;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk);
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		_size = this->conn()->count(_full_collection, _filter.obj, (int) mongo::QueryOption_SlaveOk); }
 
 	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
 	mongo::BSONObjBuilder _mongo_document;
 	zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"])); }
 
 	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
@@ -262,9 +246,7 @@ auto zpt::mongodb::Client::remove(std::string _collection, std::string _href, zp
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		this->conn()->remove(_full_collection, BSON( "_id" << _href ));
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		this->conn()->remove(_full_collection, BSON( "_id" << _href )); }
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
 	return 1;
@@ -284,9 +266,7 @@ auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, z
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
 	for (auto _record : _selected["elements"]->arr()) {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
-			this->conn()->resetError();
-			this->conn()->remove(_full_collection, BSON( "id" << _record["id"]->str()));
-			assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+			this->conn()->remove(_full_collection, BSON( "id" << _record["id"]->str())); }
 		
 		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
 	}
@@ -308,16 +288,14 @@ auto zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt:
 	mongo::BSONObj _filter = _bb_fields.obj();
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
 		_result.reset(this->conn()->query(_full_collection, BSON( "_id" << _topic ), 0, 0, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release());
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
 
-	if (_result->more()) {
-		mongo::BSONObj _record = _result->next();
-		zpt::json _obj = zpt::json::object();
-		zpt::mongodb::frommongo(_record, _obj);
-		return _obj;
-	}
+		if (_result->more()) {
+			mongo::BSONObj _record = _result->next();
+			zpt::json _obj = zpt::json::object();
+			zpt::mongodb::frommongo(_record, _obj);
+			return _obj;
+		} }
 
 	return zpt::undefined;
 }
@@ -373,7 +351,6 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	mongo::Query _query(_query_b.done());
 	unsigned long _size = 0;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
 		_size = this->conn()->count(_full_collection, _query.obj, (int) mongo::QueryOption_SlaveOk); }
 	mongo::BSONObj _order = _order_b.done();
 	if (!_order.isEmpty()) {
@@ -386,17 +363,14 @@ auto zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zp
 	mongo::BSONObj _filter = _bb_fields.obj();
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
 		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release());
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
-
-	while(_result->more()) {
-		mongo::BSONObj _record = _result->next();
-		zpt::JSONObj _obj;
-		zpt::mongodb::frommongo(_record, _obj);
-		_elements << _obj;
-	}
-
+		while(_result->more()) {
+			mongo::BSONObj _record = _result->next();
+			zpt::JSONObj _obj;
+			zpt::mongodb::frommongo(_record, _obj);
+			_elements << _obj;
+		} }
+	
 	if (_elements->size() == 0) {
 		return zpt::undefined;
 	}
@@ -457,7 +431,6 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	mongo::Query _query(_query_b.done());
 	unsigned long _size = 0;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
 		_size = this->conn()->count(_full_collection, _query.obj, (int) mongo::QueryOption_SlaveOk); }
 	mongo::BSONObj _order = _order_b.done();
 	if (!_order.isEmpty()) {
@@ -470,16 +443,14 @@ auto zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	mongo::BSONObj _filter = _bb_fields.obj();
 	std::unique_ptr<mongo::DBClientCursor> _result;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		this->conn()->resetError();
-		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release());
-		assertz(this->conn()->getLastError().length() == 0, std::string("mongodb operation returned an error: ") + this->conn()->getLastError(), 500, 0); }
+		_result.reset(this->conn()->query(_full_collection, _query, _page_size, _page_start_index, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release()); 
 
-	while(_result->more()) {
-		mongo::BSONObj _record = _result->next();
-		zpt::JSONObj _obj;
-		zpt::mongodb::frommongo(_record, _obj);
-		_elements << _obj;
-	}
+		while(_result->more()) {
+			mongo::BSONObj _record = _result->next();
+			zpt::JSONObj _obj;
+			zpt::mongodb::frommongo(_record, _obj);
+			_elements << _obj;
+		} }
 
 	if (_elements->size() == 0) {
 		return zpt::undefined;

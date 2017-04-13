@@ -183,7 +183,7 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 						"channel", _envelope["channel"],
 						"performative", zpt::ev::Reply,
 						"resource", _envelope["resource"]
-						}
+					}
 				);
 			}
 		}
@@ -241,7 +241,7 @@ auto zpt::ZMQPoll::loop() -> void {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
 					zpt::socket_ref _socket = this->__by_socket[_k];
 					if (!_socket->available()) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
 						_to_remove.push_back(this->__by_socket[_k]);
 						continue;
 					}
@@ -251,17 +251,17 @@ auto zpt::ZMQPoll::loop() -> void {
 						_envelope = _socket->recv();
 					}
 					catch (zpt::assertion& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
 						_to_remove.push_back(this->__by_socket[_k]);
 						continue;
 					}
 					catch (zmq::error_t& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
 						_to_remove.push_back(this->__by_socket[_k]);
 						continue;
 					}
 					catch (std::exception& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::warning);
+						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
 						_to_remove.push_back(this->__by_socket[_k]);
 						continue;
 					}

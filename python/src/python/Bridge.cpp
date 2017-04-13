@@ -74,7 +74,7 @@ auto zpt::python::Bridge::initialize() -> void {
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
 			if (_python_script->str().find(".py") != std::string::npos) {
-				ztrace(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"));
+				zlog(std::string("PYTHON bridge loading module '") + _python_script->str() + std::string("'"), zpt::notice);
 				FILE* _fp = ::fopen(_python_script->str().data(), "r");
 				PyRun_SimpleFileEx(_fp, _python_script->str().data(), true);
 			}
@@ -112,7 +112,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
 	zpt::python::__instance = _bridge;
 
-	ztrace(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"));
+	zlog(std::string("PYTHON bridge loading basic module (zpt.on, zpt.route, zpt.slipt, zpt.topic_var, zpt.authorize)"), zpt::notice);
 	Py_SetProgramName((wchar_t*) "zpt");
 	
 	struct _inittab _initt[zpt::python::__modules->size() + 1];

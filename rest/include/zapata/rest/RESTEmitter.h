@@ -193,14 +193,7 @@ namespace zpt {
 		static auto instance() -> zpt::ev::emitter;
 		
 	private:
-		zpt::ev::Handler __default_get;
-		zpt::ev::Handler __default_put;
-		zpt::ev::Handler __default_post;
-		zpt::ev::Handler __default_delete;
-		zpt::ev::Handler __default_head;
 		zpt::ev::Handler __default_options;
-		zpt::ev::Handler __default_patch;
-		zpt::ev::Handler __default_assync_reply;
 		zpt::ev::HandlerStack __resources;
 		zpt::ev::ReplyHandlerStack __replies;
 		zpt::rest::HandlerStack __hashed;

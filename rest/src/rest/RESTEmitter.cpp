@@ -46,22 +46,6 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 	else {
 		this->mutations((new zpt::DefaultMutationEmitter(this->options()))->self());
 	}
-	
-	this->__default_get = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
-	this->__default_put = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
-	this->__default_post = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
-	this->__default_delete = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
-	this->__default_head = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
 	this->__default_options = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		if (_envelope["headers"]["Origin"]->ok()) {
 			return {
@@ -83,12 +67,6 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 				)
 			)
 		};
-	};
-	this->__default_patch = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		assertz(false, "Performative is not accepted for the given resource", 405, 0);
-	};
-	this->__default_assync_reply = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-		return zpt::undefined;
 	};
 }
 

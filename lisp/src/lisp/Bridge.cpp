@@ -97,7 +97,7 @@ auto zpt::lisp::Bridge::initialize() -> void {
 	if (this->options()["rest"]["modules"]->ok()) {
 		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
 			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
-				ztrace(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"));
+				zlog(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
 				this->eval(std::string("(load \"") + ((std::string) _lisp_script) + std::string("\")"));
 			}
 		}

@@ -14,7 +14,7 @@ Copyright (c) 2014, Muzzley
 // zpt::MQTTPtr::~MQTTPtr() {
 // }
 
-zpt::MQTT::MQTT() : __self(this), __connected(false) {
+zpt::MQTT::MQTT() : __self(this), __connected(false), __postponed(zpt::json::object()) {
 	/**
 	 * Init mosquitto.
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_lib_init
@@ -120,12 +120,14 @@ auto zpt::MQTT::subscribe(std::string _topic) -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
 	 */
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		if (this->__postponed[_topic]->is_string()) {
+			return;
+		}
+		
+		this->__postponed << _topic << _topic;
 		if (this->__connected) {
 			zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
 			mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0);
-		}
-		else {
-			this->__postponed.push_back(_topic);
 		} }
 }
 
@@ -198,12 +200,11 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 	if (_rc == 0) {
 		{ std::lock_guard< std::mutex > _lock(_self->__mtx);
 			int _return;
-			for (auto _topic : _self->__postponed) {
-				zlog(std::string("subscribing MQTT topic ") + _topic, zpt::notice);
-				mosquitto_subscribe(_mosq, & _return, _topic.data(), 0);
+			for (auto _topic : _self->__postponed->obj()) {
+				zlog(std::string("subscribing MQTT topic ") + _topic.first, zpt::notice);
+				mosquitto_subscribe(_mosq, & _return, _topic.first.data(), 0);
 			}
 			_self->__connected = true; }
-		_self->publish("/mqtt/status", { "user", _self->__user, "status", "connected" });
 	}
 	zpt::mqtt::data _data(new MQTTData());
 	_data->__rc = _rc;

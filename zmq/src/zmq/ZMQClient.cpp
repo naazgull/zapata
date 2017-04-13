@@ -141,7 +141,7 @@ auto zpt::ZMQ::recv() -> zpt::json {
 		std::string _raw(static_cast<char*>(_frame2.data()), _frame2.size());
 		try {
 			zpt::json _envelope(_raw);
-			zverbose(std::string("< ") + _directive);
+			ztrace(std::string("< ") + _directive);
 			zverbose(zpt::json::pretty(_envelope));
 			return _envelope;
 		}
@@ -192,7 +192,7 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
-	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));// + std::string(" ") + zpt::generate::r_uuid());
+	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));
 	std::string _buffer(_envelope);
 	
 	zmq::message_t _frame1(_directive.length());
@@ -203,6 +203,8 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	std::lock_guard< std::mutex > _lock(this->out_mtx());
 	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
+	ztrace(std::string("> ") + _directive);
+	zverbose(zpt::json::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -245,12 +247,12 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQReq::~ZMQReq() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -330,12 +332,12 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQRep::~ZMQRep() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -447,11 +449,11 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt
 	_proxy.detach();
 	
 	this->connection(_connection_xpub + std::string(",") + _connection_xsub);
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQXPubXSub::~ZMQXPubXSub() {
-	ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+	zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 	if (this->__socket_sub.get() != nullptr) {
 		this->__socket_sub->close();
 		this->__socket_sub.reset();
@@ -569,11 +571,11 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZM
 	}
 
 	this->connection(_connection_pub + std::string(",") + _connection_sub);
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPubSub::~ZMQPubSub() {
-	ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+	zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 	if (this->__socket_sub.get() != nullptr) {
 		this->__socket_sub->close();
 		this->__socket_sub.reset();
@@ -659,12 +661,12 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPub::~ZMQPub() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -742,12 +744,12 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_con
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQSub::~ZMQSub() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -833,13 +835,13 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 
 zpt::ZMQPush::~ZMQPush() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -917,12 +919,12 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options) : zpt::ZMQ(_c
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQPull::~ZMQPull() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -1048,11 +1050,11 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
 	_proxy.detach();
 	
 	this->connection(_connection_router + std::string(",") + _connection_dealer);
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQRouterDealer::~ZMQRouterDealer() {
-	ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+	zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 	if (this->__socket_router.get() != nullptr) {
 		this->__socket_router->close();
 		this->__socket_router.reset();
@@ -1131,12 +1133,12 @@ zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options) : zpt::ZM
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQRouter::~ZMQRouter() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -1219,6 +1221,8 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
+	ztrace(std::string("> ") + _directive);
+	zverbose(zpt::json::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -1314,12 +1318,12 @@ zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options) : zpt::ZM
 		}
 	}
 
-	ztrace(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
+	zverbose(std::string("attaching ") + zpt::type2str(this->type())  + std::string(" socket to ") + this->connection());
 }
 
 zpt::ZMQDealer::~ZMQDealer() {
 	if (this->__socket.get() != nullptr) {
-		ztrace(std::string("dettaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
+		zverbose(std::string("detaching ") + zpt::type2str(this->type()) + std::string(" from ") + this->connection());
 		this->__socket->close();
 		this->__socket.reset();
 	}
@@ -1432,6 +1436,8 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
 	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
 		(*this->__underlying) << _reply << flush; }
+	ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"]) : std::string("")));
+	zverbose(_reply);
 	return zpt::undefined;
 }
 
@@ -1459,6 +1465,8 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 		return { "error", true };
 	}	
 	zpt::json _in = zpt::rest::http2zmq(_request);
+	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
+	zverbose(_in);
 	return _in;
 }
 

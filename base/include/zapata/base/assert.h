@@ -39,28 +39,28 @@ SOFTWARE.
 //#define assertz(x,y,z,c) if (! (x)) { throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__); }
 #define assertz(x,y,z,c) if (! (x)) { void *__backtrace_array__[10]; size_t __backtrace__size__ = backtrace(__backtrace_array__, 10); throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__, backtrace_symbols(__backtrace_array__, __backtrace__size__), __backtrace__size__); }
 
-#define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string("field '") + std::string(y) + std::string("' is mandatory."), z, 0)
-#define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string("field '") + std::string(y) + std::string("' must be a string."), z, 0)
-#define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string("field '") + std::string(y) + std::string("' must be an integer."), z, 0)
-#define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string("field '") + std::string(y) + std::string("' must be a double."), z, 0)
-#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string("field '") + std::string(y) + std::string("' must be a timestamp."), z, 0)
-#define assertz_boolean(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string("field '") + std::string(y) + std::string("' must be a boolean."), z, 0)
-#define assertz_complex(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string("field '") + std::string(y) + std::string("' must be an object."), z, 0)
-#define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string("field '") + std::string(y) + std::string("' must be an object."), z, 0)
-#define assertz_array(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string("field '") + std::string(y) + std::string("' must be an array."), z, 0)
-#define assertz_int(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string("field '") + std::string(y) + std::string("' must be an integer."), z, 0)
+#define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string(y), z, 1000)
+#define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)
+#define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)
+#define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)
+#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004)
+#define assertz_boolean(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)
+#define assertz_complex(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string(y), z, 1006)
+#define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)
+#define assertz_array(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)
+#define assertz_int(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)
 
-#define assertz_uuid(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UUID."), z, 0)
-#define assertz_utf8(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an UTF-8 string."), z, 0)
-#define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9 and '_' characters."), z, 0)
-#define assertz_hash(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9."), z, 0)
-#define assertz_token(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be a string composed by a-z, A-z, 0-9."), z, 0)
-#define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an URI."), z, 0)
-#define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string("field '") + std::string(y) + std::string("' must be an e-mail address."), z, 0)
-#define assertz_location(x,y,z) assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string("field '") + std::string(y) + std::string("' must be GPS location."), z, 0)
+#define assertz_uuid(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string(y), z, 1010)
+#define assertz_utf8(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string(y), z, 1011)
+#define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string(y), z, 1012)
+#define assertz_hash(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1013)
+#define assertz_token(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1014)
+#define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(y), z, 1015)
+#define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(y), z, 1016); if (x[y]->is_string()) { std::string _email = std::string(x[y]); std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower); x << y << _email; }
+#define assertz_location(x,y,z) assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017)
 
-#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string("provided list doesn't have required elements: ") + std::string(y) + std::string("."), z, 0); }
-#define assertz_unauthorized(x) assertz(x, std::string("unauthorized access to service: ") + std::string(#x) + std::string(" isn't verified"), 401, 0) 
+#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
+#define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 
 	
 typedef struct epoll_event epoll_event_t;
 

@@ -154,6 +154,6 @@ namespace zpt {
 		std::mutex __mtx;
 		zpt::mqtt::broker __self;
 		bool __connected;
-		std::vector< std::string > __postponed;
+		zpt::json __postponed;
 	};
 }

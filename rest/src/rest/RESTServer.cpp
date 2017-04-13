@@ -242,7 +242,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				_lib_file.append(".so");
 
 				if (_lib_file.length() > 6) {
-					ztrace(std::string("loading module '") + _lib_file + std::string("'"));
+					zlog(std::string("loading module '") + _lib_file + std::string("'"), zpt::notice);
 					void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
 					if (hndl == nullptr) {
 						zlog(std::string(dlerror()), zpt::error);
