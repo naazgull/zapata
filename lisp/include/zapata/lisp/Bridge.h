@@ -23,6 +23,9 @@ SOFTWARE.
 */
 #pragma once
 
+#define GC_THREADS
+#define _REENTRANT
+
 #include <zapata/events.h>
 #include <ossp/uuid++.hh>
 #include <mutex>

@@ -191,9 +191,6 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	if (_event != zpt::ev::Reply && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
 	}
-	else {
-		zdbg(std::string("not registering ") + _regex);
-	}
 	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
 		this->server()->subscribe(_regex, _opts);
 	}
@@ -228,9 +225,6 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 
 	if (_to_register && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
-	}
-	else {
-		zdbg(std::string("not registering ") + _regex);
 	}
 	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
 		this->server()->subscribe(_regex, _opts);
