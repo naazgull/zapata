@@ -334,6 +334,9 @@ void zpt::RESTServer::start() {
 			
 			this->__mqtt->on("connect",
 				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
+						ecl_import_current_thread(ECL_NIL, ECL_NIL);
+					}
 					if (_data->__rc == 0) {
 						zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
 					}
