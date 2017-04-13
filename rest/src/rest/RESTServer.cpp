@@ -335,9 +335,6 @@ void zpt::RESTServer::start() {
 			this->__mqtt->on("connect",
 				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
 					if (_data->__rc == 0) {
-						if (zpt::bridge::is_booted< zpt::lisp::bridge >()) {
-							ecl_import_current_thread(ECL_NIL, ECL_NIL);
-						}
 						zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
 					}
 				}
@@ -354,8 +351,10 @@ void zpt::RESTServer::start() {
 			);
 			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
 			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
-			
-			this->__mqtt->start();
+
+			if (!this->__options["mqtt"]["no-threads"]->ok() || std::string(this->__options["mqtt"]["no-threads"]) != "true") {
+				this->__mqtt->start();
+			}			
 		}
 
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
@@ -407,6 +406,11 @@ void zpt::RESTServer::start() {
 		std::string _NAME(this->__name.data());
 		std::transform(_NAME.begin(), _NAME.end(), _NAME.begin(), ::toupper);
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
+
+		if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
+			this->__mqtt->loop();
+		}
+		
 		this->__poll->loop();
 	}
 	catch (zpt::InterruptedException& e) {

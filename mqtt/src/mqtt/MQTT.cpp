@@ -192,7 +192,14 @@ auto zpt::MQTT::start() -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
 	 */
 	mosquitto_loop_start(this->__mosq);
-	//mosquitto_loop_forever(this->__mosq, -1, 1);
+}
+
+auto zpt::MQTT::loop() -> void {
+	/**
+	 * Checks if some data is available from MQTT server.
+	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
+	 */
+	mosquitto_loop_forever(this->__mosq, -1, 1);
 }
 
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {

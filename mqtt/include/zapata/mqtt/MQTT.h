@@ -137,6 +137,7 @@ namespace zpt {
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop
 		 */
 		virtual auto start() -> void;
+		virtual auto loop() -> void;
 
 	private:
 		static auto on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void;
