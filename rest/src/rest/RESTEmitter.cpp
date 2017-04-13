@@ -183,8 +183,11 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
-	if (std::string(this->options()["proc"]["directory_register"]) != "off") {
+	if (_event != zpt::ev::Reply && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
+	}
+	else {
+		zdbg(std::string("not registering ") + _regex);
 	}
 	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
 		this->server()->subscribe(_regex, _opts);
@@ -196,6 +199,7 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 
 auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, zpt::ev::Handler > _handler_set, zpt::json _opts) -> std::string {
 	std::regex _url_pattern(_regex);
+	bool _to_register = (_handler_set.find(zpt::ev::Get) != _handler_set.end() || _handler_set.find(zpt::ev::Put) != _handler_set.end() || _handler_set.find(zpt::ev::Post) != _handler_set.end() || _handler_set.find(zpt::ev::Delete) != _handler_set.end() || _handler_set.find(zpt::ev::Head) != _handler_set.end() || _handler_set.find(zpt::ev::Options) != _handler_set.end() || _handler_set.find(zpt::ev::Patch) != _handler_set.end());
 
 	std::map< zpt::ev::performative, zpt::ev::Handler >::iterator _found;
 	zpt::ev::handlers _handlers;
@@ -212,8 +216,11 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
 	this->add_by_hash(_regex, _url_pattern, _handlers);
 
-	if (std::string(this->options()["proc"]["directory_register"]) != "off") {
+	if (_to_register && std::string(this->options()["proc"]["directory_register"]) != "off") {
 		this->directory()->notify(_regex, this->options()["zmq"]);
+	}
+	else {
+		zdbg(std::string("not registering ") + _regex);
 	}
 	if (std::string(this->options()["proc"]["mqtt_register"]) != "off") {
 		this->server()->subscribe(_regex, _opts);
