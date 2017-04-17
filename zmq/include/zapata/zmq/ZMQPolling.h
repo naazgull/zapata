@@ -83,7 +83,7 @@ namespace zpt {
 		socket_ref(std::string _rhs, zpt::poll _poll);
 		socket_ref(const zpt::socket_ref& _rhs);
 		
-		auto poll(zpt::poll _poll);
+		auto poll(zpt::poll _poll) -> void;
 		auto poll() -> zpt::poll;
 		auto operator->() -> zpt::ZMQ*;
 		auto operator*() -> zpt::ZMQ*;
