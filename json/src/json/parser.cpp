@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 			std::ifstream _in;
 			_in.open(argv[_i]);
 			if (!_in.is_open()) {
-				zlog("unable to open provided file", zpt::error);
+				zlog(std::string("unable to open provided file: ") + std::string(argv[_i]), zpt::error);
 				exit(-10);
 			}
 			try {
