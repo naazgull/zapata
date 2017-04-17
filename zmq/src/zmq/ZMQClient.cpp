@@ -44,7 +44,7 @@ zpt::socket_ref::socket_ref(const zpt::socket_ref& _rhs) : std::string(_rhs.data
 zpt::socket_ref::socket_ref(std::string _rhs, zpt::poll _poll) : std::string(_rhs), __poll(_poll) {
 }
 
-auto zpt::socket_ref::poll(zpt::poll _poll) {
+auto zpt::socket_ref::poll(zpt::poll _poll) -> void {
 	this->__poll = _poll;
 }
 
