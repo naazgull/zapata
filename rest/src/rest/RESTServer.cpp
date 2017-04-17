@@ -413,17 +413,7 @@ void zpt::RESTServer::start() {
 
 bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	zpt::json _envelope = zpt::json::object();
-	if (!_data->__message["performative"]->ok()) {
-		_envelope << "performative" << int(zpt::ev::Reply);
-	}
-	else {
-		if (_data->__message["performative"]->is_string()) {
-			_envelope << "performative" << zpt::ev::from_str(std::string(_data->__message["performative"]));
-		}
-		else {
-			_envelope << "performative" << zpt::ev::performative(int(_data->__message["performative"]));
-		}
-	}
+	_envelope << "performative" << int(zpt::ev::Reply);
 	if (!_data->__message["channel"]->ok()) {
 		_envelope << "channel" << _data->__topic;
 	}
@@ -450,13 +440,10 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	}
 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
 	zverbose(_envelope);
-	zpt::ev::performative _performative = (zpt::ev::performative) int(_envelope["performative"]);
-	zpt::json _result = this->events()->trigger(_performative, std::string(_data->__topic), _envelope);
-	if (_result->ok()) {
-		ztrace(std::string("MQTT ") + std::string(_data->__topic));
-		zverbose(_result);
-		this->__mqtt->publish(std::string(_data->__topic), _result);
+	try {
+		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
 	}
+	catch(...) {}
 	return true;
 }
 
