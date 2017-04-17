@@ -266,7 +266,7 @@ auto zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt:
 	zpt::mongodb::tomongo(_fields, _bb_fields);
 	mongo::BSONObj _filter = _bb_fields.obj();
 	std::unique_ptr<mongo::DBClientCursor> _result;
-	_result.reset(this->conn()->query(_full_collection, BSON( "_id" << _topic ), 0, 0, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release());
+	_result.reset(_conn->query(_full_collection, BSON( "_id" << _topic ), 0, 0, (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr), (int) mongo::QueryOption_SlaveOk).release());
 
 	if (_result->more()) {
 		mongo::BSONObj _record = _result->next();
