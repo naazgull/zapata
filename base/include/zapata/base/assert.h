@@ -43,7 +43,7 @@ SOFTWARE.
 #define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)
 #define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)
 #define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)
-#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004)
+#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004)
 #define assertz_boolean(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)
 #define assertz_complex(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string(y), z, 1006)
 #define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)
