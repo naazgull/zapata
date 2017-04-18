@@ -366,7 +366,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (_endpoint.second[_method] != nullptr) {
 				_method_found = true;
 				try {
-					zdbg(_envelope);
 					zpt::json _result = _endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
