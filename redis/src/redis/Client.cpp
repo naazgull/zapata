@@ -120,11 +120,12 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _href_prefi
 auto zpt::redis::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn != nullptr, std::string("connection to Redis at ") + this->name() + std::string(" has not been established."), 500, 0); }
-	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	std::string _key(_collection);
 	_key.insert(0, "/");
 	_key.insert(0, (std::string) this->connection()["db"]);
+	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, std::string(_key) + std::string(" > ") + _href + std::string(": '_document' must be of type JSObject"), 412, 0);
 
 	redisReply* _reply = nullptr;
 	bool _success = true;
