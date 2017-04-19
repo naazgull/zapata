@@ -26,7 +26,7 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^")
+#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
 
 void zpt::mongodb::frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
