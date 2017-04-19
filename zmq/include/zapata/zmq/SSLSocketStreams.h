@@ -110,17 +110,21 @@ namespace zpt {
 			}
 			int _num = __buf_type::pptr() - __buf_type::pbase();
 			int _actually_written = 0;
-			if ((_actually_written = SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
-				cout << zpt::ssl_error_print(this->__sslstream, _actually_written) << endl << flush;
-				SSL_free(this->__sslstream);
-				SSL_CTX_free(this->__context);
-				::shutdown(this->__sock, SHUT_RDWR);
-				::close(this->__sock);
-				this->__sock = 0;
-				this->__sslstream = nullptr;
-				this->__context = nullptr;
-				assertz(_actually_written > 0, "write operation failed", 503, 0);
+			do {
+				if ((_actually_written = SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
+					if (SSL_get_error(this->__sslstream, _actually_written) != SSL_ERROR_WANT_WRITE) {
+						SSL_free(this->__sslstream);
+						SSL_CTX_free(this->__context);
+						::shutdown(this->__sock, SHUT_RDWR);
+						::close(this->__sock);
+						this->__sock = 0;
+						this->__sslstream = nullptr;
+						this->__context = nullptr;
+						assertz(_actually_written > 0, std::string("write operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_written), 503, 0);
+					}
+				}
 			}
+			while (SSL_get_error(this->__sslstream, _actually_written) == SSL_ERROR_WANT_WRITE);
 			__buf_type::pbump(-_actually_written);
 			return _actually_written;
 		}
@@ -154,16 +158,21 @@ namespace zpt {
 			}
 
 			int _actually_read;
-			if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
-				SSL_free(this->__sslstream);
-				SSL_CTX_free(this->__context);
-				::shutdown(this->__sock, SHUT_RDWR);
-				::close(this->__sock);
-				this->__sock = 0;
-				this->__sslstream = nullptr;
-				this->__context = nullptr;
-				assertz(_actually_read > 0, "read operation failed", 503, 0);
+			do {
+				if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
+					if (SSL_get_error(this->__sslstream, _actually_read) != SSL_ERROR_WANT_READ) {
+						SSL_free(this->__sslstream);
+						SSL_CTX_free(this->__context);
+						::shutdown(this->__sock, SHUT_RDWR);
+						::close(this->__sock);
+						this->__sock = 0;
+						this->__sslstream = nullptr;
+						this->__context = nullptr;
+						assertz(_actually_read > 0, std::string("read operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_read), 503, 0);
+					}
+				}
 			}
+			while (SSL_get_error(this->__sslstream, _actually_read) == SSL_ERROR_WANT_READ);
 			if (_actually_read == 0) {
 				return __traits_type::eof();
 			}

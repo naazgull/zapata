@@ -87,9 +87,8 @@ auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connectio
 	}
 
 	zpt::ZMQ* _underlying = this->bind(_type, _connection);
-	if (_underlying == nullptr) {
-		return zpt::socket_ref();
-	}
+	assertz(_underlying != nullptr, std::string("could not connection to ") + zpt::type2str(_type) + std::string("@") + _connection, 500, 0);
+	
 	if (_new_connection) {
 		_key.assign(_underlying->id());
 	}

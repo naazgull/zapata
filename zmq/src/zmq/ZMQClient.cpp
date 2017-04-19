@@ -1180,7 +1180,9 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	zmq::message_t* _frame1 = nullptr;
 	{ std::lock_guard< std::mutex > _lock(this->__sock_mtx);
 		_uuid.assign(std::string(_envelope["channel"]));
-		_frame1 = this->__sock_id.find(_uuid)->second; }
+		auto _found = this->__sock_id.find(_uuid);
+		_frame1 = _found->second;
+		this->__sock_id.erase(_found); }
 	
 	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
