@@ -373,12 +373,12 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 							if (bool(_opts["bubble-error"])) {
 								throw zpt::assertion(_result["payload"]["text"]->ok() ? std::string(_result["payload"]["text"]) : std::string(zpt::status_names[int(_result["status"])]), int(_result["status"]), int(_result["payload"]["code"]), _result["payload"]["assertion_failed"]->ok() ? std::string(_result["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_result["status"])]));
 							}
-						}						
+						}
 
 						_result << 
 						"performative" << zpt::ev::Reply <<
 						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"]);
-												
+
 						_return = _result;
 					}
 				}

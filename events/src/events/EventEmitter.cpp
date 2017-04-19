@@ -228,9 +228,8 @@ auto zpt::ev::init_reply(std::string _uuid, zpt::json _request) -> zpt::json {
 				_return["headers"] << "X-Redirect-To" << _return["headers"]["Location"];
 			}
 		}
-
 		if (_request["headers"]["Origin"]->ok()) {
-			_return["headers"] <<
+			_return <<
 			"Access-Control-Allow-Origin" << _request["headers"]["Origin"] <<
 			"Access-Control-Allow-Credentials" << "true" <<
 			"Access-Control-Allow-Methods" << "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY" <<
