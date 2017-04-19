@@ -61,7 +61,6 @@ SOFTWARE.
 
 #define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 
-
 #define assertz_valid_values(x,y,z) assertz(x, std::string(y), z, 1020) 
 
 typedef struct epoll_event epoll_event_t;
