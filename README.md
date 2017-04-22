@@ -32,20 +32,7 @@ b) Update your repository cache and install base packages:
 	$ sudo apt-get update
 	$ sudo apt-get install zapata-base zapata-json zapata-events zapata-http zapata-zmq zapata-mqtt zapata-lisp zapata-python zapata-rest zapata-oauth2 zapata-gen 
 
-### 2) 0mq _libcurve_ dependency ###
-
-a) Install [libcurve](https://github.com/zeromq/libcurve) from Github:
-
-	$ git clone git://github.com/zeromq/libcurve.git
-	$ cd libcurve
-	$ sh autogen.sh
-	$ ./autogen.sh
-	$ ./configure --prefix=/usr && make check
-	$ sudo make install
-	$ sudo ldconfig
-	$ cd ..
-
-### 3) PostgreSQL support ###
+### 2) PostgreSQL support ###
 
 a) In 16.04, add apt repository;
 
@@ -56,13 +43,13 @@ b) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
-### 4) MariaDB support ###
+### 3) MariaDB support ###
 
 a) Install Zapata's MariaDB support packages:
 
 	$ sudo apt-get install zapata-mariadb
 
-### 5) MongoDB support ###
+### 4) MongoDB support ###
 
 a) Install Boost & Scons dependencies:
 
@@ -82,13 +69,13 @@ d) Install Zapata's MongoDB support packages:
 
 	$ sudo apt-get install zapata-mongodb
 
-### 6) Redis support ###
+### 5) Redis support ###
 
 a) Install Zapata's Redis support packages:
 
 	$ sudo apt-get install zapata-redis
 
-### 7) OAuth2.0 support ###
+### 6) OAuth2.0 support ###
 
 a) Install Users/OAuth2.0 support packages:
 

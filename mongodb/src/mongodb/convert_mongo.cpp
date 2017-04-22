@@ -26,12 +26,12 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-#define _VALID_OPS string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
+#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
 
 void zpt::mongodb::frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out) {
 	for (mongo::BSONObjIterator _i = _in.begin(); _i.more();) {
 		mongo::BSONElement _it = _i.next();
-		string _key(_it.fieldName());
+		std::string _key(_it.fieldName());
 
 		switch (_it.type()) {
 			case mongo::jstNULL: {
@@ -124,7 +124,7 @@ void zpt::mongodb::frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out) {
 
 void zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 	for (auto _i : * _in) {
-		string _key = _i.first;
+		std::string _key = _i.first;
 		JSONElement _value = _i.second;
 
 		switch (_value->type()) {
@@ -141,7 +141,7 @@ void zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out) {
 				break;
 			}
 			case zpt::JSString: {
-				_out << _key << (string) _value;
+				_out << _key << (std::string) _value;
 				break;
 			}
 			case zpt::JSBoolean: {
@@ -188,7 +188,7 @@ void zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 				break;
 			}
 			case zpt::JSString: {
-				_out << (string) _value;
+				_out << (std::string) _value;
 				break;
 			}
 			case zpt::JSBoolean: {
@@ -217,41 +217,41 @@ void zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder&  _out) {
 	}
 }
 
-void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out, std::string _prefix) {
 	for (auto _i : * _in) {
-		string _key = _i.first;
+		std::string _key = _i.first;
 		JSONElement _value = _i.second;
 
 		switch (_value->type()) {
 			case zpt::JSObject: {
-				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
+				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
 				break;
 			}
 			case zpt::JSArray: {
-				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
+				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
 				break;
 			}
 			case zpt::JSString: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (string) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (std::string) _value;
 				break;
 			}
 			case zpt::JSBoolean: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (bool) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (bool) _value;
 				break;
 			}
 			case zpt::JSDouble: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (double) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (double) _value;
 				break;
 			}
 			case zpt::JSInteger: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + _key : _key) << (int) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (int) _value;
 				break;
 			}
 			case zpt::JSLambda : {
 				break;
 			}
 			case zpt::JSNil: {
-				_out.appendNull((_prefix.length() != 0 ? _prefix + string(".") + _key : _key));
+				_out.appendNull((_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
 				break;
 			}
 			default: {
@@ -261,41 +261,41 @@ void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder&  _out,
 	}
 }
 
-void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, string _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder&  _out, std::string _prefix) {
 	size_t _idx = 0;
 	for (auto _i : *_in) {
 		JSONPtr _value = _i;
 
 		switch (_value->type()) {
 			case zpt::JSObject: {
-				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
+				zpt::mongodb::tosetcommand(_value->obj(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
 			case zpt::JSArray: {
-				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
+				zpt::mongodb::tosetcommand(_value->arr(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
 			case zpt::JSString: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (string) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)) << (std::string) _value;
 				break;
 			}
 			case zpt::JSBoolean: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (bool) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)) << (bool) _value;
 				break;
 			}
 			case zpt::JSDouble: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (double) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)) << (double) _value;
 				break;
 			}
 			case zpt::JSInteger: {
-				_out << (_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)) << (int) _value;
+				_out << (_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)) << (int) _value;
 				break;
 			}
 			case zpt::JSLambda : {
 				break;
 			}
 			case zpt::JSNil: {
-				_out.appendNull((_prefix.length() != 0 ? _prefix + string(".") + std::to_string(_idx) : std::to_string(_idx)));
+				_out.appendNull((_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx) : std::to_string(_idx)));
 				break;
 			}
 			default: {
@@ -322,7 +322,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 		std::ostringstream oss;
 		oss << _key << flush;
 
-		string key = oss.str();
+		std::string key = oss.str();
 		if (_value->type() == zpt::JSObject) {
 			mongo::BSONObjBuilder _tmp;
 			zpt::mongodb::tomongo(_value, _tmp);
@@ -336,16 +336,16 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 			continue;
 		}
 		
-		string value = (string) _value;
+		std::string value = (std::string) _value;
 		if (value.length() > 3 && value.find('/') != std::string::npos) {
 			int bar_count = 0;
 
 			istringstream lss(value);
-			string part;
+			std::string part;
 
-			string command;
-			string expression;
-			string options;
+			std::string command;
+			std::string expression;
+			std::string options;
 			while (std::getline(lss, part, '/')) {
 				if (bar_count == 0) {
 					command = part;
@@ -380,7 +380,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 			}
 			else if (command == "n") {
 				if (bar_count == 2) {
-					istringstream iss(expression);
+					std::istringstream iss(expression);
 					int i = 0;
 					iss >> i;
 					if (!iss.eof()) {
@@ -388,7 +388,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 						double d = 0;
 						iss >> d;
 						if (!iss.eof()) {
-							string bexpr(expression.data());
+							std::string bexpr(expression.data());
 							std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
 							if (bexpr != "true" && bexpr != "false") {
 								_queryr.append(key, expression);
@@ -408,10 +408,10 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 				}
 			}
 			else {
-				string comp("$");
+				std::string comp("$");
 				comp.insert(comp.length(), command);
 
-				if (_VALID_OPS.find(comp + string("^")) != std::string::npos) {
+				if (_VALID_OPS.find(comp + std::string("^")) != std::string::npos) {
 					if (bar_count == 2) {
 						_queryr.append(key, BSON(comp << expression));
 					}
@@ -424,7 +424,7 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 							double d = 0;
 							iss >> d;
 							if (!iss.eof()) {
-								string bexpr(expression.data());
+								std::string bexpr(expression.data());
 								std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
 								if (bexpr != "true" && bexpr != "false") {
 									_queryr.append(key, expression);

@@ -11,11 +11,6 @@ WORKDIR /root/mongo-cxx-driver
 RUN git checkout 26compat && sed -i 's/-Wall/-w/g' SConstruct && scons --prefix=/usr --sharedclient --use-system-boost --full install-mongoclient
 
 WORKDIR /root
-RUN git clone git://github.com/zeromq/libcurve.git
-WORKDIR /root/libcurve
-RUN ./autogen.sh && ./configure --prefix=/usr && make check && make install
-
-WORKDIR /root
 RUN git clone git://github.com/naazgull/zapata.git
 WORKDIR /root/zapata
 RUN make config && make 

@@ -12,9 +12,6 @@
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #define HAVE_LIBCRYPTO 1
 
-/* Define to 1 if you have the `curve' library (-lcurve). */
-#define HAVE_LIBCURVE 1
-
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
@@ -23,9 +20,6 @@
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
 #define HAVE_LIBOSSP_UUID__ 1
-
-/* Define to 1 if you have the `sodium' library (-lsodium). */
-#define HAVE_LIBSODIUM 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
@@ -82,7 +76,7 @@
 #define PACKAGE_NAME "zapata-zmq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-zmq 0.9.6-1yakkety44"
+#define PACKAGE_STRING "zapata-zmq 0.9.6-1yakkety45"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-zmq"
@@ -91,10 +85,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.6-1yakkety44"
+#define PACKAGE_VERSION "0.9.6-1yakkety45"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.6-1yakkety44"
+#define VERSION "0.9.6-1yakkety45"

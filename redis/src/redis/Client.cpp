@@ -149,12 +149,14 @@ auto zpt::redis::Client::set(std::string _collection, std::string _href, zpt::js
  	_key.insert(0, (std::string) this->connection()["db"]);
 
  	zpt::json _record = this->get(_collection, _href);
- 	zpt::json _new_record = _record + _document;
+	for (auto _field : _document->obj()) {
+		_record <<  _field.first << _field.second;
+	}
 
  	redisReply* _reply = nullptr;
  	bool _success = true;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
+		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _record).data());
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
  	freeReplyObject(_reply);	
 	assertz(_success, "something whent wrong while accessing Redis", 500, 0);
@@ -174,12 +176,14 @@ auto zpt::redis::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 
 	zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
 	for (auto _record : _selected["elements"]->arr()) {
-		zpt::json _new_record = _record + _document;
+		for (auto _field : _document->obj()) {
+			_record <<  _field.first << _field.second;
+		}
 
 		redisReply* _reply = nullptr;
 		bool _success = true;
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
-			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _new_record).data());
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _record).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 		freeReplyObject(_reply);
 		assertz(_success, "something whent wrong while accessing Redis", 500, 0);
@@ -199,15 +203,14 @@ auto zpt::redis::Client::unset(std::string _collection, std::string _href, zpt::
  	_key.insert(0, (std::string) this->connection()["db"]);
 
  	zpt::json _record = this->get(_collection, _href);
- 	zpt::json _new_record = _record->clone();
  	for (auto _attribute : _document->obj()) {
- 		_new_record >> _attribute.first;
+ 		_record >> _attribute.first;
  	}
 
  	redisReply* _reply = nullptr;
  	bool _success = true;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _new_record).data());
+		redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _record).data());
 		_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
  	freeReplyObject(_reply);
 	assertz(_success, "something whent wrong while accessing Redis", 500, 0);
@@ -227,15 +230,14 @@ auto zpt::redis::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 
 	zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
 	for (auto _record : _selected["elements"]->arr()) {
-		zpt::json _new_record = _record->clone();
 		for (auto _attribute : _document->obj()) {
-			_new_record >> _attribute.first;
+			_record >> _attribute.first;
 		}
 
 		redisReply* _reply = nullptr;
 		bool _success = true;
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
-			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _new_record).data());
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _record["href"]->str().data(), ((std::string) _record).data());
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 		freeReplyObject(_reply);
 		assertz(_success, "something whent wrong while accessing Redis", 500, 0);
