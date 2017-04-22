@@ -69,8 +69,8 @@ namespace zpt {
 		typedef zpt::EventGatekeeperPtr gatekeeper;
 		typedef zpt::EventDirectoryPtr directory;
 
-		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> Handler;
-		typedef std::function<zpt::json (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
+		typedef std::function<void (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> Handler;
+		typedef std::function<void (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
 		typedef Handler Callback;
 		typedef handler callback;
 		typedef std::vector< zpt::ev::handler> handlers;
@@ -225,14 +225,14 @@ namespace zpt {
 		virtual auto unbind() -> void;
 		virtual auto version() -> std::string = 0;
 		
-		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(zpt::mutation::operation _operation, std::string _topic,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
+		virtual auto on(std::string _topic,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
 		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string = 0;
 		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void = 0;
 		virtual auto off(std::string _callback_id) -> void = 0;
 		
-		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
-		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto trigger(zpt::mutation::operation _operation, std::string _topic, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto route(zpt::mutation::operation _operation, std::string _topic, zpt::json _record, zpt::ev::handler _callback, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
