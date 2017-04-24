@@ -1,3 +1,9 @@
+zapata-postgresql (0.9.6-1yakkety46) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Mon, 24 Apr 2017 02:09:09 +0100
+
 zapata-postgresql (0.9.6-1yakkety45) yakkety; urgency=medium
 
   * Version bump
