@@ -48,10 +48,10 @@ auto zpt::Bridge::options() -> zpt::json {
 	return this->__options;
 }
 
-zpt::EventEmitter::EventEmitter() : __self(this), __mutant(nullptr), __keeper(nullptr), __directory(nullptr) {
+zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __mutant(nullptr), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
@@ -67,18 +67,6 @@ auto zpt::EventEmitter::self() const -> zpt::ev::emitter {
 
 auto zpt::EventEmitter::unbind() -> void {
 	this->__self.reset();
-}
-
-auto zpt::EventEmitter::mutations() -> zpt::mutation::emitter {
-	return this->__mutant;
-}
-
-auto zpt::EventEmitter::mutations(zpt::mutation::emitter _emitter) -> void {
-	if (this->__mutant.get() != nullptr) {
-		this->__mutant->unbind();
-	}
-	_emitter->events(this->self());
-	this->__mutant = _emitter;
 }
 
 auto zpt::EventEmitter::gatekeeper() -> zpt::ev::gatekeeper {
@@ -110,8 +98,19 @@ auto zpt::EventEmitter::lookup(std::string _topic) -> zpt::json {
 }
 
 auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
-	_connector->events(this->__self);
-	this->__mutant->connector(_name, _connector);
+	auto _found = this->__connector.find(_name);
+	if (_found == this->__connector.end()) {
+		ztrace(std::string("registering connector ") + _name + std::string("@") + _connector->name());
+		_connector->events(this->__self);
+		try {
+			_connector->connect();
+		}
+		catch(std::exception& _e) {
+			zlog(_e.what(), zpt::error);
+			return;
+		}
+		this->__connector.insert(make_pair(_name, _connector));
+	}
 }
 
 auto zpt::EventEmitter::connector(std::map<std::string, zpt::connector> _connectors) -> void {
@@ -121,7 +120,9 @@ auto zpt::EventEmitter::connector(std::map<std::string, zpt::connector> _connect
 }
 
 auto zpt::EventEmitter::connector(std::string _name) -> zpt::connector {
-	return this->__mutant->connector(_name);
+	auto _found = this->__connector.find(_name);
+	assertz(_found != this->__connector.end(), std::string("theres isn't any connector by the name '") + _name + std::string("'"), 500, 0);
+	return _found->second;
 }
 
 auto zpt::ev::split(std::string _url, zpt::json _orphans) -> zpt::json {

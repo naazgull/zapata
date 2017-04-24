@@ -41,8 +41,6 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class MutationEmitter;
-	class MutationListener;
 	class EventEmitter;
 	class EventListener;
 	class EventGatekeeper;
@@ -51,8 +49,6 @@ namespace zpt {
 	class BridgePtr;
 	class ThreadContext;
 
-	typedef std::shared_ptr< zpt::MutationEmitter > MutationEmitterPtr;
-	typedef std::shared_ptr< zpt::MutationListener > MutationListenerPtr;
 	typedef std::weak_ptr< zpt::EventEmitter > EventEmitterWPtr;
 	typedef std::shared_ptr< zpt::EventEmitter > EventEmitterPtr;
 	typedef std::shared_ptr< zpt::EventListener > EventListenerPtr;
@@ -91,18 +87,6 @@ namespace zpt {
 
 	}
 
-	namespace mutation {
-		typedef zpt::MutationEmitterPtr emitter;
-		typedef zpt::MutationListenerPtr listener;
-
-		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> Handler;
-		typedef std::function<void (zpt::mutation::operation, std::string, zpt::json, zpt::mutation::emitter)> handler;
-		typedef Handler Callback;
-		typedef handler callback;
-		typedef std::map< std::string, pair<std::regex, std::vector< zpt::mutation::handler > > > HandlerStack;
-		typedef std::map< std::string, zpt::mutation::handler > ReplyHandlerStack;
-	}
-
 	namespace thread {
 		typedef std::shared_ptr< zpt::ThreadContext > context;
 	}
@@ -116,8 +100,6 @@ namespace zpt {
 		virtual auto options() -> zpt::json = 0;
 		virtual auto events(zpt::ev::emitter _emitter) -> void = 0;
 		virtual auto events() -> zpt::ev::emitter = 0;
-		virtual auto mutations(zpt::mutation::emitter _emitter) -> void = 0;
-		virtual auto mutations() -> zpt::mutation::emitter = 0;
 
 		virtual auto connect() -> void;
 		virtual auto reconnect() -> void;
@@ -177,8 +159,6 @@ namespace zpt {
 		virtual auto name() -> std::string = 0;
 		virtual auto events(zpt::ev::emitter _emitter) -> void = 0;
 		virtual auto events() -> zpt::ev::emitter = 0;
-		virtual auto mutations(zpt::mutation::emitter _emitter) -> void = 0;
-		virtual auto mutations() -> zpt::mutation::emitter = 0;
 		virtual auto initialize() -> void = 0;
 		virtual auto self() const -> zpt::bridge = 0;
 		virtual auto unbind() -> void = 0;
@@ -212,73 +192,6 @@ namespace zpt {
 		zpt::json __options;
 	};
 
-	class MutationEmitter {
-	public:
-		MutationEmitter();
-		MutationEmitter(zpt::json _options);
-		virtual ~MutationEmitter();
-		
-		virtual auto options() -> zpt::json;
-		virtual auto self() const -> zpt::mutation::emitter;
-		virtual auto events() -> zpt::ev::emitter;
-		virtual auto events(zpt::ev::emitter _emitter) -> void;
-		virtual auto unbind() -> void;
-		virtual auto version() -> std::string = 0;
-		
-		virtual auto on(zpt::mutation::operation _operation, std::string _topic,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto on(std::string _topic,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void = 0;
-		virtual auto off(std::string _callback_id) -> void = 0;
-		
-		virtual auto trigger(zpt::mutation::operation _operation, std::string _topic, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
-		virtual auto route(zpt::mutation::operation _operation, std::string _topic, zpt::json _record, zpt::ev::handler _callback, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
-		
-		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
-		virtual auto connector(std::string _name) -> zpt::connector final;
-
-	private:
-		zpt::json __options;
-		zpt::mutation::emitter __self;
-		zpt::ev::emitter __events;
-		std::map<std::string, zpt::connector> __connector;
-	};
-
-	class DefaultMutationEmitter : public zpt::MutationEmitter {
-	public:
-		DefaultMutationEmitter(zpt::json _options);
-		virtual ~DefaultMutationEmitter();
-
-		virtual auto version() -> std::string;
-		
-		virtual auto on(zpt::mutation::operation _operation, std::string _data_class_ns,  zpt::mutation::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto on(std::string _data_class_ns,  std::map< zpt::mutation::operation, zpt::mutation::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto on(zpt::mutation::listener _listener, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto off(zpt::mutation::operation _operation, std::string _callback_id) -> void;
-		virtual auto off(std::string _callback_id) -> void;
-		
-		virtual auto trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
-		virtual auto route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts = zpt::undefined) -> zpt::json;
-	};
-	
-	class MutationListener {
-	public:
-		MutationListener(std::string _data_class_ns);
-		virtual ~MutationListener();
-
-		virtual std::string ns() final;
-		
-		virtual auto inserted(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-		virtual auto removed(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-		virtual auto updated(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-		virtual auto replaced(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-		virtual auto connected(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-		virtual auto reconnected(std::string _data_class_ns, zpt::json _record, zpt::mutation::emitter _emitter) -> void;
-
-	private:
-		std::string __namespace;
-	};
-	
 	class EventEmitter {
 	public:
 		EventEmitter();
@@ -288,7 +201,6 @@ namespace zpt {
 		virtual auto options() -> zpt::json;
 		virtual auto self() const -> zpt::ev::emitter;
 		virtual auto unbind() -> void;
-		virtual auto mutations() -> zpt::mutation::emitter;
 		virtual auto version() -> std::string = 0;
 		virtual auto gatekeeper() -> zpt::ev::gatekeeper;
 		virtual auto gatekeeper(zpt::ev::gatekeeper _gatekeeper) -> void;
@@ -318,16 +230,13 @@ namespace zpt {
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;
-
-	protected:
-		virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
 		
 	private:
 		zpt::json __options;
 		zpt::ev::emitter __self;
-		zpt::mutation::emitter __mutant;
 		zpt::ev::gatekeeper __keeper;
 		zpt::ev::directory __directory;
+		std::map<std::string, zpt::connector> __connector;
 	};
 
 	class EventGatekeeper {
