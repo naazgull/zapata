@@ -222,7 +222,7 @@ int zpt::RESTMutationServerPtr::launch(int argc, char* argv[], int _semaphore) {
 	zpt::conf::setup(_ptr);
 
 	if (std::string(_ptr["$mutations"]["run"]) != "true") {
-		//exit(0);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(0);
 	}
 
 	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {

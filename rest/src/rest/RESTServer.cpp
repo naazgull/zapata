@@ -77,8 +77,9 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 }
 
 auto zpt::rest::terminate(int _signal) -> void {
+	std::cout << "CAUGHT SIGNAL " << _signal << endl << flush;
 	if (zpt::rest::interrupted) {
-		//exit(0);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(0);
 	}
 	zpt::rest::interrupted = true;
 	if (zpt::rest::m_sem != -1) {
@@ -97,7 +98,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 
 	if (!_ptr["boot"]->is_array() || _ptr["boot"]->arr()->size() == 0) {
 		std::cout << "nothing to boot..." << endl << flush;
-		//exit(0);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(0);
 	}
 
 	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
@@ -163,8 +164,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);
-	::signal(SIGABRT, zpt::rest::terminate);
-	::signal(SIGSEGV, zpt::rest::terminate);
+	//::signal(SIGABRT, zpt::rest::terminate);
+	//::signal(SIGSEGV, zpt::rest::terminate);
 	
 	std::string _name = std::string(_options["name"]);
 	std::string _u_name(_name.data());
@@ -475,7 +476,7 @@ zpt::rest::client zpt::RESTClientPtr::launch(int argc, char* argv[]) {
 	zpt::json _options = zpt::conf::rest::init(argc, argv)->obj()->begin()->second;
 	if (!_options["rest"]->ok() || !_options["zmq"]->ok()) {
 		std::cout << "unable to start client: unsufficient configurations" << endl << flush;
-		//exit(-10);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
 	}
 	zpt::conf::setup(_options);
 	zpt::rest::client _client(_options);
@@ -706,7 +707,7 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 
 	if (!_args["c"]->ok()) {
 		zlog("unable to start client: a valid configuration file must be provided", zpt::error);
-		//exit(-10);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
 	}
 	
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
@@ -718,14 +719,14 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	_in.open(_conf_file.data());
 	if (!_in.is_open()) {
 		zlog("unable to start: a valid configuration file must be provided", zpt::error);
-		//exit(-10);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
 	}
 	try {
 		_in >> _ptr;
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog("unable to start: syntax error when parsing configuration file", zpt::error);
-		//exit(-10);
+		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
 	}
 	if (_ptr->type() == zpt::JSObject) {
 		for (auto _proc : _ptr->obj()) {
