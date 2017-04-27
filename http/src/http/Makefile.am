@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libzapata-http.la
 
 libzapata_http_la_LIBADD = -lpthread -lzapata-base
-libzapata_http_la_LDFLAGS = -version-info 9:6:9 
+libzapata_http_la_LDFLAGS = -version-info 9:7:9 
 libzapata_http_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_http_la_SOURCES = \

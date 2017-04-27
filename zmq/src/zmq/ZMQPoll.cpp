@@ -340,7 +340,7 @@ auto zpt::ZMQPoll::loop() -> void {
 	}
 	catch(zpt::assertion& _e) {
 		zlog(_e.what() + std::string(": ") + _e.description(), zpt::emergency);
-		exit(-1);
+		//exit(-1);
 	}
 }
 
