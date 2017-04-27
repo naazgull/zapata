@@ -1,3 +1,9 @@
+zapata-zmq (0.9.6-1yakkety47) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Thu, 27 Apr 2017 14:10:40 +0100
+
 zapata-zmq (0.9.6-1yakkety46) yakkety; urgency=medium
 
   * Version bump
