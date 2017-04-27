@@ -43,11 +43,11 @@ int main(int argc, char* argv[]) {
 	}
 	catch (zpt::assertion& _e) {
 		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
-		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
+		exit(-10);
 	}
 	catch (std::exception& _e) {
 		zlog(_e.what(), zpt::emergency);
-		std::cout << "THE MISTERY IS HERE: " << __FILE__ << ":" << __LINE__ << endl << flush;//exit(-10);
+		exit(-10);
 	}
 	
 	return 0;
