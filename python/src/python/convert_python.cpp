@@ -207,7 +207,9 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 		}
 		else if (PyUnicode_CheckExact(_exp)) {
 			// zdbg("Py_Unicode");
-			zpt::json _value = zpt::json::string(std::string((char*) PyUnicode_DATA(_exp), PyUnicode_GET_LENGTH(_exp)));
+			PyObject* _bytes = PyUnicode_EncodeLocale(_exp, nullptr);
+			std::string _s = std::string(PyBytes_AsString(_bytes), PyBytes_Size(_bytes));
+			zpt::json _value = zpt::json::string(_s);
 			if (_parent->is_object() || _parent->is_array()) {
 				_parent << _value;
 			}
@@ -529,8 +531,9 @@ auto zpt::python::to_python(zpt::json _in) -> PyObject* {
 			break;
 		}
 		case zpt::JSString: {
-			_ret = PyUnicode_DecodeFSDefault(std::string(_in).data());
-			//Py_INCREF(_ret);
+			//_ret = PyUnicode_DecodeFSDefault(std::string(_in).data());
+			_ret = PyUnicode_DecodeLocale(std::string(_in).data(), nullptr);
+			Py_INCREF(_ret);
 			break;
 		}
 		case zpt::JSDate: {
