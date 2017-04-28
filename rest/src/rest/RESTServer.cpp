@@ -164,7 +164,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);
 	::signal(SIGABRT, zpt::rest::terminate);
-	::signal(SIGSEGV, zpt::rest::terminate);
+	//::signal(SIGSEGV, zpt::rest::terminate);
 	
 	std::string _name = std::string(_options["name"]);
 	std::string _u_name(_name.data());

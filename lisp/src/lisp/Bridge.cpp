@@ -219,6 +219,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		":split "
 		":join "
 		":merge "
+		":replace "
 		":topic-var "
 		":authorize "
 		":authorization-headers "
@@ -491,6 +492,28 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::json _rhs = _bridge->from< zpt::lisp::object >(_args[1]);
 	
 			return _bridge->to< zpt::lisp::object >(_lhs + _rhs);
+		}
+	);
+	_bridge->deflbd(
+		{
+			"name", "zpt:replace",
+			"type", "internal",
+			"access", "a",
+			"label", "Replace a string with another, within a given string",
+			"args", { zpt::array,
+				{ "type", "any", "label", "the string to search within" },
+				{ "type", "any", "label", "the string to search for" },
+				{ "type", "any", "label", "the string to replace with" }
+			}
+		},
+		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
+			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
+
+			zpt::json _p_target = _bridge->from< zpt::lisp::object >(_args[0]);
+			zpt::json _p_search = _bridge->from< zpt::lisp::object >(_args[1]);
+			zpt::json _p_replace = _bridge->from< zpt::lisp::object >(_args[2]);
+	
+			return _bridge->to< zpt::lisp::object >(zpt::json::string(zpt::r_replace(std::string(_p_target), std::string(_p_search), std::string(_p_replace))));
 		}
 	);
 	_bridge->deflbd(
