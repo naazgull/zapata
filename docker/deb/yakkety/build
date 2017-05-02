@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd /root/zapata && git pull && make config && make && make distcheck && make deb
+cp $(find . -name "*.deb") /var/cache/zapata
+

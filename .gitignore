@@ -53,3 +53,4 @@ json/src/json/zinit
 zmq/src/zmq/zmut
 rest/src/rest/z0mqc
 json/src/json/zjson
+*/**/docker-data

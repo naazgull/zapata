@@ -62,6 +62,13 @@ int main(int argc, char* argv[]) {
 	  WantedBy=multi-user.target      
 	 */
 
+	zpt::json _args = zpt::conf::getopt(argc, argv);
+	if (_args["add"]) {
+		std::istringstream
+	}
+	else if (_args["remove"]) {
+		
+	}
 	
 	return 0;
 }
