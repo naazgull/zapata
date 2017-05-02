@@ -16,6 +16,6 @@ WORKDIR /root
 RUN git clone git://github.com/naazgull/zapata.git
 WORKDIR /root/zapata
 RUN make config && make && make upstream && make deb
-RUN ssh pf@dfz.pt 'rm -rfv /home/pf/deb/xenial/*'; scp $(find . -name "*.deb") pf@dfz.pt:/home/pf/deb/xenial/
+RUN ssh pf@dfz.pt 'rm -rfv /home/pf/deb/yakkety/*'; scp $(find . -name "*.deb") pf@dfz.pt:/home/pf/deb/yakkety/
 
 VOLUME /var/log/zapata
