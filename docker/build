@@ -5,5 +5,7 @@ then
 	echo "must specify an Ubuntu flavour"
 	exit -1
 fi
-	     
-docker run -i -t -v /var/cache/zapata/$1:/var/cache/zapata naazgull/zapata:build-$1
+
+flavour=$1
+
+docker run --rm -i -t -v /var/cache/zapata/${flavour}:/var/cache/zapata naazgull/zapata:build-${flavour}
