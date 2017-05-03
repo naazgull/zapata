@@ -17,5 +17,6 @@ RUN git checkout 26compat && sed -i 's/-Wall/-w/g' SConstruct && scons --prefix=
 
 WORKDIR /root
 RUN git clone git://github.com/naazgull/zapata.git && cd zapata && git checkout $branch
+RUN sed -i 's#yakkety#xenial#' $(grep -l -R yakkety *)
 
 ENTRYPOINT ["/root/build"]
