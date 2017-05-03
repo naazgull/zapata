@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ "$1" == "" ]]
+then
+	echo "must specify an Ubuntu flavour"
+	exit -1
+fi
+	     
+docker run -i -t -v /var/cache/zapata/$1:/var/cache/zapata naazgull/zapata:build-$1
