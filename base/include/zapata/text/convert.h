@@ -44,6 +44,7 @@ SOFTWARE.
 #include <openssl/buffer.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
+#include <openssl/hmac.h>
 
 #include <ossp/uuid++.hh>
 
@@ -144,6 +145,11 @@ namespace zpt {
 
 	namespace ascii {
 		void encode(string& out, bool quote = true);
+	}
+
+	namespace hmac {
+		auto encode(std::string _key, std::string _to_encode, std::string& _out) -> void;
+		auto r_encode(std::string _key, std::string _to_encode) -> std::string;
 	}
 
 	namespace hash {

@@ -38,6 +38,28 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	if (argc > 1) {
+		if (argc > 2 && std::string(argv[1]) == "--parse-only") {
+			zpt::json _ptr;
+			std::ifstream _in;
+			_in.open(argv[2]);
+			if (!_in.is_open()) {
+				zlog(std::string("unable to open provided file: ") + std::string(argv[2]), zpt::error);
+				exit(-10);
+			}
+			try {
+				_in >> _ptr;
+			}
+			catch(zpt::assertion& _e) {
+				std::cout << _e.what() << endl << flush;
+				return -1;
+			}
+			catch(zpt::SyntaxErrorException& _e) {
+				std::cout << argv[2] << ": " << _e.what() << endl << flush;
+				return -1;
+			}
+			return 0;
+		}
+		
 		for (int _i = 1; _i != argc; _i++) {
 			zpt::json _ptr;
 			std::ifstream _in;
