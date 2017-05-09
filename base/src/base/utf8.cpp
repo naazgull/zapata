@@ -245,18 +245,3 @@ void zpt::unicode::escape(std::string& _out) {
 	}
 	_out.assign(_oss.str());
 }
-
-auto zpt::hmac::encode(std::string _key, std::string _to_encode, std::string& _out) -> void {
-	unsigned int _size = 0;
-	HMAC_CTX _ctx;
-	HMAC_CTX_init(&_ctx);
-	HMAC_Init(&_ctx, _key.data(), _key.size(), EVP_sha256());
-	HMAC_Update(&_ctx, (const unsigned char*) _to_encode.data(), _to_encode.size());
-	HMAC_Final(&_ctx, (unsigned char*) &_out[0], &_size);
-}
-
-auto zpt::hmac::r_encode(std::string _key, std::string _to_encode) -> std::string {
-	std::string _r;
-	zpt::hmac::encode(_key, _to_encode, _r);
-	return _r;
-}
