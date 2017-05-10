@@ -1,3 +1,9 @@
+zapata-couchdb (0.9.7-1yakkety2) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 10 May 2017 10:23:52 +0100
+
 zapata-couchdb (0.9.7-1yakkety1) yakkety; urgency=medium
 
   * Initialization
