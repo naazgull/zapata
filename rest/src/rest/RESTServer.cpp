@@ -727,13 +727,13 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 		zlog("unable to start: syntax error when parsing configuration file", zpt::error);
 		exit(-10);
 	}
-	if (_ptr->type() == zpt::JSObject) {
-		for (auto _proc : _ptr->obj()) {
-			if (_proc.first.find("$") == std::string::npos) {
-				_proc.second << "argv" << _args;
-			}
-		}
-	}
+	// if (_ptr->type() == zpt::JSObject) {
+	// 	for (auto _proc : _ptr->obj()) {
+	// 		if (_proc.first.find("$") == std::string::npos) {
+	// 			_proc.second << "argv" << _args;
+	// 		}
+	// 	}
+	// }
 
 	zpt::log_lvl = _log_level;
 	return _ptr;

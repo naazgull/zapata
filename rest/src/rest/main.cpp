@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 		zpt::rest::server::launch(argc, argv);
 	}
 	catch (zpt::assertion& _e) {
-		zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
+		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
 		exit(-10);
 	}
 	catch (std::exception& _e) {
