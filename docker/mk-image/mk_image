@@ -5,9 +5,9 @@ echo "#!/bin/bash
 pushd /root/zapata
 
 git pull
-sed -i 's#$(lsb_release -sc)#$1#g' $(grep -l -R $(lsb_release -sc) *)
+sed -i 's#$(lsb_release -sc)#$1#g' \$(grep -l -R $(lsb_release -sc) *)
 make config && make && make distcheck && make deb
-cp $(find . -name "*.deb") /var/cache/zapata
+cp \$(find . -name "*.deb") /var/cache/zapata
 
 popd" > build
 
