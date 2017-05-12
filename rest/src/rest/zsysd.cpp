@@ -69,6 +69,7 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 			"${requirements}\n"
 			"\n"
 			"[Service]\n"
+			"Type=notify\n"
 			"TimeoutStartSec=0\n"
 			"TimeoutStopSec=5\n"
 			"Restart=on-failure\n"

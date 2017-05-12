@@ -90,7 +90,7 @@ navigate into the package dir and build the package.
 
 a) Install dependencies:
 
-	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libsodium-dev libpython3.6-dev ecl
+	$ sudo apt-get install g++ build-essential autoconf libtool pkg-config libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev libzmq3-dev libsodium-dev libpython3.6-dev ecl
 
 ### 2) Building a zapata package
 

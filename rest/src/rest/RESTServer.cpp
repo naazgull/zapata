@@ -35,6 +35,7 @@ SOFTWARE.
 #include <iterator>
 #include <string>
 #include <vector>
+#include <systemd/sd-daemon.h>
 #include <zapata/rest/codes_rest.h>
 #include <zapata/python.h>
 #include <zapata/lisp.h>
@@ -400,6 +401,7 @@ void zpt::RESTServer::start() {
 		std::transform(_NAME.begin(), _NAME.end(), _NAME.begin(), ::toupper);
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 
+		sd_notify(0, "READY=1");
 		if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
 			this->__mqtt->loop();
 		}
@@ -727,13 +729,6 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 		zlog("unable to start: syntax error when parsing configuration file", zpt::error);
 		exit(-10);
 	}
-	// if (_ptr->type() == zpt::JSObject) {
-	// 	for (auto _proc : _ptr->obj()) {
-	// 		if (_proc.first.find("$") == std::string::npos) {
-	// 			_proc.second << "argv" << _args;
-	// 		}
-	// 	}
-	// }
 
 	zpt::log_lvl = _log_level;
 	return _ptr;
