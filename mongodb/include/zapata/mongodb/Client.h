@@ -46,8 +46,6 @@ namespace zpt {
 			virtual auto options() -> zpt::json;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
 			virtual auto events() -> zpt::ev::emitter;
-			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
-			virtual auto mutations() -> zpt::mutation::emitter;
 
 			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;

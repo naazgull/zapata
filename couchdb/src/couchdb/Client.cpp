@@ -65,13 +65,6 @@ auto zpt::couchdb::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::couchdb::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::couchdb::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::couchdb::Client::connect() -> void {
 	zpt::Connector::connect();
 }

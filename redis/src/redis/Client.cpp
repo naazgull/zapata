@@ -67,13 +67,6 @@ auto zpt::redis::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::redis::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::redis::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::redis::Client::connect() -> void {
 	this->__host.assign(std::string(this->connection()["host"]).data());
 	this->__port = int(this->connection()["port"]);

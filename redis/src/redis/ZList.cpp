@@ -58,13 +58,6 @@ auto zpt::redis::ZList::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::redis::ZList::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::redis::ZList::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::redis::ZList::connect() -> void {
 	this->__host.assign(std::string(this->connection()["host"]).data());
 	this->__port = int(this->connection()["port"]);

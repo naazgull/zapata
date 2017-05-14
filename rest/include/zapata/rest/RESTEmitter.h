@@ -103,7 +103,6 @@ namespace zpt {
 		virtual auto options() -> zpt::json;
 		virtual auto poll() -> zpt::poll;
 		virtual auto events() -> zpt::ev::emitter;
-		virtual auto mutations() -> zpt::mutation::emitter;
 		virtual auto credentials() -> zpt::json;
 		virtual auto credentials(zpt::json _credentials) -> void;
 		virtual auto unbind() -> void;
@@ -145,7 +144,6 @@ namespace zpt {
 		virtual zpt::json options();
 		virtual zpt::poll poll();
 		virtual zpt::ev::emitter events();
-		virtual zpt::mutation::emitter mutations();
 
 		virtual zpt::socket_ref bind(short _type, std::string _connection);
 		virtual zpt::socket_ref bind(std::string _object_path);

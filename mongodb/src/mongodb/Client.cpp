@@ -59,13 +59,6 @@ auto zpt::mongodb::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::mongodb::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::mongodb::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::mongodb::Client::conn() -> mongo::ScopedDbConnection& {
 	return (*this->__conn.get());
 }

@@ -60,13 +60,6 @@ auto zpt::mariadb::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::mariadb::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::mariadb::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::mariadb::Client::connect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));

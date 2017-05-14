@@ -499,10 +499,6 @@ zpt::ev::emitter zpt::RESTClient::events() {
 	return this->__emitter;
 }
 
-zpt::mutation::emitter zpt::RESTClient::mutations() {
-	return this->__emitter->mutations();
-}
-
 zpt::json zpt::RESTClient::options() {
 	return this->__options;
 }

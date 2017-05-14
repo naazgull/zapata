@@ -60,13 +60,6 @@ auto zpt::pgsql::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::pgsql::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::pgsql::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::pgsql::Client::connect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::string _s_conn = this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("");
