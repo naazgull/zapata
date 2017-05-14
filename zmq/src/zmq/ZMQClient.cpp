@@ -1241,6 +1241,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 	try {
 		int64_t _more = 0;
 		size_t _more_size = sizeof(_more);
+		std::string _uuid;
 
 		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
 			this->in()->recv(_frame1);
@@ -1257,9 +1258,9 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
 			if (_more != 0) {
 				this->in()->recv(&_frame4);
-			} }
+			}
+			_uuid.assign(zpt::generate::r_uuid()); }
 		
-		std::string _uuid = zpt::generate::r_uuid();
 		std::string _empty(static_cast<char*>(_frame2.data()), _frame2.size());
 		std::string _directive(static_cast<char*>(_frame3.data()), _frame3.size());
 		std::string _raw(static_cast<char*>(_frame4.data()), _frame4.size());
