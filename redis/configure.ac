@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-redis, 0.9.7-1yakkety2, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-redis, 0.9.7-1yakkety6, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -18,8 +18,10 @@ AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
 AC_HAVE_LIBRARY(hiredis)
 AC_HAVE_LIBRARY(ossp-uuid++)
-AC_HAVE_LIBRARY(zapata-base)
-AC_HAVE_LIBRARY(zapata-json)
+AC_CHECK_LIB(zapata-base, zpt_base)
+AC_CHECK_LIB(zapata-json, zpt_json)
+AC_CHECK_LIB(zapata-events, zpt_events)
+AC_CHECK_LIB(zapata-http, zpt_http)
 
 AC_CANONICAL_SYSTEM
 

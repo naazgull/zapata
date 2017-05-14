@@ -3227,6 +3227,7 @@ std::string zpt::timestamp(zpt::timestamp_t _timestamp) {
 		}
 	}
 	zpt::tostr(_date, _remainder);
-	zpt::tostr(_date, (size_t) (_timestamp / 1000), "%z");
+	size_t _time_offset = (size_t) (_timestamp / 1000);
+	zpt::tostr(_date, _time_offset, "%z");
 	return _date;
 }

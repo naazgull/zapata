@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-rest, 0.9.7-1yakkety2, n@zgul <naazgull@dfz.pt>)
+AC_INIT(zapata-rest, 0.9.7-1yakkety6, n@zgul <naazgull@dfz.pt>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -51,6 +51,7 @@ AC_CONFIG_FILES(Makefile
         debian/Makefile
         etc/Makefile
         include/Makefile
+	src/Makefile
         src/rest/Makefile)
 
 AC_OUTPUT

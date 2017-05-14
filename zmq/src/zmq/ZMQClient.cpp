@@ -1181,6 +1181,9 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	{ std::lock_guard< std::mutex > _lock(this->__sock_mtx);
 		_uuid.assign(std::string(_envelope["channel"]));
 		auto _found = this->__sock_id.find(_uuid);
+		if (_found == this->__sock_id.end()) {
+			zlog(std::string("couldn't find socket associated with '") + _uuid + std::string("'"), zpt::critical);
+		}
 		_frame1 = _found->second;
 		this->__sock_id.erase(_found); }
 	
@@ -1245,10 +1248,12 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 			if (_more != 0) {
 				this->in()->recv(&_frame2);
 			}
+			_more = 0;
 			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
 			if (_more != 0) {
 				this->in()->recv(&_frame3);
 			}
+			_more = 0;
 			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
 			if (_more != 0) {
 				this->in()->recv(&_frame4);

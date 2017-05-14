@@ -39,11 +39,13 @@ SOFTWARE.
 #include <zapata/text/manip.h>
 #include <cmath>
 #include <regex>
+#include <iomanip>
 
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
+#include <openssl/hmac.h>
 
 #include <ossp/uuid++.hh>
 
@@ -210,6 +212,28 @@ namespace zpt {
 			SHA512(input, hash);
 			return hash;
 		}		
+		template<class type, class k_type>
+		type HMAC_SHA256(const type& input, k_type key) {
+			unsigned char hash[EVP_MAX_MD_SIZE];
+
+			HMAC_CTX hmac;
+			HMAC_CTX_init(&hmac);
+			HMAC_Init_ex(&hmac, &key[0], key.length(), EVP_sha256(), NULL);
+			HMAC_Update(&hmac, ( unsigned char* )&input[0], input.length());
+			unsigned int len = EVP_MAX_MD_SIZE;
+			HMAC_Final(&hmac, hash, &len);
+			HMAC_CTX_cleanup(&hmac);
+
+			std::stringstream ss;
+			ss << std::setfill('0');
+			for (unsigned int i = 0; i < len; i++) {
+				ss  << hash[i];
+			}
+			ss << flush;
+
+			return (ss.str());
+		}
+
 	}
 
 	namespace generate {

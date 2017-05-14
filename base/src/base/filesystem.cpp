@@ -25,6 +25,7 @@ SOFTWARE.
 #include <zapata/base/assert.h>
 #include <zapata/file/manip.h>
 
+#include <iostream>
 #include <fcntl.h>
 #include <stdio.h>
 #include <fstream>

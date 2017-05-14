@@ -35,6 +35,7 @@ SOFTWARE.
 #include <iterator>
 #include <string>
 #include <vector>
+#include <systemd/sd-daemon.h>
 #include <zapata/rest/codes_rest.h>
 #include <zapata/python.h>
 #include <zapata/lisp.h>
@@ -164,7 +165,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);
 	::signal(SIGABRT, zpt::rest::terminate);
-	//::signal(SIGSEGV, zpt::rest::terminate);
+	::signal(SIGSEGV, zpt::rest::terminate);
 	
 	std::string _name = std::string(_options["name"]);
 	std::string _u_name(_name.data());
@@ -400,6 +401,7 @@ void zpt::RESTServer::start() {
 		std::transform(_NAME.begin(), _NAME.end(), _NAME.begin(), ::toupper);
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 
+		sd_notify(0, "READY=1");
 		if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
 			this->__mqtt->loop();
 		}
@@ -726,13 +728,6 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog("unable to start: syntax error when parsing configuration file", zpt::error);
 		exit(-10);
-	}
-	if (_ptr->type() == zpt::JSObject) {
-		for (auto _proc : _ptr->obj()) {
-			if (_proc.first.find("$") == std::string::npos) {
-				_proc.second << "argv" << _args;
-			}
-		}
 	}
 
 	zpt::log_lvl = _log_level;
