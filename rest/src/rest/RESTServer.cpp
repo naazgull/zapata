@@ -168,6 +168,10 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	::signal(SIGSEGV, zpt::rest::terminate);
 	
 	std::string _name = std::string(_options["name"]);
+	if (_name.length() != 0) {
+		delete zpt::log_pname;
+		zpt::log_pname = new string(_name.data());
+	}
 	std::string _u_name(_name.data());
 	std::transform(_u_name.begin(), _u_name.end(), _u_name.begin(), ::toupper);
 	zlog(std::string("starting RESTful service container *") + _u_name + std::string("*"), zpt::notice);
