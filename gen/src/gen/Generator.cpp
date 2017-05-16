@@ -801,7 +801,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_h, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
-		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["name"]));
+		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, "v3", "mutations", "{operation}", this->__spec["name"] }));
 		if (this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
 			std::string _mutation;
 			bool _first = true;

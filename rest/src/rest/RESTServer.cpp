@@ -79,14 +79,6 @@ auto zpt::rest::terminate(int _signal) -> void {
 		exit(0);
 	}
 	zpt::rest::interrupted = true;
-	if (zpt::rest::m_sem != -1) {
-		semctl(zpt::rest::m_sem, 0, IPC_RMID);
-		zpt::rest::m_sem = -1;
-	}
-	if (zpt::rest::m_pid != 0) {
-		zlog(std::string("terminating mutation process"), zpt::warning);
-		::kill(zpt::rest::m_pid, (_signal == SIGSEGV ? SIGTERM : _signal));
-	}
 }
 
 int zpt::RESTServerPtr::launch(int argc, char* argv[]) {	

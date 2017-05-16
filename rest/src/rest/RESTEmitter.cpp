@@ -359,8 +359,8 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (_endpoint.second[_method] != nullptr) {
 				_method_found = true;
 				try {
-					zpt::json _result = _endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
-					if (_result->ok()) {
+					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
+					/*if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
 							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
 							if (bool(_opts["bubble-error"])) {
@@ -373,7 +373,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"]);
 
 						_return = _result;
-					}
+						}*/
 				}
 				catch (zpt::assertion& _e) {
 					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
