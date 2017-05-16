@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include <zapata/rest/RESTEmitter.h>
-#include <zapata/rest/MutationEmitter.h>
 #include <zapata/lisp.h>
 #include <zapata/python.h>
 #include <map>
@@ -40,12 +39,6 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 		zlog("something is definitely wrong, RESTEmitter already initialized", zpt::emergency);
 	}
 	zpt::rest::__emitter = this;
-	if (std::string(this->options()["$mutations"]["enabled"]) == "true") {
-		this->mutations((new zpt::RESTMutationEmitter(this->options()))->self());
-	}
-	else {
-		this->mutations((new zpt::DefaultMutationEmitter(this->options()))->self());
-	}
 	this->__default_options = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
 		if (_envelope["headers"]["Origin"]->ok()) {
 			return {

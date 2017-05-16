@@ -54,8 +54,6 @@ namespace zpt {
 			virtual auto name() -> std::string;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
 			virtual auto events() -> zpt::ev::emitter;
-			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
-			virtual auto mutations() -> zpt::mutation::emitter;
 			virtual auto self() const -> zpt::bridge;
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::python::object;

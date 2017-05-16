@@ -28,4 +28,3 @@ SOFTWARE.
 #include <zapata/rest/config.h>
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/RESTServer.h>
-#include <zapata/rest/MutationEmitter.h>

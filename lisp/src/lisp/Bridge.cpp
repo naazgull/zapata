@@ -53,13 +53,6 @@ auto zpt::lisp::Bridge::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::lisp::Bridge::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::lisp::Bridge::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
-}
-
 auto zpt::lisp::Bridge::self() const -> zpt::bridge {
 	return this->__self;
 }

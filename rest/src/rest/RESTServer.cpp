@@ -39,13 +39,10 @@ SOFTWARE.
 #include <zapata/rest/codes_rest.h>
 #include <zapata/python.h>
 #include <zapata/lisp.h>
-#include <zapata/rest/MutationEmitter.h>
 
 namespace zpt {
 	namespace rest {
 		pid_t root = 0;
-		pid_t m_pid = 0;
-		int m_sem = -1;
 		bool interrupted = false;
 	}
 }
@@ -118,49 +115,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		}
 	}
 		
-	zpt::rest::m_pid = 0;
-
-	if (std::string(_ptr["$mutations"]["run"]) == "true") {
-		key_t _key = ftok("/usr/bin/zpt", 1);
-		zpt::rest::m_sem = semget(_key, 1, IPC_CREAT | IPC_EXCL | 0777);
-		if (zpt::rest::m_sem != -1) {
-			struct sembuf _inc[1] = { { (short unsigned int) 0, 1 } };
-			semop(zpt::rest::m_sem, _inc, 1);	
-		
-			zpt::rest::m_pid = fork();
-			if (zpt::rest::m_pid == 0) {
-				try {
-					zpt::mutation::server::launch(argc, argv, zpt::rest::m_sem);
-				}
-				catch (zpt::assertion& _e) {
-					zlog(_e.what() + string(" | ") + _e.description(), zpt::emergency);
-					return -1;
-				}
-				catch (std::exception& _e) {
-					zlog(_e.what(), zpt::emergency);
-					return -1;
-				}
-				return 0;
-			}
-			else {
-				struct sembuf _block[1] = { { (short unsigned int) 0, 0 } };
-				semop(zpt::rest::m_sem, _block, 1);	
-			}
-		}
-		else {
-			zlog("mutation server already runing", zpt::notice);
-		}
-	}
-
 	zpt::json _options = _ptr["boot"][0];
-
-	if (_ptr["$mutations"]->ok()) {
-		_options << "$mutations" << _ptr["$mutations"]->clone();
-	}
-	if (_ptr["$defaults"]->ok()) {
-		_options << "$defaults" << _ptr["$defaults"]->clone();
-	}
-	_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on", "mutations_listener", (_options["$mutations"]->ok() ? "on" : "off") });
+	_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on" });
 
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);
@@ -296,10 +252,6 @@ auto zpt::RESTServer::events() -> zpt::ev::emitter {
 	return this->__emitter;
 }
 
-auto zpt::RESTServer::mutations() -> zpt::mutation::emitter {
-	return this->__emitter->mutations();
-}
-
 auto zpt::RESTServer::options() -> zpt::json {
 	return this->__options;
 }
@@ -385,16 +337,6 @@ void zpt::RESTServer::start() {
 				}
 			);
 			_http.detach();
-		}
-
-		if (std::string(this->__options["proc"]["mutations_listener"]) != "off") {
-			zlog(std::string("starting 0MQ mutation listener"), zpt::info);
-			std::thread _mutations(
-				[ this ] () -> void {
-					((zpt::RESTMutationEmitter*) this->events()->mutations().get())->loop();
-				}
-			);
-			_mutations.detach();
 		}
 
 		for (auto _callback : this->__initializers) {

@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/rest/MutationEmitter.h>
 #include <zapata/rest/RESTServer.h>
 #include <sys/sem.h>
 #include <map>

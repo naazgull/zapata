@@ -923,7 +923,7 @@ auto zpt::GenDatum::build_insert() -> std::string {
 	std::string _source = this->build_dbms_source();
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0 && _source.length() != 0) {
-		_return += std::string("{ zpt::mutation::Insert,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"insert\") {\n");	
 		_return += std::string("std::string _c_source = ");
 		_return += _source;
 		_return += std::string(";\n");
@@ -978,7 +978,7 @@ auto zpt::GenDatum::build_insert() -> std::string {
 
 		_return += std::string("_c->insert(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _r_data, { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
-		_return += std::string("}\n}\n");
+		_return += std::string("}\n");
 	}
 	return _return;
 }
@@ -987,7 +987,7 @@ auto zpt::GenDatum::build_update() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{ zpt::mutation::Update,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"update\") {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -1000,7 +1000,7 @@ auto zpt::GenDatum::build_update() -> std::string {
 		_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _envelope[\"payload\"][\"changes\"], { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("}\n");	
-		_return += std::string("}\n}\n");
+		_return += std::string("}\n");
 	}
 	return _return;
 }
@@ -1009,7 +1009,7 @@ auto zpt::GenDatum::build_remove() -> std::string {
 	std::string _return;
 	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
-		_return += std::string("{ zpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"remove\") {\n");	
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
 		_return += std::string(" };\n");
@@ -1022,7 +1022,7 @@ auto zpt::GenDatum::build_remove() -> std::string {
 		_return += std::string("_c->remove(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("}\n");	
-		_return += std::string("}\n}\n");
+		_return += std::string("}\n");
 	}
 	return _return;
 }
@@ -1032,7 +1032,7 @@ auto zpt::GenDatum::build_replace() -> std::string {
 	std::string _dbms = this->build_dbms();
 	std::string _source = this->build_dbms_source();
 	if (_dbms.length() != 0 && _source.length() != 0) {
-		_return += std::string("{ zpt::mutation::Replace,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"replace\") {\n");	
 		_return += std::string("std::string _c_source = ");
 		_return += _source;
 		_return += std::string(";\n");
@@ -1087,7 +1087,7 @@ auto zpt::GenDatum::build_replace() -> std::string {
 
 		_return += std::string("_c->save(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _r_data, { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
-		_return += std::string("}\n}\n");
+		_return += std::string("}\n");
 	}
 	return _return;
 }
@@ -1108,7 +1108,7 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 			_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
 			_join_with = zpt::Generator::get_datum(_other_ref);
 		}
-		_return += std::string("{ zpt::mutation::Insert,\n(_h_on_change = [] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"insert\" || _tv_operation == \"update\" || _tv_operation == \"replace\"") + (std::string(_field["rel"]).find("/") != std::string::npos ? std::string(" || _tv_operation == \"remove\"") : std::string("")) + std::string(") {\n");	
 		_return += std::string("try {\n");
 		_return += std::string("std::string _c_source = ");
 		_return += _source;
@@ -1175,29 +1175,25 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 		_return += std::string("}\n");
 		_return += std::string("}\n");	
 		_return += std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + _e.description(), zpt::error); }\n");
-		_return += std::string("})\n}\n");
+		_return += std::string("})\n");
 	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_associations_update(std::string _name, zpt::json _field) -> std::string {
 	std::string _return;
-	std::string _dbms = this->build_dbms();
-	if (_dbms.length() != 0) {
-		_return += std::string("{ zpt::mutation::Update, _h_on_change }\n");
-	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _field) -> std::string {
 	std::string _return;
-	std::string _dbms = this->build_dbms();
 	if (std::string(_field["rel"]).find("/") != std::string::npos) {
-		return std::string("{ zpt::mutation::Remove, _h_on_change }\n");
+		return _return;
 	}
+	std::string _dbms = this->build_dbms();
 	if (_dbms.length() != 0) {
 		zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
-		_return += std::string("{ zpt::mutation::Remove,\n[] (zpt::mutation::operation _performative, std::string _resource, zpt::json _envelope, zpt::mutation::emitter _emitter) -> void {\n");	
+		_return += std::string("if (_tv_operation == \"remove\") {\n");	
 		_return += std::string("try {\nif (_envelope[\"payload\"][\"filter\"]->ok()) return;\n");
 		_return += std::string("zpt::json _c_names = { zpt::array, ");
 		_return += this->build_dbms();
@@ -1235,17 +1231,13 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 		_return += std::string("}\n");
 		_return += std::string("}\n");
 		_return += std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + _e.description(), zpt::error); }\n");
-		_return += std::string("}\n}\n");
+		_return += std::string("}\n");
 	}
 	return _return;
 }
 
 auto zpt::GenDatum::build_associations_replace(std::string _name, zpt::json _field) -> std::string {
 	std::string _return;
-	std::string _dbms = this->build_dbms();
-	if (_dbms.length() != 0) {
-		_return += std::string("{ zpt::mutation::Replace, _h_on_change }\n");
-	}
 	return _return;
 }
 

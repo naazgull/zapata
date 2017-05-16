@@ -44,8 +44,6 @@ namespace zpt {
 
 	namespace rest {
 		extern pid_t root;
-		extern pid_t m_pid;
-		extern int m_sem;
 		extern bool interrupted;
 		
 		auto terminate(int _signal) -> void;
