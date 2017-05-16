@@ -10,15 +10,21 @@ encapsulated and abstracted by the RESTful pattern. It has built-in support
 for MongoDB, Redis, Oauth2.0 user authorization and authentication. Finally, 
 it has a really neat JSON support. It still lacks documentation, that's a work in progress.
 
-[![Build Status](https://travis-ci.org/naazgull/zapata.svg?branch=master)](https://travis-ci.org/naazgull/zapata)
-
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/naazgull/zapata?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 [![Trello](http://dfz.pt/img/trello_board.png)](https://trello.com/b/wD0PvV0H/github-com-naazgull-zapata)
 
 # INSTALLATION
 
-## Ubuntu 16.04/16.10
+## Ubuntu 16.04 specific
+
+a) Ubuntu 16.04 PPA repositories, containing acceptable PostgreSQL and Python versions:
+
+	$ sudo add-apt-repository ppa:jtv/ppa
+	$ sudo add-apt-repository ppa:fkrull/deadsnakes
+	$ sudo apt-get update
+
+## Ubuntu 16.04 / 16.10 / 17.04
 
 ### 1) Zapata RESTful libraries ###
 
@@ -34,12 +40,7 @@ b) Update your repository cache and install base packages:
 
 ### 2) PostgreSQL support ###
 
-a) In 16.04, add apt repository;
-
-	$ sudo add-apt-repository ppa:jtv/ppa
-	$ sudo apt-get update
-
-b) Install Zapata's PostgreSQL support packages:
+a) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
@@ -75,7 +76,13 @@ a) Install Zapata's Redis support packages:
 
 	$ sudo apt-get install zapata-redis
 
-### 6) OAuth2.0 support ###
+### 6) CouchDB support ###
+
+a) Install Zapata's Redis support packages:
+
+	$ sudo apt-get install zapata-couchdb
+
+### 7) OAuth2.0 support ###
 
 a) Install Users/OAuth2.0 support packages:
 
