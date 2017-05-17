@@ -69,11 +69,13 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 			"${requirements}\n"
 			"\n"
 			"[Service]\n"
+			"LimitNOFILE=${fd_max}\n"
 			"Type=notify\n"
 			"TimeoutStartSec=0\n"
-			"TimeoutStopSec=5\n"
+			"TimeoutStopSec=2\n"
 			"Restart=on-failure\n"
 			"RemainAfterExit=no\n"
+			"WatchdogSec=${keep_alive}\n"
 			"\n"
 			"ExecStart=/usr/bin/zpt -c /etc/zapata/backend-enabled/${name}.conf\n"
 			"\n"
@@ -93,6 +95,20 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 		zpt::replace(_sysd, "${dependencies}", _after);
 		zpt::replace(_sysd, "${requirements}", _requires);
 		zpt::replace(_sysd, "${name}", std::string(_conf["boot"][0]["name"]));
+		
+		if (_conf["boot"][0]["keep_alive"]->ok()) {
+			zpt::replace(_sysd, "${keep_alive}", std::string(_conf["boot"][0]["keep_alive"]));
+		}
+		else {
+			zpt::replace(_sysd, "${keep_alive}", "0");
+		}
+
+		if (_conf["boot"][0]["fd_max"]->ok()) {
+			zpt::replace(_sysd, "${fd_max}", std::string(_conf["boot"][0]["fd_max"]));
+		}
+		else {
+			zpt::replace(_sysd, "${fd_max}", "0");
+		}
 
 		std::ofstream _sfs;
 		_sfs.open((std::string("/lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) + std::string(".service")).data());
