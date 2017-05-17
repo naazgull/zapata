@@ -313,7 +313,6 @@ auto zpt::ZMQPoll::loop() -> void {
 				this->__sync[0]->recv(&_frame);
 				
 				std::string _uuid(std::string(static_cast<char*>(_frame.data()), _frame.size()));
-				//zdbg(std::string("its the add FD ") + _uuid);
 				try {
 					zpt::socket_ref _socket = this->get(_uuid);
 					_to_add.push_back(_socket);

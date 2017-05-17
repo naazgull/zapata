@@ -73,7 +73,7 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 			"Type=notify\n"
 			"TimeoutStartSec=0\n"
 			"TimeoutStopSec=2\n"
-			"Restart=on-failure\n"
+			"Restart=${restart}\n"
 			"RemainAfterExit=no\n"
 			"WatchdogSec=${keep_alive}\n"
 			"\n"
@@ -108,6 +108,13 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 		}
 		else {
 			zpt::replace(_sysd, "${fd_max}", "0");
+		}
+
+		if (_conf["boot"][0]["restart_policy"]->ok()) {
+			zpt::replace(_sysd, "${restart}", std::string(_conf["boot"][0]["restart_policy"]));
+		}
+		else {
+			zpt::replace(_sysd, "${restart}", "no");
 		}
 
 		std::ofstream _sfs;
