@@ -1,3 +1,9 @@
+zapata-lisp (0.9.7-1yakkety9) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 17 May 2017 15:44:38 +0100
+
 zapata-lisp (0.9.7-1yakkety8) yakkety; urgency=medium
 
   * Version bump
