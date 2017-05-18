@@ -1,3 +1,15 @@
+zapata-mariadb (0.9.7-1yakkety9) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 17 May 2017 15:44:37 +0100
+
+zapata-mariadb (0.9.7-1yakkety8) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Wed, 17 May 2017 15:34:08 +0100
+
 zapata-mariadb (0.9.7-1yakkety7) yakkety; urgency=medium
 
   * Version bump

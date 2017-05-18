@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/zmq/ZMQPolling.h>
+#include <systemd/sd-daemon.h>
 #include <future>
 
 zpt::ZMQPollPtr::ZMQPollPtr(zpt::json _options, zpt::ev::emitter _emiter) : std::shared_ptr<zpt::ZMQPoll>(new zpt::ZMQPoll(_options, _emiter)) {
@@ -229,11 +230,21 @@ auto zpt::ZMQPoll::loop() -> void {
 		std::vector< zpt::socket_ref > _to_add;
 		std::vector< zpt::socket_ref > _to_remove;
 
+		uint64_t _sd_watchdog_usec = 0;
+		bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
+		zlog(std::string("watchdog flag is ") + (_sd_watchdog_enabled ? std::string("enabled") + std::string(" and timeout is set to ") + std::to_string(_sd_watchdog_usec / 1000 / 1000) + std::string(" seconds") : std::string("disabled")), zpt::notice);
+		
 		for(; true; ) {
 			this->repoll();
 			
 			// zlog(std::string("polling for ") + std::to_string(this->__items.size()) + std::string(" sockets"), zpt::notice);
-			zmq::poll(this->__items, -1);
+			if (_sd_watchdog_enabled) {
+				zmq::poll(this->__items, _sd_watchdog_usec / 1000 / 2);
+				sd_notify(0, "WATCHDOG=1");
+			}
+			else {
+				zmq::poll(this->__items, -1);
+			}
 			// zdbg("got something");
 
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
@@ -271,12 +282,13 @@ auto zpt::ZMQPoll::loop() -> void {
 								zpt::json{
 									"channel", _envelope["channel"],
 									"performative", zpt::ev::Reply,
+									"status", 400,
 									"resource", "/bad-request"
 								}
 							);
 						}
 					}
-					if (_envelope->ok()) {
+					else if (_envelope->ok()) {
 						if (std::string(this->options()["$defaults"]["threads"]) == "off" || _socket->type() == ZMQ_REP) {
 							this->reply(_envelope, _socket);
 						}
@@ -301,7 +313,6 @@ auto zpt::ZMQPoll::loop() -> void {
 				this->__sync[0]->recv(&_frame);
 				
 				std::string _uuid(std::string(static_cast<char*>(_frame.data()), _frame.size()));
-				//zdbg(std::string("its the add FD ") + _uuid);
 				try {
 					zpt::socket_ref _socket = this->get(_uuid);
 					_to_add.push_back(_socket);
@@ -326,15 +337,9 @@ auto zpt::ZMQPoll::loop() -> void {
 			}
 			_to_remove.clear();
 
-			if (this->__by_socket.size() < 200) {
-				for (; _to_add.size() != 0; ) {
-					//zdbg(std::string("adding new socket ") + _to_add[0]);
-					this->__by_socket.push_back(_to_add[0]);
-					_to_add.erase(_to_add.begin());
-					if (this->__by_socket.size() > 200) {
-						break;
-					}
-				}
+			for (; _to_add.size() != 0; ) {
+				this->__by_socket.push_back(_to_add[0]);
+				_to_add.erase(_to_add.begin());
 			}
 		}
 	}

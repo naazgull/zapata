@@ -1421,7 +1421,7 @@ auto zpt::ZMQHttp::type() -> short int {
 }
 
 auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
-	assertz(_envelope["resource"]->ok(), "''resource' attributes are required", 412, 0);
+	assertz(_envelope["resource"]->ok(), "'resource' attribute is required", 412, 0);
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
