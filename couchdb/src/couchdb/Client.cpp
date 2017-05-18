@@ -33,13 +33,14 @@ zpt::couchdb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) :
 zpt::couchdb::ClientPtr::~ClientPtr() {
 }
 
-zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options) {
+zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __socket(new zpt::socketstream()) {
 	try {
 		zpt::json _uri = zpt::uri::parse((std::string) _options->getPath(_conf_path)["bind"]);
 		if (_uri["scheme"] == zpt::json::string("zpt")) {
 			_uri << "scheme" << "http";
 		}
 		this->connection(_options->getPath(_conf_path) + zpt::json{ "uri", _uri });
+		zdbg(this->connection());
 	}
 	catch(std::exception& _e) {
 		assertz(false, std::string("could not connect to CouchDB server: ") + _e.what(), 500, 0);
@@ -80,6 +81,14 @@ auto zpt::couchdb::Client::reconnect() -> void {
 	zpt::Connector::reconnect();
 }
 
+auto zpt::couchdb::Client::socket() -> zpt::socketstream_ptr {
+	if (!this->__socket->is_open()) {
+		zdbg(this->connection()["uri"]);
+		this->__socket->open(std::string(this->connection()["uri"]["domain"]), this->connection()["uri"]["port"]->ok() ? int(this->connection()["uri"]["port"]) : 80);
+	}
+	return this->__socket;
+}
+
 auto zpt::couchdb::Client::send() -> zpt::http::rep {
 	zpt::http::rep _r;
 	return _r;
@@ -88,10 +97,6 @@ auto zpt::couchdb::Client::send() -> zpt::http::rep {
 auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
-	std::string _key(_collection);
-	_key.insert(0, "/");
-	_key.insert(0, (std::string) this->connection()["db"]);
-
 	if (!_document["id"]->ok()) {
 		_document << "id" << zpt::generate::r_uuid();
 	}
@@ -99,6 +104,29 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 		_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 	}
 
+	_document << "_id" << _document["id"];
+
+	std::string _body = std::string(_document);
+
+	zpt::http::req _req;
+	zpt::http::req _rep;
+	_req->method(zpt::ev::Post);
+	_req->url(_href_prefix);
+	_req->header("Host", std::string(this->connection()["uri"]["authority"]));
+	_req->header("Accept", "*/*");
+	_req->header("User-Agent", "zapata HTTP");
+	_req->header("Content-Type", "application/json");
+	_req->header("Content-Length", std::to_string(_body.length()));
+	_req->body(_document);
+	
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		zpt::socketstream_ptr _socket = this->socket();
+		(*_socket) << _req << flush;
+		zdbg(_req);
+		(*_socket) >> _rep; }
+
+	zdbg(_rep);
+	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }

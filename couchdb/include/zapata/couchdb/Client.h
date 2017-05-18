@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <zapata/json.h>
 #include <zapata/events.h>
+#include <zapata/zmq.h>
 #include <zapata/http.h>
 #include <zapata/couchdb/convert_couchdb.h>
 #include <ossp/uuid++.hh>
@@ -54,6 +55,7 @@ namespace zpt {
 
 			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;
+			virtual auto socket() -> zpt::socketstream_ptr;
 
 			virtual auto send() -> zpt::http::rep;
 	
@@ -73,6 +75,8 @@ namespace zpt {
 		private:
 			zpt::json __options;
 			zpt::ev::emitter __events;
+			zpt::socketstream_ptr __socket;
+			std::mutex __mtx;
 		};
 
 		class ClientPtr : public std::shared_ptr<zpt::couchdb::Client> {

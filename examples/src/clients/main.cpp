@@ -28,6 +28,7 @@ SOFTWARE.
 #include <fstream>
 #include <string>
 
+#include <zapata/couchdb.h>
 #include <zapata/rest.h>
 #include <zapata/mem/usage.h>
 #include <semaphore.h>

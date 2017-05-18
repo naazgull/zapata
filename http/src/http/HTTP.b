@@ -57,7 +57,7 @@ exp :
 	SPACE STRING
 	{
 	}
-	 headers rest
+	headers rest
 	{
 		if (d_scanner.d_content_length != 0) {
 			d_scanner.body();

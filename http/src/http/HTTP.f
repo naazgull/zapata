@@ -28,7 +28,7 @@ string	d_chunked;
 
 %namespace = "zpt"
 
-//%debug
+%debug
 %no-lines
 
 %x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params

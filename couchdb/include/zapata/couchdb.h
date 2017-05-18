@@ -27,4 +27,3 @@ SOFTWARE.
 #include <zapata/json.h>
 #include <zapata/couchdb/config.h>
 #include <zapata/couchdb/Client.h>
-#include <zapata/couchdb/ZList.h>

@@ -235,8 +235,13 @@ auto zpt::conf::env(zpt::json _options) -> void {
 }
 
 auto zpt::uri::parse(std::string _uri) -> zpt::json {
-	if (_uri.find(":") >= _uri.find("/")) {
-		_uri = std::string("zpt://127.0.0.1") + _uri;
+	if (_uri.find("://") == std::string::npos) {
+		if (_uri[0] == '/') {
+			_uri = std::string("zpt://127.0.0.1") + _uri;
+		}
+		else {
+			_uri = std::string("zpt://") + _uri;
+		}
 	}
 	static const std::regex _uri_rgx(
 		"([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]*):"  // scheme:
