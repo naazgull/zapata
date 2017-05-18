@@ -96,6 +96,7 @@ void zpt::HTTPTokenizerLexer::status() {
 			string _statusstr(this->matched());
 			zpt::fromstr(_statusstr, & _status);
 			this->__root_rep->status((zpt::HTTPStatus) _status);
+			std::cout << _statusstr << endl << flush;
 			break;
 		}
 	}

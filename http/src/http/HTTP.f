@@ -15,7 +15,7 @@
         E = 268,
     };
 */
-
+      
 size_t	d_content_length;
 bool	d_chunked_body;
 string	d_chunked;
@@ -28,7 +28,7 @@ string	d_chunked;
 
 %namespace = "zpt"
 
-%debug
+//%debug
 %no-lines
 
 %x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
@@ -110,6 +110,7 @@ string	d_chunked;
 
 <reply>{
 	[0-9]{3} {
+                std::cout << endl << "RETURNING STATUS" << endl << flush;
 		return 260;
 	}
 	"\r\n" {
@@ -120,11 +121,13 @@ string	d_chunked;
 		begin(StartCondition__::headers);
 		return 261;
 	}
-	[^\r\n ] {
+	[a-zA-Z] {
+                std::cout << endl << "STARTING STATUSTEXT" << endl << flush;
 		more();
 		begin(StartCondition__::statustext);
 	}
-	[ ] {
+        [ ] {
+                std::cout << endl << "RETURNING SPACE" << endl << flush;
 		return 264;
 	}
 }
