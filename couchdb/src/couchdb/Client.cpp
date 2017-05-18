@@ -109,7 +109,7 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 	std::string _body = std::string(_document);
 
 	zpt::http::req _req;
-	zpt::http::req _rep;
+	zpt::http::rep _rep;
 	_req->method(zpt::ev::Post);
 	_req->url(_href_prefix);
 	_req->header("Host", std::string(this->connection()["uri"]["authority"]));

@@ -41,7 +41,6 @@ zpt::HTTPStatus zpt::HTTPRepT::status() {
 
 void zpt::HTTPRepT::status(zpt::HTTPStatus _in) {
 	this->__status = _in;
-	std::cout << _in << endl << flush;
 }
 
 void zpt::HTTPRepT::stringify(ostream& _out) {

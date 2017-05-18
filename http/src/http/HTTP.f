@@ -110,7 +110,6 @@ string	d_chunked;
 
 <reply>{
 	[0-9]{3} {
-                std::cout << endl << "RETURNING STATUS" << endl << flush;
 		return 260;
 	}
 	"\r\n" {
@@ -121,13 +120,11 @@ string	d_chunked;
 		begin(StartCondition__::headers);
 		return 261;
 	}
-	[a-zA-Z] {
-                std::cout << endl << "STARTING STATUSTEXT" << endl << flush;
+	[^\r\n ] {
 		more();
 		begin(StartCondition__::statustext);
 	}
         [ ] {
-                std::cout << endl << "RETURNING SPACE" << endl << flush;
 		return 264;
 	}
 }
