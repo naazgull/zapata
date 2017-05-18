@@ -1,3 +1,9 @@
+zapata-events (0.9.7-1yakkety10) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Thu, 18 May 2017 15:22:40 +0100
+
 zapata-events (0.9.7-1yakkety9) yakkety; urgency=medium
 
   * Version bump
