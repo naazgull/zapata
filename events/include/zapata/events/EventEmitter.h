@@ -219,14 +219,12 @@ namespace zpt {
 		virtual auto credentials() -> zpt::json = 0;
 		virtual auto credentials(zpt::json _credentials) -> void = 0;
 		
-		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void = 0;
 
-		virtual auto init_thread() -> zpt::thread::context = 0;
-		virtual auto dispose_thread(zpt::thread::context _context) -> void = 0;
-		
 		virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 		virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
 		virtual auto connector(std::string _name) -> zpt::connector final;

@@ -175,8 +175,9 @@ namespace zpt {
 		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void;
 		virtual auto off(std::string _callback_id) -> void;
 		
-		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 

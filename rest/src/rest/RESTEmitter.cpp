@@ -294,8 +294,8 @@ auto zpt::RESTEmitter::off(std::string _callback_id) -> void {
 	}
 }
 
-auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
-	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true") });
+auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> void {
+	return this->resolve(_method, _url, _envelope, _callback, _opts + zpt::json{ "broker", (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true") });
 }
 
 auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
@@ -320,7 +320,31 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true });
 }
 
-auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> void {
+	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	
+	if (bool(_opts["mqtt"])) {
+		if (bool(_opts["no-envelope"])) {
+			this->__server->publish(_url, _envelope);
+		}
+		else {
+			zpt::json _in = _envelope + zpt::json{ 
+				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
+				"channel", _url,
+				"performative", _method,
+				"resource", _url
+			};
+			this->__server->publish(_url, _in);
+		}
+		if (_callback != nullptr) {
+			_callback(zpt::ev::Reply, _url, zpt::undefined, { "mqtt", true });
+		}
+	}
+	
+	this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true }, _callback);
+}
+
+auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> zpt::json {
 	zpt::json _return;
 	bool _endpoint_found = false;
 	bool _method_found = false;
@@ -359,7 +383,8 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (_endpoint.second[_method] != nullptr) {
 				_method_found = true;
 				try {
-					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
+					this->__pending_callbacks.insert(std::make_pair(_envelope["channel"], _callback))
+					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH  
 					/*if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
 							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
@@ -374,6 +399,8 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 
 						_return = _result;
 						}*/
+					if (
+					
 				}
 				catch (zpt::assertion& _e) {
 					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
