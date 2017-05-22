@@ -277,27 +277,27 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_h, "$[namespace]", _namespace);
 				zpt::replace(_datum_cxx, "$[namespace]", _namespace);
 			
-				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "mongodb", "postgresql", "mariadb" }, _namespace);
+				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "couchdb", "mongodb", "postgresql", "mariadb" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.get.client]", _get_client);
 				zpt::replace(_datum_cxx, "$[datum.method.get.client]", _get_client);
 		
-				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
+				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "couchdb", "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.query.client]", _query_client);
 				zpt::replace(_datum_cxx, "$[datum.method.query.client]", _query_client);
 
-				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.insert.client]", _insert_client);
 				zpt::replace(_datum_cxx, "$[datum.method.insert.client]", _insert_client);
 		
-				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.save.client]", _save_client);
 				zpt::replace(_datum_cxx, "$[datum.method.save.client]", _save_client);
 
-				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.set.client]", _set_client);
 				zpt::replace(_datum_cxx, "$[datum.method.set.client]", _set_client);
 
-				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
 				zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
 			
@@ -456,7 +456,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _make;
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis") + _dyn_link + std::string("\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis -lzapata-couchdb") + _dyn_link + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _dyn_dir + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
@@ -1630,6 +1630,9 @@ auto zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespa
 	}
 	else if (_dbms == "mariadb") {
 		return "{ \"dbms.mariadb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mariadb::Client(_emitter->options(), \"mariadb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
+	}
+	else if (_dbms == "couchdb") {
+		return "{ \"dbms.couchdb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::couchdb::Client(_emitter->options(), \"couchdb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
 	}
 	else if (_dbms == "mongodb") {
 		return "{ \"dbms.mongodb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mongodb::Client(_emitter->options(), \"mongodb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
