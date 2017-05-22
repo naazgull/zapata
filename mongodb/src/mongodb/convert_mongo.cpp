@@ -427,7 +427,6 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder&  _queryr) {
 								std::string bexpr(expression.data());
 								std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
 								if (bexpr != "true" && bexpr != "false") {
-									_queryr.append(key, expression);
 									_queryr.append(key, BSON(comp << expression));
 								}
 								else {
