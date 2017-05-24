@@ -253,6 +253,7 @@ namespace zpt {
 		auto token(std::string _token) -> bool;
 		auto uri(std::string _uri) -> bool;
 		auto email(std::string _email) -> bool;
+		auto phone(std::string _phone) -> bool;
 		auto regex(std::string _target, std::string _regex) -> bool;
 	}
 

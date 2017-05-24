@@ -58,6 +58,7 @@ SOFTWARE.
 #define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(y), z, 1015)
 #define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(y), z, 1016); if (x[y]->is_string()) { std::string _email = std::string(x[y]); std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower); x << y << _email; }
 #define assertz_location(x,y,z) assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017)
+#define assertz_phone(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018)
 
 #define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 

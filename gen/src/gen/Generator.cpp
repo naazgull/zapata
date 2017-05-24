@@ -1426,7 +1426,7 @@ auto zpt::GenDatum::build_validation() -> std::string {
 			}
 			
 			if (_opts["default"]->ok()) {
-				if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+				if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 					_return += std::string("if (!_document[\"") + _field.first + std::string("\"]->ok()) {\n");
 					_return += std::string("_document << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 					_return += std::string("}\n");
@@ -1676,6 +1676,9 @@ auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	}
 	else if (_type == "token" || _type == "hash" || _type == "uri" || _type == "email") {
 		_return += std::string("varchar(512)");
+	}
+	else if (_type == "phone") {
+		_return += std::string("varchar(20)");
 	}
 	else if (_type == "uuid") {
 		_return += std::string("char(36)");
@@ -1980,7 +1983,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("if (!_envelope[\"payload\"][\"") + _field.first + std::string("\"]->ok()) {\n");
 						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 						_return += std::string("}\n");
@@ -2613,7 +2616,7 @@ auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("  (if (null (gethash \"") + _field.first + std::string("\" (gethash \"payload\" envelope))) (add-to-object (gethash \"payload\" envelope) \"") + _field.first + std::string("\" \"") + std::string(_opts["default"]) + std::string("\"))");
 					}
 					else if (_type == "int") {
@@ -3062,7 +3065,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 
 			if (_perf != zpt::ev::Get && _perf != zpt::ev::Head && _perf != zpt::ev::Delete) {
 				if (!_opts["read-only"]->ok()) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("assertz_") + _type + std::string("(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 					}
 					else if (_type == "int") {
@@ -3092,7 +3095,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("if (!_envelope[\"payload\"][\"") + _field.first + std::string("\"]->ok()) {\n");
 						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 						_return += std::string("}\n");

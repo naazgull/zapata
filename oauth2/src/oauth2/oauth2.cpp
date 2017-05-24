@@ -125,7 +125,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 
 		zpt::json _owner;
 		try {
-			_owner = this->retrieve_owner(std::string(_ownername), std::string(_password));
+			_owner = this->retrieve_owner(std::string(_ownername), std::string(_password), std::string(_client_id));
 		}
 		catch(zpt::assertion& _e) {
 			if (_redirect_uri->is_string()) {

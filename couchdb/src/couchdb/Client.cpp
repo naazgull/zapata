@@ -383,20 +383,45 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	std::string _db_name = std::string("/") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
-	zpt::json _query = zpt::couchdb::get_query(_opts + _regexp);
+	zpt::json _query = zpt::couchdb::get_query(_regexp);
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
-	_req->method(zpt::ev::Post);
-	_req->url(_db_name + std::string("/_find"));
-	_req->header("Content-Type", "application/json");
-	_req->header("Content-Length", std::to_string(_body.length()));
-	_req->body(_body);
+	size_t _size = 0;
+	if (_query["selector"]->is_object() && _query["selector"]->obj()->size() != 0) {
+		zpt::http::req _req_count;
+		_req_count->method(zpt::ev::Get);
+		_req_count->url(_db_name + std::string("/_all_docs"));
+		_req_count->param("limit", "0");
+		zpt::http::rep _rep_count = this->send(_req_count);
+		zpt::json _count(_rep_count->body());
+		_size = size_t(_count["total_rows"]);
+		
+		_req->method(zpt::ev::Post);
+		_req->url(_db_name + std::string("/_find"));
+		_req->header("Content-Type", "application/json");
+		_req->header("Content-Length", std::to_string(_body.length()));
+		_req->body(_body);
+	}
+	else {
+		_req->method(zpt::ev::Get);
+		_req->url(_db_name + std::string("/_all_docs"));
+		_req->param("include_docs", "true");
+		if (_query->is_object()) {
+			for (auto _param : _query->obj()) {
+				_req->param(_param.first, std::string(_param.second));
+			}
+		}
+	}
 
 	zpt::http::rep _rep = this->send(_req);
-	zpt::json _result(_rep->body());	
+	zpt::json _result(_rep->body());
 	zpt::JSONArr _return;
 	if (_result["docs"]->is_array()) {
 		_return = _result["docs"]->arr();
+	}
+	else if (_result["rows"]->is_array()) {
+		_size = size_t(_result["total_rows"]);
+		_return = _result["rows"]->arr();
 	}
 	else {
 		_return = zpt::json::array();
@@ -404,7 +429,7 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::query(_collection, _regexp, _opts);
 	return {
-		"size", _return->size(),
+		"size", _size,
 		"elements", _return
 	};
 }
