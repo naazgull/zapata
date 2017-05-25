@@ -114,3 +114,45 @@ b) Go into package source dir and build (using zapata-base as an example):
 	$ sudo make install
 	
 c) Repeat _b)_ for every package you want
+
+# CONFIGURATION 
+
+## Available configurations
+
+Target configurations should be placed in _**/etc/zapata/backend-available**_. If you want to use the **zctl** command to manage your Zapata daemons, this should be the only directory you should touch.
+
+## Manage configurations
+
+You may manually manage your Zapata daemons, example files are provide in the _**examples/**_ directory. The rest of this section is intended for those who want to use the **zctl** command to manage their daemons.
+
+### 1) Enable
+
+To enable a given configuration, run:
+
+	$ sudo zctl --add <available configuration file name, without the '.conf'>
+	
+e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists:
+
+	$ sudo zctl --add my-container
+
+### 2) Remove
+
+To disable a given configuration, run:
+
+	$ sudo zctl --remove <available configuration file name, without the '.conf'>
+	
+e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists:
+
+	$ sudo zctl --remove my-container
+
+### 3) Reconfigure
+
+Each time you change the files in _**/etc/zapata/backend-available/**_ or in _**/etc/zapata/rc.d**_, you should run:
+
+	$ sudo zctl --reconfigure
+	
+This command will refresh both configurations and **systemd** units.
+
+## Configuration attributes
+
+### SystemD

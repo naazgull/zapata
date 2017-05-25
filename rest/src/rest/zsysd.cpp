@@ -185,11 +185,21 @@ int main(int argc, char* argv[]) {
 	}
 	else if (_args["remove"]) {
 		for (auto _to_remove : _args["remove"]->arr()) {
-			if (system((std::string("rm -rf /etc/zapata/backend-enabled/") + std::string(_to_remove) + std::string(".conf")).data())) {
+			std::ifstream _ifs;
+			_ifs.open((std::string("/etc/zapata/backend-available/") + std::string(_to_remove) + std::string(".conf")).data());
+			if (_ifs.is_open()) {
+				zpt::json _conf;
+				_ifs >> _conf;
+				_ifs.close();
+				
+				if (system((std::string("rm -rf /etc/zapata/backend-enabled/") + std::string(_conf["boot"][0]["name"]) + std::string(".conf")).data())) {
+				}
+				std::cout << "> removing /etc/zapata/backend-enabled/" << std::string(_conf["boot"][0]["name"]) << ".conf" << endl << flush;
+				if (system((std::string("rm -rf /lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) + std::string(".service")).data())) {
+				}
+				std::cout << "> removing /lib/systemd/system/" << std::string(_conf["boot"][0]["name"]) << ".service" << endl << flush;
 			}
-			if (system((std::string("rm -rf /lib/systemd/system/") + std::string(_to_remove) + std::string(".service")).data())) {
-			}
-		}		
+		}
 	}
 	
 	return 0;
