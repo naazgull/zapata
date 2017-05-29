@@ -131,7 +131,7 @@ auto zpt::test::utf8(std::string _uri) -> bool {
 
 auto zpt::test::ascii(std::string _ascii) -> bool {
 	static const std::regex _ascii_rgx(
-		"^([a-zA-Z0-9_@:;./+*|\\-]+)$"
+		"^([a-zA-Z0-9_@:;./+*|-]+)$"
 	);
 	return std::regex_match(_ascii, _ascii_rgx);
 }
@@ -159,6 +159,14 @@ auto zpt::test::email(std::string _email) -> bool {
 		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)"
 	);
 	return std::regex_match(_email, _email_rgx);
+}
+
+auto zpt::test::phone(std::string _phone) -> bool {
+	static const std::regex _phone_rgx(
+		"\\(([0-9]){1,3}\\)([ ]*)"
+		"([0-9]){3,12}"
+	);
+	return std::regex_match(_phone, _phone_rgx);
 }
 
 auto zpt::test::regex(std::string _target, std::string _regex) -> bool {

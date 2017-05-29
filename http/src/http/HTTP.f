@@ -15,7 +15,7 @@
         E = 268,
     };
 */
-
+      
 size_t	d_content_length;
 bool	d_chunked_body;
 string	d_chunked;
@@ -124,7 +124,7 @@ string	d_chunked;
 		more();
 		begin(StartCondition__::statustext);
 	}
-	[ ] {
+        [ ] {
 		return 264;
 	}
 }

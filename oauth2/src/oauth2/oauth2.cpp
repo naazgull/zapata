@@ -125,7 +125,7 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 
 		zpt::json _owner;
 		try {
-			_owner = this->retrieve_owner(std::string(_ownername), std::string(_password));
+			_owner = this->retrieve_owner(std::string(_ownername), std::string(_password), std::string(_client_id));
 		}
 		catch(zpt::assertion& _e) {
 			if (_redirect_uri->is_string()) {
@@ -310,8 +310,8 @@ auto zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::json _
 
 auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 	std::string _client_id = std::string(_data["client_id"]);
-	std::string _scope = std::string(_data["scope"]);
-	std::string _grant_type = std::string(_data["response_type"]);
+	zpt::json _scope = _data["scope"];
+	std::string _grant_type = _data["grant_type"]->ok() ? std::string(_data["grant_type"]) : std::string(_data["response_type"]);
 	std::string _owner_id = std::string(_data["owner_id"]);
 	std::string _client_secret = std::string(_data["client_secret"]);
 	std::string _access_token = zpt::generate::r_key(128);
@@ -322,7 +322,7 @@ auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 		"refresh_token", zpt::generate::r_key(64),
 		"code", zpt::generate::r_key(64),
 		"expires", (zpt::timestamp_t) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + 90L * 24L * 3600L * 1000L,
-		"scope", zpt::split(_scope, ",", true),
+		"scope", _scope->is_string() ? zpt::split(_scope, ",", true) : _scope,
 		"grant_type", _grant_type,
 		"client_id", _client_id,
 		"owner_id", (_owner_id.length() != 0 ? zpt::json::string(_owner_id) : zpt::undefined)

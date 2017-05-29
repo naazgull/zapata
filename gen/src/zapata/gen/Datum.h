@@ -5,6 +5,7 @@
 #include <zapata/postgresql.h>
 #include <zapata/mariadb.h>
 #include <zapata/mongodb.h>
+#include <zapata/couchdb.h>
 #include <zapata/redis.h>
 $[data.path.h]
 

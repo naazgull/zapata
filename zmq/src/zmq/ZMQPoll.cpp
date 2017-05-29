@@ -237,7 +237,6 @@ auto zpt::ZMQPoll::loop() -> void {
 		for(; true; ) {
 			this->repoll();
 			
-			// zlog(std::string("polling for ") + std::to_string(this->__items.size()) + std::string(" sockets"), zpt::notice);
 			if (_sd_watchdog_enabled) {
 				zmq::poll(this->__items, _sd_watchdog_usec / 1000 / 2);
 				sd_notify(0, "WATCHDOG=1");
@@ -245,7 +244,6 @@ auto zpt::ZMQPoll::loop() -> void {
 			else {
 				zmq::poll(this->__items, -1);
 			}
-			// zdbg("got something");
 
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {

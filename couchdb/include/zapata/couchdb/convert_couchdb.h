@@ -32,7 +32,7 @@ namespace zpt {
 
 	namespace couchdb {
 
-		auto to_regex(zpt::json _regex) -> std::string;
+		auto get_query(zpt::json _params) -> zpt::json;
 
 	}
 }

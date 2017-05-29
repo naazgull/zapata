@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <zapata/json.h>
 #include <zapata/events.h>
+#include <zapata/zmq.h>
 #include <zapata/http.h>
 #include <zapata/couchdb/convert_couchdb.h>
 #include <ossp/uuid++.hh>
@@ -52,9 +53,14 @@ namespace zpt {
 
 			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;
+			virtual auto socket() -> zpt::socketstream_ptr;
 
-			virtual auto send() -> zpt::http::rep;
-	
+			virtual auto send(zpt::http::req _req) -> zpt::http::rep;
+
+			virtual auto init_request(zpt::http::req _req) -> void;
+			virtual auto create_database(std::string _db_name) -> void;
+			virtual auto create_index(std::string _collection, zpt::json _fields) -> void;
+			
 			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
 			virtual auto save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
@@ -71,6 +77,8 @@ namespace zpt {
 		private:
 			zpt::json __options;
 			zpt::ev::emitter __events;
+			zpt::socketstream_ptr __socket;
+			std::mutex __mtx;
 		};
 
 		class ClientPtr : public std::shared_ptr<zpt::couchdb::Client> {

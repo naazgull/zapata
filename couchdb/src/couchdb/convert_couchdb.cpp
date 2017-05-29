@@ -25,23 +25,188 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-auto zpt::couchdb::to_regex(zpt::json _regexp) -> std::string {
-	std::string _return;
-	if( _regexp->type() == zpt::JSObject) {
-		for (auto _r : _regexp->obj()) {
-			_return += std::string("*\"") + _r.first + std::string("\":") + zpt::couchdb::to_regex(_r.second);
-		}	
-	}
-	else if (_regexp->type() == zpt::JSArray) {
-		for (auto _r : _regexp->arr()) {
-			_return +=  std::string("*") + zpt::couchdb::to_regex(_r);
-		}	
-	}
-	else {
-		std::string _value;
-		_regexp->stringify(_value);
-		return _value;
-	}
-	return _return;
-}
+#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
 
+auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
+	if (!_in->is_object()) {
+		return zpt::undefined;
+	}
+	zpt::json _selector = zpt::json::object();
+	zpt::json _query = { "selector", _selector };
+	for (auto _i : _in->obj()) {
+		std::string _key = _i.first;
+		zpt::json _value = _i.second;
+
+		if (_key == "page_size") {
+			_query << "limit" << _value;
+			continue;
+		}
+		else if (_key == "page_start_index") {
+			_query << "offset" << _value;
+			continue;
+		}
+		else if (_key == "order_by") {
+			if (!_query["sort"]->is_array()) {
+				_query << "sort" << zpt::json::array();
+			}
+			zpt::json _splited = zpt::split(std::string(_value), ",", true);
+			for (auto _field : _splited->arr()) {
+				std::string _name = std::string(_field);
+				std::string _direction;
+				if (_name[0] == '-') {
+					_direction.assign("desc");
+					_name = _name.substr(1);
+				}
+				else if (_name[0] == '+') {
+					_direction.assign("asc");
+					_name = _name.substr(1);
+				}
+				else {
+					_direction.assign("asc");
+				}
+				_query["sort"] << zpt::json{ _name, _direction };
+			}
+			continue;
+		}
+		else if (_key == "fields") {
+			_query << "fields" << zpt::split(std::string(_value), ",", true);
+			continue;
+		}
+		else if (_key == "embed") {
+			continue;
+		}
+
+		if (_value->type() != zpt::JSString) {
+			_selector << std::string(_key) << _value;
+			continue;
+		}
+		
+		std::string _s_value = (std::string) _value;
+		if (_s_value.length() > 3 && _s_value.find('/') != std::string::npos) {
+			int _bar_count = 0;
+
+			std::istringstream _lss(_s_value);
+			std::string _part;
+			
+			std::string _command;
+			std::string _expression;
+			std::string _options;
+			while (std::getline(_lss, _part, '/')) {
+				if (_bar_count == 0) {
+					_command = _part;
+					++_bar_count;
+				}
+				else if (_bar_count == 1) {
+					_expression.append(_part);
+
+					if (_expression.length() == 0 || _expression[_expression.length() - 1] != '\\') {
+						++_bar_count;
+					}
+					else {
+						if (_expression.length() > 0) {
+							_expression[_expression.length() - 1] = '/';
+						}
+					}
+				}
+				else if (_bar_count == 2) {
+					_options = _part;
+					++_bar_count;
+				}
+				else {
+					++_bar_count;
+				}
+			}
+
+			if (_command == "m") {
+				if (_bar_count == 3) {
+					_selector << std::string(_key) << zpt::json{ "$regex", _expression };
+					continue;
+				}
+			}
+			else if (_command == "n") {
+				if (_bar_count == 2) {
+					std::istringstream iss(_expression);
+					int i = 0;
+					iss >> i;
+					if (!iss.eof()) {
+						iss.clear();
+						double d = 0;
+						iss >> d;
+						if (!iss.eof()) {
+							std::string bexpr(_expression.data());
+							std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
+							if (bexpr != "true" && bexpr != "false") {
+								_selector << std::string(_key) << _expression;
+							}
+							else {
+								_selector << std::string(_key) << bexpr == "true";
+							}
+						}
+						else {
+							_selector << std::string(_key) << d;
+						}
+					}
+					else {
+						_selector << std::string(_key) << i;
+					}
+					continue;
+				}
+			}
+			else {
+				std::string comp("$");
+				comp.insert(comp.length(), _command);
+
+				if (_VALID_OPS.find(comp + std::string("^")) != std::string::npos) {
+					if (_bar_count == 2) {
+						_selector << std::string(_key) << zpt::json{ comp, _expression };
+					}
+					else if (_options == "n") {
+						istringstream iss(_expression);
+						int i = 0;
+						iss >> i;
+						if (!iss.eof()) {
+							iss.str(_expression);
+							double d = 0;
+							iss >> d;
+							if (!iss.eof()) {
+								std::string bexpr(_expression.data());
+								std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
+								if (bexpr != "true" && bexpr != "false") {
+									_selector << std::string(_key) << zpt::json{ comp, _expression };
+								}
+								else {
+									_selector << std::string(_key) << zpt::json{ comp, (bexpr == "true") };
+								}
+							}
+							else {
+								_selector << std::string(_key) << zpt::json{ comp, d };
+							}
+						}
+						else {
+							_selector << std::string(_key) << zpt::json{ comp, i };
+						}
+					}
+					else if (_options == "j") {
+						istringstream iss(_expression);
+						zpt::json _json;
+						try {
+							iss >> _json;
+							_selector << std::string(_key) << zpt::json{ comp, _json };
+						}
+						catch(std::exception& _e) {}
+					}
+					else if (_options == "d") {
+						zpt::json _json({ "time", zpt::timestamp(_expression) });
+						_selector << std::string(_key) << zpt::json{ comp, _json["time"] };
+					}
+					continue;
+				}
+
+			}
+		}
+
+		_selector << std::string(_key) << _value;
+	}
+
+	return _query;
+}

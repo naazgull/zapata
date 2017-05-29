@@ -277,27 +277,27 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_h, "$[namespace]", _namespace);
 				zpt::replace(_datum_cxx, "$[namespace]", _namespace);
 			
-				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "mongodb", "postgresql", "mariadb" }, _namespace);
+				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "couchdb", "mongodb", "postgresql", "mariadb" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.get.client]", _get_client);
 				zpt::replace(_datum_cxx, "$[datum.method.get.client]", _get_client);
 		
-				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
+				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "couchdb", "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.query.client]", _query_client);
 				zpt::replace(_datum_cxx, "$[datum.method.query.client]", _query_client);
 
-				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.insert.client]", _insert_client);
 				zpt::replace(_datum_cxx, "$[datum.method.insert.client]", _insert_client);
 		
-				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.save.client]", _save_client);
 				zpt::replace(_datum_cxx, "$[datum.method.save.client]", _save_client);
 
-				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.set.client]", _set_client);
 				zpt::replace(_datum_cxx, "$[datum.method.set.client]", _set_client);
 
-				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "mongodb", "redis" }, _namespace);
+				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
 				zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
 			
@@ -456,7 +456,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _make;
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis") + _dyn_link + std::string("\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis -lzapata-couchdb") + _dyn_link + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _dyn_dir + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
@@ -1418,7 +1418,7 @@ auto zpt::GenDatum::build_validation() -> std::string {
 			}
 			
 			if (_opts["default"]->ok()) {
-				if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+				if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 					_return += std::string("if (!_document[\"") + _field.first + std::string("\"]->ok()) {\n");
 					_return += std::string("_document << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 					_return += std::string("}\n");
@@ -1623,6 +1623,9 @@ auto zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespa
 	else if (_dbms == "mariadb") {
 		return "{ \"dbms.mariadb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mariadb::Client(_emitter->options(), \"mariadb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
 	}
+	else if (_dbms == "couchdb") {
+		return "{ \"dbms.couchdb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::couchdb::Client(_emitter->options(), \"couchdb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
+	}
 	else if (_dbms == "mongodb") {
 		return "{ \"dbms.mongodb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mongodb::Client(_emitter->options(), \"mongodb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
 	}
@@ -1665,6 +1668,9 @@ auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	}
 	else if (_type == "token" || _type == "hash" || _type == "uri" || _type == "email") {
 		_return += std::string("varchar(512)");
+	}
+	else if (_type == "phone") {
+		_return += std::string("varchar(20)");
 	}
 	else if (_type == "uuid") {
 		_return += std::string("char(36)");
@@ -1969,7 +1975,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("if (!_envelope[\"payload\"][\"") + _field.first + std::string("\"]->ok()) {\n");
 						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 						_return += std::string("}\n");
@@ -2602,7 +2608,7 @@ auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("  (if (null (gethash \"") + _field.first + std::string("\" (gethash \"payload\" envelope))) (add-to-object (gethash \"payload\" envelope) \"") + _field.first + std::string("\" \"") + std::string(_opts["default"]) + std::string("\"))");
 					}
 					else if (_type == "int") {
@@ -3051,7 +3057,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 
 			if (_perf != zpt::ev::Get && _perf != zpt::ev::Head && _perf != zpt::ev::Delete) {
 				if (!_opts["read-only"]->ok()) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("assertz_") + _type + std::string("(_envelope[\"payload\"], \"") + _field.first + std::string("\", 412);\n");
 					}
 					else if (_type == "int") {
@@ -3081,7 +3087,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 						(std::string(this->__spec["type"]) == "document" && _perf == zpt::ev::Put)
 					)
 				) {
-					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email") {
+					if (_type == "utf8" || _type == "ascii" || _type == "token" || _type == "uri" || _type == "uuid" || _type == "email" || _type == "phone") {
 						_return += std::string("if (!_envelope[\"payload\"][\"") + _field.first + std::string("\"]->ok()) {\n");
 						_return += std::string("_envelope[\"payload\"] << \"") + _field.first + std::string("\" << zpt::json::string(\"") + std::string(_opts["default"]) + std::string("\");\n");
 						_return += std::string("}\n");
