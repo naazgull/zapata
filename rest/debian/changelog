@@ -1,3 +1,9 @@
+zapata-rest (0.9.7-1yakkety14) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Thu, 01 Jun 2017 12:27:36 +0100
+
 zapata-rest (0.9.7-1yakkety13) yakkety; urgency=medium
 
   * Version bump
