@@ -1708,7 +1708,7 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 		_return->header(_header.first, ((std::string) _header.second));
 	}
 
-	if (((_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0)) && _return->status() != zpt::HTTP204) {
+	if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) || (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0)) && _return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 && _return->status() >= zpt::HTTP200) {
 		std::string _body = std::string(_out["payload"]);
 		zpt::trim(_body);
 		if (_body.length() != 0) {
@@ -1720,6 +1720,9 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 			}
 			_return->body(_body);
 			_return->header("Content-Length", std::to_string(_body.length()));
+		}
+		else {
+			_return->header("Content-Length", "0");
 		}
 	}
 	

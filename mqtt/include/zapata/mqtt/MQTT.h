@@ -147,6 +147,7 @@ namespace zpt {
 		static auto on_subscribe(struct mosquitto * _mosq, void * _ptr, int _mid, int _qos_count, const int * _granted_qos) -> void;
 		static auto on_unsubscribe(struct mosquitto * _mosq, void * _ptr, int _mid) -> void;
 		static auto on_error(struct mosquitto * _mosq, void * _ptr) -> void;
+		static auto on_log(struct mosquitto * _mosq, void * _ptr, int _level, const char* _message) -> void;
 
 		struct mosquitto * __mosq;
 		zpt::mqtt::handlers __callbacks;
