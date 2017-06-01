@@ -1,8 +1,8 @@
-zapata-events (0.9.7-1yakkety12) yakkety; urgency=medium
+zapata-events (0.9.7-1yakkety13) yakkety; urgency=medium
 
   * Version bump
 
- -- n@zgul <naazgull@dfz.pt>  Wed, 24 May 2017 15:14:02 +0100
+ -- n@zgul <naazgull@dfz.pt>  Thu, 01 Jun 2017 10:26:17 +0100
 
 zapata-events (0.9.7-1yakkety11) yakkety; urgency=medium
 

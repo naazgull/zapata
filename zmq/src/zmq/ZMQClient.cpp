@@ -1438,9 +1438,9 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
-	if (!_envelope["payload"]->ok()) {
-		_envelope << "payload" << zpt::json::object();
-	}
+	// if (!_envelope["payload"]->ok()) {
+	// 	_envelope << "payload" << zpt::json::object();
+	// }
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
 	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
 		(*this->__underlying) << _reply << flush; }
@@ -1664,9 +1664,11 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 	"channel" << zpt::generate::r_uuid() <<
 	"performative" << zpt::ev::Reply <<
 	"resource" << zpt::generate::r_uuid();
-	
+
+	std::string _body = _reply->body();
 	zpt::json _payload;
-	if (_reply->body() != "") {
+	zpt::trim(_body);
+	if (_body != "") {
 		if (_reply->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
 			_payload = zpt::rest::http::deserialize(_reply->body());
 		}
@@ -1681,9 +1683,9 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 			_payload = { "text", _reply->body() };
 		}
 	}
-	else {
-		_payload = zpt::json::object();
-	}
+	// else {
+	// 	_payload = zpt::json::object();
+	// }
 	_return << "payload" << _payload;
 
 	zpt::json _headers = zpt::json::object();
@@ -1705,17 +1707,23 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 	for (auto _header : _out["headers"]->obj()) {
 		_return->header(_header.first, ((std::string) _header.second));
 	}
-	
-	if (_out["payload"]->ok()) {
-		if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
-			_return->header("Content-Type", "application/json");
+
+	if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) || (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0)) && _return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 && _return->status() >= zpt::HTTP200) {
+		std::string _body = std::string(_out["payload"]);
+		zpt::trim(_body);
+		if (_body.length() != 0) {
+			if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
+				_return->header("Content-Type", "application/json");
+			}
+			else {
+				_return->header("Content-Type", "text/plain");
+			}
+			_return->body(_body);
+			_return->header("Content-Length", std::to_string(_body.length()));
 		}
 		else {
-			_return->header("Content-Type", "text/plain");
+			_return->header("Content-Length", "0");
 		}
-		std::string _body = (std::string) _out["payload"];
-		_return->body(_body);
-		_return->header("Content-Length", std::to_string(_body.length()));
 	}
 	
 	return _return;

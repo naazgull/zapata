@@ -531,10 +531,7 @@ auto zpt::rest::no_content(std::string _resource) -> zpt::json {
 		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
 		"resource", _resource,
-		"status", 204,
-		"payload", {
-			"text", "the required resource produced no content"
-		}
+		"status", 204
 	};
 }
 

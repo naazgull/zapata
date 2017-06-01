@@ -38,6 +38,7 @@ zpt::MQTT::MQTT() : __self(this), __connected(false), __postponed(zpt::json::obj
 	 mosquitto_message_callback_set(this->__mosq, MQTT::on_message);
 	 mosquitto_subscribe_callback_set(this->__mosq, MQTT::on_subscribe);
 	 mosquitto_unsubscribe_callback_set(this->__mosq, MQTT::on_unsubscribe);
+	 mosquitto_log_callback_set(this->__mosq, MQTT::on_log);
 
 }
 
@@ -267,6 +268,10 @@ auto zpt::MQTT::on_error(struct mosquitto * _mosq, void * _ptr) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
 	zpt::mqtt::data _data(new MQTTData());
 	_self->trigger("error", _data);
+}
+
+auto zpt::MQTT::on_log(struct mosquitto * _mosq, void * _ptr, int _level, const char* _message) -> void {
+	zlog(std::string(_message), (zpt::LogLevel) _level);
 }
 
 extern "C" auto zpt_mqtt() -> int {
