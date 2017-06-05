@@ -976,7 +976,7 @@ auto zpt::GenDatum::build_insert() -> std::string {
 			}
 		}
 
-		_return += std::string("_c->insert(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _r_data, { \"mutated-event\", true });\n");
+		_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _r_data, { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("}\n}\n");
 	}
@@ -997,7 +997,9 @@ auto zpt::GenDatum::build_update() -> std::string {
 		_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"filter\"], _envelope[\"payload\"][\"changes\"], { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("else {\n");
-		_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _envelope[\"payload\"][\"changes\"], { \"mutated-event\", true });\n");
+		_return += std::string("zpt::json _split = zpt::split(_envelope[\"payload\"][\"href\"]->str(), \"/\");\n");
+		_return += std::string("_split->arr()->pop_back();\n");
+		_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), _envelope[\"payload\"][\"changes\"] + zpt::json{ \"href\", _envelope[\"payload\"][\"href\"] }, { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("}\n");	
 		_return += std::string("}\n}\n");

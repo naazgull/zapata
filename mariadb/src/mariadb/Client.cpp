@@ -128,6 +128,85 @@ auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_pre
 	return _document["id"]->str();
 }
 
+auto zpt::mariadb::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
+
+	{
+		if (_document["href"]->ok()) {
+			std::string _href = std::string(_document["href"]);
+			std::string _expression("UPDATE ");
+			_expression += _collection;
+			_expression += std::string(" SET ");
+			std::string _sets;
+			for (auto _c : _document->obj()){
+				if (_sets.length() != 0) {
+					_sets += std::string(",");
+				}
+				std::string _val;
+				_c.second->stringify(_val);
+				_sets += _c.first + std::string("=") + _val;
+			}
+			_expression += _sets;
+
+			zpt::json _splited = zpt::split(_href, "/");
+			_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+
+			try {
+				{ std::lock_guard< std::mutex > _lock(this->__mtx);
+					std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+					_stmt->execute(_expression); }
+			}
+			catch(std::exception& _e) {}
+
+			if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+			return _document["id"]->str();
+		}
+	}
+	{
+		if (!_document["id"]->ok()) {
+			_document << "id" << zpt::generate::r_uuid();
+		}
+		if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+		}
+	
+		std::string _expression("INSERT INTO ");
+		_expression += _collection;
+		_expression += std::string("(");
+		std::string _columns;
+		std::string _values;
+		for (auto _c : _document->obj()){
+			if (_columns.length() != 0) {
+				_columns += std::string(",");
+			}
+			_columns += _c.first;
+			if (_values.length() != 0) {
+				_values += std::string(",");
+			}
+			std::string _val;
+			_c.second->stringify(_val);
+			_values += _val;
+		}
+
+		_expression += _columns + std::string(") VALUES (") + _values + (")");
+		try {
+			{ std::lock_guard< std::mutex > _lock(this->__mtx);
+				std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+				_stmt->execute(_expression); }
+		}
+		catch(std::exception& _e) {
+			assertz(false, _e.what(), 412, 0);
+		}
+
+		if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	}
+	return _document["id"]->str();
+}
+
 auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);

@@ -53,6 +53,10 @@ auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, z
 	return std::string(_record["href"]);
 }
 
+auto zpt::Connector::upsert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
+	return std::string(_record["href"]);
+}
+
 auto zpt::Connector::save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts) -> int {
 	if (bool(_opts["mutated-event"])) return 0;
 	this->mutations()->route(zpt::mutation::Replace, std::string("/") + _collection, { "headers", _opts["headers"], "performative", "save", "href", _href, "new", _record });

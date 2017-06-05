@@ -166,9 +166,76 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 		this->create_database(_collection);
 		_rep = this->send(_req);
 	}
-	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't insert document:\n") + std::string(_rep), _rep->status(), 2002); 
+	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't insert document ") + std::string(_document["href"]) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	return _document["id"]->str();
+}
+
+auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	std::string _db_name = std::string("/") + _collection;
+	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
+
+	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_document["href"]));
+	{
+		zpt::http::rep _rep;
+		zpt::http::req _req;
+		_req->method(zpt::ev::Put);
+		_req->url(_url);
+		_req->header("Content-Type", "application/json");
+		do {
+			zpt::json _revision = this->get(_collection, std::string(_document["href"]));
+			if (!_revision->ok()) {
+				break;
+			}
+			zpt::json _upsert = _revision + _document;
+			if (!_upsert["id"]->ok()) {
+				_upsert << "id" << zpt::generate::r_uuid();
+			}
+			if (!_upsert["href"]->ok() && _href_prefix.length() != 0) {
+				_upsert << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _upsert["id"]->str());
+			}
+			_upsert << "_id" << _upsert["href"];
+
+			std::string _body = std::string(_upsert);
+			_req->header("Content-Length", std::to_string(_body.length()));
+			_req->body(_body);
+			_rep = this->send(_req);
+		}
+		while(_rep->status() == zpt::HTTP409);
+		if (_rep->status() == zpt::HTTP201) {	
+			if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, std::string(_document["href"]), _document, _opts);
+			return _document["id"]->str();
+		}
+	}	
+	{
+		
+		if (!_document["id"]->ok()) {
+			_document << "id" << zpt::generate::r_uuid();
+		}
+		if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+		}
+		_document << "_id" << _document["href"];
+
+		std::string _body = std::string(_document);
+		zpt::http::req _req;
+		_req->method(zpt::ev::Post);
+		_req->url(_db_name);
+		_req->header("Content-Type", "application/json");
+		_req->header("Content-Length", std::to_string(_body.length()));
+		_req->body(_body);
+
+		zpt::http::rep _rep = this->send(_req);	
+		if (_rep->status() == zpt::HTTP404) {
+			this->create_database(_collection);
+			_rep = this->send(_req);
+		}
+		assertz(_rep->status() == zpt::HTTP201, std::string("couldn't upsert document ") + std::string(_document["href"]) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
+		if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	}
+	
 	return _document["id"]->str();
 }
 
@@ -193,13 +260,13 @@ auto zpt::couchdb::Client::save(std::string _collection, std::string _href, zpt:
 		_rep = this->send(_req);
 	}
 	while(_rep->status() == zpt::HTTP409);
-	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't save document:\n") + std::string(_rep), _rep->status(), 2002); 
+	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't save document ") + std::string(_href) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
 	return 1;
 }
 
-auto zpt::couchdb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
+auto zpt::couchdb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, std::string("'_document' must be of type JSObject"), 412, 0);
 	std::string _db_name = std::string("/") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -218,7 +285,7 @@ auto zpt::couchdb::Client::set(std::string _collection, std::string _href, zpt::
 		_rep = this->send(_req);
 	}
 	while(_rep->status() == zpt::HTTP409);
-	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't set document fields:\n") + std::string(_rep), _rep->status(), 2002); 
+	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't set document ") + std::string(_href) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
 	return 1;
@@ -271,7 +338,7 @@ auto zpt::couchdb::Client::unset(std::string _collection, std::string _href, zpt
 		_rep = this->send(_req);
 	}
 	while(_rep->status() == zpt::HTTP409);
-	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't unset document fields:\n") + std::string(_rep), _rep->status(), 2002); 
+	assertz(_rep->status() == zpt::HTTP201, std::string("couldn't unset document ") + std::string(_href) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
 	return 1;
@@ -320,7 +387,7 @@ auto zpt::couchdb::Client::remove(std::string _collection, std::string _href, zp
 		_rep = this->send(_req);
 	}
 	while(_rep->status() == zpt::HTTP409);
-	assertz(_rep->status() == zpt::HTTP200, std::string("couldn't remove document:\n") + std::string(_rep), _rep->status(), 2002); 
+	assertz(_rep->status() == zpt::HTTP200, std::string("couldn't remove document ") + std::string(_href) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
 	return 1;

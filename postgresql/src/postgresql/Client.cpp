@@ -115,6 +115,71 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 	return _document["id"]->str();
 }
 
+auto zpt::pgsql::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+
+	{
+		if (_document["href"]->ok()) {
+			std::string _href = std::string(_document["href"]);
+			std::string _expression("UPDATE ");
+			_expression += zpt::pgsql::escape_name(_collection);
+			_expression += std::string(" SET ");
+			std::string _sets = zpt::pgsql::get_column_sets(_document, _opts);
+			_expression += _sets;
+
+			zpt::json _splited = zpt::split(_href, "/");
+			_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
+
+			int _size = 0;
+			try {
+				{ std::lock_guard< std::mutex > _lock(this->__mtx);
+					pqxx::work _stmt(this->conn());
+					_size = _stmt.exec(_expression).affected_rows();
+					_stmt.commit(); }
+			}
+			catch(std::exception& _e) {
+				zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
+				assertz(false, _e.what(), 412, 0);
+			}
+
+			if (_size != 0) {
+				if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+				return _document["id"]->str();
+			}
+		}
+	}
+	{
+		if (!_document["id"]->ok()) {
+			_document << "id" << zpt::generate::r_uuid();
+		}
+		if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+		}
+	
+		std::string _expression("INSERT INTO ");
+		_expression += zpt::pgsql::escape_name(_collection);
+		_expression += std::string(" (");
+		std::string _columns = zpt::pgsql::get_column_names(_document, _opts);
+		std::string _values = zpt::pgsql::get_column_values(_document, _opts);
+		_expression += _columns + std::string(") VALUES (") + _values + (")");
+		int _size = 0;
+		try {
+			{ std::lock_guard< std::mutex > _lock(this->__mtx);
+				pqxx::work _stmt(this->conn());
+				_size = _stmt.exec(_expression).affected_rows();
+				_stmt.commit(); }
+		}
+		catch(std::exception& _e) {
+			zlog(std::string("pgsql: error in insert: ") + _e.what(), zpt::error);
+			assertz(false, _e.what(), 412, 0);
+		}
+		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	}
+	return _document["id"]->str();
+}
+
 auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
