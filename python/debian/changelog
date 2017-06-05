@@ -1,3 +1,9 @@
+zapata-python (0.9.7-1yakkety16) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <naazgull@dfz.pt>  Mon, 05 Jun 2017 12:01:03 +0100
+
 zapata-python (0.9.7-1yakkety15) yakkety; urgency=medium
 
   * Version bump
