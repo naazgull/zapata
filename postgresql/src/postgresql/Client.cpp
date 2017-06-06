@@ -125,6 +125,10 @@ auto zpt::pgsql::Client::upsert(std::string _collection, std::string _href_prefi
 			if (!_document["href"]->ok()) {
 				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 			}
+			if (!_document["id"]->ok()) {
+				zpt::json _split = zpt::split(_document["href"]->str(), "/");
+				_document << "id" << _split->arr()->back();
+			}
 			std::string _href = std::string(_document["href"]);
 			std::string _expression("UPDATE ");
 			_expression += zpt::pgsql::escape_name(_collection);
