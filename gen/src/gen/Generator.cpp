@@ -1159,18 +1159,26 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 		
 		if (std::string(_field["rel"]).find("/") != std::string::npos) {
 			if (_field["type"] == zpt::json::string("array")) {
-				_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
+				_return += std::string("_split->arr()->pop_back();\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 			else if (_field["type"] == zpt::json::string("object")) {
-				_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
+				_return += std::string("_split->arr()->pop_back();\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 		}
 		else {
 			if (_field["type"] == zpt::json::string("array")) {
-				_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
+				_return += std::string("_split->arr()->pop_back();\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 			else if (_field["type"] == zpt::json::string("object")) {
-				_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
+				_return += std::string("_split->arr()->pop_back();\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 		}		
 		_return += std::string("}\n");

@@ -121,7 +121,10 @@ auto zpt::pgsql::Client::upsert(std::string _collection, std::string _href_prefi
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 
 	{
-		if (_document["href"]->ok()) {
+		if (_document["href"]->ok() || _document["id"]->ok()) {
+			if (!_document["href"]->ok()) {
+				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+			}
 			std::string _href = std::string(_document["href"]);
 			std::string _expression("UPDATE ");
 			_expression += zpt::pgsql::escape_name(_collection);

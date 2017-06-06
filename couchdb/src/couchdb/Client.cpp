@@ -177,40 +177,45 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 	std::string _db_name = std::string("/") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
-	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_document["href"]));
 	{
-		zpt::http::rep _rep;
-		zpt::http::req _req;
-		_req->method(zpt::ev::Put);
-		_req->url(_url);
-		_req->header("Content-Type", "application/json");
-		do {
-			zpt::json _revision = this->get(_collection, std::string(_document["href"]));
-			if (!_revision->ok()) {
-				break;
+		if (_document["href"]->ok() || _document["id"]->ok()) {
+			if (!_document["href"]->ok()) {
+				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 			}
-			zpt::json _upsert = _revision + _document;
-			if (!_upsert["id"]->ok()) {
-				_upsert << "id" << zpt::generate::r_uuid();
-			}
-			if (!_upsert["href"]->ok() && _href_prefix.length() != 0) {
-				_upsert << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _upsert["id"]->str());
-			}
-			_upsert << "_id" << _upsert["href"];
+			std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_document["href"]));
+			zpt::json _upsert;
+			zpt::http::rep _rep;
+			zpt::http::req _req;
+			_req->method(zpt::ev::Put);
+			_req->url(_url);
+			_req->header("Content-Type", "application/json");
+			do {
+				zpt::json _revision = this->get(_collection, std::string(_document["href"]));
+				if (!_revision->ok()) {
+					break;
+				}
+				_upsert = _revision + _document;
+				if (!_upsert["id"]->ok()) {
+					_upsert << "id" << zpt::generate::r_uuid();
+				}
+				if (!_upsert["href"]->ok() && _href_prefix.length() != 0) {
+					_upsert << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _upsert["id"]->str());
+				}
+				_upsert << "_id" << _upsert["href"];
 
-			std::string _body = std::string(_upsert);
-			_req->header("Content-Length", std::to_string(_body.length()));
-			_req->body(_body);
-			_rep = this->send(_req);
-		}
-		while(_rep->status() == zpt::HTTP409);
-		if (_rep->status() == zpt::HTTP201) {	
-			if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, std::string(_document["href"]), _document, _opts);
-			return _document["id"]->str();
+				std::string _body = std::string(_upsert);
+				_req->header("Content-Length", std::to_string(_body.length()));
+				_req->body(_body);
+				_rep = this->send(_req);
+			}
+			while(_rep->status() == zpt::HTTP409);
+			if (_rep->status() == zpt::HTTP201) {	
+				if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, std::string(_upsert["href"]), _upsert, _opts);
+				return _upsert["id"]->str();
+			}
 		}
 	}	
 	{
-		
 		if (!_document["id"]->ok()) {
 			_document << "id" << zpt::generate::r_uuid();
 		}
@@ -234,8 +239,7 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 		}
 		assertz(_rep->status() == zpt::HTTP201, std::string("couldn't upsert document ") + std::string(_document["href"]) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 		if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
-	}
-	
+	}	
 	return _document["id"]->str();
 }
 

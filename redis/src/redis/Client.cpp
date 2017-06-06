@@ -126,7 +126,10 @@ auto zpt::redis::Client::upsert(std::string _collection, std::string _href_prefi
 	_key.insert(0, "/");
 	_key.insert(0, (std::string) this->connection()["db"]);
 	{
-		if (_document["href"]->ok()) {
+		if (_document["href"]->ok() || _document["id"]->ok()) {
+			if (!_document["href"]->ok()) {
+				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+			}
 			std::string _href = std::string(_document["href"]);
 			zpt::json _record = this->get(_collection, _href);
 			if (_record->ok()) {
