@@ -115,6 +115,10 @@ namespace zpt {
 		auto join(zpt::json _to_join) -> std::string;
 	}
 
+	namespace email {
+		auto parse(std::string _email) -> zpt::json;
+	}
+
 	namespace uri {
 		auto parse(std::string _uri) -> zpt::json;
 		

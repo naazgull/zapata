@@ -234,6 +234,27 @@ auto zpt::conf::env(zpt::json _options) -> void {
 	);
 }
 
+auto zpt::email::parse(std::string _email) -> zpt::json {
+	static const std::regex _email_rgx(
+		"(?:\"([^\"]*)\")?"
+		"(?:[ ])?"
+		"(?:<)?"
+		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)@"
+		"([a-zA-Z0-9])([a-zA-Z0-9+._-]*)"
+		"(?:>)?"
+	);
+	std::smatch _email_matches;
+	std::regex_match(_email, _email_matches, _email_rgx);
+
+	return {
+		"full", ((std::string) _email_matches[0]),
+		"name", (((std::string) _email_matches[1]).length() == 0 ? zpt::undefined : zpt::json::string(((std::string) _email_matches[1]))),
+		"user",  (((std::string) _email_matches[2]) + ((std::string) _email_matches[3])),
+		"domain", (((std::string) _email_matches[4]) + ((std::string) _email_matches[5])),
+		"address", (((std::string) _email_matches[2]) + ((std::string) _email_matches[3]) + std::string("@") + ((std::string) _email_matches[4]) + ((std::string) _email_matches[5])),
+	};
+}
+
 auto zpt::uri::parse(std::string _uri) -> zpt::json {
 	if (_uri.find("://") == std::string::npos) {
 		if (_uri[0] == '/') {

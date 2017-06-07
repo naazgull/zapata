@@ -41,6 +41,11 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {	
 	try {
+		std::cout << std::string(zpt::email::parse("pedro.figueiredo@muzzley.com")) << endl << flush;
+		std::cout << std::string(zpt::email::parse("\"José Paulo\" <pedro.figueiredo@muzzley.com>")) << endl << flush;
+		std::cout << std::string(zpt::email::parse("<pedro.figueiredo@muzzley.com>")) << endl << flush;
+		return 0;
+		
 		time_t _now = time(nullptr);
 		zpt::tm_ptr _tm_now = zpt::get_time(_now);
 		time_t _then = _now - (3600 * 24 * 30);

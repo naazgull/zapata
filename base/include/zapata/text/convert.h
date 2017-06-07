@@ -135,6 +135,11 @@ namespace zpt {
 	namespace unicode {
 		void escape(std::string& _out);
 	}
+
+	namespace quoted_printable {
+		auto encode(std::string _quote, std::string _charset, std::string& _out) -> void;
+		auto r_encode(std::string _quote, std::string _charset) -> std::string;
+	}
 	
 	namespace url {
 		auto encode(wstring s, ostream& out) -> void;
