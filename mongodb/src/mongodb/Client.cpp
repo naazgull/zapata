@@ -102,6 +102,58 @@ auto zpt::mongodb::Client::insert(std::string _collection, std::string _href_pre
 	return _document["id"]->str();
 }
 
+auto zpt::mongodb::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+	mongo::ScopedDbConnection _conn((std::string) this->connection()["bind"]);
+
+	std::string _full_collection(_collection);
+	_full_collection.insert(0, ".");
+	_full_collection.insert(0, (std::string) this->connection()["db"]);
+
+	{
+		if (_document["href"]->ok() || _document["id"]->ok()) {
+			if (!_document["href"]->ok()) {
+				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+			}
+			if (!_document["id"]->ok()) {
+				zpt::json _split = zpt::split(_document["href"]->str(), "/");
+				_document << "id" << _split->arr()->back();
+			}
+			std::string _href = std::string(_document["href"]);
+			unsigned long _size = 0;
+			_size = _conn->count(_full_collection, BSON( "_id" << _href ), (int) mongo::QueryOption_SlaveOk);
+			if (_size != 0) {
+				zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+				mongo::BSONObjBuilder _mongo_document;
+				zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
+				_conn->update(_full_collection, BSON( "_id" << _href ), _mongo_document.obj(), false, false);
+				_conn.done();
+
+				if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+				return _document["id"]->str();
+			}
+		}
+	}
+	{
+		if (!_document["id"]->ok()) {
+			_document << "id" << zpt::generate::r_uuid();
+		}
+		if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+		}
+		_document << "_id" << _document["href"];
+
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+		mongo::BSONObjBuilder _mongo_document;
+		zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
+		_conn->insert(_full_collection, _mongo_document.obj());
+		_conn.done();
+
+		if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	}
+	return _document["id"]->str();
+}
+
 auto zpt::mongodb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	mongo::ScopedDbConnection _conn((std::string) this->connection()["bind"]);

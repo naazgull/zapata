@@ -110,6 +110,64 @@ auto zpt::redis::Client::insert(std::string _collection, std::string _href_prefi
 	return _document["id"]->str();
 }
 
+auto zpt::redis::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		assertz(this->__conn != nullptr, std::string("connection to Redis at ") + this->name() + std::string(" has not been established."), 500, 0); }
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+
+	std::string _key(_collection);
+	_key.insert(0, "/");
+	_key.insert(0, (std::string) this->connection()["db"]);
+	{
+		if (_document["href"]->ok() || _document["id"]->ok()) {
+			if (!_document["href"]->ok()) {
+				_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+			}
+			if (!_document["id"]->ok()) {
+				zpt::json _split = zpt::split(_document["href"]->str(), "/");
+				_document << "id" << _split->arr()->back();
+			}
+			std::string _href = std::string(_document["href"]);
+			zpt::json _record = this->get(_collection, _href);
+			if (_record->ok()) {
+				for (auto _field : _document->obj()) {
+					_record <<  _field.first << _field.second;
+				}
+
+				redisReply* _reply = nullptr;
+				bool _success = true;
+				{ std::lock_guard< std::mutex > _lock(this->__mtx);
+					redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string) _record).data());
+					_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
+				freeReplyObject(_reply);	
+				assertz(_success, "something whent wrong while accessing Redis", 500, 0);
+
+				if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+				return _document["id"]->str();
+			}
+		}
+	}
+	{
+		if (!_document["id"]->ok()) {
+			_document << "id" << zpt::generate::r_uuid();
+		}
+		if (!_document["href"]->ok() && _href_prefix.length() != 0) {
+			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
+		}
+
+		redisReply* _reply = nullptr;
+		bool _success = true;
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			redisAppendCommand(this->__conn, "HSET %s %s %s", _key.data(), _document["href"]->str().data(), ((std::string) _document).data());
+			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
+		freeReplyObject(_reply);
+		assertz(_success, "something whent wrong while accessing Redis", 500, 0);
+
+		if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+	}
+	return _document["id"]->str();
+}
+
 auto zpt::redis::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn != nullptr, std::string("connection to Redis at ") + this->name() + std::string(" has not been established."), 500, 0); }

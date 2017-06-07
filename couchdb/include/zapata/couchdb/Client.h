@@ -62,6 +62,7 @@ namespace zpt {
 			virtual auto create_index(std::string _collection, zpt::json _fields) -> void;
 			
 			virtual auto insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
+			virtual auto upsert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined) -> std::string;
 			virtual auto save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
 			virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;

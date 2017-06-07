@@ -179,7 +179,7 @@ auto zpt::RESTMutationEmitter::trigger(zpt::mutation::operation _operation, std:
 					_i.second.second[_operation](_operation, _data_class_ns, _record, this->self());
 				}
 				catch(zpt::assertion& _e) {
-					zlog(_e.what() + std::string(", ") + _e.description(), zpt::error);
+					zlog(_e.what() + std::string(", ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::error);
 					return zpt::undefined;
 				}
 				catch(std::exception& _e) {

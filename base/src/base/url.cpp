@@ -32,6 +32,28 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
+auto zpt::quoted_printable::encode(std::string _quote, std::string _charset, std::string& _out) -> void {
+	std::ostringstream _oss;
+	_oss << "=?" << _charset << "?Q?" << flush;
+	std::string _s(_quote);
+	for (size_t _i = 0; _i != _s.length(); _i++) {
+		if (((unsigned char) _s[_i]) > 127) {
+			_oss << "=" << std::uppercase << std::hex << ((int) ((unsigned char) _s[_i]));
+		}
+		else {
+			_oss << _s[_i];
+		}
+	}
+	_oss << "?=" << flush;
+	_out.insert(_out.length(), _oss.str());
+}
+
+auto zpt::quoted_printable::r_encode(std::string _quote, std::string _charset) -> std::string {
+	std::string _out;
+	zpt::quoted_printable::encode(_quote, _charset, _out);
+	return _out;
+}
+
 auto zpt::url::encode(std::string& _out) -> void {
 	const char DEC2HEX[16 + 1] = "0123456789ABCDEF";
 	const unsigned char * pSrc = (const unsigned char *) _out.c_str();
