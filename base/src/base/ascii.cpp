@@ -173,3 +173,23 @@ auto zpt::test::regex(std::string _target, std::string _regex) -> bool {
 	std::regex _rgx(_regex);
 	return std::regex_match(_target, _rgx);
 }
+
+auto zpt::test::timestamp(std::string _timestamp) -> bool {
+	static const std::regex _timestamp_rgx(
+		"([0-9]){4}"
+		"(?:[ /_-])?"
+		"([0-9]){2}"
+		"(?:[ /_-])?"
+		"([0-9]){2}"
+		"T"
+		"([0-9]){2}"
+		"(?:[ :])?"
+		"([0-9]){2}"
+		"(?:[ :])?"
+		"([0-9]){2}"
+		"(?:[Z+-])?"
+		"(?:[0-9]{2,4})?"
+	);
+	return std::regex_match(_timestamp, _timestamp_rgx);
+}
+

@@ -51,7 +51,7 @@ void zpt::HTTPRepT::stringify(ostream& _out) {
 
 void zpt::HTTPRepT::stringify(string& _out) {
 	_out.insert(_out.length(), "HTTP/1.1 "),
-	_out.insert(_out.length(),  zpt::status_names[this->__status]);
+	_out.insert(_out.length(),  zpt::status_names[this->__status > 99 ? this->__status : 100]);
 	_out.insert(_out.length(), CRLF);
 	for (auto i : this->__headers) {
 		_out.insert(_out.length(), i.first);
