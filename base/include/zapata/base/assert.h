@@ -39,26 +39,26 @@ SOFTWARE.
 //#define assertz(x,y,z,c) if (! (x)) { throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__); }
 #define assertz(x,y,z,c) if (! (x)) { void *__backtrace_array__[10]; size_t __backtrace__size__ = backtrace(__backtrace_array__, 10); throw zpt::AssertionException(y, z, c, #x, __LINE__, __FILE__, backtrace_symbols(__backtrace_array__, __backtrace__size__), __backtrace__size__); }
 
-#define assertz_mandatory(x,y,z) assertz(x[y]->ok(), std::string(y), z, 1000)
-#define assertz_string(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)
-#define assertz_integer(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)
-#define assertz_double(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)
-#define assertz_timestamp(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004)
-#define assertz_boolean(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)
-#define assertz_complex(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string(y), z, 1006)
-#define assertz_object(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)
-#define assertz_array(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)
-#define assertz_int(x,y,z) assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)
+#define assertz_mandatory(x,y,z) if (std::string(y).length() == 0) assertz(x->ok(), std::string(x), z, 1000) else assertz(x[y]->ok(), std::string(y), z, 1000)
+#define assertz_string(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)
+#define assertz_integer(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)
+#define assertz_double(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)
+#define assertz_timestamp(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() ==  zpt::JSDate || (x->type() == zpt::JSString && zpt::test::timestamp(x)), std::string(x), z, 1004) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004)
+#define assertz_boolean(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)
+#define assertz_complex(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray, std::string(x), z, 1006) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string(y), z, 1006)
+#define assertz_object(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)
+#define assertz_array(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)
+#define assertz_int(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009) else assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)
 
-#define assertz_uuid(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string(y), z, 1010)
-#define assertz_utf8(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string(y), z, 1011)
-#define assertz_ascii(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string(y), z, 1012)
-#define assertz_hash(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1013)
-#define assertz_token(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1014)
-#define assertz_uri(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(y), z, 1015)
-#define assertz_email(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(y), z, 1016); if (x[y]->is_string()) { std::string _email = std::string(x[y]); std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower); x << y << _email; }
-#define assertz_location(x,y,z) assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017)
-#define assertz_phone(x,y,z) assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018)
+#define assertz_uuid(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string(x), z, 1010) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string(y), z, 1010)
+#define assertz_utf8(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string(x), z, 1011) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string(y), z, 1011)
+#define assertz_ascii(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string(x), z, 1012) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string(y), z, 1012)
+#define assertz_hash(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(x), z, 1013) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1013)
+#define assertz_token(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(x), z, 1014) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1014)
+#define assertz_uri(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(x), z, 1015) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(y), z, 1015)
+#define assertz_email(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(x), z, 1016) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(y), z, 1016); if (x[y]->is_string()) { std::string _email = std::string(x[y]); std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower); x << y << _email; }
+#define assertz_location(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) && zpt::test::location(x[y]->str())), std::string(x), z, 1017) else assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017)
+#define assertz_phone(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(x), z, 1018) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018)
 
 #define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 
