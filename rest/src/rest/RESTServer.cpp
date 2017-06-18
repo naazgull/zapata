@@ -269,7 +269,6 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		zlog(_e.what(), zpt::emergency);
 		this->__suicidal = true;
 	}
-
 }
 
 zpt::RESTServer::~RESTServer(){
@@ -318,7 +317,6 @@ auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
 
 void zpt::RESTServer::start() {
 	try {
-
 		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
 			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
