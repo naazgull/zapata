@@ -585,37 +585,37 @@ auto zpt::JSONElementT::is_nil() -> bool {
 }
 
 zpt::JSONObj& zpt::JSONElementT::obj() {
-	assertz(this->__target.__type == zpt::JSObject, std::string("this element is not of type JSObject: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSObject, std::string("this element is not of type JSObject: ") + this->stringify(), 500, 1100);
 	return this->__target.__object;
 }
 
 zpt::JSONArr& zpt::JSONElementT::arr() {
-	assertz(this->__target.__type == zpt::JSArray, std::string("this element is not of type JSArray: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSArray, std::string("this element is not of type JSArray: ") + this->stringify(), 500, 1100);
 	return this->__target.__array;
 }
 
 string zpt::JSONElementT::str() {
-	assertz(this->__target.__type == zpt::JSString, std::string("this element is not of type JSString: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSString, std::string("this element is not of type JSString: ") + this->stringify(), 500, 1100);
 	return *(this->__target.__string.get());
 }
 
 long long zpt::JSONElementT::intr() {
-	assertz(this->__target.__type == zpt::JSInteger, std::string("this element is not of type JSInteger: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSInteger, std::string("this element is not of type JSInteger: ") + this->stringify(), 500, 1100);
 	return this->__target.__integer;
 }
 
 double zpt::JSONElementT::dbl() {
-	assertz(this->__target.__type == zpt::JSDouble, std::string("this element is not of type JSDouble: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSDouble, std::string("this element is not of type JSDouble: ") + this->stringify(), 500, 1100);
 	return this->__target.__double;
 }
 
 bool zpt::JSONElementT::bln() {
-	assertz(this->__target.__type == zpt::JSBoolean, std::string("this element is not of type JSBoolean: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSBoolean, std::string("this element is not of type JSBoolean: ") + this->stringify(), 500, 1100);
 	return this->__target.__boolean;
 }
 
 zpt::timestamp_t zpt::JSONElementT::date() {
-	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString, std::string("this element is not of type JSDate: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString, std::string("this element is not of type JSDate: ") + this->stringify(), 500, 1100);
 	if (this->__target.__type == zpt::JSString) {
 		return zpt::timestamp(*(this->__target.__string.get()));
 	}
@@ -623,12 +623,12 @@ zpt::timestamp_t zpt::JSONElementT::date() {
 }
 
 zpt::lambda& zpt::JSONElementT::lbd() {
-	assertz(this->__target.__type == zpt::JSLambda, std::string("this element is not of type JSLambda: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSLambda, std::string("this element is not of type JSLambda: ") + this->stringify(), 500, 1100);
 	return this->__target.__lambda;
 }
 
 double zpt::JSONElementT::number() {
-	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger || this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean, std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 0, 0);
+	assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger || this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean, std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify(), 500, 1100);
 	switch(this->__target.__type) {
 		case zpt::JSInteger : {
 			return (double) this->__target.__integer;

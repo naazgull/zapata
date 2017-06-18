@@ -455,6 +455,8 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
 	size_t _size = 0;
+	zdbg(_query);
+		
 	if (_query["selector"]->is_object() && _query["selector"]->obj()->size() != 0) {
 		zpt::http::req _req_count;
 		_req_count->method(zpt::ev::Get);
@@ -463,7 +465,7 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 		zpt::http::rep _rep_count = this->send(_req_count);
 		zpt::json _count(_rep_count->body());
 		_size = size_t(_count["total_rows"]);
-		
+
 		_req->method(zpt::ev::Post);
 		_req->url(_db_name + std::string("/_find"));
 		_req->header("Content-Type", "application/json");

@@ -260,6 +260,7 @@ namespace zpt {
 		auto email(std::string _email) -> bool;
 		auto phone(std::string _phone) -> bool;
 		auto regex(std::string _target, std::string _regex) -> bool;
+		auto timestamp(std::string _timestamp) -> bool;
 	}
 
 }
