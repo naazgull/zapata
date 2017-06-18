@@ -159,7 +159,7 @@ auto zpt::ZMQ::recv() -> zpt::json {
 auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	return this->send(
 		{
-			"channel", _resource,
+			"channel", zpt::generate::r_uuid(),
 			"performative", _performative,
 			"resource", _resource, 
 			"payload", _payload
@@ -174,7 +174,6 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
-	"channel" << _uri["path"] <<
 	"resource" << _uri["path"] <<
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
@@ -289,10 +288,10 @@ auto zpt::ZMQReq::type() -> short int {
 	return ZMQ_REQ;
 }
 
-auto zpt::ZMQReq::send(zpt::json _envelope) -> zpt::json {
-	zpt::ZMQ::send(_envelope);
-	return this->recv();
-}
+// auto zpt::ZMQReq::send(zpt::json _envelope) -> zpt::json {
+// 	zpt::ZMQ::send(_envelope);
+// 	return this->recv();
+// }
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
@@ -1258,8 +1257,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
 			if (_more != 0) {
 				this->in()->recv(&_frame4);
-			}
-			_uuid.assign(zpt::generate::r_uuid()); }
+			} }
 		
 		std::string _empty(static_cast<char*>(_frame2.data()), _frame2.size());
 		std::string _directive(static_cast<char*>(_frame3.data()), _frame3.size());
@@ -1268,8 +1266,14 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		try {
 			zpt::json _envelope(_raw);
 			{ std::lock_guard< std::mutex > _lock(this->__sock_mtx);
+				if (!_envelope["channel"]->ok()) {
+					_uuid.assign(zpt::generate::r_uuid());					
+					_envelope << "channel" << _uuid;
+				}
+				else {
+					_uuid.assign(std::string(_envelope["channel"]));					
+				}
 				this->__sock_id.insert(std::make_pair(_uuid, _frame1));}
-			_envelope << "channel" << _uuid;
 			zverbose(std::string("< ") + _directive);
 			zverbose(zpt::json::pretty(_envelope));
 			
@@ -1425,7 +1429,6 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
-	"channel" << _uri["path"] <<
 	"resource" << _uri["path"] <<
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
@@ -1613,9 +1616,9 @@ auto zpt::net::getip() -> std::string {
 auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 	zpt::json _return = zpt::json::object();
 	_return <<
-		"channel" << _request->url() <<
-		"performative" << _request->method() <<
-		"resource" << _request->url();
+	"channel" << (_request->header("X-Cid").length() != 0 ? _request->header("X-Cid") : zpt::generate::r_uuid()) <<
+	"performative" << _request->method() <<
+	"resource" << _request->url();
 	
 	zpt::json _payload;
 	if (_request->body() != "") {
@@ -1661,7 +1664,7 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 	zpt::json _return = zpt::json::object();
 	_return <<
 	"status" << (int) _reply->status() <<
-	"channel" << zpt::generate::r_uuid() <<
+	"channel" << (_reply->header("X-Cid").length() != 0 ? _reply->header("X-Cid") : zpt::generate::r_uuid()) <<
 	"performative" << zpt::ev::Reply <<
 	"resource" << zpt::generate::r_uuid();
 
@@ -1706,6 +1709,9 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 	_out << "headers" << (zpt::ev::init_reply() + _out["headers"]);
 	for (auto _header : _out["headers"]->obj()) {
 		_return->header(_header.first, ((std::string) _header.second));
+	}
+	if (_out["channel"]->ok()) {
+		_return->header("X-Cid", std::string(_out["channel"]));
 	}
 
 	if (_return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 && _return->status() >= zpt::HTTP200) {

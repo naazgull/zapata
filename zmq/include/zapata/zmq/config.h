@@ -31,7 +31,7 @@
 #define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+/* #undef HAVE_LIBZAPATA_EVENTS */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
 #define HAVE_LIBZAPATA_JSON 1

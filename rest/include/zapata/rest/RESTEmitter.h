@@ -176,10 +176,14 @@ namespace zpt {
 		virtual auto off(std::string _callback_id) -> void;
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
-		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
+		// virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
+		virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
+
+		virtual auto pending(zpt::json _envelope, zpt::ev::handler _callback) -> void;
+		virtual auto has_pending(zpt::json _envelope) -> bool;
 
 		virtual auto init_thread() -> zpt::thread::context;
 		virtual auto dispose_thread(zpt::thread::context _context) -> void;
@@ -194,7 +198,7 @@ namespace zpt {
 	private:
 		zpt::ev::Handler __default_options;
 		zpt::ev::HandlerStack __resources;
-		zpt::ev::ReplyHandlerStack __replies;
+		zpt::ev::ReplyHandlerStack __pending;
 		zpt::rest::HandlerStack __hashed;
 		zpt::poll __poll;
 		zpt::rest::server __server;
@@ -202,8 +206,8 @@ namespace zpt {
 
 		auto get_hash(std::string _pattern) -> std::string;
 		auto add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void;
-		auto resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
-		auto resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+		auto resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback = nullptr) -> void;
+		auto resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback = nullptr) -> void;
 
 	};
 

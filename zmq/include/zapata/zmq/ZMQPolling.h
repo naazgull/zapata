@@ -174,7 +174,7 @@ namespace zpt {
 		ZMQReq(std::string _connection, zpt::json _options);
 		virtual ~ZMQReq();
 		
-		virtual zpt::json send(zpt::json _envelope);
+		// virtual zpt::json send(zpt::json _envelope);
 		
 		virtual auto socket() -> zmq::socket_ptr;
 		virtual auto in() -> zmq::socket_ptr;

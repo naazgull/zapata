@@ -237,9 +237,27 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::json _performative = _params[0];
 	zpt::json _topic = _params[1];
 	zpt::json _envelope = _params[2];
-	
-	zpt::json _ret = _bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope);
-	return **_bridge->to< zpt::python::object >(_ret);
+	zpt::json _opts = _params[3];
+	zpt::json _callback = _params[4];
+
+	if (_callback->is_lambda()) {
+		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts,
+			[ _callback ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) -> void {
+				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+				PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
+				PyObject* _args = PyTuple_Pack(3, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_p_performative).data()), PyUnicode_DecodeFSDefault(_p_topic.data()), zpt::python::to_python(_p_result));
+				try {
+					PyErr_Clear();
+					PyObject_CallObject(_func, _args);
+				}
+				catch(...) {}
+			}
+		);
+	}
+	else {
+		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts, nullptr);
+	}
+	Py_RETURN_TRUE;
 }
 
 auto zpt::python::module::split(PyObject* _self, PyObject* _args) -> PyObject* {

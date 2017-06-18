@@ -175,17 +175,26 @@ auto zpt::ZMQPoll::repoll() -> void {
 auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 	try {
 		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-		zpt::json _result = this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
-		if (_result->ok()) {
-			if (*_socket != nullptr) {
-				_socket->send(_result +
-					zpt::json{ 
-						"channel", _envelope["channel"],
-						"performative", zpt::ev::Reply,
-						"resource", _envelope["resource"]
+
+		if (_performative == zpt::ev::Reply) {
+			this->__emitter->reply(_envelope, _envelope);
+		}
+		else {
+			this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope, zpt::undefined,
+				[ &_socket, &_envelope ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _result, zpt::ev::emitter _p_emitter) -> void {
+					if (_result->ok()) {
+						if (*_socket != nullptr) {
+							_socket->send(_result +
+								zpt::json{ 
+									"channel", _envelope["channel"],
+									"performative", zpt::ev::Reply,
+									"resource", _envelope["resource"]
+								}
+							);
+						}
 					}
-				);
-			}
+				}
+			);
 		}
 	}
 	catch(zpt::assertion& _e) {
@@ -200,7 +209,7 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 						"text", _e.what(),
 						"assertion_failed", _e.description(),
 						"code", _e.code()
-						}
+					}
 				}
 			);
 		}
@@ -216,7 +225,7 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 					"payload", {
 						"text", _e.what(),
 						"code", 0
-						}
+					}
 				}
 			);
 		}
@@ -287,20 +296,20 @@ auto zpt::ZMQPoll::loop() -> void {
 						}
 					}
 					else if (_envelope->ok()) {
-						if (std::string(this->options()["$defaults"]["threads"]) == "off" || _socket->type() == ZMQ_REP) {
+						// if (std::string(this->options()["$defaults"]["threads"]) == "off" || _socket->type() == ZMQ_REP) {
 							this->reply(_envelope, _socket);
-						}
-						else {
-							std::thread _worker(
-								[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
-									zpt::thread::context _context = _poll->emitter()->init_thread();
-									_poll->reply(_envelope, _socket);
-									_poll->emitter()->dispose_thread(_context);
-								},
-								_envelope, _socket, this->self()
-							);
-							_worker.detach();
-						}
+						// }
+						// else {
+						// 	std::thread _worker(
+						// 		[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
+						// 			zpt::thread::context _context = _poll->emitter()->init_thread();
+						// 			_poll->reply(_envelope, _socket);
+						// 			_poll->emitter()->dispose_thread(_context);
+						// 		},
+						// 		_envelope, _socket, this->self()
+						// 	);
+						// 	_worker.detach();
+						// }
 					}
 					// this->__items[_k].revents = 0;
 				}
