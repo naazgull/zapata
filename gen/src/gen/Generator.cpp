@@ -2134,13 +2134,13 @@ auto zpt::GenResource::build_get() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 404), \"payload\", _r_body  };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 404), \"payload\", _r_body  });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -2180,10 +2180,10 @@ auto zpt::GenResource::build_get() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -2209,10 +2209,10 @@ auto zpt::GenResource::build_post() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 201, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "controller") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -2252,10 +2252,10 @@ auto zpt::GenResource::build_post() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -2281,10 +2281,10 @@ auto zpt::GenResource::build_put() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 201, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -2324,10 +2324,10 @@ auto zpt::GenResource::build_put() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -2350,13 +2350,13 @@ auto zpt::GenResource::build_patch() -> std::string {
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -2396,10 +2396,10 @@ auto zpt::GenResource::build_patch() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", _envelope[\"params\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -2422,13 +2422,13 @@ auto zpt::GenResource::build_delete() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -2468,10 +2468,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -2540,10 +2540,10 @@ auto zpt::GenResource::build_head() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ _envelope ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) -> void {\n_c_emitter->reply(_envelope, _c_result)\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3234,10 +3234,10 @@ auto zpt::GenResource::build_python_get() -> std::string {
 			_return += std::string("        (json \"status\" 204)))\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -3296,10 +3296,10 @@ auto zpt::GenResource::build_python_post() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 201, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "controller") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -3346,10 +3346,10 @@ auto zpt::GenResource::build_python_put() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 201, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -3393,13 +3393,13 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
@@ -3455,13 +3455,13 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"status\", 200, \"payload\", _r_body };\n");
+			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
 	_return += std::string("\n}\n}");
