@@ -204,18 +204,30 @@ string zpt::HTTPObj::header(const char* _idx) {
 void zpt::HTTPObj::header(const char* _name, const char* _value) {
 	string _n(_name);
 	zpt::prettify_header_name(_n);
+	auto _found = this->__headers.find(_n);
+	if (_found != this->__headers.end()) {
+		this->__headers.erase(_found);
+	}
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
 void zpt::HTTPObj::header(const char* _name, string _value) {
 	string _n(_name);
 	zpt::prettify_header_name(_n);
+	auto _found = this->__headers.find(_n);
+	if (_found != this->__headers.end()) {
+		this->__headers.erase(_found);
+	}
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
 void zpt::HTTPObj::header(string _name, string _value) {
 	string _n(_name);
 	zpt::prettify_header_name(_n);
+	auto _found = this->__headers.find(_n);
+	if (_found != this->__headers.end()) {
+		this->__headers.erase(_found);
+	}
 	this->__headers.insert(pair< string, string> (_n, _value));
 }
 
