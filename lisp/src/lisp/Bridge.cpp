@@ -386,10 +386,10 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				std::string _name = std::string(_lambda.second);
 				_handlers.insert(
 					std::make_pair(_performative,
-						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 							zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 							zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
-							return _bridge->from< zpt::lisp::object >(_ret);
+							_emitter->reply(_envelope, _bridge->from< zpt::lisp::object >(_ret));
 						}
 					)
 				);

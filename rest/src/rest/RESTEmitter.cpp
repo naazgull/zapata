@@ -230,34 +230,33 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::string {
 	std::regex _url_pattern(_listener->regex());
 
-	zpt::ev::Handler _handler = [ _listener ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+	zpt::ev::Handler _handler = [ _listener ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 		switch (_performative) {
 			case zpt::ev::Get : {
-				return _listener->get(_resource, _envelope, _emitter);
+				 _listener->get(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Put : {
-				return _listener->put(_resource, _envelope, _emitter);
+				 _listener->put(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Post : {
-				return _listener->post(_resource, _envelope, _emitter);
+				 _listener->post(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Delete : {
-				return _listener->del(_resource, _envelope, _emitter);
+				 _listener->del(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Head : {
-				return _listener->head(_resource, _envelope, _emitter);
+				 _listener->head(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Options : {
-				return _listener->options(_resource, _envelope, _emitter);
+				 _listener->options(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Patch : {
-				return _listener->patch(_resource, _envelope, _emitter);
+				 _listener->patch(_resource, _envelope, _emitter);
 			}
 			case zpt::ev::Reply : {
-				return _listener->reply(_resource, _envelope, _emitter);
+				 _listener->reply(_resource, _envelope, _emitter);
 			}
 		}
-		return zpt::undefined;
 	};
 	
 	zpt::ev::handlers _handlers;
@@ -345,6 +344,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 			};
 			this->__server->publish(_url, _in);
 		}
+		return;
 	}
 	
 	this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true }, _callback);

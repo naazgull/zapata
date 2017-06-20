@@ -253,35 +253,35 @@ auto zpt::EventListener::regex() -> std::string {
 	return this->__regex;
 }
 
-auto zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	if (_envelope["headers"]["Origin"]->ok()) {
-		return {
+		_emitter->reply(_envelope, {
 			"status", 413,
 			"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]))
-		};
+		});
 	}
 	string _origin = _envelope["headers"]["Origin"];
-	return {
+	_emitter->reply(_envelope, {
 		"status", 200,
 		"headers", (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + zpt::json(
 				{
@@ -293,15 +293,14 @@ auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt
 				}
 			)
 		)
-	};
+	});
 }
 
-auto zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
+auto zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 	assertz(false, "Performative is not accepted for the given resource", 405, 0);
 }
 
-auto zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> zpt::json {
-	return zpt::undefined;
+auto zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
 }
 
 zpt::EventGatekeeper::EventGatekeeper(zpt::json _options) : __options(_options), __self(this) {

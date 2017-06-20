@@ -288,14 +288,14 @@ namespace zpt {
 
 		virtual std::string regex() final;
 		
-		virtual auto get(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto put(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto post(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto del(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto head(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto options(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto patch(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
-		virtual auto reply(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json;
+		virtual auto get(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto put(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto post(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto del(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto head(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto options(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto patch(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
+		virtual auto reply(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
 
 	private:
 		std::string __regex;

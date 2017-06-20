@@ -199,7 +199,7 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 		Py_INCREF(_func);
 		_handlers.insert(
 			std::make_pair(_performative,
-				[ _lambda, _instance ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+				[ _lambda, _instance ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 					zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 					std::string _s_performative = zpt::ev::to_str(_performative);
 					std::transform(_s_performative.begin(), _s_performative.end(), _s_performative.begin(), ::tolower);
@@ -218,10 +218,11 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 						else {
 							_ret = _bridge->from< zpt::python::object >(_result);
 						}
-						return _ret;
+						_emitter->reply(_envelope, _ret);
+						return;
 					}
 					catch(...) {}
-					return { "status", 500, "payload", { "text", "something went terribly wrong with Python listeners invokation" } };
+					_emitter->reply(_envelope, { "status", 500, "payload", { "text", "something went terribly wrong with Python listeners invokation" } });
 				}
 			)
 		);

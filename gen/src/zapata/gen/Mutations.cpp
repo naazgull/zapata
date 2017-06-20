@@ -1,7 +1,7 @@
 $[mutation.path.self.h]
 
 auto $[namespace]::mutations::$[mutation.name]::mutify(zpt::ev::emitter _emitter) -> void {
-zpt::callback _h_on_change;
+zpt::ev::handler _h_on_change;
  
 $[mutation.self.handler.begin]
 _emitter->on("$[mutation.topic.self.regex]",
