@@ -67,7 +67,7 @@
 #define PACKAGE "zapata-gen"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "n@zgul <naazgull@dfz.pt>"
+#define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "zapata-gen"
