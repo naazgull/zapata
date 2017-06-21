@@ -193,4 +193,3 @@ auto zpt::test::timestamp(std::string _timestamp) -> bool {
 	);
 	return std::regex_match(_timestamp, _timestamp_rgx);
 }
-
