@@ -243,7 +243,8 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 
 	if (_callback->is_lambda()) {
 		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts,
-			[ _callback ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) -> void {
+			[ _callback
+			] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) -> void {
 				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 				PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
 				PyObject* _args = PyTuple_Pack(3, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_p_performative).data()), PyUnicode_DecodeFSDefault(_p_topic.data()), zpt::python::to_python(_p_result));

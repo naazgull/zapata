@@ -48,7 +48,7 @@
 #define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
+#define HAVE_LIBZAPATA_EVENTS 1
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
 #define HAVE_LIBZAPATA_HTTP 1
@@ -57,7 +57,7 @@
 #define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-/* #undef HAVE_LIBZAPATA_ZMQ */
+#define HAVE_LIBZAPATA_ZMQ 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

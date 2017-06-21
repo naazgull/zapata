@@ -85,6 +85,9 @@ auto zpt::Generator::load() -> void {
 	if (!this->__options["files"]->ok()) {
 		return;
 	}
+	if (!this->__options["version"]->ok()) {
+		this->__options << "version" << "v3";
+	}
 	for (auto _file : this->__options["files"]->arr()) {
 		std::ifstream _ifs(_file->str().data());
 		zpt::json _spec;
@@ -801,7 +804,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_h, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
-		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, "v3", "mutations", "{operation}", this->__spec["name"] } ) }));
+		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, this->__options["version"], "mutations", "{operation}", this->__spec["name"] } ) }));
 		if (this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
 			std::string _mutation;
 			bool _first = true;
@@ -857,11 +860,11 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 				_second++;
 				std::string _other_ref = std::string(_second->second);
 				_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
-				std::string _uri(std::string("/v3/mutations/([^/]+)") + zpt::r_replace(_other_ref, std::string("/v3"), ""));
+				std::string _uri(std::string("^/") + std::string(this->__options["version"]) + std::string("/mutations/([^/]+)") + zpt::r_replace(_other_ref, std::string("/") + std::string(this->__options["version"]), "") + std::string("$"));
 				zpt::replace(_mutation_on, "$[mutation.topic.regex]", _uri);
 			}
 			else {
-				std::string _uri(std::string("/v3/mutations/([^/]+)") + zpt::r_replace(_topic, std::string("/v3"), ""));
+				std::string _uri(std::string("^/") + std::string(this->__options["version"]) + std::string("/mutations/([^/]+)") + zpt::r_replace(_topic, std::string("^/") + std::string(this->__options["version"]), ""));
 				zpt::replace(_mutation_on, "$[mutation.topic.regex]", _uri);
 			}				
 			
