@@ -230,31 +230,39 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::string {
 	std::regex _url_pattern(_listener->regex());
 
-	zpt::ev::Handler _handler = [ _listener ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+	zpt::ev::Handler _handler = [ & ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 		switch (_performative) {
 			case zpt::ev::Get : {
 				 _listener->get(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Put : {
 				 _listener->put(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Post : {
 				 _listener->post(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Delete : {
 				 _listener->del(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Head : {
 				 _listener->head(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Options : {
 				 _listener->options(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Patch : {
 				 _listener->patch(_resource, _envelope, _emitter);
+				 break;
 			}
 			case zpt::ev::Reply : {
 				 _listener->reply(_resource, _envelope, _emitter);
+				 break;
 			}
 		}
 	};
@@ -319,6 +327,7 @@ auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 	if (_exists != this->__pending.end()) {
 		auto _callback = _exists->second;
 		_callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
+		this->__pending.erase(_exists);
 	}
 }
 
@@ -516,6 +525,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 		}
 	}
 	zpt::json _out = zpt::rest::not_found(_url);
+	zdbg(zpt::json::pretty(_out));
 	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 		throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 	}
