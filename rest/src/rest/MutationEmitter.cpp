@@ -168,6 +168,25 @@ auto zpt::RESTMutationEmitter::route(zpt::mutation::operation _operation, std::s
 	return zpt::undefined;
 }
 
+auto zpt::RESTMutationEmitter::sync_route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	if (bool(_opts["mutated-event"])) return zpt::undefined;
+	
+	std::string _op = zpt::mutation::to_str(_operation);
+	std::transform(std::begin(_op), std::end(_op), std::begin(_op), ::tolower);
+	std::string _uri(std::string("/") + this->version() + std::string("/mutations/") + _op + zpt::r_replace(_data_class_ns, std::string("/") + this->version(), ""));
+	
+	zpt::json _envelope = {
+		"channel", _uri,
+		"performative", (int) _operation,
+		"resource", _uri, 
+		"payload", _record
+	};
+
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		this->__socket->send(_envelope); }
+	return zpt::undefined;
+}
+
 auto zpt::RESTMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	if (bool(_opts["mutated-event"])) return zpt::undefined;
 
