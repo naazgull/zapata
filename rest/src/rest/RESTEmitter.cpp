@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
+Copyright (c) 2014 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -532,6 +532,182 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 	if (this->has_pending(_envelope)) {
 		this->reply(_envelope, _out);
 	}
+}
+
+auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	
+	if (bool(_opts["mqtt"])) {
+		if (bool(_opts["no-envelope"])) {
+			this->__server->publish(_url, _envelope);
+		}
+		else {
+			zpt::json _in = _envelope + zpt::json{ 
+				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
+				"channel", _url,
+				"performative", _method,
+				"resource", _url
+			};
+			this->__server->publish(_url, _in);
+		}
+		return zpt::undefined;
+	}
+	
+	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true });
+}
+
+auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	zpt::json _return;
+	bool _endpoint_found = false;
+	bool _method_found = false;
+
+	_envelope = _envelope + zpt::json{ 
+		"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
+		"channel", _url,
+		"performative", _method,
+		"resource", _url
+	};
+
+	std::vector< std::pair<std::regex, zpt::ev::handlers > > _resources;
+	if (_method != zpt::ev::Reply) {
+		zpt::json _splited = zpt::split(_url, "/");
+		std::string _hash;
+		for (auto _i : _splited->arr()) {
+			_hash += std::string("/") + _i->str();
+			auto _found = this->__hashed.find(_hash);
+			if (_found != this->__hashed.end()) {
+				_resources = _found->second;
+				break;
+			}
+		}
+	}
+	else {
+		auto _found = this->__hashed.find("/___reply___");
+		if (_found != this->__hashed.end()) {
+			_resources = _found->second;
+		}
+	}
+
+	for (auto _endpoint : _resources) {
+		std::regex _regexp = _endpoint.first;
+		if (std::regex_match(_url, _regexp)) {
+			_endpoint_found = true;
+			if (_endpoint.second[_method] != nullptr) {
+				_method_found = true;
+				try {
+					zpt::json _result = _endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
+					if (_result->ok()) {
+						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
+							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
+							if (bool(_opts["bubble-error"])) {
+								throw zpt::assertion(_result["payload"]["text"]->ok() ? std::string(_result["payload"]["text"]) : std::string(zpt::status_names[int(_result["status"])]), int(_result["status"]), int(_result["payload"]["code"]), _result["payload"]["assertion_failed"]->ok() ? std::string(_result["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_result["status"])]));
+							}
+						}
+
+						_result << 
+						"performative" << zpt::ev::Reply <<
+						"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"]);
+
+						_return = _result;
+					}
+				}
+				catch (zpt::assertion& _e) {
+					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+					if (bool(_opts["bubble-error"])) {
+						throw;
+					}
+					_return = {
+						"performative", zpt::ev::Reply,
+						"status", _e.status(),
+						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
+						"payload", {
+							"text", _e.what(),
+							"assertion_failed", _e.description(),
+							"code", _e.code()
+						}
+					};
+				}
+				catch(std::exception& _e) {
+					zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
+					if (bool(_opts["bubble-error"])) {
+						throw;
+					}
+					_return = {
+						"performative", zpt::ev::Reply,
+						"status", 500,
+						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
+						"payload", {
+							"text", _e.what(),
+							"code", 0
+						}
+					};
+				}
+			}
+		}
+	}
+
+	if (_method != zpt::ev::Reply) {
+		if (!_endpoint_found) {
+			_return = this->resolve_remotely(_method, _url, _envelope, _opts);
+		}
+		else if (!_method_found) {
+			zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
+			if (bool(_opts["bubble-error"])) {
+				assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 0);
+			}
+			_return = {
+				"performative", zpt::ev::Reply,
+				"status", 405,
+				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
+				"payload", {
+					"text", "the requested performative is not allowed to be used with the requested resource"
+				}
+			};
+		}
+	}	
+	return _return;
+}
+
+auto zpt::RESTEmitter::sync_resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
+	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	
+	zpt::json _container = this->lookup(_url);
+	if (_container->ok()) {
+		short _type = zpt::str2type(_container["type"]->str());
+		switch(_type) {
+			case ZMQ_ROUTER_DEALER :
+			case ZMQ_ROUTER :
+			case ZMQ_REP :
+			case ZMQ_REQ : {
+				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);
+				zpt::json _out = _client->send(_envelope);
+				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
+					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
+				}
+				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
+					throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
+				}
+				this->__poll->remove(_client);
+				return _out;
+			}
+			case ZMQ_PUB_SUB : {
+				std::string _connect = _container["connect"]->str();
+				zpt::socket_ref _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+				_client->send(_envelope);
+				return zpt::rest::accepted(_url);
+			}
+			case ZMQ_PUSH : {
+				zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
+				_client->send(_envelope);
+				return zpt::rest::accepted(_url);
+			}
+		}
+	}
+	zpt::json _out = zpt::rest::not_found(_url);
+	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
+		throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
+	}
+	return _out;
 }
 
 auto zpt::RESTEmitter::instance() -> zpt::ev::emitter {

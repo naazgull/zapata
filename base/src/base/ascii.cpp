@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
+Copyright (c) 2014 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -193,4 +193,3 @@ auto zpt::test::timestamp(std::string _timestamp) -> bool {
 	);
 	return std::regex_match(_timestamp, _timestamp_rgx);
 }
-
