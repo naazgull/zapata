@@ -221,8 +221,8 @@ namespace zpt {
 		virtual auto credentials(zpt::json _credentials) -> void = 0;
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
-		// virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
+		virtual auto sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json = 0;
 		virtual auto reply(zpt::json _request, zpt::json _reply) -> void = 0;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void = 0;

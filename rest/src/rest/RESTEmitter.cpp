@@ -506,6 +506,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 				// 	throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 				// }
 				// this->__poll->remove(_client);
+				return;
 			}
 			case ZMQ_PUB_SUB : {
 				std::string _connect = _container["connect"]->str();
@@ -514,6 +515,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 				if (this->has_pending(_envelope)) {
 					this->reply(_envelope, zpt::rest::accepted(_url));
 				}
+				return;
 			}
 			case ZMQ_PUSH : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
@@ -521,11 +523,11 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 				if (this->has_pending(_envelope)) {
 					this->reply(_envelope, zpt::rest::accepted(_url));
 				}
+				return;
 			}
 		}
 	}
 	zpt::json _out = zpt::rest::not_found(_url);
-	zdbg(zpt::json::pretty(_out));
 	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 		throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 	}
@@ -553,7 +555,7 @@ auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _ur
 		return zpt::undefined;
 	}
 	
-	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true });
+	return this->sync_resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true });
 }
 
 auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
@@ -595,7 +597,16 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 			if (_endpoint.second[_method] != nullptr) {
 				_method_found = true;
 				try {
-					zpt::json _result = _endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
+					zpt::json _result;
+					this->pending(_envelope,
+						[ & ] (zpt::ev::performative _p_performtive, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _p_emitter) -> void {
+							_result = _p_result;
+						}
+					);
+					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
+					if (this->has_pending(_envelope)) {
+						this->reply(_envelope, { "status", 204 });
+					}
 					if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
 							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);
@@ -648,7 +659,7 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 
 	if (_method != zpt::ev::Reply) {
 		if (!_endpoint_found) {
-			_return = this->resolve_remotely(_method, _url, _envelope, _opts);
+			_return = this->sync_resolve_remotely(_method, _url, _envelope, _opts);
 		}
 		else if (!_method_found) {
 			zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
@@ -680,7 +691,8 @@ auto zpt::RESTEmitter::sync_resolve_remotely(zpt::ev::performative _method, std:
 			case ZMQ_REP :
 			case ZMQ_REQ : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);
-				zpt::json _out = _client->send(_envelope);
+				_client->send(_envelope);
+				zpt::json _out = _client->recv();
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
