@@ -198,6 +198,10 @@ auto zpt::DefaultMutationEmitter::route(zpt::mutation::operation _operation, std
 	return zpt::undefined;
 }
 
+auto zpt::DefaultMutationEmitter::sync_route(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
+	return zpt::undefined;
+}
+
 auto zpt::DefaultMutationEmitter::trigger(zpt::mutation::operation _operation, std::string _data_class_ns, zpt::json _record, zpt::json _opts) -> zpt::json {
 	return zpt::undefined;
 }
