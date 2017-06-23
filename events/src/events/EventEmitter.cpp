@@ -215,11 +215,14 @@ auto zpt::ev::init_reply(std::string _uuid, zpt::json _request) -> zpt::json {
 		zpt::json{
 			"Server", "zapata RESTful server",
 			"Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag",
-			"Date", std::string(_buffer_date),
+			"Date", std::string(_buffer_date)
 		}
 	);
 	if (_uuid != "") {
 		_return << "X-Cid" << _uuid;
+	}
+	if (_request["headers"]["Connection"]->ok()) {
+		_return << "Connection" << _request["headers"]["Connection"];
 	}
 
 	if (_request->ok()) {

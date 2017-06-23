@@ -34,6 +34,8 @@ SOFTWARE.
 #include <mutex>
 #include <zapata/zmq/SocketStreams.h>
 #include <zapata/http/HTTPObj.h>
+#include <poll.h>
+#include <zmq_utils.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -51,6 +53,7 @@ using namespace __gnu_cxx;
 
 namespace zmq {
 	typedef std::shared_ptr< zmq::socket_t > socket_ptr;
+	// auto __poll(zmq_pollitem_t *items_, int nitems_, long timeout_) -> int;
 }
 
 namespace zpt {
@@ -121,7 +124,8 @@ namespace zpt {
 		std::mutex __mtx[2];
 		zpt::ZMQPollPtr __self;
 		zpt::ev::emitter __emitter;
-		
+		bool __needs_rebuild;
+
 		auto bind(short _type, std::string _connection) -> zpt::ZMQ*;
 		auto signal(std::string _message) -> void;
 		auto notify(std::string _message) -> void;

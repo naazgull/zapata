@@ -178,12 +178,8 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
-	}
-	else {
+	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
@@ -287,11 +283,6 @@ auto zpt::ZMQReq::out_mtx() -> std::mutex& {
 auto zpt::ZMQReq::type() -> short int {
 	return ZMQ_REQ;
 }
-
-// auto zpt::ZMQReq::send(zpt::json _envelope) -> zpt::json {
-// 	zpt::ZMQ::send(_envelope);
-// 	return this->recv();
-// }
 
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
@@ -1196,12 +1187,8 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
-	}
-	else {
+	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}		
 	if (!_envelope["payload"]->ok()) {
@@ -1404,6 +1391,7 @@ auto zpt::ZMQHttp::fd() -> int {
 }
 
 auto zpt::ZMQHttp::close() -> void {
+	this->__underlying->close();
 }
 
 auto zpt::ZMQHttp::available() -> bool {
@@ -1433,17 +1421,13 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-	if (_performative != zpt::ev::Reply) {
-		_envelope << "headers" << (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]);
-	}
-	else {
+	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope << "headers" << (zpt::ev::init_reply() + this->options()["$defaults"]["headers"]["response"] + _envelope["headers"]);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
-	}		
-	// if (!_envelope["payload"]->ok()) {
-	// 	_envelope << "payload" << zpt::json::object();
-	// }
+	}
+	if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
+		_envelope["headers"] << "Connection" << "close";
+	}
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
 	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
 		(*this->__underlying) << _reply << flush; }
@@ -1706,9 +1690,11 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	
-	_out << "headers" << (zpt::ev::init_reply() + _out["headers"]);
-	for (auto _header : _out["headers"]->obj()) {
-		_return->header(_header.first, ((std::string) _header.second));
+	//_out << "headers" << (zpt::ev::init_reply() + _out["headers"])
+	if (_out["headers"]->is_object()) {;
+		for (auto _header : _out["headers"]->obj()) {
+			_return->header(_header.first, ((std::string) _header.second));
+		}
 	}
 	if (_out["channel"]->ok()) {
 		_return->header("X-Cid", std::string(_out["channel"]));

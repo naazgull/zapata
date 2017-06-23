@@ -25,6 +25,7 @@ SOFTWARE.
 #include <zapata/zmq/ZMQPolling.h>
 #include <systemd/sd-daemon.h>
 #include <future>
+#include <chrono>
 
 zpt::ZMQPollPtr::ZMQPollPtr(zpt::json _options, zpt::ev::emitter _emiter) : std::shared_ptr<zpt::ZMQPoll>(new zpt::ZMQPoll(_options, _emiter)) {
 }
@@ -38,7 +39,7 @@ zpt::ZMQPollPtr::ZMQPollPtr(zpt::ZMQPoll * _ptr) : std::shared_ptr<zpt::ZMQPoll>
 zpt::ZMQPollPtr::~ZMQPollPtr() {
 }
 
-zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options( _options), __id(0), __self(this), __emitter(_emiter)/*, __context(0)*/ {
+zpt::ZMQPoll::ZMQPoll(zpt::json _options, zpt::ev::emitter _emiter) : __options( _options), __id(0), __self(this), __emitter(_emiter),__needs_rebuild(true)/*, __context(0)*/ {
 	std::string _uuid = zpt::generate::r_uuid();
 	std::string _connection(std::string("inproc://") + _uuid);
 	this->__sync[0] = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
@@ -155,11 +156,12 @@ auto zpt::ZMQPoll::poll(zpt::socket_ref _socket) -> void {
 }
 
 auto zpt::ZMQPoll::repoll() -> void {
-	if (this->__items.size() == this->__by_socket.size() + 1) {
+	if (!this->__needs_rebuild) {
 		return;
 	}
 	// zdbg("rebuilding");
 	this->__items.clear();
+	this->__items.resize(0);
 	
 	for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 		if (this->__by_socket[_k]->in().get() != nullptr) {
@@ -170,6 +172,7 @@ auto zpt::ZMQPoll::repoll() -> void {
 		}
 	}
 	this->__items.push_back({ (void*)(*this->__sync[0]), 0, ZMQ_POLLIN, 0 });
+	this->__needs_rebuild = false;
 }
 
 auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
@@ -184,13 +187,14 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 				[ &_socket, &_envelope ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _result, zpt::ev::emitter _p_emitter) -> void {
 					if (_result->ok()) {
 						if (*_socket != nullptr) {
-							_socket->send(_result +
+							_result = zpt::json{ "headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + _p_emitter->options()["$defaults"]["headers"]["response"] } + _result + 
 								zpt::json{ 
 									"channel", _envelope["channel"],
 									"performative", zpt::ev::Reply,
 									"resource", _envelope["resource"]
-								}
-							);
+								};
+							_socket->send(_result);
+							_envelope["headers"] << "Connection" << _result["headers"]["Connection"];
 						}
 					}
 				}
@@ -245,17 +249,25 @@ auto zpt::ZMQPoll::loop() -> void {
 		
 		for(; true; ) {
 			this->repoll();
+			// zdbg(std::string("socket list size is ") + std::to_string(this->__items.size()));
 			
+			int _n_events = 0;
 			if (_sd_watchdog_enabled) {
-				zmq::poll(this->__items, _sd_watchdog_usec / 1000 / 2);
+				_n_events = zmq::poll(&this->__items[0], this->__items.size(), _sd_watchdog_usec / 1000 / 2);
 				sd_notify(0, "WATCHDOG=1");
 			}
 			else {
-				zmq::poll(this->__items, -1);
+				_n_events = zmq::poll(&this->__items[0], this->__items.size(), -1);
 			}
 
+			if (_n_events == 0) {
+				continue;
+			}
+			//zdbg(std::string("events ") + std::to_string(_n_events));
+			
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
+					//zdbg(std::string("communication event on ") + std::to_string(_k));
 					zpt::socket_ref _socket = this->__by_socket[_k];
 					if (!_socket->available()) {
 						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
@@ -296,57 +308,50 @@ auto zpt::ZMQPoll::loop() -> void {
 						}
 					}
 					else if (_envelope->ok()) {
-						// if (std::string(this->options()["$defaults"]["threads"]) == "off" || _socket->type() == ZMQ_REP) {
-							this->reply(_envelope, _socket);
-						// }
-						// else {
-						// 	std::thread _worker(
-						// 		[] (zpt::json _envelope, zpt::socket_ref _socket, zpt::poll _poll) {
-						// 			zpt::thread::context _context = _poll->emitter()->init_thread();
-						// 			_poll->reply(_envelope, _socket);
-						// 			_poll->emitter()->dispose_thread(_context);
-						// 		},
-						// 		_envelope, _socket, this->self()
-						// 	);
-						// 	_worker.detach();
-						// }
+						this->reply(_envelope, _socket);
 					}
-					// this->__items[_k].revents = 0;
+
+					if (_envelope["headers"]["Connection"] == zpt::json::string("close")) {
+						_to_remove.push_back(_socket);
+					}
 				}
 			}
 
 			if (this->__items[this->__items.size() - 1].revents & ZMQ_POLLIN) {
+				//zdbg("synchronization event");
 				zmq::message_t _frame;
 				this->__sync[0]->recv(&_frame);
 				
 				std::string _uuid(std::string(static_cast<char*>(_frame.data()), _frame.size()));
 				try {
 					zpt::socket_ref _socket = this->get(_uuid);
+					//zdbg(std::string("adding socket ") + _socket);
 					_to_add.push_back(_socket);
 				}
 				catch(zpt::assertion& _e) {
 				}
 				this->notify(_uuid);
-				// this->__items[this->__items.size() - 1].revents = 0;
 			}
 
 			for (auto _socket : _to_remove) {
-				//zdbg(std::string("removing socket ") + _socket);
+				// zdbg(std::string("removing socket ") + _socket);
 				for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 					if (this->__by_socket[_k] == _socket) {
-						// zdbg("FOUND IT");
 						this->__by_socket.erase(this->__by_socket.begin() + _k);
 						break;
 					}
 				}
 				_socket->close();
 				this->remove(_socket);
+				this->__needs_rebuild = true;
 			}
 			_to_remove.clear();
+			_to_remove.resize(0);
 
 			for (; _to_add.size() != 0; ) {
 				this->__by_socket.push_back(_to_add[0]);
 				_to_add.erase(_to_add.begin());
+				this->__needs_rebuild = true;
 			}
 		}
 	}
@@ -438,3 +443,310 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 	return nullptr;
 }
 
+// #define ZMQ_POLL_BASED_ON_POLL
+// #define ZMQ_POLL_BASED_ON_SELECT
+
+// auto zmq::__poll(zmq_pollitem_t *items_, int nitems_, long timeout_) -> int {
+// #if defined ZMQ_POLL_BASED_ON_POLL
+// 	if (!items_) {
+// 		return -1;
+// 	}
+
+// 	uint64_t now = 0;
+// 	uint64_t end = 0;
+// 	pollfd spollfds[ZMQ_POLLITEMS_DFLT];
+// 	pollfd *pollfds = spollfds;
+
+// 	if (nitems_ > ZMQ_POLLITEMS_DFLT) {
+// 		pollfds = (pollfd*) malloc (nitems_ * sizeof (pollfd));
+// 	}
+
+// 	//  Build pollset for poll () system call.
+// 	for (int i = 0; i != nitems_; i++) {
+
+// 		//  If the poll item is a 0MQ socket, we poll on the file descriptor
+// 		//  retrieved by the ZMQ_FD socket option.
+// 		if (items_ [i].socket) {
+// 			size_t zmq_fd_size = sizeof (int);
+// 			if (zmq_getsockopt (items_ [i].socket, ZMQ_FD, &pollfds [i].fd,
+// 					&zmq_fd_size) == -1) {
+// 				if (pollfds != spollfds)
+// 					free (pollfds);
+// 				return -1;
+// 			}
+// 			pollfds [i].events = items_ [i].events ? POLLIN : 0;
+// 		}
+// 		//  Else, the poll item is a raw file descriptor. Just convert the
+// 		//  events to normal POLLIN/POLLOUT for poll ().
+// 		else {
+// 			pollfds [i].fd = items_ [i].fd;
+// 			            pollfds [i].events =
+// 				    (items_ [i].events & ZMQ_POLLIN ? POLLIN : 0) |
+// 				    (items_ [i].events & ZMQ_POLLOUT ? POLLOUT : 0);
+// 		}
+// 	}
+
+// 	bool first_pass = true;
+// 	int nevents = 0;
+
+// 	while (true) {
+// 		//  Compute the timeout for the subsequent poll.
+// 		int timeout;
+// 		if (first_pass)
+// 			timeout = 0;
+// 		else
+// 		        if (timeout_ < 0)
+// 				timeout = -1;
+// 		        else
+// 				timeout = end - now;
+
+// 		//  Wait for events.
+// 		while (true) {
+// 			int rc = poll(pollfds, nitems_, timeout);
+// 			if (rc == -1 && errno == EINTR) {
+// 				if (pollfds != spollfds)
+// 					free(pollfds);
+// 				return -1;
+// 			}
+// 			break;
+// 		}
+// 		//  Check for the events.
+// 		for (int i = 0; i != nitems_; i++) {
+
+// 			items_ [i].revents = 0;
+
+// 			//  The poll item is a 0MQ socket. Retrieve pending events
+// 			//  using the ZMQ_EVENTS socket option.
+// 			if (items_ [i].socket) {
+// 				size_t zmq_events_size = sizeof (uint32_t);
+// 				uint32_t zmq_events;
+// 				if (zmq_getsockopt (items_ [i].socket, ZMQ_EVENTS, &zmq_events,
+// 						&zmq_events_size) == -1) {
+// 					if (pollfds != spollfds)
+// 						free (pollfds);
+// 					return -1;
+// 				}
+// 				if ((items_ [i].events & ZMQ_POLLOUT) &&
+// 					(zmq_events & ZMQ_POLLOUT))
+// 					items_ [i].revents |= ZMQ_POLLOUT;
+// 				if ((items_ [i].events & ZMQ_POLLIN) &&
+// 					(zmq_events & ZMQ_POLLIN))
+// 					items_ [i].revents |= ZMQ_POLLIN;
+// 			}
+// 			//  Else, the poll item is a raw file descriptor, simply convert
+// 			//  the events to zmq_pollitem_t-style format.
+// 			else {
+// 				if (pollfds [i].revents & POLLIN)
+// 					items_ [i].revents |= ZMQ_POLLIN;
+// 				if (pollfds [i].revents & POLLOUT)
+// 					items_ [i].revents |= ZMQ_POLLOUT;
+// 				if (pollfds [i].revents & ~(POLLIN | POLLOUT))
+// 					items_ [i].revents |= ZMQ_POLLERR;
+// 			}
+
+// 			if (items_ [i].revents)
+// 				nevents++;
+// 		}
+
+// 		//  If timout is zero, exit immediately whether there are events or not.
+// 		if (timeout_ == 0)
+// 			break;
+
+// 		//  If there are events to return, we can exit immediately.
+// 		if (nevents)
+// 			break;
+
+// 		//  At this point we are meant to wait for events but there are none.
+// 		//  If timeout is infinite we can just loop until we get some events.
+// 		if (timeout_ < 0) {
+// 			if (first_pass)
+// 				first_pass = false;
+// 			continue;
+// 		}
+
+// 		//  The timeout is finite and there are no events. In the first pass
+// 		//  we get a timestamp of when the polling have begun. (We assume that
+// 		//  first pass have taken negligible time). We also compute the time
+// 		//  when the polling should time out.
+// 		if (first_pass) {
+// 			now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();;
+// 			end = now + timeout_;
+// 			if (now == end)
+// 				break;
+// 			first_pass = false;
+// 			continue;
+// 		}
+
+// 		//  Find out whether timeout have expired.
+// 		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();;
+// 		if (now >= end)
+// 			break;
+// 	}
+
+// 	if (pollfds != spollfds)
+// 	        free (pollfds);
+// 	return nevents;
+
+// #elif defined ZMQ_POLL_BASED_ON_SELECT
+
+// 	if (nitems_ < 0) {
+// 		errno = EINVAL;
+// 		return -1;
+// 	}
+// 	if (nitems_ == 0) {
+// 		if (timeout_ == 0)
+// 			return 0;
+// 		return usleep (timeout_ * 1000);
+// 	}
+// 	uint64_t now = 0;
+// 	uint64_t end = 0;
+
+// 	fd_set pollset_in;
+// 	FD_ZERO (&pollset_in);
+// 	fd_set pollset_out;
+// 	FD_ZERO (&pollset_out);
+// 	fd_set pollset_err;
+// 	FD_ZERO (&pollset_err);
+
+// 	int maxfd = 0;
+
+// 	//  Build the fd_sets for passing to select ().
+// 	for (int i = 0; i != nitems_; i++) {
+
+// 		//  If the poll item is a 0MQ socket we are interested in input on the
+// 		//  notification file descriptor retrieved by the ZMQ_FD socket option.
+// 		if (items_ [i].socket) {
+// 			size_t zmq_fd_size = sizeof (int);
+// 			int notify_fd;
+// 			if (zmq_getsockopt (items_ [i].socket, ZMQ_FD, &notify_fd,
+// 					&zmq_fd_size) == -1)
+// 				return -1;
+// 			if (items_ [i].events) {
+// 				FD_SET (notify_fd, &pollset_in);
+// 				if (maxfd < notify_fd)
+// 					maxfd = notify_fd;
+// 			}
+// 		}
+// 		//  Else, the poll item is a raw file descriptor. Convert the poll item
+// 		//  events to the appropriate fd_sets.
+// 		else {
+// 			if (items_ [i].events & ZMQ_POLLIN)
+// 				FD_SET (items_ [i].fd, &pollset_in);
+// 			if (items_ [i].events & ZMQ_POLLOUT)
+// 				FD_SET (items_ [i].fd, &pollset_out);
+// 			if (items_ [i].events & ZMQ_POLLERR)
+// 				FD_SET (items_ [i].fd, &pollset_err);
+// 			if (maxfd < items_ [i].fd)
+// 				maxfd = items_ [i].fd;
+// 		}
+// 	}
+
+// 	bool first_pass = true;
+// 	int nevents = 0;
+// 	fd_set inset, outset, errset;
+
+// 	while (true) {
+
+// 		//  Compute the timeout for the subsequent poll.
+// 		timeval timeout;
+// 		timeval *ptimeout;
+// 		if (first_pass) {
+// 			timeout.tv_sec = 0;
+// 			timeout.tv_usec = 0;
+// 			ptimeout = &timeout;
+// 		}
+// 		else
+// 		        if (timeout_ < 0)
+// 				ptimeout = NULL;
+// 		        else {
+// 				timeout.tv_sec = (long) ((end - now) / 1000);
+// 				timeout.tv_usec = (long) ((end - now) % 1000 * 1000);
+// 				ptimeout = &timeout;
+// 			}
+
+// 		//  Wait for events. Ignore interrupts if there's infinite timeout.
+// 		while (true) {
+// 			memcpy (&inset, &pollset_in, sizeof (fd_set));
+// 			memcpy (&outset, &pollset_out, sizeof (fd_set));
+// 			memcpy (&errset, &pollset_err, sizeof (fd_set));
+// 			int rc = select (maxfd + 1, &inset, &outset, &errset, ptimeout);
+// 			if (rc == -1) {
+// 				return -1;
+// 			}
+// 			break;
+// 		}
+
+// 		//  Check for the events.
+// 		for (int i = 0; i != nitems_; i++) {
+
+// 			items_ [i].revents = 0;
+
+// 			//  The poll item is a 0MQ socket. Retrieve pending events
+// 			//  using the ZMQ_EVENTS socket option.
+// 			if (items_ [i].socket) {
+// 				size_t zmq_events_size = sizeof (uint32_t);
+// 				uint32_t zmq_events;
+// 				if (zmq_getsockopt (items_ [i].socket, ZMQ_EVENTS, &zmq_events,
+// 						&zmq_events_size) == -1)
+// 					return -1;
+// 				if ((items_ [i].events & ZMQ_POLLOUT) &&
+// 					(zmq_events & ZMQ_POLLOUT))
+// 					items_ [i].revents |= ZMQ_POLLOUT;
+// 				if ((items_ [i].events & ZMQ_POLLIN) &&
+// 					(zmq_events & ZMQ_POLLIN))
+// 					items_ [i].revents |= ZMQ_POLLIN;
+// 			}
+// 			//  Else, the poll item is a raw file descriptor, simply convert
+// 			//  the events to zmq_pollitem_t-style format.
+// 			else {
+// 				if (FD_ISSET (items_ [i].fd, &inset))
+// 					items_ [i].revents |= ZMQ_POLLIN;
+// 				if (FD_ISSET (items_ [i].fd, &outset))
+// 					items_ [i].revents |= ZMQ_POLLOUT;
+// 				if (FD_ISSET (items_ [i].fd, &errset))
+// 					items_ [i].revents |= ZMQ_POLLERR;
+// 			}
+
+// 			if (items_ [i].revents)
+// 				nevents++;
+// 		}
+
+// 		//  If timout is zero, exit immediately whether there are events or not.
+// 		if (timeout_ == 0)
+// 			break;
+
+// 		//  If there are events to return, we can exit immediately.
+// 		if (nevents)
+// 			break;
+
+// 		//  At this point we are meant to wait for events but there are none.
+// 		//  If timeout is infinite we can just loop until we get some events.
+// 		if (timeout_ < 0) {
+// 			if (first_pass)
+// 				first_pass = false;
+// 			continue;
+// 		}
+
+// 		//  The timeout is finite and there are no events. In the first pass
+// 		//  we get a timestamp of when the polling have begun. (We assume that
+// 		//  first pass have taken negligible time). We also compute the time
+// 		//  when the polling should time out.
+// 		if (first_pass) {
+// 			now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();;
+// 			end = now + timeout_;
+// 			if (now == end)
+// 				break;
+// 			first_pass = false;
+// 			continue;
+// 		}
+
+// 		//  Find out whether timeout have expired.
+// 		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();;
+// 		if (now >= end)
+// 			break;
+// 	}
+
+// 	return nevents;
+
+// #endif
+// }

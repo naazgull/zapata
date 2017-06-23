@@ -498,6 +498,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 			case ZMQ_REP :
 			case ZMQ_REQ : {
 				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);				
+				this->__poll->poll(_client);
 				_client->send(_envelope);
 				// if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
 				// 	_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
@@ -600,13 +601,14 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 					zpt::json _result;
 					this->pending(_envelope,
 						[ & ] (zpt::ev::performative _p_performtive, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _p_emitter) -> void {
-							_result = _p_result;
+							_result << "result" << _p_result;
 						}
 					);
 					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
 					if (this->has_pending(_envelope)) {
 						this->reply(_envelope, { "status", 204 });
 					}
+					_result = _result["result"];
 					if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
 							zlog(std::string("error processing '") + _url + std::string("': ") + std::string(_result["payload"]), zpt::error);

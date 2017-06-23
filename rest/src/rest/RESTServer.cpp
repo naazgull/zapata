@@ -321,8 +321,16 @@ void zpt::RESTServer::start() {
 					for (; true; ) {
 						int _fd = -1;
 						_ss->accept(& _fd);
-						zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
-						this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
+						if (_fd >= 0) {
+							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
+							this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
+						}
+						else {
+							zlog("please, check your soft and hard limits for allowed number of opened file descriptors,", zpt::warning);
+							zlog("unable to accept HTTP sockets, going to disable HTTP server.", zpt::emergency);
+							_ss->close();
+							return;
+						}
 					}
 				}
 			);
