@@ -628,6 +628,12 @@ auto zpt::rest::authorization::validate(std::string _topic, zpt::json _envelope,
 	return _emitter->authorize(_topic, _envelope, _roles_needed);
 }
 
+auto zpt::rest::authorization::has_roles(zpt::json _identity, zpt::json _roles_needed) -> bool {
+	std::vector< zpt::json > _result;
+	std::set_intersection(std::begin(_identity["roles"]->arr()), std::end(_identity["roles"]->arr()), std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), std::back_inserter(_result));
+	return _result.size() != 0;
+}
+
 auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 	zpt::json _aliases = zpt::split(_pattern, "|");
 	zpt::json _topics = zpt::json::array();

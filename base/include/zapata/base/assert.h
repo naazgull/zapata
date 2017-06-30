@@ -60,7 +60,7 @@ SOFTWARE.
 #define assertz_location(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) && zpt::test::location(x)), std::string(x), z, 1017) else assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017)
 #define assertz_phone(x,y,z) if (std::string(y).length() == 0) assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())), std::string(x), z, 1018) else assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018)
 
-#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::begin(__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
+#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 
 #define assertz_valid_values(x,y,z) assertz(x, std::string(y), z, 1020) 
 
