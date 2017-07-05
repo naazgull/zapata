@@ -214,6 +214,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -244,6 +245,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -308,6 +310,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -368,6 +371,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	}
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 

@@ -1192,7 +1192,7 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 			break;
 		}
 		case zpt::JSArray: {
-			if (_in->arr()->size() == 2 && _in[0]->type() == zpt::JSDouble && _in[1]->type() == zpt::JSDouble) {
+			if (_in->arr()->size() == 2 && _in[0]->is_number() && _in[1]->is_number()) {
 				_out.assign(std::string("point") + zpt::r_replace(zpt::r_replace(std::string(_in), "[", "("), "]", ")"));
 			}
 			else {
