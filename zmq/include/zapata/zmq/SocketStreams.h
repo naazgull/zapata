@@ -86,6 +86,10 @@ namespace zpt {
 			if (_sock != 0) {
 				int iOption = 1; 
 				setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof(int));
+				struct linger a;
+				a.l_onoff = 1;
+				a.l_linger = 30;
+				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof(a));
 			}
 		}
 

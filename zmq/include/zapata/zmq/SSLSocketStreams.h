@@ -86,6 +86,10 @@ namespace zpt {
 		}
 
 		void set_socket(int sock) {
+			struct linger a;
+			a.l_onoff = 1;
+			a.l_linger = 30;
+			setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof(a));
 			this->__sock = sock;
 		}
 		int get_socket() {
