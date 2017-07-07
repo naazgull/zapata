@@ -69,7 +69,7 @@ auto zpt::pgsql::Client::connect() -> void {
 
 auto zpt::pgsql::Client::reconnect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0);
+	assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 1200);
 	this->__conn.release();
 	this->__conn.reset(new pqxx::connection(this->connection()["bind"]->str() + std::string(" dbname=") + this->connection()["db"]->str() + (this->connection()["user"]->ok() ? std::string(" user=") + this->connection()["user"]->str() + std::string(" password=") + this->connection()["passwd"]->str() : "") + std::string("")));
 	zpt::Connector::reconnect();
@@ -77,8 +77,8 @@ auto zpt::pgsql::Client::reconnect() -> void {
 
 auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
-	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 1200); }
+	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 1201);
 
 	if (!_document["id"]->ok()) {
 		_document << "id" << zpt::generate::r_uuid();
@@ -100,10 +100,7 @@ auto zpt::pgsql::Client::insert(std::string _collection, std::string _href_prefi
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in insert: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
@@ -139,10 +136,7 @@ auto zpt::pgsql::Client::upsert(std::string _collection, std::string _href_prefi
 					_size = _stmt.exec(_expression).affected_rows();
 					_stmt.commit(); }
 			}
-			catch(std::exception& _e) {
-				zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
-				assertz(false, _e.what(), 412, 0);
-			}
+			psql_catch_block(1200);
 
 			if (_size != 0) {
 				if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
@@ -171,10 +165,7 @@ auto zpt::pgsql::Client::upsert(std::string _collection, std::string _href_prefi
 				_size = _stmt.exec(_expression).affected_rows();
 				_stmt.commit(); }
 		}
-		catch(std::exception& _e) {
-			zlog(std::string("pgsql: error in insert: ") + _e.what(), zpt::error);
-			assertz(false, _e.what(), 412, 0);
-		}
+		psql_catch_block(1200);
 		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	}
 	return _document["id"]->str();
@@ -201,12 +192,10 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in save: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -231,12 +220,10 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -265,10 +252,7 @@ auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in set: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _pattern, _document, _opts);
 	return _size;
@@ -295,12 +279,10 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in unset: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -329,10 +311,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in unset: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _pattern, _document, _opts);
 	return _size;
@@ -355,12 +334,10 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 			_size = _stmt.exec(_expression).affected_rows();
 			_stmt.commit(); }
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in remove: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
 
@@ -378,10 +355,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 				_size = _stmt.exec(_expression).affected_rows();
 				_stmt.commit(); }
 		}
-		catch(std::exception& _e) {
-			zlog(std::string("pgsql: error in query: ") + _e.what(), zpt::error);
-			assertz(false, _e.what(), 412, 0);
-		}
+		psql_catch_block(1200);
 
 		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
 	}
@@ -413,10 +387,7 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 			_elements << zpt::pgsql::fromsql_r(_r);
 		}
 	}
-	catch(std::exception& _e) {
-		zlog(std::string("pgsql: error in query: ") + _e.what(), zpt::error);
-		assertz(false, _e.what(), 412, 0);
-	}
+	psql_catch_block(1200);
 	return _elements;
 }
 

@@ -181,9 +181,12 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
-	}		
+	}
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::json::object();
+	}
+	if (_envelope["payload"]["error"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
@@ -1194,6 +1197,9 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::json::object();
 	}
+	if (_envelope["payload"]["error"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
+	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
 	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));// + std::string(" ") + zpt::generate::r_uuid());
@@ -1427,6 +1433,9 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 	}
 	if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
 		_envelope["headers"] << "Connection" << "close";
+	}		
+	if (_envelope["payload"]["error"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
 	}
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
 	{ std::lock_guard< std::mutex > _lock(this->out_mtx());

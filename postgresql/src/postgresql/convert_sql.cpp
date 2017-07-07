@@ -1187,9 +1187,17 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 	std::string _out;
 	
 	switch (_in->type()) {
-		case zpt::JSObject:
-		case zpt::JSArray: {
+		case zpt::JSObject: {
 			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in))));
+			break;
+		}
+		case zpt::JSArray: {
+			if (_in->arr()->size() == 2 && _in[0]->is_number() && _in[1]->is_number()) {
+				_out.assign(std::string("point") + zpt::r_replace(zpt::r_replace(std::string(_in), "[", "("), "]", ")"));
+			}
+			else {
+				_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in))));
+			}
 			break;
 		}
 		case zpt::JSString: {

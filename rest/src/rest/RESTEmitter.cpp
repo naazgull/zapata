@@ -651,7 +651,7 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 						"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
 						"payload", {
 							"text", _e.what(),
-							"code", 0
+							"code", 1102
 						}
 					};
 				}
@@ -666,14 +666,15 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 		else if (!_method_found) {
 			zlog(std::string("error processing '") + _url + std::string("': method'") + zpt::ev::to_str(_method) + std::string("' not registered"), zpt::error);
 			if (bool(_opts["bubble-error"])) {
-				assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 0);
+				assertz(_endpoint_found, "the requested performative is not allowed to be used with the requested resource", 405, 1103);
 			}
 			_return = {
 				"performative", zpt::ev::Reply,
 				"status", 405,
 				"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"],
 				"payload", {
-					"text", "the requested performative is not allowed to be used with the requested resource"
+					"text", "the requested performative is not allowed to be used with the requested resource",
+					"code", 1104
 				}
 			};
 		}
@@ -696,7 +697,7 @@ auto zpt::RESTEmitter::sync_resolve_remotely(zpt::ev::performative _method, std:
 				_client->send(_envelope);
 				zpt::json _out = _client->recv();
 				if (!_out["status"]->ok() || ((int) _out["status"]) < 100) {
-					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 0, "assertion_failed", "_out[\"status\"]->ok()" } });
+					_out << "status" << 501 << zpt::json({ "payload", { "text", "required protocol is not implemented", "code", 1105, "assertion_failed", "_out[\"status\"]->ok()" } });
 				}
 				if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
 					throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
@@ -725,7 +726,7 @@ auto zpt::RESTEmitter::sync_resolve_remotely(zpt::ev::performative _method, std:
 }
 
 auto zpt::RESTEmitter::instance() -> zpt::ev::emitter {
-	assertz(zpt::rest::__emitter != nullptr, "REST emitter has not been initialized", 500, 0);
+	assertz(zpt::rest::__emitter != nullptr, "REST emitter has not been initialized", 500, 1106);
 	return zpt::rest::__emitter->self();
 }
 
@@ -737,7 +738,7 @@ auto zpt::rest::not_found(std::string _resource) -> zpt::json {
 		"status", 404,
 		"payload", {
 			"text", "resource not found",
-			"code", 0,
+			"code", 1101,
 			"assertion_failed", "_container->ok()"
 		}
 	};
@@ -751,7 +752,7 @@ auto zpt::rest::bad_request() -> zpt::json {
 		"status", 400,
 		"payload", {
 			"text", "bad request",
-			"code", 0,
+			"code", 1100,
 			"assertion_failed", "_socket >> _req"
 		}
 	};
