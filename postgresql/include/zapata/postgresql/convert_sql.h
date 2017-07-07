@@ -28,6 +28,7 @@ SOFTWARE.
 #include <stddef.h>
 #include <string>
 #include <pqxx/pqxx>
+#include <pqxx/except>
 
 using namespace std;
 #if !defined __APPLE__
