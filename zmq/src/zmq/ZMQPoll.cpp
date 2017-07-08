@@ -184,7 +184,7 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 		}
 		else {
 			this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope, zpt::undefined,
-				[ &_socket, &_envelope ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _result, zpt::ev::emitter _p_emitter) -> void {
+				[=] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _result, zpt::ev::emitter _p_emitter) mutable -> void {
 					if (_result->ok()) {
 						if (*_socket != nullptr) {
 							_result = zpt::json{ "headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + _p_emitter->options()["$defaults"]["headers"]["response"] } + _result + 
@@ -194,7 +194,6 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 									"resource", _envelope["resource"]
 								};
 							_socket->send(_result);
-							_envelope["headers"] << "Connection" << _result["headers"]["Connection"];
 						}
 					}
 				}
@@ -294,7 +293,7 @@ auto zpt::ZMQPoll::loop() -> void {
 						_to_remove.push_back(this->__by_socket[_k]);
 						continue;
 					}
-
+					
 					if (bool(_envelope["error"])) {
 						if (*_socket != nullptr) {
 							_socket->send(_envelope +

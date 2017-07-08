@@ -403,6 +403,14 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 					if (_callback != nullptr) {
 						this->pending(_envelope, _callback);
 					}
+					else if (_opts["bubble-response"]->is_object()) {
+						this->pending(_envelope,
+							[ _opts ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+								_emitter->reply(_opts["bubble-response"], _envelope);
+							}
+						);
+					}
+
 					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH  
 					/*if (_result->ok()) {
 						if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
@@ -488,6 +496,13 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 	
 	if (_callback != nullptr) {
 		this->pending(_envelope, _callback);
+	}
+	else if (_opts["bubble-response"]->is_object()) {
+		this->pending(_envelope,
+			[ _opts ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+				_emitter->reply(_opts["bubble-response"], _envelope);
+			}
+		);
 	}
 	zpt::json _container = this->lookup(_url);
 	if (_container->ok()) {

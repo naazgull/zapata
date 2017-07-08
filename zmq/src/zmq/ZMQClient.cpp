@@ -1176,6 +1176,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 		auto _found = this->__sock_id.find(_uuid);
 		if (_found == this->__sock_id.end()) {
 			zlog(std::string("couldn't find socket associated with '") + _uuid + std::string("'"), zpt::critical);
+			return zpt::undefined;
 		}
 		_frame1 = _found->second;
 		this->__sock_id.erase(_found); }
@@ -1218,7 +1219,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
-	ztrace(std::string("> ") + _directive);
+	zdbg(std::string("> ") + _directive);
 	zverbose(zpt::json::pretty(_envelope));
 
 	return zpt::undefined;
