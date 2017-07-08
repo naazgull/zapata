@@ -318,14 +318,11 @@ auto zpt::ZMQPoll::loop() -> void {
 				catch(zpt::assertion& _e) {
 				}
 				this->notify(_uuid);
-				// this->__items[this->__items.size() - 1].revents = 0;
 			}
 
 			for (auto _socket : _to_remove) {
-				//zdbg(std::string("removing socket ") + _socket);
 				for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 					if (this->__by_socket[_k] == _socket) {
-						// zdbg("FOUND IT");
 						this->__by_socket.erase(this->__by_socket.begin() + _k);
 						break;
 					}
