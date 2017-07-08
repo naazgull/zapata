@@ -146,14 +146,14 @@ auto zpt::ZMQ::recv() -> zpt::json {
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
-			return { "error", true, "status", 400, "payload", { "text", _e.what() } };
+			return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
 		}
 	}
 	catch(zmq::error_t& _e) {
 		zlog(zpt::type2str(this->type()) + std::string(" ") + this->connection() + std::string(": ") + _e.what(), zpt::error);
 		throw;
 	}
-	return { "error", true, "status", 503 };	
+	return { "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
 }
 
 auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
@@ -185,8 +185,8 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::json::object();
 	}
-	if (_envelope["payload"]["error"]->ok()) {
-		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
+	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
@@ -1197,8 +1197,8 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	if (!_envelope["payload"]->ok()) {
 		_envelope << "payload" << zpt::json::object();
 	}
-	if (_envelope["payload"]["error"]->ok()) {
-		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
+	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
 	}
 	int _status = (int) _envelope["headers"]["X-Status"];
 
@@ -1274,7 +1274,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		}
 		catch(zpt::SyntaxErrorException& _e) {
 			delete _frame1;
-			return { "error", true, "status", 400, "payload", { "text", _e.what() } };
+			return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
 		}
 	}
 	catch(zmq::error_t& _e) {
@@ -1283,7 +1283,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		throw;
 	}
 	delete _frame1;	
-	return { "error", true, "status", 503 };	
+	return { "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
 }
 
 zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
@@ -1434,14 +1434,18 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 	if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
 		_envelope["headers"] << "Connection" << "close";
 	}		
-	if (_envelope["payload"]["error"]->ok()) {
-		_envelope["headers"] << "X-Error" << _envelope["payload"]["error"];
+	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
 	}
 	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
-	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
-		(*this->__underlying) << _reply << flush; }
-	ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"]) : std::string("")));
-	zverbose(_reply);
+	try {
+		{ std::lock_guard< std::mutex > _lock(this->out_mtx());
+			(*this->__underlying) << _reply << flush; }
+		ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"]) : std::string("")));
+		zverbose(_reply);
+	}
+	catch (std::ios_base::failure& _e) {}
+	catch (std::exception& _e) {}
 	return zpt::undefined;
 }
 
@@ -1466,7 +1470,7 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
-		return { "error", true, "status", 400, "payload", { "text", _e.what() } };
+		return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
 	}	
 	zpt::json _in = zpt::rest::http2zmq(_request);
 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
