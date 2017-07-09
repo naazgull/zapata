@@ -1219,7 +1219,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
-	zdbg(std::string("> ") + _directive);
+	ztrace(std::string("> ") + _directive);
 	zverbose(zpt::json::pretty(_envelope));
 
 	return zpt::undefined;
@@ -1268,7 +1268,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 					_uuid.assign(std::string(_envelope["channel"]));					
 				}
 				this->__sock_id.insert(std::make_pair(_uuid, _frame1));}
-			zverbose(std::string("< ") + _directive);
+			ztrace(std::string("< ") + _directive);
 			zverbose(zpt::json::pretty(_envelope));
 			
 			return _envelope;
