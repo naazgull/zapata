@@ -28,16 +28,16 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+/* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+/* #undef HAVE_LIBZAPATA_EVENTS */
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-#define HAVE_LIBZAPATA_HTTP 1
+/* #undef HAVE_LIBZAPATA_HTTP */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* #undef HAVE_LIBZAPATA_JSON */
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
 #define HAVE_LIBZMQ 1
