@@ -40,6 +40,7 @@ SOFTWARE.
 #include <cmath>
 #include <regex>
 #include <iomanip>
+#include <mutex>
 
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
@@ -54,6 +55,7 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 	extern uuid uuid_gen;
+	extern std::mutex uuid_mtx;
 
 	auto tostr(std::string& s, int i) -> void;
 	auto tostr(std::string& s, bool i) -> void;
