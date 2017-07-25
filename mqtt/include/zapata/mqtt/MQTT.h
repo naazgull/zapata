@@ -17,7 +17,11 @@ Copyright (c) 2014, Muzzley
 #include <string>
 #include <utility>
 #include <vector>
+#if defined(ZPT_USE_MOSQUITTO)
 #include <mosquitto.h>
+#elif defined(ZPT_USE_PAHO)
+#include <mqtt/async_client.h>
+#endif	       
 #include <mutex>
 #include <zapata/json.h>
 
@@ -140,6 +144,7 @@ namespace zpt {
 		virtual auto loop() -> void;
 
 	private:
+#if defined(ZPT_USE_MOSQUITTO)
 		static auto on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void;
 		static auto on_disconnect(struct mosquitto * _mosq, void * _ptr, int _reason) -> void;
 		static auto on_publish(struct mosquitto * _mosq, void * _ptr, int _mid) -> void;
@@ -149,7 +154,26 @@ namespace zpt {
 		static auto on_error(struct mosquitto * _mosq, void * _ptr) -> void;
 		static auto on_log(struct mosquitto * _mosq, void * _ptr, int _level, const char* _message) -> void;
 
-		struct mosquitto * __mosq;
+		struct mosquitto* __mosq;
+#elif defined(ZPT_USE_PAHO)
+		class callback : public ::mqtt::callback, public virtual ::mqtt::iaction_listener {
+		public:
+			callback(zpt::MQTT* _broker);
+			
+			virtual auto on_failure(const ::mqtt::token& _tok) -> void;
+			virtual auto on_success(const ::mqtt::token& _tok) -> void;
+			virtual auto connection_lost(const std::string& cause) -> void;
+			virtual auto message_arrived(::mqtt::const_message_ptr msg) -> void;
+			virtual auto delivery_complete(::mqtt::delivery_token_ptr token) -> void;
+			
+		private:
+			zpt::MQTT* __broker;
+
+		};
+		
+		::mqtt::async_client* __paho;
+		::mqtt::connect_options* __paho_opts;
+#endif	       
 		zpt::mqtt::handlers __callbacks;
 		std::string __user;
 		std::string __passwd;

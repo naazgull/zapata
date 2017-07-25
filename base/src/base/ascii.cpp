@@ -163,7 +163,7 @@ auto zpt::test::email(std::string _email) -> bool {
 
 auto zpt::test::phone(std::string _phone) -> bool {
 	static const std::regex _phone_rgx(
-		"\\(([0-9]){1,3}\\)([ ]*)"
+		"(?:\\(([0-9]){1,3}\\)([ ]*))?"
 		"([0-9]){3,12}"
 	);
 	return std::regex_match(_phone, _phone_rgx);
