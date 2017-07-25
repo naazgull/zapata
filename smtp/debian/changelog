@@ -1,3 +1,9 @@
+zapata-smtp (0.9.7-1yakkety24) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 10:33:50 +0100
+
 zapata-smtp (0.9.7-1yakkety23) yakkety; urgency=medium
 
   * Version bump
