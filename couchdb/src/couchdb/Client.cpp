@@ -389,15 +389,16 @@ auto zpt::couchdb::Client::remove(std::string _collection, std::string _href, zp
 	_req->method(zpt::ev::Delete);
 	_req->url(_url);
 	zpt::http::rep _rep;
+	zpt::json _revision;
 	do {
-		zpt::json _revision = this->get(_collection, _href);
+		_revision = this->get(_collection, _href);
 		_req->param("rev", std::string(_revision["_rev"]));
 		_rep = this->send(_req);
 	}
 	while(_rep->status() == zpt::HTTP409);
 	assertz(_rep->status() == zpt::HTTP200, std::string("couldn't remove document ") + std::string(_href) + std::string(": ") + _rep->body(), _rep->status(), 2002); 
 	
-	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _revision });
 	return 1;
 }
 
@@ -411,6 +412,7 @@ auto zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, z
 	zpt::http::req _req;
 	_req->method(zpt::ev::Delete);
 	zpt::json _result = this->query(_collection, _pattern);
+	zpt::json _removed = zpt::json::array();
 
 	for (auto _record : _result["elements"]->arr()) {
 		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_record["href"]));
@@ -419,10 +421,11 @@ auto zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, z
 		zpt::http::rep _rep = this->send(_req);
 		if (_rep->status() == zpt::HTTP200) {
 			_size++;
+			_removed << _record;
 		}
 	}
 	
-	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::remove(_collection, _pattern, _opts);
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::remove(_collection, _pattern, _opts + zpt::json{ "removed", _removed });
 	return _size;
 }
 

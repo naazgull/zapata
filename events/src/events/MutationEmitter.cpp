@@ -89,13 +89,13 @@ auto zpt::Connector::unset(std::string _collection, zpt::json _pattern, zpt::jso
 
 auto zpt::Connector::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
 	if (bool(_opts["mutated-event"])) return 0;
-	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "headers", _opts["headers"], "performative", "remove", "href", _href });
+	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "headers", _opts["headers"], "performative", "remove", "href", _href, "removed", _opts["removed"] });
 	return 0;
 }
 
 auto zpt::Connector::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
 	if (bool(_opts["mutated-event"])) return 0;
-	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "headers", _opts["headers"], "performative", "remove", "href", _opts["href"], "filter", _pattern });
+	this->mutations()->route(zpt::mutation::Remove, std::string("/") + _collection, { "headers", _opts["headers"], "performative", "remove", "href", _opts["href"], "filter", _pattern, "removed", _opts["removed"] });
 	return 0;
 }
 

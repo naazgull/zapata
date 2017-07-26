@@ -32,7 +32,7 @@ zpt::MQTT::MQTT() : __self(this), __connected(false), __postponed(zpt::json::obj
 	mosquitto_subscribe_callback_set(this->__mosq, MQTT::on_subscribe);
 	mosquitto_unsubscribe_callback_set(this->__mosq, MQTT::on_unsubscribe);
 	mosquitto_log_callback_set(this->__mosq, MQTT::on_log);
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 	this->__paho = nullptr;
 	this->__paho_opts = new ::mqtt::connect_options();
 	this->__paho_opts->set_clean_session(true);
@@ -54,7 +54,7 @@ zpt::MQTT::~MQTT() {
 		mosquitto_lib_cleanup();
 		this->__mosq = nullptr;
 	}
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 	if (this->__paho != nullptr) {
 		delete this->__paho;
 	}
@@ -79,7 +79,7 @@ auto zpt::MQTT::credentials(std::string _user, std::string _passwd) -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_username_pw_set
 	 */
 	mosquitto_username_pw_set(this->__mosq, _user.data(), _passwd.data());
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 	this->__paho_opts->set_user_name(this->__user);
 	this->__paho_opts->set_password(this->__passwd);
 #endif
@@ -117,7 +117,7 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 	 */
 	mosquitto_connect(this->__mosq, _host.data(), _port, _keep_alive);
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 	this->__paho_opts->set_keep_alive_interval(_keep_alive);
 	
 	std::string _uri;
@@ -144,7 +144,7 @@ auto zpt::MQTT::reconnect() -> void {
 	 */
 	if (mosquitto_reconnect(this->__mosq) != MOSQ_ERR_SUCCESS) {
 	}
-#elif defined(ZPT_USE_PAHO)		
+#elif false && defined(ZPT_USE_PAHO)		
 #endif	       
 }
 
@@ -164,7 +164,7 @@ auto zpt::MQTT::subscribe(std::string _topic) -> void {
 			 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
 			 */
 			mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0);
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 			this->__paho->subscribe(_topic, 0);
 #endif	       
 		} }
@@ -181,7 +181,7 @@ auto zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
 			 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
 			 */
 			mosquitto_publish(this->__mosq, & _return, _topic.data(), _payload_str.length(), (const uint8_t *) _payload_str.data(), 0, false);
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 			::mqtt::message_ptr _msg = ::mqtt::make_message(_topic, _payload_str);
 			_msg->set_qos(0);
 			this->__paho->publish(_msg);
@@ -238,7 +238,7 @@ auto zpt::MQTT::start() -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
 	 */
 	mosquitto_loop_start(this->__mosq);
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 	zpt::MQTT::callback* _callback = new zpt::MQTT::callback(this);
 	this->__paho->set_callback(*_callback);
 
@@ -257,7 +257,7 @@ auto zpt::MQTT::loop() -> void {
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
 	 */
 	mosquitto_loop_forever(this->__mosq, -1, 1);
-#elif defined(ZPT_USE_PAHO)		
+#elif false && defined(ZPT_USE_PAHO)		
 #endif	       
 }
 
@@ -333,7 +333,7 @@ auto zpt::MQTT::on_log(struct mosquitto * _mosq, void * _ptr, int _level, const 
 	zlog(std::string(_message), (zpt::LogLevel) _level);
 }
 
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 
 zpt::MQTT::callback::callback(zpt::MQTT* _broker) : __broker(_broker) {
 }

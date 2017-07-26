@@ -9,6 +9,10 @@ Copyright (c) 2014, Muzzley
  * 
  * Compile with '-lmosquitto'.
  */
+#if !defined(ZPT_USE_MOSQUITTO) && !defined(ZPT_USE_PAHO)
+#define ZPT_USE_MOSQUITTO
+#endif
+
 #include <unistd.h>
 #include <iostream>
 #include <functional>
@@ -19,7 +23,7 @@ Copyright (c) 2014, Muzzley
 #include <vector>
 #if defined(ZPT_USE_MOSQUITTO)
 #include <mosquitto.h>
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 #include <mqtt/async_client.h>
 #endif	       
 #include <mutex>
@@ -155,7 +159,7 @@ namespace zpt {
 		static auto on_log(struct mosquitto * _mosq, void * _ptr, int _level, const char* _message) -> void;
 
 		struct mosquitto* __mosq;
-#elif defined(ZPT_USE_PAHO)
+#elif false && defined(ZPT_USE_PAHO)
 		class callback : public ::mqtt::callback, public virtual ::mqtt::iaction_listener {
 		public:
 			callback(zpt::MQTT* _broker);

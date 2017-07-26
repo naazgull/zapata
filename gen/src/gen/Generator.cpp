@@ -857,11 +857,10 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 				_second++;
 				std::string _other_ref = std::string(_second->second);
 				_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
-				zpt::replace(_mutation_on, "$[mutation.topic.regex]", _other_ref);
+				_topic.assign(_other_ref);
 			}
-			else {
-				zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
-			}				
+			_topic = zpt::r_replace(_topic, "$", "") + std::string("(.*)$");
+			zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
 			
 			std::string _mutation;
 			bool _first = true;

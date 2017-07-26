@@ -281,7 +281,6 @@ auto zpt::mongodb::Client::remove(std::string _collection, std::string _href, zp
 	_conn->remove(_full_collection, BSON( "_id" << _href ));
 	_conn.done();
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
 	return 1;
 }
 
@@ -299,7 +298,7 @@ auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, z
 	for (auto _record : _selected["elements"]->arr()) {
 		_conn->remove(_full_collection, BSON( "id" << _record["id"]->str()));
 		
-		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
+		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts + zpt::json{ "removed", _record });
 	}
 	_conn.done();
 	

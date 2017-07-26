@@ -411,14 +411,17 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 	std::string _expression = std::string("DELETE FROM ") +  _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
 
 	int _size = 0;
+	zpt::json _removed;
 	try {
+		if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
+
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
 			std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 			_size = _stmt->execute(_expression); }
 	}
 	catch(std::exception& _e) {}
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
 	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
@@ -439,7 +442,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 		}
 		catch(std::exception& _e) {}
 
-		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
+		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts + zpt::json{ "removed", _record });
 	}
 	
 	return int(_selected["size"]);
