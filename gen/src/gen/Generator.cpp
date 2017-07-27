@@ -1728,6 +1728,9 @@ auto zpt::GenDatum::get_restrictions(zpt::json _field) -> std::string {
 		}
 		zpt::json _splited = zpt::split(std::string(_opts["foreign"]), ":");
 		_return += std::string("references ") + _splited->arr()->back()->str();
+		if (_opts["cascade"]->ok()) {
+			_return += std::string(" on delete cascade");
+		}
 	}
 	return _return;
 }
@@ -2733,10 +2736,10 @@ auto zpt::GenResource::build_lisp_get() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"get\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"get\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"get\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"get\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
@@ -2790,10 +2793,10 @@ auto zpt::GenResource::build_lisp_post() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"post\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"post\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"post\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"post\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
@@ -2847,10 +2850,10 @@ auto zpt::GenResource::build_lisp_put() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"put\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"put\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"put\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"put\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
@@ -2904,10 +2907,10 @@ auto zpt::GenResource::build_lisp_patch() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"patch\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"patch\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"patch\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"patch\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
@@ -2961,10 +2964,10 @@ auto zpt::GenResource::build_lisp_delete() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"delete\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"delete\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"delete\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"delete\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
@@ -3010,10 +3013,10 @@ auto zpt::GenResource::build_lisp_head() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\" ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("        (zpt:route \"head\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))");
+			_remote_invoke += std::string("        (zpt:route \"head\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (zpt:merge (gethash \"params\" envelope) (json ") + _params + std::string("))))))");
 		}
 		else {
-			_remote_invoke += std::string("        (zpt:route \"head\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope))) ");
+			_remote_invoke += std::string("        (zpt:route \"head\"\n                   (zpt:join (list ") + _topic + std::string(" ) \"/\")\n                   (json \"headers\" (zpt:authorization-headers identity) \"params\" (gethash \"params\" envelope)))))");
 		}
 		zpt::replace(_return, ";; ---> YOUR CODE HERE <--- ;;", _remote_invoke);
 	}
