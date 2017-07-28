@@ -31,19 +31,19 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
+#define HAVE_LIBZAPATA_EVENTS 1
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-/* #undef HAVE_LIBZAPATA_HTTP */
+#define HAVE_LIBZAPATA_HTTP 1
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-/* #undef HAVE_LIBZAPATA_JSON */
+#define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-/* #undef HAVE_LIBZAPATA_ZMQ */
+#define HAVE_LIBZAPATA_ZMQ 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -82,7 +82,7 @@
 #define PACKAGE_NAME "zapata-mariadb"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-mariadb 0.9.7-1yakkety22"
+#define PACKAGE_STRING "zapata-mariadb 0.9.7-1yakkety27"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-mariadb"
@@ -91,10 +91,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.7-1yakkety22"
+#define PACKAGE_VERSION "0.9.7-1yakkety27"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.7-1yakkety22"
+#define VERSION "0.9.7-1yakkety27"

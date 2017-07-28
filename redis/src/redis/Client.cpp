@@ -305,6 +305,9 @@ auto zpt::redis::Client::remove(std::string _collection, std::string _href, zpt:
  	_key.insert(0, "/");
  	_key.insert(0, (std::string) this->connection()["db"]);
 
+	zpt::json _removed;
+	if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
+
  	redisReply* _reply = nullptr;
  	bool _success = true;
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -313,7 +316,7 @@ auto zpt::redis::Client::remove(std::string _collection, std::string _href, zpt:
  	freeReplyObject(_reply);
 	assertz(_success, "something whent wrong while accessing Redis", 500, 0);
 
-	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
  	return 1;
 }
 
@@ -327,6 +330,9 @@ auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt
 
 	zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
 	for (auto _record : _selected["elements"]->arr()) {
+		zpt::json _removed;
+		if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _record["href"]->str());
+
 		redisReply* _reply = nullptr;
 		bool _success = true;
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -334,7 +340,7 @@ auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt
 			_success = (redisGetReply(this->__conn, (void**) & _reply) == REDIS_OK); }
 		freeReplyObject(_reply);
 		assertz(_success, "something whent wrong while accessing Redis", 500, 0);
-		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
+		if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts + zpt::json{ "removed", _removed });
 	}
 	
 	return int(_selected["size"]);

@@ -35,6 +35,7 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 	uuid uuid_gen;
+	std::mutex uuid_mtx;
 }
 
 auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
@@ -105,11 +106,13 @@ auto zpt::generate::r_hash() -> std::string {
 }
 
 auto zpt::generate::uuid(std::string& _out) -> void {
+	std::lock_guard< std::mutex > _lock(zpt::uuid_mtx);
 	zpt::uuid_gen.make(UUID_MAKE_V1);
 	_out.append(zpt::uuid_gen.string());
 }
 
 auto zpt::generate::r_uuid() -> std::string {
+	std::lock_guard< std::mutex > _lock(zpt::uuid_mtx);
 	zpt::uuid_gen.make(UUID_MAKE_V1);
 	return zpt::uuid_gen.string();
 }
@@ -163,7 +166,7 @@ auto zpt::test::email(std::string _email) -> bool {
 
 auto zpt::test::phone(std::string _phone) -> bool {
 	static const std::regex _phone_rgx(
-		"\\(([0-9]){1,3}\\)([ ]*)"
+		"(?:\\(([0-9]){1,3}\\)([ ]*))?"
 		"([0-9]){3,12}"
 	);
 	return std::regex_match(_phone, _phone_rgx);

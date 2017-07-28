@@ -327,6 +327,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
 
+	zpt::json _removed;
+	if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
+
 	int _size = 0;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -336,7 +339,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	}
 	psql_catch_block(1200);
 
-	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts);
+	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
 	assertz(_size != 0, "no such record", 404, 2200);
 	return 1;
 }
@@ -357,7 +360,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 		}
 		psql_catch_block(1200);
 
-		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts);
+		if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _record["href"]->str(), _opts + zpt::json{ "removed", _record });
 	}
 	
 	return int(_selected["size"]);

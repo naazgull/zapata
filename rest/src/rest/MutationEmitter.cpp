@@ -81,7 +81,7 @@ auto zpt::RESTMutationEmitter::on(std::string _data_class_ns,  std::map< zpt::mu
 	std::regex _url_pattern(_uri);
 
 	std::map< zpt::mutation::operation, zpt::mutation::Handler >::iterator _found;
-	vector< zpt::mutation::Handler> _handlers;
+	std::vector< zpt::mutation::Handler> _handlers;
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Insert)) == _handler_set.end() ?  nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Remove)) == _handler_set.end() ?  nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::mutation::Update)) == _handler_set.end() ?  nullptr : _found->second);
