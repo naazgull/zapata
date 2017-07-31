@@ -2330,11 +2330,12 @@ void zpt::JSONArrT::pop(const char* _idx) {
 }
 
 void zpt::JSONArrT::pop(std::string _idx) {
-	size_t _i = 0;
+	long _i = -1;
 	zpt::fromstr(_idx, &_i);
-
-	assertz(_i < this->size(), "the index of the element you want to remove must be lower than the array size", 500, 0);
-	this->erase(this->begin() + _i);
+	if (_i > 0) {
+		assertz((size_t) _i < this->size(), "the index of the element you want to remove must be lower than the array size", 500, 0);
+		this->erase(this->begin() + _i);
+	}
 }
 
 void zpt::JSONArrT::pop(size_t _idx) {
@@ -2364,12 +2365,14 @@ zpt::JSONPtr zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
 	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_part == "*" && _remainder.length() != 0) {
+			zpt::json _return = zpt::json::array();
 			for (auto _a : (* this)) {
 				_current = _a->getPath(_remainder, _separator);
 				if (_current->ok()) {
-					return _current;
+					_return << _current;
 				}
 			}
+			return _return;
 		}
 		return zpt::undefined;
 	}

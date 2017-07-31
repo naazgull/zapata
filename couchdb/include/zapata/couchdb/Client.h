@@ -53,7 +53,6 @@ namespace zpt {
 
 			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;
-			virtual auto socket() -> zpt::socketstream_ptr;
 
 			virtual auto send(zpt::http::req _req) -> zpt::http::rep;
 
@@ -78,8 +77,11 @@ namespace zpt {
 		private:
 			zpt::json __options;
 			zpt::ev::emitter __events;
-			zpt::socketstream_ptr __socket;
-			std::mutex __mtx;
+			std::vector< zpt::socketstream_ptr > __sockets;
+			std::vector< std::mutex* > __mtxs;
+			std::mutex __global;
+			unsigned short __pool_size;
+			unsigned short __round_robin;
 		};
 
 		class ClientPtr : public std::shared_ptr<zpt::couchdb::Client> {

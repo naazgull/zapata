@@ -86,7 +86,10 @@ auto zpt::Generator::load() -> void {
 		return;
 	}
 	if (!this->__options["version"]->ok()) {
-		this->__options << "version" << "v3";
+		this->__options << "version" << zpt::json{ zpt::array, 0, 1, 0 };
+	}
+	if (!this->__options["api_version"]->ok()) {
+		this->__options << "api_version" << (std::string("v") + std::string(this->__options["version"][0]));
 	}
 	for (auto _file : this->__options["files"]->arr()) {
 		std::ifstream _ifs(_file->str().data());
@@ -126,6 +129,13 @@ auto zpt::Generator::load() -> void {
 				std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
 				if (_include.front() == '/') {
 					_include.erase(0, 1);
+				}
+				if (_datum["dbms"]->is_array()) {
+					for (auto _dbms : _datum["dbms"]->arr()) {
+						if (zpt::Generator::datum_includes.find(std::string("#include <zapata/") + std::string(_dbms) + std::string(".h>\n")) == std::string::npos) {
+							zpt::Generator::datum_includes += std::string("#include <zapata/") + std::string(_dbms) + std::string(".h>\n");
+						}
+					}
 				}
 				zpt::Generator::datum_includes += std::string("#include <") + _include + std::string(">\n");
 			}
@@ -383,6 +393,13 @@ auto zpt::Generator::build_container() -> void {
 			std::string _dyn_dir;
 			if (_spec["datums"]->type() == zpt::JSArray) {
 				for (auto _datum : _spec["datums"]->arr()) {
+					if (_datum["dbms"]->is_array()) {
+						for (auto _dbms : _datum["dbms"]->arr()) {
+							if (_dyn_link.find(std::string(" -lzapata-") + std::string(_dbms)) == std::string::npos) {
+								_dyn_link += std::string(" -lzapata-") + std::string(_dbms);
+							}
+						}
+					}
 					if (_datum["name"]->ok()) {
 						std::string _include(std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h"));
 						zpt::replace(_include, std::string(this->__options["prefix-h"][0]), "");
@@ -459,7 +476,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _make;
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest -lzapata-postgresql -lzapata-mariadb -lzapata-mongodb -lzapata-redis -lzapata-couchdb") + _dyn_link + std::string("\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest ") + _dyn_link + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _dyn_dir + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
@@ -804,7 +821,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_h, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
-		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, this->__options["version"], "mutations", "{operation}", this->__spec["name"] } ) }));
+		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, this->__options["api_version"], "mutations", "{operation}", this->__spec["name"] } ) }));
 		if (this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
 			std::string _mutation;
 			bool _first = true;
@@ -862,9 +879,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 				_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
 				_topic.assign(_other_ref);
 			}
-			size_t _first_slash = _topic.find("/");
-			std::string _version = _topic.substr(_first_slash + 1, _topic.find("/", _first_slash) - _first_slash - 1); 
-			_topic = std::string("^/") + _version + std::string("/mutations/([^/]+)") + zpt::r_replace(_topic, std::string("^/") + _version, "");
+			_topic = std::string("^/") + std::string(this->__options["api_version"]) + std::string("/mutations/([^/]+)") + zpt::r_replace(_topic, std::string("^/") + std::string(this->__options["api_version"]), "");
 			_topic = zpt::r_replace(_topic, "$", "") + std::string("(.*)$");
 			zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
 			

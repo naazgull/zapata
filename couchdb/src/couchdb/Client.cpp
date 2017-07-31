@@ -33,7 +33,7 @@ zpt::couchdb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) :
 zpt::couchdb::ClientPtr::~ClientPtr() {
 }
 
-zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __socket(new zpt::socketstream()) {
+zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __round_robin(0) {
 	try {
 		zpt::json _uri = zpt::uri::parse((std::string) _options->getPath(_conf_path)["bind"]);
 		if (_uri["scheme"] == zpt::json::string("zpt")) {
@@ -44,9 +44,25 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __opt
 	catch(std::exception& _e) {
 		assertz(false, std::string("could not connect to CouchDB server: ") + _e.what(), 500, 0);
 	}
+
+	this->__pool_size = 0;
+	if (_options->getPath(_conf_path)["pool"]->ok()) {
+		this->__pool_size = int(_options->getPath(_conf_path)["pool"]);
+		for (int _k = 0; _k < this->__pool_size; _k++) {
+			this->__sockets.push_back(zpt::socketstream_ptr(new zpt::socketstream()));
+			this->__mtxs.push_back(new std::mutex());
+		}		
+	}
+
 }
 
 zpt::couchdb::Client::~Client() {
+	for (auto _socket : this->__sockets) {
+		_socket->close();
+	}
+	for (auto _mtx : this->__mtxs) {
+		delete _mtx;
+	}
 }
 
 auto zpt::couchdb::Client::name() -> std::string {
@@ -73,30 +89,60 @@ auto zpt::couchdb::Client::reconnect() -> void {
 	zpt::Connector::reconnect();
 }
 
-auto zpt::couchdb::Client::socket() -> zpt::socketstream_ptr {
-	zpt::socketstream_ptr _socket(new zpt::socketstream());
-	_socket->open(std::string(this->connection()["uri"]["domain"]), this->connection()["uri"]["port"]->ok() ? int(this->connection()["uri"]["port"]) : 80);
-	return _socket;
-
-}
-
 auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 	zpt::http::rep _rep;
 	this->init_request(_req);
-	zpt::socketstream_ptr _socket = this->socket();
-	(*_socket) << _req << flush;
-	try {
-		(*_socket) >> _rep;
+	// zdbg(_req);
+	if (this->__pool_size) {
+		int _k = 0;
+		{ std::lock_guard< std::mutex> _l(this->__global);
+			_k = this->__round_robin++;
+			if (this->__round_robin == this->__sockets.size()) {
+				this->__round_robin = 0;
+			} }
+
+		{ std::lock_guard< std::mutex> _l(*this->__mtxs[_k]);
+			short _n_tries = 0;
+			do {
+				if (!this->__sockets[_k]->is_open()) {
+					zdbg("couchdb: opening socket");
+					this->__sockets[_k]->open(std::string(this->connection()["uri"]["domain"]), this->connection()["uri"]["port"]->ok() ? int(this->connection()["uri"]["port"]) : 80);
+				}
+				try {
+					(*this->__sockets[_k]) << _req << flush;
+					try {
+						(*this->__sockets[_k]) >> _rep;
+					}
+					catch (zpt::SyntaxErrorException& _e) {
+					}
+					break;
+				}
+				catch(std::exception& _e) {
+					this->__sockets[_k]->close();
+				}
+				_n_tries++;
+			}
+			while(_n_tries != 5);
+		}
 	}
-	catch (zpt::SyntaxErrorException& _e) {
+	else {
+		zpt::socketstream _socket;
+		_socket.open(std::string(this->connection()["uri"]["domain"]), this->connection()["uri"]["port"]->ok() ? int(this->connection()["uri"]["port"]) : 80);
+		_socket << _req << flush;
+		try {
+			_socket >> _rep;
+		}
+		catch (zpt::SyntaxErrorException& _e) { }
+		_socket.close();
 	}
-	_socket->close();
+	// zdbg(_rep);
 	return _rep;
 }
 
 auto zpt::couchdb::Client::init_request(zpt::http::req _req) -> void {
 	_req->header("Host", std::string(this->connection()["uri"]["authority"]));
 	_req->header("Accept", "*/*");
+	_req->header("Connection", "keep-alive");
 	if (this->connection()["user"]->ok() && this->connection()["passwd"]->ok()) {
 		_req->header("Authorization", std::string("Basic ") + zpt::base64::r_encode(std::string(this->connection()["user"]) + std::string(":") + std::string(this->connection()["passwd"])));
 	}
@@ -458,7 +504,6 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
 	size_t _size = 0;
-	zdbg(_query);
 		
 	if (_query["selector"]->is_object() && _query["selector"]->obj()->size() != 0) {
 		zpt::http::req _req_count;
@@ -466,6 +511,12 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 		_req_count->url(_db_name + std::string("/_all_docs"));
 		_req_count->param("limit", "0");
 		zpt::http::rep _rep_count = this->send(_req_count);
+		if (_rep_count->status() != 200) {
+			return {
+				"size", 0,
+				"elements", zpt::json::array()
+			};
+		}
 		zpt::json _count(_rep_count->body());
 		_size = size_t(_count["total_rows"]);
 
@@ -488,16 +539,14 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 
 	zpt::http::rep _rep = this->send(_req);
 	zpt::json _result(_rep->body());
-	zpt::JSONArr _return;
+	zpt::json _return = zpt::json::array();
 	if (_result["docs"]->is_array()) {
-		_return = _result["docs"]->arr();
+		_return = _result["docs"];
+		_size = _result["total_rows"]->ok() ? size_t(_result["total_rows"]) : (_return->is_array() ? _return->arr()->size() : 0);
 	}
 	else if (_result["rows"]->is_array()) {
 		_size = size_t(_result["total_rows"]);
-		_return = _result["rows"]->arr();
-	}
-	else {
-		_return = zpt::json::array();
+		_return = _result->getPath("rows.*.doc");
 	}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::query(_collection, _regexp, _opts);
@@ -509,16 +558,36 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 
 auto zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
+	std::string _db_name = std::string("/") + _collection;
+	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
- 	std::string _key(_collection);
- 	_key.insert(0, "/");
- 	_key.insert(0, (std::string) this->connection()["db"]);
+	zpt::http::req _req;		
+	_req->method(zpt::ev::Get);
+	_req->url(_db_name + std::string("/_all_docs"));
+	_req->param("include_docs", "true");
+	if (_opts["page_size"]->ok()) {
+		_req->param("limit", std::string(_opts["page_size"]));
+	}
+	if (_opts["page_start_index"]->ok()) {
+		_req->param("skip", std::string(_opts["page_start_index"]));
+	}
 
-	zpt::JSONArr _return;
-
+	zpt::http::rep _rep = this->send(_req);
+	zpt::json _result(_rep->body());
+	zpt::json _return = zpt::json::array();
+	size_t _size = 0;
+	if (_result["docs"]->is_array()) {
+		_size = size_t(_result["total_rows"]);
+		_return = _result["docs"];
+	}
+	else if (_result["rows"]->is_array()) {
+		_size = size_t(_result["total_rows"]);
+		_return = _result->getPath("rows.*.doc");
+	}
+	
 	if (!bool(_opts["mutated-event"])) zpt::Connector::all(_collection, _opts);
 	return {
-		"size", _return->size(),
+		"size", _size,
 		"elements", _return
 	};
 }

@@ -1432,9 +1432,9 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}
-	if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
-		_envelope["headers"] << "Connection" << "close";
-	}		
+	// if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
+	// 	_envelope["headers"] << "Connection" << "close";
+	// }
 	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
 		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
 	}

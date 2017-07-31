@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
 				}
 				_envelope << "headers" << _headers;
 			}
-			zpt::json _reply = _socket.send(_envelope);
+			_socket.send(_envelope);
+			zpt::json _reply = _socket.recv();
 			std::cout << "> " << zpt::r_replace(zpt::json::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
 			std::cout << "< " << zpt::r_replace(zpt::json::pretty(_reply), "\n", "\n< ") << endl << flush;
 			return 0;
