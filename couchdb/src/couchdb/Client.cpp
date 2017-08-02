@@ -149,7 +149,7 @@ auto zpt::couchdb::Client::init_request(zpt::http::req _req) -> void {
 }
 
 auto zpt::couchdb::Client::create_database(std::string _collection) -> void {
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;
@@ -162,7 +162,7 @@ auto zpt::couchdb::Client::create_database(std::string _collection) -> void {
 }
 
 auto zpt::couchdb::Client::create_index(std::string _collection, zpt::json _fields) -> void {
-	std::string _db_name = std::string("/") + _collection + std::string("/_index");
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection + std::string("/_index");
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;
@@ -180,7 +180,7 @@ auto zpt::couchdb::Client::create_index(std::string _collection, zpt::json _fiel
 
 auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	if (!_document["id"]->ok()) {
@@ -213,7 +213,7 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 
 auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	{
@@ -288,7 +288,7 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 
 auto zpt::couchdb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, std::string("'_document' must be of type JSObject"), 412, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(_href);
@@ -315,7 +315,7 @@ auto zpt::couchdb::Client::save(std::string _collection, std::string _href, zpt:
 
 auto zpt::couchdb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, std::string("'_document' must be of type JSObject"), 412, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(_href);
@@ -342,7 +342,7 @@ auto zpt::couchdb::Client::set(std::string _collection, zpt::json _pattern, zpt:
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
 	size_t _size = 0;
 
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;
@@ -368,7 +368,7 @@ auto zpt::couchdb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 
 auto zpt::couchdb::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
  	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(_href);
@@ -395,7 +395,7 @@ auto zpt::couchdb::Client::unset(std::string _collection, zpt::json _pattern, zp
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
 	size_t _size = 0;
 
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;
@@ -420,7 +420,7 @@ auto zpt::couchdb::Client::unset(std::string _collection, zpt::json _pattern, zp
 }
 
 auto zpt::couchdb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {	
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(_href);
@@ -445,7 +445,7 @@ auto zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, z
  	assertz(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject", 412, 0);
 	size_t _size = 0;
 
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;
@@ -472,7 +472,7 @@ auto zpt::couchdb::Client::get(std::string _collection, std::string _href, zpt::
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
  	assertz(_href.length() != 0, "'href' parameter must not be empty", 0, 0);
 
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	std::string _url = _db_name + std::string("/") + zpt::url::r_encode(_href);
@@ -497,45 +497,33 @@ auto zpt::couchdb::Client::query(std::string _collection, std::string _regexp, z
 
 auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt::json _opts) -> zpt::json {
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::json _query = zpt::couchdb::get_query(_regexp);
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
 	size_t _size = 0;
-		
-	if (_query["selector"]->is_object() && _query["selector"]->obj()->size() != 0) {
-		zpt::http::req _req_count;
-		_req_count->method(zpt::ev::Get);
-		_req_count->url(_db_name + std::string("/_all_docs"));
-		_req_count->param("limit", "0");
-		zpt::http::rep _rep_count = this->send(_req_count);
-		if (_rep_count->status() != 200) {
-			return {
-				"size", 0,
-				"elements", zpt::json::array()
-			};
-		}
-		zpt::json _count(_rep_count->body());
-		_size = size_t(_count["total_rows"]);
 
-		_req->method(zpt::ev::Post);
-		_req->url(_db_name + std::string("/_find"));
-		_req->header("Content-Type", "application/json");
-		_req->header("Content-Length", std::to_string(_body.length()));
-		_req->body(_body);
-	}
-	else {
-		_req->method(zpt::ev::Get);
-		_req->url(_db_name + std::string("/_all_docs"));
-		_req->param("include_docs", "true");
-		if (_query->is_object()) {
-			for (auto _param : _query->obj()) {
-				_req->param(_param.first, std::string(_param.second));
-			}
-		}
-	}
+	// zpt::http::req _req_count;
+	// _req_count->method(zpt::ev::Get);
+	// _req_count->url(_db_name + std::string("/_all_docs"));
+	// _req_count->param("limit", "0");
+	// zpt::http::rep _rep_count = this->send(_req_count);
+	// if (_rep_count->status() != 200) {
+	// 	return {
+	// 		"size", 0,
+	// 		"elements", zpt::json::array()
+	// 	};
+	// }
+	// zpt::json _count(_rep_count->body());
+	// _size = size_t(_count["total_rows"]);
+
+	_req->method(zpt::ev::Post);
+	_req->url(_db_name + std::string("/_find"));
+	_req->header("Content-Type", "application/json");
+	_req->header("Content-Length", std::to_string(_body.length()));
+	_req->body(_body);
 
 	zpt::http::rep _rep = this->send(_req);
 	zpt::json _result(_rep->body());
@@ -558,7 +546,7 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 
 auto zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
  	assertz(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
-	std::string _db_name = std::string("/") + _collection;
+	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::http::req _req;		

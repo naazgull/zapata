@@ -16,7 +16,8 @@ $[mutation.handler.self.remove]
 $[mutation.handler.self.replace]
 }
 }
-}
+},
+{ "mqtt", true, "amqp", true }
 );
 $[mutation.self.handler.end]
 
@@ -33,7 +34,8 @@ $[mutation.handler.remove]
 $[mutation.handler.replace]
 }
 }
-}
+},
+{ "mqtt", true, "amqp", true }
 );
 $[mutation.handler.end]
 }

@@ -47,6 +47,7 @@ using namespace __gnu_cxx;
 #define ZMQ_ROUTER_DEALER -3
 #define ZMQ_ASSYNC_REQ -4
 #define ZMQ_HTTP_RAW -5
+#define ZMQ_MQTT_RAW -6
 
 #define ZPT_SELF_CERTIFICATE 0
 #define ZPT_PEER_CERTIFICATE 1

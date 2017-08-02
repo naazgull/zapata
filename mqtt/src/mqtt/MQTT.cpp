@@ -5,7 +5,7 @@
 #include <zapata/mqtt/MQTT.h>
 #include <ossp/uuid++.hh>
 
-zpt::MQTT::MQTT() : __self(this), __connected(false), __postponed(zpt::json::object()) {
+zpt::MQTT::MQTT() : zpt::ZMQ("", zpt::undefined), __self(this), __connected(false), __postponed(zpt::json::object()) {
 #if defined(ZPT_USE_MOSQUITTO)
 	this->__mosq =  nullptr;
 	/**
@@ -164,6 +164,7 @@ auto zpt::MQTT::subscribe(std::string _topic) -> void {
 			 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
 			 */
 			mosquitto_subscribe(this->__mosq, & _return, _topic.data(), 0);
+			mosquitto_loop_write(this->__mosq, 1);
 #elif false && defined(ZPT_USE_PAHO)
 			this->__paho->subscribe(_topic, 0);
 #endif	       
@@ -181,6 +182,7 @@ auto zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
 			 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
 			 */
 			mosquitto_publish(this->__mosq, & _return, _topic.data(), _payload_str.length(), (const uint8_t *) _payload_str.data(), 0, false);
+			mosquitto_loop_write(this->__mosq, 1);
 #elif false && defined(ZPT_USE_PAHO)
 			::mqtt::message_ptr _msg = ::mqtt::make_message(_topic, _payload_str);
 			_msg->set_qos(0);
@@ -231,35 +233,35 @@ auto zpt::MQTT::trigger(std::string _event, zpt::mqtt::data _data) -> void {
 	}
 }
 
-auto zpt::MQTT::start() -> void {
-#if defined(ZPT_USE_MOSQUITTO)
-	/**
-	 * Checks if some data is available from MQTT server.
-	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
-	 */
-	mosquitto_loop_start(this->__mosq);
-#elif false && defined(ZPT_USE_PAHO)
-	zpt::MQTT::callback* _callback = new zpt::MQTT::callback(this);
-	this->__paho->set_callback(*_callback);
+// auto zpt::MQTT::start() -> void {
+// #if defined(ZPT_USE_MOSQUITTO)
+// 	/**
+// 	 * Checks if some data is available from MQTT server.
+// 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
+// 	 */
+// 	mosquitto_loop_start(this->__mosq);
+// #elif false && defined(ZPT_USE_PAHO)
+// 	zpt::MQTT::callback* _callback = new zpt::MQTT::callback(this);
+// 	this->__paho->set_callback(*_callback);
 
-	try {
-		this->__paho->connect(*this->__paho_opts, nullptr, *_callback);
-	}
-	catch (::mqtt::exception& _e) {
-	}
-#endif	       
-}
+// 	try {
+// 		this->__paho->connect(*this->__paho_opts, nullptr, *_callback);
+// 	}
+// 	catch (::mqtt::exception& _e) {
+// 	}
+// #endif	       
+// }
 
-auto zpt::MQTT::loop() -> void {
-#if defined(ZPT_USE_MOSQUITTO)
-	/**
-	 * Checks if some data is available from MQTT server.
-	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
-	 */
-	mosquitto_loop_forever(this->__mosq, -1, 1);
-#elif false && defined(ZPT_USE_PAHO)		
-#endif	       
-}
+// auto zpt::MQTT::loop() -> void {
+// #if defined(ZPT_USE_MOSQUITTO)
+// 	/**
+// 	 * Checks if some data is available from MQTT server.
+// 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop_forever
+// 	 */
+// 	mosquitto_loop_forever(this->__mosq, -1, 1);
+// #elif false && defined(ZPT_USE_PAHO)		
+// #endif	       
+// }
 
 #if defined(ZPT_USE_MOSQUITTO)
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {
@@ -377,6 +379,82 @@ auto zpt::MQTT::callback::message_arrived(::mqtt::const_message_ptr _msg) -> voi
 auto zpt::MQTT::callback::delivery_complete(::mqtt::delivery_token_ptr token) -> void{}
 
 #endif	       
+
+auto zpt::MQTT::uri(size_t _idx) -> zpt::json {
+	return zpt::undefined;
+}
+
+auto zpt::MQTT::uri(std::string _uris) -> void{
+}
+
+auto zpt::MQTT::detach() -> void {
+}
+
+auto zpt::MQTT::close() -> void {
+#if defined(ZPT_USE_MOSQUITTO)
+	if (this->__mosq != nullptr) {
+		mosquitto_destroy(this->__mosq);
+		mosquitto_lib_cleanup();
+		this->__mosq = nullptr;
+	}
+#elif false && defined(ZPT_USE_PAHO)
+	if (this->__paho != nullptr) {
+		delete this->__paho;
+	}
+	if (this->__paho_opts != nullptr) {
+		delete this->__paho_opts;
+	}
+#endif
+}
+
+auto zpt::MQTT::available() -> bool {
+	return true;
+}
+
+auto zpt::MQTT::recv() -> zpt::json {
+	mosquitto_loop_read(this->__mosq, 1);
+	return zpt::undefined;
+}
+
+auto zpt::MQTT::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
+	this->publish(_resource, _payload);
+	return zpt::undefined;
+}
+
+auto zpt::MQTT::send(zpt::json _envelope) -> zpt::json {
+	assertz(_envelope["payload"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
+	this->send(zpt::ev::Reply, std::string(_envelope["resource"]), _envelope["payload"]);
+	return zpt::undefined;
+}
+
+auto zpt::MQTT::socket() -> zmq::socket_ptr {
+	return zmq::socket_ptr(nullptr);
+}
+
+auto zpt::MQTT::in() -> zmq::socket_ptr {
+	return zmq::socket_ptr(nullptr);
+}
+
+auto zpt::MQTT::out() -> zmq::socket_ptr {
+	return zmq::socket_ptr(nullptr);
+}
+
+auto zpt::MQTT::fd() -> int {
+	return mosquitto_socket(this->__mosq);
+}
+
+auto zpt::MQTT::in_mtx() -> std::mutex& {
+	return this->__mtx;
+}
+
+auto zpt::MQTT::out_mtx() -> std::mutex& {
+	return this->__mtx;
+}
+
+auto zpt::MQTT::type() -> short int {
+	return ZMQ_MQTT_RAW;
+}
+
 
 extern "C" auto zpt_mqtt() -> int {
 	return 1;

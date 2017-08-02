@@ -298,9 +298,11 @@ void zpt::RESTServer::start() {
 			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
 			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
-			if (!this->__options["mqtt"]["no-threads"]->ok() || std::string(this->__options["mqtt"]["no-threads"]) != "true") {
-				this->__mqtt->start();
-			}			
+			this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+			
+			// if (!this->__options["mqtt"]["no-threads"]->ok() || std::string(this->__options["mqtt"]["no-threads"]) != "true") {
+			// 	this->__mqtt->start();
+			// }			
 		}
 
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
@@ -346,9 +348,9 @@ void zpt::RESTServer::start() {
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 
 		sd_notify(0, "READY=1");
-		if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
-			this->__mqtt->loop();
-		}
+		// if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
+		// 	this->__mqtt->loop();
+		// }
 		
 		this->__poll->loop();
 	}

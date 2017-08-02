@@ -27,6 +27,7 @@ Copyright (c) 2014, Muzzley
 #include <mqtt/async_client.h>
 #endif	       
 #include <mutex>
+#include <zapata/zmq.h>
 #include <zapata/json.h>
 
 using namespace std;
@@ -78,7 +79,7 @@ namespace zpt {
 
 	//typedef std::shared_ptr<zpt::MQTT> MQTTPtr;
 	
-	class MQTT {
+	class MQTT : public zpt::ZMQ {
 	public:
 		/**
 		 * Init mosquitto.
@@ -144,9 +145,25 @@ namespace zpt {
 		 * Checks if some data is available from MQTT server.
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_loop
 		 */
-		virtual auto start() -> void;
-		virtual auto loop() -> void;
+		// virtual auto start() -> void;
+		// virtual auto loop() -> void;
 
+		virtual auto uri(size_t _idx) -> zpt::json;
+		virtual auto uri(std::string _uris) -> void;
+		virtual auto detach() -> void;
+		virtual auto close() -> void;
+		virtual auto available() -> bool;
+		virtual auto recv() -> zpt::json;
+		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
+		virtual auto send(zpt::json _envelope) -> zpt::json;
+		virtual auto socket() -> zmq::socket_ptr;
+		virtual auto in() -> zmq::socket_ptr;
+		virtual auto out() -> zmq::socket_ptr;
+		virtual auto fd() -> int;
+		virtual auto in_mtx() -> std::mutex&;
+		virtual auto out_mtx() -> std::mutex&;
+		virtual auto type() -> short int;
+		
 	private:
 #if defined(ZPT_USE_MOSQUITTO)
 		static auto on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void;

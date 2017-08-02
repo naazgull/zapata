@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
 				"channel", std::string(_uri["path"]),
 				"performative", zpt::ev::from_str(std::string(_opts["X"][0])),
 				"resource", std::string(_uri["path"]),
+				"headers", zpt::ev::init_request(),
 				"params", _uri["query"],
 				"payload", (_opts["d"]->ok() ? zpt::json(std::string(_opts["d"][0])) : zpt::undefined)
 			};
@@ -73,8 +74,13 @@ int main(int argc, char* argv[]) {
 			}
 			_socket.send(_envelope);
 			zpt::json _reply = _socket.recv();
-			std::cout << "> " << zpt::r_replace(zpt::json::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
-			std::cout << "< " << zpt::r_replace(zpt::json::pretty(_reply), "\n", "\n< ") << endl << flush;
+			if (_opts["q"]->ok()) {
+				std::cout << "* request termnated with status " << std::string(_reply["status"]) << endl << endl << flush;
+			}
+			else {
+				std::cout << endl << "> " << zpt::r_replace(zpt::rest::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
+				std::cout << "< " << zpt::r_replace(zpt::rest::pretty(_reply), "\n", "\n< ") << endl << flush;
+			}
 			return 0;
 		}
 		else if (std::string(_opts["N"][0]) == "pub-sub") {

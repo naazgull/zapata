@@ -846,3 +846,35 @@ auto zpt::rest::options(std::string _resource, std::string _origin) -> zpt::json
 auto zpt::rest::url_pattern(zpt::json _to_join) -> std::string {
 	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
 }		
+
+auto zpt::rest::pretty(zpt::json _envelope) -> std::string {
+	std::string _ret;
+	if (_envelope["status"]->ok()) {
+		_ret += std::string("ZMQ/4.1 ") + std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\n"); 
+	}
+	else {
+		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" ") + _envelope["resource"]->str();
+		if (_envelope["params"]->is_object()) {
+			_ret += std::string("?");
+			bool _first = true;
+			for (auto _param : _envelope["params"]->obj()) {
+				if (!_first) {
+					_ret += std::string("&");
+				}
+				_first = false;
+				_ret += _param.first + std::string("=") + std::string(_param.second);
+			}
+		}
+		_ret += std::string(" ZMQ/4.1\n"); 
+	}
+	if (_envelope["headers"]->ok()) {
+		for (auto _header : _envelope["headers"]->obj()) {
+			_ret += _header.first + std::string(": ") + std::string(_header.second) + std::string("\n");
+		}
+	}
+	_ret += std::string("\n");
+	if (_envelope["payload"]->ok() && !_envelope["payload"]->empty()) {
+		_ret += zpt::json::pretty(_envelope["payload"]);
+	}
+	return _ret;
+}
