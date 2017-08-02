@@ -242,7 +242,7 @@ auto zpt::ZMQPoll::loop() -> void {
 		std::vector< zpt::socket_ref > _to_add;
 		std::vector< zpt::socket_ref > _to_remove;
 
-		uint64_t _sd_watchdog_usec = 0;
+		uint64_t _sd_watchdog_usec = 30000;
 		bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
 		zlog(std::string("watchdog flag is ") + (_sd_watchdog_enabled ? std::string("enabled") + std::string(" and timeout is set to ") + std::to_string(_sd_watchdog_usec / 1000 / 1000) + std::string(" seconds") : std::string("disabled")), zpt::notice);
 		
@@ -251,15 +251,19 @@ auto zpt::ZMQPoll::loop() -> void {
 			// zdbg(std::string("socket list size is ") + std::to_string(this->__items.size()));
 			
 			int _n_events = 0;
+			_n_events = zmq::poll(&this->__items[0], this->__items.size(), _sd_watchdog_usec / 1000 / 2);
 			if (_sd_watchdog_enabled) {
-				_n_events = zmq::poll(&this->__items[0], this->__items.size(), _sd_watchdog_usec / 1000 / 2);
 				sd_notify(0, "WATCHDOG=1");
 			}
-			else {
-				_n_events = zmq::poll(&this->__items[0], this->__items.size(), -1);
-			}
+			// else {
+			// 	_n_events = zmq::poll(&this->__items[0], this->__items.size(), -1);
+			// }
 
 			if (_n_events == 0) {
+				for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
+					zpt::socket_ref _socket = this->__by_socket[_k];
+					_socket->loop_iteration();
+				}
 				continue;
 			}
 			//zdbg(std::string("events ") + std::to_string(_n_events));
@@ -313,6 +317,10 @@ auto zpt::ZMQPoll::loop() -> void {
 					if (_envelope["headers"]["Connection"] == zpt::json::string("close")) {
 						_to_remove.push_back(_socket);
 					}
+				}
+				else {
+					zpt::socket_ref _socket = this->__by_socket[_k];
+					_socket->loop_iteration();
 				}
 			}
 

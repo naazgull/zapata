@@ -72,7 +72,7 @@ namespace zpt {
 
 		extern zpt::rest::emitter* __emitter;
 
-		auto pretty(zpt::json _envelope) -> std::string;
+		auto pretty(zpt::json _envelope, std::string _protocol) -> std::string;
 	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {

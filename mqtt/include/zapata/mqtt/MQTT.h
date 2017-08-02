@@ -156,6 +156,7 @@ namespace zpt {
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
+		virtual auto loop_iteration() -> void;
 		virtual auto socket() -> zmq::socket_ptr;
 		virtual auto in() -> zmq::socket_ptr;
 		virtual auto out() -> zmq::socket_ptr;
@@ -198,7 +199,8 @@ namespace zpt {
 		zpt::mqtt::handlers __callbacks;
 		std::string __user;
 		std::string __passwd;
-		std::mutex __mtx;
+		std::mutex __mtx_conn;
+		std::mutex __mtx_callbacks;
 		zpt::mqtt::broker __self;
 		bool __connected;
 		zpt::json __postponed;

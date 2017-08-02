@@ -847,13 +847,23 @@ auto zpt::rest::url_pattern(zpt::json _to_join) -> std::string {
 	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
 }		
 
-auto zpt::rest::pretty(zpt::json _envelope) -> std::string {
+auto zpt::rest::pretty(zpt::json _envelope, std::string _protocol) -> std::string {
 	std::string _ret;
 	if (_envelope["status"]->ok()) {
-		_ret += std::string("ZMQ/4.1 ") + std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\n"); 
+		std::string _color;
+		if (int(_envelope["status"]) < 300) {
+			_color.assign("32");
+		}
+		else if (int(_envelope["status"]) < 400) {
+			_color.assign("33");
+		}
+		else {
+			_color.assign("31");
+		}
+		_ret += _protocol + std::string(" \033[1;") + _color + std::string("m") + std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\033[0m\n"); 
 	}
 	else {
-		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" ") + _envelope["resource"]->str();
+		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" \033[1;35m") + _envelope["resource"]->str() + std::string("\033[0m");
 		if (_envelope["params"]->is_object()) {
 			_ret += std::string("?");
 			bool _first = true;
@@ -865,7 +875,7 @@ auto zpt::rest::pretty(zpt::json _envelope) -> std::string {
 				_ret += _param.first + std::string("=") + std::string(_param.second);
 			}
 		}
-		_ret += std::string(" ZMQ/4.1\n"); 
+		_ret += std::string(" ") + _protocol + std::string("\n"); 
 	}
 	if (_envelope["headers"]->ok()) {
 		for (auto _header : _envelope["headers"]->obj()) {

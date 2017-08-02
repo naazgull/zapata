@@ -153,6 +153,7 @@ namespace zpt {
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
+		virtual auto loop_iteration() -> void;
 				
 		virtual auto socket() -> zmq::socket_ptr = 0;
 		virtual auto in() -> zmq::socket_ptr = 0;

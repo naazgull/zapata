@@ -98,12 +98,12 @@ auto zpt::MQTT::self() const -> zpt::mqtt::broker {
 }
 
 auto zpt::MQTT::connected() -> bool {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
+	std::lock_guard< std::mutex > _lock(this->__mtx_conn);
 	return this->__connected;
 }
 
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> void {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
+	std::lock_guard< std::mutex > _lock(this->__mtx_conn);
 
 #if defined(ZPT_USE_MOSQUITTO)
 	if (_tls) {
@@ -135,7 +135,7 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 }
 
 auto zpt::MQTT::reconnect() -> void {
-	std::lock_guard< std::mutex > _lock(this->__mtx);
+	std::lock_guard< std::mutex > _lock(this->__mtx_conn);
 
 #if defined(ZPT_USE_MOSQUITTO)
 	/**
@@ -149,7 +149,7 @@ auto zpt::MQTT::reconnect() -> void {
 }
 
 auto zpt::MQTT::subscribe(std::string _topic) -> void {	
-	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx_conn);
 		if (this->__postponed[_topic]->is_string()) {
 			return;
 		}
@@ -195,7 +195,7 @@ auto zpt::MQTT::on(std::string _event, zpt::mqtt::handler _callback) -> void {
 	/**
 	 * Add to the callback list, the callback *_callback*, attached to the event type *_event*.
 	 */
-	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx_callbacks);
 		auto _found = this->__callbacks.find(_event);
 		if (_found != this->__callbacks.end()) {
 			_found->second.push_back(_callback);
@@ -211,7 +211,7 @@ auto zpt::MQTT::off(std::string _event) -> void {
 	/**
 	 * Remove from the callback list, the callback *_callback*, attached to the event type *_event*.
 	 */
-	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx_callbacks);
 		auto _found = this->__callbacks.find(_event);
 		if (_found != this->__callbacks.end()) {
 			this->__callbacks.erase(_found);
@@ -223,7 +223,7 @@ auto zpt::MQTT::trigger(std::string _event, zpt::mqtt::data _data) -> void {
 	 * Searches for and executes registered callbacks under the event type *_event*.
 	 */
 	std::vector<zpt::mqtt::handler> _callbacks;
-	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__mtx_callbacks);
 		auto _found = this->__callbacks.find(_event);
 		if (_found != this->__callbacks.end()) {
 			_callbacks = _found->second; 
@@ -267,7 +267,7 @@ auto zpt::MQTT::trigger(std::string _event, zpt::mqtt::data _data) -> void {
 auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
 	if (_rc == 0) {
-		{ std::lock_guard< std::mutex > _lock(_self->__mtx);
+		{ std::lock_guard< std::mutex > _lock(_self->__mtx_conn);
 			int _return;
 			for (auto _topic : _self->__postponed->obj()) {
 				zlog(std::string("subscribing MQTT topic ") + _topic.first, zpt::notice);
@@ -282,7 +282,7 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 
 auto zpt::MQTT::on_disconnect(struct mosquitto * _mosq, void * _ptr, int _reason) -> void {
 	zpt::MQTT* _self = (zpt::MQTT*) _ptr;
-	{ std::lock_guard< std::mutex > _lock(_self->__mtx);
+	{ std::lock_guard< std::mutex > _lock(_self->__mtx_conn);
 		_self->__connected = false; }
 	zpt::mqtt::data _data(new MQTTData());
 	_self->trigger("disconnect", _data);
@@ -345,7 +345,7 @@ auto zpt::MQTT::callback::on_failure(const ::mqtt::token& _tok) -> void {
 }
 
 auto zpt::MQTT::callback::on_success(const ::mqtt::token& _tok) -> void {
-	{ std::lock_guard< std::mutex > _lock(this->__broker->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__broker->__mtx_conn);
 		for (auto _topic : this->__broker->__postponed->obj()) {
 			zlog(std::string("subscribing MQTT topic ") + _topic.first, zpt::notice);
 			this->__broker->__paho->subscribe(_topic.first, 0);
@@ -357,7 +357,7 @@ auto zpt::MQTT::callback::on_success(const ::mqtt::token& _tok) -> void {
 }
 
 auto zpt::MQTT::callback::connection_lost(const std::string& _cause) -> void {
-	{ std::lock_guard< std::mutex > _lock(this->__broker->__mtx);
+	{ std::lock_guard< std::mutex > _lock(this->__broker->__mtx_conn);
 		this->__broker->__connected = false; }
 	zpt::mqtt::data _data(new MQTTData());
 	this->__broker->trigger("disconnect", _data);
@@ -427,6 +427,10 @@ auto zpt::MQTT::send(zpt::json _envelope) -> zpt::json {
 	return zpt::undefined;
 }
 
+auto zpt::MQTT::loop_iteration() -> void {
+	mosquitto_loop_misc(this->__mosq);
+}
+
 auto zpt::MQTT::socket() -> zmq::socket_ptr {
 	return zmq::socket_ptr(nullptr);
 }
@@ -444,11 +448,11 @@ auto zpt::MQTT::fd() -> int {
 }
 
 auto zpt::MQTT::in_mtx() -> std::mutex& {
-	return this->__mtx;
+	return this->__mtx_conn;
 }
 
 auto zpt::MQTT::out_mtx() -> std::mutex& {
-	return this->__mtx;
+	return this->__mtx_conn;
 }
 
 auto zpt::MQTT::type() -> short int {

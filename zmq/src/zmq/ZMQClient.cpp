@@ -207,6 +207,9 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	return zpt::undefined;
 }
 
+auto zpt::ZMQ::loop_iteration() -> void {
+}
+
 zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options)/*, __context(0)*/, __socket(nullptr)/*, __self(this)*/ {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REQ));
 	// this->__socket->setsockopt(ZMQ_SNDTIMEO, 10000);
