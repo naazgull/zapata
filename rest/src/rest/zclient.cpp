@@ -78,8 +78,8 @@ int main(int argc, char* argv[]) {
 				std::cout << "* request termnated with status " << std::string(_reply["status"]) << endl << endl << flush;
 			}
 			else {
-				std::cout << "*" << endl << "> " << zpt::r_replace(zpt::rest::pretty(_envelope, "ZMQ/4.1"), "\n", "\n> ") << endl << flush;
-				std::cout << "< " << zpt::r_replace(zpt::rest::pretty(_reply, "ZMQ/4.1"), "\n", "\n< ") << endl << flush;
+				std::cout << "*" << endl << "> " << zpt::r_replace(zpt::ev::pretty(_envelope), "\n", "\n> ") << endl << flush;
+				std::cout << "< " << zpt::r_replace(zpt::ev::pretty(_reply), "\n", "\n< ") << endl << flush;
 			}
 			return 0;
 		}

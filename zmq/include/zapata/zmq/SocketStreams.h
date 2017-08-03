@@ -37,6 +37,9 @@ SOFTWARE.
 #include <cstring>
 #include <unistd.h>
 #include <errno.h>
+#include <openssl/ssl.h>
+#include <openssl/tls1.h>
+#include <openssl/err.h>
 #include <zapata/base/assert.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/text/convert.h>
@@ -48,6 +51,8 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zpt {
+
+	std::string ssl_error_print(SSL * _ssl, int _ret);
 
 	template<typename Char>
 	class basic_socketbuf : public std::basic_streambuf<Char> {
@@ -66,19 +71,26 @@ namespace zpt {
 		__char_type ibuf[SIZE];
 
 		int __sock;
+		bool __ssl;
 		struct sockaddr_in __server;
-		string __host;
+		std::string __host;
 		short __port;
 		short __protocol;
+		SSL* __sslstream;
+		SSL_CTX* __context;
 
 	public:
-		basic_socketbuf() : __sock(0), __port(-1), __protocol(0) {
+		basic_socketbuf() : __sock(0), __ssl(false), __port(-1), __protocol(0), __sslstream(nullptr), __context(nullptr) {
 			__buf_type::setp(obuf, obuf + (SIZE - 1));
 			__buf_type::setg(ibuf, ibuf, ibuf);
 		};
 
 		virtual ~basic_socketbuf() {
 			sync();
+			if (this->__sslstream != nullptr) {
+				SSL_free(this->__sslstream);
+				SSL_CTX_free(this->__context);
+			}
 		}
 
 		void set_socket(int _sock) {
@@ -88,7 +100,7 @@ namespace zpt {
 				setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof(int));
 				struct linger a;
 				a.l_onoff = 1;
-				a.l_linger = 30;
+				a.l_linger = 5;
 				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof(a));
 			}
 		}
@@ -97,8 +109,20 @@ namespace zpt {
 			return this->__sock;
 		}
 
+		void set_context(SSL_CTX* _ctx) {
+			this->__ssl = true;
+			this->__context = _ctx;
+			this->__sslstream = SSL_new(_ctx);
+			SSL_set_fd(this->__sslstream, this->__sock);
+			SSL_connect(this->__sslstream);
+		}
+
 		struct sockaddr_in& server() {
 			return this->__server;
+		}
+
+		bool& ssl() {
+			return this->__ssl;
 		}
 
 		std::string& host() {
@@ -114,7 +138,7 @@ namespace zpt {
 		}
 
 		virtual bool __good() {
-			return this->__sock != 0;
+			return this->__sock != 0 && (!this->__ssl || (this->__ssl && this->__sslstream != nullptr && this->__context != nullptr));
 		}
 
 	protected:
@@ -124,38 +148,62 @@ namespace zpt {
 				return __traits_type::eof();
 			}
 
-			switch(protocol()) {
-				case IPPROTO_IP: {
-					int _num = __buf_type::pptr() - __buf_type::pbase();
-					int _actually_written = -1;
-					if ((_actually_written = ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
-						::shutdown(this->__sock, SHUT_RDWR);
-						::close(this->__sock);
-						this->__sock = 0;
-						assertz(_actually_written > 0, "write operation failed", 503, 0);
-					}
-					__buf_type::pbump(-_actually_written);
-					return _actually_written;
-				}
-				case IPPROTO_UDP: {
-					int _num = __buf_type::pptr() - __buf_type::pbase();
-					int _actually_written = -1;
-					if ((_actually_written = ::sendto(__sock, reinterpret_cast<char*>(obuf), _num * char_size, 0, (struct sockaddr *) & __server, sizeof(__server))) < 0) {
-						if (_actually_written < 0) {
+			if (!this->__ssl) {
+				switch(protocol()) {
+					case IPPROTO_IP: {
+						int _num = __buf_type::pptr() - __buf_type::pbase();
+						int _actually_written = -1;
+						if ((_actually_written = ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
 							::shutdown(this->__sock, SHUT_RDWR);
 							::close(this->__sock);
 							this->__sock = 0;
 							assertz(_actually_written > 0, "write operation failed", 503, 0);
 						}
+						__buf_type::pbump(-_actually_written);
+						return _actually_written;
+					}
+					case IPPROTO_UDP: {
+						int _num = __buf_type::pptr() - __buf_type::pbase();
+						int _actually_written = -1;
+						if ((_actually_written = ::sendto(__sock, reinterpret_cast<char*>(obuf), _num * char_size, 0, (struct sockaddr *) & __server, sizeof(__server))) < 0) {
+							if (_actually_written < 0) {
+								::shutdown(this->__sock, SHUT_RDWR);
+								::close(this->__sock);
+								this->__sock = 0;
+								assertz(_actually_written > 0, "write operation failed", 503, 0);
+							}
+							return __traits_type::eof();
+						}
+						__buf_type::pbump(-_actually_written);
+						return _actually_written;
+					}
+					default: {
 						return __traits_type::eof();
 					}
-					__buf_type::pbump(-_actually_written);
-					return _actually_written;
-				}
-				default: {
-					return __traits_type::eof();
 				}
 			}
+			else {
+				int _num = __buf_type::pptr() - __buf_type::pbase();
+				int _actually_written = 0;
+				do {
+					if ((_actually_written = SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
+						if (SSL_get_error(this->__sslstream, _actually_written) != SSL_ERROR_WANT_WRITE) {
+							SSL_free(this->__sslstream);
+							SSL_CTX_free(this->__context);
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+							this->__sslstream = nullptr;
+							this->__context = nullptr;
+							assertz(_actually_written > 0, std::string("write operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_written), 503, 0);
+						}
+					}
+				}
+				while (SSL_get_error(this->__sslstream, _actually_written) == SSL_ERROR_WANT_WRITE);
+				__buf_type::pbump(-_actually_written);
+				return _actually_written;
+			}
+			return __traits_type::eof();
 		}
 
 		virtual __int_type overflow(__int_type c) {
@@ -186,18 +234,63 @@ namespace zpt {
 				return __traits_type::eof();
 			}
 
-			int _actually_read = -1;
-			if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) < 0) {
-				::shutdown(this->__sock, SHUT_RDWR);
-				::close(this->__sock);
-				this->__sock = 0;
-				assertz(_actually_read > 0, "read operation failed", 503, 0);
+			if (!this->__ssl) {
+				switch(protocol()) {
+					case IPPROTO_IP: {
+						int _actually_read = -1;
+						if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) < 0) {
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+							assertz(_actually_read > 0, "read operation failed", 503, 0);
+						}
+						if (_actually_read == 0) {
+							return __traits_type::eof();
+						}
+						__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
+						return *__buf_type::gptr();
+					}
+					case IPPROTO_UDP : {
+						int _actually_read = -1;
+						socklen_t _peer_addr_len = sizeof(__server);
+						if ((_actually_read = ::recvfrom(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0, (struct sockaddr *) & __server, &_peer_addr_len)) < 0) {
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+							assertz(_actually_read > 0, "read operation failed", 503, 0);
+						}
+						if (_actually_read == 0) {
+							return __traits_type::eof();
+						}
+						__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
+						return *__buf_type::gptr();
+					}
+				}
 			}
-			if (_actually_read == 0) {
-				return __traits_type::eof();
+			else {
+				int _actually_read = -1;
+				do {
+					if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
+						if (SSL_get_error(this->__sslstream, _actually_read) != SSL_ERROR_WANT_READ) {
+							SSL_free(this->__sslstream);
+							SSL_CTX_free(this->__context);
+							::shutdown(this->__sock, SHUT_RDWR);
+							::close(this->__sock);
+							this->__sock = 0;
+							this->__sslstream = nullptr;
+							this->__context = nullptr;
+							assertz(_actually_read > 0, std::string("read operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_read), 503, 0);
+						}
+					}
+				}
+				while (SSL_get_error(this->__sslstream, _actually_read) == SSL_ERROR_WANT_READ);
+				if (_actually_read == 0) {
+					return __traits_type::eof();
+				}
+				__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
+				return *__buf_type::gptr();
 			}
-			__buf_type::setg(ibuf, ibuf, ibuf + _actually_read);
-			return *__buf_type::gptr();
+			return __traits_type::eof();
 		}
 	};
 
@@ -216,12 +309,13 @@ namespace zpt {
 		bool __is_error;
 
 	public:
-		basic_socketstream() :
-			__stream_type(&__buf), __is_error(false) {
+		basic_socketstream() : __stream_type(&__buf), __is_error(false) {
 		};
 
-		basic_socketstream(int s) : __stream_type(&__buf), __is_error(false) {
+		basic_socketstream(int s, bool _ssl = false, short _protocol = IPPROTO_IP) : __stream_type(&__buf), __is_error(false) {
 			__buf.set_socket(s);
+			__buf.protocol() = _protocol;
+			__buf.ssl() = _ssl;
 		}
 		virtual ~basic_socketstream() {
 			__stream_type::flush();
@@ -229,8 +323,31 @@ namespace zpt {
 			__buf.set_socket(0);
 		}
 
+		bool& ssl() {
+			return __buf.ssl();
+		}
+
+		std::string& host() {
+			return __buf.host();
+		}
+
+		short& port() {
+			return __buf.port();
+		}
+
+		short& protocol() {
+			return __buf.protocol();
+		}
+
 		void assign(int _sockfd) {
 			__buf.set_socket(_sockfd);
+			__buf.ssl() = false;
+		}
+
+		void assign(int _sockfd, SSL_CTX* _ctx) {
+			__buf.set_socket(_sockfd);
+			__buf.set_context(_ctx);
+			__buf.ssl() = true;
 		}
 
 		void unassign() {
@@ -262,11 +379,12 @@ namespace zpt {
 			return this->__buf;
 		}
 
-		bool open(const std::string& _host, uint16_t _port, short _protocol = IPPROTO_IP) {
+		bool open(const std::string& _host, uint16_t _port, bool _ssl = false, short _protocol = IPPROTO_IP) {
 			this->close();
 			__buf.host() = _host;
 			__buf.port() = _port;
 			__buf.protocol() = _protocol;
+			__buf.ssl() = _ssl;
 			
 			::hostent *_he = gethostbyname(_host.c_str());
 			if (_he == nullptr) {
@@ -277,63 +395,92 @@ namespace zpt {
 			__buf.server().sin_family = AF_INET;
 			__buf.server().sin_port = htons(_port);
 
-			switch(_protocol) {
-				case IPPROTO_IP: {
-					int _sd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-					if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof(__buf.server())) < 0) {
+			if (!_ssl) {
+				switch(_protocol) {
+					case IPPROTO_IP: {
+						int _sd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+						if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof(__buf.server())) < 0) {
+							__stream_type::setstate(std::ios::failbit);
+							__buf.set_socket(0);
+							__is_error = true;
+							return false;
+						}
+						else {
+							__buf.set_socket(_sd);
+						}
+
+						// struct timeval _timeout;
+						// _timeout.tv_sec = 20;
+						// _timeout.tv_usec = 0;
+
+						// if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+						// 	this->close();
+						// 	__is_error = true;
+						// 	return false;
+						// }
+						// if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
+						// 	this->close();
+						// 	__is_error = true;
+						// 	return false;
+						// }
+						return true;
+					}
+					case IPPROTO_UDP: {
+						int _sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+						int _ret = inet_aton(__buf.host().c_str(), & __buf.server().sin_addr);
+						if (_ret == 0) {
+							struct addrinfo _hints, * _result = NULL;
+							std::memset(& _hints, 0, sizeof(_hints));
+							_hints.ai_family = AF_INET;
+							_hints.ai_socktype = SOCK_DGRAM;
+
+							_ret = getaddrinfo(__buf.host().c_str(), NULL, & _hints, & _result);
+							if (_ret) {
+								__stream_type::setstate(std::ios::failbit);
+								__buf.set_socket(0);
+								__is_error = true;
+								return false;
+							}
+							struct sockaddr_in* _host_addr = (struct sockaddr_in *) _result->ai_addr;
+							memcpy(& __buf.server().sin_addr, & _host_addr->sin_addr, sizeof(struct in_addr));
+							freeaddrinfo(_result);
+						}
+						__buf.set_socket(_sd);
+						return true;
+					}
+					default: {
+						break;
+					}
+				}
+				return false;
+			}
+			else {
+				int _sd = socket(AF_INET, SOCK_STREAM, 0);
+				// fcntl(_sd, F_SETFL, O_NONBLOCK);
+				if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.server()), sizeof(__buf.server())) < 0) {
+					__stream_type::setstate(std::ios::failbit);
+					__buf.set_socket(0);
+					__is_error = true;
+					return false;
+				}
+				else {
+					// fcntl(_sd, F_SETFL, fcntl(_sd, F_GETFL, 0) & ~O_NONBLOCK);
+					SSL_library_init();
+					OpenSSL_add_all_algorithms();
+					SSL_load_error_strings();
+					SSL_CTX* _context = SSL_CTX_new(TLSv1_client_method());
+					if (_context == nullptr) {
 						__stream_type::setstate(std::ios::failbit);
 						__buf.set_socket(0);
 						__is_error = true;
 						return false;
 					}
 					else {
-						__buf.set_socket(_sd);
+						this->assign(_sd, _context);
 					}
-
-					// struct timeval _timeout;
-					// _timeout.tv_sec = 20;
-					// _timeout.tv_usec = 0;
-
-					// if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-					// 	this->close();
-					// 	__is_error = true;
-					// 	return false;
-					// }
-					// if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-					// 	this->close();
-					// 	__is_error = true;
-					// 	return false;
-					// }
-					return true;
 				}
-				case IPPROTO_UDP: {
-					int _sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-					int _ret = inet_aton(__buf.host().c_str(), & __buf.server().sin_addr);
-					if (_ret == 0) {
-						struct addrinfo _hints, * _result = NULL;
-						std::memset(& _hints, 0, sizeof(_hints));
-						_hints.ai_family = AF_INET;
-						_hints.ai_socktype = SOCK_DGRAM;
-
-						_ret = getaddrinfo(__buf.host().c_str(), NULL, & _hints, & _result);
-						if (_ret) {
-							__stream_type::setstate(std::ios::failbit);
-							__buf.set_socket(0);
-							__is_error = true;
-							return false;
-						}
-						struct sockaddr_in* _host_addr = (struct sockaddr_in *) _result->ai_addr;
-						memcpy(& __buf.server().sin_addr, & _host_addr->sin_addr, sizeof(struct in_addr));
-						freeaddrinfo(_result);
-					}
-					__buf.set_socket(_sd);
-					return true;
-				}
-				default: {
-					break;
-				}
+				return true;
 			}
-			return false;
 		}
 	};
 
@@ -344,57 +491,40 @@ namespace zpt {
 	typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
 
 	template<typename Char>
-	class basic_serversocketstream : public std::basic_iostream<Char> {
-	public:
-		typedef Char __char_type;
-		typedef std::basic_iostream<__char_type> __stream_type;
-		typedef basic_socketbuf<__char_type> __buf_type;
-
+	class basic_serversocketstream {
 	protected:
-		__buf_type __buf;
 		int __sockfd;
 
 	public:
-		basic_serversocketstream() :
-		__stream_type(&__buf) {
+		basic_serversocketstream() :  __sockfd(0) {
 		};
 
-		basic_serversocketstream(int s) : __stream_type(&__buf) {
-			__buf.set_socket(s);
+		basic_serversocketstream(int s) : __sockfd(s) {
 		}
 		virtual ~basic_serversocketstream() {
 			this->close();
 		}
 
 		void close() {
-			__stream_type::flush();
-			__stream_type::clear();
-			if (__buf.get_socket() != 0) {
-				::shutdown(__buf.get_socket(), SHUT_RDWR);
-				::close(__buf.get_socket());
-			}
-			__buf.set_socket(0);
+			::shutdown(this->__sockfd, SHUT_RDWR);
+			::close(this->__sockfd);
+			this->__sockfd = 0;
 		}
 
 		bool is_open() {
-			return __buf.get_socket() != 0 && __buf.__good();
+			return __sockfd != 0;;
 		}
 
 		bool ready() {
 			fd_set sockset;
 			FD_ZERO(&sockset);
-			FD_SET(__buf.get_socket(), &sockset);
-			return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
-		}
-
-		__buf_type& buffer() {
-			return this->__buf;
+			FD_SET(__sockfd, &sockset);
+			return select(__sockfd + 1, &sockset, nullptr, nullptr, nullptr) == 1;
 		}
 
 		bool bind(uint16_t _port) {
 			this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
 			if (this->__sockfd < 0) {
-				__stream_type::setstate(std::ios::failbit);
 				return false;
 			}
 
@@ -403,7 +533,6 @@ namespace zpt {
 				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = 0;
-				__stream_type::setstate(std::ios::failbit);
 				return false;
 			}
 
@@ -416,12 +545,9 @@ namespace zpt {
 				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = 0;
-				__buf.set_socket(0);
-				__stream_type::setstate(std::ios::failbit);
 				return false;
 			}
 			::listen(this->__sockfd, 100);
-			__buf.set_socket(this->__sockfd);
 			return true;
 		}
 
@@ -473,256 +599,5 @@ namespace zpt {
 	typedef std::shared_ptr< zpt::wserversocketstream > wserversocketstream_ptr;
 
 	#define CRLF "\r\n"
-
-	class websocketserverstream : public basic_serversocketstream<char> {
-	public:
-		websocketserverstream() {
-		};
-		virtual ~websocketserverstream() {
-		}
-
-		bool handshake() {
-			string _key;
-			string _line;
-			do {
-				std::getline((* this), _line);
-				zpt::trim(_line);
-				string _header(_line);
-				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
-				if (_header.find("sec-websocket-key:") != std::string::npos) {
-					_key.assign(_line.substr(19));
-				}
-			}
-			while (_line != "");
-
-			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-			string _sha1 = zpt::hash::SHA1(_key);
-			zpt::base64::encode(_sha1);
-			_key.assign(_sha1);
-
-			(* this) << 
-			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
-			"Upgrade: websocket" << CRLF << 
-			"Connection: Upgrade" << CRLF <<
-			"Sec-WebSocket-Accept: " << _key << CRLF <<
-			CRLF << std::flush;
-			return true;
-		}
-
-		bool read(string& _out, int* _op_code) {
-			unsigned char _hdr;
-			(* this) >> noskipws >> _hdr;
-
-			bool _fin = _hdr & 0x80;
-			*_op_code = _hdr & 0x0F;
-			(* this) >> noskipws >> _hdr;
-			bool _mask = _hdr & 0x80;
-			string _masking;
-			string _masked;
-
-			int _len = _hdr & 0x7F;
-			if (_len == 126) {
-				(* this) >> noskipws >> _hdr;
-				_len = (int) _hdr;
-				_len <<= 8;
-				(* this) >> noskipws >> _hdr;
-				_len += (int) _hdr;
-			}
-			else if (_len == 127) {
-				(* this) >> noskipws >> _hdr;
-				_len = (int) _hdr;
-				for (int _i = 0; _i < 7; _i++) {
-					_len <<= 8;
-					(* this) >> noskipws >> _hdr;
-					_len += (int) _hdr;
-				}
-			}
-
-			if (_mask) {
-				for (int _i = 0; _i < 4; _i++) {
-					(* this) >> noskipws >> _hdr;
-					_masking.push_back((char) _hdr);
-				}
-			}
-
-
-			for (int _i = 0; _i != _len; _i++) {
-				(* this) >> noskipws >> _hdr;
-				_masked.push_back((char) _hdr);
-			}
-
-			if (_mask) {
-				for (size_t _i = 0; _i < _masked.length(); _i++) {
-					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
-				}
-			}
-			else {
-				_out.assign(_masked);
-			}
-
-			return _fin;
-		}
-
-		bool write(string _in){
-			int _len = _in.length();
-
-			if (!this->is_open()) {
-				return false;
-			}
-			(* this) << (unsigned char) 0x81;
-			if (_len > 65535) {
-				(* this) << (unsigned char) 0x7F;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
-				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
-				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
-				(* this) << ((unsigned char) (_len & 0xFF));
-			}
-			else if (_len > 125) {
-				(* this) << (unsigned char) 0x7E;
-				(* this) << ((unsigned char) (_len >> 8));
-				(* this) << ((unsigned char) (_len & 0xFF));
-			}
-			else {
-				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
-			}
-
-			(* this) << _in << std::flush;
-			return true;
-		}
-	};
-
-	class websocketstream : public basic_socketstream<char> {
-	public:
-		websocketstream(int _socket) : basic_socketstream<char>(_socket) {
-		};
-		virtual ~websocketstream() {
-		}
-
-		bool handshake() {
-			string _key;
-			string _line;
-			do {
-				std::getline((* this), _line);
-				zpt::trim(_line);
-				string _header(_line);
-				std::transform(_header.begin(), _header.end(), _header.begin(), ::tolower);
-				if (_header.find("sec-websocket-key:") != std::string::npos) {
-					_key.assign(_line.substr(19));
-				}
-			}
-			while (_line != "");
-
-			_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-			string _sha1 = zpt::hash::SHA1(_key);
-			zpt::base64::encode(_sha1);
-			_key.assign(_sha1);
-
-			(* this) << 
-			"HTTP/1.1 101 Switching Protocols" << "\r\n" <<
-			"Upgrade: websocket" << CRLF << 
-			"Connection: Upgrade" << CRLF <<
-			"Sec-WebSocket-Accept: " << _key << CRLF <<
-			CRLF << std::flush;
-			return true;
-		}
-
-		bool read(string& _out, int* _op_code) {
-			unsigned char _hdr;
-			(* this) >> noskipws >> _hdr;
-
-			bool _fin = _hdr & 0x80;
-			*_op_code = _hdr & 0x0F;
-			(* this) >> noskipws >> _hdr;
-			bool _mask = _hdr & 0x80;
-			string _masking;
-			string _masked;
-
-			int _len = _hdr & 0x7F;
-			if (_len == 126) {
-				(* this) >> noskipws >> _hdr;
-				_len = (int) _hdr;
-				_len <<= 8;
-				(* this) >> noskipws >> _hdr;
-				_len += (int) _hdr;
-			}
-			else if (_len == 127) {
-				(* this) >> noskipws >> _hdr;
-				_len = (int) _hdr;
-				for (int _i = 0; _i < 7; _i++) {
-					_len <<= 8;
-					(* this) >> noskipws >> _hdr;
-					_len += (int) _hdr;
-				}
-			}
-
-			if (_mask) {
-				for (int _i = 0; _i < 4; _i++) {
-					(* this) >> noskipws >> _hdr;
-					_masking.push_back((char) _hdr);
-				}
-			}
-
-
-			for (int _i = 0; _i != _len; _i++) {
-				(* this) >> noskipws >> _hdr;
-				_masked.push_back((char) _hdr);
-			}
-
-			if (_mask) {
-				for (size_t _i = 0; _i < _masked.length(); _i++) {
-					_out.push_back(_masked[_i] ^ _masking[_i % 4]);
-				}
-			}
-			else {
-				_out.assign(_masked);
-			}
-
-			return _fin;
-		}
-
-		bool write(string _in, bool _masked = false){
-			int _len = _in.length();
-
-			if (!this->is_open()) {
-				return false;
-			}
-			(* this) << (unsigned char) 0x81;
-			if (_len > 65535) {
-				(* this) << (unsigned char) 0x7F;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << (unsigned char) 0x00;
-				(* this) << ((unsigned char) ((_len >> 24) & 0xFF));
-				(* this) << ((unsigned char) ((_len >> 16) & 0xFF));
-				(* this) << ((unsigned char) ((_len >> 8) & 0xFF));
-				(* this) << ((unsigned char) (_len & 0xFF));
-			}
-			else if (_len > 125) {
-				(* this) << (unsigned char) 0x7E;
-				(* this) << ((unsigned char) (_len >> 8));
-				(* this) << ((unsigned char) (_len & 0xFF));
-			}
-			else {
-				(* this) << (unsigned char) (0x80 | ((unsigned char) _len));
-			}
-
-			if (_masked) {
-				for (int _i = 0; _i != 4; _i++) {
-					(* this) << (unsigned char) 0x00;
-				}		
-			}
-
-			(* this) << _in << std::flush;
-			return true;
-		}
-	};	
-
-	typedef std::shared_ptr< zpt::websocketstream > websocketstream_ptr;
-	typedef std::shared_ptr< zpt::websocketserverstream > websocketserverstream_ptr;
 
 }

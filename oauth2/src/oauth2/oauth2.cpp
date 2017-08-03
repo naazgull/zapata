@@ -253,6 +253,35 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 	assertz(false, "\"response_type\" not valid", 400, 0);
 }
 
+auto zpt::authenticator::OAuth2::authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json {
+	std::string _access_token = zpt::authenticator::extract(_envelope);
+	zpt::json _identity = this->get_token(_access_token);
+	assertz(_identity["client_id"]->is_string(), "associated token isn't a valid token", 401, 0);
+	assertz(_identity["permissions"]->is_string(), "associated token isn't a valid token", 401, 0);
+	assertz(this->validate_roles_permissions(_envelope, _topic, _identity["permissions"]), "token didn't provide the necessary permissions", 403, 1);
+		
+	bool _role_found = !_roles_needed->is_array();
+	if (_roles_needed->is_array()) {
+		_role_found = _role_found || (std::find(std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), zpt::json::string("self")) != std::end(_roles_needed->arr()));
+		_role_found = _role_found || (std::find(std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), _identity["client_id"]) != std::end(_roles_needed->arr()));
+		if (_identity["owner_id"]->is_string() && std::string(_identity["owner_id"]).length() != 0) {
+			_role_found = _role_found || (std::find(std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), zpt::json::string("me")) != std::end(_roles_needed->arr()));
+			_role_found = _role_found || (std::find(std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), _identity["owner_id"]) != std::end(_roles_needed->arr()));
+		}
+
+		if (!_role_found && _identity["roles"]->is_array()) {
+			for (auto _role : _identity["roles"]->arr()) {
+				_role_found = _role_found || (std::find(std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), _role) != std::end(_roles_needed->arr()));
+				if (_role_found) {
+					break;
+				}
+			}
+		}
+	}
+	assertz(_role_found, "token didn't provide the necessary roles", 401, 0);
+	return _identity;
+}
+
 auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json {
 	std::string _param;
 	if (_performative == zpt::ev::Post) {
@@ -330,3 +359,24 @@ auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 	
 	return _token + this->get_roles_permissions(_token);
 }
+
+auto zpt::authenticator::extract(zpt::json _envelope) -> std::string {
+	if (_envelope["headers"]["Authorization"]->ok()) {
+		return std::string(zpt::split(_envelope["headers"]["Authorization"], " ")[1]);
+	}
+	if (_envelope["payload"]["access_token"]->ok()) {
+		std::string _param(_envelope["payload"]["access_token"]);
+		zpt::url::decode(_param);
+		return _param;
+	}
+	if (_envelope["params"]["access_token"]->ok()) {
+		std::string _param(_envelope["params"]["access_token"]);
+		zpt::url::decode(_param);
+		return _param;
+	}
+	if (_envelope["headers"]["Cookie"]->ok()) {
+		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
+	}
+	return "";
+}
+

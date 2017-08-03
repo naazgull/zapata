@@ -162,6 +162,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex& = 0;
 		virtual auto out_mtx() -> std::mutex& = 0;
 		virtual auto type() -> short int = 0;
+		virtual auto protocol() -> std::string = 0;
 		
 	private:
 		zpt::json __options;
@@ -189,6 +190,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -207,6 +209,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -225,6 +228,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -244,6 +248,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		virtual void subscribe(std::string _prefix);
 		
@@ -267,6 +272,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -287,6 +293,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		virtual void subscribe(std::string _prefix);
 		
@@ -308,6 +315,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -328,6 +336,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -346,6 +355,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -368,6 +378,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -393,6 +404,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -414,12 +426,13 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 		virtual auto close() -> void;
 		virtual auto available() -> bool;
 		
 	private:
-		zmq::socket_ptr __socket;
 		zpt::socketstream_ptr __underlying;
+		short __state;
 	};
 
 	namespace net {
@@ -430,7 +443,8 @@ namespace zpt {
 	namespace rest {
 		auto http2zmq(zpt::http::req _request) -> zpt::json;
 		auto http2zmq(zpt::http::rep _reply) -> zpt::json;
-		auto zmq2http(zpt::json _out) -> zpt::HTTPRep;
+		auto zmq2http_rep(zpt::json _out) -> zpt::http::rep;
+		auto zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::req;
 
 		namespace http {
 			zpt::json deserialize(std::string _body);

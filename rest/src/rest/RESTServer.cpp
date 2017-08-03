@@ -263,10 +263,11 @@ void zpt::RESTServer::start() {
 	try {
 		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
-			this->credentials(this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]));
+			zpt::json _credentials = this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]);
+			this->credentials(_credentials);
 		}
 
-		if (std::string(this->__options["mqtt_register"]) != "off" && (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok()))) {
+		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
 			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
 			if (!_uri["port"]->ok()) {
 				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
@@ -320,11 +321,12 @@ void zpt::RESTServer::start() {
 					}
 					zlog(std::string("starting HTTP listener for ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
+					bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
 					for (; true; ) {
 						int _fd = -1;
 						_ss->accept(& _fd);
 						if (_fd >= 0) {
-							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd));
+							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd, _is_ssl));
 							this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
 						}
 						else {
@@ -386,8 +388,9 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	if (_data->__message["params"]->ok()) {
 		_envelope << "params" << _data->__message["params"];
 	}
+	_envelope << "protocol" << this->__mqtt->protocol();
 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
-	zverbose(_envelope);
+	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 	try {
 		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
 	}
@@ -396,8 +399,8 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 }
 
 auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {
-	ztrace(std::string("MQTT ") + _topic);
-	zverbose(_payload);
+	ztrace(std::string("> PUBLISH ") + _topic);
+	zverbose(std::string("PUBLISH \033[1;35m") + _topic + std::string("\033[0m MQTT/3.1\n\n") + zpt::json::pretty(_payload));
 	this->__mqtt->publish(_topic, _payload);
 }
 
@@ -407,64 +410,6 @@ auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 		for (auto _t : _topics->arr()) {
 			this->__mqtt->subscribe(_t->str());
 		}
-	}
-}
-
-zpt::RESTClientPtr::RESTClientPtr(zpt::json _options) : std::shared_ptr<zpt::RESTClient>(new zpt::RESTClient(_options)) {
-}
-
-zpt::RESTClientPtr::RESTClientPtr(zpt::RESTClient * _ptr) : std::shared_ptr<zpt::RESTClient>(_ptr) {
-}
-
-zpt::RESTClientPtr::~RESTClientPtr() {
-}
-
-zpt::rest::client zpt::RESTClientPtr::launch(int argc, char* argv[]) {
-	zpt::json _options = zpt::conf::rest::init(argc, argv)->obj()->begin()->second;
-	if (!_options["rest"]->ok() || !_options["zmq"]->ok()) {
-		std::cout << "unable to start client: unsufficient configurations" << endl << flush;
-		exit(-10);
-	}
-	zpt::conf::setup(_options);
-	zpt::rest::client _client(_options);
-	return _client;
-}
-
-zpt::RESTClient::RESTClient(zpt::json _options) : __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options) {
-	((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
-}
-
-zpt::RESTClient::~RESTClient(){
-}
-
-zpt::poll zpt::RESTClient::poll() {
-	return this->__poll;
-}
-
-zpt::ev::emitter zpt::RESTClient::events() {
-	return this->__emitter;
-}
-
-zpt::json zpt::RESTClient::options() {
-	return this->__options;
-}
-
-zpt::socket_ref zpt::RESTClient::bind(std::string _object_path) {
-	zpt::json _zmq_cnf = this->__options->getPath(_object_path);
-	short _type = zpt::str2type(_zmq_cnf["type"]->str());
-	return this->bind(_type, _zmq_cnf["bind"]->str());
-}
-
-zpt::socket_ref zpt::RESTClient::bind(short _type, std::string _connection) {
-	return this->__poll->add(_type, _connection);
-}
-
-void zpt::RESTClient::start() {
-	try {
-		this->__poll->loop();
-	}
-	catch (zpt::InterruptedException& e) {
-		return;
 	}
 }
 

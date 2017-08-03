@@ -148,6 +148,7 @@ namespace zpt {
 		// virtual auto start() -> void;
 		// virtual auto loop() -> void;
 
+		virtual auto id() -> std::string;
 		virtual auto uri(size_t _idx) -> zpt::json;
 		virtual auto uri(std::string _uris) -> void;
 		virtual auto detach() -> void;
@@ -164,6 +165,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 		
 	private:
 #if defined(ZPT_USE_MOSQUITTO)

@@ -404,3 +404,122 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> v
 extern "C" auto zpt_events() -> int {
 	return 1;
 }
+
+auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
+	std::string _protocol = (_envelope["protocol"]->ok() ? std::string(_envelope["protocol"]) : "ZPT/1.0");
+	std::string _ret;
+	if (_envelope["status"]->ok()) {
+		std::string _color;
+		if (int(_envelope["status"]) < 300) {
+			_color.assign("32");
+		}
+		else if (int(_envelope["status"]) < 400) {
+			_color.assign("33");
+		}
+		else {
+			_color.assign("31");
+		}
+		_ret += _protocol + std::string(" \033[1;") + _color + std::string("m") + std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\033[0m\n"); 
+	}
+	else {
+		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" \033[1;35m") + _envelope["resource"]->str() + std::string("\033[0m");
+		if (_envelope["params"]->is_object()) {
+			_ret += std::string("?");
+			bool _first = true;
+			for (auto _param : _envelope["params"]->obj()) {
+				if (!_first) {
+					_ret += std::string("&");
+				}
+				_first = false;
+				_ret += _param.first + std::string("=") + std::string(_param.second);
+			}
+		}
+		_ret += std::string(" ") + _protocol + std::string("\n"); 
+	}
+	if (_envelope["headers"]->ok()) {
+		for (auto _header : _envelope["headers"]->obj()) {
+			_ret += _header.first + std::string(": ") + std::string(_header.second) + std::string("\n");
+		}
+	}
+	_ret += std::string("\n");
+	if (_envelope["payload"]->ok() && !_envelope["payload"]->empty()) {
+		_ret += zpt::json::pretty(_envelope["payload"]);
+	}
+	return _ret;
+}
+
+namespace zpt {
+	const char* status_names[] = { nullptr,
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "100 Continue ",
+				       "101 Switching Protocols ",
+				       "102 Processing ",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "200 OK ",
+				       "201 Created ",
+				       "202 Accepted ",
+				       "203 Non-Authoritative Information ",
+				       "204 No Content ",
+				       "205 Reset Content ",
+				       "206 Partial Content ",
+				       "207 Multi-Status ",
+				       "208 Already Reported ",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "226 IM Used ",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "300 Multiple Choices ",
+				       "301 Moved Permanently ",
+				       "302 Found ",
+				       "303 See Other ",
+				       "304 Not Modified ",
+				       "305 Use Proxy ",
+				       "306 (Unused) ",
+				       "307 Temporary Redirect ",
+				       "308 Permanent Redirect ",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "400 Bad Request ",
+				       "401 Unauthorized ",
+				       "402 Payment Required ",
+				       "403 Forbidden ",
+				       "404 Not Found ",
+				       "405 Method Not Allowed ",
+				       "406 Not Acceptable ",
+				       "407 Proxy Authentication Required ",
+				       "408 Request Timeout ",
+				       "409 Conflict ",
+				       "410 Gone ",
+				       "411 Length Required ",
+				       "412 Precondition Failed ",
+				       "413 Payload Too Large ",
+				       "414 URI Too Long ",
+				       "415 Unsupported Media Type ",
+				       "416 Requested Range Not Satisfiable ",
+				       "417 Expectation Failed ",
+				       nullptr, nullptr, nullptr, nullptr,
+				       "422 Unprocessable Entity ",
+				       "423 Locked ",
+				       "424 Failed Dependency ",
+				       "425 Unassigned ",
+				       "426 Upgrade Required ",
+				       "427 Unassigned ",
+				       "428 Precondition Required ",
+				       "429 Too Many Requests ",
+				       "430 Unassigned ",
+				       "431 Request Header Fields Too Large ",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "451 Unavailable For Legal Reasons",
+				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+				       "500 Internal Server Error ",
+				       "501 Not Implemented ",
+				       "502 Bad Gateway ",
+				       "503 Service Unavailable ",
+				       "504 Gateway Timeout ",
+				       "505 HTTP Version Not Supported ",
+				       "506 Variant Also Negotiates (Experimental) ",
+				       "507 Insufficient Storage ",
+				       "508 Loop Detected ",
+				       "509 Unassigned ",
+				       "510 Not Extended ",
+				       "511 Network Authentication Required ",
+	};
+}

@@ -71,8 +71,6 @@ namespace zpt {
 		typedef std::map< std::string, std::vector< std::pair<std::regex, zpt::ev::handlers > > > HandlerStack;
 
 		extern zpt::rest::emitter* __emitter;
-
-		auto pretty(zpt::json _envelope, std::string _protocol) -> std::string;
 	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
@@ -136,26 +134,6 @@ namespace zpt {
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 
-	class RESTClient {
-	public:
-		RESTClient(zpt::json _options);
-		virtual ~RESTClient();
-
-		virtual void start();
-
-		virtual zpt::json options();
-		virtual zpt::poll poll();
-		virtual zpt::ev::emitter events();
-
-		virtual zpt::socket_ref bind(short _type, std::string _connection);
-		virtual zpt::socket_ref bind(std::string _object_path);
-
-	private:
-		zpt::ev::emitter __emitter;
-		zpt::poll __poll;
-		zpt::json __options;
-	};
-
 	class RESTThreadContext : public zpt::ThreadContext {
 	public:
 		//PyGILState_STATE python_state;
@@ -179,6 +157,7 @@ namespace zpt {
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback) -> void;
 		virtual auto sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 		virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
 

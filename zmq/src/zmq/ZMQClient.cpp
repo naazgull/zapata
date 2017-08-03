@@ -31,6 +31,9 @@ SOFTWARE.
 #include <arpa/inet.h>
 #include <iomanip>
 
+#define HTTP_REP 0
+#define HTTP_REQ 1
+
 namespace zpt {
 	zmq::context_t __context(1);
 }
@@ -142,7 +145,7 @@ auto zpt::ZMQ::recv() -> zpt::json {
 		try {
 			zpt::json _envelope(_raw);
 			ztrace(std::string("< ") + _directive);
-			zverbose(zpt::json::pretty(_envelope));
+			zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
@@ -175,6 +178,7 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
 	"resource" << _uri["path"] <<
+	"protocol" << this->protocol() <<
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
@@ -202,7 +206,7 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
 	ztrace(std::string("> ") + _directive);
-	zverbose(zpt::json::pretty(_envelope));
+	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -290,6 +294,10 @@ auto zpt::ZMQReq::type() -> short int {
 	return ZMQ_REQ;
 }
 
+auto zpt::ZMQReq::protocol() -> std::string {
+	return "ZMQ-REQ/4.1";
+}
+
 zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
 	// this->__socket->setsockopt(ZMQ_RCVTIMEO, 10000);
@@ -368,6 +376,10 @@ auto zpt::ZMQRep::out_mtx() -> std::mutex& {
 
 auto zpt::ZMQRep::type() -> short int {
 	return ZMQ_REP;
+}
+
+auto zpt::ZMQRep::protocol() -> std::string {
+	return "ZMQ-REP/4.1";
 }
 
 zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket_sub(nullptr), __socket_pub(nullptr) {
@@ -489,6 +501,10 @@ auto zpt::ZMQXPubXSub::out_mtx() -> std::mutex& {
 
 auto zpt::ZMQXPubXSub::type() -> short int {
 	return ZMQ_XPUB_XSUB;
+}
+
+auto zpt::ZMQXPubXSub::protocol() -> std::string {
+	return "ZMQ-XPUB-XSUB/4.1";
 }
 
 zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket_sub(nullptr), __socket_pub(nullptr) {
@@ -613,6 +629,10 @@ auto zpt::ZMQPubSub::type() -> short int {
 	return ZMQ_PUB_SUB;
 }
 
+auto zpt::ZMQPubSub::protocol() -> std::string {
+	return "ZMQ-PUB-SUB/4.1";
+}
+
 void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 	std::lock_guard< std::mutex > _lock(this->in_mtx());
 	for (size_t _p = 0; _p != 8; _p++) {
@@ -699,6 +719,10 @@ auto zpt::ZMQPub::type() -> short int {
 	return ZMQ_PUB;
 }
 
+auto zpt::ZMQPub::protocol() -> std::string {
+	return "ZMQ-PUB/4.1";
+}
+
 auto zpt::ZMQPub::recv() -> zpt::json {
 	return zpt::undefined;
 }
@@ -780,6 +804,10 @@ auto zpt::ZMQSub::out_mtx() -> std::mutex& {
 
 auto zpt::ZMQSub::type() -> short int {
 	return ZMQ_SUB;
+}
+
+auto zpt::ZMQSub::protocol() -> std::string {
+	return "ZMQ-SUB/4.1";
 }
 
 auto zpt::ZMQSub::send(zpt::json _envelope) -> zpt::json {
@@ -874,6 +902,10 @@ auto zpt::ZMQPush::type() -> short int {
 	return ZMQ_PUSH;
 }
 
+auto zpt::ZMQPush::protocol() -> std::string {
+	return "ZMQ-PUSH/4.1";
+}
+
 auto zpt::ZMQPush::recv() -> zpt::json {
 	return zpt::undefined;
 }
@@ -955,6 +987,10 @@ auto zpt::ZMQPull::out_mtx() -> std::mutex& {
 
 auto zpt::ZMQPull::type() -> short int {
 	return ZMQ_PULL;
+}
+
+auto zpt::ZMQPull::protocol() -> std::string {
+	return "ZMQ-PULL/4.1";
 }
 
 auto zpt::ZMQPull::send(zpt::json _envelope) -> zpt::json {
@@ -1092,6 +1128,10 @@ auto zpt::ZMQRouterDealer::type() -> short int {
 	return ZMQ_ROUTER_DEALER;
 }
 
+auto zpt::ZMQRouterDealer::protocol() -> std::string {
+	return "ZMQ-ROUTER-DEALER/4.1";
+}
+
 zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
 	this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_ROUTER));
 	this->uri(_connection);
@@ -1171,6 +1211,10 @@ auto zpt::ZMQRouter::type() -> short int {
 	return ZMQ_ROUTER;
 }
 
+auto zpt::ZMQRouter::protocol() -> std::string {
+	return "ZMQ-ROUTER/4.1";
+}
+
 auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	std::string _uuid;
 	zmq::message_t* _frame1 = nullptr;
@@ -1191,6 +1235,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
 	"resource" << _uri["path"] <<
+	"protocol" << this->protocol() <<
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
@@ -1223,7 +1268,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
 	ztrace(std::string("> ") + _directive);
-	zverbose(zpt::json::pretty(_envelope));
+	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -1272,7 +1317,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 				}
 				this->__sock_id.insert(std::make_pair(_uuid, _frame1));}
 			ztrace(std::string("< ") + _directive);
-			zverbose(zpt::json::pretty(_envelope));
+			zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 			
 			return _envelope;
 		}
@@ -1369,6 +1414,10 @@ auto zpt::ZMQDealer::type() -> short int {
 	return ZMQ_DEALER;
 }
 
+auto zpt::ZMQDealer::protocol() -> std::string {
+	return "ZMQ-DEALER/4.1";
+}
+
 auto zpt::ZMQDealer::send(zpt::json _envelope) -> zpt::json {
 	zpt::ZMQ::send(_envelope);
 	return this->recv();
@@ -1378,7 +1427,7 @@ auto zpt::ZMQDealer::recv() -> zpt::json {
 	return zpt::ZMQ::recv();
 }
 
-zpt::ZMQHttp::ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options) : zpt::ZMQ("http://*:*", _options), __underlying(_underlying) {
+zpt::ZMQHttp::ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options) : zpt::ZMQ("http://*:*", _options), __underlying(_underlying), __state(-1) {
 }
 
 zpt::ZMQHttp::~ZMQHttp() {
@@ -1422,31 +1471,44 @@ auto zpt::ZMQHttp::type() -> short int {
 	return ZMQ_HTTP_RAW;
 }
 
+auto zpt::ZMQHttp::protocol() -> std::string {
+	return "HTTP/1.1";
+}
+
 auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
+	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+
+	assertz((_performative == zpt::ev::Reply && this->__state == HTTP_REQ) || (_performative != zpt::ev::Reply && this->__state != HTTP_REQ), "HTTP socket state doesn't allow you to send a reply without having received a request", 400, 1201);
 	assertz(_envelope["resource"]->ok(), "'resource' attribute is required", 412, 0);
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
 	"resource" << _uri["path"] <<
+	"protocol" << this->protocol() << 
 	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 	
-	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
 	}
-	// if (_envelope["headers"]["Connection"] != zpt::json::string("keep-alive")) {
-	// 	_envelope["headers"] << "Connection" << "close";
-	// }
 	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
 		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
 	}
-	std::string _reply = std::string(zpt::rest::zmq2http(_envelope));
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->out_mtx());
-			(*this->__underlying) << _reply << flush; }
+			std::string _message;
+			if (_performative == zpt::ev::Reply) {
+				_message.assign(std::string(zpt::rest::zmq2http_rep(_envelope)));
+				this->__state = HTTP_REP;
+			}
+			else {
+				_message.assign(std::string(zpt::rest::zmq2http_req(_envelope, this->__underlying->host() + std::string(":") + std::to_string(this->__underlying->port()))));
+				this->__state = HTTP_REQ;
+			}
+			(*this->__underlying) << _message << flush; }
+
 		ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"]) : std::string("")));
-		zverbose(_reply);
+		zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
 	}
 	catch (std::ios_base::failure& _e) {}
 	catch (std::exception& _e) {}
@@ -1454,31 +1516,41 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 }
 
 auto zpt::ZMQHttp::recv() -> zpt::json {
-	zpt::http::req _request;
+	zpt::json _in;
 	try {
 		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
-			(*this->__underlying) >> _request;
-			bool _blank_space = false;
-			do {
-				char _c = 0;
-				int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK | MSG_DONTWAIT);
-				if (_read > 0 && ((int) _c) < 33) {
-					::recv(this->fd(), &_c, 1, 0);
-					_blank_space = true;
-					continue;
-				}
-				_blank_space = false;
+			if (this->__state != HTTP_REQ) {
+				zpt::http::req _request;
+				(*this->__underlying) >> _request;
+				this->__state = HTTP_REQ;
+				_in = zpt::rest::http2zmq(_request);
 			}
-			while(_blank_space);
+			else {
+				zpt::http::rep _reply;
+				(*this->__underlying) >> _reply;
+				this->__state = HTTP_REP;
+				_in = zpt::rest::http2zmq(_reply);
+			}
+			// bool _blank_space = false;
+			// do {
+			// 	char _c = 0;
+			// 	int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK | MSG_DONTWAIT);
+			// 	if (_read > 0 && ((int) _c) < 33) {
+			// 		::recv(this->fd(), &_c, 1, 0);
+			// 		_blank_space = true;
+			// 		continue;
+			// 	}
+			// 	_blank_space = false;
+			// }
+			// while(_blank_space);
 		}
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
 		return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
-	}	
-	zpt::json _in = zpt::rest::http2zmq(_request);
+	}
 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
-	zverbose(_in);
+	zverbose(std::string("\n") + zpt::ev::pretty(_in));
 	return _in;
 }
 
@@ -1517,8 +1589,11 @@ auto zpt::str2type(std::string _type) -> short {
 	if (_type == "PULL"){
 		return ZMQ_PULL;
 	}
-	if (_type == "HTTP"){
+	if (_type == "HTTP" || _type == "HTTPS"){
 		return ZMQ_HTTP_RAW;
+	}
+	if (_type == "MQTT" || _type == "MQTTS"){
+		return ZMQ_MQTT_RAW;
 	}
 	return -20;
 }
@@ -1560,6 +1635,9 @@ auto zpt::type2str(short _type) -> std::string {
 		}
 		case ZMQ_HTTP_RAW : {
 			return "HTTP";
+		}
+		case ZMQ_MQTT_RAW : {
+			return "MQTT";
 		}
 	}
 	return "UNKNOWN_SOCKET_TYPE";
@@ -1637,9 +1715,6 @@ auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 			_payload = { "text", _request->body() };
 		}
 	}
-	// else {
-	// 	_payload = zpt::json::object();
-	// }
 	_return << "payload" << _payload;
 
 	if (_request->params().size() != 0) {
@@ -1687,9 +1762,6 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 			_payload = { "text", _reply->body() };
 		}
 	}
-	// else {
-	// 	_payload = zpt::json::object();
-	// }
 	_return << "payload" << _payload;
 
 	zpt::json _headers = zpt::json::object();
@@ -1703,7 +1775,7 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 	return _return;
 }
 
-auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
+auto zpt::rest::zmq2http_rep(zpt::json _out) -> zpt::http::rep {
 	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	
@@ -1734,6 +1806,42 @@ auto zpt::rest::zmq2http(zpt::json _out) -> zpt::http::rep {
 			else {
 				_return->header("Content-Length", "0");
 			}
+		}
+		else {
+			_return->header("Content-Length", "0");
+		}
+	}	
+	return _return;
+}
+
+auto zpt::rest::zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::req {
+	zpt::http::req _return;
+	_return->method(zpt::ev::performative(int(_out["performative"])));
+	_return->url(std::string(_out["resource"]));
+	
+	_return->header("Host", _host);
+	if (_out["headers"]->is_object()) {;
+		for (auto _header : _out["headers"]->obj()) {
+			_return->header(_header.first, ((std::string) _header.second));
+		}
+	}	
+	if (_out["channel"]->ok()) {
+		_return->header("X-Cid", std::string(_out["channel"]));
+	}
+
+	if(_out["params"]->is_object()) {
+		for (auto _param : _out["params"]->obj()) {
+			_return->param(_param.first, ((std::string) _param.second));
+		}
+	}
+
+	if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) || (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {
+		std::string _body = std::string(_out["payload"]);
+		zpt::trim(_body);
+		if (_body.length() != 0) {
+			_return->header("Content-Type", "application/json");
+			_return->header("Content-Length", std::to_string(_body.length()));
+			_return->body(_body);
 		}
 		else {
 			_return->header("Content-Length", "0");

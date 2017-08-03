@@ -40,6 +40,7 @@ using namespace __gnu_cxx;
 #define REST_ACCESS_CONTROL_HEADERS "X-Cid,X-Status,X-No-Redirection,X-Redirect-To,Authorization,Accept,Accept-Language,Cache-Control,Connection,Content-Length,Content-Type,Cookie,Date,Expires,Location,Origin,Server,X-Requested-With,X-Replied-With,Pragma,Cache-Control,E-Tag"
 
 namespace zpt {
+	extern const char* status_names[];
 
 	class EventEmitter;
 	class EventListener;
@@ -85,6 +86,7 @@ namespace zpt {
 		auto init_request(std::string _cid = "") -> zpt::json;
 		auto init_reply(std::string _cid = "", zpt::json _request = zpt::undefined) -> zpt::json;
 
+		auto pretty(zpt::json _envelope) -> std::string;
 	}
 
 	namespace thread {
@@ -222,6 +224,7 @@ namespace zpt {
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void = 0;
+		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback) -> void = 0;
 		virtual auto sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 		virtual auto reply(zpt::json _request, zpt::json _reply) -> void = 0;
 

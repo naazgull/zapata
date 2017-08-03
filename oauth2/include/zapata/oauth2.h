@@ -38,6 +38,8 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 	namespace authenticator {
+
+		auto extract(zpt::json _envelope) -> std::string;
 		
 		class OAuth2 {
 		public:
@@ -48,6 +50,7 @@ namespace zpt {
 			virtual auto name() -> std::string;
 
 			virtual auto authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+			virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json;
 			virtual auto token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 			virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 			virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
@@ -61,6 +64,7 @@ namespace zpt {
 			virtual auto get_token(std::string _access_token) -> zpt::json = 0;
 			virtual auto get_refresh_token(std::string _refresh_token) -> zpt::json = 0;
 			virtual auto get_roles_permissions(zpt::json _token) -> zpt::json = 0;
+			virtual auto validate_roles_permissions(zpt::json _envelope, std::string _topic, zpt::json _permissions) -> bool = 0;
 			virtual auto remove_token(zpt::json _token) -> void = 0;
 			
 		private:

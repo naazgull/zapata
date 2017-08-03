@@ -380,6 +380,10 @@ auto zpt::MQTT::callback::delivery_complete(::mqtt::delivery_token_ptr token) ->
 
 #endif	       
 
+auto zpt::MQTT::id() -> std::string {
+	return "__mqtt_connection__";
+}
+
 auto zpt::MQTT::uri(size_t _idx) -> zpt::json {
 	return zpt::undefined;
 }
@@ -459,6 +463,9 @@ auto zpt::MQTT::type() -> short int {
 	return ZMQ_MQTT_RAW;
 }
 
+auto zpt::MQTT::protocol() -> std::string {
+	return "MQTT/3.1";
+}
 
 extern "C" auto zpt_mqtt() -> int {
 	return 1;

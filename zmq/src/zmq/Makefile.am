@@ -6,7 +6,6 @@ libzapata_zmq_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_zmq_la_SOURCES = \
 ./SocketStreams.cpp \
-./SSLSocketStreams.cpp \
 ./WebSocket.cpp \
 ./ZMQPoll.cpp \
 ./ZMQClient.cpp
