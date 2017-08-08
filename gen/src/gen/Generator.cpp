@@ -177,23 +177,27 @@ auto zpt::Generator::build() -> void {
 }
 
 auto zpt::Generator::build_docs() -> void {
+	std::string _to_pdf_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/CONTAINER.md");
+	std::string _apiary_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/APIARY.md");
+	std::string _proj_name = std::string (this->__options["abbr"]);
+	std::transform(_proj_name.begin(), _proj_name.end(), _proj_name.begin(), ::toupper);
+	std::string _doc = std::string("% ") + zpt::r_replace(zpt::r_replace(_proj_name, "-", " "), "_", " ") + std::string(" CONTAINER\n\n");
+	std::string _apiary = std::string("FORMAT: 1A\nHOST: https://api.something.something/\n\n# ") + _proj_name + std::string(" CONTAINER\n\n");
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
 		std::string _name = std::string(_spec["name"]);
 		std::string _md_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + _name + std::string("/README.md");
-		std::string _to_pdf_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + _name + std::string("/CONTAINER.md");
-		std::string _apiary_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + _name + std::string("/APIARY.md");
 		std::transform(_name.begin(), _name.end(), _name.begin(), ::toupper);
-		std::string _readme = std::string("# ") + _name + std::string(" CONTAINER\n\n") + std::string(_spec["description"]) + std::string("\n\n");
-		std::string _doc = std::string("# ") + _name + std::string(" CONTAINER\n\n") + std::string(_spec["description"]) + std::string("\n\n");
-		std::string _apiary = std::string("FORMAT: 1A\nHOST: https://api.something.something/\n\n# ") + _name + std::string(" CONTAINER\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		std::string _readme = std::string("# ") + _name + std::string(" API INDEX\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		_doc += std::string("# ") + _name + std::string(" API REFERENCE\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		_apiary += std::string("# Group ") + _name + std::string(" API\n\n") + std::string(_spec["description"]) + std::string("\n\n");
 
 		_readme += std::string("## ENDPOINTS\n\n");
 		_doc += std::string("## ENDPOINTS\n\n");
 		if (_spec["resources"]->type() == zpt::JSArray) {		
 			for (auto _resource : _spec["resources"]->arr()) {
-				_readme += std::string("- **") + std::string(_resource["topic"]) + std::string("' ") + std::string(_resource["type"]) + std::string("**: ");
-				_readme += std::string(_resource["description"]) + std::string("\n");
+				_readme += std::string("- **'") + std::string(_resource["topic"]) + std::string("' ") + std::string(_resource["type"]) + std::string("**: ");
+				_readme += zpt::r_replace(std::string(_resource["description"]), "\n", " ") + std::string("\n");
 
 				_doc += std::string("### '") + std::string(_resource["topic"]) + std::string("' ") + std::string(_resource["type"]) + std::string("\n\n");
 				_doc += std::string("---\n\n");				
@@ -211,7 +215,7 @@ auto zpt::Generator::build_docs() -> void {
 					std::string _name = std::string(_resource["name"]);
 					std::transform(_perf.begin(), _perf.end(), _perf.begin(), ::toupper);
 					_doc += std::string("#### ") + _perf + std::string(" ") + std::string(_resource["topic"]) + std::string("\n\n");
-					_apiary += std::string("\n### ") + this->generate_title_performative(_resource, _perf) + std::string(" ") + (_resource["type"] == zpt::json::string("document") ? _name.substr(0, _name.length() - 1)  : _name) + std::string(" [") + _perf + std::string("]\n\n");
+					_apiary += std::string("\n### ") + this->generate_title_performative(_resource, _perf) + std::string(" ") + _name + std::string(" [") + _perf + std::string("]\n\n");
 					zpt::json _uri_param = zpt::gen::url_pattern_to_params(_resource["topic"]);
 					if (_uri_param->is_object() && _uri_param->obj()->size() != 0) {
 						_apiary += std::string("+ Parameters\n");
@@ -631,18 +635,18 @@ auto zpt::Generator::build_docs() -> void {
 		_readme += std::string("\n");
 
 		{ std::ofstream _ofs(_md_file.data());
-		_ofs << _readme << endl << flush;
-		_ofs.close();
-		ztrace(std::string("processed ") + _md_file); }
-		{ std::ofstream _ofs(_to_pdf_file.data());
+			_ofs << _readme << endl << flush;
+			_ofs.close();
+			ztrace(std::string("processed ") + _md_file); }
+	}
+	{ std::ofstream _ofs(_to_pdf_file.data());
 		_ofs << _doc << endl << flush;
 		_ofs.close();
 		ztrace(std::string("processed ") + _to_pdf_file); }
-		{ std::ofstream _ofs(_apiary_file.data());
+	{ std::ofstream _ofs(_apiary_file.data());
 		_ofs << _apiary << endl << flush;
 		_ofs.close();
 		ztrace(std::string("processed ") + _apiary_file); }
-	}
 }
 
 auto zpt::Generator::generate_title_performative(zpt::json _resource, std::string _performative) -> std::string {
