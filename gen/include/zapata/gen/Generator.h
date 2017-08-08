@@ -90,6 +90,8 @@ namespace zpt {
 		virtual auto build_container() -> void;
 		virtual auto build_mutations() -> void;
 		virtual auto build_docs() -> void;
+		virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
+		virtual auto generate_title_performative(zpt::json _resource, std::string _performative) -> std::string;
 
 		static auto get_datum(std::string _ref) -> std::string;
 
