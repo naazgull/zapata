@@ -364,8 +364,8 @@ void zpt::RESTServer::start() {
 bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	zpt::json _envelope = zpt::json::object();
 	_envelope << "performative" << int(zpt::ev::Reply);
-	if (!_data->__message["channel"]->ok()) {
-		_envelope << "channel" << _data->__topic;
+	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
+		_envelope << "channel" << zpt::generate::r_uuid();
 	}
 	else {
 		_envelope << "channel" << _data->__message["channel"];
@@ -487,7 +487,7 @@ auto zpt::rest::authorization::deserialize(std::string _token) -> zpt::json {
 
 auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 	if (_envelope["headers"]["Authorization"]->ok()) {
-		return std::string(zpt::split(_envelope["headers"]["Authorization"], " ")[1]);
+		return std::string(zpt::split(std::string(_envelope["headers"]["Authorization"]), " ")[1]);
 	}
 	if (_envelope["payload"]["access_token"]->ok()) {
 		std::string _param(_envelope["payload"]["access_token"]);
@@ -500,7 +500,7 @@ auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 		return _param;
 	}
 	if (_envelope["headers"]["Cookie"]->ok()) {
-		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
+		return std::string(zpt::split(std::string(_envelope["headers"]["Cookie"]), ";")[0]);
 	}
 	return "";
 }
@@ -532,6 +532,9 @@ auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 				case '/' : {
 					if (_state == 0) {
 						if (_regex) {
+							if (_return.back() != '/') {
+								_return.push_back('/');
+							}
 							_return.push_back('+');
 							_regex = false;
 						}
@@ -585,6 +588,9 @@ auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 			}		
 		}
 		if (_regex) {
+			if (_return.back() != '/') {
+				_return.push_back('/');
+			}
 			_return.push_back('#');
 		}
 		_topics << _return;

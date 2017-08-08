@@ -172,7 +172,125 @@ auto zpt::Generator::build() -> void {
 	}
 	if (this->__options["mutations-out-cxx"]->ok() && this->__options["mutations-out-h"]->ok()) {
 		this->build_mutations();
-	}	
+	}
+	this->build_docs();
+}
+
+auto zpt::Generator::build_docs() -> void {
+	for (auto _pair : this->__specs->obj()) {
+		zpt::json _spec = _pair.second;
+		std::string _name = std::string(_spec["name"]);
+		std::string _md_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + _name + std::string("/README.md");
+		std::transform(_name.begin(), _name.end(), _name.begin(), ::toupper);
+		std::string _doc = std::string("# ") + _name + std::string("\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+
+		_doc += std::string("## ENDPOINTS\n\n");
+		if (_spec["resources"]->type() == zpt::JSArray) {		
+			for (auto _resource : _spec["resources"]->arr()) {
+				_doc += std::string("### '") + std::string(_resource["topic"]) + std::string("' ") + std::string(_resource["type"]) + std::string("\n\n");
+				_doc += std::string("(in _") + std::string(_resource["namespace"]) + std::string("_)\n\n");
+				_doc += std::string(_resource["description"]) + std::string("\n\n");
+				_doc += std::string("#### Allowed protocols:\n\n- ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_resource["protocols"]), "[", ""), "]", ""), "\"", ""), ",", "\n- ") + std::string("\n\n");
+
+				for (auto _p : _resource["performatives"]->arr()) {
+					std::string _perf = std::string(_p);
+					std::transform(_perf.begin(), _perf.end(), _perf.begin(), ::toupper);
+					_doc += std::string("#### ") + _perf + std::string(" ") + std::string(_resource["topic"]) + std::string("\n\n");
+					if (
+						_resource["datum"]->ok() &&
+						(
+							(_resource["type"] == zpt::json::string("collection")) ||
+							(_resource["type"] == zpt::json::string("store")) ||
+							(_resource["type"] == zpt::json::string("document") && (_perf != "DELETE")) ||
+							(_resource["type"] == zpt::json::string("controller"))
+						)
+					) {
+						_doc += std::string(
+							"##### Parameters\n\n"
+							"| PARAM | TYPE | OPTIONS | DESCRIPTON |\n"
+							"|:------|:----:|:-------:|------------|\n"
+						);
+
+						if (_resource["datum"]["name"]->ok()) {
+							auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));							
+							if (_datum != zpt::Generator::datums.end()) {
+								for (auto _field : _datum->second->spec()["fields"]->obj()) {
+									std::string _opts = std::string(_field.second["opts"]);
+							
+									if (_perf == "PATCH" || _perf == "DELETE" || _perf == "HEAD" || _perf == "GET") {
+										_opts = "";
+									}
+									else if (_opts.find("mandatory") != std::string::npos) {
+										_opts = "mandatory";
+									}
+									else {
+										_opts = "";
+									}
+									
+									_doc += std::string("| **") + std::string(_field.first) + std::string("** | ") + std::string(_field.second["type"]) + std::string(" | ") + _opts + std::string(" | ") + std::string(_field.second["description"]) + std::string(" |\n");
+								}
+								_doc += std::string("\n");
+							}
+						}
+						else if (_resource["datum"]["fields"]->ok()) {
+							for (auto _field : _resource["datum"]["fields"]->obj()) {
+								std::string _opts = std::string(_field.second["opts"]);
+							
+								if (_perf == "PATCH" || _perf == "DELETE" || _perf == "HEAD" || _perf == "GET") {
+									_opts = "";
+								}
+								else if (_opts.find("mandatory") != std::string::npos) {
+									_opts = "mandatory";
+								}
+								else {
+									_opts = "";
+								}
+								_doc += std::string("| **") + std::string(_field.first) + std::string("** | ") + std::string(_field.second["type"]) + std::string(" | ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_field.second["opts"]), "[", ""), "]", ""), "\"", ""), ",", ", ") + std::string(" | ") + std::string(_field.second["description"]) + std::string(" |\n");
+							}
+							_doc += std::string("\n");
+						}
+						
+					}
+				}
+
+				_doc += std::string("\n");
+				_doc += std::string("---\n\n");				
+			}
+		}
+
+		_doc += std::string("## DATUMS\n\n");
+		if (_spec["datums"]->type() == zpt::JSArray) {
+			for (auto _datum : _spec["datums"]->arr()) {
+				_doc += std::string("### ") + std::string(_datum["name"]) + std::string("\n\n");
+				_doc += std::string("(in _") + std::string(_datum["namespace"]) + std::string("_)\n\n");
+				_doc += std::string(_datum["description"]) + std::string("\n\n");
+				_doc += std::string("#### Supported DBMS:\n\n- ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_datum["dbms"]), "[", ""), "]", ""), "\"", ""), ",", "\n- ") + std::string("\n\n");
+				_doc += std::string(
+					"#### Fields\n\n"
+					"| FIELD | TYPE | OPTIONS | DESCRIPTON |\n"
+					"|:------|:----:|:-------:|------------|\n"
+					"| **id** | uuid | mandatory, index, primary-key | Primary key and index |\n"
+					"| **href** | uri | mandatory | Record access URI |\n"
+				);
+
+				for (auto _field : _datum["fields"]->obj()) {
+					_doc += std::string("| **") + std::string(_field.first) + std::string("** | ") + std::string(_field.second["type"]) + std::string(" | ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_field.second["opts"]), "[", ""), "]", ""), "\"", ""), ",", ", ") + std::string(" | ") + std::string(_field.second["description"]) + std::string(" |\n");
+				}
+
+				_doc += std::string(
+					"| **created** | timestamp | mandatory, auto | Record creation timestamp |\n"
+					"| **updated** | timstamp | mandatory, auto | Record update timestamp |\n\n"
+				);
+			}
+			_doc += std::string("\n\n");
+			_doc += std::string("---\n\n");				
+		}
+
+		std::ofstream _ofs(_md_file.data());
+		_ofs << _doc << endl << flush;
+		_ofs.close();
+		ztrace(std::string("processed ") + _md_file);
+	}
 }
 
 auto zpt::Generator::build_data_layer() -> void {
@@ -313,16 +431,30 @@ auto zpt::Generator::build_data_layer() -> void {
 				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
 				zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
-			
-				if (_found != zpt::Generator::datums.end()) {
-					zpt::replace(_datum_cxx, "$[datum.relations.get]", _found->second->build_associations_get());
-					zpt::replace(_datum_cxx, "$[datum.relations.query]", _found->second->build_associations_query());
-					zpt::replace(_datum_cxx, "$[datum.relations.insert]", _found->second->build_associations_insert());
-					zpt::replace(_datum_cxx, "$[datum.relations.save]", _found->second->build_associations_save());
-					zpt::replace(_datum_cxx, "$[datum.relations.set]", _found->second->build_associations_set());
-					zpt::replace(_datum_cxx, "$[datum.relations.remove]", _found->second->build_associations_remove());
-				}
 
+				std::string _relation_insert;
+				std::string _relation_replace;
+				std::string _relation_update;
+				std::string _relation_remove;
+				if (_found != zpt::Generator::datums.end()) {
+					for (auto _f : _datum["fields"]->obj()) {
+						if (!_f.second["ref"]->ok()) {
+							continue;
+						}
+						_relation_insert += _found->second->build_associations_for_insert(_f.first, _f.second);
+						_relation_replace += _found->second->build_associations_for_replace(_f.first, _f.second);
+						_relation_update += _found->second->build_associations_for_update(_f.first, _f.second);
+						_relation_remove += _found->second->build_associations_for_remove(_f.first, _f.second);
+					}
+				}
+				zpt::replace(_datum_cxx, "$[datum.relations.insert]", _relation_insert);
+				zpt::replace(_datum_cxx, "$[datum.relations.save]", _relation_replace);
+				zpt::replace(_datum_cxx, "$[datum.relations.set]", _relation_update);
+				zpt::replace(_datum_cxx, "$[datum.relations.remove]", _relation_remove);
+
+
+				zpt::replace(_datum_cxx, "$[datum.method.ordered.clients]", zpt::GenDatum::build_ordered_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace));
+				
 				struct stat _buffer;
 				bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
 				bool _h_exists = stat(_h_file.c_str(), &_buffer) == 0;
@@ -351,6 +483,17 @@ auto zpt::Generator::build_data_layer() -> void {
 }
 
 auto zpt::Generator::build_container() -> void {
+	zpt::mkdir_recursive(std::string(this->__options["resource-out-cxx"][0]) + std::string("/mutations/"));
+	std::string _mutation_cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/mutations/api.cpp");
+	std::string _mutation_am_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/mutations/Makefile.am");
+	std::string _mutation_cxx;
+	std::string _mutation_make_files;
+	std::string _mutation_child_includes;
+	std::string _mutation_registry;
+	std::string _mutation_dyn_link;
+	std::string _mutation_dyn_dir;
+	zpt::json _mutation_dbms = zpt::json::object();
+	zpt::load_path("/usr/share/zapata/gen/MutationsLoad.cpp", _mutation_cxx);
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
 		bool _handlers_built = false;
@@ -379,9 +522,11 @@ auto zpt::Generator::build_container() -> void {
 			std::string _connectors_initialize("{ ");
 			for (auto _dbms : _spec["dbms"]->obj()) {
 				_connectors_initialize += zpt::GenDatum::build_initialization(_dbms.first, std::string(_spec["namespace"]));
+				_mutation_dbms << _dbms.first << _dbms.first;
 			}
 			_connectors_initialize += "}";
 			zpt::replace(_container_cxx, "$[datum.connectors.initialize]", _connectors_initialize);
+			_mutation_registry += std::string("\n_emitter->connector(") + _connectors_initialize + std::string(");\n");
 
 			zpt::replace(_container_cxx, "$[namespace]", std::string(_spec["namespace"]));
 
@@ -414,13 +559,13 @@ auto zpt::Generator::build_container() -> void {
 						if (_include.front() == '/') {
 							_include.erase(0, 1);
 						}
-						_child_includes += std::string("#include <") + _include + std::string(">\n");
+						_mutation_child_includes += std::string("#include <") + _include + std::string(">\n");
 						_h_make_files += std::string("./") + _include + std::string(" \\\n");
 
 						std::string _make_file(std::string("./datums/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
 						_make_files += _make_file;
-						_make_file.assign(std::string("./mutations/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
-						_make_files += _make_file;
+						_make_file.assign(std::string("../") + std::string(_spec["name"]) + std::string("/mutations/") + std::string(_datum["name"]) + std::string(".cpp \\\n"));
+						_mutation_make_files += _make_file;
 						if (_datum["dynlink"]->ok()) {
 							_dyn_link += std::string(_datum["dynlink"]);
 						}
@@ -432,7 +577,7 @@ auto zpt::Generator::build_container() -> void {
 				for (auto _datum : _spec["datums"]->arr()) {
 					if (_datum["name"]->ok()) {
 						std::string _key = std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]);
-						_registry += zpt::Generator::datums.find(_key)->second->build_mutations(std::string(_spec["name"]), _child_includes);
+						_mutation_registry += zpt::Generator::datums.find(_key)->second->build_mutations(std::string(_spec["name"]), _mutation_child_includes);
 					}
 				}
 			}
@@ -587,6 +732,45 @@ auto zpt::Generator::build_container() -> void {
 				ztrace(std::string("processed ") + _py_file);	
 			}
 		}
+	}
+
+	for (auto _dbms : _mutation_dbms->obj()) {
+		_mutation_child_includes += std::string("#include <zapata/") + _dbms.first + std::string(".h>\n");
+		_mutation_dyn_link += std::string(" -lzapata-") + _dbms.first;
+	}
+	
+	zpt::replace(_mutation_cxx, "$[mutations.api.path.h]", _mutation_child_includes);
+	zpt::replace(_mutation_cxx, "$[mutations.handlers.delegate]", _mutation_registry);
+	zpt::replace(_mutation_cxx, "_emitter->connector({ });", "");
+
+	struct stat _buffer;
+	bool _mutation_cxx_exists = stat(_mutation_cxx_file.c_str(), &_buffer) == 0;
+	bool _mutation_am_exists = stat(_mutation_am_file.c_str(), &_buffer) == 0;
+	if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_mutation_cxx_exists)) {
+		std::ofstream _cxx_ofs(_mutation_cxx_file.data());
+		_cxx_ofs << _mutation_cxx << endl << flush;
+		_cxx_ofs.close();
+		ztrace(std::string("processed ") + _mutation_cxx_file);	
+	}
+
+	size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + 1;
+	std::string _parent_dir;
+	for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
+	
+	std::string _make;
+	std::string _lib_escaped = zpt::r_replace(this->__options["name"]->str(), "-", "_") + std::string("_mutations");
+	_make += std::string("lib_LTLIBRARIES = lib") + std::string(this->__options["name"]) + std::string("-mutations.la\n\n");
+	_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest ") + _mutation_dyn_link + std::string("\n");
+	_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _mutation_dyn_dir + std::string("\n");
+	_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
+	_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
+	_make += _mutation_make_files;
+	_make += std::string("./api.cpp\n");
+	if (bool(this->__options["force-makefile"][0]) || (!bool(this->__options["force-makefile"][0]) && !_mutation_am_exists)) {
+		std::ofstream _am_ofs(_mutation_am_file.data());
+		_am_ofs << _make << endl << flush;
+		_am_ofs.close();
+		ztrace(std::string("processed ") + _mutation_am_file);
 	}
 	
 	//ztrace(_handler_cxx);
@@ -821,8 +1005,8 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		zpt::replace(_mutation_h, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 		zpt::replace(_mutation_cxx, "$[mutation.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
 
-		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, this->__options["api_version"], "mutations", "{operation}", this->__spec["name"] } ) }));
-		if (this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
+		zpt::replace(_mutation_cxx, "$[mutation.topic.self.regex]", std::string("std::string(\"") + zpt::gen::url_pattern_to_regexp({ zpt::array, zpt::path::join({ zpt::array, "\") + _emitter->version() + std::string(\"", "mutations", "{operation}", this->__spec["name"] } ) }) + std::string("\")"));
+		if (false && this->__spec["dbms"]->is_array() && this->__spec["dbms"]->arr()->size() > 1) {
 			std::string _mutation;
 			bool _first = true;
 			_mutation.assign(this->build_insert());
@@ -852,7 +1036,9 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 		else {
 			size_t _begin = _mutation_cxx.find("$[mutation.self.handler.begin]");
 			size_t _end = _mutation_cxx.find("$[mutation.self.handler.end]") + 28;
-			_mutation_cxx.erase(_begin, _end - _begin);
+			if (_begin != std::string::npos) {
+				_mutation_cxx.erase(_begin, _end - _begin);
+			}
 		}
 		
 		size_t _begin = _mutation_cxx.find("$[mutation.handler.begin]") + 25;
@@ -879,8 +1065,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 				_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
 				_topic.assign(_other_ref);
 			}
-			_topic = std::string("^/") + std::string(this->__options["api_version"]) + std::string("/mutations/([^/]+)") + zpt::r_replace(_topic, std::string("^/") + std::string(this->__options["api_version"]), "");
-			_topic = zpt::r_replace(_topic, "$", "") + std::string("(.*)$");
+			_topic = std::string("std::string(\"^/\") + _emitter->version() + std::string(\"/mutations/([^/]+)\") + zpt::r_replace(\"") + zpt::r_replace(zpt::r_replace(_topic, "^", ""), "$", "") + std::string("\", std::string(\"/\") + _emitter->version(), \"\") + std::string(\"(.*)$\")");
 			zpt::replace(_mutation_on, "$[mutation.topic.regex]", _topic);
 			
 			std::string _mutation;
@@ -1427,6 +1612,48 @@ auto zpt::GenDatum::build_associations_remove() -> std::string{
 	return _return;
 }
 
+auto zpt::GenDatum::build_associations_for_insert(std::string _name, zpt::json _field) -> std::string {
+	std::string _return;
+	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
+	_return += std::string("zpt::json _r_") + _name + std::string(" = _c->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
+	if (_rel->ok() && _rel->obj()->size() != 0) {
+		if (std::string(_field["rel"]).find("/") != std::string::npos) {
+			_return += this->build_query(_field);
+		}
+		else {
+			_return += std::string("{ ");
+			_return += this->build_params(_rel, false);
+			_return += std::string(" }");
+		}
+	}
+	else {
+		_return += std::string("zpt::json::object()");
+	}
+	_return += std::string(");\n");
+	if (_field["type"] == zpt::json::string("object")) {
+		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
+	}
+	else if (_field["type"] == zpt::json::string("array")) {
+		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json{ zpt::array, _r_") + _name + std::string(" });\n");
+	}
+	return _return;
+}
+
+auto zpt::GenDatum::build_associations_for_update(std::string _name, zpt::json _field) -> std::string {
+	std::string _return;
+	return _return;
+}
+
+auto zpt::GenDatum::build_associations_for_remove(std::string _name, zpt::json _field) -> std::string {
+	std::string _return;
+	return _return;
+}
+
+auto zpt::GenDatum::build_associations_for_replace(std::string _name, zpt::json _field) -> std::string {
+	std::string _return;
+	return _return;
+}
+
 auto zpt::GenDatum::build_validation() -> std::string {
 	zpt::json _fields;
 	std::string _return;
@@ -1516,11 +1743,43 @@ auto zpt::GenDatum::build_extends_query() -> std::string{
 }
 
 auto zpt::GenDatum::build_extends_insert() -> std::string{
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.insert.client]\");\n\n_document <<\n\"created\" << zpt::json::date() <<\n\"updated\" << zpt::json::date();\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
+	std::string _return(
+		"std::string _r_id;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n"
+		"_document <<\n\"created\" << zpt::json::date() <<\n\"updated\" << zpt::json::date();\n");
+	_return += this->build_validation();
+	_return += std::string(
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"if (zpt::is_sql(std::string(_c_name))) {\n"
+		"if (_r_id.length() == 0) {\n"
+		"_r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+			"_document << \"id\" << _r_id;\n"
+			"}\nelse {\n"
+			"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+				"}\n"
+				"}\n"
+				"else {\n"
+				"$[datum.relations.insert]\n"
+				"if (_r_id.length() == 0) {\n"
+				"_r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+				"_document << \"id\" << _r_id;\n"
+				"}\nelse {\n"
+				"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+				"}\n"
+				"}\n"
+				"_c_idx++;\n"
+				"}\n");
+
 	if (this->__spec["extends"]["name"]->ok()) {
-		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
 		if (_found != zpt::Generator::datums.end()) {
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::insert(_topic, _document, _emitter, _identity, _envelope);\n");
+		
 			if (this->__spec["lib"] != _found->second->spec()["lib"]) {
 				if (this->__spec["dynlink"]->ok()) {
 					this->__spec << "dynlink" << (this->__spec["dynlink"]->str() + std::string(" -l") + _found->second->spec()["lib"]->str());
@@ -1535,120 +1794,150 @@ auto zpt::GenDatum::build_extends_insert() -> std::string{
 					this->__spec << "dyndir" << (std::string(" -L../") + _found->second->spec()["spec_name"]->str() + std::string("/.libs"));
 				}
 			}
-			
-			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
-			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
-
-			_return += _found->second->build_validation();
-			//std::string _ext_fields_arr = zpt::gen::get_fields_array(_found->second->spec()["fields"]);
-			_return += std::string("\nstd::string _r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" });\n");
-			_return += std::string("_r_data = { \"id\", _r_id, \"href\", (_topic + std::string(\"/\") + _r_id) };\n");
-			_return += std::string("_document << \"id\" << _r_id;\n");
-			_return += _class + std::string("::insert(_topic, _document, _emitter, _identity, _envelope);\n");
 		}
 	}
-	else {
-		_return += std::string("\nstd::string _r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" });\n_r_data = { \"id\", _r_id, \"href\", (_topic + std::string(\"/\") + _r_id) };\n");
-	}
+	_return += std::string("_r_data = { \"id\", _r_id, \"href\", (_topic + std::string(\"/\") + _r_id) };\n");
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_save() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.save.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
-	if (this->__spec["extends"]["name"]->ok()) {
-		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
-		if (_found != zpt::Generator::datums.end()) {
-			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
-			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+	std::string _return = std::string(
+		"size_t _n_updated = 0;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n"
+		"_document <<\n\"updated\" << zpt::json::date();\n"
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"if (zpt::is_sql(std::string(_c_name))) {\n"
+		"_n_updated = _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+			"}\nelse {\n"
+			"_n_updated = _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+			"}\n"
+			"_c_idx++;\n"
+			"}\n");
 
-			_return += _found->second->build_validation();
-			//std::string _ext_fields_arr = zpt::gen::get_fields_array(_found->second->spec()["fields"]);
-			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-			_return += _class + std::string("::save(_topic, _document, _emitter, _identity, _envelope);\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
+		if (_found != zpt::Generator::datums.end()) {
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::save(_topic, _document, _emitter, _identity, _envelope);\n");
 		}
 	}
-	else {
-		_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string("  }) };\n");
-	}
+	_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _n_updated };\n");
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_set_topic() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
-	if (this->__spec["extends"]["name"]->ok()) {
-		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
-		if (_found != zpt::Generator::datums.end()) {
-			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
-			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
+	std::string _return = std::string(
+		"size_t _n_updated = 0;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n"
+		"_document <<\n\"updated\" << zpt::json::date();\n"
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"if (zpt::is_sql(std::string(_c_name))) {\n"
+		"_n_updated = _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+			"}\nelse {\n"
+			"_n_updated = _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+			"}\n"
+			"_c_idx++;\n"
+			"}\n");
 
-			//std::string _ext_fields_arr = zpt::gen::get_fields_array(_found->second->spec()["fields"]);
-			_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-			_return += _class + std::string("::set(_topic, _document, _emitter, _identity, _envelope);\n");
+	if (this->__spec["extends"]["name"]->ok()) {
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
+		if (_found != zpt::Generator::datums.end()) {
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::set(_topic, _document, _emitter, _identity, _envelope);\n");
 		}
 	}
-	else {
-		_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-	}
+	_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _n_updated };\n");
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_set_pattern() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.set.client]\");\n\n_document <<\n\"updated\" << zpt::json::date();\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
+	std::string _return = std::string(
+		"size_t _n_updated = 0;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n"
+		"_document <<\n\"updated\" << zpt::json::date();\n"
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"if (zpt::is_sql(std::string(_c_name))) {\n"
+		"_n_updated = _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+			"}\nelse {\n"
+			"_n_updated = _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+			"}\n"
+			"_c_idx++;\n"
+			"}\n");
+
 	if (this->__spec["extends"]["name"]->ok()) {
-		std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
-		std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
-		
-		_return += std::string("zpt::json _r_elements = ") + _class + std::string("::query(_topic, _filter, _emitter, _identity, _envelope);\n");
-		_return += std::string("for (auto _r_element : _r_elements[\"elements\"]->arr()) {\n");
-		_return += _class + std::string("::set(_r_element[\"href\"]->str(), _document, _emitter, _identity, _envelope);\n");
-		_return += std::string("}\n");
-		_return += std::string("_r_data = { \"href\", _topic, \"n_updated\", _r_elements[\"size\"] };\n");
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
+		if (_found != zpt::Generator::datums.end()) {
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::set(_topic, _document, _filter, _emitter, _identity, _envelope);\n");
+		}
 	}
-	else {
-		_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-	}
+	_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _n_updated };\n");
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_remove_topic() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
+	std::string _return(
+		"size_t _n_deleted = 0;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n");
+
 	if (this->__spec["extends"]["name"]->ok()) {
-		auto _found = zpt::Generator::datums.find(zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_"));
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
 		if (_found != zpt::Generator::datums.end()) {
-			std::string _name = std::string(zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_"));
-			std::string _class = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + _name;
-			
-			//std::string _ext_fields_arr = zpt::gen::get_fields_array(_found->second->spec()["fields"]);
-			_return += std::string("_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-			_return += _class + std::string("::remove(_topic, _emitter, _identity, _envelope);\n");
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::remove(_topic, _emitter, _identity, _envelope);\n");
 		}
 	}
-	else {
-		_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" }) };\n");
-	}
+
+	_return += std::string(
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"_n_deleted = _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+		"_c_idx++;\n"
+		"}\n");
+
+	_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _n_deleted };\n");
 	return _return;
 }
 
 auto zpt::GenDatum::build_extends_remove_pattern() -> std::string {
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.remove.client]\");\n");
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
+	std::string _return(
+		"size_t _n_deleted = 0;\n"
+		"size_t _c_idx = 0;\n"
+		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n");
+
 	if (this->__spec["extends"]["name"]->ok()) {
-		std::string _name = std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_"));
-		std::string _class = std::string(this->__spec["namespace"]) + std::string("::datums::") + _name;
-		
-		_return += std::string("zpt::json _r_elements = ") + _class + std::string("::query(_topic, _filter, _emitter, _identity, _envelope);\n");
-		_return += std::string("for (auto _r_element : _r_elements[\"elements\"]->arr()) {\n");
-		_return += _class + std::string("::remove(_r_element[\"href\"]->str(), _emitter, _identity, _envelope);\n");
-		_return += std::string("}\n");
-		_return += std::string("_r_data = { \"href\", _topic, \"n_deleted\", _r_elements[\"size\"] };\n");
+		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
+		auto _found = zpt::Generator::datums.find(_name);
+		if (_found != zpt::Generator::datums.end()) {
+			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
+			_return += _name + std::string("::remove(_topic, _filter, _emitter, _identity, _envelope);\n");
+		}
 	}
-	else {
-		_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _c->remove(\"$[datum.collection]\", _filter, _filter + zpt::json({ \"href\", _topic, \"fields\", ") + _fields_arr + std::string(" })) };\n");
-	}
+
+	_return += std::string(
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"_n_deleted = _c->remove(\"$[datum.collection]\", _topic, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+		"_c_idx++;\n"
+		"}\n");
+
+	_return += std::string("\n_r_data = { \"href\", _topic, \"n_deleted\", _n_deleted };\n");
 	return _return;
 }
 
@@ -1684,6 +1973,23 @@ auto zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::
 	return "";
 }
 
+auto zpt::GenDatum::build_ordered_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string {
+	std::string _return;
+	for (auto _db : _ordered->arr()) {
+		if (std::find(std::begin(_dbms->arr()), std::end(_dbms->arr()), _db) != std::end(_dbms->arr())) {
+			std::string _db_client(_db->str());
+			if (_db->str() == "postgresql") {
+				_db_client.assign("pgsql");
+			}
+			if (_return.length() != 0) {
+				_return += std::string(", ");
+			}
+			_return += std::string("\"dbms.") + _db_client + std::string(".") + zpt::r_replace(_namespace, "::", ".") + std::string("\"");
+		}
+	}
+	return _return;
+}
+
 auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	zpt::json _opts = zpt::gen::get_opts(_field);
 	std::string _type(_field["type"]);
@@ -1695,7 +2001,7 @@ auto zpt::GenDatum::get_type(zpt::json _field) -> std::string {
 	
 	if (_type == "utf8" || _type == "text") {
 		_return += std::string("text");
-	}
+ 	}
 	else if (_type == "string") {
 		_return += std::string("varchar(1024)");
 	}

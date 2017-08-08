@@ -171,9 +171,12 @@ auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, 
 }
 
 auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
-	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
+
+	if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
+		_envelope << "channel" << zpt::generate::r_uuid();
+	}
 
 	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
 	_envelope <<
@@ -1228,7 +1231,6 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 		_frame1 = _found->second;
 		this->__sock_id.erase(_found); }
 	
-	assertz(_envelope["channel"]->ok(), "'channel' attribute is required", 412, 0);
 	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
 	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
 
@@ -1308,7 +1310,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		try {
 			zpt::json _envelope(_raw);
 			{ std::lock_guard< std::mutex > _lock(this->__sock_mtx);
-				if (!_envelope["channel"]->ok()) {
+				if (!_envelope["channel"]->ok() || !zpt::test::uuid(std::string(_envelope["channel"]))) {
 					_uuid.assign(zpt::generate::r_uuid());					
 					_envelope << "channel" << _uuid;
 				}
@@ -1431,6 +1433,10 @@ zpt::ZMQHttp::ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options) : z
 }
 
 zpt::ZMQHttp::~ZMQHttp() {
+}
+
+auto zpt::ZMQHttp::underlying() -> zpt::socketstream_ptr {
+	return this->__underlying;;
 }
 
 auto zpt::ZMQHttp::socket() -> zmq::socket_ptr {

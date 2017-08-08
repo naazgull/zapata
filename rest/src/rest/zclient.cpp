@@ -57,7 +57,6 @@ int main(int argc, char* argv[]) {
 			std::cout << "* \033[4;37mconnecting to " << (std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"])) << "\033[0m" << endl << flush;
 			zpt::ZMQReq _socket(std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]), _opts);
 			zpt::json _envelope = {
-				"channel", std::string(_uri["path"]),
 				"performative", zpt::ev::from_str(std::string(_opts["X"][0])),
 				"resource", std::string(_uri["path"]),
 				"headers", zpt::ev::init_request(),

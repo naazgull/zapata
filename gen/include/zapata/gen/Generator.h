@@ -89,6 +89,7 @@ namespace zpt {
 		virtual auto build_data_layer() -> void;
 		virtual auto build_container() -> void;
 		virtual auto build_mutations() -> void;
+		virtual auto build_docs() -> void;
 
 		static auto get_datum(std::string _ref) -> std::string;
 
@@ -128,6 +129,10 @@ namespace zpt {
 		virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_insert(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_update(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_remove(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_replace(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_get() -> std::string;
 		virtual auto build_associations_query() -> std::string;
 		virtual auto build_associations_insert() -> std::string;
@@ -145,6 +150,7 @@ namespace zpt {
 
 		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
 		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
+		static auto build_ordered_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
 		static auto get_type(zpt::json _field) -> std::string;
 		static auto get_restrictions(zpt::json _field) -> std::string;
 

@@ -271,9 +271,12 @@ auto zpt::mongodb::Client::remove(std::string _collection, std::string _href, zp
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
+	zpt::json _removed;
+	if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
 	_conn->remove(_full_collection, BSON( "_id" << _href ));
 	_conn.done();
 
+	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _removed["href"]->str(), _opts + zpt::json{ "removed", _removed });
 	return 1;
 }
 

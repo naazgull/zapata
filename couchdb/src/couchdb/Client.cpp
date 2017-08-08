@@ -517,7 +517,7 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	_req->body(_body);
 
 	zpt::http::rep _rep = this->send(_req);
-	assertz(_rep->status() == zpt::HTTP200, std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") + std::string(_rep), int(_rep->status()), 1201); 
+	assertz(_rep->status() == zpt::HTTP200 || _rep->status() == zpt::HTTP404, std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") + std::string(_rep), int(_rep->status()), 1201); 
 
 	zpt::json _result(_rep->body());
 	zpt::json _return = zpt::json::array();

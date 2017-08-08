@@ -423,7 +423,8 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			std::string _callback = std::string(_bridge->from< zpt::lisp::object >(_args[4]));
 
 			if (_callback.length() == 0) {	
-				_bridge->events()->route(_performative, _topic, _payload, _opts);
+				zpt::json _result = _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
+				return _bridge->to< zpt::lisp::object >(_result);
 			}
 			else {
 				_bridge->events()->route(_performative, _topic, _payload, _opts,
@@ -439,7 +440,6 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				);
 			}
 			return zpt::lisp::object(ecl_make_bool(true));
-			// return _bridge->to< zpt::lisp::object >(_result);
 		}
 	);
 	_bridge->deflbd(

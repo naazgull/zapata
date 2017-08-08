@@ -92,7 +92,9 @@ namespace zpt {
 	namespace thread {
 		typedef std::shared_ptr< zpt::ThreadContext > context;
 	}
-		
+
+	auto is_sql(std::string _name) -> bool;
+	
 	class Connector {
 	public:
 		Connector();

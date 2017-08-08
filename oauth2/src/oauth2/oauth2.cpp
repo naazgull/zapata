@@ -210,12 +210,15 @@ auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, 
 			_client = this->retrieve_client(std::string(_client_id), std::string(_client_secret));
 		}
 		catch(zpt::assertion& _e) {
-			return {
-				"status", (_performative == zpt::ev::Post ? 303 : 307),
-				"headers", {
-					"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+client"))
-				}
-			};
+			if (_redirect_uri->is_string()) {
+				return {
+					"status", (_performative == zpt::ev::Post ? 303 : 307),
+					"headers", {
+						"Location", (std::string(_redirect_uri) + (std::string(_redirect_uri).find("?") != std::string::npos ? std::string("&") : std::string("?")) + std::string("error=true&reason=no+such+client"))
+						}
+				};
+			}
+			throw;
 		}
 		
 		zpt::json _token = this->generate_token(
@@ -362,7 +365,7 @@ auto zpt::authenticator::OAuth2::generate_token(zpt::json _data) -> zpt::json {
 
 auto zpt::authenticator::extract(zpt::json _envelope) -> std::string {
 	if (_envelope["headers"]["Authorization"]->ok()) {
-		return std::string(zpt::split(_envelope["headers"]["Authorization"], " ")[1]);
+		return std::string(zpt::split(std::string(_envelope["headers"]["Authorization"]), " ")[1]);
 	}
 	if (_envelope["payload"]["access_token"]->ok()) {
 		std::string _param(_envelope["payload"]["access_token"]);
@@ -375,7 +378,7 @@ auto zpt::authenticator::extract(zpt::json _envelope) -> std::string {
 		return _param;
 	}
 	if (_envelope["headers"]["Cookie"]->ok()) {
-		return std::string(zpt::split(_envelope["headers"]["Cookie"], ";")[0]);
+		return std::string(zpt::split(std::string(_envelope["headers"]["Cookie"]), ";")[0]);
 	}
 	return "";
 }

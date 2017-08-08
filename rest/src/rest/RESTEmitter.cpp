@@ -305,8 +305,9 @@ auto zpt::RESTEmitter::pending(zpt::json _envelope, zpt::ev::handler _callback) 
 	auto _exists = this->__pending.find(std::string(_envelope["channel"]));
 	if (_exists != this->__pending.end()) {
 		auto _first_callback = _exists->second;
+		this->__pending.erase(_exists);
 		this->__pending.insert(std::make_pair(std::string(_envelope["channel"]),
-				[ &_first_callback, &_callback ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_envelope, zpt::ev::emitter _p_emitter) -> void {
+				[ _first_callback, _callback ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_envelope, zpt::ev::emitter _p_emitter) mutable -> void {
 					_first_callback(_p_performative, _p_topic, _p_envelope, _p_emitter);
 					_callback(_p_performative, _p_topic, _p_envelope, _p_emitter);
 				}
@@ -404,8 +405,10 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (_endpoint.second[_method] != nullptr) {
 				_method_found = true;
 				try {
+					bool _has_callback = false;
 					if (_callback != nullptr) {
 						this->pending(_envelope, _callback);
+						_has_callback = true;
 					}
 					else if (_opts["bubble-response"]->is_object()) {
 						this->pending(_envelope,
@@ -413,10 +416,11 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 								_emitter->reply(_opts["bubble-response"], _envelope);
 							}
 						);
+						_has_callback = true;
 					}
 
 					_endpoint.second[_method](_method, _url, _envelope, this->self());
-					if (this->has_pending(_envelope)) {
+					if (!_has_callback) {
 						this->reply(_envelope, { "status", 204 });
 					}
 					return;
@@ -483,9 +487,11 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 
 auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> void {
 	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
-	
+
+	bool _has_callback = false;
 	if (_callback != nullptr) {
 		this->pending(_envelope, _callback);
+		_has_callback = true;
 	}
 	else if (_opts["bubble-response"]->is_object()) {
 		this->pending(_envelope,
@@ -493,6 +499,7 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 				_emitter->reply(_opts["bubble-response"], _envelope);
 			}
 		);
+		_has_callback = true;
 	}
 	zpt::json _uri = zpt::uri::parse(_url);
 	
@@ -507,40 +514,44 @@ auto zpt::RESTEmitter::resolve_remotely(zpt::ev::performative _method, std::stri
 	}
 	if (_container->ok()) {
 		short _type = zpt::str2type(_container["type"]->str());
+		bool _no_answer = false;
+		zpt::socket_ref _client;
 		switch(_type) {
 			case ZMQ_ROUTER_DEALER :
 			case ZMQ_ROUTER :
 			case ZMQ_REP :
 			case ZMQ_REQ : {
-				zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);				
+				_client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);				
 				this->__poll->poll(_client);
-				_client->send(_envelope);
-				return;
+				break;
 			}
 			case ZMQ_PUB_SUB : {
 				std::string _connect = _container["connect"]->str();
-				zpt::socket_ref _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
-				_client->send(_envelope);
-				if (this->has_pending(_envelope)) {
-					this->reply(_envelope, zpt::rest::accepted(_url));
-				}
-				return;
+				_client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+				_no_answer = true;
+				break;
 			}
 			case ZMQ_PUSH : {
-				zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
-				_client->send(_envelope);
-				if (this->has_pending(_envelope)) {
-					this->reply(_envelope, zpt::rest::accepted(_url));
-				}
-				return;
+				_client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
+				_no_answer = true;
+				break;
 			}
 			case ZMQ_HTTP_RAW : {
-				zpt::socket_ref _client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
+				_client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
 				this->__poll->poll(_client);
-				_client->send(_envelope);
-				return;
+				break;
 			}
 		}
+		this->pending(_envelope,
+			[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+				this->__poll->clean_up(_client);
+			}
+		);
+		_client->send(_envelope);
+		if (_no_answer && !_has_callback) {
+			this->reply(_envelope, zpt::rest::accepted(_url));
+		}
+		return;
 	}
 	zpt::json _out = zpt::rest::not_found(_url);
 	if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
@@ -615,12 +626,12 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 				try {
 					zpt::json _result;
 					this->pending(_envelope,
-						[ & ] (zpt::ev::performative _p_performtive, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _p_emitter) -> void {
+						[ = ] (zpt::ev::performative _p_performtive, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _p_emitter) mutable -> void {
 							_result << "result" << _p_result;
 						}
 					);
 					_endpoint.second[_method](_method, _url, _envelope, this->self()); // > HASH <
-					if (this->has_pending(_envelope)) {
+					if (!this->has_pending(_envelope)) {
 						this->reply(_envelope, { "status", 204 });
 					}
 					_result = _result["result"];
