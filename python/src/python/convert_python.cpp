@@ -404,7 +404,13 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 			assertz(Py_TYPE(_exp) != &_PyNamespace_Type, std::string("unmanaged python type _PyNamespace"), 500, 0);
 		}
 		else if (PyType_Check(_exp)) {
-			assertz(Py_TYPE(_exp) != &PyType_Type, std::string("unmanaged python type PyType"), 500, 0);
+			zpt::json _value = zpt::json::string(((PyTypeObject*)_exp)->tp_name);
+			if (_parent->is_object() || _parent->is_array()) {
+				_parent << _value;
+			}
+			else {
+				_parent = _value;
+			}
 		}
 		else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
 			assertz(Py_TYPE(_exp) != &PyBaseObject_Type, std::string("unmanaged python type PyBaseObject"), 500, 0);

@@ -506,7 +506,7 @@ auto zpt::rest::authorization::extract(zpt::json _envelope) -> std::string {
 }
 
 auto zpt::rest::authorization::headers(std::string _token) -> zpt::json {
-	return { "Authorization", (std::string("OAuth2.0 ") + _token) };
+	return { "Authorization", (std::string("Bearer ") + _token) };
 }
 
 auto zpt::rest::authorization::validate(std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter, zpt::json _roles_needed) -> zpt::json {

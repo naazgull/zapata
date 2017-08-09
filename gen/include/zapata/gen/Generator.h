@@ -50,9 +50,11 @@ namespace zpt {
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_var_decl(zpt::json _url) -> std::string;
 		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
+		auto url_pattern_to_vars_python(std::string _url) -> std::string;
 		auto url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string;
 		auto url_pattern_to_params(zpt::json _url) -> zpt::json;
 		auto url_pattern_to_params_lisp(zpt::json _url) -> zpt::json;
+		auto url_pattern_to_params_python(zpt::json _url) -> zpt::json;
 
 		auto get_opts(zpt::json _field) -> zpt::json;
 		auto get_fields_array(zpt::json _fields) -> std::string;
@@ -77,6 +79,8 @@ namespace zpt {
 	public:
 		static std::map< std::string, zpt::gen::datum > datums;
 		static std::map< std::string, zpt::gen::resource > resources;
+		static std::map< std::string, zpt::gen::datum > included_datums;
+		static std::map< std::string, zpt::gen::resource > included_resources;
 		static std::string datum_includes;
 		static std::map< std::string, std::string > alias;
 
@@ -92,6 +96,7 @@ namespace zpt {
 		virtual auto build_docs() -> void;
 		virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
 		virtual auto generate_title_performative(zpt::json _resource, std::string _performative) -> std::string;
+		virtual auto get_fields(zpt::json _resource, int* _parent_type = nullptr) -> zpt::json;
 
 		static auto get_datum(std::string _ref) -> std::string;
 

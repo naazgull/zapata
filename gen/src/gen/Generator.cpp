@@ -39,6 +39,8 @@ SOFTWARE.
 std::string zpt::Generator::datum_includes;
 std::map<std::string, zpt::gen::datum> zpt::Generator::datums;
 std::map<std::string, zpt::gen::resource> zpt::Generator::resources;
+std::map<std::string, zpt::gen::datum> zpt::Generator::included_datums;
+std::map<std::string, zpt::gen::resource> zpt::Generator::included_resources;
 std::map<std::string, std::string> zpt::Generator::alias;
 
 zpt::GeneratorPtr::GeneratorPtr(zpt::json _options) : std::shared_ptr<zpt::Generator>(new zpt::Generator(_options)) {
@@ -53,7 +55,7 @@ zpt::GeneratorPtr::~GeneratorPtr() {
 auto zpt::GeneratorPtr::launch(int argc, char* argv[]) -> int {
 	zpt::json _options = zpt::conf::gen::init(argc, argv);
 	std::ifstream _ifs;
-	if (_options["c"]->type() == zpt::JSString) {
+	if (_options["c"]->is_string()) {
 		_ifs.open(_options["c"]->str().data());
 	}
 	else {
@@ -91,6 +93,44 @@ auto zpt::Generator::load() -> void {
 	if (!this->__options["api_version"]->ok()) {
 		this->__options << "api_version" << (std::string("v") + std::string(this->__options["version"][0]));
 	}
+
+	for (auto _file : this->__options["files"]->arr()) {
+		std::ifstream _ifs(_file->str().data());
+		zpt::json _spec;
+		_ifs >> _spec;
+
+		if (_spec["ref"]->is_array()) {
+			for (auto _include : _spec["ref"]->arr()) {
+				std::ifstream _iifs(_include->str().data());
+				zpt::json _ispec;
+				_iifs >> _ispec;
+				
+				if (_ispec["resources"]->is_array()) {
+					for (auto _resource : _ispec["resources"]->arr()) {
+						_resource << "namespace" << _ispec["namespace"] << "lib" << _ispec["lib"] << "spec_name" << _ispec["name"];
+						zpt::gen::resource _r = zpt::gen::resource(new zpt::GenResource(_resource, this->__options));
+						zpt::Generator::included_resources.insert(std::make_pair(std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]), _r));
+						zpt::Generator::included_resources.insert(std::make_pair(zpt::gen::url_pattern_to_regexp(_resource["topic"]), _r));
+					}
+				}
+				if (_ispec["datums"]->is_array()) {
+					for (auto _datum : _ispec["datums"]->arr()) {
+						_datum << "namespace" << _ispec["namespace"] << "lib" << _ispec["lib"] << "spec_name" << _ispec["name"];
+						zpt::Generator::included_datums.insert(std::make_pair(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]), zpt::gen::datum(new zpt::GenDatum(_datum, this->__options))));
+					}
+				}
+			}
+		}
+	}
+	for (auto _datum : zpt::Generator::included_datums) {
+		if (_datum.second->spec()["extends"]->ok()) {
+			auto _parent = zpt::Generator::included_datums.find(_datum.second->spec()["extends"]["name"]->str());
+			if (_parent != zpt::Generator::included_datums.end()) {
+				_datum.second->spec() << "fields" << (_parent->second->spec()["fields"] + _datum.second->spec()["fields"]);
+			}
+		}
+	}
+	
 	for (auto _file : this->__options["files"]->arr()) {
 		std::ifstream _ifs(_file->str().data());
 		zpt::json _spec;
@@ -104,7 +144,7 @@ auto zpt::Generator::load() -> void {
 		}
 		_spec << "dbms" << zpt::json::object();
 
-		if (_spec["resources"]->type() == zpt::JSArray) {
+		if (_spec["resources"]->is_array()) {
 			for (auto _resource : _spec["resources"]->arr()) {
 				_resource << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
 				zpt::gen::resource _r = zpt::gen::resource(new zpt::GenResource(_resource, this->__options));
@@ -115,11 +155,11 @@ auto zpt::Generator::load() -> void {
 				}
 			}
 		}
-		if (_spec["datums"]->type() == zpt::JSArray) {
+		if (_spec["datums"]->is_array()) {
 			for (auto _datum : _spec["datums"]->arr()) {
 				_datum << "namespace" << _spec["namespace"] << "lib" << _spec["lib"] << "spec_name" << _spec["name"];
 				zpt::Generator::datums.insert(std::make_pair(std::string(_datum["namespace"]) + std::string("::") + std::string(_datum["name"]), zpt::gen::datum(new zpt::GenDatum(_datum, this->__options))));
-				if (_datum["dbms"]->type() == zpt::JSArray) {
+				if (_datum["dbms"]->is_array()) {
 					for (auto _dbms : _datum["dbms"]->arr()) {
 						_spec["dbms"] << std::string(_dbms) << true;
 					}
@@ -143,7 +183,16 @@ auto zpt::Generator::load() -> void {
 	}
 	for (auto _datum : zpt::Generator::datums) {
 		if (_datum.second->spec()["extends"]->ok()) {
-			_datum.second->spec() << "fields" << (zpt::Generator::datums.find(_datum.second->spec()["extends"]["name"]->str())->second->spec()["fields"] + _datum.second->spec()["fields"]);
+			auto _parent = zpt::Generator::datums.find(_datum.second->spec()["extends"]["name"]->str());
+			if (_parent != zpt::Generator::datums.end()) {
+				_datum.second->spec() << "fields" << (_parent->second->spec()["fields"] + _datum.second->spec()["fields"]);
+			}
+			else {
+				_parent = zpt::Generator::included_datums.find(_datum.second->spec()["extends"]["name"]->str());
+				if (_parent != zpt::Generator::included_datums.end()) {
+					_datum.second->spec() << "fields" << (_parent->second->spec()["fields"] + _datum.second->spec()["fields"]);
+				}
+			}
 		}
 	}
 }
@@ -173,10 +222,13 @@ auto zpt::Generator::build() -> void {
 	if (this->__options["mutations-out-cxx"]->ok() && this->__options["mutations-out-h"]->ok()) {
 		this->build_mutations();
 	}
-	this->build_docs();
+	if (this->__options["resource-out-cxx"]->ok()) {
+		this->build_docs();
+	}
 }
 
 auto zpt::Generator::build_docs() -> void {
+	struct stat _buffer;
 	std::string _to_pdf_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/CONTAINER.md");
 	std::string _apiary_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/APIARY.md");
 	std::string _proj_name = std::string (this->__options["abbr"]);
@@ -188,13 +240,47 @@ auto zpt::Generator::build_docs() -> void {
 		std::string _name = std::string(_spec["name"]);
 		std::string _md_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + _name + std::string("/README.md");
 		std::transform(_name.begin(), _name.end(), _name.begin(), ::toupper);
-		std::string _readme = std::string("# ") + _name + std::string(" API INDEX\n\n") + std::string(_spec["description"]) + std::string("\n\n");
-		_doc += std::string("# ") + _name + std::string(" API REFERENCE\n\n") + std::string(_spec["description"]) + std::string("\n\n");
-		_apiary += std::string("# Group ") + _name + std::string(" API\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		std::string _readme = std::string("# ") + _name + std::string(" INDEX\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		_doc += std::string("# ") + _name + std::string("\n\n") + std::string(_spec["description"]) + std::string("\n\n");
+		_apiary += std::string("# Group ") + _name + std::string("\n\n") + std::string(_spec["description"]) + std::string("\n\n");
 
-		_readme += std::string("## ENDPOINTS\n\n");
-		_doc += std::string("## ENDPOINTS\n\n");
-		if (_spec["resources"]->type() == zpt::JSArray) {		
+		if (_spec["datums"]->is_array()) {
+			_doc += std::string("## DATUMS\n\n");
+			_readme += std::string("\n## DATUMS\n\n");
+			for (auto _datum : _spec["datums"]->arr()) {
+				_readme += std::string("- **") + std::string(_datum["name"]) + std::string("**: ");
+				_readme += std::string(_datum["description"]) + std::string("\n");
+
+				_doc += std::string("### ") + std::string(_datum["name"]) + std::string("\n\n");
+				_doc += std::string("---\n\n");				
+				_doc += std::string("(in _") + std::string(_datum["namespace"]) + std::string("_)\n\n");
+				_doc += std::string(_datum["description"]) + std::string("\n\n");
+				_doc += std::string("#### Supported DBMS:\n\n- ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_datum["dbms"]), "[", ""), "]", ""), "\"", ""), ",", "\n- ") + std::string("\n\n");
+				_doc += std::string(
+					"##### Fields\n\n"
+					"| FIELD | TYPE | DESCRIPTION |\n"
+					"|:------|:----:|:-------|\n"
+					"| _**id**_ | uuid | Primary key and index. This field is: _mandatory; index; primary-key_ |\n"
+					"| _**href**_ | uri | Record access URI. This field is: _mandatory_ |\n"
+				);
+
+				for (auto _field : _datum["fields"]->obj()) {
+					std::string _opts = zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_field.second["opts"]), "[", ""), "]", ""), "\"", ""), ",", "; ");
+					_doc += std::string("| _**") + zpt::r_replace(std::string(_field.first), "_", "\\_") + std::string("**_ | ") + std::string(_field.second["type"]) + std::string(" | ") + std::string(_field.second["description"]) + (_opts.length() != 0 ? std::string(" This field is _") + _opts + std::string("_.") : std::string("")) + std::string(" |\n");
+				}
+
+				_doc += std::string(
+					"| _**created**_ | timestamp | Record creation timestamp. This field is: _mandatory; auto_ |\n"
+					"| _**updated**_ | timstamp | Record update timestamp. This field is: _mandatory; auto_ |\n\n"
+				);
+			}
+			_doc += std::string("\n\n");
+		}
+		_readme += std::string("\n");
+
+		if (_spec["resources"]->is_array()) {	
+			_readme += std::string("## ENDPOINTS\n\n");
+			_doc += std::string("## ENDPOINTS\n\n");
 			for (auto _resource : _spec["resources"]->arr()) {
 				_readme += std::string("- **'") + std::string(_resource["topic"]) + std::string("' ") + std::string(_resource["type"]) + std::string("**: ");
 				_readme += zpt::r_replace(std::string(_resource["description"]), "\n", " ") + std::string("\n");
@@ -240,9 +326,10 @@ auto zpt::Generator::build_docs() -> void {
 							"|:------|:----:|:-------|\n"
 						);
 
-						if (_resource["datum"]["name"]->ok()) {
-							auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
-							if (_datum != zpt::Generator::datums.end()) {
+						int _parent_type = 0;
+						zpt::json _fields = this->get_fields(_resource, &_parent_type);
+						if (_fields->is_object()) {
+							if (_parent_type == 1) {
 								if (_perf == "DELETE" || _perf == "HEAD" || _perf == "GET" || (_perf == "PUT" && _resource["type"] == zpt::json::string("store"))) {
 									_doc += std::string("| _**id**_ | uuid | Primary key and index.") + std::string(_resource["type"] == zpt::json::string("store") ? ". This field is: _mandatory_" : "") + std::string(" |\n");
 								}
@@ -254,26 +341,9 @@ auto zpt::Generator::build_docs() -> void {
 										"| _**fields**_ | string | Comma separated list of fields to include as part of the returning object. Example: _fields=id,name,created_ |\n"
 									);
 								}
-								for (auto _field : _datum->second->spec()["fields"]->obj()) {
-									std::string _opts = std::string(_field.second["opts"]);
-							
-									if (_perf == "PATCH" || _perf == "DELETE" || _perf == "HEAD" || _perf == "GET") {
-										_opts = "";
-									}
-									else if (_opts.find("mandatory") != std::string::npos) {
-										_opts = "mandatory";
-									}
-									else {
-										_opts = "";
-									}
-									
-									_doc += std::string("| _**") + zpt::r_replace(std::string(_field.first), "_", "\\_") + std::string("**_ | ") + std::string(_field.second["type"]) + std::string(" | ") + std::string(_field.second["description"]) + (_opts.length() != 0 ? std::string(" This field is _") + _opts + std::string("_.") : std::string("")) + std::string(" |\n");
-								}
-								_doc += std::string("\n");
 							}
-						}
-						else if (_resource["datum"]["fields"]->ok()) {
-							for (auto _field : _resource["datum"]["fields"]->obj()) {
+
+							for (auto _field : _fields->obj()) {
 								std::string _opts = std::string(_field.second["opts"]);
 							
 								if (_perf == "PATCH" || _perf == "DELETE" || _perf == "HEAD" || _perf == "GET") {
@@ -285,10 +355,12 @@ auto zpt::Generator::build_docs() -> void {
 								else {
 									_opts = "";
 								}
+									
 								_doc += std::string("| _**") + zpt::r_replace(std::string(_field.first), "_", "\\_") + std::string("**_ | ") + std::string(_field.second["type"]) + std::string(" | ") + std::string(_field.second["description"]) + (_opts.length() != 0 ? std::string(" This field is _") + _opts + std::string("_.") : std::string("")) + std::string(" |\n");
 							}
 							_doc += std::string("\n");
-						}						
+						}
+						
 					}
 					
 					_doc += std::string("##### Returns\n\n");
@@ -330,7 +402,7 @@ auto zpt::Generator::build_docs() -> void {
 					_doc += std::string(
 						"- **204 No Content**: if the requested resource doesn't produces data\n"
 						"- **401 Unauthorized**: if the client credentials couldn't be authorized\n"
-						"- **403 Forbidden**: if the client doesn't have permissions to perform over the requested resource\n"
+						"- **403 Forbidden**: if the client doesn't have the necessary permissions\n"
 						"- **404 Not Found**: if the requested resource can't be found\n"
 						"- **412 Precondition Failed**: if the request doesn't conform with the endpoint specification\n"
 						"- **500 Internal Server Error**: if the backend process encounters an unexpected error\n\n"
@@ -340,6 +412,7 @@ auto zpt::Generator::build_docs() -> void {
 
 					
 					if (_perf == "GET") {
+						std::string _uuid = zpt::generate::r_uuid();
 						if (_resource["type"] == zpt::json::string("collection") || _resource["type"] == zpt::json::string("store")) {
 							_doc += std::string("$ curl -i 'https://api.platform.muzzley.com") + std::string(_resource["topic"]) + std::string("?page_size=2' \\\n       -X GET \\\n       -H \"Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\"\n\n");
 							_apiary += std::string("+ Request (application/json)\n\n    + Headers\n\n            Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\n\n");
@@ -363,20 +436,19 @@ auto zpt::Generator::build_docs() -> void {
 								"        \"size\" : 43,\n"
 								"        \"elements\" : [\n"
 							);
-							if (_resource["datum"]["name"]->ok()) {
-								auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
-								if (_datum != zpt::Generator::datums.end()) {
-									bool _first = true;
-									std::string _element = "            {\n";
-									for (auto _field : _datum->second->spec()["fields"]->obj()) {
-										if (!_first) _element += std::string(",\n");
-										_first = false;
-										_element += std::string("                  \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
-									}
-									_element += std::string("\n            }");
-									_doc += _element + std::string(",\n") + _element + std::string("\n");
-									_apiary += _element + std::string(",\n") + _element + std::string("\n");
+							zpt::json _fields = this->get_fields(_resource);
+							if (_fields->is_object()) {
+								std::string _element = "            {\n";
+								_element += std::string("                  \"id\" : \"") + _uuid + std::string("\",\n");
+								_element += std::string("                  \"href\" : \"") + std::string(_resource["topic"]) + std::string("/") + _uuid + std::string("\",\n");
+								_element += std::string("                  \"created\" : \"") + std::string(zpt::json::date()) + std::string("\",\n");
+								_element += std::string("                  \"updated\" : \"") + std::string(zpt::json::date()) + std::string("\"");
+								for (auto _field : _fields->obj()) {
+									_element += std::string(",\n                  \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
 								}
+								_element += std::string("\n            }");
+								_doc += _element + std::string(",\n") + _element + std::string("\n");
+								_apiary += _element + std::string(",\n") + _element + std::string("\n");
 							}
 							_apiary += std::string(
 								"        ]\n"
@@ -406,19 +478,19 @@ auto zpt::Generator::build_docs() -> void {
 								"+ Response 200 (application/json)\n\n"
 								"        {\n"
 							);
-							if (_resource["datum"]["name"]->ok()) {
-								auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
-								if (_datum != zpt::Generator::datums.end()) {
-									bool _first = true;
-									for (auto _field : _datum->second->spec()["fields"]->obj()) {
-										if (!_first) {
-											_doc += std::string(",\n");
-											_apiary += std::string(",\n");
-										}
-										_first = false;
-										_doc += std::string("        \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
-										_apiary += std::string("        \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
-									}
+							zpt::json _fields = this->get_fields(_resource);
+							if (_fields->is_object()) {
+								_doc += std::string("        \"id\" : \"") + _uuid + std::string("\",\n");
+								_doc += std::string("        \"href\" : \"") + std::string(_resource["topic"]) + std::string("/") + _uuid + std::string("\",\n");
+								_doc += std::string("        \"created\" : \"") + std::string(zpt::json::date()) + std::string("\",\n");
+								_doc += std::string("        \"updated\" : \"") + std::string(zpt::json::date()) + std::string("\"");
+								_apiary += std::string("        \"id\" : \"") + _uuid + std::string("\",\n");
+								_apiary += std::string("        \"href\" : \"") + std::string(_resource["topic"]) + std::string("/") + _uuid + std::string("\",\n");
+								_apiary += std::string("        \"created\" : \"") + std::string(zpt::json::date()) + std::string("\",\n");
+								_apiary += std::string("        \"updated\" : \"") + std::string(zpt::json::date()) + std::string("\"");
+								for (auto _field : _fields->obj()) {
+									_doc += std::string(",\n        \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
+									_apiary += std::string(",\n        \"") + _field.first + std::string("\" : ") + this->generate_value(_field.second, _field.first) + std::string("");
 								}
 							}
 							_apiary += std::string(
@@ -432,24 +504,10 @@ auto zpt::Generator::build_docs() -> void {
 					else if (_perf == "POST") {
 						_doc += std::string("$ curl -i 'https://api.platform.muzzley.com") + std::string(_resource["topic"]) + std::string("' \\\n       -X POST \\\n       -H \"Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\" \\\n       -d '{");
 						_apiary += std::string("+ Request (application/json)\n\n    + Headers\n\n            Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\n\n    + Body\n\n            {\n");
-						zpt::json _fields;
-						if (_resource["datum"]["name"]->ok()) {
-							auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
-							if (_datum != zpt::Generator::datums.end()) {
-								_fields = _datum->second->spec()["fields"];
-							}
-						}
-						else if (_resource["datum"]["fields"]->ok()) {
-							_fields = _resource["datum"]["fields"];
-						}
+						zpt::json _fields = this->get_fields(_resource);
 						if (_fields->is_object()) {
 							bool _first = true;
 							for (auto _field : _fields->obj()) {
-								std::string _opts = std::string(_field.second["opts"]);
-								if (_opts.find("mandatory") == std::string::npos || _opts.find("auto") != std::string::npos) {
-									continue;
-								}
-								
 								if (!_first) {
 									_doc += std::string(",\\\n            ");
 									_apiary += std::string(",\n");
@@ -489,24 +547,10 @@ auto zpt::Generator::build_docs() -> void {
 						_doc += std::string("$ curl -i 'https://api.platform.muzzley.com") + std::string(_resource["topic"]) + std::string("' \\\n       -X ") + _perf + std::string(" \\\n       -H \"Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\" \\\n       -d '{");
 						_apiary += std::string("+ Request (application/json)\n\n    + Headers\n\n            Authorization: Bearer asdnofiudifunaoisduf2839sdfd23\n\n    + Body\n\n            {\n");
 						
-						zpt::json _fields;
-						if (_resource["datum"]["name"]->ok()) {
-							auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
-							if (_datum != zpt::Generator::datums.end()) {
-								_fields = _datum->second->spec()["fields"];
-							}
-						}
-						else if (_resource["datum"]["fields"]->ok()) {
-							_fields = _resource["datum"]["fields"];
-						}
+						zpt::json _fields = this->get_fields(_resource);
 						if (_fields->is_object()) {
 							bool _first = true;
 							for (auto _field : _fields->obj()) {
-								std::string _opts = std::string(_field.second["opts"]);
-								if (_opts.find("mandatory") == std::string::npos || _opts.find("auto") != std::string::npos) {
-									continue;
-								}
-								
 								if (!_first) {
 									_doc += std::string(",\\\n            ");
 									_apiary += std::string(",\n");
@@ -599,54 +643,30 @@ auto zpt::Generator::build_docs() -> void {
 				_doc += std::string("\n");
 			}
 		}
-
-		_doc += std::string("## DATUMS\n\n");
-		_readme += std::string("\n## DATUMS\n\n");
-		if (_spec["datums"]->type() == zpt::JSArray) {
-			for (auto _datum : _spec["datums"]->arr()) {
-				_readme += std::string("- **") + std::string(_datum["name"]) + std::string("**: ");
-				_readme += std::string(_datum["description"]) + std::string("\n");
-
-				_doc += std::string("### ") + std::string(_datum["name"]) + std::string("\n\n");
-				_doc += std::string("---\n\n");				
-				_doc += std::string("(in _") + std::string(_datum["namespace"]) + std::string("_)\n\n");
-				_doc += std::string(_datum["description"]) + std::string("\n\n");
-				_doc += std::string("#### Supported DBMS:\n\n- ") + zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_datum["dbms"]), "[", ""), "]", ""), "\"", ""), ",", "\n- ") + std::string("\n\n");
-				_doc += std::string(
-					"##### Fields\n\n"
-					"| FIELD | TYPE | DESCRIPTION |\n"
-					"|:------|:----:|:-------|\n"
-					"| _**id**_ | uuid | Primary key and index. This field is: _mandatory; index; primary-key_ |\n"
-					"| _**href**_ | uri | Record access URI. This field is: _mandatory_ |\n"
-				);
-
-				for (auto _field : _datum["fields"]->obj()) {
-					std::string _opts = zpt::r_replace(zpt::r_replace(zpt::r_replace(zpt::r_replace(std::string(_field.second["opts"]), "[", ""), "]", ""), "\"", ""), ",", "; ");
-					_doc += std::string("| **") + zpt::r_replace(std::string(_field.first), "_", "\\_") + std::string("** | ") + std::string(_field.second["type"]) + std::string(" | ") + std::string(_field.second["description"]) + (_opts.length() != 0 ? std::string(" This field is _") + _opts + std::string("_.") : std::string("")) + std::string(" |\n");
-				}
-
-				_doc += std::string(
-					"| _**created**_ | timestamp | Record creation timestamp. This field is: _mandatory; auto_ |\n"
-					"| _**updated**_ | timstamp | Record update timestamp. This field is: _mandatory; auto_ |\n\n"
-				);
-			}
-			_doc += std::string("\n\n");
-		}
 		_readme += std::string("\n");
 
-		{ std::ofstream _ofs(_md_file.data());
+		bool _readme_exists = stat(_md_file.c_str(), &_buffer) == 0;
+		if (bool(this->__options["force-doc"][0]) || (!bool(this->__options["force-doc"][0]) && !_readme_exists)) {
+			std::ofstream _ofs(_md_file.data());
 			_ofs << _readme << endl << flush;
 			_ofs.close();
-			ztrace(std::string("processed ") + _md_file); }
+			ztrace(std::string("processed ") + _md_file);
+		}
 	}
-	{ std::ofstream _ofs(_to_pdf_file.data());
+	bool _pdf_exists = stat(_to_pdf_file.c_str(), &_buffer) == 0;
+	if (bool(this->__options["force-doc"][0]) || (!bool(this->__options["force-doc"][0]) && !_pdf_exists)) {
+		std::ofstream _ofs(_to_pdf_file.data());
 		_ofs << _doc << endl << flush;
 		_ofs.close();
-		ztrace(std::string("processed ") + _to_pdf_file); }
-	{ std::ofstream _ofs(_apiary_file.data());
+		ztrace(std::string("processed ") + _to_pdf_file);
+	}
+	bool _apiary_exists = stat(_apiary_file.c_str(), &_buffer) == 0;
+	if (bool(this->__options["force-doc"][0]) || (!bool(this->__options["force-doc"][0]) && !_apiary_exists)) {
+		std::ofstream _ofs(_apiary_file.data());
 		_ofs << _apiary << endl << flush;
 		_ofs.close();
-		ztrace(std::string("processed ") + _apiary_file); }
+		ztrace(std::string("processed ") + _apiary_file);
+	}
 }
 
 auto zpt::Generator::generate_title_performative(zpt::json _resource, std::string _performative) -> std::string {
@@ -730,6 +750,38 @@ auto zpt::Generator::generate_value(zpt::json _field, std::string _name) -> std:
 	return "\"\"";
 }
 
+auto zpt::Generator::get_fields(zpt::json _resource, int* _parent_type) -> zpt::json {
+	if (_resource["datum"]["name"]->ok()) {
+		auto _datum = zpt::Generator::datums.find(std::string(_resource["datum"]["name"]));
+		if (_datum != zpt::Generator::datums.end()) {
+			if (_parent_type != nullptr) {
+				*_parent_type = 1;
+			}
+			return _datum->second->spec()["fields"]->clone();
+		}
+		_datum = zpt::Generator::included_datums.find(std::string(_resource["datum"]["name"]));
+		if (_datum != zpt::Generator::included_datums.end()) {
+			if (_parent_type != nullptr) {
+				*_parent_type = 1;
+			}
+			return _datum->second->spec()["fields"]->clone();
+		}
+	}
+	else if (_resource["datum"]["fields"]->ok()) {	
+		if (_parent_type != nullptr) {
+			*_parent_type = 2;
+		}
+		return _resource["datum"]["fields"]->clone();
+	}						
+	else if (_resource["datum"]["ref"]->ok()) {
+		auto _iresource = zpt::Generator::included_resources.find(zpt::gen::url_pattern_to_regexp(_resource["datum"]["ref"]));
+		if (_iresource != zpt::Generator::included_resources.end()) {
+			return this->get_fields(_iresource->second->spec(), _parent_type);
+		}
+	}
+	return zpt::undefined;	
+}
+
 auto zpt::Generator::build_data_layer() -> void {
 	for (auto _pair : this->__specs->obj()) {
 		zpt::json _spec = _pair.second;
@@ -737,7 +789,7 @@ auto zpt::Generator::build_data_layer() -> void {
 		zpt::mkdir_recursive(std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/"));
 		zpt::mkdir_recursive(std::string(this->__options["data-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/"));
 
-		if (_spec["datums"]->type() == zpt::JSArray) {		
+		if (_spec["datums"]->is_array()) {		
 			for (auto _datum : _spec["datums"]->arr()) {
 				std::string _h_file = std::string(this->__options["data-out-h"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".h");
 				std::string _cxx_file = std::string(this->__options["data-out-cxx"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/datums/") + std::string(_datum["name"]) + std::string(".cpp");
@@ -751,7 +803,7 @@ auto zpt::Generator::build_data_layer() -> void {
 
 				zpt::replace(_datum_h, "$[data.path.h]", zpt::Generator::datum_includes);
 
-				if (_datum["fields"]->type() == zpt::JSObject){
+				if (_datum["fields"]->is_object()){
 					std::string _fields;
 					std::string _pk_constraint(",\n\tprimary key(id");
 					int _pks = 0;
@@ -973,7 +1025,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _registry;
 			std::string _dyn_link;
 			std::string _dyn_dir;
-			if (_spec["datums"]->type() == zpt::JSArray) {
+			if (_spec["datums"]->is_array()) {
 				for (auto _datum : _spec["datums"]->arr()) {
 					if (_datum["dbms"]->is_array()) {
 						for (auto _dbms : _datum["dbms"]->arr()) {
@@ -1020,7 +1072,7 @@ auto zpt::Generator::build_container() -> void {
 			}
 		
 			std::string _includes;
-			if (_spec["resources"]->type() == zpt::JSArray) {
+			if (_spec["resources"]->is_array()) {
 				_handlers_built = true;
 				for (auto _resource : _spec["resources"]->arr()) {
 					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
@@ -1059,7 +1111,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _lib_escaped = zpt::r_replace(std::string(_spec["lib"]), "-", "_");
 			_make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) + std::string(".la\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest ") + _dyn_link + std::string("\n");
-			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _dyn_dir + std::string("\n");
+			_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->is_array() ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _dyn_dir + std::string("\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
 			_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
 			_make += _make_files;
@@ -1087,7 +1139,7 @@ auto zpt::Generator::build_container() -> void {
 			std::string _lisp_file = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.lisp");
 				
 			std::string _includes;
-			if (_spec["resources"]->type() == zpt::JSArray) {
+			if (_spec["resources"]->is_array()) {
 				for (auto _resource : _spec["resources"]->arr()) {
 					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
 
@@ -1139,19 +1191,23 @@ auto zpt::Generator::build_container() -> void {
 			_py_ofs.open((std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/controllers/__init__.py")).data());
 			_py_ofs << endl << flush;
 			_py_ofs.close();
-		
+
+			_py_ofs.open((std::string(this->__options["resource-out-scripts"][0]) + std::string("/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			_py_ofs.open((std::string(this->__options["resource-out-scripts"][0]).substr(0, std::string(this->__options["resource-out-scripts"][0]).rfind("/")) + std::string("/__init__.py")).data());
+			_py_ofs << endl << flush;
+			_py_ofs.close();
+			
 			std::string _py_file = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_spec["name"]) + std::string("/api.py");
 				
 			std::string _includes;
-			if (_spec["resources"]->type() == zpt::JSArray) {
+			if (_spec["resources"]->is_array()) {
 				for (auto _resource : _spec["resources"]->arr()) {
 					std::string _key = std::string(_resource["namespace"]) + std::string("::") + std::string(_resource["topic"]->is_array() ? _resource["topic"][0] : _resource["topic"]);
 
-					std::string _include = std::string(zpt::r_replace(_spec["name"]->str(), "-", "_")) + std::string(" import ") + std::string(_resource["type"]) + std::string("s.") + std::string(zpt::r_replace(_resource["name"]->str(), "-", "_")) + std::string("");
-					if (_include.front() == '/') {
-						_include.erase(0, 1);
-					}
-					_includes += std::string("from ") + _include + std::string("\n");
+					std::string _include = std::string("import ") + zpt::r_replace(std::string(this->__options["prefix"]), "/", "") + std::string(".") + std::string(this->__options["abbr"]) + std::string(".") + std::string(zpt::r_replace(_spec["name"]->str(), "-", "_")) + std::string(".") + std::string(_resource["type"]) + std::string("s.") + std::string(zpt::r_replace(_resource["name"]->str(), "-", "_")) + std::string("");
+					_includes += _include + std::string("\n");
 					if (!_handlers_built) {
 						zpt::Generator::resources.find(_key)->second->build_handlers(std::string(_spec["name"]), "");
 					}
@@ -1171,45 +1227,46 @@ auto zpt::Generator::build_container() -> void {
 		}
 	}
 
-	for (auto _dbms : _mutation_dbms->obj()) {
-		_mutation_child_includes += std::string("#include <zapata/") + _dbms.first + std::string(".h>\n");
-		_mutation_dyn_link += std::string(" -lzapata-") + _dbms.first;
-	}
+	if (!this->__options["resource-out-lang"]->ok() || std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("c++")) != std::end(this->__options["resource-out-lang"]->arr())) {
+		for (auto _dbms : _mutation_dbms->obj()) {
+			_mutation_child_includes += std::string("#include <zapata/") + _dbms.first + std::string(".h>\n");
+			_mutation_dyn_link += std::string(" -lzapata-") + _dbms.first;
+		}
 	
-	zpt::replace(_mutation_cxx, "$[mutations.api.path.h]", _mutation_child_includes);
-	zpt::replace(_mutation_cxx, "$[mutations.handlers.delegate]", _mutation_registry);
-	zpt::replace(_mutation_cxx, "_emitter->connector({ });", "");
+		zpt::replace(_mutation_cxx, "$[mutations.api.path.h]", _mutation_child_includes);
+		zpt::replace(_mutation_cxx, "$[mutations.handlers.delegate]", _mutation_registry);
+		zpt::replace(_mutation_cxx, "_emitter->connector({ });", "");
 
-	struct stat _buffer;
-	bool _mutation_cxx_exists = stat(_mutation_cxx_file.c_str(), &_buffer) == 0;
-	bool _mutation_am_exists = stat(_mutation_am_file.c_str(), &_buffer) == 0;
-	if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_mutation_cxx_exists)) {
-		std::ofstream _cxx_ofs(_mutation_cxx_file.data());
-		_cxx_ofs << _mutation_cxx << endl << flush;
-		_cxx_ofs.close();
-		ztrace(std::string("processed ") + _mutation_cxx_file);	
-	}
+		struct stat _buffer;
+		bool _mutation_cxx_exists = stat(_mutation_cxx_file.c_str(), &_buffer) == 0;
+		bool _mutation_am_exists = stat(_mutation_am_file.c_str(), &_buffer) == 0;
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_mutation_cxx_exists)) {
+			std::ofstream _cxx_ofs(_mutation_cxx_file.data());
+			_cxx_ofs << _mutation_cxx << endl << flush;
+			_cxx_ofs.close();
+			ztrace(std::string("processed ") + _mutation_cxx_file);	
+		}
 
-	size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + 1;
-	std::string _parent_dir;
-	for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
+		size_t _cxx_out_split = zpt::split(std::string(this->__options["resource-out-cxx"][0]), "/")->arr()->size() + 1;
+		std::string _parent_dir;
+		for (size_t _i = 0; _i != _cxx_out_split; _i++) _parent_dir += "../";
 	
-	std::string _make;
-	std::string _lib_escaped = zpt::r_replace(this->__options["name"]->str(), "-", "_") + std::string("_mutations");
-	_make += std::string("lib_LTLIBRARIES = lib") + std::string(this->__options["name"]) + std::string("-mutations.la\n\n");
-	_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest ") + _mutation_dyn_link + std::string("\n");
-	_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->type() == zpt::JSArray ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _mutation_dyn_dir + std::string("\n");
-	_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
-	_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
-	_make += _mutation_make_files;
-	_make += std::string("./api.cpp\n");
-	if (bool(this->__options["force-makefile"][0]) || (!bool(this->__options["force-makefile"][0]) && !_mutation_am_exists)) {
-		std::ofstream _am_ofs(_mutation_am_file.data());
-		_am_ofs << _make << endl << flush;
-		_am_ofs.close();
-		ztrace(std::string("processed ") + _mutation_am_file);
-	}
-	
+		std::string _make;
+		std::string _lib_escaped = zpt::r_replace(this->__options["name"]->str(), "-", "_") + std::string("_mutations");
+		_make += std::string("lib_LTLIBRARIES = lib") + std::string(this->__options["name"]) + std::string("-mutations.la\n\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json -lzapata-http -lzapata-events -lzapata-zmq -lzapata-rest ") + _mutation_dyn_link + std::string("\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") + (this->__options["version"]->is_array() ? std::to_string(int(this->__options["version"][0]) + int(this->__options["version"][1])) + std::string(":") + std::string(this->__options["version"][2]) + std::string(":") + std::string(this->__options["version"][1]) : std::string("0:1:0")) + _mutation_dyn_dir + std::string("\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_CPPFLAGS = -O3 -std=c++14 -I") + _parent_dir + std::string("include\n\n");
+		_make += std::string("lib") + _lib_escaped + std::string("_la_SOURCES = \\\n");
+		_make += _mutation_make_files;
+		_make += std::string("./api.cpp\n");
+		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_mutation_am_exists)) {
+			std::ofstream _am_ofs(_mutation_am_file.data());
+			_am_ofs << _make << endl << flush;
+			_am_ofs.close();
+			ztrace(std::string("processed ") + _mutation_am_file);
+		}
+	}	
 	//ztrace(_handler_cxx);
 }
 
@@ -1301,7 +1358,7 @@ auto zpt::GenDatum::build_topic(zpt::json _topic) -> std::string {
 
 auto zpt::GenDatum::build_dbms() -> std::string {
 	std::string _dbmss;
-	if (this->__spec["dbms"]->type() == zpt::JSArray) {
+	if (this->__spec["dbms"]->is_array()) {
 		for (auto _dbms : this->__spec["dbms"]->arr()) {
 			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mariadb")) {
 				continue;
@@ -1316,7 +1373,7 @@ auto zpt::GenDatum::build_dbms() -> std::string {
 }
 
 auto zpt::GenDatum::build_dbms_source() -> std::string {
-	if (this->__spec["dbms"]->type() == zpt::JSArray) {
+	if (this->__spec["dbms"]->is_array()) {
 		for (auto _dbms : this->__spec["dbms"]->arr()) {
 			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mariadb")) {
 				return std::string("\"") + zpt::GenDatum::build_data_client(this->__spec["dbms"], { zpt::array, _dbms->str() }, std::string(this->__spec["namespace"])) + std::string("\"");
@@ -1530,7 +1587,7 @@ auto zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child
 			zpt::replace(_mutation_on, "$[mutation.handler.replace]", _mutation);
 
 			zpt::json _resource_opts = zpt::json::object();
-			if (this->__spec["protocols"]->type() == zpt::JSArray) {
+			if (this->__spec["protocols"]->is_array()) {
 				for (auto _proto : this->__spec["protocols"]->arr()) {
 					_resource_opts << _proto->str() << true;
 				}
@@ -1601,18 +1658,18 @@ auto zpt::GenDatum::build_insert() -> std::string {
 
 				if (std::string(_field["rel"]).find("/") != std::string::npos) {
 					if (_field["type"] == zpt::json::string("array")) {
-						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
+						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
 					}
 					else if (_field["type"] == zpt::json::string("object")) {
-						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(");\n");
+						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(");\n");
 					}
 				}
 				else {
 					if (_field["type"] == zpt::json::string("array")) {
-						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
+						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
 					}
 					else if (_field["type"] == zpt::json::string("object")) {
-						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
+						_return += std::string("if (_r_") + _name + std::string("->ok()) _r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
 					}
 				}
 			}
@@ -1715,18 +1772,18 @@ auto zpt::GenDatum::build_replace() -> std::string {
 
 				if (std::string(_field["rel"]).find("/") != std::string::npos) {
 					if (_field["type"] == zpt::json::string("array")) {
-						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
+						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
 					}
 					else if (_field["type"] == zpt::json::string("object")) {
-						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(");\n");
+						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(");\n");
 					}
 				}
 				else {
 					if (_field["type"] == zpt::json::string("array")) {
-						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
+						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" }));\n");
 					}
 					else if (_field["type"] == zpt::json::string("object")) {
-						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
+						_return += std::string("_r_data << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
 					}
 				}
 			}
@@ -1807,24 +1864,24 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 			if (_field["type"] == zpt::json::string("array")) {
 				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
 				_return += std::string("_split->arr()->pop_back();\n");
-				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string(" : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 			else if (_field["type"] == zpt::json::string("object")) {
 				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
 				_return += std::string("_split->arr()->pop_back();\n");
-				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("->type() == zpt::JSArray ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("->is_array() ? _r_") + _name + std::string("[0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 		}
 		else {
 			if (_field["type"] == zpt::json::string("array")) {
 				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
 				_return += std::string("_split->arr()->pop_back();\n");
-				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 			else if (_field["type"] == zpt::json::string("object")) {
 				_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
 				_return += std::string("_split->arr()->pop_back();\n");
-				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+				_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 			}
 		}		
 		_return += std::string("}\n");
@@ -1879,10 +1936,10 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 		_return += std::string(", zpt::undefined, \n[ & ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_envelope, zpt::ev::emitter _p_emitter) -> void {\n");
 		_return += std::string("zpt::json _r_") + _name + std::string(" = _p_envelope[\"payload\"];\n");
 		if (_field["type"] == zpt::json::string("array")) {
-			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 		}
 		else if (_field["type"] == zpt::json::string("object")) {
-			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 		}
 		_return += std::string("});\n");		
 		
@@ -1901,7 +1958,7 @@ auto zpt::GenDatum::build_associations_replace(std::string _name, zpt::json _fie
 
 auto zpt::GenDatum::build_associations_get() -> std::string{
 	std::string _return;
-	// if (this->__spec["fields"]->type() == zpt::JSObject) {
+	// if (this->__spec["fields"]->is_object()) {
 	// 	for (auto _field : this->__spec["fields"]->obj()) {
 	// 		std::string _type(_field.second["type"]);
 	// 		zpt::json _opts = zpt::gen::get_opts(_field.second);
@@ -1925,7 +1982,7 @@ auto zpt::GenDatum::build_associations_get() -> std::string{
 	// 				}
 					
 	// 				_return += std::string("zpt::json _d_") + _field.first + std::string(" = ") + _remote_invoke;
-	// 				_return += std::string("_r_data << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->type() == zpt::JSArray ? _d_") + _field.first + std::string("[\"elements\"][0] : _d_") + _field.first + std::string(");\n");
+	// 				_return += std::string("_r_data << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->is_array() ? _d_") + _field.first + std::string("[\"elements\"][0] : _d_") + _field.first + std::string(");\n");
 	// 			}
 	// 		}
 	// 		else if (_type == "array") {
@@ -1947,7 +2004,7 @@ auto zpt::GenDatum::build_associations_get() -> std::string{
 	// 				}
 
 	// 				_return += std::string("zpt::json _d_") + _field.first + std::string(" = ") + _remote_invoke;
-	// 				_return += std::string("_r_data << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->type() == zpt::JSArray ? _d_") + _field.first + std::string("[\"elements\"] : zpt::json({ zpt::array, _d_") + _field.first + std::string(" }));\n");
+	// 				_return += std::string("_r_data << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->is_array() ? _d_") + _field.first + std::string("[\"elements\"] : zpt::json({ zpt::array, _d_") + _field.first + std::string(" }));\n");
 	// 			}
 	// 		}
 	// 	}
@@ -1957,7 +2014,7 @@ auto zpt::GenDatum::build_associations_get() -> std::string{
 
 auto zpt::GenDatum::build_associations_query() -> std::string{
 	std::string _return;
-	// if (this->__spec["fields"]->type() == zpt::JSObject) {
+	// if (this->__spec["fields"]->is_object()) {
 	// 	bool _found = false;
 	// 	for (auto _field : this->__spec["fields"]->obj()) {
 	// 		std::string _type(_field.second["type"]);
@@ -1966,7 +2023,7 @@ auto zpt::GenDatum::build_associations_query() -> std::string{
 	// 		if (_type == "object") {
 	// 			if (_field.second["ref"]->ok() && _opts["on-demand"]->ok()) {
 	// 				if (!_found) {
-	// 					_return += std::string("if (_r_data[\"elements\"]->type() == zpt::JSArray) {\n");
+	// 					_return += std::string("if (_r_data[\"elements\"]->is_array()) {\n");
 	// 					_return += std::string("for (auto _d_element : _r_data[\"elements\"]->arr()) {\n");
 	// 				}
 	// 				std::string _topic;
@@ -1986,7 +2043,7 @@ auto zpt::GenDatum::build_associations_query() -> std::string{
 	// 				}
 					
 	// 				_return += std::string("zpt::json _d_") + _field.first + std::string(" = ") + _remote_invoke;
-	// 				_return += std::string("_d_element << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->type() == zpt::JSArray ? _d_") + _field.first + std::string("[\"elements\"][0] : _d_") + _field.first + std::string(");\n");
+	// 				_return += std::string("_d_element << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->is_array() ? _d_") + _field.first + std::string("[\"elements\"][0] : _d_") + _field.first + std::string(");\n");
 
 	// 				_found = true;
 	// 			}
@@ -1994,7 +2051,7 @@ auto zpt::GenDatum::build_associations_query() -> std::string{
 	// 		else if (_type == "array") {
 	// 			if (_field.second["ref"]->ok() && _opts["on-demand"]->ok()) {
 	// 				if (!_found) {
-	// 					_return += std::string("if (_r_data[\"elements\"]->type() == zpt::JSArray) {\n");
+	// 					_return += std::string("if (_r_data[\"elements\"]->is_array()) {\n");
 	// 					_return += std::string("for (auto _d_element : _r_data[\"elements\"]->arr()) {\n");
 	// 				}
 
@@ -2015,7 +2072,7 @@ auto zpt::GenDatum::build_associations_query() -> std::string{
 	// 				}
 					
 	// 				_return += std::string("zpt::json _d_") + _field.first + std::string(" = ") + _remote_invoke;
-	// 				_return += std::string("_d_element << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->type() == zpt::JSArray ? _d_") + _field.first + std::string("[\"elements\"] : zpt::json({ zpt::array, _d_") + _field.first + std::string(" }));\n");
+	// 				_return += std::string("_d_element << \"") + _field.first + std::string("\" << (_d_") + _field.first + std::string("[\"elements\"]->is_array() ? _d_") + _field.first + std::string("[\"elements\"] : zpt::json({ zpt::array, _d_") + _field.first + std::string(" }));\n");
 
 	// 				_found = true;
 	// 			}
@@ -2068,10 +2125,10 @@ auto zpt::GenDatum::build_associations_for_insert(std::string _name, zpt::json _
 	}
 	_return += std::string(");\n");
 	if (_field["type"] == zpt::json::string("object")) {
-		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
+		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(");\n");
 	}
 	else if (_field["type"] == zpt::json::string("array")) {
-		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->type() == zpt::JSArray ? _r_") + _name + std::string("[\"elements\"] : zpt::json{ zpt::array, _r_") + _name + std::string(" });\n");
+		_return += std::string("if (_r_") + _name + std::string("->ok()) _document << \"") + _name + std::string("\" << (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json{ zpt::array, _r_") + _name + std::string(" });\n");
 	}
 	return _return;
 }
@@ -2095,7 +2152,7 @@ auto zpt::GenDatum::build_validation() -> std::string {
 	zpt::json _fields;
 	std::string _return;
 	_fields = this->__spec["fields"];
-	if (_fields->type() == zpt::JSObject) {
+	if (_fields->is_object()) {
 		for (auto _field : _fields->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = zpt::gen::get_opts(_field.second);
@@ -2603,7 +2660,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		zpt::replace(_handler_cxx, "$[resource.handler.reply]", _handler);
 
 		zpt::json _resource_opts = zpt::json::object();
-		if (this->__spec["protocols"]->type() == zpt::JSArray) {
+		if (this->__spec["protocols"]->is_array()) {
 			for (auto _proto : this->__spec["protocols"]->arr()) {
 				_resource_opts << _proto->str() << true;
 			}
@@ -2667,7 +2724,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		zpt::replace(_handler_lisp, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
 
 		std::string _resource_opts;
-		if (this->__spec["protocols"]->type() == zpt::JSArray) {
+		if (this->__spec["protocols"]->is_array()) {
 			for (auto _proto : this->__spec["protocols"]->arr()) {
 				_resource_opts += std::string(" \"") + _proto->str() + std::string("\" t");
 			}
@@ -2685,9 +2742,56 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	}
 	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
 		std::string _handler_py;
-		zpt::load_path("/usr/share/zapata/gen/Handler.py", _handler_py);
+		zpt::load_path("/usr/share/zapata/gen/Handlers.py", _handler_py);
 		std::string _py_file = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".py");
 
+		zpt::json _performatives = { zpt::array, "get", "post", "put", "patch", "delete", "head" };
+		bool _first = true;
+		for (auto _perf : _performatives->arr()) {
+			if (this->__spec["performatives"]->ok() && std::find(std::begin(this->__spec["performatives"]->arr()), std::end(this->__spec["performatives"]->arr()), zpt::json::string(_perf->str())) == std::end(this->__spec["performatives"]->arr())) {
+				zpt::replace(_handler_py, std::string("$[resource.handler.") + _perf->str() + std::string("]"), std::string(""));
+				zpt::replace(_handler_py, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), std::string(""));
+				continue;
+			}
+
+			std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_") + _perf->str();
+			std::string _function;
+			if (_perf->str() == "get") {
+				_function.assign(this->build_python_get());
+			}
+			else if (_perf->str() == "post") {
+				_function.assign(this->build_python_post());
+			}
+			else if (_perf->str() == "put") {
+				_function.assign(this->build_python_put());
+			}
+			else if (_perf->str() == "patch") {
+				_function.assign(this->build_python_patch());
+			}
+			else if (_perf->str() == "delete") {
+				_function.assign(this->build_python_delete());
+			}
+			else if (_perf->str() == "head") {
+				_function.assign(this->build_python_head());
+			}
+
+			zpt::replace(_handler_py, std::string("$[resource.handler.") + _perf->str() + std::string("]"), _function);
+			zpt::replace(_handler_py, std::string("$[resource.handler.") + _perf->str() + std::string(".name]"), (!_first ? std::string(",\n                ") : std::string("")) + std::string("'") + _perf->str() + std::string("' : ") + _f_name + std::string(""));
+			_first = false;
+				
+		}
+		zpt::replace(_handler_py, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
+
+		std::string _resource_opts("{ ");
+		if (this->__spec["protocols"]->is_array()) {
+			for (auto _proto : this->__spec["protocols"]->arr()) {
+				if (_resource_opts.length() != 2) _resource_opts += std::string(", ");
+				_resource_opts += std::string(" \"") + _proto->str() + std::string("\" : True");
+			}
+			_resource_opts += std::string(" }");
+		}
+		zpt::replace(_handler_py, "$[resource.opts]", _resource_opts);
+		
 		struct stat _buffer;
 		bool _py_exists = stat(_py_file.c_str(), &_buffer) == 0;
 		if (bool(this->__options["force-resource"][0]) || (!bool(this->__options["force-resource"][0]) && !_py_exists)) {
@@ -2719,7 +2823,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 	else if (this->__spec["datum"]["fields"]->ok()) {
 		_fields = this->__spec["datum"]["fields"];
 	}
-	if (_fields->type() == zpt::JSObject) {
+	if (_fields->is_object()) {
 		for (auto _field : _fields->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = zpt::gen::get_opts(_field.second);
@@ -2873,7 +2977,7 @@ auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std:
 	}
 	_return += std::string("\nzpt::json _r_body;\n");
 	_return += std::string("/* ---> YOUR CODE HERE <---*/\n");
-	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->type() == zpt::JSArray) {
+	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->is_array()) {
 		_return += std::string("if (_r_body[\"payload\"]->ok() && int(_r_body[\"status\"]) < 300) {\n");
 		_return += std::string("_r_body[\"payload\"] << \"links\" << zpt::json({ ");
 		
@@ -3355,7 +3459,7 @@ auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std
 	else if (this->__spec["datum"]["fields"]->ok()) {
 		_fields = this->__spec["datum"]["fields"];
 	}
-	if (_fields->type() == zpt::JSObject) {
+	if (_fields->is_object()) {
 		for (auto _field : _fields->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = zpt::gen::get_opts(_field.second);
@@ -3821,7 +3925,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 	else if (this->__spec["datum"]["fields"]->ok()) {
 		_fields = this->__spec["datum"]["fields"];
 	}
-	if (_fields->type() == zpt::JSObject) {
+	if (_fields->is_object()) {
 		for (auto _field : _fields->obj()) {
 			std::string _type(_field.second["type"]);
 			zpt::json _opts = zpt::gen::get_opts(_field.second);
@@ -3964,27 +4068,26 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 auto zpt::GenResource::build_python_handler_header(zpt::ev::performative _perf) -> std::string {
 	std::string _return;
 	
-	_return += this->build_validation(_perf);
-	_return += std::string("\nzpt::json _t_split = zpt::split(_topic, \"/\");\n");
-	_return += zpt::gen::url_pattern_to_vars(std::string(this->__spec["topic"]));
-	_return += std::string("zpt::json _identity = zpt::rest::authorization::validate(\"") + std::string(this->__spec["topic"]) + std::string("\", _envelope, _emitter);\n");
-	_return += std::string("\nzpt::json _r_body;\n");
-	_return += std::string("/* ---> YOUR CODE HERE <---*/\n");
-	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->type() == zpt::JSArray) {
-		_return += std::string("if (_r_body[\"payload\"]->ok() && int(_r_body[\"status\"]) < 300) {\n");
-		_return += std::string("_r_body[\"payload\"] << \"links\" << zpt::json({ ");
+	_return += this->build_python_validation(_perf);
+	_return += std::string("        t_split = topic.split('/')\n");
+	_return += zpt::gen::url_pattern_to_vars_python(std::string(this->__spec["topic"]));
+	_return += std::string("        identity = zpt.authorize('") + std::string(this->__spec["topic"]) + std::string("', envelope)\n");
+	_return += std::string("        # ---> YOUR CODE HERE <---\n");
+	if (_perf != zpt::ev::Reply && _perf != zpt::ev::Delete && this->__spec["links"]->is_array()) {
+		_return += std::string("        if 'payload' in r_body and r_body['status'] < 300 : \n");
+		_return += std::string("                r_body['payload']['links'] = { ");
 		
 		for (auto _link : this->__spec["links"]->arr()) {
 			std::string _topic;
 			zpt::json _url_params = zpt::gen::url_pattern_to_params(_link["ref"]);	
 			zpt::json _splited = zpt::split(std::string(_link["ref"]), "/");
 			for (auto _part : _splited->arr()) {
-				_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+				if (_topic.length() != 0) _topic += std::string(", ");
+				_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 			}
-			_return += std::string("\"") + std::string(_link["rel"]) + std::string("\", zpt::path::join({ zpt::array") + _topic + std::string(" }), ");
+			_return += std::string("'") + std::string(_link["rel"]) + std::string("': zpt.path_join([ ") + _topic + std::string(" ]), ");
 		}
-		_return += std::string(" });\n");
-		_return += std::string("}\n");
+		_return += std::string(" }\n");
 	}
 	return _return;
 }
@@ -3998,53 +4101,49 @@ auto zpt::GenResource::build_python_get() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Get);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_get");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Get);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
-		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("        (json \"status\" 204)))\n");
-		}
-		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  });\n");
-		}
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204), \"payload\", _r_body  });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : (len(r_body) != 0 ? 200 : 404), 'payload' : r_body  })\n");
+		}
+		else {
+			_return += std::string("        zpt.reply(envelope, { 'status' : (len(r_body) != 0 ? 200 : 204), 'payload' : r_body  })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_get(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
 
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, r_body)\n\n");
+		
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
 				if (_params.length() != 0) {
 					_params += std::string(", ");
 				}
-				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'get',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'get',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4063,38 +4162,49 @@ auto zpt::GenResource::build_python_post() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Post);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_post");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Post);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 201, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "controller") {
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_post(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
 
-		_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, r_body)\n\n");
+		
+		if (_rel->obj()->size() != 0) {
+			std::string _params;
+			for (auto _param : _rel->obj()) {
+				if (_params.length() != 0) {
+					_params += std::string(", ");
+				}
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
+			}
+			_remote_invoke += std::string("        zpt.route(\n                'post',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : zpt.merge(envelope['payload'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
+		}
+		else {
+			_remote_invoke += std::string("        zpt.route(\n                'post',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
+		}
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4113,38 +4223,49 @@ auto zpt::GenResource::build_python_put() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Put);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_put");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Put);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 201, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 201, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_put(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
 
-		_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] }\n);\n");
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, r_body)\n\n");
+		
+		if (_rel->obj()->size() != 0) {
+			std::string _params;
+			for (auto _param : _rel->obj()) {
+				if (_params.length() != 0) {
+					_params += std::string(", ");
+				}
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
+			}
+			_remote_invoke += std::string("        zpt.route(\n                'put',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : zpt.merge(envelope['payload'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
+		}
+		else {
+			_remote_invoke += std::string("        zpt.route(\n                'put',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
+		}
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4160,38 +4281,37 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Patch);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_patch");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Patch);
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_patch(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
+
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, r_body)\n\n");
 
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
@@ -4199,14 +4319,14 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 				if (_params.length() != 0) {
 					_params += std::string(", ");
 				}
-				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'patch',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'], 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'patch',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'], 'params' : envelope['params'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4222,38 +4342,37 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Delete);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_delete");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Delete);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : 200, 'payload' : r_body  })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_delete(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
+
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, r_body)\n\n");
 
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
@@ -4261,14 +4380,14 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 				if (_params.length() != 0) {
 					_params += std::string(", ");
 				}
-				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'delete',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'delete',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4276,61 +4395,56 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 
 auto zpt::GenResource::build_python_head() -> std::string {
 	zpt::json _performatives = this->__spec["performatives"];
-	if (_performatives->ok() && std::find(std::begin(_performatives->arr()), std::end(_performatives->arr()), zpt::json::string("head")) == std::end(_performatives->arr())) {
+	if (_performatives->ok() && std::find(std::begin(_performatives->arr()), std::end(_performatives->arr()), zpt::json::string("get")) == std::end(_performatives->arr())) {
 		return "";
 	}
-
 	if (std::string(this->__spec["type"]) == "controller") {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Head);
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_head");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Head);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
-		if (std::string(this->__spec["type"]) == "collection") { 
-			_return += std::string("return { \"headers\",\n{ \"Content-Length\", std::string(_r_body).length() }, \"status\", (_r_body->ok() ? 200 : 204) });\n");
-		}
-		if (std::string(this->__spec["type"]) == "store") { 
-			_return += std::string("return { \"headers\",\n{ \"Content-Length\", std::string(_r_body).length() }, \"status\", (_r_body->ok() ? 200 : 204) });\n");
-		}
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", "        r_body = None\n        # ---> YOUR CODE HERE <---\n");
 		if (std::string(this->__spec["type"]) == "document") {
-			_return += std::string("return { \"headers\",\n{ \"Content-Length\", std::string(_r_body).length() }, \"status\", (_r_body->ok() ? 200 : 204) });\n");
+			_return += std::string("        zpt.reply(envelope, { 'status' : (len(r_body) != 0 ? 200 : 404) })\n");
+		}
+		else {
+			_return += std::string("        zpt.reply(envelope, { 'status' : (len(r_body) != 0 ? 200 : 204) })\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	_return += std::string("\n");
 
-	if (this->__spec["datum"]["name"]->ok()) {
-		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
-		if (_found != zpt::Generator::datums.end()) {
-			zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _found->second->build_head(this->__spec));
-		}
-	}
-	else if (this->__spec["datum"]["ref"]->ok()) {
+	if (this->__spec["datum"]["ref"]->ok()) {
 		std::string _remote_invoke;
 		std::string _topic;
 		zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
-		zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
+		zpt::json _url_params = zpt::gen::url_pattern_to_params_python(this->__spec["topic"]);
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			if (_topic.length() != 0) _topic += std::string(", ");
+			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
 
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body) :\n                zpt.reply(envelope, { 'status' : r_body['status'] })\n\n");
+		
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
 				if (_params.length() != 0) {
 					_params += std::string(", ");
 				}
-				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
+				_params += std::string("'") + _param.first + std::string("' : ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("'") + std::string(_param.second->str()) + std::string("'"));
 			}
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'head',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
 		else {
-			_remote_invoke += std::string("return _emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] }\n);\n");
+			_remote_invoke += std::string("        zpt.route(\n                'head',\n                zpt.path_join([ ") + _topic + std::string(" ]),\n                { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n                { 'bubble-error' : True, 'context' : envelope },\n                callback\n        )\n");
 		}
-		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
+		zpt::replace(_return, "# ---> YOUR CODE HERE <---", _remote_invoke);
 	}
 	
 	return _return;
@@ -4346,10 +4460,10 @@ auto zpt::GenResource::build_python_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
-	_return += this->build_handler_header(zpt::ev::Head);
-	_return += std::string("return zpt::undefined;\n");
-	_return += std::string("\n}\n}");
+	std::string _f_name = zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string("_") + std::string(this->__spec["type"]) + std::string("_reply");
+	std::string _return = std::string("def ") + _f_name + std::string("(performative, topic, envelope) :\n");
+	_return += this->build_python_handler_header(zpt::ev::Reply);
+	_return += std::string("\n");
 	return _return;
 }
 
@@ -4464,6 +4578,20 @@ auto zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 	return _return;
 }
 
+auto zpt::gen::url_pattern_to_vars_python(std::string _url) -> std::string {
+	zpt::json _splited = zpt::split(_url, "/");
+	std::string _return;
+
+	short _i = 0;
+	for (auto _part : _splited->arr()) {
+		if (_part->str().find("{") != std::string::npos) {
+			_return += std::string("        tv_") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "-", "_") + std::string(" = t_split[") + std::to_string(_i) + std::string("]\n");
+		}
+		_i++;
+	}
+	return _return;
+}
+
 auto zpt::gen::url_pattern_to_params(zpt::json _url) -> zpt::json {
 	zpt::json _url_list;
 	if (_url->is_array()) {
@@ -4503,6 +4631,29 @@ auto zpt::gen::url_pattern_to_params_lisp(zpt::json _url) -> zpt::json {
 		for (auto _part : _splited->arr()) {
 			if (_part->str().find("{") != std::string::npos) {
 				_return << _part->str() << (std::string("tv-") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "_", "-"));
+			}
+			_i++;
+		}
+	}
+	return _return;
+}
+
+auto zpt::gen::url_pattern_to_params_python(zpt::json _url) -> zpt::json {
+	zpt::json _url_list;
+	if (_url->is_array()) {
+		_url_list = _url;
+	}
+	else {
+		_url_list = { zpt::array, _url };
+	}
+	zpt::json _return = zpt::json::object();
+	for (auto _u : _url_list->arr()) {
+		zpt::json _splited = zpt::split(std::string(_u), "/");
+
+		short _i = 0;
+		for (auto _part : _splited->arr()) {
+			if (_part->str().find("{") != std::string::npos) {
+				_return << _part->str() << (std::string("tv_") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "-", "_"));
 			}
 			_i++;
 		}

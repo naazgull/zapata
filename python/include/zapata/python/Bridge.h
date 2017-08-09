@@ -114,13 +114,15 @@ namespace zpt {
 			auto init() -> PyObject*;
 			auto on(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto route(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto split(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto topic_var(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto reply(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto options(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto hook(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto log(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto assertion(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto path_join(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto authorization_headers(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto merge(PyObject* _self, PyObject* _args) -> PyObject*;
 			
 			extern PyMethodDef methods[];
 			extern PyModuleDef spec;
