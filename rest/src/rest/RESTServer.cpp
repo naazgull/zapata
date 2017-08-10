@@ -390,7 +390,7 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	}
 	_envelope << "protocol" << this->__mqtt->protocol();
 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
-	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+	zverbose(zpt::ev::pretty(_envelope));
 	try {
 		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
 	}

@@ -407,7 +407,7 @@ extern "C" auto zpt_events() -> int {
 
 auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 	std::string _protocol = (_envelope["protocol"]->ok() ? std::string(_envelope["protocol"]) : "ZPT/1.0");
-	std::string _ret;
+	std::string _ret("\n");
 	if (_envelope["status"]->ok()) {
 		std::string _color;
 		if (int(_envelope["status"]) < 300) {

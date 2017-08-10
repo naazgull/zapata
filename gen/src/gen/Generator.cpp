@@ -4585,7 +4585,7 @@ auto zpt::gen::url_pattern_to_vars_python(std::string _url) -> std::string {
 	short _i = 0;
 	for (auto _part : _splited->arr()) {
 		if (_part->str().find("{") != std::string::npos) {
-			_return += std::string("        tv_") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "-", "_") + std::string(" = t_split[") + std::to_string(_i) + std::string("]\n");
+			_return += std::string("        tv_") + zpt::r_replace(_part->str().substr(1, _part->str().length() - 2), "-", "_") + std::string(" = t_split[") + std::to_string(_i + 1) + std::string("]\n");
 		}
 		_i++;
 	}

@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 					zpt::json _splited = zpt::split(_header->str(), ":");
 					_headers << zpt::r_trim(_splited[0]->str()) << zpt::r_trim(_splited[1]->str());
 				}
-				_envelope << "headers" << _headers;
+				_envelope << "headers" << (_envelope["headers"] + _headers);
 			}
 			_socket.send(_envelope);
 			zpt::json _reply = _socket.recv();

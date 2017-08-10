@@ -145,7 +145,7 @@ auto zpt::ZMQ::recv() -> zpt::json {
 		try {
 			zpt::json _envelope(_raw);
 			ztrace(std::string("< ") + _directive);
-			zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+			zverbose(zpt::ev::pretty(_envelope));
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
@@ -209,7 +209,7 @@ auto zpt::ZMQ::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
 	ztrace(std::string("> ") + _directive);
-	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+	zverbose(zpt::ev::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -1270,7 +1270,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
 	assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
 	ztrace(std::string("> ") + _directive);
-	zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+	zverbose(zpt::ev::pretty(_envelope));
 
 	return zpt::undefined;
 }
@@ -1319,7 +1319,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 				}
 				this->__sock_id.insert(std::make_pair(_uuid, _frame1));}
 			ztrace(std::string("< ") + _directive);
-			zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+			zverbose(zpt::ev::pretty(_envelope));
 			
 			return _envelope;
 		}
@@ -1514,7 +1514,7 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 			(*this->__underlying) << _message << flush; }
 
 		ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"]) : std::string("")));
-		zverbose(std::string("\n") + zpt::ev::pretty(_envelope));
+		zverbose(zpt::ev::pretty(_envelope));
 	}
 	catch (std::ios_base::failure& _e) {}
 	catch (std::exception& _e) {}
@@ -1556,7 +1556,7 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 		return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
 	}
 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
-	zverbose(std::string("\n") + zpt::ev::pretty(_in));
+	zverbose(zpt::ev::pretty(_in));
 	return _in;
 }
 
