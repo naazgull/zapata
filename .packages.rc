@@ -10,6 +10,7 @@ export projects=(
        mqtt
        zmq
        gen
+       upnp
        mongodb
        redis
        mariadb

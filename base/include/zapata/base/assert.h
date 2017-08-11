@@ -80,7 +80,8 @@ namespace zpt {
 			Head = 4,
 			Options = 5,
 			Patch = 6,
-			Reply = 7
+			Reply = 7,
+			Search = 8
 		};
 
 		auto to_str(zpt::ev::performative _performative) -> std::string;

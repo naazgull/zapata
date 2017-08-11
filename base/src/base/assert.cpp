@@ -67,11 +67,14 @@ auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
 		case zpt::ev::Options : {
 			return "OPTIONS";
 		}
-		case zpt::ev::Patch: {
+		case zpt::ev::Patch : {
 			return "PATCH";
 		}
-		case zpt::ev::Reply: {
+		case zpt::ev::Reply : {
 			return "REPLY";
+		}
+		case zpt::ev::Search : {
+			return "M-SEARCH";
 		}
 	}
 	return "HEAD";
@@ -101,6 +104,9 @@ auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
 	}
 	if (_performative == "REPLY" || _performative == "reply") {
 		return zpt::ev::Reply;
+	}
+	if (_performative == "M-SEARCH" || _performative == "m-search") {
+		return zpt::ev::Search;
 	}
 	return zpt::ev::Head;
 }

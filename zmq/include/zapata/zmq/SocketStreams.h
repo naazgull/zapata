@@ -73,6 +73,7 @@ namespace zpt {
 		int __sock;
 		bool __ssl;
 		struct sockaddr_in __server;
+		struct sockaddr_in __peer;
 		std::string __host;
 		short __port;
 		short __protocol;
@@ -252,8 +253,8 @@ namespace zpt {
 					}
 					case IPPROTO_UDP : {
 						int _actually_read = -1;
-						socklen_t _peer_addr_len = sizeof(__server);
-						if ((_actually_read = ::recvfrom(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0, (struct sockaddr *) & __server, &_peer_addr_len)) < 0) {
+						socklen_t _peer_addr_len = sizeof(__peer);
+						if ((_actually_read = ::recvfrom(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0, (struct sockaddr *) & __peer, &_peer_addr_len)) < 0) {
 							::shutdown(this->__sock, SHUT_RDWR);
 							::close(this->__sock);
 							this->__sock = 0;
