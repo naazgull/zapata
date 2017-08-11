@@ -48,6 +48,7 @@ using namespace __gnu_cxx;
 #define ZMQ_ASSYNC_REQ -4
 #define ZMQ_HTTP_RAW -5
 #define ZMQ_MQTT_RAW -6
+#define ZMQ_UPNP_RAW -7
 
 #define ZPT_SELF_CERTIFICATE 0
 #define ZPT_PEER_CERTIFICATE 1
@@ -442,7 +443,6 @@ namespace zpt {
 	namespace net {
 		auto getip() -> std::string;
 	}
-
 
 	namespace rest {
 		auto http2zmq(zpt::http::req _request) -> zpt::json;

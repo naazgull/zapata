@@ -192,8 +192,9 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 	}
 
 	_document << "_id" << _document["href"];
-
-	std::string _body = std::string(_document);
+	
+	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+	std::string _body = std::string(_document - _exclude);
 	zpt::http::req _req;
 	_req->method(zpt::ev::Post);
 	_req->url(_db_name);
@@ -238,7 +239,7 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 				if (!_revision->ok()) {
 					break;
 				}
-				_upsert = _revision + _document;
+				_upsert = _revision | _document;
 				if (!_upsert["id"]->ok()) {
 					_upsert << "id" << zpt::generate::r_uuid();
 				}
@@ -247,7 +248,8 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 				}
 				_upsert << "_id" << _upsert["href"];
 
-				std::string _body = std::string(_upsert);
+				zpt::json _exclude = (_opts["fields"]->is_array() ? _upsert - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+				std::string _body = std::string(_upsert - _exclude);
 				_req->header("Content-Length", std::to_string(_body.length()));
 				_req->body(_body);
 				_rep = this->send(_req);
@@ -268,7 +270,8 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 		}
 		_document << "_id" << _document["href"];
 
-		std::string _body = std::string(_document);
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		zpt::http::req _req;
 		_req->method(zpt::ev::Post);
 		_req->url(_db_name);
@@ -302,7 +305,8 @@ auto zpt::couchdb::Client::save(std::string _collection, std::string _href, zpt:
 		zpt::json _revision = this->get(_collection, _href);
 		_document << "_rev" << _revision["_rev"];
 		
-		std::string _body = std::string(_document);
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		_req->header("Content-Length", std::to_string(_body.length()));
 		_req->body(_body);
 		_rep = this->send(_req);
@@ -326,8 +330,11 @@ auto zpt::couchdb::Client::set(std::string _collection, std::string _href, zpt::
 	_req->header("Content-Type", "application/json");
 	zpt::http::rep _rep;
 	do {
-		zpt::json _revision = this->get(_collection, _href);		
-		std::string _body = std::string(zpt::json(_revision + _document));
+		zpt::json _revision = this->get(_collection, _href);
+		
+		_document = _revision | _document;
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		_req->header("Content-Length", std::to_string(_body.length()));
 		_req->body(_body);
 		_rep = this->send(_req);
@@ -351,9 +358,12 @@ auto zpt::couchdb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	_req->header("Content-Type", "application/json");
 	zpt::json _result = this->query(_collection, _pattern);
 
-	for (auto _record : _result["elements"]->arr()) {
-		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_record["href"]));
-		std::string _body = std::string(zpt::json(_record + _document));
+	for (auto _revision : _result["elements"]->arr()) {
+		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
+
+		_document = _revision | _document;
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		_req->url(_url);
 		_req->header("Content-Length", std::to_string(_body.length()));
 		_req->body(_body);
@@ -380,7 +390,10 @@ auto zpt::couchdb::Client::unset(std::string _collection, std::string _href, zpt
 	zpt::http::rep _rep;
 	do {
 		zpt::json _revision = this->get(_collection, _href);		
-		std::string _body = std::string(zpt::json(_revision - _document));
+
+		_document = _revision - _document;
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		_req->header("Content-Length", std::to_string(_body.length()));
 		_req->body(_body);
 		_rep = this->send(_req);
@@ -404,9 +417,12 @@ auto zpt::couchdb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	_req->header("Content-Type", "application/json");
 	zpt::json _result = this->query(_collection, _pattern);
 
-	for (auto _record : _result["elements"]->arr()) {
-		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_record["href"]));
-		std::string _body = std::string(zpt::json(_record - _document));
+	for (auto _revision : _result["elements"]->arr()) {
+		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
+
+		_document = _revision - _document;
+		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
+		std::string _body = std::string(_document - _exclude);
 		_req->url(_url);
 		_req->header("Content-Length", std::to_string(_body.length()));
 		_req->body(_body);

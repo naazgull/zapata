@@ -29,6 +29,7 @@ SOFTWARE.
 #include <zapata/events.h>
 #include <zapata/zmq.h>
 #include <zapata/mqtt.h>
+#include <zapata/upnp.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -124,6 +125,7 @@ namespace zpt {
 		std::vector< zpt::socket_ref > __router_dealer;
 		zpt::rest::server __self;
 		zpt::mqtt::broker __mqtt;
+		zpt::upnp::broker __upnp;
 		zpt::ev::OnStartStack __initializers;
 		size_t __max_threads;
 		size_t __alloc_threads;

@@ -147,7 +147,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __upnp(_options), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
 		assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
@@ -341,6 +341,8 @@ void zpt::RESTServer::start() {
 			_http.detach();
 		}
 
+		this->__poll->poll(this->__poll->add(this->__upnp.get()));
+		
 		for (auto _callback : this->__initializers) {
 			_callback(this->__emitter);
 		}

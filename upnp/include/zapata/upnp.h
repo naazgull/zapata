@@ -24,5 +24,5 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/smtp/config.h>
-#include <zapata/smtp/SMTP.h>
+#include <zapata/upnp/config.h>
+#include <zapata/upnp/UPnP.h>

@@ -46,7 +46,6 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile
-        src/applications/Makefile
         src/clients/Makefile)
 
 AC_OUTPUT

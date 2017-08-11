@@ -39,9 +39,10 @@ namespace zpt {
 		"OPTIONS",
 		"PATCH",
 		"REPLY",
+		"M-SEARCH",
+		"NOTIFY",
 		"TRACE",
-		"CONNECT",
-		"M-SEARCH"
+		"CONNECT"
 	};
 
 }

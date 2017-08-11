@@ -33,6 +33,7 @@ namespace zpt {
 	namespace couchdb {
 
 		auto get_query(zpt::json _params) -> zpt::json;
+		auto get_fields(zpt::json _opts) -> zpt::json;
 
 	}
 }

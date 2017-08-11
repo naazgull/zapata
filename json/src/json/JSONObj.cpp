@@ -1506,6 +1506,52 @@ zpt::JSONPtr zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) {
 	return zpt::undefined;
 }
 
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::json _rhs) {
+	return (* this) | (* _rhs);
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::JSONPtr _rhs) {
+	return (* this) | (* _rhs);
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) {
+	if (this->__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _rrhs = _rhs.clone();
+		return _rrhs;
+	}
+	if (_rhs.__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _lhs = this->clone();
+		return _lhs;
+	}
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+	assertz(this->__target.__type == zpt::JSArray || _rhs.__target.__type == zpt::JSArray || this->__target.__type == _rhs.__target.__type, "can't add JSON objects of different types", 500, 0);
+	switch(this->__target.__type) {
+		case zpt::JSObject : {
+			zpt::JSONPtr _lhs = this->clone();
+			for (auto _e : _rhs.obj()) {
+				if (_lhs[_e.first]->type() == zpt::JSObject) {
+					_lhs << _e.first << (_lhs[_e.first] | _e.second);
+				}
+				else {
+					_lhs << _e.first << _e.second;
+				}
+			}
+			return _lhs;
+		}
+		case zpt::JSArray : 
+		case zpt::JSString : 
+		case zpt::JSInteger : 
+		case zpt::JSDouble : 
+		case zpt::JSBoolean : 
+		case zpt::JSNil : 
+		case zpt::JSDate : 
+		case zpt::JSLambda : {
+			return zpt::undefined;
+		}
+	}
+	return zpt::undefined;
+}
+
 zpt::JSONPtr zpt::JSONElementT::getPath(std::string _path, std::string _separator) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
 	switch(this->__target.__type) {

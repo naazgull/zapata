@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
+#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^$elemMatch^")
 
 auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 	zpt::json _selector = zpt::json::object();
@@ -162,6 +162,14 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 					if (_bar_count == 2) {
 						_selector << std::string(_key) << zpt::json{ comp, _expression };
 					}
+					else if (_command == "elemMatch") {
+						try  {
+							_selector << std::string(_key) << zpt::json{ comp, { (std::string("$") + _options), zpt::json(_expression) } };
+						}
+						catch(...) {
+							_selector << std::string(_key) << zpt::json{ comp, { (std::string("$") + _options), _expression } };
+						}
+					}
 					else if (_options == "n") {
 						istringstream iss(_expression);
 						int i = 0;
@@ -211,4 +219,20 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 	}
 
 	return _query;
+}
+
+auto zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+	zpt::json _fields = _opts["fields"];
+	if (_fields->ok()) {
+		if (_fields->is_string()) {
+			_fields = zpt::split(std::string(_opts["fields"]), ",");
+		}
+		if (_fields->is_array()) {
+			for (auto _f : _fields->arr()) {
+				_return << std::string(_f) << true;
+			}
+		}
+	}
+	return _return;
 }

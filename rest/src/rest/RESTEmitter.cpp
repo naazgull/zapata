@@ -171,6 +171,10 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Patch ? nullptr : _handler));
 	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Reply ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Search ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Notify ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Trace ? nullptr : _handler));
+	_handlers.push_back((_handler == nullptr || _event != zpt::ev::Connect ? nullptr : _handler));
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
@@ -206,6 +210,10 @@ auto zpt::RESTEmitter::on(std::string _regex, std::map< zpt::ev::performative, z
 	_handlers.push_back(this->__default_options);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Patch)) == _handler_set.end() ? nullptr : _found->second);
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Reply)) == _handler_set.end() ? nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Search)) == _handler_set.end() ? nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Notify)) == _handler_set.end() ? nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Trace)) == _handler_set.end() ? nullptr : _found->second);
+	_handlers.push_back((_found = _handler_set.find(zpt::ev::Connect)) == _handler_set.end() ? nullptr : _found->second);
 
 	std::string _uuid = zpt::generate::r_uuid();
 	this->__resources.insert(std::make_pair(_uuid, std::make_pair(_url_pattern, _handlers)));
@@ -262,6 +270,12 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> std::
 			}
 			case zpt::ev::Reply : {
 				 _listener->reply(_resource, _envelope, _emitter);
+				 break;
+			}
+			case zpt::ev::Search :
+			case zpt::ev::Notify :
+			case zpt::ev::Trace :
+			case zpt::ev::Connect : {
 				 break;
 			}
 		}

@@ -279,8 +279,8 @@ auto zpt::ZMQPoll::loop() -> void {
 					//zdbg(std::string("communication event on ") + std::to_string(_k));
 					zpt::socket_ref _socket = this->__by_socket[_k];
 					if (!_socket->available()) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
-						this->__to_remove.push_back(this->__by_socket[_k]);
+						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						this->clean_up(_socket);
 						continue;
 					}
 
@@ -289,18 +289,18 @@ auto zpt::ZMQPoll::loop() -> void {
 						_envelope = _socket->recv();
 					}
 					catch (zpt::assertion& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
-						this->__to_remove.push_back(this->__by_socket[_k]);
+						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						this->clean_up(_socket);
 						continue;
 					}
 					catch (zmq::error_t& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
-						this->__to_remove.push_back(this->__by_socket[_k]);
+						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						this->clean_up(_socket);
 						continue;
 					}
 					catch (std::exception& _e) {
-						zlog(std::string("could not consume data from socket: peer has closed the connection"), zpt::verbose);
-						this->__to_remove.push_back(this->__by_socket[_k]);
+						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						this->clean_up(_socket);
 						continue;
 					}
 					
@@ -321,7 +321,7 @@ auto zpt::ZMQPoll::loop() -> void {
 					}
 
 					if (_envelope["headers"]["Connection"] == zpt::json::string("close")) {
-						this->__to_remove.push_back(_socket);
+						this->clean_up(_socket);
 					}
 					_socket->loop_iteration();
 				}
@@ -469,6 +469,13 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 			}
 			break;
 		}
+		case ZMQ_UPNP_RAW : {
+			zpt::socket_ref _found = this->get("__upnp_connection__");
+			if ((*_found) != nullptr) {
+				return *_found;
+			}
+			break;
+		}
 	}
 	return nullptr;
 }
@@ -505,6 +512,8 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket) -> void {
 			break;
 		}
 		case ZMQ_PUSH : {
+			this->__to_remove.push_back(_socket);
+			this->__needs_rebuild = true;
 			break;
 		}
 		case ZMQ_PULL : {
@@ -520,6 +529,9 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket) -> void {
 			break;
 		}
 		case ZMQ_MQTT_RAW : {
+			break;
+		}
+		case ZMQ_UPNP_RAW : {
 			break;
 		}
 	}

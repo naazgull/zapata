@@ -7,10 +7,10 @@ export projects=(
        http
        smtp
        oauth2
-       mqtt
        zmq
-       gen
+       mqtt
        upnp
+       gen
        mongodb
        redis
        mariadb

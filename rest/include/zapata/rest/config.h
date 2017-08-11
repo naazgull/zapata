@@ -28,28 +28,28 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
+#define HAVE_LIBZAPATA_EVENTS 1
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-/* #undef HAVE_LIBZAPATA_HTTP */
+#define HAVE_LIBZAPATA_HTTP 1
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-/* #undef HAVE_LIBZAPATA_JSON */
+#define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the `zapata-lisp' library (-lzapata-lisp). */
-/* #undef HAVE_LIBZAPATA_LISP */
+#define HAVE_LIBZAPATA_LISP 1
 
 /* Define to 1 if you have the `zapata-mqtt' library (-lzapata-mqtt). */
-/* #undef HAVE_LIBZAPATA_MQTT */
+#define HAVE_LIBZAPATA_MQTT 1
 
 /* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
-/* #undef HAVE_LIBZAPATA_PYTHON */
+#define HAVE_LIBZAPATA_PYTHON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-/* #undef HAVE_LIBZAPATA_ZMQ */
+#define HAVE_LIBZAPATA_ZMQ 1
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
 #define HAVE_LIBZMQ 1

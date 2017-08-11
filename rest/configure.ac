@@ -24,6 +24,7 @@ AC_CHECK_LIB(zapata-events, zpt_events)
 AC_CHECK_LIB(zapata-zmq, zpt_zmq)
 AC_CHECK_LIB(zapata-http, zpt_http)
 AC_CHECK_LIB(zapata-mqtt, zpt_mqtt)
+AC_CHECK_LIB(zapata-upnp, zpt_upnp)
 AC_CHECK_LIB(zapata-lisp, zpt_lisp)
 AC_CHECK_LIB(zapata-python, zpt_python)
 

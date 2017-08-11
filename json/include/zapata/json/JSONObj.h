@@ -367,6 +367,8 @@ namespace zpt {
 		JSONPtr operator-(T _in);
 		template <typename T>
 		JSONPtr operator/(T _in);
+		template <typename T>
+		JSONPtr operator|(T _in);
 
 		/**
 		 * \brief Friendly '>>' std::istream operator override that parses the textual representation available on an std::istream object into a of a zpt::JSONPtr object.
@@ -1608,6 +1610,9 @@ namespace zpt {
 		JSONPtr operator/(zpt::json _rhs);
 		JSONPtr operator/(zpt::JSONPtr _rhs);
 		JSONPtr operator/(zpt::JSONElementT& _rhs);
+		JSONPtr operator|(zpt::json _rhs);
+		JSONPtr operator|(zpt::JSONPtr _rhs);
+		JSONPtr operator|(zpt::JSONElementT& _rhs);
 
 		friend ostream& operator<<(ostream& _out, JSONElementT _in) {
 			_in.stringify(_out);
@@ -1776,6 +1781,10 @@ zpt::JSONPtr zpt::JSONPtr::operator-(T _rhs) {
 template <typename T>
 zpt::JSONPtr zpt::JSONPtr::operator/(T _rhs) {
 	return *(this->get()) / _rhs;
+};
+template <typename T>
+zpt::JSONPtr zpt::JSONPtr::operator|(T _rhs) {
+	return *(this->get()) | _rhs;
 };
 template <typename T>
 zpt::json zpt::json::operator[](T _idx) {

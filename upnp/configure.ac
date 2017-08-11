@@ -19,6 +19,7 @@ AC_HAVE_LIBRARY(crypto)
 AC_HAVE_LIBRARY(mosquitto)
 AC_CHECK_LIB(zapata-base, zpt_base)
 AC_CHECK_LIB(zapata-json, zpt_json)
+AC_CHECK_LIB(zapata-http, zpt_http)
 AC_CHECK_LIB(zapata-zmq, zpt_zmq)
 
 AC_CANONICAL_SYSTEM

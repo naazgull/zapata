@@ -76,6 +76,15 @@ auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
 		case zpt::ev::Search : {
 			return "M-SEARCH";
 		}
+		case zpt::ev::Notify : {
+			return "NOTIFY";
+		}
+		case zpt::ev::Trace : {
+			return "TRACE";
+		}
+		case zpt::ev::Connect : {
+			return "CONNECT";
+		}
 	}
 	return "HEAD";
 }
@@ -108,53 +117,16 @@ auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
 	if (_performative == "M-SEARCH" || _performative == "m-search") {
 		return zpt::ev::Search;
 	}
-	return zpt::ev::Head;
-}
-
-auto zpt::mutation::to_str(zpt::mutation::operation _performative) -> std::string{
-	switch(_performative) {
-		case zpt::mutation::Insert : {
-			return "INSERT";
-		}
-		case zpt::mutation::Remove : {
-			return "REMOVE";
-		}
-		case zpt::mutation::Update : {
-			return "UPDATE";
-		}
-		case zpt::mutation::Replace : {
-			return "REPLACE";
-		}
-		case zpt::mutation::Connect : {
-			return "CONNECT";
-		}
-		case zpt::mutation::Reconnect : {
-			return "RECONNECT";
-		}
+	if (_performative == "NOTIFY" || _performative == "notify") {
+		return zpt::ev::Notify;
 	}
-	return "";
-}
-
-auto zpt::mutation::from_str(std::string _performative) -> zpt::mutation::operation {
-	if (_performative == "INSERT" || _performative == "insert") {
-		return zpt::mutation::Insert;
-	}
-	if (_performative == "REMOVE" || _performative == "remove") {
-		return zpt::mutation::Remove;
-	}
-	if (_performative == "UPDATE" || _performative == "update") {
-		return zpt::mutation::Update;
-	}
-	if (_performative == "REPLACE" || _performative == "replace") {
-		return zpt::mutation::Replace;
+	if (_performative == "TRACE" || _performative == "trace") {
+		return zpt::ev::Search;
 	}
 	if (_performative == "CONNECT" || _performative == "connect") {
-		return zpt::mutation::Connect;
+		return zpt::ev::Search;
 	}
-	if (_performative == "RECONNECT" || _performative == "reconnect") {
-		return zpt::mutation::Reconnect;
-	}
-	return zpt::mutation::Insert;
+	return zpt::ev::Head;
 }
 
 zpt::tm_ptr zpt::get_time(time_t _t) {

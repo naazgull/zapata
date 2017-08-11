@@ -1537,18 +1537,6 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 				this->__state = HTTP_REP;
 				_in = zpt::rest::http2zmq(_reply);
 			}
-			// bool _blank_space = false;
-			// do {
-			// 	char _c = 0;
-			// 	int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK | MSG_DONTWAIT);
-			// 	if (_read > 0 && ((int) _c) < 33) {
-			// 		::recv(this->fd(), &_c, 1, 0);
-			// 		_blank_space = true;
-			// 		continue;
-			// 	}
-			// 	_blank_space = false;
-			// }
-			// while(_blank_space);
 		}
 	}
 	catch(zpt::SyntaxErrorException& _e) {
@@ -1598,6 +1586,9 @@ auto zpt::str2type(std::string _type) -> short {
 	if (_type == "HTTP" || _type == "HTTPS"){
 		return ZMQ_HTTP_RAW;
 	}
+	if (_type == "UPNP"){
+		return ZMQ_UPNP_RAW;
+	}
 	if (_type == "MQTT" || _type == "MQTTS"){
 		return ZMQ_MQTT_RAW;
 	}
@@ -1640,6 +1631,9 @@ auto zpt::type2str(short _type) -> std::string {
 			return "PULL";
 		}
 		case ZMQ_HTTP_RAW : {
+			return "HTTP";
+		}
+		case ZMQ_UPNP_RAW : {
 			return "HTTP";
 		}
 		case ZMQ_MQTT_RAW : {

@@ -392,10 +392,11 @@ namespace zpt {
 				return false;
 			}
 
-			std::copy(reinterpret_cast<char*>(_he->h_addr), reinterpret_cast<char*>(_he->h_addr) + _he->h_length, reinterpret_cast<char*>(& __buf.server().sin_addr.s_addr));
+			std::string _addr(reinterpret_cast<char*>(_he->h_addr), _he->h_length);
+			std::copy(_addr.c_str(), _addr.c_str() + _addr.length(), reinterpret_cast<char*>(& __buf.server().sin_addr.s_addr));
 			__buf.server().sin_family = AF_INET;
 			__buf.server().sin_port = htons(_port);
-
+			
 			if (!_ssl) {
 				switch(_protocol) {
 					case IPPROTO_IP: {
@@ -409,25 +410,12 @@ namespace zpt {
 						else {
 							__buf.set_socket(_sd);
 						}
-
-						// struct timeval _timeout;
-						// _timeout.tv_sec = 20;
-						// _timeout.tv_usec = 0;
-
-						// if (setsockopt (_sd, SOL_SOCKET, SO_RCVTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-						// 	this->close();
-						// 	__is_error = true;
-						// 	return false;
-						// }
-						// if (setsockopt (_sd, SOL_SOCKET, SO_SNDTIMEO, (char *) &_timeout, sizeof(_timeout)) < 0) {
-						// 	this->close();
-						// 	__is_error = true;
-						// 	return false;
-						// }
 						return true;
 					}
 					case IPPROTO_UDP: {
 						int _sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+						int _reuse = 1;
+						setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char *) &_reuse, sizeof(_reuse));
 						int _ret = inet_aton(__buf.host().c_str(), & __buf.server().sin_addr);
 						if (_ret == 0) {
 							struct addrinfo _hints, * _result = NULL;
@@ -457,7 +445,6 @@ namespace zpt {
 			}
 			else {
 				int _sd = socket(AF_INET, SOCK_STREAM, 0);
-				// fcntl(_sd, F_SETFL, O_NONBLOCK);
 				if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.server()), sizeof(__buf.server())) < 0) {
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
@@ -465,7 +452,6 @@ namespace zpt {
 					return false;
 				}
 				else {
-					// fcntl(_sd, F_SETFL, fcntl(_sd, F_GETFL, 0) & ~O_NONBLOCK);
 					SSL_library_init();
 					OpenSSL_add_all_algorithms();
 					SSL_load_error_strings();

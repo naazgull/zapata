@@ -81,25 +81,14 @@ namespace zpt {
 			Options = 5,
 			Patch = 6,
 			Reply = 7,
-			Search = 8
+			Search = 8,
+			Notify = 9,
+			Trace = 10,
+			Connect = 11
 		};
 
 		auto to_str(zpt::ev::performative _performative) -> std::string;
 		auto from_str(std::string _performative) -> zpt::ev::performative;
-	}
-
-	namespace mutation {
-		enum operation {
-			Insert = 0,
-			Remove = 1,
-			Update = 2,
-			Replace = 3,
-			Connect = 4,
-			Reconnect = 5
-		};
-
-		auto to_str(zpt::mutation::operation _operation) -> std::string;
-		auto from_str(std::string _operation) -> zpt::mutation::operation;
 	}
 
 	extern std::string* tz;
