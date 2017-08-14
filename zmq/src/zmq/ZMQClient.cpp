@@ -1314,10 +1314,6 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 			_raw.assign(_directive);
 			_directive.assign(_empty);
 		}
-
-		// zdbg(_id);
-		// zdbg(_directive);
-		// zdbg(_raw);
 		
 		try {
 			zpt::json _envelope(_raw);
@@ -1442,58 +1438,9 @@ auto zpt::ZMQDealer::protocol() -> std::string {
 auto zpt::ZMQDealer::send(zpt::json _envelope) -> zpt::json {
 	zpt::ZMQ::send(_envelope);
 	return zpt::undefined;
-	// std::string _uuid = zpt::generate::r_uuid();
-	
-	// assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
-	// assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
-
-	// zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
-	// _envelope <<
-	// "resource" << _uri["path"] <<
-	// "protocol" << this->protocol() <<
-	// "params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
-	
-	// zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
-	// if (_performative == zpt::ev::Reply) {
-	// 	assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-	// 	_envelope["headers"] << "X-Status" << _envelope["status"];
-	// }		
-	// if (!_envelope["payload"]->ok()) {
-	// 	_envelope << "payload" << zpt::json::object();
-	// }
-	// if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
-	// 	_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
-	// }
-	// int _status = (int) _envelope["headers"]["X-Status"];
-
-	// std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));// + std::string(" ") + zpt::generate::r_uuid());
-	// std::string _buffer(_envelope);
-	
-	// zmq::message_t _frame1(_uuid.length());
-	// zmq::message_t _frame2(0);
-	// zmq::message_t _frame3(_directive.length());
-	// zmq::message_t _frame4(_buffer.length());
-
-	// memcpy(_frame1.data(), _uuid.data(), _uuid.length());
-	// memcpy(_frame3.data(), _directive.data(), _directive.length());
-	// memcpy(_frame4.data(), _buffer.data(), _buffer.length());
-	
-	// std::lock_guard< std::mutex > _lock(this->out_mtx());
-	// assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-	// assertz(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-	// assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-	// assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
-	// ztrace(std::string("> ") + _directive);
-	// zverbose(zpt::ev::pretty(_envelope));
-
-	// return zpt::undefined;
 }
 
 auto zpt::ZMQDealer::recv() -> zpt::json {
-	// zpt::json _return = zpt::ZMQ::recv();
-	// zdbg(_return);
-	// return _return;
-	
 	zmq::message_t _frame1;
 	zmq::message_t _frame2;
 	zmq::message_t _frame3;
@@ -1518,17 +1465,12 @@ auto zpt::ZMQDealer::recv() -> zpt::json {
 		std::string _directive(static_cast<char*>(_frame2.data()), _frame2.size());
 		std::string _raw(static_cast<char*>(_frame3.data()), _frame3.size());
 
-		// zdbg(_empty);
-		// zdbg(_directive);
-		// zdbg(_raw);
-		
 		if (_raw.length() == 0 && _empty.length() != 0) {
 			_raw.assign(_directive);
 			_directive.assign(_empty);
 		}
 
 		if (_raw.length() == 0 || _directive.length() == 0) {
-			// zdbg(this->protocol() + std::string(": empty message"));
 			return zpt::undefined;
 		}
 		
