@@ -108,7 +108,6 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 		
 	zpt::json _options = _ptr["boot"][0];
-	_options << "proc" << zpt::json({ "directory_register", "on", "mqtt_register", "on" });
 
 	::signal(SIGINT, zpt::rest::terminate);
 	::signal(SIGTERM, zpt::rest::terminate);
@@ -152,7 +151,10 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
+		std::string _ip = std::string("tcp://") + zpt::net::getip();
 
+		this->__poll->poll(this->__poll->add(this->__upnp.get()));
+		
 		for (auto _definition : this->__options["zmq"]->arr()) {
 			short int _type = zpt::str2type(_definition["type"]->str());
 			zpt::socket_ref _socket;
@@ -171,7 +173,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					break;
 				}
 			}
-			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(_socket->connection(), "@tcp", ">tcp"));
+			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"), "tcp://*", _ip));
 			zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 		}
 		
@@ -217,6 +219,8 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		zlog(_e.what(), zpt::emergency);
 		this->__suicidal = true;
 	}
+
+	// std::cout << this->__emitter->directory()->pretty() << endl << flush;
 }
 
 zpt::RESTServer::~RESTServer(){
@@ -300,10 +304,6 @@ void zpt::RESTServer::start() {
 			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
 			this->__poll->poll(this->__poll->add(this->__mqtt.get()));
-			
-			// if (!this->__options["mqtt"]["no-threads"]->ok() || std::string(this->__options["mqtt"]["no-threads"]) != "true") {
-			// 	this->__mqtt->start();
-			// }			
 		}
 
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
@@ -341,8 +341,34 @@ void zpt::RESTServer::start() {
 			_http.detach();
 		}
 
-		this->__poll->poll(this->__poll->add(this->__upnp.get()));
-		
+		this->__emitter->on("(.*)",
+			{
+				{ zpt::ev::Notify,
+					[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+						if (_envelope["payload"]["uuid"] != zpt::json::string(_emitter->uuid())) {
+							_emitter->directory()->notify(std::string(_envelope["payload"]["regex"]), std::make_tuple(_envelope["payload"], zpt::ev::handlers(), std::regex(std::string(_envelope["payload"]["regex"]))));
+							//std::cout << _emitter->directory()->pretty() << endl << flush;
+						}
+					}
+				},
+				{ zpt::ev::Search,
+					[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+						zpt::json _found = std::get<0>(_emitter->directory()->lookup(zpt::r_replace(std::string(_envelope["headers"]["ST"]), "urn:schemas-upnp-org:service:", ""), zpt::ev::Connect));
+						if (_found["uuid"] == zpt::json::string(_emitter->uuid())) {
+							_emitter->route(
+								zpt::ev::Notify,
+								"*",
+								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
+									"payload", _found },
+								{ "upnp", true }
+							);
+						}
+					}
+				}
+			},
+			{ "upnp", true }
+		);
+
 		for (auto _callback : this->__initializers) {
 			_callback(this->__emitter);
 		}
@@ -352,9 +378,6 @@ void zpt::RESTServer::start() {
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 
 		sd_notify(0, "READY=1");
-		// if (this->__options["mqtt"]["no-threads"]->ok() && std::string(this->__options["mqtt"]["no-threads"]) == "true") {
-		// 	this->__mqtt->loop();
-		// }
 		
 		this->__poll->loop();
 	}
@@ -413,6 +436,10 @@ auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 			this->__mqtt->subscribe(_t->str());
 		}
 	}
+}
+
+auto zpt::RESTServer::broadcast(zpt::json _envelope) -> void {
+	this->__upnp->send(_envelope);
 }
 
 std::string zpt::rest::scopes::serialize(zpt::json _info) {

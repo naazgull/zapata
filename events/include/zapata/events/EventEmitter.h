@@ -31,6 +31,7 @@ SOFTWARE.
 #include <map>
 #include <memory>
 #include <ossp/uuid++.hh>
+#include <regex>
 
 using namespace std;
 #if !defined __APPLE__
@@ -46,15 +47,16 @@ namespace zpt {
 	class EventListener;
 	class EventGatekeeper;
 	class EventDirectory;
+	class EventDirectoryGraph;
 	class Bridge;
 	class BridgePtr;
-	class ThreadContext;
 
 	typedef std::weak_ptr< zpt::EventEmitter > EventEmitterWPtr;
 	typedef std::shared_ptr< zpt::EventEmitter > EventEmitterPtr;
 	typedef std::shared_ptr< zpt::EventListener > EventListenerPtr;
 	typedef std::shared_ptr< zpt::EventGatekeeper > EventGatekeeperPtr;
 	typedef std::shared_ptr< zpt::EventDirectory > EventDirectoryPtr;
+	typedef std::shared_ptr< zpt::EventDirectoryGraph > EventDirectoryGraphPtr;
 
 	typedef BridgePtr bridge;
 
@@ -65,15 +67,17 @@ namespace zpt {
 		typedef zpt::EventListenerPtr listener;
 		typedef zpt::EventGatekeeperPtr gatekeeper;
 		typedef zpt::EventDirectoryPtr directory;
-
+		typedef zpt::EventDirectoryGraphPtr graph;
+		
 		typedef std::function<void (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> Handler;
 		typedef std::function<void (zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
 		typedef Handler Callback;
 		typedef handler callback;
 		typedef std::vector< zpt::ev::handler> handlers;
-		typedef std::map< std::string, std::pair<std::regex, zpt::ev::handlers > > HandlerStack;
 		typedef std::map< std::string, zpt::ev::handler > ReplyHandlerStack;
 
+		typedef std::tuple< zpt::json, zpt::ev::handlers, std::regex > node;
+		
 		typedef std::function<void (zpt::ev::emitter)> initializer;
 		typedef std::vector< zpt::ev::initializer > OnStartStack;
 
@@ -87,10 +91,20 @@ namespace zpt {
 		auto init_reply(std::string _cid = "", zpt::json _request = zpt::undefined) -> zpt::json;
 
 		auto pretty(zpt::json _envelope) -> std::string;
-	}
 
-	namespace thread {
-		typedef std::shared_ptr< zpt::ThreadContext > context;
+		auto not_found(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto bad_request(zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto accepted(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto no_content(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto temporary_redirect(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto see_other(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto options(std::string _resource, std::string _origin, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto internal_server_error(std::exception& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto assertion_error(zpt::assertion& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
+
+		namespace uri {
+			auto get_simplified_topics(std::string _pattern) -> zpt::json;
+		}
 	}
 
 	auto is_sql(std::string _name) -> bool;
@@ -203,6 +217,7 @@ namespace zpt {
 		EventEmitter(zpt::json _options);
 		virtual ~EventEmitter();
 		
+		virtual auto uuid() -> std::string;
 		virtual auto options() -> zpt::json;
 		virtual auto self() const -> zpt::ev::emitter;
 		virtual auto unbind() -> void;
@@ -210,16 +225,13 @@ namespace zpt {
 		virtual auto gatekeeper() -> zpt::ev::gatekeeper;
 		virtual auto gatekeeper(zpt::ev::gatekeeper _gatekeeper) -> void;
 		virtual auto directory() -> zpt::ev::directory;
-		virtual auto directory(zpt::ev::directory _directory) -> void;
 
 		virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed = zpt::undefined) -> zpt::json;
-		virtual auto lookup(std::string _topic) -> zpt::json;
+		virtual auto lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
 		
-		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> std::string = 0;
-		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void = 0;
-		virtual auto off(std::string _callback_id) -> void = 0;
+		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> void = 0;
+		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> void = 0;
+		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> void = 0;
 
 		virtual auto credentials() -> zpt::json = 0;
 		virtual auto credentials(zpt::json _credentials) -> void = 0;
@@ -242,6 +254,7 @@ namespace zpt {
 		zpt::ev::gatekeeper __keeper;
 		zpt::ev::directory __directory;
 		std::map<std::string, zpt::connector> __connector;
+		std::string __uuid;
 	};
 
 	class EventGatekeeper {
@@ -263,6 +276,26 @@ namespace zpt {
 		zpt::ev::emitter __emitter;
 	};
 	
+
+	class EventDirectoryGraph {
+	public:
+		EventDirectoryGraph(std::string _resolver, zpt::ev::node _service);
+		virtual ~EventDirectoryGraph();
+		
+		virtual auto insert(std::string _topic, zpt::ev::node _node) -> void;
+		virtual auto find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
+		virtual auto pretty(std::string _tabs = "", bool _last = false) -> std::string;
+			
+	private:
+		std::string __resolver;
+		zpt::ev::node __service;
+		std::map< std::string, zpt::ev::graph > __children;
+
+		auto insert(zpt::json _topic, zpt::ev::node _service) -> void;
+		auto find(std::string _topic, zpt::json _splited, zpt::ev::performative _performative) -> zpt::ev::node;
+		
+	};
+	
 	class EventDirectory {
 	public:
 		EventDirectory(zpt::json _options);
@@ -273,16 +306,15 @@ namespace zpt {
 		virtual auto self() const -> zpt::ev::directory;
 		virtual auto events() -> zpt::ev::emitter final;
 		virtual auto events(zpt::ev::emitter _emitter) -> void final;
-		virtual auto lookup(std::string _topic) -> zpt::json;
-		virtual auto notify(std::string _topic, zpt::json _connection = zpt::undefined) -> void;
+		virtual auto lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
+		virtual auto notify(std::string _topic, zpt::ev::node _connection) -> void;
+		virtual auto pretty() -> std::string;
 		
 	private:
 		zpt::json __options;
 		zpt::ev::directory __self;
 		zpt::ev::emitter __emitter;
-		
-	protected:
-		std::map< std::string, std::pair< std::regex, zpt::json > > __index;
+		zpt::ev::graph __services;
 		std::mutex __mtx;
 	};
 	
@@ -304,9 +336,6 @@ namespace zpt {
 
 	private:
 		std::string __regex;
-	};
-
-	class ThreadContext {
 	};
 
 	template< typename T >

@@ -85,6 +85,7 @@ auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connectio
 	std::string _key;
 
 	if (!_new_connection && this->relay(zpt::type2str(_type) + std::string(">") + _connection) != nullptr) {
+		// zdbg(std::string("returning already found connection for: ") + zpt::type2str(_type) + std::string(">") + _connection);
 		return zpt::socket_ref(zpt::type2str(_type) + std::string(">") + _connection, this->self());
 	}
 
@@ -152,6 +153,11 @@ auto zpt::ZMQPoll::poll(zpt::socket_ref _socket) -> void {
 			this->signal(_socket.data());
 		}
 		else {
+			for (auto _already : this->__by_socket) {
+				if (_already == _socket) {
+					return;
+				}
+			}
 			this->__to_add.push_back(_socket);
 			this->__needs_rebuild = true;
 		}
@@ -210,35 +216,12 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 	}
 	catch(zpt::assertion& _e) {
 		if (*_socket != nullptr) {
-			_socket->send(
-				{
-					"channel", _envelope["channel"],
-					"performative", zpt::ev::Reply,
-					"status", _e.status(),
-					"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
-					"payload", {
-						"text", _e.what(),
-						"assertion_failed", _e.description(),
-						"code", _e.code()
-					}
-				}
-			);
+			_socket->send(zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
 		}
 	}
 	catch(std::exception& _e) {
 		if (*_socket != nullptr) {
-			_socket->send(
-				{
-					"channel", _envelope["channel"],
-					"performative", zpt::ev::Reply,
-					"status", 500,
-					"headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"],
-					"payload", {
-						"text", _e.what(),
-						"code", 0
-					}
-				}
-			);
+			_socket->send(zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
 		}
 	}
 			
@@ -254,7 +237,7 @@ auto zpt::ZMQPoll::loop() -> void {
 		
 		for(; true; ) {
 			this->repoll();
-			//zdbg(std::string("socket list size is ") + std::to_string(this->__items.size()));
+			// zdbg(std::string("socket list size is ") + std::to_string(this->__items.size()));
 			
 			int _n_events = 0;
 			_n_events = zmq::poll(&this->__items[0], this->__items.size(), _sd_watchdog_usec / 1000 / 2);
@@ -272,14 +255,15 @@ auto zpt::ZMQPoll::loop() -> void {
 				}
 				continue;
 			}
-			//zdbg(std::string("events ") + std::to_string(_n_events));
+			// zdbg(std::string("events ") + std::to_string(_n_events));
 			
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
 					//zdbg(std::string("communication event on ") + std::to_string(_k));
 					zpt::socket_ref _socket = this->__by_socket[_k];
+					zverbose(std::string("poll event on ") + _socket->protocol() + std::string("/") + _socket->connection());
 					if (!_socket->available()) {
-						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
@@ -289,21 +273,21 @@ auto zpt::ZMQPoll::loop() -> void {
 						_envelope = _socket->recv();
 					}
 					catch (zpt::assertion& _e) {
-						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
 					catch (zmq::error_t& _e) {
-						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
 					catch (std::exception& _e) {
-						zlog(std::string("could not consume data from socket"), zpt::verbose);
+						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
-					
+
 					if (bool(_envelope["error"])) {
 						if (*_socket != nullptr) {
 							_socket->send(_envelope +
@@ -314,6 +298,9 @@ auto zpt::ZMQPoll::loop() -> void {
 									"resource", "/bad-request"
 								}
 							);
+							zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+							this->clean_up(_socket);
+							continue;
 						}
 					}
 					else if (_envelope->ok()) {
@@ -323,6 +310,7 @@ auto zpt::ZMQPoll::loop() -> void {
 					if (_envelope["headers"]["Connection"] == zpt::json::string("close")) {
 						this->clean_up(_socket);
 					}
+
 					_socket->loop_iteration();
 				}
 				else {
@@ -522,7 +510,7 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket) -> void {
 			break;
 		}
 		case ZMQ_HTTP_RAW : {
-			if (((zpt::ZMQHttp*) *_socket)->underlying()->host() != "") {
+			if (!_socket->available() || ((zpt::ZMQHttp*) *_socket)->underlying()->host() != "") {
 				this->__to_remove.push_back(_socket);
 				this->__needs_rebuild = true;
 			}

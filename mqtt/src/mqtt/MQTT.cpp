@@ -104,6 +104,7 @@ auto zpt::MQTT::connected() -> bool {
 
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx_conn);
+	this->connection(std::string(_tls ? "mqtts://" : "mqtt://") + _host + std::string(":") + std::to_string(_port));
 
 #if defined(ZPT_USE_MOSQUITTO)
 	if (_tls) {

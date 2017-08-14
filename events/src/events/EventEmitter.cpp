@@ -51,10 +51,14 @@ auto zpt::Bridge::options() -> zpt::json {
 zpt::EventEmitter::EventEmitter() : __self(this), __keeper(nullptr), __directory(nullptr) {
 }
 
-zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()) {
+zpt::EventEmitter::EventEmitter(zpt::json _options) :  __options(_options), __self(this), __keeper((new zpt::EventGatekeeper(_options))->self()), __directory((new zpt::EventDirectory(_options))->self()), __uuid(zpt::generate::r_uuid()) {
 }
 
 zpt::EventEmitter::~EventEmitter() {
+}
+
+auto zpt::EventEmitter::uuid() -> std::string {
+	return this->__uuid;
 }
 
 auto zpt::EventEmitter::options() -> zpt::json {
@@ -83,18 +87,12 @@ auto zpt::EventEmitter::directory() -> zpt::ev::directory {
 	return this->__directory;
 }
 
-auto zpt::EventEmitter::directory(zpt::ev::directory _directory) -> void {
-	this->__directory->unbind();
-	_directory->events(this->self());
-	this->__directory = _directory;
-}
-
 auto zpt::EventEmitter::authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json {
 	return this->__keeper->authorize(_topic, _envelope, _roles_needed);
 }
 
-auto zpt::EventEmitter::lookup(std::string _topic) -> zpt::json {
-	return this->__directory->lookup(_topic);
+auto zpt::EventEmitter::lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
+	return this->__directory->lookup(_topic, _performative);
 }
 
 auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
@@ -109,7 +107,7 @@ auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) 
 			zlog(_e.what(), zpt::error);
 			return;
 		}
-		this->__connector.insert(make_pair(_name, _connector));
+		this->__connector.insert(std::make_pair(_name, _connector));
 	}
 }
 
@@ -340,24 +338,7 @@ auto zpt::EventGatekeeper::authorize(std::string _topic, zpt::json _envelope, zp
 	return { "client_id", "anyone", "access_token", "--blank--", "roles", zpt::json::array() };
 }
 
-zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), __self(this) {
-	if (_options["directory"]->type() == zpt::JSObject) {
-		for (auto _api : _options["directory"]->obj()) {
-			if (_api.second["endpoints"]->type() != zpt::JSArray) {
-				continue;
-			}
-			for (auto _endpoint : _api.second["endpoints"]->arr()) {
-				if (_endpoint->type() != zpt::JSString) {
-					continue;
-				}
-				try {
-					std::regex _regex(std::string("^") + _endpoint->str() + std::string("(.*)$"));
-					this->__index.insert(std::make_pair(std::string("^") + _endpoint->str() + std::string("(.*)$"), std::make_pair(_regex, zpt::json({ "connect", _api.second["connect"], "type", _api.second["type"] }))));
-				}
-				catch(std::exception& _e) {}
-			}
-		}
-	}
+zpt::EventDirectory::EventDirectory(zpt::json _options) : __options(_options), __self(this), __services(new zpt::EventDirectoryGraph("",  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*")))) {
 }
 
 zpt::EventDirectory::~EventDirectory() {
@@ -383,22 +364,177 @@ auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void {
 	this->__emitter = _emitter;
 }
 
-auto zpt::EventDirectory::lookup(std::string _topic) -> zpt::json {
+auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	for (auto _service : this->__index) {
-		if (std::regex_match(_topic, _service.second.first)) {
-			return _service.second.second;
+	zpt::ev::node _found = this->__services->find(_topic, _performative);
+	if (std::get<0>(_found)->is_object()) {
+		size_t _next = size_t(std::get<0>(_found)["next"]);
+		zpt::json _peers = std::get<0>(_found)["peers"];
+		zpt::json _container = _peers[_next];
+		if (_next == _peers->arr()->size() - 1) {
+			_next = 0;
 		}
+		else {
+			_next++;
+			std::get<0>(_found) << "next" << _next;
+		}
+		return std::make_tuple(_container, std::get<1>(_found), std::get<2>(_found));
 	}
-	return zpt::undefined;
+	return _found;
 }
 
-auto zpt::EventDirectory::notify(std::string _topic, zpt::json _connection) -> void {
+auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	std::regex _regex(_topic);
-	zpt::json _record = (_connection->type() == zpt::JSArray ? _connection[0] : _connection);
-	_record << "connect" << zpt::r_replace(_record["connect"]->str(), "tcp://*:", std::string("tcp://127.0.0.1:"));
-	this->__index.insert(std::make_pair(_topic, std::make_pair(_regex, _record)));
+	std::get<0>(_connection) << "connect" << zpt::r_replace(std::string(std::get<0>(_connection)["connect"]), "tcp://*:", std::string("tcp://127.0.0.1:"));
+	if (std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
+		this->__emitter->route(
+			zpt::ev::Notify,
+			"*",
+			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + _topic), "Location", std::get<0>(_connection)["connect"] },
+				"payload", std::get<0>(_connection) },
+			{ "upnp", true }
+		);
+	}
+	this->__services->insert(_topic, _connection);
+}
+
+auto zpt::EventDirectory::pretty() -> std::string {
+	return this->__services->pretty();
+}
+
+zpt::EventDirectoryGraph::EventDirectoryGraph(std::string _resolver, zpt::ev::node _service) : __resolver(_resolver), __service(_service) {
+}
+
+zpt::EventDirectoryGraph::~EventDirectoryGraph() {
+}
+		
+auto zpt::EventDirectoryGraph::insert(std::string _topic, zpt::ev::node _service) -> void {
+	zpt::json _topics = zpt::ev::uri::get_simplified_topics(_topic);
+	for (auto _topic : _topics->arr()) {
+		this->insert(zpt::path::split(std::string(_topic)), _service);
+	}
+}
+
+auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) -> void {	
+	if (_topic->arr()->size() == 0) {
+		zpt::json _containers = std::get<0>(this->__service)["peers"];
+		if (_containers->is_array()) {
+			zpt::json _new_containers = std::get<0>(_service);
+			if (_new_containers->is_array()) {
+				for (auto _nc : _new_containers->arr()) {
+					bool _found = false;
+					for (auto _c : _containers->arr()) {
+						if (_nc["connect"] == _c["connect"]) {
+							_c << "uuid" << _nc["uuid"] << "type" << _nc["type"];
+							_found = true;
+							break;
+						}
+					}
+					if (!_found) {
+						_containers << _nc;
+					}
+				}
+			}
+		}
+		else {
+			zpt::json _s_data = std::get<0>(_service)->clone();
+			std::get<0>(_service)->obj()->clear();
+			std::get<0>(_service) << "peers" << zpt::json{ zpt::array, _s_data } << "next" << 0;
+			// std::get<0>(_service) = { "peers", { zpt::array, std::get<0>(_service) }, "next", 0 };
+			this->__service = _service;
+		}
+		return;
+	}
+	
+	std::string _resolver = std::string(_topic[0]);
+	auto _child = this->__children.find(_resolver);
+	if (_child == this->__children.end()) {
+		this->__children.insert(std::make_pair(_resolver.data(), zpt::ev::graph(new zpt::EventDirectoryGraph(_resolver, std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"))))));
+		_child = this->__children.find(_resolver);
+	}
+
+	_topic->arr()->erase(_topic->arr()->begin());
+	_child->second->insert(_topic, _service);
+}
+
+auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
+	zpt::json _splited = zpt::path::split(_topic);
+	if (std::string(_splited[0]).find(":") != std::string::npos) {
+		zpt::json _uri = zpt::uri::parse(_topic);
+		std::string _connect = std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]);
+		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", zpt::r_replace(_topic, _connect, ""), "type", (_uri["scheme"] == zpt::json::string("tcp") ? "req" : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));
+	}
+	return this->find(_topic, _splited, _performative);
+}
+
+auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::json _splited, zpt::ev::performative _performative) -> zpt::ev::node {
+	zpt::json _containers = std::get<0>(this->__service);
+	if (_containers->is_object()) {
+		if (std::regex_match(_topic, std::get<2>(this->__service))) {
+			if (_performative == zpt::ev::Connect) {
+				return this->__service;
+			}
+
+			for (auto _c : _containers["peers"]->arr()) {
+				if (_c["performatives"][zpt::ev::to_str(_performative)]->ok()) {
+					return this->__service;
+				}
+			}
+		}
+	}
+
+	if (_splited->arr()->size() == 0) {
+		return  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"));
+	}
+	
+	auto _child = this->__children.find(std::string(_splited[0]));
+	if (_child != this->__children.end()) {
+		zpt::json _less = _splited->clone();
+		_less->arr()->erase(_less->arr()->begin());
+		zpt::ev::node _result = _child->second->find(_topic, _less, _performative);
+		if (std::get<0>(_result)->ok()) {
+			return _result;
+		}
+	}
+	
+	_child = this->__children.find("+");
+	if (_child != this->__children.end()) {
+		zpt::json _less = _splited->clone();
+		_less->arr()->erase(_less->arr()->begin());
+		zpt::ev::node _result = _child->second->find(_topic, _less, _performative);
+		if (std::get<0>(_result)->ok()) {
+			return _result;
+		}
+	}
+	
+	_child = this->__children.find("*");
+	if (_child != this->__children.end()) {
+		zpt::json _less = _splited->clone();
+		do {
+			_less->arr()->erase(_less->arr()->begin());
+			zpt::ev::node _result = _child->second->find(_topic, _less, _performative);
+			if (std::get<0>(_result)->ok()) {
+				return _result;
+			}
+		}
+		while(_less->arr()->size() != 0);
+	}
+	
+	return  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"));
+}
+
+auto zpt::EventDirectoryGraph::pretty(std::string _tabs, bool _last) -> std::string {
+	std::string _return;
+	if (this->__resolver != "") {
+		_return = (_tabs + (_tabs != "" ? std::string(!_last ? "├─ " : "└─ ") : std::string("─ ")) + this->__resolver + (std::get<0>(this->__service)->ok() ? std::string(" <") : std::string("")) + std::string("\n"));
+	}
+	
+	size_t _idx = 0;
+	for (auto _child : this->__children) {
+		_return += _child.second->pretty((this->__resolver != "" ? _tabs + std::string(!_last ? "│\t" : "\t") : std::string("")), _idx == this->__children.size() - 1);
+		_idx++;
+	}		
+	return _return;
 }
 
 extern "C" auto zpt_events() -> int {
@@ -446,6 +582,220 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 		_ret += zpt::json::pretty(_envelope["payload"]);
 	}
 	return _ret;
+}
+
+auto zpt::ev::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
+	zpt::json _aliases = zpt::split(_pattern, "|");
+	zpt::json _topics = zpt::json::array();
+	char _op;
+	for (auto _alias : _aliases->arr()) {
+		std::string _return;
+		short _state = 0;
+		bool _regex = false;
+		bool _escaped = false;
+		for (auto _c : _alias->str()) {
+			switch (_c) {
+				case '/' : {
+					if (_state == 0) {
+						if (_regex) {
+							if (_return.back() != '/') {
+								_return.push_back('/');
+							}
+							_return.push_back(_op);
+							_regex = false;
+						}
+						_return.push_back(_c);
+					}
+					break;
+				}
+				case ')' : 
+				case ']' : {
+					if (!_escaped) {
+						_state--;
+					}
+					else {
+						_escaped = false;
+					}
+					_regex = true;
+					break;
+				}
+				case '(' :
+				case '[' : {
+					if (!_escaped) {
+						_state++;
+					}
+					else {
+						_escaped = false;
+					}
+					_regex = true;
+					break;
+				}
+				case '{' :
+				case '}' :
+				case '.' :
+				case '+' : {
+					_op = '+';
+					_regex = true;
+					break;
+				}
+				case '*' : {
+					_op = '*';
+					_regex = true;
+					break;
+				}
+				case '$' :
+				case '^' : {
+					break;
+				}
+				case '\\' : {
+					_escaped = !_escaped;
+					break;
+				}
+				default : {
+					if (_state == 0) {
+						_return.push_back(_c);
+					}
+				}
+			}		
+		}
+		if (_regex) {
+			if (_return.back() != '/') {
+				_return.push_back('/');
+			}
+			_return.push_back(_op);
+		}
+		_topics << _return;
+	}
+	return _topics;
+}
+
+auto zpt::ev::not_found(std::string _resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"headers", _headers,
+		"status", 404,
+		"payload", {
+			"text", "resource not found",
+			"code", 1101,
+			"assertion_failed", "_container->ok()"
+		}
+	};
+}
+
+auto zpt::ev::bad_request(zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", zpt::generate::r_uuid(),
+		"headers", _headers,
+		"status", 400,
+		"payload", {
+			"text", "bad request",
+			"code", 1100,
+			"assertion_failed", "_socket >> _req"
+		}
+	};
+}
+
+auto zpt::ev::accepted(std::string _resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"headers", _headers,
+		"status", 202,
+		"payload", {
+			"text", "request was accepted"
+		}
+	};
+}
+
+auto zpt::ev::no_content(std::string _resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"headers", _headers,
+		"status", 204
+	};
+}
+
+auto zpt::ev::temporary_redirect(std::string _resource, std::string _target_resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 307,
+		"headers", _headers + zpt::json{
+			"Location", _target_resource
+		},
+		"payload", {
+			"text", "temporarily redirecting you to another location"
+		}
+	};
+}
+
+auto zpt::ev::see_other(std::string _resource, std::string _target_resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 303,
+		"headers", _headers + zpt::json{
+			"Location", _target_resource
+		},
+		"payload", {
+			"text", "temporarily redirecting you to another location"
+		}
+	};
+}
+
+auto zpt::ev::options(std::string _resource, std::string _origin, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"status", 200,
+		"headers", _headers + zpt::json{
+			"Access-Control-Allow-Origin", _origin,
+			"Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
+			"Access-Control-Allow-Headers", REST_ACCESS_CONTROL_HEADERS,
+			"Access-Control-Expose-Headers", REST_ACCESS_CONTROL_HEADERS,
+			"Access-Control-Max-Age", "1728000"
+		},
+		"payload", {
+			"text", "request was accepted"
+		}
+	};
+}
+
+auto zpt::ev::internal_server_error(std::exception& _e, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"status", 500,
+		"headers", _headers,
+		"payload", {
+			"text", _e.what(),
+			"code", 0
+		}
+	};
+}
+
+auto zpt::ev::assertion_error(zpt::assertion& _e, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"status", _e.status(),
+		"headers", _headers,
+		"payload", {
+			"text", _e.what(),
+			"assertion_failed", _e.description(),
+			"code", _e.code()
+		}
+	};
 }
 
 namespace zpt {

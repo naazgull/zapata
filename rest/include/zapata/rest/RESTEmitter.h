@@ -113,6 +113,7 @@ namespace zpt {
 		virtual bool route_mqtt(zpt::mqtt::data _data);
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
+		virtual auto broadcast(zpt::json _envelope) -> void;
 
 		virtual auto suicidal() -> bool;
 		
@@ -136,12 +137,6 @@ namespace zpt {
 		auto get_subscription_topics(std::string _pattern) -> zpt::json;
 	};
 
-	class RESTThreadContext : public zpt::ThreadContext {
-	public:
-		//PyGILState_STATE python_state;
-		void* python_thread_state = nullptr;
-	};
-	
 	class RESTEmitter : public zpt::EventEmitter {
 	public:
 		RESTEmitter(zpt::json _options);
@@ -151,11 +146,9 @@ namespace zpt {
 		virtual auto credentials() -> zpt::json;
 		virtual auto credentials(zpt::json _credentials) -> void;
 		
-		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> std::string;
-		virtual auto off(zpt::ev::performative _method, std::string _callback_id) -> void;
-		virtual auto off(std::string _callback_id) -> void;
+		virtual auto on(zpt::ev::performative _method, std::string _regex,  zpt::ev::Handler _handler, zpt::json _opts = zpt::undefined) -> void;
+		virtual auto on(std::string _regex,  std::map< zpt::ev::performative, zpt::ev::Handler > _handlers, zpt::json _opts = zpt::undefined) -> void;
+		virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> void;
 		
 		virtual auto trigger(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
 		virtual auto route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _opts = zpt::undefined, zpt::ev::handler _callback = nullptr) -> void;
@@ -168,9 +161,6 @@ namespace zpt {
 		virtual auto pending(zpt::json _envelope, zpt::ev::handler _callback) -> void;
 		virtual auto has_pending(zpt::json _envelope) -> bool;
 
-		virtual auto init_thread() -> zpt::thread::context;
-		virtual auto dispose_thread(zpt::thread::context _context) -> void;
-		
 		virtual auto poll(zpt::poll _poll) -> void;
 		virtual auto poll() -> zpt::poll;
 		virtual auto server(zpt::rest::server _server) -> void;
@@ -180,31 +170,18 @@ namespace zpt {
 		
 	private:
 		zpt::ev::Handler __default_options;
-		zpt::ev::HandlerStack __resources;
 		zpt::ev::ReplyHandlerStack __pending;
-		zpt::rest::HandlerStack __hashed;
 		zpt::poll __poll;
 		zpt::rest::server __server;
 		zpt::json __credentials;
 
-		auto get_hash(std::string _pattern) -> std::string;
-		auto add_by_hash(std::string _topic, std::regex& _url_pattern, zpt::ev::handlers& _handlers) -> void;
 		auto resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback = nullptr) -> void;
-		auto resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback = nullptr) -> void;
 		auto sync_resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
-		auto sync_resolve_remotely(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 
 	};
 
 	namespace rest {
-		auto not_found(std::string _resource) -> zpt::json;
-		auto bad_request() -> zpt::json;
-		auto accepted(std::string _resource) -> zpt::json;
-		auto no_content(std::string _resource) -> zpt::json;
-		auto temporary_redirect(std::string _resource, std::string _target_resource) -> zpt::json;
-		auto see_other(std::string _resource, std::string _target_resource) -> zpt::json;
-		auto options(std::string _resource, std::string _origin) -> zpt::json;
-
+		
 		auto url_pattern(zpt::json _to_join) -> std::string;
 
 	}

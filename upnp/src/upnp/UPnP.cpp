@@ -20,9 +20,11 @@ zpt::UPnPPtr::UPnPPtr(zpt::json _options) : std::shared_ptr<zpt::UPnP>(new zpt::
 zpt::UPnPPtr::~UPnPPtr() {
 }
 
-zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ("udp://239.255.255.250:1900", _options), __underlying(new zpt::socketstream()), __send(new zpt::socketstream()) {
-	this->__underlying->open("239.255.255.250", 1900, false, IPPROTO_UDP);
-	this->__send->open("239.255.255.250", 1900, false, IPPROTO_UDP);
+zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str() : "udp://239.255.255.250:1991"), _options), __underlying(new zpt::socketstream()), __send(new zpt::socketstream()) {
+	this->uri(this->connection());
+
+	this->__underlying->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+	this->__send->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
 	
 	char _no_lo = 0;
 	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_no_lo, sizeof(_no_lo));
@@ -34,16 +36,20 @@ zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ("udp://239.255.255.250:1900", _op
 	struct sockaddr_in _local_addr;
 	memset((char *) &_local_addr, 0, sizeof(_local_addr));
 	_local_addr.sin_family = AF_INET;
-	_local_addr.sin_port = htons(1900);
+	_local_addr.sin_port = htons(int(this->uri()["port"]));
 	_local_addr.sin_addr.s_addr = INADDR_ANY;
-
 	::bind(this->__underlying->buffer().get_socket(), (struct sockaddr*) &_local_addr, sizeof(_local_addr));
 
 	struct ip_mreq _group_addr;
-	_group_addr.imr_multiaddr.s_addr = inet_addr("239.255.255.250");
+	_group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->str().data());
 	_group_addr.imr_interface.s_addr = inet_addr("0.0.0.0");
-
 	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &_group_addr, sizeof(_group_addr));
+
+	struct timeval _tv;
+	_tv.tv_sec = 0;
+	_tv.tv_usec = 500000;
+	setsockopt(this->__underlying->buffer().get_socket(), SOL_SOCKET, SO_RCVTIMEO, (char *) &_tv,sizeof(struct timeval));
+
 }
 
 zpt::UPnP::~UPnP() {
@@ -57,28 +63,49 @@ auto zpt::UPnP::listen() ->  zpt::http::req {
 }
 
 auto zpt::UPnP::notify(std::string _search, std::string _location) -> void {
-	zpt::http::req _req;
-	_req->method(zpt::ev::Notify);
-	_req->url("*");
-	_req->header("Host", "239.255.255.250:1900");
-	_req->header("Location", _location);
-	_req->header("ST", _search);
-	_req->header("MAN", "\"ssdp:discover\"");
-	_req->header("MX", "3");	
-	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
-		(*this->__send) << _req << flush; }
+	// zpt::http::req _req;
+	// _req->method(zpt::ev::Notify);
+	// _req->url("*");
+	// _req->header("Host", std::string(this->uri()["authority"]));
+	// _req->header("Location", _location);
+	// _req->header("ST", _search);
+	// _req->header("MAN", "\"ssdp:discover\"");
+	// _req->header("MX", "3");	
+	// { std::lock_guard< std::mutex > _lock(this->out_mtx());
+	// 	(*this->__send) << _req << flush; }
+	this->send(
+		{
+			"performative", int(zpt::ev::Notify),
+			"headers", {
+				"Location", _location,
+				"ST", _search,
+				"MAN", "\"ssdp:discover\"",
+				"MX", "3"
+			}
+		}
+	);
 }
 
 auto zpt::UPnP::search(std::string _search) -> void {
-	zpt::http::req _req;
-	_req->method(zpt::ev::Search);
-	_req->url("*");
-	_req->header("Host", "239.255.255.250:1900");
-	_req->header("ST", _search);
-	_req->header("MAN", "\"ssdp:discover\"");
-	_req->header("MX", "3");	
-	{ std::lock_guard< std::mutex > _lock(this->out_mtx());
-		(*this->__send) << _req << flush; }
+	// zpt::http::req _req;
+	// _req->method(zpt::ev::Search);
+	// _req->url("*");
+	// _req->header("Host", std::string(this->uri()["authority"]));
+	// _req->header("ST", _search);
+	// _req->header("MAN", "\"ssdp:discover\"");
+	// _req->header("MX", "3");	
+	// { std::lock_guard< std::mutex > _lock(this->out_mtx());
+	// 	(*this->__send) << _req << flush; }
+	this->send(
+		{
+			"performative", int(zpt::ev::Search),
+			"headers", {
+				"ST", _search,
+				"MAN", "\"ssdp:discover\"",
+				"MX", "3"
+			}
+		}
+	);
 }
 
 auto zpt::UPnP::id() -> std::string {
@@ -111,9 +138,7 @@ auto zpt::UPnP::close() -> void {
 }
 
 auto zpt::UPnP::available() -> bool {
-	char _c;
-	int _read = ::recv(this->fd(), &_c, 1, MSG_PEEK);
-	return _read > 0;
+	return true;
 }
 
 auto zpt::UPnP::in_mtx() -> std::mutex& {
@@ -168,7 +193,9 @@ auto zpt::UPnP::recv() -> zpt::json {
 		zpt::http::req _request;
 		(*this->__underlying) >> _request;
 		_in = zpt::rest::http2zmq(_request);
-		_in << "protocol" << this->protocol(); }
+		_in <<
+		"resource" << "*" <<
+		"protocol" << this->protocol(); }
 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
 	zverbose(zpt::ev::pretty(_in));
 	return _in;
