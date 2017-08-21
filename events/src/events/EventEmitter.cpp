@@ -398,6 +398,10 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) 
 	this->__services->insert(_topic, _connection);
 }
 
+auto zpt::EventDirectory::list(std::string _uuid) -> zpt::json {
+	return this->__services->list(_uuid);
+}
+
 auto zpt::EventDirectory::pretty() -> std::string {
 	return this->__services->pretty();
 }
@@ -523,10 +527,38 @@ auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::json _splited, zpt:
 	return  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"));
 }
 
+auto zpt::EventDirectoryGraph::list(std::string _uuid) -> zpt::json {
+	zpt::json _containers = std::get<0>(this->__service);
+	zpt::json _return;
+	
+	if (_containers->is_object()) {
+		if (_uuid.length() != 0) {
+			_return = zpt::json::array();
+			for (auto _container : _containers["peers"]->arr()) {
+				if (_container["uuid"] == zpt::json::string(_uuid)) {
+					_return << _container;
+				}
+			}
+		}
+		else {
+			_return = _containers["peers"]->clone();
+		}
+	}
+	else {
+		_return = zpt::json::array();
+	}
+
+	for (auto _child : this->__children) {
+		_return = _return + _child.second->list(_uuid);
+	}
+	
+	return  _return;
+}
+
 auto zpt::EventDirectoryGraph::pretty(std::string _tabs, bool _last) -> std::string {
 	std::string _return;
 	if (this->__resolver != "") {
-		_return = (_tabs + (_tabs != "" ? std::string(!_last ? "├─ " : "└─ ") : std::string("─ ")) + this->__resolver + (std::get<0>(this->__service)->ok() ? std::string(" <") : std::string("")) + std::string("\n"));
+		_return = (_tabs + (_tabs != "" ? std::string(!_last ? "├─ " : "└─ ") : std::string("─ ")) + this->__resolver + (std::get<0>(this->__service)->is_object() ? std::string(" (") + std::to_string(std::get<0>(this->__service)["peers"]->arr()->size()) + std::string(")") : std::string("")) + std::string("\n"));
 	}
 	
 	size_t _idx = 0;

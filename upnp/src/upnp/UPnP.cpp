@@ -63,16 +63,6 @@ auto zpt::UPnP::listen() ->  zpt::http::req {
 }
 
 auto zpt::UPnP::notify(std::string _search, std::string _location) -> void {
-	// zpt::http::req _req;
-	// _req->method(zpt::ev::Notify);
-	// _req->url("*");
-	// _req->header("Host", std::string(this->uri()["authority"]));
-	// _req->header("Location", _location);
-	// _req->header("ST", _search);
-	// _req->header("MAN", "\"ssdp:discover\"");
-	// _req->header("MX", "3");	
-	// { std::lock_guard< std::mutex > _lock(this->out_mtx());
-	// 	(*this->__send) << _req << flush; }
 	this->send(
 		{
 			"performative", int(zpt::ev::Notify),
@@ -87,20 +77,11 @@ auto zpt::UPnP::notify(std::string _search, std::string _location) -> void {
 }
 
 auto zpt::UPnP::search(std::string _search) -> void {
-	// zpt::http::req _req;
-	// _req->method(zpt::ev::Search);
-	// _req->url("*");
-	// _req->header("Host", std::string(this->uri()["authority"]));
-	// _req->header("ST", _search);
-	// _req->header("MAN", "\"ssdp:discover\"");
-	// _req->header("MX", "3");	
-	// { std::lock_guard< std::mutex > _lock(this->out_mtx());
-	// 	(*this->__send) << _req << flush; }
 	this->send(
 		{
 			"performative", int(zpt::ev::Search),
 			"headers", {
-				"ST", _search,
+				"ST", (std::string("urn:schemas-upnp-org:service:") + _search),
 				"MAN", "\"ssdp:discover\"",
 				"MX", "3"
 			}

@@ -263,7 +263,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		}
 		else {
 			zpt::json _in = _envelope + zpt::json{ 
-				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
+				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"] + zpt::json{ "X-Sender", this->uuid() }),
 				"performative", _method,
 				"resource", _url
 			};
@@ -272,7 +272,12 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		return;
 	}
 	if (bool(_opts["upnp"])) {
-		this->__server->broadcast(zpt::json{ "performative", int(_method), "resource", _url } + _envelope);
+		this->__server->broadcast(_envelope + zpt::json{ 
+				"headers", (_envelope["headers"] + zpt::json{ "X-Sender", this->uuid() }),
+				"performative", _method,
+				"resource", _url
+			}
+		);
 		return;
 	}
 	
@@ -329,7 +334,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			this->reply(_envelope, zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"]));
+			this->reply(_envelope, zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
 			return;
 		}
 		catch(std::exception& _e) {
@@ -337,7 +342,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			this->reply(_envelope, zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"]));
+			this->reply(_envelope, zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
 			return;
 		}
 	}
@@ -381,7 +386,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			this->reply(_envelope, zpt::ev::accepted(_url));
 		}
 	}
-
 }
 
 auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
@@ -393,7 +397,7 @@ auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _ur
 		}
 		else {
 			zpt::json _in = _envelope + zpt::json{ 
-				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
+				"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"] + zpt::json{ "X-Sender", this->uuid() }),
 				"performative", _method,
 				"resource", _url
 			};
@@ -402,7 +406,12 @@ auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _ur
 		return zpt::undefined;
 	}
 	if (bool(_opts["upnp"])) {
-		this->__server->broadcast(zpt::json{ "performative", int(_method), "resource", _url } + _envelope);
+		this->__server->broadcast(_envelope + zpt::json{ 
+				"headers", (_envelope["headers"] + zpt::json{ "X-Sender", this->uuid() }),
+				"performative", _method,
+				"resource", _url
+			}
+		);
 		return zpt::undefined;
 	}
 	
@@ -454,24 +463,24 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 				
 				_result << 
 				"performative" << zpt::ev::Reply <<
-				"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"]);
+				"headers" << (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + _result["headers"] + zpt::json{ "X-Sender", this->uuid() });
 				return _result;
 			}
-			return zpt::ev::no_content(zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]);
+			return zpt::ev::no_content(zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 		}
 		catch (zpt::assertion& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			return zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"]);
+			return zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 		}
 		catch(std::exception& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			return zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"]);
+			return zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 		}
 	}
 	else {

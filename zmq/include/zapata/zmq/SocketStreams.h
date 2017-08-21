@@ -66,7 +66,7 @@ namespace zpt {
 	protected:
 
 		static const int char_size = sizeof(__char_type);
-		static const int SIZE = 128;
+		static const int SIZE = 1024;
 		__char_type obuf[SIZE];
 		__char_type ibuf[SIZE];
 
