@@ -101,6 +101,10 @@ auto zpt::RESTEmitter::hook(zpt::ev::initializer _callback) -> void {
 	this->__server->hook(_callback);
 }
 
+auto zpt::RESTEmitter::shutdown() -> void {
+	this->directory()->shutdown(this->uuid());
+}
+
 auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts) -> void {
 	std::regex _url_pattern(_regex);
 

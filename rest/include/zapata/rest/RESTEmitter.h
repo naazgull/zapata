@@ -114,6 +114,7 @@ namespace zpt {
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
 		virtual auto broadcast(zpt::json _envelope) -> void;
+		virtual auto notify_peers() -> void;
 
 		virtual auto suicidal() -> bool;
 		
@@ -157,6 +158,7 @@ namespace zpt {
 		virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
+		virtual auto shutdown() -> void;
 
 		virtual auto pending(zpt::json _envelope, zpt::ev::handler _callback) -> void;
 		virtual auto has_pending(zpt::json _envelope) -> bool;

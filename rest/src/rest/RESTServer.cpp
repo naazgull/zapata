@@ -74,6 +74,14 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 	}
 }
 
+auto zpt::rest::shutdown(int _signal) -> void {
+	if (zpt::rest::interrupted) {
+		exit(0);
+	}
+	zpt::rest::__emitter->shutdown();
+	zpt::rest::interrupted = true;
+}
+
 auto zpt::rest::terminate(int _signal) -> void {
 	if (zpt::rest::interrupted) {
 		exit(0);
@@ -109,7 +117,7 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 		
 	zpt::json _options = _ptr["boot"][0];
 
-	::signal(SIGINT, zpt::rest::terminate);
+	::signal(SIGINT, zpt::rest::shutdown);
 	::signal(SIGTERM, zpt::rest::terminate);
 	::signal(SIGABRT, zpt::rest::terminate);
 	::signal(SIGSEGV, zpt::rest::terminate);
@@ -148,33 +156,34 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 
 zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __upnp(_options), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
-		assertz(this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0, "zmq settings (bind, type) must be provided in the configuration file", 500, 0);
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
-		std::string _ip = std::string("tcp://") + zpt::net::getip();
 
 		this->__poll->poll(this->__poll->add(this->__upnp.get()));
-		
-		for (auto _definition : this->__options["zmq"]->arr()) {
-			short int _type = zpt::str2type(_definition["type"]->str());
-			zpt::socket_ref _socket;
-			switch(_type) {
-				case ZMQ_ROUTER_DEALER : {
-					_socket = this->__poll->add(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
-					break;
+
+		if (this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0) {
+			std::string _ip = std::string("tcp://") + zpt::net::getip();
+			for (auto _definition : this->__options["zmq"]->arr()) {
+				short int _type = zpt::str2type(_definition["type"]->str());
+				zpt::socket_ref _socket;
+				switch(_type) {
+					case ZMQ_ROUTER_DEALER : {
+						_socket = this->__poll->add(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
+						break;
+					}
+					case ZMQ_PUB_SUB : {
+						_socket = this->__poll->add(ZMQ_XPUB_XSUB, _definition["bind"]->str());
+						break;
+					}
+					default : {
+						_socket = this->__poll->add(_type, _definition["bind"]->str());
+						this->__poll->poll(_socket);
+						break;
+					}
 				}
-				case ZMQ_PUB_SUB : {
-					_socket = this->__poll->add(ZMQ_XPUB_XSUB, _definition["bind"]->str());
-					break;
-				}
-				default : {
-					_socket = this->__poll->add(_type, _definition["bind"]->str());
-					this->__poll->poll(_socket);
-					break;
-				}
+				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"), "tcp://*", _ip));
+				zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 			}
-			_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"), "tcp://*", _ip));
-			zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
 		}
 		
 		if (this->__options["rest"]["modules"]->ok()) {
@@ -341,62 +350,12 @@ void zpt::RESTServer::start() {
 			_http.detach();
 		}
 
-		{ // UPnP service discovery
-			this->__emitter->on("(.*)",
-				{
-					{ zpt::ev::Notify,
-						[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
-							if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
-								return;
-							}
-							if (_envelope["payload"]["connect"]->ok()) {
-								_emitter->directory()->notify(std::string(_envelope["payload"]["regex"]), std::make_tuple(_envelope["payload"], zpt::ev::handlers(), std::regex(std::string(_envelope["payload"]["regex"]))));
-							}
-						}
-					},
-					{ zpt::ev::Search,
-						[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
-							if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
-								return;
-							}
-						
-							std::string _search_term = zpt::r_replace(std::string(_envelope["headers"]["ST"]), "urn:schemas-upnp-org:service:", "");
-							if (_search_term == "*") {
-								zpt::json _services = _emitter->directory()->list(_emitter->uuid());
-								for (auto _found : _services->arr()) {
-									_emitter->route(
-										zpt::ev::Notify,
-										"*",
-										{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + std::string(_found["regex"])), "Location", _found["connect"] },
-											"payload", _found },
-										{ "upnp", true }
-									);
-								}
-							}
-							else {
-								zpt::json _found = std::get<0>(_emitter->directory()->lookup(_search_term, zpt::ev::Connect));
-								if (_found["uuid"] == zpt::json::string(_emitter->uuid())) {
-									_emitter->route(
-										zpt::ev::Notify,
-										"*",
-										{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
-											"payload", _found },
-										{ "upnp", true }
-									);
-								}
-							}
-						}
-					}
-				},
-				{ "upnp", true }
-			);
-
-			this->__emitter->route(
-				zpt::ev::Search,
-				"*",
-				{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
-				{ "upnp", true }
-			);
+		if (!this->__options["rest"]["discoverable"]->ok()) {
+			this->__options["rest"] << "discoverable" << true;
+		}
+		
+		if (bool(this->__options["rest"]["discoverable"])) {
+			this->notify_peers();
 		}
 		
 		for (auto _callback : this->__initializers) {
@@ -470,6 +429,70 @@ auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 
 auto zpt::RESTServer::broadcast(zpt::json _envelope) -> void {
 	this->__upnp->send(_envelope);
+}
+
+auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
+	this->__emitter->on("(.*)",
+		{
+			{ zpt::ev::Notify,
+				[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
+						return;
+					}
+					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:shutdown") {
+						zdbg(std::string("removing container ") + std::string(_envelope["headers"]["Location"]));
+						_emitter->directory()->vanished(std::string(_envelope["headers"]["Location"]));
+						return;
+					}
+					if (_envelope["payload"]["connect"]->ok()) {
+						_emitter->directory()->notify(std::string(_envelope["payload"]["regex"]), std::make_tuple(_envelope["payload"], zpt::ev::handlers(), std::regex(std::string(_envelope["payload"]["regex"]))));
+						return;
+					}
+				}
+			},
+			{ zpt::ev::Search,
+				[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
+						return;
+					}
+						
+					std::string _search_term = zpt::r_replace(std::string(_envelope["headers"]["ST"]), "urn:schemas-upnp-org:service:", "");
+					if (_search_term == "*") {
+						zpt::json _services = _emitter->directory()->list(_emitter->uuid());
+						for (auto _found : _services->arr()) {
+							_emitter->route(
+								zpt::ev::Notify,
+								"*",
+								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + std::string(_found["regex"])), "Location", _found["connect"] },
+									"payload", _found },
+								{ "upnp", true }
+							);
+						}
+					}
+					else {
+						zpt::json _found = std::get<0>(_emitter->directory()->lookup(_search_term, zpt::ev::Connect));
+						if (_found["uuid"] == zpt::json::string(_emitter->uuid())) {
+							_emitter->route(
+								zpt::ev::Notify,
+								"*",
+								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
+									"payload", _found },
+								{ "upnp", true }
+							);
+						}
+					}
+				}
+			}
+		},
+		{ "upnp", true }
+	);
+
+	this->__emitter->route(
+		zpt::ev::Search,
+		"*",
+		{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
+		{ "upnp", true }
+	);
 }
 
 std::string zpt::rest::scopes::serialize(zpt::json _info) {

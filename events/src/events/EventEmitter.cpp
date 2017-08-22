@@ -376,8 +376,8 @@ auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _perf
 		}
 		else {
 			_next++;
-			std::get<0>(_found) << "next" << _next;
 		}
+		std::get<0>(_found) << "next" << _next;
 		return std::make_tuple(_container, std::get<1>(_found), std::get<2>(_found));
 	}
 	return _found;
@@ -386,7 +386,7 @@ auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _perf
 auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::get<0>(_connection) << "connect" << zpt::r_replace(std::string(std::get<0>(_connection)["connect"]), "tcp://*:", std::string("tcp://127.0.0.1:"));
-	if (std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
+	if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
 		this->__emitter->route(
 			zpt::ev::Notify,
 			"*",
@@ -396,6 +396,21 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) 
 		);
 	}
 	this->__services->insert(_topic, _connection);
+}
+
+auto zpt::EventDirectory::shutdown(std::string _uuid) -> void {
+	if (bool(this->__options["rest"]["discoverable"])) {
+		this->__emitter->route(
+			zpt::ev::Notify,
+			"*",
+			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:container:shutdown", "Location", _uuid } },
+			{ "upnp", true }
+		);
+	}
+}
+
+auto zpt::EventDirectory::vanished(std::string _uuid) -> void {
+	this->__services->remove(_uuid);
 }
 
 auto zpt::EventDirectory::list(std::string _uuid) -> zpt::json {
@@ -421,22 +436,24 @@ auto zpt::EventDirectoryGraph::insert(std::string _topic, zpt::ev::node _service
 
 auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) -> void {	
 	if (_topic->arr()->size() == 0) {
+		if (std::get<1>(this->__service).size() != 0) {
+			return;
+		}
+		
 		zpt::json _containers = std::get<0>(this->__service)["peers"];
 		if (_containers->is_array()) {
-			zpt::json _new_containers = std::get<0>(_service);
-			if (_new_containers->is_array()) {
-				for (auto _nc : _new_containers->arr()) {
-					bool _found = false;
-					for (auto _c : _containers->arr()) {
-						if (_nc["connect"] == _c["connect"]) {
-							_c << "uuid" << _nc["uuid"] << "type" << _nc["type"];
-							_found = true;
-							break;
-						}
+			zpt::json _new_container = std::get<0>(_service);
+			if (_new_container->is_object()) {		       
+				bool _found = false;
+				for (auto _c : _containers->arr()) {
+					if (_new_container["connect"] == _c["connect"]) {
+						_c << "uuid" << _new_container["uuid"] << "type" << _new_container["type"];
+						_found = true;
+						break;
 					}
-					if (!_found) {
-						_containers << _nc;
-					}
+				}
+				if (!_found) {
+					_containers << _new_container;
 				}
 			}
 		}
@@ -444,7 +461,6 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 			zpt::json _s_data = std::get<0>(_service)->clone();
 			std::get<0>(_service)->obj()->clear();
 			std::get<0>(_service) << "peers" << zpt::json{ zpt::array, _s_data } << "next" << 0;
-			// std::get<0>(_service) = { "peers", { zpt::array, std::get<0>(_service) }, "next", 0 };
 			this->__service = _service;
 		}
 		return;
@@ -463,7 +479,7 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 
 auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
 	zpt::json _splited = zpt::path::split(_topic);
-	if (std::string(_splited[0]).find(":") != std::string::npos) {
+	if (std::string(_splited[0]).find("://") != std::string::npos) {
 		zpt::json _uri = zpt::uri::parse(_topic);
 		std::string _connect = std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]);
 		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", zpt::r_replace(_topic, _connect, ""), "type", (_uri["scheme"] == zpt::json::string("tcp") ? "req" : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));
@@ -525,6 +541,26 @@ auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::json _splited, zpt:
 	}
 	
 	return  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"));
+}
+
+auto zpt::EventDirectoryGraph::remove(std::string _uuid) -> void {
+	zpt::json _containers = std::get<0>(this->__service);
+	
+	if (_containers->is_object()) {
+		for (size_t _idx = 0; _idx != _containers["peers"]->arr()->size(); _idx++) {
+			if (_containers["peers"][_idx]["uuid"] == zpt::json::string(_uuid)) {
+				_containers["peers"] >> _idx;
+				break;
+			}
+		}
+		if (_containers["peers"]->arr()->size() == 0) {
+			std::get<0>(this->__service) = zpt::undefined;
+		}
+	}
+
+	for (auto _child : this->__children) {
+		_child.second->remove(_uuid);
+	}
 }
 
 auto zpt::EventDirectoryGraph::list(std::string _uuid) -> zpt::json {
@@ -831,77 +867,77 @@ auto zpt::ev::assertion_error(zpt::assertion& _e, zpt::json _headers) -> zpt::js
 }
 
 namespace zpt {
-	const char* status_names[] = { nullptr,
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "100 Continue ",
-				       "101 Switching Protocols ",
-				       "102 Processing ",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "200 OK ",
-				       "201 Created ",
-				       "202 Accepted ",
-				       "203 Non-Authoritative Information ",
-				       "204 No Content ",
-				       "205 Reset Content ",
-				       "206 Partial Content ",
-				       "207 Multi-Status ",
-				       "208 Already Reported ",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "226 IM Used ",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "300 Multiple Choices ",
-				       "301 Moved Permanently ",
-				       "302 Found ",
-				       "303 See Other ",
-				       "304 Not Modified ",
-				       "305 Use Proxy ",
-				       "306 (Unused) ",
-				       "307 Temporary Redirect ",
-				       "308 Permanent Redirect ",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "400 Bad Request ",
-				       "401 Unauthorized ",
-				       "402 Payment Required ",
-				       "403 Forbidden ",
-				       "404 Not Found ",
-				       "405 Method Not Allowed ",
-				       "406 Not Acceptable ",
-				       "407 Proxy Authentication Required ",
-				       "408 Request Timeout ",
-				       "409 Conflict ",
-				       "410 Gone ",
-				       "411 Length Required ",
-				       "412 Precondition Failed ",
-				       "413 Payload Too Large ",
-				       "414 URI Too Long ",
-				       "415 Unsupported Media Type ",
-				       "416 Requested Range Not Satisfiable ",
-				       "417 Expectation Failed ",
-				       nullptr, nullptr, nullptr, nullptr,
-				       "422 Unprocessable Entity ",
-				       "423 Locked ",
-				       "424 Failed Dependency ",
-				       "425 Unassigned ",
-				       "426 Upgrade Required ",
-				       "427 Unassigned ",
-				       "428 Precondition Required ",
-				       "429 Too Many Requests ",
-				       "430 Unassigned ",
-				       "431 Request Header Fields Too Large ",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "451 Unavailable For Legal Reasons",
-				       nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-				       "500 Internal Server Error ",
-				       "501 Not Implemented ",
-				       "502 Bad Gateway ",
-				       "503 Service Unavailable ",
-				       "504 Gateway Timeout ",
-				       "505 HTTP Version Not Supported ",
-				       "506 Variant Also Negotiates (Experimental) ",
-				       "507 Insufficient Storage ",
-				       "508 Loop Detected ",
-				       "509 Unassigned ",
-				       "510 Not Extended ",
-				       "511 Network Authentication Required ",
+	const char* status_names[] = {
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"100 Continue ",
+		"101 Switching Protocols ",
+		"102 Processing ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"200 OK ",
+		"201 Created ",
+		"202 Accepted ",
+		"203 Non-Authoritative Information ",
+		"204 No Content ",
+		"205 Reset Content ",
+		"206 Partial Content ",
+		"207 Multi-Status ",
+		"208 Already Reported ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"226 IM Used ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"300 Multiple Choices ",
+		"301 Moved Permanently ",
+		"302 Found ",
+		"303 See Other ",
+		"304 Not Modified ",
+		"305 Use Proxy ",
+		"306 (Unused) ",
+		"307 Temporary Redirect ",
+		"308 Permanent Redirect ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"400 Bad Request ",
+		"401 Unauthorized ",
+		"402 Payment Required ",
+		"403 Forbidden ",
+		"404 Not Found ",
+		"405 Method Not Allowed ",
+		"406 Not Acceptable ",
+		"407 Proxy Authentication Required ",
+		"408 Request Timeout ",
+		"409 Conflict ",
+		"410 Gone ",
+		"411 Length Required ",
+		"412 Precondition Failed ",
+		"413 Payload Too Large ",
+		"414 URI Too Long ",
+		"415 Unsupported Media Type ",
+		"416 Requested Range Not Satisfiable ",
+		"417 Expectation Failed ",
+		nullptr, nullptr, nullptr, nullptr,
+		"422 Unprocessable Entity ",
+		"423 Locked ",
+		"424 Failed Dependency ",
+		"425 Unassigned ",
+		"426 Upgrade Required ",
+		"427 Unassigned ",
+		"428 Precondition Required ",
+		"429 Too Many Requests ",
+		"430 Unassigned ",
+		"431 Request Header Fields Too Large ",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"451 Unavailable For Legal Reasons",
+		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		"500 Internal Server Error ",
+		"501 Not Implemented ",
+		"502 Bad Gateway ",
+		"503 Service Unavailable ",
+		"504 Gateway Timeout ",
+		"505 HTTP Version Not Supported ",
+		"506 Variant Also Negotiates (Experimental) ",
+		"507 Insufficient Storage ",
+		"508 Loop Detected ",
+		"509 Unassigned ",
+		"510 Not Extended ",
+		"511 Network Authentication Required ",
 	};
 }

@@ -229,8 +229,8 @@ auto zpt::Generator::build() -> void {
 
 auto zpt::Generator::build_docs() -> void {
 	struct stat _buffer;
-	std::string _to_pdf_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/CONTAINER.md");
-	std::string _apiary_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/APIARY.md");
+	std::string _to_pdf_file = std::string("ENDPOINTS.md");
+	std::string _apiary_file = std::string("apiary.apib");
 	std::string _proj_name = std::string (this->__options["abbr"]);
 	std::transform(_proj_name.begin(), _proj_name.end(), _proj_name.begin(), ::toupper);
 	std::string _doc = std::string("% ") + zpt::r_replace(zpt::r_replace(_proj_name, "-", " "), "_", " ") + std::string(" CONTAINER\n\n");
@@ -538,8 +538,8 @@ auto zpt::Generator::build_docs() -> void {
 						_apiary += std::string(
 							"+ Response 201 (application/json)\n\n"
 							"        {\n"
-							"                \"id\":\"4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\",\n"
-							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("/4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\"\n"
+							"                \"id\":\"{id}\",\n"
+							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("\"\n"
 							"        }\n\n"
 						);
 					}
@@ -575,14 +575,14 @@ auto zpt::Generator::build_docs() -> void {
 							"X-Status: 200\n\n"
 							"{\n"
 							"        \"n_updated\":1,\n"
-							"        \"href\":\"") + std::string(_resource["topic"]) + std::string("/4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\"\n"
+							"        \"href\":\"") + std::string(_resource["topic"]) + std::string("\"\n"
 							"}\n\n"
 						);
 						_apiary += std::string(
 							"+ Response ") + (_resource["type"] == zpt::json::string("document") ? std::string("200") : std::string("201")) + std::string(" (application/json)\n\n"
 							"        {\n"
 							"                \"n_updated\":1,\n"
-							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("/4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\",\n"
+							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("\",\n"
 							"        }\n\n"
 						);
 						
@@ -602,14 +602,14 @@ auto zpt::Generator::build_docs() -> void {
 							"X-Status: 200\n\n"
 							"{\n"
 							"        \"n_deleted\":") + (_resource["type"] == zpt::json::string("document") ? std::string("1") : std::string("43")) + std::string(",\n"
-							"        \"href\":\"") + std::string(_resource["topic"]) + std::string("/4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\"\n"
+							"        \"href\":\"") + std::string(_resource["topic"]) + std::string("\"\n"
 							"}\n\n"
 						);
 						_apiary += std::string(
 							"+ Response 200 (application/json)\n\n"
 							"        {\n"
 							"                \"n_deleted\":") + (_resource["type"] == zpt::json::string("document") ? std::string("1") : std::string("43")) + std::string(",\n"
-							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("/4208d1c2-7c61-11e7-8eb3-9bf41b6564f5\",\n"
+							"                \"href\":\"") + std::string(_resource["topic"]) + std::string("\",\n"
 							"        }\n\n"
 						);
 					}
@@ -4429,7 +4429,7 @@ auto zpt::GenResource::build_python_head() -> std::string {
 			_topic += (_url_params[_part->str()]->ok() ? std::string("str(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("'") + _part->str() + std::string("'"));
 		}
 
-		_remote_invoke += std::string("\n        def callback(performative, topic, r_body) :\n                zpt.reply(envelope, { 'status' : r_body['status'] })\n\n");
+		_remote_invoke += std::string("\n        def callback(performative, topic, r_body, context) :\n                zpt.reply(context, { 'status' : r_body['status'] })\n\n");
 		
 		if (_rel->obj()->size() != 0) {
 			std::string _params;

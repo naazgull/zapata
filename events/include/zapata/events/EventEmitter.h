@@ -284,6 +284,7 @@ namespace zpt {
 		
 		virtual auto insert(std::string _topic, zpt::ev::node _node) -> void;
 		virtual auto find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
+		virtual auto remove(std::string _uuid) -> void;
 		virtual auto list(std::string _uuid = "") -> zpt::json;
 		virtual auto pretty(std::string _tabs = "", bool _last = false) -> std::string;
 			
@@ -309,6 +310,8 @@ namespace zpt {
 		virtual auto events(zpt::ev::emitter _emitter) -> void final;
 		virtual auto lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
 		virtual auto notify(std::string _topic, zpt::ev::node _connection) -> void;
+		virtual auto shutdown(std::string _uuid) -> void;
+		virtual auto vanished(std::string _uuid) -> void;
 		virtual auto list(std::string _uuid = "") -> zpt::json;
 		virtual auto pretty() -> std::string;
 		

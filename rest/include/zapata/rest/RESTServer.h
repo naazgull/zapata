@@ -47,6 +47,7 @@ namespace zpt {
 		extern bool interrupted;
 		
 		auto terminate(int _signal) -> void;
+		auto shutdown(int _signal) -> void;
 
 		namespace uri {
 			auto get_simplified_topics(std::string _pattern) -> zpt::json;
