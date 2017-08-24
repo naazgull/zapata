@@ -205,13 +205,12 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 					std::transform(_s_performative.begin(), _s_performative.end(), _s_performative.begin(), ::tolower);
 					PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
 					PyObject* _args = nullptr;
+					PyObject* _context = Py_None;
 					if (_instance.length() != 0) {
-						PyObject* _context = zpt::python::from_ref(zpt::json::string(_instance));
-						_args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(_s_performative.data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
+						_context = zpt::python::from_ref(zpt::json::string(_instance));
 					}
-					else {
-						_args = PyTuple_Pack(3, PyUnicode_DecodeFSDefault(_s_performative.data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope));
-					}						
+					_args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(_s_performative.data()), PyUnicode_DecodeFSDefault(_resource.data()), zpt::python::to_python(_envelope), _context);
+
 					try {
 						PyErr_Clear();
 						PyObject_CallObject(_func, _args);
