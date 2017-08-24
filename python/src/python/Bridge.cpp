@@ -34,7 +34,9 @@ namespace zpt {
 }
 
 zpt::python::Bridge::Bridge(zpt::json _options) : zpt::Bridge(_options), __self(this), __lambdas(new std::map< std::string, std::function< zpt::python::object (int, zpt::python::object[]) > >()) {
-	zpt::python::__modules->push_back(std::make_pair("zpt", &zpt::python::module::init));
+	if (zpt::python::__modules->size() == 0) {
+		zpt::python::__modules->push_back(std::make_pair("zpt", &zpt::python::module::init));
+	}
 }
 
 zpt::python::Bridge::~Bridge() {
@@ -111,7 +113,7 @@ auto zpt::python::Bridge::boot(zpt::json _options) -> void {
 	
 	struct _inittab _initt[zpt::python::__modules->size() + 1];
 	for (size_t _k = 0; _k != zpt::python::__modules->size(); _k++) {
-		ztrace(std::string("PYTHON registering module '") + zpt::python::__modules->at(_k).first + std::string("'"));
+		zlog(std::string("loading module 'python-") + zpt::python::__modules->at(_k).first + std::string("'"), zpt::notice);
 		_initt[_k].name = zpt::python::__modules->at(_k).first.data();
 		_initt[_k].initfunc = zpt::python::__modules->at(_k).second;
 	}

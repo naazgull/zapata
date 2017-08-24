@@ -33,6 +33,7 @@ namespace zpt {
 
 	class UPnPPtr : public std::shared_ptr<zpt::UPnP> {
 	public :
+		UPnPPtr();
 		UPnPPtr(zpt::json _options);
 		virtual ~UPnPPtr();
 	};

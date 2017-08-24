@@ -113,7 +113,7 @@ namespace zpt {
 		virtual auto remove(zpt::socket_ref _socket) -> void;
 
 		virtual auto poll(zpt::socket_ref _socket) -> void;
-		virtual auto clean_up(zpt::socket_ref _socket) -> void;
+		virtual auto clean_up(zpt::socket_ref _socket, bool _force = false) -> void;
 		
 		virtual auto loop() -> void;
 			

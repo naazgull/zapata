@@ -293,6 +293,7 @@ namespace zpt {
 		zpt::ev::node __service;
 		std::map< std::string, zpt::ev::graph > __children;
 
+		auto merge(zpt::ev::node _service) -> void;
 		auto insert(zpt::json _topic, zpt::ev::node _service) -> void;
 		auto find(std::string _topic, zpt::json _splited, zpt::ev::performative _performative) -> zpt::ev::node;
 		

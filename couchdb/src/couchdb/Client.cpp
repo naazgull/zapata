@@ -49,7 +49,7 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path) : __opt
 	if (_options->getPath(_conf_path)["pool"]->ok()) {
 		this->__pool_size = int(_options->getPath(_conf_path)["pool"]);
 		for (int _k = 0; _k < this->__pool_size; _k++) {
-			this->__sockets.push_back(zpt::socketstream_ptr(new zpt::socketstream()));
+			this->__sockets.push_back(zpt::socketstream_ptr());
 			this->__mtxs.push_back(new std::mutex());
 		}		
 	}

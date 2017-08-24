@@ -486,6 +486,7 @@ auto zpt::mongodb::get_fields(zpt::json _opts) -> zpt::json {
 			for (auto _f : _fields->arr()) {
 				_return << std::string(_f) << true;
 			}
+			_return << "_id" << true;
 		}
 	}
 	return _return;

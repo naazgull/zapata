@@ -48,6 +48,9 @@
 /* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
 #define HAVE_LIBZAPATA_PYTHON 1
 
+/* Define to 1 if you have the `zapata-upnp' library (-lzapata-upnp). */
+#define HAVE_LIBZAPATA_UPNP 1
+
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
 #define HAVE_LIBZAPATA_ZMQ 1
 

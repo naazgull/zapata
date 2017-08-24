@@ -146,19 +146,20 @@ auto zpt::ZMQ::recv() -> zpt::json {
 		std::string _raw(static_cast<char*>(_frame2.data()), _frame2.size());
 		try {
 			zpt::json _envelope(_raw);
+			_envelope << "protocol" << this->protocol();
 			ztrace(std::string("< ") + _directive);
 			zverbose(zpt::ev::pretty(_envelope));
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
-			return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
+			return { "protocol", this->protocol(), "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
 		}
 	}
 	catch(zmq::error_t& _e) {
 		zlog(zpt::type2str(this->type()) + std::string(" ") + this->connection() + std::string(": ") + _e.what(), zpt::error);
 		throw;
 	}
-	return { "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
+	return { "protocol", this->protocol(), "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
 }
 
 auto zpt::ZMQ::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
@@ -1326,6 +1327,8 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 					_uuid.assign(std::string(_envelope["channel"]));					
 				}
 				this->__sock_id.insert(std::make_pair(_uuid, _frame1));}
+
+			_envelope << "protocol" << this->protocol();
 			ztrace(std::string("< ") + _directive);
 			zverbose(zpt::ev::pretty(_envelope));
 			
@@ -1333,7 +1336,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		}
 		catch(zpt::SyntaxErrorException& _e) {
 			delete _frame1;
-			return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
+			return { "protocol", this->protocol(), "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
 		}
 	}
 	catch(zmq::error_t& _e) {
@@ -1342,7 +1345,7 @@ auto zpt::ZMQRouter::recv() -> zpt::json {
 		throw;
 	}
 	delete _frame1;	
-	return { "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
+	return { "protocol", this->protocol(), "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
 }
 
 zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options) : zpt::ZMQ(_connection, _options), __socket(nullptr) {
@@ -1479,20 +1482,21 @@ auto zpt::ZMQDealer::recv() -> zpt::json {
 			if (_envelope->ok() && (!_envelope["channel"]->ok() || !zpt::test::uuid(std::string(_envelope["channel"])))) {
 				_envelope << "channel" << zpt::generate::r_uuid();
 			}
+			_envelope << "protocol" << this->protocol();
 			ztrace(std::string("< ") + _directive);
 			zverbose(zpt::ev::pretty(_envelope));
 			
 			return _envelope;
 		}
 		catch(zpt::SyntaxErrorException& _e) {
-			return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
+			return { "protocol", this->protocol(), "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
 		}
 	}
 	catch(zmq::error_t& _e) {
 		zlog(_e.what(), zpt::error);
 		throw;
 	}
-	return { "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
+	return { "protocol", this->protocol(), "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
 }
 
 zpt::ZMQHttp::ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options) : zpt::ZMQ(std::string(_underlying->ssl() ? "https://" : "http://") + std::string(_underlying->host() != "" ? _underlying->host() : "*") + std::string(":") + std::to_string(_underlying->port()), _options), __underlying(_underlying), __state(-1) {
@@ -1607,8 +1611,9 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
-		return { "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
+		return { "protocol", this->protocol(), "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
 	}
+	_in << "protocol" << this->protocol();
 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") + _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply ? std::string(" ") + std::string(_in["status"]) : std::string("")));
 	zverbose(zpt::ev::pretty(_in));
 	return _in;

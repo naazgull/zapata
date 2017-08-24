@@ -350,7 +350,7 @@ inline std::string const &JSONLexerBase::filename() const
 
 inline void JSONLexerBase::echo() const
 {
-    *d_out << d_matched;
+    //*d_out << d_matched;
 }
 
 inline size_t JSONLexerBase::length() const

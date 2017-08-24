@@ -39,21 +39,9 @@ auto zpt::Connector::connection(zpt::json _conn_conf) -> void {
 }
 
 auto zpt::Connector::connect() -> void {
-	this->events()->route(
-		zpt::ev::Reply,
-		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "connect", zpt::r_replace(this->name(), "://", "/") }),
-		{ "id", this->name(), "node", this->connection() },
-		{ "mqtt", true }
-	);	
 }
 
 auto zpt::Connector::reconnect() -> void {
-	this->events()->route(
-		zpt::ev::Reply,
-		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "connect", zpt::r_replace(this->name(), "://", "/") }),
-		{ "id", this->name(), "node", this->connection() },
-		{ "mqtt", true }
-	);	
 }
 
 auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts) -> std::string {
@@ -61,7 +49,7 @@ auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, z
 	assertz(_record["href"]->ok(), "required fields: 'href'", 412, 0);
 	this->events()->route(
 		zpt::ev::Reply,
-		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "insert", zpt::r_replace(_href_prefix, std::string("/") + this->events()->version() + std::string("/"), "") }),
+		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "insert", zpt::r_replace(std::string(_record["href"]), std::string("/") + this->events()->version() + std::string("/"), "") }),
 		{ "headers", _opts["headers"], "performative", "insert", "href", _record["href"], "new", _record },
 		{ "mqtt", true }
 	);

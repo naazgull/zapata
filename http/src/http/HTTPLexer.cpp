@@ -756,7 +756,7 @@ void HTTPLexerBase::continue__(int ch)
 
 void HTTPLexerBase::echoCh__(size_t ch)
 {
-    *d_out << as<char>(ch);
+    //*d_out << as<char>(ch);
     d_atBOL = ch == '\n';
 }
 

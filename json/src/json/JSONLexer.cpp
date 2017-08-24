@@ -547,7 +547,7 @@ void JSONLexerBase::continue__(int ch)
 
 void JSONLexerBase::echoCh__(size_t ch)
 {
-    *d_out << as<char>(ch);
+    //*d_out << as<char>(ch);
     d_atBOL = ch == '\n';
 }
 

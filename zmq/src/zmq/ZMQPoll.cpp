@@ -207,7 +207,7 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 									"resource", _envelope["resource"]
 								};
 							_socket->send(_result);
-							this->clean_up(_socket);
+							this->clean_up(_socket, _envelope["headers"]["Connection"] == zpt::json::string("close"));
 						}
 					}
 				}
@@ -263,7 +263,7 @@ auto zpt::ZMQPoll::loop() -> void {
 					zpt::socket_ref _socket = this->__by_socket[_k];
 					zverbose(std::string("poll event on ") + _socket->protocol() + std::string("/") + _socket->connection());
 					if (!_socket->available()) {
-						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+						// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
@@ -273,17 +273,17 @@ auto zpt::ZMQPoll::loop() -> void {
 						_envelope = _socket->recv();
 					}
 					catch (zpt::assertion& _e) {
-						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+						// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
 					catch (zmq::error_t& _e) {
-						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+						// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
 					catch (std::exception& _e) {
-						zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+						// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 						this->clean_up(_socket);
 						continue;
 					}
@@ -298,20 +298,15 @@ auto zpt::ZMQPoll::loop() -> void {
 									"resource", "/bad-request"
 								}
 							);
-							zverbose(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+							// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
 							this->clean_up(_socket);
 							continue;
 						}
 					}
 					else if (_envelope->ok()) {
+						_socket->loop_iteration();
 						this->reply(_envelope, _socket);
 					}
-
-					if (_envelope["headers"]["Connection"] == zpt::json::string("close")) {
-						this->clean_up(_socket);
-					}
-
-					_socket->loop_iteration();
 				}
 				else {
 					this->__by_socket[_k]->loop_iteration();
@@ -445,7 +440,7 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 		case ZMQ_HTTP_RAW : {
 			zpt::json _uri = zpt::uri::parse(_connection);
 			bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
-			zpt::socketstream_ptr _cs(new zpt::socketstream());
+			zpt::socketstream_ptr _cs;
 			_cs->open(std::string(_uri["domain"]), _uri["port"]->ok() ? int(_uri["port"]) : (_is_ssl ? 443 : 80), _is_ssl);
 			zpt::ZMQ* _socket = new zpt::ZMQHttp(_cs, this->__options);
 			return _socket;
@@ -468,7 +463,7 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 	return nullptr;
 }
 
-auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket) -> void {
+auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket, bool _force) -> void {
 	switch(_socket->type()) {
 		case ZMQ_ROUTER_DEALER : {
 			break;
@@ -510,7 +505,7 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket) -> void {
 			break;
 		}
 		case ZMQ_HTTP_RAW : {
-			if (!_socket->available() || ((zpt::ZMQHttp*) *_socket)->underlying()->host() != "") {
+			if (_force || ((zpt::ZMQHttp*) *_socket)->underlying()->host() != "" || !_socket->available()) {
 				this->__to_remove.push_back(_socket);
 				this->__needs_rebuild = true;
 			}

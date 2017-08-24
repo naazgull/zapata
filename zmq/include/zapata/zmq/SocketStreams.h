@@ -144,7 +144,7 @@ namespace zpt {
 
 	protected:
 
-		int output_buffer() {
+		__int_type output_buffer() {
 			if (!__good()) {
 				return __traits_type::eof();
 			}
@@ -474,9 +474,25 @@ namespace zpt {
 	typedef basic_socketstream<char> socketstream;
 	typedef basic_socketstream<wchar_t> wsocketstream;
 
-	typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
-	typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
-
+	// typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
+	// typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
+	
+	class socketstream_ptr : public std::shared_ptr< zpt::socketstream > {
+	public:
+		socketstream_ptr() : std::shared_ptr< zpt::socketstream >(new zpt::socketstream()) {}
+		socketstream_ptr(zpt::socketstream* _new) : std::shared_ptr< zpt::socketstream >(_new) {}
+		socketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::socketstream >(new zpt::socketstream(_fd, _ssl, _protocol)) {}
+		virtual ~socketstream_ptr() {}
+	};
+	
+	class wsocketstream_ptr : public std::shared_ptr< zpt::wsocketstream > {
+	public:
+		wsocketstream_ptr() : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream()) {}
+		wsocketstream_ptr(zpt::wsocketstream* _new) : std::shared_ptr< zpt::wsocketstream >(_new) {}
+		wsocketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream(_fd, _ssl, _protocol)) {}
+		virtual ~wsocketstream_ptr() {}
+	};
+	
 	template<typename Char>
 	class basic_serversocketstream {
 	protected:
@@ -582,9 +598,22 @@ namespace zpt {
 	typedef basic_serversocketstream<char> serversocketstream;
 	typedef basic_serversocketstream<wchar_t> wserversocketstream;
 
-	typedef std::shared_ptr< zpt::serversocketstream > serversocketstream_ptr;
-	typedef std::shared_ptr< zpt::wserversocketstream > wserversocketstream_ptr;
-
+	class serversocketstream_ptr : public std::shared_ptr< zpt::serversocketstream > {
+	public:
+		serversocketstream_ptr() : std::shared_ptr< zpt::serversocketstream >(new zpt::serversocketstream()) {}
+		serversocketstream_ptr(zpt::serversocketstream* _new) : std::shared_ptr< zpt::serversocketstream >(_new) {}
+		serversocketstream_ptr(int _fd) : std::shared_ptr< zpt::serversocketstream >(new zpt::serversocketstream(_fd)) {}
+		virtual ~serversocketstream_ptr() {}
+	};
+	
+	class wserversocketstream_ptr : public std::shared_ptr< zpt::wserversocketstream > {
+	public:
+		wserversocketstream_ptr() : std::shared_ptr< zpt::wserversocketstream >(new zpt::wserversocketstream()) {}
+		wserversocketstream_ptr(zpt::wserversocketstream* _new) : std::shared_ptr< zpt::wserversocketstream >(_new) {}
+		wserversocketstream_ptr(int _fd) : std::shared_ptr< zpt::wserversocketstream >(new zpt::wserversocketstream(_fd)) {}
+		virtual ~wserversocketstream_ptr() {}
+	};
+	
 	#define CRLF "\r\n"
 
 }

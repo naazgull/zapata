@@ -362,7 +362,7 @@ inline std::string const &HTTPLexerBase::filename() const
 
 inline void HTTPLexerBase::echo() const
 {
-    *d_out << d_matched;
+    //*d_out << d_matched;
 }
 
 inline size_t HTTPLexerBase::length() const

@@ -14,13 +14,16 @@ Copyright (c) 2014, Muzzley
 #define CRLF "\r\n"
 #endif
 
+zpt::UPnPPtr::UPnPPtr() : std::shared_ptr<zpt::UPnP>(nullptr) {
+}
+
 zpt::UPnPPtr::UPnPPtr(zpt::json _options) : std::shared_ptr<zpt::UPnP>(new zpt::UPnP(_options)) {
 }
 
 zpt::UPnPPtr::~UPnPPtr() {
 }
 
-zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str() : "udp://239.255.255.250:1991"), _options), __underlying(new zpt::socketstream()), __send(new zpt::socketstream()) {
+zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str() : "udp://239.255.255.250:1991"), _options), __underlying(), __send() {
 	this->uri(this->connection());
 
 	this->__underlying->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);

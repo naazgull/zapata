@@ -426,6 +426,21 @@ zpt::EventDirectoryGraph::EventDirectoryGraph(std::string _resolver, zpt::ev::no
 
 zpt::EventDirectoryGraph::~EventDirectoryGraph() {
 }
+
+auto zpt::EventDirectoryGraph::merge(zpt::ev::node _service) -> void {
+	auto _lhs = std::get<1>(this->__service);
+	auto _rhs = std::get<1>(_service);
+	for (short _idx = 0; _idx != short(zpt::ev::Connect) + 1; _idx++) {
+		auto _lh_callback = _lhs[_idx];
+		auto _rh_callback = _rhs[_idx];
+		std::get<1>(this->__service)[_idx] = (
+			[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+				_lh_callback(_performative, _topic, _envelope, _emitter);
+				_rh_callback(_performative, _topic, _envelope, _emitter);
+			}
+		);
+	}
+}
 		
 auto zpt::EventDirectoryGraph::insert(std::string _topic, zpt::ev::node _service) -> void {
 	zpt::json _topics = zpt::ev::uri::get_simplified_topics(_topic);
@@ -437,6 +452,9 @@ auto zpt::EventDirectoryGraph::insert(std::string _topic, zpt::ev::node _service
 auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) -> void {	
 	if (_topic->arr()->size() == 0) {
 		if (std::get<1>(this->__service).size() != 0) {
+			if (std::get<1>(_service).size() != 0) {
+				this->merge(_service);
+			}
 			return;
 		}
 		
@@ -479,7 +497,7 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 
 auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
 	zpt::json _splited = zpt::path::split(_topic);
-	if (std::string(_splited[0]).find("://") != std::string::npos) {
+	if (std::string(_splited[0]).find(":") != std::string::npos) {
 		zpt::json _uri = zpt::uri::parse(_topic);
 		std::string _connect = std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]);
 		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", zpt::r_replace(_topic, _connect, ""), "type", (_uri["scheme"] == zpt::json::string("tcp") ? "req" : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));

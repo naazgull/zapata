@@ -154,12 +154,19 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __upnp(_options), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
+zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()), __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this), __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
+		if (!this->__options["rest"]["discoverable"]->ok()) {
+			this->__options["rest"] << "discoverable" << false;
+		}
+
+		if (bool(this->options()["rest"]["discoverable"])) {
+			this->__upnp = zpt::upnp::broker(_options);
+			this->__poll->poll(this->__poll->add(this->__upnp.get()));
+		}
+		
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
-
-		this->__poll->poll(this->__poll->add(this->__upnp.get()));
 
 		if (this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray && this->__options["zmq"]->arr()->size() != 0) {
 			std::string _ip = std::string("tcp://") + zpt::net::getip();
@@ -335,7 +342,7 @@ void zpt::RESTServer::start() {
 						int _fd = -1;
 						_ss->accept(& _fd);
 						if (_fd >= 0) {
-							zpt::socketstream_ptr _cs(new zpt::socketstream(_fd, _is_ssl));
+							zpt::socketstream_ptr _cs(_fd, _is_ssl);
 							this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
 						}
 						else {
@@ -350,10 +357,6 @@ void zpt::RESTServer::start() {
 			_http.detach();
 		}
 
-		if (!this->__options["rest"]["discoverable"]->ok()) {
-			this->__options["rest"] << "discoverable" << true;
-		}
-		
 		if (bool(this->__options["rest"]["discoverable"])) {
 			this->notify_peers();
 		}
@@ -414,7 +417,7 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 
 auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {
 	ztrace(std::string("> PUBLISH ") + _topic);
-	zverbose(std::string("PUBLISH \033[1;35m") + _topic + std::string("\033[0m MQTT/3.1\n\n") + zpt::json::pretty(_payload));
+	zverbose(std::string("\nPUBLISH \033[1;35m") + _topic + std::string("\033[0m MQTT/3.1\n\n") + zpt::json::pretty(_payload));
 	this->__mqtt->publish(_topic, _payload);
 }
 
@@ -428,7 +431,9 @@ auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 }
 
 auto zpt::RESTServer::broadcast(zpt::json _envelope) -> void {
-	this->__upnp->send(_envelope);
+	if (bool(this->options()["rest"]["discoverable"])) {
+		this->__upnp->send(_envelope);
+	}
 }
 
 auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
@@ -440,7 +445,6 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 						return;
 					}
 					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:shutdown") {
-						zdbg(std::string("removing container ") + std::string(_envelope["headers"]["Location"]));
 						_emitter->directory()->vanished(std::string(_envelope["headers"]["Location"]));
 						return;
 					}

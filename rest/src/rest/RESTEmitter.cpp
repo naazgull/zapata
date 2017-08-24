@@ -248,7 +248,7 @@ auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 }
 
 auto zpt::RESTEmitter::trigger(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> void {
-	return this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true") }, _callback);
+	this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true") }, _callback);
 }
 
 // auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts) -> zpt::json {
@@ -293,15 +293,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 	zpt::json _container = std::get<0>(_found);
 	zpt::ev::handlers _handlers = std::get<1>(_found);
 
-	if (!_container->is_object() && _handlers.size() == 0) {
-		zpt::json _out = zpt::ev::not_found(_url);
-		if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-			throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
-		}
-		this->reply(_envelope, _out);
-		return;
-	}
-	
 	_envelope = _envelope + zpt::json{ 
 		"headers", (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
 		"performative", _method,
@@ -323,6 +314,15 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			}
 		);
 		_has_callback = true;
+	}
+	
+	if (!_container->is_object() && _handlers.size() == 0) {
+		zpt::json _out = zpt::ev::not_found(_url);
+		if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
+			throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
+		}
+		this->reply(_envelope, _out);
+		return;
 	}
 	
 	if (_container["uuid"] == zpt::json::string(this->uuid()) && _handlers.size() > _method && _handlers[_method] != nullptr) {		
