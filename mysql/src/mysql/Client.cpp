@@ -22,51 +22,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/mariadb/Client.h>
+#include <zapata/mysql/Client.h>
 
-zpt::mariadb::ClientPtr::ClientPtr(zpt::mariadb::Client * _target) : std::shared_ptr<zpt::mariadb::Client>(_target) {
+zpt::mysql::ClientPtr::ClientPtr(zpt::mysql::Client * _target) : std::shared_ptr<zpt::mysql::Client>(_target) {
 }
 
-zpt::mariadb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : std::shared_ptr<zpt::mariadb::Client>(new zpt::mariadb::Client(_options, _conf_path)) {
+zpt::mysql::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path) : std::shared_ptr<zpt::mysql::Client>(new zpt::mysql::Client(_options, _conf_path)) {
 }
 
-zpt::mariadb::ClientPtr::~ClientPtr() {
+zpt::mysql::ClientPtr::~ClientPtr() {
 }
 
-zpt::mariadb::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
+zpt::mysql::Client::Client(zpt::json _options, std::string _conf_path) : __options( _options), __conn(nullptr) {
 	this->connection(_options->getPath(_conf_path));
 }
 
-zpt::mariadb::Client::~Client() {
+zpt::mysql::Client::~Client() {
 	if (this->__conn.get() != nullptr) {
 		this->__conn->close();
 		this->__conn.release();
 	}
 }
 
-auto zpt::mariadb::Client::name() -> std::string {
-	return std::string("mariadb://") + ((std::string) this->connection()["bind"]) + std::string("/") + ((std::string) this->connection()["db"]);
+auto zpt::mysql::Client::name() -> std::string {
+	return std::string("mysql://") + ((std::string) this->connection()["bind"]) + std::string("/") + ((std::string) this->connection()["db"]);
 }
 
-auto zpt::mariadb::Client::options() -> zpt::json {
+auto zpt::mysql::Client::options() -> zpt::json {
 	return this->__options;
 }
 
-auto zpt::mariadb::Client::events(zpt::ev::emitter _emitter) -> void {
+auto zpt::mysql::Client::events(zpt::ev::emitter _emitter) -> void {
 	this->__events = _emitter;
 }
 
-auto zpt::mariadb::Client::events() -> zpt::ev::emitter {
+auto zpt::mysql::Client::events() -> zpt::ev::emitter {
 	return this->__events;
 }
 
-auto zpt::mariadb::Client::connect() -> void {
+auto zpt::mysql::Client::connect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
 	zpt::Connector::connect();
 }
 
-auto zpt::mariadb::Client::reconnect() -> void {
+auto zpt::mysql::Client::reconnect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
 	this->__conn->close();
@@ -75,7 +75,7 @@ auto zpt::mariadb::Client::reconnect() -> void {
 	zpt::Connector::reconnect();
 }
 
-auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+auto zpt::mysql::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -121,7 +121,7 @@ auto zpt::mariadb::Client::insert(std::string _collection, std::string _href_pre
 	return _document["id"]->str();
 }
 
-auto zpt::mariadb::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
+auto zpt::mysql::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -153,7 +153,7 @@ auto zpt::mariadb::Client::upsert(std::string _collection, std::string _href_pre
 			_expression += _sets;
 
 			zpt::json _splited = zpt::split(_href, "/");
-			_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+			_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 
 			try {
 				{ std::lock_guard< std::mutex > _lock(this->__mtx);
@@ -207,7 +207,7 @@ auto zpt::mariadb::Client::upsert(std::string _collection, std::string _href_pre
 	return _document["id"]->str();
 }
 
-auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
+auto zpt::mysql::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -229,7 +229,7 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+	_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 
 	int _size = 0;
 	try {
@@ -240,11 +240,11 @@ auto zpt::mariadb::Client::save(std::string _collection, std::string _href, zpt:
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
+	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
 	return 1;
 }
 
-auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mysql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -266,7 +266,7 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+	_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 
 	int _size = 0;
 	try {
@@ -277,11 +277,11 @@ auto zpt::mariadb::Client::set(std::string _collection, std::string _href, zpt::
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
+	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
 	return 1;
 }
 
-auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mysql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -304,10 +304,10 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
 		std::string _where;
-		zpt::mariadb::get_query(_pattern, _where);
+		zpt::mysql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_opts(_opts, _expression);
+	zpt::mysql::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -321,7 +321,7 @@ auto zpt::mariadb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	return _size;
 }
 
-auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mysql::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -341,7 +341,7 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 	_expression += _sets;
 
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+	_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 
 	int _size = 0;
 	try {
@@ -352,11 +352,11 @@ auto zpt::mariadb::Client::unset(std::string _collection, std::string _href, zpt
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
+	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
 	return 1;
 }
 
-auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
+auto zpt::mysql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -377,10 +377,10 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
 		std::string _where;
-		zpt::mariadb::get_query(_pattern, _where);
+		zpt::mysql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_opts(_opts, _expression);
+	zpt::mysql::get_opts(_opts, _expression);
 	
 	int _size = 0;
 	try {
@@ -394,14 +394,14 @@ auto zpt::mariadb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	return _size;
 }
 
-auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+auto zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	zpt::json _splited = zpt::split(_href, "/");
-	std::string _expression = std::string("DELETE FROM ") +  _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+	std::string _expression = std::string("DELETE FROM ") +  _collection + std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 
 	int _size = 0;
 	zpt::json _removed;
@@ -415,11 +415,11 @@ auto zpt::mariadb::Client::remove(std::string _collection, std::string _href, zp
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
-	assertz(_size != 0, "no such record", 404, 2200);
+	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
 	return 1;
 }
 
-auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+auto zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
@@ -427,7 +427,7 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
 	for (auto _record : _selected["elements"]->arr()) {
-		std::string _expression = std::string("DELETE FROM ") + _collection + std::string(" WHERE id=") + zpt::mariadb::escape(_record["id"]);	
+		std::string _expression = std::string("DELETE FROM ") + _collection + std::string(" WHERE id=") + zpt::mysql::escape(_record["id"]);	
 		try {
 			{ std::lock_guard< std::mutex > _lock(this->__mtx);
 				std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
@@ -441,14 +441,14 @@ auto zpt::mariadb::Client::remove(std::string _collection, zpt::json _pattern, z
 	return int(_selected["size"]);
 }
 
-auto zpt::mariadb::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
+auto zpt::mysql::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
 	zpt::json _splited = zpt::split(_href, "/");
-	_expression += std::string(" WHERE id=") + zpt::mariadb::escape(_splited->arr()->back());
+	_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
 	return this->query(_collection, _expression, _opts)[0];
 }
 
-auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
+auto zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	zpt::json _elements = zpt::json::array();
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
 		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
@@ -460,24 +460,24 @@ auto zpt::mariadb::Client::query(std::string _collection, std::string _pattern, 
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_result.reset(_stmt->executeQuery(_pattern)); }
 	for (; _result->next(); ) {
-		_elements << zpt::mariadb::fromsql_r(_result);
+		_elements << zpt::mysql::fromsql_r(_result);
 	}
 
 	return _elements;
 }
 
-auto zpt::mariadb::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
+auto zpt::mysql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
 	_count_expression += _collection;
 	if (_pattern->ok() && _pattern->type() == zpt::JSObject) {
 		std::string _where;
-		zpt::mariadb::get_query(_pattern, _where);
+		zpt::mysql::get_query(_pattern, _where);
 		_expression += std::string(" WHERE ") + _where;
 		_count_expression += std::string(" WHERE ") + _where;
 	}
-	zpt::mariadb::get_opts(_opts, _expression);
+	zpt::mysql::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 
@@ -487,12 +487,12 @@ auto zpt::mariadb::Client::query(std::string _collection, zpt::json _pattern, zp
 	
 }
 
-auto zpt::mariadb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+auto zpt::mysql::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
 	std::string _expression("SELECT * FROM ");
 	std::string _count_expression("SELECT COUNT(1) FROM ");
 	_expression += _collection;
 	_count_expression += _collection;
-	zpt::mariadb::get_opts(_opts, _expression);
+	zpt::mysql::get_opts(_opts, _expression);
 	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
 	zpt::json _return = {
 		"size", _size, 
@@ -501,6 +501,6 @@ auto zpt::mariadb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	return _return;
 }
 
-extern "C" auto zpt_mariadb() -> int {
+extern "C" auto zpt_mysql() -> int {
 	return 1;
 }

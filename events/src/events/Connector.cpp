@@ -157,5 +157,5 @@ auto zpt::Connector::all(std::string _collection, zpt::json _opts) -> zpt::json 
 }
 
 auto zpt::is_sql(std::string _name) -> bool {
-	return _name.find("pgsql") != std::string::npos || _name.find("postgresql") != std::string::npos || _name.find("mariadb") != std::string::npos || _name.find("mysql") != std::string::npos;
+	return _name.find("pgsql") != std::string::npos || _name.find("postgresql") != std::string::npos || _name.find("mysql") != std::string::npos || _name.find("mysql") != std::string::npos;
 }

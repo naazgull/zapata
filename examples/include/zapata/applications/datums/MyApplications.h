@@ -3,7 +3,7 @@
 #include <string>
 #include <zapata/rest.h>
 #include <zapata/postgresql.h>
-#include <zapata/mariadb.h>
+#include <zapata/mysql.h>
 #include <zapata/mongodb.h>
 #include <zapata/redis.h>
 #include <zapata/applications/datums/ResourceOwners.h>

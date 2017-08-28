@@ -21,7 +21,7 @@ AC_CHECK_LIB(zapata-lisp, zpt_lisp)
 AC_CHECK_LIB(zapata-python, zpt_python)
 AC_CHECK_LIB(zapata-rest, zpt_rest)
 #AC_CHECK_LIB(zapata-postgresql, zpt_postgresql)
-#AC_CHECK_LIB(zapata-mariadb, zpt_mariadb)
+#AC_CHECK_LIB(zapata-mysql, zpt_mysql)
 #AC_CHECK_LIB(zapata-mongodb, zpt_mongodb)
 #AC_CHECK_LIB(zapata-redis, zpt_redis)
 

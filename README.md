@@ -44,11 +44,11 @@ a) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
-### 3) MariaDB support ###
+### 3) MySQL support ###
 
-a) Install Zapata's MariaDB support packages:
+a) Install Zapata's MySQL support packages:
 
-	$ sudo apt-get install zapata-mariadb
+	$ sudo apt-get install zapata-mysql
 
 ### 4) MongoDB support ###
 

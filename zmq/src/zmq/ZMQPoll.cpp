@@ -216,12 +216,12 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 	}
 	catch(zpt::assertion& _e) {
 		if (*_socket != nullptr) {
-			_socket->send(zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+			_socket->send(zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
 		}
 	}
 	catch(std::exception& _e) {
 		if (*_socket != nullptr) {
-			_socket->send(zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+			_socket->send(zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
 		}
 	}
 			
@@ -354,7 +354,7 @@ auto zpt::ZMQPoll::loop() -> void {
 		}
 	}
 	catch(zpt::assertion& _e) {
-		zlog(_e.what() + std::string(": ") + _e.description(), zpt::emergency);
+		zlog(_e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
 		exit(-1);
 	}
 }

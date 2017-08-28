@@ -21,7 +21,7 @@ AC_HAVE_LIBRARY(zapata-zmq)
 AC_HAVE_LIBRARY(zapata-http)
 AC_HAVE_LIBRARY(zapata-rest)
 AC_HAVE_LIBRARY(zapata-postgresql)
-AC_HAVE_LIBRARY(zapata-mariadb)
+AC_HAVE_LIBRARY(zapata-mysql)
 AC_HAVE_LIBRARY(zapata-mongodb)
 AC_HAVE_LIBRARY(zapata-redis)
 

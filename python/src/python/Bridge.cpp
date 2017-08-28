@@ -264,7 +264,16 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 			[ _lambda, _context ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) mutable -> void {
 				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 				PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
-				PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_p_performative).data()), PyUnicode_DecodeFSDefault(_p_topic.data()), zpt::python::to_python(_p_result), zpt::python::to_python(_context));
+				PyObject* _ctx = Py_None;
+				if (_context->ok()) {
+					if (_context->is_object()) {
+						_ctx = zpt::python::to_python(_context);
+					}
+					else {
+						_ctx = zpt::python::from_ref(_context);
+					}
+				}
+				PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_p_performative).data()), PyUnicode_DecodeFSDefault(_p_topic.data()), zpt::python::to_python(_p_result), _ctx);
 				try {
 					PyErr_Clear();
 					PyObject_CallObject(_func, _args);					

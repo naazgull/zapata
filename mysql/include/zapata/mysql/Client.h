@@ -23,7 +23,7 @@ SOFTWARE.
 */
 #pragma once
 
-#include <zapata/mariadb/convert_sql.h>
+#include <zapata/mysql/convert_sql.h>
 #include <zapata/events.h>
 #include <ossp/uuid++.hh>
 #include <mutex>
@@ -35,7 +35,7 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace mariadb {
+	namespace mysql {
 
 		class Client : public zpt::Connector {
 		public:
@@ -72,14 +72,14 @@ namespace zpt {
 			zpt::ev::emitter __events;
 		};
 
-		class ClientPtr : public std::shared_ptr<zpt::mariadb::Client> {
+		class ClientPtr : public std::shared_ptr<zpt::mysql::Client> {
 		public:
 			/**
 			 * @brief Creates an std::shared_ptr to an Self instance.
 			 * 
 			 * @param _options the configuration object retrieved from the configuration JSON file
 			 */
-			 ClientPtr(zpt::mariadb::Client * _target);
+			 ClientPtr(zpt::mysql::Client * _target);
 			 ClientPtr(zpt::json _options, std::string _conf_path);
 
 			/**
@@ -88,7 +88,7 @@ namespace zpt {
 			 virtual ~ClientPtr();
 		};
 
-		typedef zpt::mariadb::ClientPtr client;
+		typedef zpt::mysql::ClientPtr client;
 	}
 	
 }

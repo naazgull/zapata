@@ -24,6 +24,6 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/mariadb/config.h>
-#include <zapata/mariadb/convert_sql.h>
-#include <zapata/mariadb/Client.h>
+#include <zapata/mysql/config.h>
+#include <zapata/mysql/convert_sql.h>
+#include <zapata/mysql/Client.h>

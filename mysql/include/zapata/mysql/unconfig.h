@@ -1,4 +1,4 @@
-/* include/zapata/mariadb/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/mysql/config.h.in.  Generated from configure.ac by autoheader.  */
 
 #pragma once
 

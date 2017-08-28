@@ -1,7 +1,7 @@
-/* include/zapata/mariadb/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/mariadb/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/mysql/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/mysql/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/mariadb/unconfig.h>
+#include <zapata/mysql/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -73,19 +73,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-mariadb"
+#define PACKAGE "zapata-mysql"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-mariadb"
+#define PACKAGE_NAME "zapata-mysql"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-mariadb 0.9.7-1yakkety27"
+#define PACKAGE_STRING "zapata-mysql 0.9.7-1yakkety27"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-mariadb"
+#define PACKAGE_TARNAME "zapata-mysql"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

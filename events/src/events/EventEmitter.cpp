@@ -770,11 +770,11 @@ auto zpt::ev::not_found(std::string _resource, zpt::json _headers) -> zpt::json 
 	};
 }
 
-auto zpt::ev::bad_request(zpt::json _headers) -> zpt::json {
+auto zpt::ev::bad_request(std::string _resource, zpt::json _headers) -> zpt::json {
 	return {
 		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
-		"resource", zpt::generate::r_uuid(),
+		"resource", _resource,
 		"headers", _headers,
 		"status", 400,
 		"payload", {
@@ -857,10 +857,11 @@ auto zpt::ev::options(std::string _resource, std::string _origin, zpt::json _hea
 	};
 }
 
-auto zpt::ev::internal_server_error(std::exception& _e, zpt::json _headers) -> zpt::json {
+auto zpt::ev::internal_server_error(std::string _resource, std::exception& _e, zpt::json _headers) -> zpt::json {
 	return {
 		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
+		"resource", _resource,
 		"status", 500,
 		"headers", _headers,
 		"payload", {
@@ -870,10 +871,11 @@ auto zpt::ev::internal_server_error(std::exception& _e, zpt::json _headers) -> z
 	};
 }
 
-auto zpt::ev::assertion_error(zpt::assertion& _e, zpt::json _headers) -> zpt::json {
+auto zpt::ev::assertion_error(std::string _resource, zpt::assertion& _e, zpt::json _headers) -> zpt::json {
 	return {
 		"channel", zpt::generate::r_uuid(),
 		"performative", zpt::ev::Reply,
+		"resource", _resource,
 		"status", _e.status(),
 		"headers", _headers,
 		"payload", {

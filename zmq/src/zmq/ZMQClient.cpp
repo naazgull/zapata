@@ -1439,8 +1439,7 @@ auto zpt::ZMQDealer::protocol() -> std::string {
 }
 
 auto zpt::ZMQDealer::send(zpt::json _envelope) -> zpt::json {
-	zpt::ZMQ::send(_envelope);
-	return zpt::undefined;
+	return zpt::ZMQ::send(_envelope);
 }
 
 auto zpt::ZMQDealer::recv() -> zpt::json {

@@ -21,17 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include <zapata/mariadb/convert_sql.h>
+#include <zapata/mysql/convert_sql.h>
 
 namespace zpt {
-	namespace mariadb {
+	namespace mysql {
 
 		std::map<std::string, std::string> OPS = { { "gt", ">" }, { "gte", ">=" }, { "lt", "<" }, { "lte", "<=" }, { "ne", "<>" }, { "exists", "EXISTS" }, { "in", "IN" } };
 		
 	}
 }
 
-auto zpt::mariadb::fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void {
+auto zpt::mysql::fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void {
 	sql::ResultSetMetaData* _metadata = _in->getMetaData();
 	for (size_t _i = 0; _i != _metadata->getColumnCount(); _i++) {
 		switch(_metadata->getColumnType(_i + 1)) {
@@ -79,13 +79,13 @@ auto zpt::mariadb::fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) 
 	}
 }
 
-auto zpt::mariadb::fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json {
+auto zpt::mysql::fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json {
 	zpt::json _return = zpt::json::object();
-	zpt::mariadb::fromsql(_in, _return);
+	zpt::mysql::fromsql(_in, _return);
 	return _return;
 }
 
-auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
+auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 	if (!_in->is_object()) {
 		return;
 	}
@@ -137,7 +137,7 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 
 			if (_command == "m") {
-				_queryr += zpt::mariadb::escape(_key) + std::string("=") + zpt::mariadb::escape(_expression);
+				_queryr += zpt::mysql::escape(_key) + std::string("=") + zpt::mysql::escape(_expression);
 				continue;
 			}
 			else if (_command == "n") {
@@ -153,27 +153,27 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 							std::string _bexpr(_expression.data());
 							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr += zpt::mariadb::escape(_key) + std::string("=") + zpt::mariadb::escape(_expression);
+								_queryr += zpt::mysql::escape(_key) + std::string("=") + zpt::mysql::escape(_expression);
 							}
 							else {
-								_queryr += zpt::mariadb::escape(_key) + std::string("=") + _bexpr;
+								_queryr += zpt::mysql::escape(_key) + std::string("=") + _bexpr;
 							}
 						}
 						else {
-							_queryr += zpt::mariadb::escape(_key) + std::string("=") + std::to_string(d);
+							_queryr += zpt::mysql::escape(_key) + std::string("=") + std::to_string(d);
 						}
 					}
 					else {
-						_queryr += zpt::mariadb::escape(_key) + std::string("=") + std::to_string(i);
+						_queryr += zpt::mysql::escape(_key) + std::string("=") + std::to_string(i);
 					}
 					continue;
 				}
 			}
 			else {
-				std::map<std::string, std::string>::iterator _found = zpt::mariadb::OPS.find(_command);
-				if (_found != zpt::mariadb::OPS.end()) {
+				std::map<std::string, std::string>::iterator _found = zpt::mysql::OPS.find(_command);
+				if (_found != zpt::mysql::OPS.end()) {
 					if (_bar_count == 2) {
-						_queryr += zpt::mariadb::escape(_key) + _found->second + zpt::mariadb::escape(_expression);
+						_queryr += zpt::mysql::escape(_key) + _found->second + zpt::mysql::escape(_expression);
 					}
 					else if (_options == "n") {
 						std::istringstream iss(_expression);
@@ -187,24 +187,24 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 								std::string _bexpr(_expression.data());
 								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += zpt::mariadb::escape(_key) + _found->second + zpt::mariadb::escape(_expression);
+									_queryr += zpt::mysql::escape(_key) + _found->second + zpt::mysql::escape(_expression);
 								}
 								else {
-									_queryr += zpt::mariadb::escape(_key) + _found->second + _bexpr;
+									_queryr += zpt::mysql::escape(_key) + _found->second + _bexpr;
 								}
 							}
 							else {
-								_queryr += zpt::mariadb::escape(_key) + _found->second + std::to_string(d);
+								_queryr += zpt::mysql::escape(_key) + _found->second + std::to_string(d);
 							}
 						}
 						else {
-							_queryr += zpt::mariadb::escape(_key) + _found->second + std::to_string(i);
+							_queryr += zpt::mysql::escape(_key) + _found->second + std::to_string(i);
 						}
 					}
 					else if (_options == "j") {
 					}
 					else if (_options == "d") {
-						_queryr += zpt::mariadb::escape(_key) + _found->second + std::string("TIMESTAMP('") + zpt::mariadb::escape(_expression) + std::string("')");
+						_queryr += zpt::mysql::escape(_key) + _found->second + std::string("TIMESTAMP('") + zpt::mysql::escape(_expression) + std::string("')");
 					}
 					continue;
 				}
@@ -212,11 +212,11 @@ auto zpt::mariadb::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			}
 		}
 
-		_queryr += _key + std::string("=") + zpt::mariadb::escape(_value);
+		_queryr += _key + std::string("=") + zpt::mysql::escape(_value);
 	}
 }
 
-auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
+auto zpt::mysql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	if (!_in->is_object()) {
 		return;
 	}
@@ -240,7 +240,7 @@ auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 					_dir = "DESC";
 				}
 				_part.erase(0, 1);
-				_queryr += (!_first ? ", " : "") + zpt::mariadb::escape(_part) + std::string(" ") + _dir;
+				_queryr += (!_first ? ", " : "") + zpt::mysql::escape(_part) + std::string(" ") + _dir;
 				_first = false;
 			}
 		}
@@ -251,7 +251,7 @@ auto zpt::mariadb::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	}
 }
 
-auto zpt::mariadb::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
+auto zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
 	std::string _columns;
 	if (_opts["fields"]->ok()) {
 		if (!_document->ok()) {
@@ -259,7 +259,7 @@ auto zpt::mariadb::get_column_names(zpt::json _document, zpt::json _opts) -> std
 				if (_columns.length() != 0) {
 					_columns += std::string(",");
 				}
-				_columns += zpt::mariadb::escape_name(std::string(_c));
+				_columns += zpt::mysql::escape_name(std::string(_c));
 			}			
 		}
 		else {
@@ -270,7 +270,7 @@ auto zpt::mariadb::get_column_names(zpt::json _document, zpt::json _opts) -> std
 				if (_columns.length() != 0) {
 					_columns += std::string(",");
 				}
-				_columns += zpt::mariadb::escape_name(std::string(_c));
+				_columns += zpt::mysql::escape_name(std::string(_c));
 			}			
 		}
 	}
@@ -282,13 +282,13 @@ auto zpt::mariadb::get_column_names(zpt::json _document, zpt::json _opts) -> std
 			if (_columns.length() != 0) {
 				_columns += std::string(",");
 			}
-			_columns += zpt::mariadb::escape_name(_c.first);
+			_columns += zpt::mysql::escape_name(_c.first);
 		}
 	}
 	return _columns;
 }
 
-auto zpt::mariadb::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
+auto zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
 	std::string _values;
 	if (_opts["fields"]->ok()) {
 		if (!_document->ok()) {
@@ -302,7 +302,7 @@ auto zpt::mariadb::get_column_values(zpt::json _document, zpt::json _opts) -> st
 				if (_values.length() != 0) {
 					_values += std::string(",");
 				}
-				_values += zpt::mariadb::escape(_document[std::string(_c)]);
+				_values += zpt::mysql::escape(_document[std::string(_c)]);
 			}			
 		}
 	}
@@ -314,17 +314,17 @@ auto zpt::mariadb::get_column_values(zpt::json _document, zpt::json _opts) -> st
 			if (_values.length() != 0) {
 				_values += std::string(",");
 			}
-			std::string _val = zpt::mariadb::escape(_c.second);
+			std::string _val = zpt::mysql::escape(_c.second);
 			_values += _val;
 		}
 	}
 	return _values;
 }
 
-auto zpt::mariadb::escape_name(std::string _in) -> std::string {
+auto zpt::mysql::escape_name(std::string _in) -> std::string {
 	return _in;
 }
 
-auto zpt::mariadb::escape(zpt::json _in) -> std::string {
+auto zpt::mysql::escape(zpt::json _in) -> std::string {
 	return std::string(_in);
 }

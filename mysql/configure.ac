@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-mariadb, 0.9.7-1yakkety27, n@zgul <n@zgul.me>)
+AC_INIT(zapata-mysql, 0.9.7-1yakkety27, n@zgul <n@zgul.me>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -27,8 +27,8 @@ AC_CHECK_LIB(zapata-http, zpt_http)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/mariadb/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/mariadb/config.h])
+AH_TOP([#include <zapata/mysql/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/mysql/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])
@@ -47,6 +47,6 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile
-        src/mariadb/Makefile)
+        src/mysql/Makefile)
 
 AC_OUTPUT

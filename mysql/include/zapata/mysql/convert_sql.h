@@ -42,7 +42,7 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace mariadb {
+	namespace mysql {
 
 		extern std::map<std::string, std::string> OPS;
 		

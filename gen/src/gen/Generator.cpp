@@ -897,27 +897,27 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_h, "$[namespace]", _namespace);
 				zpt::replace(_datum_cxx, "$[namespace]", _namespace);
 			
-				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "couchdb", "mongodb", "postgresql", "mariadb" }, _namespace);
+				std::string _get_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "redis", "couchdb", "mongodb", "postgresql", "mysql" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.get.client]", _get_client);
 				zpt::replace(_datum_cxx, "$[datum.method.get.client]", _get_client);
 		
-				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "couchdb", "mongodb", "postgresql", "mariadb", "redis" }, _namespace);
+				std::string _query_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "couchdb", "mongodb", "postgresql", "mysql", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.query.client]", _query_client);
 				zpt::replace(_datum_cxx, "$[datum.method.query.client]", _query_client);
 
-				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
+				std::string _insert_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mysql", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.insert.client]", _insert_client);
 				zpt::replace(_datum_cxx, "$[datum.method.insert.client]", _insert_client);
 		
-				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
+				std::string _save_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mysql", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.save.client]", _save_client);
 				zpt::replace(_datum_cxx, "$[datum.method.save.client]", _save_client);
 
-				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
+				std::string _set_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mysql", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.set.client]", _set_client);
 				zpt::replace(_datum_cxx, "$[datum.method.set.client]", _set_client);
 
-				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace);
+				std::string _remove_client = zpt::GenDatum::build_data_client(_datum["dbms"], { zpt::array, "postgresql", "mysql", "couchdb", "mongodb", "redis" }, _namespace);
 				zpt::replace(_datum_h, "$[datum.method.remove.client]", _remove_client);
 				zpt::replace(_datum_cxx, "$[datum.method.remove.client]", _remove_client);
 
@@ -942,7 +942,7 @@ auto zpt::Generator::build_data_layer() -> void {
 				zpt::replace(_datum_cxx, "$[datum.relations.remove]", _relation_remove);
 
 
-				zpt::replace(_datum_cxx, "$[datum.method.ordered.clients]", zpt::GenDatum::build_ordered_data_client(_datum["dbms"], { zpt::array, "postgresql", "mariadb", "couchdb", "mongodb", "redis" }, _namespace));
+				zpt::replace(_datum_cxx, "$[datum.method.ordered.clients]", zpt::GenDatum::build_ordered_data_client(_datum["dbms"], { zpt::array, "postgresql", "mysql", "couchdb", "mongodb", "redis" }, _namespace));
 				
 				struct stat _buffer;
 				bool _cxx_exists = stat(_cxx_file.c_str(), &_buffer) == 0;
@@ -1360,7 +1360,7 @@ auto zpt::GenDatum::build_dbms() -> std::string {
 	std::string _dbmss;
 	if (this->__spec["dbms"]->is_array()) {
 		for (auto _dbms : this->__spec["dbms"]->arr()) {
-			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mariadb")) {
+			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mysql")) {
 				continue;
 			}
 			if (_dbmss.length() != 0) {
@@ -1375,7 +1375,7 @@ auto zpt::GenDatum::build_dbms() -> std::string {
 auto zpt::GenDatum::build_dbms_source() -> std::string {
 	if (this->__spec["dbms"]->is_array()) {
 		for (auto _dbms : this->__spec["dbms"]->arr()) {
-			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mariadb")) {
+			if (_dbms == zpt::json::string("postgresql") || _dbms == zpt::json::string("mysql")) {
 				return std::string("\"") + zpt::GenDatum::build_data_client(this->__spec["dbms"], { zpt::array, _dbms->str() }, std::string(this->__spec["namespace"])) + std::string("\"");
 			}
 		}
@@ -2439,8 +2439,8 @@ auto zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespa
 	if (_dbms == "postgresql") {
 		return "{ \"dbms.pgsql." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::pgsql::Client(_emitter->options(), \"pgsql." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
 	}
-	else if (_dbms == "mariadb") {
-		return "{ \"dbms.mariadb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mariadb::Client(_emitter->options(), \"mariadb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
+	else if (_dbms == "mysql") {
+		return "{ \"dbms.mysql." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::mysql::Client(_emitter->options(), \"mysql." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";
 	}
 	else if (_dbms == "couchdb") {
 		return "{ \"dbms.couchdb." + zpt::r_replace(_namespace, "::", ".") + "\", zpt::connector(new zpt::couchdb::Client(_emitter->options(), \"couchdb." + zpt::r_replace(_namespace, "::", ".") + "\")) }, ";

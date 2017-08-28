@@ -93,14 +93,14 @@ namespace zpt {
 		auto pretty(zpt::json _envelope) -> std::string;
 
 		auto not_found(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-		auto bad_request(zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto bad_request(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto accepted(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto no_content(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto temporary_redirect(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto see_other(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto options(std::string _resource, std::string _origin, zpt::json _headers = zpt::undefined) -> zpt::json;
-		auto internal_server_error(std::exception& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
-		auto assertion_error(zpt::assertion& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto internal_server_error(std::string _resource, std::exception& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto assertion_error(std::string _resource, zpt::assertion& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
 
 		namespace uri {
 			auto get_simplified_topics(std::string _pattern) -> zpt::json;

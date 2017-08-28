@@ -241,8 +241,10 @@ auto zpt::RESTEmitter::has_pending(zpt::json _envelope) -> bool {
 auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 	auto _exists = this->__pending.find(std::string(_request["channel"]));
 	if (_exists != this->__pending.end()) {
-		auto _callback = _exists->second;
-		_callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
+		if (_reply->ok()) {
+			auto _callback = _exists->second;
+			_callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
+		}
 		this->__pending.erase(_exists);
 	}
 }
@@ -315,10 +317,11 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		);
 		_has_callback = true;
 	}
-	
+
 	if (!_container->is_object() && _handlers.size() == 0) {
 		zpt::json _out = zpt::ev::not_found(_url);
 		if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
+			this->reply(_envelope);
 			throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
 		}
 		this->reply(_envelope, _out);
@@ -336,17 +339,19 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		catch (zpt::assertion& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
 			if (bool(_opts["bubble-error"])) {
+				this->reply(_envelope);
 				throw;
 			}
-			this->reply(_envelope, zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
+			this->reply(_envelope, zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
 			return;
 		}
 		catch(std::exception& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
 			if (bool(_opts["bubble-error"])) {
+				this->reply(_envelope);
 				throw;
 			}
-			this->reply(_envelope, zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
+			this->reply(_envelope, zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
 			return;
 		}
 	}
@@ -477,14 +482,14 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			return zpt::ev::assertion_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
+			return zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 		}
 		catch(std::exception& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}
-			return zpt::ev::internal_server_error(_e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
+			return zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 		}
 	}
 	else {
