@@ -192,6 +192,8 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 		Py_INCREF(_context);
 	}
 
+	_opts >> "bubble-error";
+	
 	for (auto _handler : _callbacks->obj()) {
 		zpt::ev::performative _performative = zpt::ev::from_str(_handler.first);
 		PyObject* _func = **_bridge->to< zpt::python::object >(_handler.second);
@@ -251,12 +253,17 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::json _opts = _params[3];
 	zpt::json _callback = _params[4];
 
+	_opts >> "bubble-error";
+	
 	if (_callback->is_lambda()) {
+		PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
+		std::string _lambda = std::string(zpt::python::to_ref(_func));
+		Py_INCREF(_func);	
 		zpt::json _context = _opts["context"];
 		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts,
-			[ _callback, _context ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) mutable -> void {
+			[ _lambda, _context ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) mutable -> void {
 				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
-				PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
+				PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
 				PyObject* _args = PyTuple_Pack(4, PyUnicode_DecodeFSDefault(zpt::ev::to_str(_p_performative).data()), PyUnicode_DecodeFSDefault(_p_topic.data()), zpt::python::to_python(_p_result), zpt::python::to_python(_context));
 				try {
 					PyErr_Clear();

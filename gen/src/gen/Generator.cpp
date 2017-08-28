@@ -4147,7 +4147,7 @@ auto zpt::GenResource::build_python_get() -> std::string {
 				"                        'get',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4158,7 +4158,7 @@ auto zpt::GenResource::build_python_get() -> std::string {
 				"                        'get',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
@@ -4223,7 +4223,7 @@ auto zpt::GenResource::build_python_post() -> std::string {
 				"                        'post',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : zpt.merge(envelope['payload'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4234,7 +4234,7 @@ auto zpt::GenResource::build_python_post() -> std::string {
 				"                        'post',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
@@ -4299,7 +4299,7 @@ auto zpt::GenResource::build_python_put() -> std::string {
 				"                        'put',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : zpt.merge(envelope['payload'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4310,7 +4310,7 @@ auto zpt::GenResource::build_python_put() -> std::string {
 				"                        'put',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
@@ -4375,7 +4375,7 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 				"                        'patch',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'], 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4386,7 +4386,7 @@ auto zpt::GenResource::build_python_patch() -> std::string {
 				"                        'patch',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'payload' : envelope['payload'], 'params' : envelope['params'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
@@ -4451,7 +4451,7 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 				"                        'delete',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4462,7 +4462,7 @@ auto zpt::GenResource::build_python_delete() -> std::string {
 				"                        'delete',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
@@ -4523,7 +4523,7 @@ auto zpt::GenResource::build_python_head() -> std::string {
 				"                        'head',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : zpt.merge(envelope['params'], { ") + _params + std::string(" }) },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n"
 				"");
@@ -4534,7 +4534,7 @@ auto zpt::GenResource::build_python_head() -> std::string {
 				"                        'head',\n"
 				"                        zpt.path_join([ ") + _topic + std::string(" ]),\n"
 				"                        { \"headers\" : zpt.auth_headers(identity), 'params' : envelope['params'] },\n"
-				"                        { 'bubble-error' : True, 'context' : envelope },\n"
+				"                        { 'context' : envelope },\n"
 				"                        callback\n"
 				"                )\n");
 		}
