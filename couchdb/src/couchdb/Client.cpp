@@ -93,7 +93,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 	bool _is_ssl = this->connection()["uri"]["scheme"] == zpt::json::string("https");
 	zpt::http::rep _rep;
 	this->init_request(_req);
-	// zdbg(_req);
+	//zdbg(_req);
 	if (this->__pool_size) {
 		int _k = 0;
 		{ std::lock_guard< std::mutex> _l(this->__global);
@@ -136,7 +136,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 		catch (zpt::SyntaxErrorException& _e) { }
 		_socket.close();
 	}
-	// zdbg(_rep);
+	//zdbg(_rep);
 	return _rep;
 }
 
@@ -192,6 +192,7 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 	}
 
 	_document << "_id" << _document["href"];
+	_document >> "_rev";
 	
 	zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
 	std::string _body = std::string(_document - _exclude);
@@ -357,6 +358,9 @@ auto zpt::couchdb::Client::set(std::string _collection, zpt::json _pattern, zpt:
 	_req->method(zpt::ev::Put);
 	_req->header("Content-Type", "application/json");
 	zpt::json _result = this->query(_collection, _pattern);
+	if (!_result->ok()) {
+		return 0;
+	}
 
 	for (auto _revision : _result["elements"]->arr()) {
 		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
@@ -416,6 +420,9 @@ auto zpt::couchdb::Client::unset(std::string _collection, zpt::json _pattern, zp
 	_req->method(zpt::ev::Put);
 	_req->header("Content-Type", "application/json");
 	zpt::json _result = this->query(_collection, _pattern);
+	if (!_result->ok()) {
+		return 0;
+	}
 
 	for (auto _revision : _result["elements"]->arr()) {
 		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
@@ -468,6 +475,9 @@ auto zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, z
 	zpt::http::req _req;
 	_req->method(zpt::ev::Delete);
 	zpt::json _result = this->query(_collection, _pattern);
+	if (!_result->ok()) {
+		return 0;
+	}
 	zpt::json _removed = zpt::json::array();
 
 	for (auto _record : _result["elements"]->arr()) {

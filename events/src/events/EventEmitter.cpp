@@ -763,7 +763,7 @@ auto zpt::ev::not_found(std::string _resource, zpt::json _headers) -> zpt::json 
 		"headers", _headers,
 		"status", 404,
 		"payload", {
-			"text", "resource not found",
+			"text", std::string("'") + _resource + std::string("' could not be found"),
 			"code", 1101,
 			"assertion_failed", "_container->ok()"
 		}

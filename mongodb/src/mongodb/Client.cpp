@@ -291,6 +291,9 @@ auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, z
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		_conn->remove(_full_collection, BSON( "id" << _record["id"]->str()));
 		

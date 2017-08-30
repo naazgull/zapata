@@ -189,23 +189,31 @@ auto zpt::ZMQPoll::repoll() -> void {
 }
 
 auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
-	try {
-		zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 
-		if (_performative == zpt::ev::Reply) {
+	if (_performative == zpt::ev::Reply) {
+		try {
 			this->__emitter->reply(_envelope, _envelope);
 		}
-		else {
+		catch(zpt::assertion& _e) {
+			zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description(), zpt::emergency);
+		}
+		catch(std::exception& _e) {
+			zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what(), zpt::emergency);
+		}
+	}
+	else {
+		try {
 			this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope, zpt::undefined,
 				[ = ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _result, zpt::ev::emitter _p_emitter) mutable -> void {
 					if (_result->ok()) {
 						if (*_socket != nullptr) {
 							_result = zpt::json{ "headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + _p_emitter->options()["$defaults"]["headers"]["response"] } + _result + 
-								zpt::json{ 
-									"channel", _envelope["channel"],
-									"performative", zpt::ev::Reply,
-									"resource", _envelope["resource"]
-								};
+							zpt::json{ 
+								"channel", _envelope["channel"],
+								"performative", zpt::ev::Reply,
+								"resource", _envelope["resource"]
+							};
 							_socket->send(_result);
 							this->clean_up(_socket, _envelope["headers"]["Connection"] == zpt::json::string("close"));
 						}
@@ -213,15 +221,17 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 				}
 			);
 		}
-	}
-	catch(zpt::assertion& _e) {
-		if (*_socket != nullptr) {
-			_socket->send(zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+		catch(zpt::assertion& _e) {
+			if (*_socket != nullptr) {
+				_socket->send(zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+				this->clean_up(_socket, _envelope["headers"]["Connection"] == zpt::json::string("close"));
+			}
 		}
-	}
-	catch(std::exception& _e) {
-		if (*_socket != nullptr) {
-			_socket->send(zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+		catch(std::exception& _e) {
+			if (*_socket != nullptr) {
+				_socket->send(zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) + this->options()["$defaults"]["headers"]["response"]) + zpt::json{ "channel", _envelope["channel"] });
+				this->clean_up(_socket, _envelope["headers"]["Connection"] == zpt::json::string("close"));
+			}
 		}
 	}
 			

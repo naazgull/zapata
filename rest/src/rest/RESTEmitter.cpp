@@ -243,9 +243,12 @@ auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 	if (_exists != this->__pending.end()) {
 		if (_reply->ok()) {
 			auto _callback = _exists->second;
+			this->__pending.erase(_exists);
 			_callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
 		}
-		this->__pending.erase(_exists);
+		else {
+			this->__pending.erase(_exists);
+		}
 	}
 }
 
@@ -303,27 +306,45 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 	if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
 		_envelope << "channel" << zpt::generate::r_uuid();
 	}
-
 	bool _has_callback = false;
 	if (_callback != nullptr) {
-		this->pending(_envelope, _callback);
+		if (_opts["bubble-error"]->is_object()) {
+			this->pending(_envelope,
+				[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _reply, zpt::ev::emitter _emitter) mutable -> void {
+					if (int(_reply["status"]) > 399) {
+						_emitter->reply(_opts["bubble-error"], _reply);
+					}
+					else {
+						_callback(_performative, _topic, _reply, _emitter);
+					}
+				}
+			);
+		}
+		else {
+			this->pending(_envelope, _callback);
+		}
 		_has_callback = true;
 	}
 	else if (_opts["bubble-response"]->is_object()) {
 		this->pending(_envelope,
-			[ _opts ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
-				_emitter->reply(_opts["bubble-response"], _envelope);
+			[ _opts ] (zpt::ev::performative _performative, std::string _topic, zpt::json _reply, zpt::ev::emitter _emitter) mutable -> void {
+				_emitter->reply(_opts["bubble-response"], _reply);
 			}
 		);
 		_has_callback = true;
 	}
+	else if (_opts["bubble-error"]->is_object()) {
+		this->pending(_envelope,
+			[ _opts ] (zpt::ev::performative _performative, std::string _topic, zpt::json _reply, zpt::ev::emitter _emitter) mutable -> void {
+				if (int(_reply["status"]) > 399) {
+					_emitter->reply(_opts["bubble-error"], _reply);
+				}
+			}
+		);
+	}
 
 	if (!_container->is_object() && _handlers.size() == 0) {
 		zpt::json _out = zpt::ev::not_found(_url);
-		if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-			this->reply(_envelope);
-			throw zpt::assertion(_out["payload"]["text"]->ok() ? std::string(_out["payload"]["text"]) : std::string(zpt::status_names[int(_out["status"])]), int(_out["status"]), int(_out["payload"]["code"]), _out["payload"]["assertion_failed"]->ok() ? std::string(_out["payload"]["assertion_failed"]) : std::string(zpt::status_names[int(_out["status"])]));
-		}
 		this->reply(_envelope, _out);
 		return;
 	}
@@ -337,21 +358,15 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			return;
 		}
 		catch (zpt::assertion& _e) {
+			zpt::json _out = zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
-			if (bool(_opts["bubble-error"])) {
-				this->reply(_envelope);
-				throw;
-			}
-			this->reply(_envelope, zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
+			this->reply(_envelope, _out);
 			return;
 		}
 		catch(std::exception& _e) {
+			zpt::json _out = zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
-			if (bool(_opts["bubble-error"])) {
-				this->reply(_envelope);
-				throw;
-			}
-			this->reply(_envelope, zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() }));
+			this->reply(_envelope, _out);
 			return;
 		}
 	}

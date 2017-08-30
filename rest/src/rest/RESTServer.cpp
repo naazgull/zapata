@@ -163,6 +163,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		if (bool(this->options()["rest"]["discoverable"])) {
 			this->__upnp = zpt::upnp::broker(_options);
 			this->__poll->poll(this->__poll->add(this->__upnp.get()));
+			zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") + std::string(this->__upnp->uri()["scheme"]) + std::string("://") + std::string(this->__upnp->uri()["domain"]) + std::string(":") + std::string(this->__upnp->uri()["port"]), zpt::info);
 		}
 		
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
@@ -189,7 +190,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					}
 				}
 				_definition << "connect" << (_definition["public"]->is_string() ? _definition["public"]->str() : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"), "tcp://*", _ip));
-				zlog(std::string("starting 0MQ listener for ") + _socket->connection(), zpt::info);
+				zlog(std::string("binding ") + _socket->protocol() + std::string(" listener to ") + _socket->connection(), zpt::info);
 			}
 		}
 		
@@ -317,7 +318,7 @@ void zpt::RESTServer::start() {
 				}
 			);
 			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
-			zlog(std::string("connecting MQTT listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+			zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
 			this->__poll->poll(this->__poll->add(this->__mqtt.get()));
 		}
@@ -335,7 +336,9 @@ void zpt::RESTServer::start() {
 						zlog(std::string("couldn't bind HTTP listener to ") + std::string(this->__options["http"]["bind"]), zpt::alert);
 						return;
 					}
-					zlog(std::string("starting HTTP listener for ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+					std::string _scheme = std::string(_uri["scheme"]);
+					std::transform(std::begin(_scheme), std::end(_scheme), std::begin(_scheme), ::toupper);
+					zlog(std::string("binding ") + _scheme + std::string("/1,1 listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
 					bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
 					for (; true; ) {
@@ -356,7 +359,7 @@ void zpt::RESTServer::start() {
 			);
 			_http.detach();
 		}
-
+		
 		if (bool(this->__options["rest"]["discoverable"])) {
 			this->notify_peers();
 		}
@@ -445,10 +448,13 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 						return;
 					}
 					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:shutdown") {
+						//zdbg(zpt::ev::pretty(_envelope));
 						_emitter->directory()->vanished(std::string(_envelope["headers"]["Location"]));
+						//std::cout << _emitter->directory()->pretty() << endl << flush;
 						return;
 					}
 					if (_envelope["payload"]["connect"]->ok()) {
+						//zdbg(zpt::ev::pretty(_envelope));
 						_emitter->directory()->notify(std::string(_envelope["payload"]["regex"]), std::make_tuple(_envelope["payload"], zpt::ev::handlers(), std::regex(std::string(_envelope["payload"]["regex"]))));
 						return;
 					}
@@ -456,6 +462,7 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 			},
 			{ zpt::ev::Search,
 				[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
+					//zdbg(zpt::ev::pretty(_envelope));
 					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
 						return;
 					}
@@ -463,6 +470,7 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 					std::string _search_term = zpt::r_replace(std::string(_envelope["headers"]["ST"]), "urn:schemas-upnp-org:service:", "");
 					if (_search_term == "*") {
 						zpt::json _services = _emitter->directory()->list(_emitter->uuid());
+						//zdbg(zpt::json::pretty(_services));
 						for (auto _found : _services->arr()) {
 							_emitter->route(
 								zpt::ev::Notify,
@@ -471,6 +479,7 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 									"payload", _found },
 								{ "upnp", true }
 							);
+							usleep(10000);
 						}
 					}
 					else {

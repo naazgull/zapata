@@ -335,7 +335,7 @@ auto zpt::uri::authority::parse(std::string _authority) -> zpt::json {
 }
 
 auto zpt::test::location(zpt::json _location) -> bool {
-	return (_location->type() == zpt::JSObject && _location["longitude"]->type() == zpt::JSDouble && _location["latitude"]->type() == zpt::JSDouble) || (_location->type() == zpt::JSArray && _location->arr()->size() == 2 && _location[0]->type() == zpt::JSDouble && _location[1]->type() == zpt::JSDouble);
+	return (_location->is_object() && _location["longitude"]->is_number() && _location["latitude"]->is_number()) || (_location->is_array() && _location->arr()->size() == 2 && _location[0]->is_number() && _location[1]->is_number());
 }
 
 auto zpt::test::timestamp(zpt::json _timestamp) -> bool {

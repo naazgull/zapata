@@ -68,7 +68,7 @@ auto zpt::mysql::Client::connect() -> void {
 
 auto zpt::mysql::Client::reconnect() -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
-	assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+	assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 	this->__conn->close();
 	this->__conn.release();
 	this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(string("tcp://") + this->connection()["bind"]->str(), std::string(this->connection()["user"]), std::string(this->connection()["passwd"])));
@@ -78,7 +78,7 @@ auto zpt::mysql::Client::reconnect() -> void {
 auto zpt::mysql::Client::insert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -124,7 +124,7 @@ auto zpt::mysql::Client::insert(std::string _collection, std::string _href_prefi
 auto zpt::mysql::Client::upsert(std::string _collection, std::string _href_prefix, zpt::json _document, zpt::json _opts) -> std::string {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -210,7 +210,7 @@ auto zpt::mysql::Client::upsert(std::string _collection, std::string _href_prefi
 auto zpt::mysql::Client::save(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {	
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -247,7 +247,7 @@ auto zpt::mysql::Client::save(std::string _collection, std::string _href, zpt::j
 auto zpt::mysql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -284,7 +284,7 @@ auto zpt::mysql::Client::set(std::string _collection, std::string _href, zpt::js
 auto zpt::mysql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -324,7 +324,7 @@ auto zpt::mysql::Client::set(std::string _collection, zpt::json _pattern, zpt::j
 auto zpt::mysql::Client::unset(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -359,7 +359,7 @@ auto zpt::mysql::Client::unset(std::string _collection, std::string _href, zpt::
 auto zpt::mysql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
 	assertz(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject", 412, 0);
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -396,7 +396,7 @@ auto zpt::mysql::Client::unset(std::string _collection, zpt::json _pattern, zpt:
 
 auto zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -421,11 +421,14 @@ auto zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt:
 
 auto zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		std::string _expression = std::string("DELETE FROM ") + _collection + std::string(" WHERE id=") + zpt::mysql::escape(_record["id"]);	
 		try {
@@ -445,13 +448,13 @@ auto zpt::mysql::Client::get(std::string _collection, std::string _href, zpt::js
 	std::string _expression("SELECT * FROM ");
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
-	return this->query(_collection, _expression, _opts)[0];
+	return this->query(_collection, _expression, _opts)["elements"][0];
 }
 
 auto zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
 	zpt::json _elements = zpt::json::array();
 	{ std::lock_guard< std::mutex > _lock(this->__mtx);
-		assertz(this->__conn.get() != nullptr, std::string("connection to MariaDB at ") + this->name() + std::string(" has not been established."), 500, 0);
+		assertz(this->__conn.get() != nullptr, std::string("connection to MySQL at ") + this->name() + std::string(" has not been established."), 500, 0);
 		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
 		_stmt->execute(string("USE ") + this->connection()["db"]->str()); }
 
@@ -462,8 +465,10 @@ auto zpt::mysql::Client::query(std::string _collection, std::string _pattern, zp
 	for (; _result->next(); ) {
 		_elements << zpt::mysql::fromsql_r(_result);
 	}
-
-	return _elements;
+	if (_elements->arr()->size() == 0) {
+		return zpt::undefined;
+	}
+	return { "size", _elements->arr()->size(), "elements", _elements };
 }
 
 auto zpt::mysql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
@@ -478,11 +483,23 @@ auto zpt::mysql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 		_count_expression += std::string(" WHERE ") + _where;
 	}
 	zpt::mysql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	std::shared_ptr<sql::ResultSet> _result;
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_result.reset(_stmt->executeQuery(_count_expression)); }
+	size_t _size = 0;
+	if (_result->next()) {
+		_size = size_t(zpt::mysql::fromsql_r(_result)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+	
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 	
 }
@@ -493,11 +510,23 @@ auto zpt::mysql::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	_expression += _collection;
 	_count_expression += _collection;
 	zpt::mysql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	std::shared_ptr<sql::ResultSet> _result;
+	{ std::lock_guard< std::mutex > _lock(this->__mtx);
+		std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
+		_result.reset(_stmt->executeQuery(_count_expression)); }
+	size_t _size = 0;
+	if (_result->next()) {
+		_size = size_t(zpt::mysql::fromsql_r(_result)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+	
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 }
 

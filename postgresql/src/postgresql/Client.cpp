@@ -349,6 +349,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		std::string _expression = std::string("DELETE FROM ") + zpt::pgsql::escape_name(_collection) + std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_record["id"]);
 		int _size = 0;
@@ -373,7 +376,7 @@ auto zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::js
 	_expression += zpt::pgsql::escape_name(_collection);
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
-	return this->query(_collection, _expression, _opts)[0];
+	return this->query(_collection, _expression, _opts)["elements"][0];
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
@@ -391,7 +394,10 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 		}
 	}
 	psql_catch_block(1200);
-	return _elements;
+	if (_elements->arr()->size() == 0) {
+		return zpt::undefined;
+	}
+	return { "size", _elements->arr()->size(), "elements", _elements };
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
@@ -410,11 +416,26 @@ auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 		}
 	}
 	zpt::pgsql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	pqxx::result _result;
+	try {
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_result = _stmt.exec(_count_expression); }
+	}
+	psql_catch_block(1200);
+	size_t _size = 0;
+	for (auto _r : _result) {
+		_size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 }
 
@@ -426,11 +447,26 @@ auto zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	_expression += zpt::pgsql::escape_name(_collection);
 	_count_expression += zpt::pgsql::escape_name(_collection);
 	zpt::pgsql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	pqxx::result _result;
+	try {
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_result = _stmt.exec(_count_expression); }
+	}
+	psql_catch_block(1200);
+	size_t _size = 0;
+	for (auto _r : _result) {
+		_size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 }
 

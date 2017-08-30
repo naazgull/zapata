@@ -329,6 +329,9 @@ auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt
  	_key.insert(0, (std::string) this->connection()["db"]);
 
 	zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		zpt::json _removed;
 		if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _record["href"]->str());
