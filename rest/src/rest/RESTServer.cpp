@@ -448,8 +448,8 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 						return;
 					}
 					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:shutdown") {
-						//zdbg(zpt::ev::pretty(_envelope));
-						_emitter->directory()->vanished(std::string(_envelope["headers"]["Location"]));
+						_emitter->directory()->vanished(std::string(_envelope["headers"]["X-UUID"]));
+						((zpt::RESTEmitter*) _emitter.get())->server()->poll()->vanished(std::string(_envelope["headers"]["Location"]));
 						//std::cout << _emitter->directory()->pretty() << endl << flush;
 						return;
 					}

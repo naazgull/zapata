@@ -403,7 +403,7 @@ auto zpt::EventDirectory::shutdown(std::string _uuid) -> void {
 		this->__emitter->route(
 			zpt::ev::Notify,
 			"*",
-			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:container:shutdown", "Location", _uuid } },
+			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:container:shutdown", "X-UUID", _uuid, "Location", this->__options["zmq"][0]["connect"] } },
 			{ "upnp", true }
 		);
 	}
@@ -433,12 +433,19 @@ auto zpt::EventDirectoryGraph::merge(zpt::ev::node _service) -> void {
 	for (short _idx = 0; _idx != short(zpt::ev::Connect) + 1; _idx++) {
 		auto _lh_callback = _lhs[_idx];
 		auto _rh_callback = _rhs[_idx];
-		std::get<1>(this->__service)[_idx] = (
-			[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
-				_lh_callback(_performative, _topic, _envelope, _emitter);
-				_rh_callback(_performative, _topic, _envelope, _emitter);
-			}
-		);
+
+		if (_lh_callback == nullptr && _rh_callback != nullptr) {
+			std::get<1>(this->__service)[_idx] = _rh_callback;
+			std::get<0>(this->__service)["peers"][0]["performatives"] << zpt::ev::to_str(zpt::ev::performative(_idx)) << true;
+		}
+		else if (_lh_callback != nullptr && _rh_callback != nullptr) {
+			std::get<1>(this->__service)[_idx] = (
+				[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+					_lh_callback(_performative, _topic, _envelope, _emitter);
+					_rh_callback(_performative, _topic, _envelope, _emitter);
+				}
+			);
+		}
 	}
 }
 		
@@ -658,6 +665,9 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 		}
 		_ret += std::string(" ") + _protocol + std::string("\n"); 
 	}
+	if (_envelope["status"]->ok()) {
+		_ret += std::string("Location: ") + std::string(_envelope["resource"]) + std::string("\n");
+	}
 	if (_envelope["headers"]->ok()) {
 		for (auto _header : _envelope["headers"]->obj()) {
 			_ret += _header.first + std::string(": ") + std::string(_header.second) + std::string("\n");
@@ -673,7 +683,7 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 auto zpt::ev::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 	zpt::json _aliases = zpt::split(_pattern, "|");
 	zpt::json _topics = zpt::json::array();
-	char _op;
+	char _op = '\0';
 	for (auto _alias : _aliases->arr()) {
 		std::string _return;
 		short _state = 0;
@@ -691,6 +701,10 @@ auto zpt::ev::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 							_regex = false;
 						}
 						_return.push_back(_c);
+						_op = '\0';
+					}
+					else {
+						_op = '+';
 					}
 					break;
 				}
@@ -717,10 +731,13 @@ auto zpt::ev::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 					break;
 				}
 				case '{' :
-				case '}' :
-				case '.' :
-				case '+' : {
+				case '}' : {
 					_op = '+';
+					_regex = true;
+					break;
+				}
+				case '+' : {
+					if (_op == '\0') _op = '*';
 					_regex = true;
 					break;
 				}

@@ -111,6 +111,7 @@ namespace zpt {
 		virtual auto add(short _type, std::string _connection, bool _new_connection = false) -> zpt::socket_ref;
 		virtual auto add(zpt::ZMQ* _underlying) -> zpt::socket_ref;
 		virtual auto remove(zpt::socket_ref _socket) -> void;
+		virtual auto vanished(std::string _connection) -> void;
 
 		virtual auto poll(zpt::socket_ref _socket) -> void;
 		virtual auto clean_up(zpt::socket_ref _socket, bool _force = false) -> void;
@@ -128,8 +129,8 @@ namespace zpt {
 		zpt::ZMQPollPtr __self;
 		zpt::ev::emitter __emitter;
 		bool __needs_rebuild;
-		std::vector< zpt::socket_ref > __to_add;
-		std::vector< zpt::socket_ref > __to_remove;
+		std::map< zpt::socket_ref, std::string > __to_add;
+		std::map< zpt::socket_ref, std::string > __to_remove;
 
 		auto bind(short _type, std::string _connection) -> zpt::ZMQ*;
 		auto signal(std::string _message) -> void;

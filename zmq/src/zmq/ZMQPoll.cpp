@@ -84,9 +84,18 @@ auto zpt::ZMQPoll::relay(std::string _key) -> zpt::ZMQ* {
 auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connection) -> zpt::socket_ref {
 	std::string _key;
 
-	if (!_new_connection && this->relay(zpt::type2str(_type) + std::string(">") + _connection) != nullptr) {
-		// zdbg(std::string("returning already found connection for: ") + zpt::type2str(_type) + std::string(">") + _connection);
-		return zpt::socket_ref(zpt::type2str(_type) + std::string(">") + _connection, this->self());
+	if (!_new_connection) {
+		_key = std::string(_connection.data());
+		if (_key.front() == '@') {
+			_key[0] = '>';
+		}
+		else if (_key.front() != '>') {
+			_key = '>' + _key;
+		}
+		if (this->relay(_key) != nullptr) {
+			//zdbg(std::string("already connected socket ") + _key);
+			return zpt::socket_ref(_key, this->self());
+		}
 	}
 
 	zpt::ZMQ* _underlying = this->bind(_type, _connection);
@@ -94,9 +103,6 @@ auto zpt::ZMQPoll::add(short _type, std::string _connection, bool _new_connectio
 	
 	if (_new_connection) {
 		_key.assign(_underlying->id());
-	}
-	else {
-		_key.assign(zpt::type2str(_type) + std::string(">") + _underlying->connection());
 	}
 	
 	{ std::lock_guard< std::mutex > _lock(this->__mtx[0]);
@@ -114,6 +120,23 @@ auto zpt::ZMQPoll::add(zpt::ZMQ* _underlying) -> zpt::socket_ref {
 	{ std::lock_guard< std::mutex > _lock(this->__mtx[0]);
 		this->__by_refs.insert(std::make_pair(_key, _underlying)); }
 	return zpt::socket_ref(_key, this->self());
+}
+
+auto zpt::ZMQPoll::vanished(std::string _connection) -> void {
+	std::string _key(_connection.data());
+	if (_key.front() == '@') {
+		_key[0] = '>';
+	}
+	else if (_key.front() != '>') {
+		_key = '>' + _key;
+	}
+
+	if (this->relay(_key) != nullptr) {
+		zpt::socket_ref _socket(_key, this->self());
+		this->__to_remove.insert(std::make_pair(_socket, "zpt::ZMQPoll::vanished"));
+		this->__needs_rebuild = true;
+	}
+	
 }
 
 auto zpt::ZMQPoll::remove(zpt::socket_ref _socket) -> void {
@@ -158,7 +181,7 @@ auto zpt::ZMQPoll::poll(zpt::socket_ref _socket) -> void {
 					return;
 				}
 			}
-			this->__to_add.push_back(_socket);
+			this->__to_add.insert(std::make_pair(_socket, "zpt::ZMQPoll::poll"));
 			this->__needs_rebuild = true;
 		}
 	}
@@ -254,9 +277,6 @@ auto zpt::ZMQPoll::loop() -> void {
 			if (_sd_watchdog_enabled) {
 				sd_notify(0, "WATCHDOG=1");
 			}
-			// else {
-			// 	_n_events = zmq::poll(&this->__items[0], this->__items.size(), -1);
-			// }
 
 			if (_n_events == 0) {
 				for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
@@ -324,23 +344,22 @@ auto zpt::ZMQPoll::loop() -> void {
 			}
 
 			if (this->__items[this->__items.size() - 1].revents & ZMQ_POLLIN) {
-				//zdbg("synchronization event");
 				zmq::message_t _frame;
 				this->__sync[0]->recv(&_frame);
 				
 				std::string _uuid(std::string(static_cast<char*>(_frame.data()), _frame.size()));
 				try {
 					zpt::socket_ref _socket = this->get(_uuid);
-					//zdbg(std::string("adding socket ") + _socket);
-					this->__to_add.push_back(_socket);
+					this->__to_add.insert(std::make_pair(_socket, "zpt::ZMQPoll::loop"));
 				}
 				catch(zpt::assertion& _e) {
 				}
 				this->notify(_uuid);
 			}
 
-			for (auto _socket : this->__to_remove) {
-				// zdbg(std::string("removing socket ") + _socket);
+			for (auto _pair : this->__to_remove) {
+				zpt::socket_ref _socket = _pair.first;
+				// zdbg(std::string("removing socket ") + _socket + std::string(" (") + _pair.second + std::string(")"));
 				for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 					if (this->__by_socket[_k] == _socket) {
 						this->__by_socket.erase(this->__by_socket.begin() + _k);
@@ -352,15 +371,14 @@ auto zpt::ZMQPoll::loop() -> void {
 				this->__needs_rebuild = true;
 			}
 			this->__to_remove.clear();
-			this->__to_remove.resize(0);
 
-			for (; this->__to_add.size() != 0; ) {
-				this->__by_socket.push_back(this->__to_add[0]);
-				this->__to_add.erase(this->__to_add.begin());
+			for (auto _pair : this->__to_add) {
+				zpt::socket_ref _socket = _pair.first;
+				// zdbg(std::string("adding socket ") + _socket);
+				this->__by_socket.push_back(_socket);
 				this->__needs_rebuild = true;
 			}
 			this->__to_add.clear();
-			this->__to_add.resize(0);
 		}
 	}
 	catch(zpt::assertion& _e) {
@@ -444,6 +462,10 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::ZMQ* {
 			return _socket;
 		}
 		case ZMQ_PULL : {
+			zpt::socket_ref _found = this->get(_connection);
+			if ((*_found) != nullptr) {
+				return *_found;
+			}
 			zpt::ZMQ* _socket = new zpt::ZMQPull(_connection, this->__options);
 			return _socket;
 		}
@@ -485,7 +507,7 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket, bool _force) -> void {
 			break;
 		}
 		case ZMQ_REQ : {
-			this->__to_remove.push_back(_socket);
+			this->__to_remove.insert(std::make_pair(_socket, "zpt::ZMQPoll::clean_up / ZMQ_REQ"));
 			this->__needs_rebuild = true;
 			break;
 		}
@@ -505,18 +527,14 @@ auto zpt::ZMQPoll::clean_up(zpt::socket_ref _socket, bool _force) -> void {
 			break;
 		}
 		case ZMQ_PUSH : {
-			this->__to_remove.push_back(_socket);
-			this->__needs_rebuild = true;
 			break;
 		}
 		case ZMQ_PULL : {
-			this->__to_remove.push_back(_socket);
-			this->__needs_rebuild = true;
 			break;
 		}
 		case ZMQ_HTTP_RAW : {
 			if (_force || ((zpt::ZMQHttp*) *_socket)->underlying()->host() != "" || !_socket->available()) {
-				this->__to_remove.push_back(_socket);
+				this->__to_remove.insert(std::make_pair(_socket, "ztp::ZMQPoll::clean_up / ZMQ_HTTP_RAW"));
 				this->__needs_rebuild = true;
 			}
 			break;

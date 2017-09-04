@@ -93,7 +93,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 	bool _is_ssl = this->connection()["uri"]["scheme"] == zpt::json::string("https");
 	zpt::http::rep _rep;
 	this->init_request(_req);
-	//zdbg(_req);
+	// zdbg(_req);
 	if (this->__pool_size) {
 		int _k = 0;
 		{ std::lock_guard< std::mutex> _l(this->__global);
@@ -136,7 +136,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 		catch (zpt::SyntaxErrorException& _e) { }
 		_socket.close();
 	}
-	//zdbg(_rep);
+	// zdbg(_rep);
 	return _rep;
 }
 
@@ -270,6 +270,7 @@ auto zpt::couchdb::Client::upsert(std::string _collection, std::string _href_pre
 			_document << "href" << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) + _document["id"]->str());
 		}
 		_document << "_id" << _document["href"];
+		_document >> "_rev";
 
 		zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::couchdb::get_fields(_opts) : zpt::undefined);
 		std::string _body = std::string(_document - _exclude);
@@ -529,9 +530,6 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::json _query = zpt::couchdb::get_query(_regexp);
-	if (!_query["selector"]->ok() || (_query["selector"]->is_object() && _query["selector"]->obj()->size() == 0)) {
-		return this->all(_collection, _opts);
-	}
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
 	size_t _size = 0;
@@ -575,6 +573,7 @@ auto zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	_req->method(zpt::ev::Get);
 	_req->url(_db_name + std::string("/_all_docs"));
 	_req->param("include_docs", "true");
+	_req->param("endkey", "\"_\"");
 	if (_opts["page_size"]->ok()) {
 		_req->param("limit", std::string(_opts["page_size"]));
 	}
@@ -589,11 +588,11 @@ auto zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt:
 	zpt::json _return = zpt::json::array();
 	size_t _size = 0;
 	if (_result["docs"]->is_array()) {
-		_size = size_t(_result["total_rows"]);
+		_size = size_t(_result["total_rows"]) - 1;
 		_return = _result["docs"];
 	}
 	else if (_result["rows"]->is_array()) {
-		_size = size_t(_result["total_rows"]);
+		_size = size_t(_result["total_rows"]) - 1;
 		_return = _result->getPath("rows.*.doc");
 	}
 	

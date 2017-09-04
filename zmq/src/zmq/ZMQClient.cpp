@@ -1228,7 +1228,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 		_uuid.assign(std::string(_envelope["channel"]));
 		auto _found = this->__sock_id.find(_uuid);
 		if (_found == this->__sock_id.end()) {
-			zlog(std::string("couldn't find socket associated with '") + _uuid + std::string("'"), zpt::critical);
+			zlog(std::string("couldn't find socket associated with '") + _uuid + std::string("':") + zpt::ev::pretty(_envelope), zpt::critical);
 			return zpt::undefined;
 		}
 		_frame1 = _found->second;

@@ -310,7 +310,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 	if (_callback != nullptr) {
 		if (_opts["bubble-error"]->is_object()) {
 			this->pending(_envelope,
-				[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _reply, zpt::ev::emitter _emitter) mutable -> void {
+				[ _opts, _callback ] (zpt::ev::performative _performative, std::string _topic, zpt::json _reply, zpt::ev::emitter _emitter) mutable -> void {
 					if (int(_reply["status"]) > 399) {
 						_emitter->reply(_opts["bubble-error"], _reply);
 					}
@@ -364,10 +364,10 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			return;
 		}
 		catch(std::exception& _e) {
-			zpt::json _out = zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
-			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
-			this->reply(_envelope, _out);
-			return;
+		 	zpt::json _out = zpt::ev::internal_server_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
+		 	zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
+		 	this->reply(_envelope, _out);
+		 	return;
 		}
 	}
 	else {
@@ -400,11 +400,12 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			}
 		}
 		this->__poll->poll(_client);
-		this->pending(_envelope,
-			[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
-				this->__poll->clean_up(_client);
-			}
-		);
+		// this->pending(_envelope,
+		//  	[ & ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
+		//  		this->__poll->clean_up(_client);
+		//  		zdbg(_envelope);
+		//  	}
+		// );
 		_client->send(_envelope);
 		if (_no_answer && !_has_callback) {
 			this->reply(_envelope, zpt::ev::accepted(_url));

@@ -28,9 +28,10 @@ SOFTWARE.
 #define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^$elemMatch^")
 
 auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
-	zpt::json _selector = zpt::json::object();
+	zpt::json _selector = { "_id", { "$lt", "_" } };
 	zpt::json _query = { "selector", _selector };
 	if (!_in->is_object()) {
+		_query << "limit" << INT_MAX;
 		return _query;
 	}
 	for (auto _i : _in->obj()) {
@@ -45,33 +46,37 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 			_query << "offset" << ((unsigned long) _value);
 			continue;
 		}
-		else if (_key == "order_by") {
+		else if (_key == "order_by" && (_value->is_string() || _value->is_array())) {
 			if (!_query["sort"]->is_array()) {
 				_query << "sort" << zpt::json::array();
 			}
+			zpt::json _splited;
 			if (_value->is_string()) {
-				zpt::json _splited = zpt::split(std::string(_value), ",", true);
-				for (auto _field : _splited->arr()) {
-					std::string _name = std::string(_field);
-					std::string _direction;
-					if (_name[0] == '-') {
-						_direction.assign("desc");
-						_name = _name.substr(1);
-					}
-					else if (_name[0] == '+') {
-						_direction.assign("asc");
-						_name = _name.substr(1);
-					}
-					else {
-						_direction.assign("asc");
-					}
-					_query["sort"] << zpt::json{ _name, _direction };
+				_splited = zpt::split(std::string(_value), ",", true);
+			}
+			else {
+				_splited = _value;
+			}
+			for (auto _field : _splited->arr()) {
+				std::string _name = std::string(_field);
+				std::string _direction;
+				if (_name[0] == '-') {
+					_direction.assign("desc");
+					_name = _name.substr(1);
 				}
+				else if (_name[0] == '+') {
+					_direction.assign("asc");
+					_name = _name.substr(1);
+				}
+				else {
+					_direction.assign("asc");
+				}
+				_query["sort"] << zpt::json{ _name, _direction };
 			}
 			continue;
 		}
-		else if (_key == "fields") {
-			_query << "fields" << zpt::split(std::string(_value), ",", true);
+		else if (_key == "fields" && (_value->is_string() || _value->is_array())) {
+			_query << "fields" << (_value->is_string() ? zpt::split(_value->str(), ",", true) : _value);
 			continue;
 		}
 		else if (_key == "embed") {
@@ -211,6 +216,10 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 		}
 
 		_selector << std::string(_key) << _value;
+	}
+
+	if (!_query["limit"]->ok()) {
+		_query << "limit" << INT_MAX;
 	}
 
 	return _query;
