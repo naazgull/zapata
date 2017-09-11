@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014, Muzzley
+Copyright (c) 2017, Muzzley
 */
 
 #include <zapata/smtp/SMTP.h>
