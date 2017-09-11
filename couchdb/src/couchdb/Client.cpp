@@ -473,26 +473,31 @@ auto zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, z
 	std::string _db_name = std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
-	zpt::http::req _req;
-	_req->method(zpt::ev::Delete);
 	zpt::json _result = this->query(_collection, _pattern);
 	if (!_result->ok()) {
 		return 0;
 	}
+	_size = _result["elements"]->arr()->size();
 	zpt::json _removed = zpt::json::array();
 
 	for (auto _record : _result["elements"]->arr()) {
-		std::string _url = _db_name + std::string("/") + zpt::url::r_encode(std::string(_record["href"]));
-		_req->url(_url);
-		_req->param("rev", std::string(_record["_rev"]));
-		zpt::http::rep _rep = this->send(_req);
-		if (_rep->status() == zpt::HTTP200) {
-			_size++;
-			_removed << _record;
-		}
+		_removed << zpt::json{ "_id", _record["_id"], "_rev", _record["_rev"], "_deleted", true };
+	}
+
+	zpt::http::req _req;
+	_req->method(zpt::ev::Post);
+	std::string _url = _db_name + std::string("/_bulk_docs");
+	std::string _body = std::string(zpt::json{ "docs", _removed });
+	_req->url(_url);
+	_req->body(_body);
+	_req->header("Content-Type", "application/json");
+	_req->header("Content-Length", std::to_string(_body.length()));
+	zpt::http::rep _rep = this->send(_req);
+	if (_rep->status() > 399) {
+		_size = 0;
 	}
 	
-	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::remove(_collection, _pattern, _opts + zpt::json{ "removed", _removed });
+	if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::remove(_collection, _pattern, _opts + zpt::json{ "removed", _result["elements"] });
 	return _size;
 }
 

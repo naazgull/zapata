@@ -2088,7 +2088,7 @@ auto zpt::GenDatum::build_extends_get() -> std::string{
 }
 
 auto zpt::GenDatum::build_extends_query() -> std::string{
-	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.query.client]\");\n_r_data = _c->query(\"$[datum.collection]\", _filter, _filter + zpt::json({ \"href\", _topic }));\n");
+	std::string _return("zpt::connector _c = _emitter->connector(\"$[datum.method.query.client]\");\n_r_data = _c->query(\"$[datum.collection]\", zpt::json(zpt::json::object() + _filter), _filter + zpt::json({ \"href\", _topic }));\n");
 	return _return;
 }
 
@@ -2218,9 +2218,9 @@ auto zpt::GenDatum::build_extends_set_pattern() -> std::string {
 		"\nfor (auto _c_name : _c_names->arr()) {\n"
 		"zpt::connector _c = _emitter->connector(_c_name);\n"
 		"if (zpt::is_sql(std::string(_c_name))) {\n"
-		"_n_updated = _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+		"_n_updated = _c->set(\"$[datum.collection]\", zpt::json(zpt::json::object() + _filter), _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
 			"}\nelse {\n"
-			"_n_updated = _c->set(\"$[datum.collection]\", _filter, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+			"_n_updated = _c->set(\"$[datum.collection]\", zpt::json(zpt::json::object() + _filter), _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
 			"}\n"
 			"_c_idx++;\n"
 			"}\n");
@@ -2230,7 +2230,7 @@ auto zpt::GenDatum::build_extends_set_pattern() -> std::string {
 		auto _found = zpt::Generator::datums.find(_name);
 		if (_found != zpt::Generator::datums.end()) {
 			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
-			_return += _name + std::string("::set(_topic, _document, _filter, _emitter, _identity, _envelope + zpt::json{ \"opts\", { \"extends\", true } });\n");
+			_return += _name + std::string("::set(_topic, _document, zpt::json(zpt::json::object() + _filter), _emitter, _identity, _envelope + zpt::json{ \"opts\", { \"extends\", true } });\n");
 		}
 	}
 	_return += std::string("\n_r_data = { \"href\", _topic, \"n_updated\", _n_updated };\n");
@@ -2276,14 +2276,14 @@ auto zpt::GenDatum::build_extends_remove_pattern() -> std::string {
 		auto _found = zpt::Generator::datums.find(_name);
 		if (_found != zpt::Generator::datums.end()) {
 			_name = std::string(_found->second->spec()["namespace"]) + std::string("::datums::") + zpt::r_replace(_found->second->spec()["name"]->str(), "-", "_");
-			_return += _name + std::string("::remove(_topic, _filter, _emitter, _identity, _envelope + zpt::json{ \"opts\", { \"extends\", true } });\n");
+			_return += _name + std::string("::remove(_topic, zpt::json(zpt::json::object() + _filter), _emitter, _identity, _envelope + zpt::json{ \"opts\", { \"extends\", true } });\n");
 		}
 	}
 
 	_return += std::string(
 		"\nfor (auto _c_name : _c_names->arr()) {\n"
 		"zpt::connector _c = _emitter->connector(_c_name);\n"
-		"_n_deleted = _c->remove(\"$[datum.collection]\", _filter, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
+		"_n_deleted = _c->remove(\"$[datum.collection]\", zpt::json(zpt::json::object() + _filter), { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });"
 		"_c_idx++;\n"
 		"}\n");
 

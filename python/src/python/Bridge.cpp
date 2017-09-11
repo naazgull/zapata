@@ -260,7 +260,7 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 		std::string _lambda = std::string(zpt::python::to_ref(_func));
 		Py_INCREF(_func);	
 		zpt::json _context = _opts["context"];
-		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts,
+		_bridge->events()->route(zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))), std::string(_topic), _envelope, _opts,
 			[ _lambda, _context ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) mutable -> void {
 				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 				PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
