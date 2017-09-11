@@ -321,8 +321,13 @@ auto zpt::python::module::validate_authorization(PyObject* _self, PyObject* _arg
 	zpt::json _topic = _params[0];
 	zpt::json _envelope = _params[1];
 	zpt::json _roles = _params[2];
-	zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
-	return **_bridge->to< zpt::python::object >(_identity);
+	try {
+		zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
+		return **_bridge->to< zpt::python::object >(_identity);
+	}
+	catch(zpt::assertion& _e) {
+		Py_RETURN_NONE;
+	}
 }
 
 auto zpt::python::module::options(PyObject* _self, PyObject* _args) -> PyObject* {
