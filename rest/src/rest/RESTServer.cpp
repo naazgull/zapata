@@ -338,7 +338,7 @@ void zpt::RESTServer::start() {
 					}
 					std::string _scheme = std::string(_uri["scheme"]);
 					std::transform(std::begin(_scheme), std::end(_scheme), std::begin(_scheme), ::toupper);
-					zlog(std::string("binding ") + _scheme + std::string("/1,1 listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+					zlog(std::string("binding ") + _scheme + std::string("/1.1 listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
 
 					bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
 					for (; true; ) {
