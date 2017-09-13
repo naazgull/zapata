@@ -398,6 +398,11 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 				_client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
 				break;
 			}
+			default : {
+				zpt::json _out = zpt::ev::unsupported_media_type(_url);
+				this->reply(_envelope, _out);
+				return;
+			}
 		}
 		this->__poll->poll(_client);
 		// this->pending(_envelope,
