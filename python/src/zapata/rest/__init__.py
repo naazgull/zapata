@@ -5,13 +5,14 @@ class RestHandler(object):
     def __init__(self):
         self.get_callback = self.__callback
         self.post_callback = self.__callback
+        self.put_callback = self.__callback
         self.patch_callback = self.__callback
         self.delete_callback = self.__callback
         self.head_callback = self.__callback
 
         self.web_endpoint = ''
         self.data_layer_endpoint = ''
-        self.methods_allowed = ['get', 'post', 'patch', 'delete', 'head']
+        self.methods_allowed = ['get', 'post', 'put', 'patch', 'delete', 'head']
         self.unauthorized_status = 401
         self.unauthorized_code = 1019
         self.unauthorized_text = 'unauthorized access to this resource'
@@ -22,7 +23,7 @@ class RestHandler(object):
         
         if not identity:
             zpt.reply(envelope, {
-                'status': self..unauthorized_status,
+                'status': self.unauthorized_status,
                 'payload': {
                     'code': self.unauthorized_code,
                     'text': self.unauthorized_text
@@ -55,6 +56,9 @@ class RestHandler(object):
 
     def post(performative, topic, envelope, context):
         self.dispatch('post', performative, topic, envelope, context)
+
+    def put(performative, topic, envelope, context):
+        self.dispatch('put', performative, topic, envelope, context)
 
     def patch(performative, topic, envelope, context):
         self.dispatch('patch', performative, topic, envelope, context) 
