@@ -13,19 +13,19 @@ class RestHandler(object):
         self.data_layer_endpoint = ''
         self.methods_allowed = ['get', 'post', 'patch', 'delete', 'head']
         self.unauthorized_status = 401
-        unauthorized_code = 1019
-        unauthorized_text = 'unauthorized access to this resource'
+        self.unauthorized_code = 1019
+        self.unauthorized_text = 'unauthorized access to this resource'
         
     def authorize(self, method, performative, topic, envelope, context):
 
-        identity = zpt.authorize(self.Meta.web_endpoint, envelope)
+        identity = zpt.authorize(self.web_endpoint, envelope)
         
         if not identity:
             zpt.reply(envelope, {
-                'status': self.Meta.unauthorized_status,
+                'status': self..unauthorized_status,
                 'payload': {
-                    'code': self.Meta.unauthorized_code,
-                    'text': self.Meta.unauthorized_text
+                    'code': self.unauthorized_code,
+                    'text': self.unauthorized_text
                 }
             })
             return None
@@ -44,7 +44,7 @@ class RestHandler(object):
 
         zpt.route(
             method,
-            self.Meta.data_layer_endpoint,
+            self.data_layer_endpoint,
             {'headers': zpt.auth_headers(identity), 'params' : envelope.get('params') },
             {'context': envelope },
             getattr(self, '{}_callback'.format(method))
