@@ -115,6 +115,7 @@ namespace zpt {
 		virtual auto build() -> std::string;
 		virtual auto build_data_layer() -> std::string;
 		virtual auto build_query(zpt::json _field) -> std::string;
+		virtual auto build_doc_query(zpt::json _field, std::string _name) -> std::string;
 		virtual auto build_params(zpt::json _rel, bool _multi, std::string _var_name = "") -> std::string;
 		virtual auto build_inverted_params(zpt::json _rel) -> std::string;
 		virtual auto build_topic(zpt::json _topic) -> std::string;

@@ -505,6 +505,9 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
 	zpt::json _splited = zpt::path::split(_topic);
 	if (std::string(_splited[0]).find(":") != std::string::npos) {
+		if (!zpt::test::uri(_topic)) {
+			return  std::make_tuple(zpt::undefined, zpt::ev::handlers(), std::regex(".*"));
+		}
 		zpt::json _uri = zpt::uri::parse(_topic);
 		std::string _connect = std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]);
 		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", zpt::r_replace(_topic, _connect, ""), "type", (_uri["scheme"] == zpt::json::string("tcp") ? "req" : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));
@@ -665,13 +668,13 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 		}
 		_ret += std::string(" ") + _protocol + std::string("\n"); 
 	}
-	if (_envelope["status"]->ok()) {
-		_ret += std::string("Location: ") + std::string(_envelope["resource"]) + std::string("\n");
-	}
 	if (_envelope["headers"]->ok()) {
 		for (auto _header : _envelope["headers"]->obj()) {
 			_ret += _header.first + std::string(": ") + std::string(_header.second) + std::string("\n");
 		}
+	}
+	if (!_envelope["headers"]["X-Resource"]->ok()) {
+		_ret += std::string("X-Resource: ") + std::string(_envelope["resource"]) + std::string("\n");
 	}
 	_ret += std::string("\n");
 	if (_envelope["payload"]->ok() && !_envelope["payload"]->empty()) {
@@ -798,6 +801,20 @@ auto zpt::ev::bad_request(std::string _resource, zpt::json _headers) -> zpt::jso
 			"text", "bad request",
 			"code", 1100,
 			"assertion_failed", "_socket >> _req"
+		}
+	};
+}
+
+auto zpt::ev::unsupported_media_type(std::string _resource, zpt::json _headers) -> zpt::json {
+	return {
+		"channel", zpt::generate::r_uuid(),
+		"performative", zpt::ev::Reply,
+		"resource", _resource,
+		"headers", _headers,
+		"status", 415,
+		"payload", {
+			"text", std::string("'") + _resource + std::string("' uri type is not supported by this server"),
+			"code", 1199
 		}
 	};
 }

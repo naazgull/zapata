@@ -610,7 +610,7 @@ auto zpt::rest::authorization::validate(std::string _topic, zpt::json _envelope,
 
 auto zpt::rest::authorization::has_roles(zpt::json _identity, zpt::json _roles_needed) -> bool {
 	std::vector< zpt::json > _result;
-	std::set_intersection(std::begin(_identity["roles"]->arr()), std::end(_identity["roles"]->arr()), std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), std::back_inserter(_result));
+	std::set_intersection(std::begin(_identity["roles"]->arr()), std::end(_identity["roles"]->arr()), std::begin(_roles_needed->arr()), std::end(_roles_needed->arr()), std::back_inserter(_result), [] (zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });
 	return _result.size() != 0;
 }
 

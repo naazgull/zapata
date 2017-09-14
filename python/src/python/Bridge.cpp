@@ -245,16 +245,22 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	zpt::json _performative = _params[0];
 	assertz_mandatory(_params[0], "", 412);
 	assertz_mandatory(_params[1], "", 412);
+
+	return zpt::python::module::route(_self, _params);
+}
+
+auto zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	zpt::json _performative = _params[0];
 	zpt::json _topic = _params[1];
 	zpt::json _envelope = _params[2];
 	zpt::json _opts = _params[3];
 	zpt::json _callback = _params[4];
 
 	_opts >> "bubble-error";
-	
+
 	if (_callback->is_lambda()) {
 		PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
 		std::string _lambda = std::string(zpt::python::to_ref(_func));
@@ -297,9 +303,10 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 		);
 	}
 	else {
-		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts);
+		_bridge->events()->route(zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))), std::string(_topic), _envelope, _opts);
 	}
 	Py_RETURN_TRUE;
+	
 }
 
 auto zpt::python::module::reply(PyObject* _self, PyObject* _args) -> PyObject* {
@@ -357,7 +364,6 @@ auto zpt::python::module::hook(PyObject* _self, PyObject* _args) -> PyObject* {
 auto zpt::python::module::log(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	assertz_mandatory(_params[0], "", 412);
 	assertz_mandatory(_params[1], "", 412);
 	std::string _text = std::string(_params[0]);
 	int _level = int(_params[1]);

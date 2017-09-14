@@ -1199,6 +1199,32 @@ auto zpt::GenDatum::build_query(zpt::json _field) -> std::string {
 	return _query;
 }
 
+auto zpt::GenDatum::build_doc_query(zpt::json _field, std::string _name) -> std::string {
+	std::string _base = zpt::Generator::get_datum(std::string(_field["ref"]));
+	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
+	auto _second = _rel->obj()->begin();
+	_second++;
+	std::string _other_ref = std::string(_second->second);
+	std::string _on_field = _other_ref.substr(_other_ref.rfind("/") + 1);
+	_other_ref = _other_ref.substr(0, _other_ref.rfind("/"));
+	std::string _join_with = zpt::Generator::get_datum(_other_ref);
+	auto _first = _rel->obj()->begin();
+	std::string _other_other_ref = std::string(_first->first);
+	std::string _where_field = _other_other_ref.substr(_other_other_ref.rfind("/") + 1);
+
+	std::string _query;
+	_query += std::string("zpt::json _r_") + _name + std::string("_join = zpt::json::object();\n");
+	_query += std::string("zpt::json _r_") + _name + std::string("_1 = _c->query(\"") + _join_with + std::string("\", zpt::json{ \"") + _where_field + std::string("\", ") + (_first->second->str().front() == '{' ? std::string("_r_data[\"") + _first->second->str().substr(1, _first->second->str().length() - 2) + std::string("\"]") : std::string("\"") + _first->second->str() + std::string("\"")) + std::string(" });\n");
+	_query += std::string("if (!_r_") + _name + std::string("_1->ok()) continue;\n");
+	_query += std::string("for (auto _r_other : _r_") + _name + std::string("_1[\"elements\"]->arr()) {\n");
+	_query += std::string("zpt::json _r_") + _name + std::string("_2 = _c->query(\"") + _base + std::string("\", zpt::json{ \"") + _second->first + std::string("\", _r_other[\"") + _on_field + std::string("\"] });\n");
+	_query += std::string("if (!_r_") + _name + std::string("_2->ok()) continue;\n");
+	_query += std::string("_r_") + _name + std::string("_join << \"elements\" << (_r_") + _name + std::string("_join[\"elements\"] + _r_") + _name + std::string("_2[\"elements\"]);\n");
+	_query += std::string("}\n");
+	_query += std::string("if (_r_") + _name + std::string("_join[\"elements\"]->is_array()) _r_") + _name + std::string(" = _r_") + _name + std::string("_join;\n");
+	return _query;
+}
+
 auto zpt::GenDatum::build_params(zpt::json _rel, bool _multi, std::string _var_name) -> std::string {
 	std::string _params;
 	for (auto _param : _rel->obj()) {
@@ -1570,9 +1596,7 @@ auto zpt::GenDatum::build_update() -> std::string {
 		_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"filter\"], _envelope[\"payload\"][\"changes\"], { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("else {\n");
-		_return += std::string("zpt::json _split = zpt::split(_envelope[\"payload\"][\"href\"]->str(), \"/\");\n");
-		_return += std::string("_split->arr()->pop_back();\n");
-		_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), _envelope[\"payload\"][\"changes\"] + zpt::json{ \"href\", _envelope[\"payload\"][\"href\"] }, { \"mutated-event\", true });\n");
+		_return += std::string("_c->upsert(\"") + std::string(this->__spec["name"]) + std::string("\", _envelope[\"payload\"][\"href\"]->str(), _envelope[\"payload\"][\"changes\"] + zpt::json{ \"href\", _envelope[\"payload\"][\"href\"] }, { \"mutated-event\", true });\n");
 		_return += std::string("}\n");	
 		_return += std::string("}\n");	
 		_return += std::string("return;\n");
@@ -1704,13 +1728,17 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 		_return += std::string(" });\n");
 		_return += std::string("if (!_r_targets[\"elements\"]->is_array()) continue;\n");
 		_return += std::string("for (auto _r_data : _r_targets[\"elements\"]->arr()) {\n");
-		_return += std::string("zpt::json _r_") + _name + std::string(" = _c->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
+		_return += std::string("zpt::json _r_") + _name + std::string(";\n");
+		if (_rel->ok() && _rel->obj()->size() != 0 && std::string(_field["rel"]).find("/") != std::string::npos) {
+			_return += std::string("if (zpt::is_sql(std::string(_c_name))) {\n");
+		}
+		_return += std::string("_r_") + _name + std::string(" = _c->query(\"") + zpt::Generator::get_datum(std::string(_field["ref"])) + std::string("\", ");
 		if (_rel->ok() && _rel->obj()->size() != 0) {
 			if (std::string(_field["rel"]).find("/") != std::string::npos) {
 				_return += this->build_query(_field);
 			}
 			else {
-				_return += std::string("{ ");
+				_return += std::string("zpt::json{ ");
 				_return += this->build_params(_rel, false);
 				_return += std::string(" }");
 			}
@@ -1719,18 +1747,18 @@ auto zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _fiel
 			_return += std::string("zpt::json::object()");
 		}
 		_return += std::string(");\n");
-		_return += std::string("if (!_r_") + _name + std::string("->ok()) continue;\n");
-
-		
+		if (_rel->ok() && _rel->obj()->size() != 0 && std::string(_field["rel"]).find("/") != std::string::npos) {
+			_return += std::string("}\n");
+			_return += std::string("else {\n");
+			_return += this->build_doc_query(_field, _name);
+			_return += std::string("}\n");
+		}
+		_return += std::string("if (!_r_") + _name + std::string("->ok()) continue;\n");		
 		if (_field["type"] == zpt::json::string("array")) {
-			_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
-			_return += std::string("_split->arr()->pop_back();\n");
-			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"] : zpt::json({ zpt::array, _r_") + _name + std::string(" })) }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 		}
 		else if (_field["type"] == zpt::json::string("object")) {
-			_return += std::string("zpt::json _split = zpt::split(_r_data[\"href\"]->str(), \"/\");\n");
-			_return += std::string("_split->arr()->pop_back();\n");
-			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", zpt::path::join(_split), { \"href\", _r_data[\"href\"], \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
+			_return += std::string("_c->set(\"") + std::string(this->__spec["name"]) + std::string("\", _r_data[\"href\"]->str(), { \"") + _name + std::string("\", (_r_") + _name + std::string("[\"elements\"]->is_array() ? _r_") + _name + std::string("[\"elements\"][0] : _r_") + _name + std::string(") }, { \"href\", _r_data[\"href\"], \"mutated-event\", true });\n");
 		}
 		_return += std::string("}\n");
 		_return += std::string("}\n");
