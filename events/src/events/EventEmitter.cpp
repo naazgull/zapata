@@ -668,13 +668,13 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 		}
 		_ret += std::string(" ") + _protocol + std::string("\n"); 
 	}
-	if (_envelope["status"]->ok()) {
-		_ret += std::string("Location: ") + std::string(_envelope["resource"]) + std::string("\n");
-	}
 	if (_envelope["headers"]->ok()) {
 		for (auto _header : _envelope["headers"]->obj()) {
 			_ret += _header.first + std::string(": ") + std::string(_header.second) + std::string("\n");
 		}
+	}
+	if (!_envelope["headers"]["X-Resource"]->ok()) {
+		_ret += std::string("X-Resource: ") + std::string(_envelope["resource"]) + std::string("\n");
 	}
 	_ret += std::string("\n");
 	if (_envelope["payload"]->ok() && !_envelope["payload"]->empty()) {

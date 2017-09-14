@@ -114,6 +114,7 @@ namespace zpt {
 			auto init() -> PyObject*;
 			auto on(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto route(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto route(PyObject* _self, zpt::json _params) -> PyObject*;
 			auto reply(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto options(PyObject* _self, PyObject* _args) -> PyObject*;

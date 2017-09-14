@@ -1521,7 +1521,7 @@ auto zpt::ZMQHttp::out() -> zmq::socket_ptr {
 }
 
 auto zpt::ZMQHttp::fd() -> int {
-	return this->__underlying->buffer().get_socket();;
+	return this->__underlying->buffer().get_socket();
 }
 
 auto zpt::ZMQHttp::close() -> void {
@@ -1579,6 +1579,8 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 			else {
 				_message.assign(std::string(zpt::rest::zmq2http_req(_envelope, this->__underlying->host() + std::string(":") + std::to_string(this->__underlying->port()))));
 				this->__state = HTTP_REQ;
+				this->__cid = std::string(_envelope["channel"]);
+				//zdbg(this->__cid);
 			}
 			(*this->__underlying) << _message << flush; }
 
@@ -1599,11 +1601,16 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 				(*this->__underlying) >> _request;
 				this->__state = HTTP_REQ;
 				_in = zpt::rest::http2zmq(_request);
+				this->__cid = std::string(_in["channel"]);
 			}
 			else {
 				zpt::http::rep _reply;
 				(*this->__underlying) >> _reply;
 				this->__state = HTTP_REP;
+				if (_reply->header("X-Cid") == "") {
+					//zdbg(this->__cid);
+					_reply->header("X-Cid", this->__cid);
+				}
 				_in = zpt::rest::http2zmq(_reply);
 			}
 		}
@@ -1810,9 +1817,9 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 	zpt::json _return = zpt::json::object();
 	_return <<
 	"status" << (int) _reply->status() <<
-	"channel" << (_reply->header("X-Cid").length() != 0 ? _reply->header("X-Cid") : zpt::generate::r_uuid()) <<
+	"channel" << (_reply->header("X-Cid").length() != 0 ? _reply->header("X-Cid") : zpt::undefined) <<
 	"performative" << zpt::ev::Reply <<
-	"resource" << zpt::generate::r_uuid();
+	"resource" << _reply->header("X-Resource");
 
 	std::string _body = _reply->body();
 	zpt::json _payload;
@@ -1849,7 +1856,6 @@ auto zpt::rest::zmq2http_rep(zpt::json _out) -> zpt::http::rep {
 	zpt::http::rep _return;
 	_return->status((zpt::HTTPStatus) ((int) _out["status"]));
 	
-	//_out << "headers" << (zpt::ev::init_reply() + _out["headers"])
 	if (_out["headers"]->is_object()) {;
 		for (auto _header : _out["headers"]->obj()) {
 			_return->header(_header.first, ((std::string) _header.second));
@@ -1858,12 +1864,39 @@ auto zpt::rest::zmq2http_rep(zpt::json _out) -> zpt::http::rep {
 	if (_out["channel"]->ok()) {
 		_return->header("X-Cid", std::string(_out["channel"]));
 	}
+	_return->header("X-Resource", _out["resource"]);
 
 	if (_return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 && _return->status() >= zpt::HTTP200) {
 		if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) || (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {
-			std::string _body = std::string(_out["payload"]);
-			zpt::trim(_body);
-			if (_body.length() != 0) {
+			if (_out["headers"]["Content-Type"]->ok() && std::string(_out["headers"]["Content-Type"]) != "application/json") {
+				if (std::string(_out["headers"]["Content-Type"]) == "application/x-www-form-urlencoded" || std::string(_out["headers"]["Content-Type"]) == "multipart/form-data") {
+					std::string _body;
+					if (_out["payload"]->is_object()) {
+						for (auto _param : _out["payload"]->obj()) {
+							if (_body.length() != 0) {
+								_body += std::string("&");
+							}
+							_body += _param.first + std::string("=") +  zpt::url::r_encode(std::string(_param.second));
+						}
+					}
+					else {
+						_body = std::string("payload=") + zpt::url::r_encode(std::string(_out["payload"]));
+					}
+					zpt::trim(_body);
+					_return->header("Content-Length", std::to_string(_body.length()));
+					_return->body(_body);
+				}
+				else {
+					std::string _body = std::string(_out["payload"]);
+					zpt::trim(_body);
+					_return->header("Content-Type", "text/plain");
+					_return->header("Content-Length", std::to_string(_body.length()));
+					_return->body(_body);
+				}
+			}
+			else {
+				std::string _body = std::string(_out["payload"]);
+				zpt::trim(_body);
 				if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
 					_return->header("Content-Type", "application/json");
 				}
@@ -1872,9 +1905,6 @@ auto zpt::rest::zmq2http_rep(zpt::json _out) -> zpt::http::rep {
 				}
 				_return->body(_body);
 				_return->header("Content-Length", std::to_string(_body.length()));
-			}
-			else {
-				_return->header("Content-Length", "0");
 			}
 		}
 		else {
@@ -1906,15 +1936,48 @@ auto zpt::rest::zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::re
 	}
 
 	if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) || (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) || (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {
-		std::string _body = std::string(_out["payload"]);
-		zpt::trim(_body);
-		if (_body.length() != 0) {
-			_return->header("Content-Type", "application/json");
-			_return->header("Content-Length", std::to_string(_body.length()));
-			_return->body(_body);
+		if (_out["headers"]["Content-Type"]->ok() && std::string(_out["headers"]["Content-Type"]) != "application/json") {
+			if (std::string(_out["headers"]["Content-Type"]) == "application/x-www-form-urlencoded" || std::string(_out["headers"]["Content-Type"]) == "multipart/form-data") {
+				std::string _body;
+				if (_out["payload"]->is_object()) {
+					for (auto _param : _out["payload"]->obj()) {
+						if (_body.length() != 0) {
+							_body += std::string("&");
+						}
+						_body += _param.first + std::string("=") +  zpt::url::r_encode(std::string(_param.second));
+					}
+				}
+				else {
+					_body = std::string("payload=") + zpt::url::r_encode(std::string(_out["payload"]));
+				}
+				zpt::trim(_body);
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			}
+			else {
+				std::string _body = std::string(_out["payload"]);
+				zpt::trim(_body);
+				_return->header("Content-Type", "text/plain");
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			}
 		}
 		else {
-			_return->header("Content-Length", "0");
+			std::string _body = std::string(_out["payload"]);
+			zpt::trim(_body);
+			if (_body.length() != 0) {
+				if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
+					_return->header("Content-Type", "application/json");
+				}
+				else {
+					_return->header("Content-Type", "text/plain");
+				}
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			}
+			else {
+				_return->header("Content-Length", "0");
+			}
 		}
 	}	
 	return _return;
