@@ -3,12 +3,12 @@ import zpt
 class RestHandler(object):
 
     def __init__(self):
-        self.get_callback = self.__callback
-        self.post_callback = self.__callback
-        self.put_callback = self.__callback
-        self.patch_callback = self.__callback
-        self.delete_callback = self.__callback
-        self.head_callback = self.__callback
+        self.get_callback = self.default_callback
+        self.post_callback = self.default_callback
+        self.put_callback = self.default_callback
+        self.patch_callback = self.default_callback
+        self.delete_callback = self.default_callback
+        self.head_callback = self.default_callback
 
         self.web_endpoint = ''
         self.data_layer_endpoint = ''
@@ -33,12 +33,13 @@ class RestHandler(object):
 
         return identity
 
-    def __callback(self, performative, topic, t_reply, context):
+    @staticmethod
+    def default_callback(performative, topic, t_reply, context):
         zpt.reply(context, t_reply)
         
     def dispatch(self, method, performative, topic, envelope, context):
-
-        identity = self.authorize()
+        
+        identity = self.authorize(method, performative, topic, envelope, context)
 
         if not identity:
             return # cancel the dispatch
