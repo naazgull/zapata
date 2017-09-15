@@ -209,7 +209,7 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 		_rep = this->send(_req);
 	}
 	assertz(_rep->status() == zpt::HTTP201, std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") + std::string(_rep), int(_rep->status()), 1201); 
-	
+	zdbg(std::string("inserting ") + std::string(_document["href"]) + std::string(":\n") + std::string(_rep));
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
