@@ -1,23 +1,38 @@
 import zpt
 
+METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head']
+
 class RestHandler(object):
 
     def __init__(self):
-        self.get_callback = self.default_callback
-        self.post_callback = self.default_callback
-        self.put_callback = self.default_callback
-        self.patch_callback = self.default_callback
-        self.delete_callback = self.default_callback
-        self.head_callback = self.default_callback
-
-        self.web_endpoint = ''
-        self.data_layer_endpoint = ''
-        self.methods_allowed = ['get', 'post', 'put', 'patch', 'delete', 'head']
+        self.web_endpoint = None
+        self.data_layer_endpoint = None
+        self.methods_allowed = METHODS
         self.unauthorized_status = 401
         self.unauthorized_code = 1019
         self.unauthorized_text = 'unauthorized access to this resource'
+
+    def __getattribute__(self, name):
+
+        try:
+            return object.__getattribute__(self, name)
+        except Exception as e:
+
+            if name in self.methods_allowed:
+                return self.dispatch
+            elif name in ['{}_callback'.format(method) for method in self.methods_allowed]:
+                return self.default_callback
+
+        super(RestHandler, self).__getattribute__(name)
+
+    def __setattribute__(self, name, value):
+
+        if name == 'methods_allowed':
+            return [method for method in self.__methods_allowed if method in METHODS]
+
+        super(RestHandler, self).__setattribute__(name, value)
         
-    def authorize(self, method, performative, topic, envelope, context):
+    def authorize(self, method, topic, envelope, context):
 
         identity = zpt.authorize(self.web_endpoint, envelope)
         
@@ -34,12 +49,12 @@ class RestHandler(object):
         return identity
 
     @staticmethod
-    def default_callback(performative, topic, t_reply, context):
-        zpt.reply(context, t_reply)
+    def default_callback(method, topic, reply, context):
+        zpt.reply(context, reply)
         
-    def dispatch(self, method, performative, topic, envelope, context):
+    def dispatch(self, method, topic, envelope, context):
         
-        identity = self.authorize(method, performative, topic, envelope, context)
+        identity = self.authorize(method, topic, envelope, context)
 
         if not identity:
             return # cancel the dispatch
@@ -51,21 +66,3 @@ class RestHandler(object):
             {'context': envelope },
             getattr(self, '{}_callback'.format(method))
         )
-
-    def get(self, performative, topic, envelope, context):
-        self.dispatch('get', performative, topic, envelope, context)
-
-    def post(performative, topic, envelope, context):
-        self.dispatch('post', performative, topic, envelope, context)
-
-    def put(performative, topic, envelope, context):
-        self.dispatch('put', performative, topic, envelope, context)
-
-    def patch(performative, topic, envelope, context):
-        self.dispatch('patch', performative, topic, envelope, context) 
-
-    def delete(performative, topic, envelope, context):
-        self.dispatch('delete', performative, topic, envelope, context)
-
-    def head(performative, topic, envelope, context):
-        self.dispatch('head', performative, topic, envelope, context)
