@@ -16,7 +16,7 @@ $[resource.handler.delete]
 $[resource.handler.head]
 $[resource.handler.reply]
 	
-}
+};
 $[namespaces.end]
 
 auto $[namespace]::$[resource.type]s::$[resource.name]::restify(zpt::ev::emitter _emitter) -> void {

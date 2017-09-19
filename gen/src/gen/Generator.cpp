@@ -2512,37 +2512,37 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		zpt::replace(_handler_cxx, "$[resource.handler.get]", _handler);
 		_first = _handler.length() == 0;
 		_handler.assign(this->build_post());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}
 		zpt::replace(_handler_cxx, "$[resource.handler.post]", _handler);
 		_handler.assign(this->build_put());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}		
 		zpt::replace(_handler_cxx, "$[resource.handler.put]", _handler);
 		_handler.assign(this->build_patch());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}		
 		zpt::replace(_handler_cxx, "$[resource.handler.patch]", _handler);
 		_handler.assign(this->build_delete());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}		
 		zpt::replace(_handler_cxx, "$[resource.handler.delete]", _handler);
 		_handler.assign(this->build_head());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}		
 		zpt::replace(_handler_cxx, "$[resource.handler.head]", _handler);
 		_handler.assign(this->build_reply());
-		if (_handler.length() != 0 && !_first) {
+		if (this->__options["resource-mode"][0] == zpt::json::string("lambda") && _handler.length() != 0 && !_first) {
 			_first = false;
 			_handler = std::string(",\n") + _handler;
 		}		

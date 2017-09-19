@@ -11,4 +11,4 @@ using namespace __gnu_cxx;
 
 $[namespaces.begin]
 auto restify(zpt::ev::emitter _emitter) -> void;
-$[namepsaces.end]
+$[namespaces.end]
