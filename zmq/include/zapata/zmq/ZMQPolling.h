@@ -443,7 +443,7 @@ namespace zpt {
 	};
 
 	namespace net {
-		auto getip() -> std::string;
+		auto getip(std::string _if = "") -> std::string;
 	}
 
 	namespace rest {

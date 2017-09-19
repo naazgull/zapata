@@ -32,8 +32,19 @@ zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_str
 	char _no_lo = 0;
 	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_no_lo, sizeof(_no_lo));
 
+	std::string _ip;
+	if (_options["upnp"]["interface"]->is_string()) {
+		_ip = zpt::net::getip(_options["upnp"]["interface"]->str());
+		if (_ip == "127.0.0.1") {
+			_ip = "0.0.0.0";
+		}
+	}
+	else {
+		_ip = "0.0.0.0";
+	}
+	
 	struct in_addr _local_interface;
-	_local_interface.s_addr = inet_addr("0.0.0.0");
+	_local_interface.s_addr = inet_addr(_ip.data());
 	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_IF, (char *) &_local_interface, sizeof(_local_interface));
 
 	struct sockaddr_in _local_addr;
@@ -45,7 +56,7 @@ zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_str
 
 	struct ip_mreq _group_addr;
 	_group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->str().data());
-	_group_addr.imr_interface.s_addr = inet_addr("0.0.0.0");
+	_group_addr.imr_interface.s_addr = inet_addr(_ip.data());
 	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &_group_addr, sizeof(_group_addr));
 
 	struct timeval _tv;
