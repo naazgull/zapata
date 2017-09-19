@@ -24,7 +24,7 @@ class RestHandler(object):
             if name in self.allowed_performatives:
                 return self.dispatch
             elif name in ['{}_callback'.format(performative) for performative in self.allowed_performatives]:
-                return self.default_callback
+                return RestHandler.default_callback
 
         super(RestHandler, self).__getattribute__(name)
 
@@ -85,8 +85,17 @@ class RestHandler(object):
 
         return data_template
 
-    def dispatch(self, performative, topic, envelope, context):
-        
+    def dispatch(self, performative, topic, envelope, context = None):
+        if self.datum_topic == None :
+            zpt.reply(envelope, {
+                'status': 405,
+                'payload': {
+                    'code': 1300,
+                    'text': 'Performative is not accepted for the given resource'
+                }
+            })
+            return
+    
         identity = self.authorize(performative, topic, envelope, context)
 
         if not identity:
