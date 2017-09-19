@@ -7,9 +7,9 @@ PARAM_PATTERN = re.compile(r'(\{[^\}]+\})')
 class RestHandler(object):
 
     def __init__(self):
-        self.web_endpoint = None
-        self.data_layer_endpoint = None
-        self.data_layer_params = None
+        self.base_topic = None
+        self.relayed_topic = None
+        self.relayed_topic_params = None
         self.methods_allowed = METHODS
         self.unauthorized_status = 401
         self.unauthorized_code = 1019
@@ -37,7 +37,7 @@ class RestHandler(object):
         
     def authorize(self, method, topic, envelope, context):
 
-        identity = zpt.authorize(self.web_endpoint, envelope)
+        identity = zpt.authorize(self.base_topic, envelope)
         
         if not identity:
             zpt.reply(envelope, {
@@ -89,14 +89,14 @@ class RestHandler(object):
         if not identity:
             return # cancel the dispatch
 
-        endpoint, variables = self.path_discover(self.web_endpoint, topic, self.data_layer_endpoint)
+        endpoint, variables = self.path_discover(self.base_topic, topic, self.relayed_topic)
 
         zpt.route(
             method,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
-                'params': zpt.merge(envelope.get('params'), self.variable_resolver(self.data_layer_params, variables)),
+                'params': zpt.merge(envelope.get('params'), self.variable_resolver(self.relayed_topic_params, variables)),
                 'payload': envelope.get('payload') 
             },
             {'context': envelope },

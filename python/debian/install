@@ -1,0 +1,3 @@
+src/zapata/__init__.py /usr/lib/python3/dist-packages/zpt
+src/zapata/rest/__init__.py /usr/lib/python3/dist-packages/zpt/rest
+
