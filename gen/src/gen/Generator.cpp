@@ -2484,7 +2484,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			_namespaces_end += "}\n";
 		}
 		zpt::replace(_handler_cxx, "$[namespaces.begin]", _namespaces_begin);
-		zpt::replace(_handler_cxx, "$[namepsaces.end]", _namespaces_end);
+		zpt::replace(_handler_cxx, "$[namespaces.end]", _namespaces_end);
 
 		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["type"]) + std::string("s {\n");
 		_namespaces_end += "}\n";
@@ -2492,8 +2492,14 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		_namespaces_end += "}\n";
 	
 		zpt::replace(_handler_h, "$[namespaces.begin]", _namespaces_begin);
-		zpt::replace(_handler_h, "$[namepsaces.end]", _namespaces_end);
+		zpt::replace(_handler_h, "$[namespaces.end]", _namespaces_end);
 
+		std::string _type = std::string(this->__spec["type"]);
+		std::transform(std::begin(_type), std::begin(_type) + 1, std::begin(_type), ::toupper);
+		std::string _c_name = zpt::r_replace(zpt::r_prettify_header_name(std::string(this->__spec["name"])), "-", "") + _type;
+		zpt::replace(_handler_h, "$[resource.handler.class.name]", _c_name);
+		zpt::replace(_handler_cxx, "$[resource.handler.class.name]", _c_name);
+		
 		zpt::replace(_handler_h, "$[resource.type]", std::string(this->__spec["type"]));
 		zpt::replace(_handler_cxx, "$[resource.type]", std::string(this->__spec["type"]));
 		zpt::replace(_handler_h, "$[resource.name]", std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")));
@@ -2911,7 +2917,13 @@ auto zpt::GenResource::build_get() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto get(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Get);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2925,7 +2937,12 @@ auto zpt::GenResource::build_get() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 404), \"payload\", _r_body  });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -2986,7 +3003,13 @@ auto zpt::GenResource::build_post() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto post(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Post);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -2997,7 +3020,12 @@ auto zpt::GenResource::build_post() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -3058,7 +3086,13 @@ auto zpt::GenResource::build_put() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto put(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Put);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3069,7 +3103,12 @@ auto zpt::GenResource::build_put() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -3127,7 +3166,13 @@ auto zpt::GenResource::build_patch() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto patch(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Patch);
 	
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3141,7 +3186,12 @@ auto zpt::GenResource::build_patch() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -3199,7 +3249,13 @@ auto zpt::GenResource::build_delete() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto remove(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Delete);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3213,7 +3269,12 @@ auto zpt::GenResource::build_delete() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", 200, \"payload\", _r_body });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -3271,7 +3332,13 @@ auto zpt::GenResource::build_head() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto head(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Head);
 
 	if (!this->__spec["datum"]["ref"]->ok()) {
@@ -3285,7 +3352,12 @@ auto zpt::GenResource::build_head() -> std::string {
 			_return += std::string("_emitter->reply(_envelope, { \"status\", (_r_body->ok() ? 200 : 204) });\n");
 		}
 	}
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 
 	if (this->__spec["datum"]["name"]->ok()) {
 		std::map<std::string, zpt::gen::datum>::iterator _found = zpt::Generator::datums.find(this->__spec["datum"]["name"]->str());	
@@ -3343,10 +3415,21 @@ auto zpt::GenResource::build_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	std::string _return;
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return = ("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
+	else {
+		_return = ("auto reply(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {\n");
+	}
 	_return += this->build_handler_header(zpt::ev::Head);
 	_return += std::string("return zpt::undefined;\n");
-	_return += std::string("\n}\n}");
+	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
+		_return += std::string("\n}\n}");
+	}
+	else {
+		_return += std::string("\n}");
+	}
 	return _return;
 }
 
