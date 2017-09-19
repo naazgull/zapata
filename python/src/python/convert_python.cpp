@@ -512,6 +512,7 @@ auto zpt::python::from_ref(zpt::json _in) -> PyObject* {
 auto zpt::python::to_ref(PyObject* _in) -> zpt::json {
 	std::ostringstream _oss;
 	_oss << _in << flush;
+	Py_INCREF(_in);
 	return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
 }
 
@@ -546,8 +547,8 @@ auto zpt::python::to_python(zpt::json _in) -> PyObject* {
 			}
 			else {
 				_ret = PyUnicode_DecodeLocale(std::string(_in).data(), nullptr);
+				Py_INCREF(_ret);
 			}
-			Py_INCREF(_ret);
 			break;
 		}
 		case zpt::JSDate: {
