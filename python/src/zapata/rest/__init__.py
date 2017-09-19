@@ -91,14 +91,21 @@ class RestHandler(object):
 
         endpoint, variables = self.path_discover(self.web_endpoint, topic, self.data_layer_endpoint)
 
+        params = envelope.get('params')
+        payload = envelope.get('payload')
+
+        if params: params = zpt.merge(params, self.variable_resolver(self.data_layer_params, variables))
+        if payload: payload = zpt.merge(payload, self.variable_resolver(self.data_layer_params, variables))
+
         zpt.route(
             method,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
-                'params': zpt.merge(envelope.get('params'), self.variable_resolver(self.data_layer_params, variables)),
-                'payload': envelope.get('payload') 
+                'params': params,
+                'payload': payload
             },
             {'context': envelope },
             getattr(self, '{}_callback'.format(method))
         )
+
