@@ -23,7 +23,7 @@ class RestHandler(object):
 
             if name in self.allowed_performatives:
                 return self.dispatch
-            elif name in ['{}_callback'.format(method) for method in self.allowed_performatives]:
+            elif name in ['{}_callback'.format(performative) for performative in self.allowed_performatives]:
                 return self.default_callback
 
         super(RestHandler, self).__getattribute__(name)
@@ -31,11 +31,11 @@ class RestHandler(object):
     def __setattribute__(self, name, value):
 
         if name == 'allowed_performatives':
-            return [method for method in self.__allowed_performatives if method in PERFORMATIVES]
+            return [performative for performative in self.__allowed_performatives if performative in PERFORMATIVES]
 
         super(RestHandler, self).__setattribute__(name, value)
         
-    def authorize(self, method, topic, envelope, context):
+    def authorize(self, performative, topic, envelope, context):
 
         identity = zpt.authorize(self.resource_topic, envelope)
         
@@ -52,7 +52,7 @@ class RestHandler(object):
         return identity
 
     @staticmethod
-    def default_callback(method, topic, reply, context):
+    def default_callback(performative, topic, reply, context):
         zpt.reply(context, reply)
 
     def path_discover(self, template_path, original_path, endpoint):
@@ -73,6 +73,9 @@ class RestHandler(object):
 
     def variable_resolver(self, data_template, variables):
 
+        if not data_template or type(data_template) is not dict:
+            return {}
+
         for key in data_template.keys():
 
             value = data_template[key]
@@ -80,20 +83,20 @@ class RestHandler(object):
             if type(value) is str:
                 data_template[key] = value.format(**variables) if value else None
 
-        return data_template if data_template else {}
+        return data_template
 
-    def dispatch(self, method, topic, envelope, context):
+    def dispatch(self, performative, topic, envelope, context):
         
-        identity = self.authorize(method, topic, envelope, context)
+        identity = self.authorize(performative, topic, envelope, context)
 
         if not identity:
             return # cancel the dispatch
 
         endpoint, variables = self.path_discover(self.resource_topic, topic, self.datum_topic)
-        extra_params = self.variable_resolver(self.datum_params, variables)
+        extra_params = self.variable_resolver(self.datum_topic_params, variables)
 
         zpt.route(
-            method,
+            performative,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
@@ -101,6 +104,6 @@ class RestHandler(object):
                 'payload': zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else extra_params # TODO: remove the if condition after merge function is working with a nil object
             },
             {'context': envelope },
-            getattr(self, '{}_callback'.format(method))
+            getattr(self, '{}_callback'.format(performative))
         )
 
