@@ -90,20 +90,15 @@ class RestHandler(object):
             return # cancel the dispatch
 
         endpoint, variables = self.path_discover(self.web_endpoint, topic, self.data_layer_endpoint)
-
-        params = envelope.get('params')
-        payload = envelope.get('payload')
-
-        if params: params = zpt.merge(params, self.variable_resolver(self.data_layer_params, variables))
-        if payload: payload = zpt.merge(payload, self.variable_resolver(self.data_layer_params, variables))
+        extra_params = self.variable_resolver(self.data_layer_params, variables)
 
         zpt.route(
             method,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
-                'params': params,
-                'payload': payload
+                'params': zpt.merge(envelope.get('params'), extra_params) if envelope.get('params') else None, # TODO: remove the if condition after merge function is working with a nil object
+                'payload': zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else None # TODO: remove the if condition after merge function is working with a nil object
             },
             {'context': envelope },
             getattr(self, '{}_callback'.format(method))
