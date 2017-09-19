@@ -47,7 +47,7 @@ class RestHandler(object):
         zpt.route(
             method,
             self.data_layer_endpoint,
-            {'headers': zpt.auth_headers(identity), 'params' : envelope.get('params') },
+            {'headers': zpt.auth_headers(identity), 'params' : envelope.get('params'), "payload" : envelope.get("payload") },
             {'context': envelope },
             getattr(self, '{}_callback'.format(method))
         )

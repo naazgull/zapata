@@ -1200,6 +1200,7 @@ auto zpt::GenDatum::build_query(zpt::json _field) -> std::string {
 }
 
 auto zpt::GenDatum::build_doc_query(zpt::json _field, std::string _name) -> std::string {
+	zpt::json _opts = zpt::gen::get_opts(_field);
 	std::string _base = zpt::Generator::get_datum(std::string(_field["ref"]));
 	zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
 	auto _second = _rel->obj()->begin();
@@ -1217,7 +1218,7 @@ auto zpt::GenDatum::build_doc_query(zpt::json _field, std::string _name) -> std:
 	_query += std::string("zpt::json _r_") + _name + std::string("_1 = _c->query(\"") + _join_with + std::string("\", zpt::json{ \"") + _where_field + std::string("\", ") + (_first->second->str().front() == '{' ? std::string("_r_data[\"") + _first->second->str().substr(1, _first->second->str().length() - 2) + std::string("\"]") : std::string("\"") + _first->second->str() + std::string("\"")) + std::string(" });\n");
 	_query += std::string("if (!_r_") + _name + std::string("_1->ok()) continue;\n");
 	_query += std::string("for (auto _r_other : _r_") + _name + std::string("_1[\"elements\"]->arr()) {\n");
-	_query += std::string("zpt::json _r_") + _name + std::string("_2 = _c->query(\"") + _base + std::string("\", zpt::json{ \"") + _second->first + std::string("\", _r_other[\"") + _on_field + std::string("\"] });\n");
+	_query += std::string("zpt::json _r_") + _name + std::string("_2 = _c->query(\"") + _base + std::string("\", zpt::json{ \"") + _second->first + std::string("\", _r_other[\"") + _on_field + std::string("\"] }") + (_opts["fields"]->ok() ? zpt::r_replace(zpt::r_replace(std::string(zpt::split(_opts["fields"]->str(), ",", true)), "[", ", { \"fields\", { zpt::array, "), "]", " } }") : std::string(""))  + std::string(");\n");
 	_query += std::string("if (!_r_") + _name + std::string("_2->ok()) continue;\n");
 	_query += std::string("_r_") + _name + std::string("_join << \"elements\" << (_r_") + _name + std::string("_join[\"elements\"] + _r_") + _name + std::string("_2[\"elements\"]);\n");
 	_query += std::string("}\n");
@@ -2123,34 +2124,15 @@ auto zpt::GenDatum::build_extends_query() -> std::string{
 auto zpt::GenDatum::build_extends_insert() -> std::string{
 	std::string _fields_arr = zpt::gen::get_fields_array(this->__spec["fields"]);
 	std::string _return(
-		"std::string _r_id;\n"
+		"std::string _r_id = std::string(_document[\"id\"]);\n"
+		"if (_r_id.length() == 0) {\n"
+		"_r_id.assign(zpt::generate::r_uuid());\n"
+		"_document << \"id\" << _r_id;\n"
+		"}\n"
 		"size_t _c_idx = 0;\n"
 		"zpt::json _c_names = { zpt::array, $[datum.method.ordered.clients] };\n\n"
 		"_document <<\n\"created\" << zpt::json::date() <<\n\"updated\" << zpt::json::date();\n");
 	_return += this->build_validation();
-	_return += std::string(
-		"\nfor (auto _c_name : _c_names->arr()) {\n"
-		"zpt::connector _c = _emitter->connector(_c_name);\n"
-		"if (zpt::is_sql(std::string(_c_name))) {\n"
-		"if (_r_id.length() == 0) {\n"
-		"_r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-			"_document << \"id\" << _r_id;\n"
-			"}\nelse {\n"
-			"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-				"}\n"
-				"}\n"
-				"else {\n"
-				"$[datum.relations.insert]\n"
-				"if (_r_id.length() == 0) {\n"
-				"_r_id = _c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-				"_document << \"id\" << _r_id;\n"
-				"}\nelse {\n"
-				"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-				"}\n"
-				"}\n"
-				"_c_idx++;\n"
-				"}\n");
-
 	if (this->__spec["extends"]["name"]->ok()) {
 		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
 		auto _found = zpt::Generator::datums.find(_name);
@@ -2174,6 +2156,19 @@ auto zpt::GenDatum::build_extends_insert() -> std::string{
 			}
 		}
 	}
+	_return += std::string(
+		"\nfor (auto _c_name : _c_names->arr()) {\n"
+		"zpt::connector _c = _emitter->connector(_c_name);\n"
+		"if (zpt::is_sql(std::string(_c_name))) {\n"
+		"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+		"}\n"
+		"else {\n"
+		"$[datum.relations.insert]\n"
+		"_c->insert(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+		"}\n"
+		"_c_idx++;\n"
+		"}\n");
+
 	_return += std::string("_r_data = { \"id\", _r_id, \"href\", (_topic + std::string(\"/\") + _r_id) };\n");
 	return _return;
 }
@@ -2189,11 +2184,11 @@ auto zpt::GenDatum::build_extends_save() -> std::string {
 		"zpt::connector _c = _emitter->connector(_c_name);\n"
 		"if (zpt::is_sql(std::string(_c_name))) {\n"
 		"_n_updated = _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"fields\", ") + _fields_arr + std::string(", \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-			"}\nelse {\n"
-			"_n_updated = _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
-			"}\n"
-			"_c_idx++;\n"
-			"}\n");
+		"}\nelse {\n"
+		"_n_updated = _c->save(\"$[datum.collection]\", _topic, _document, { \"href\", _topic, \"mutated-event\", (_c_idx != _c_names->arr()->size() - 1) });\n"
+		"}\n"
+		"_c_idx++;\n"
+		"}\n");
 
 	if (this->__spec["extends"]["name"]->ok()) {
 		std::string _name = zpt::r_replace(this->__spec["extends"]["name"]->str(), "-", "_");
@@ -2466,7 +2461,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		std::string _handler_h;
 		zpt::load_path("/usr/share/zapata/gen/Handlers.h", _handler_h);
 		std::string _handler_cxx;
-		zpt::load_path("/usr/share/zapata/gen/Handlers.cpp", _handler_cxx);
+		zpt::load_path("/usr/share/zapata/gen/Handlers_lambda.cpp", _handler_cxx);
 
 		std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
 		if (_include.front() == '/') {

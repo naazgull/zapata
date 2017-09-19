@@ -136,7 +136,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 		catch (zpt::SyntaxErrorException& _e) { }
 		_socket.close();
 	}
-	// zdbg(_rep);
+	//zdbg(_rep);
 	return _rep;
 }
 
@@ -209,7 +209,7 @@ auto zpt::couchdb::Client::insert(std::string _collection, std::string _href_pre
 		_rep = this->send(_req);
 	}
 	assertz(_rep->status() == zpt::HTTP201, std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") + std::string(_rep), int(_rep->status()), 1201); 
-	zdbg(std::string("inserting ") + std::string(_document["href"]) + std::string(":\n") + std::string(_rep));
+
 	if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
 	return _document["id"]->str();
 }
@@ -535,6 +535,9 @@ auto zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt
 	std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
 	zpt::json _query = zpt::couchdb::get_query(_regexp);
+	if (_opts["fields"]->is_array()) {
+		_query << "fields" << _opts["fields"];
+	}
 	std::string _body = std::string(_query);
 	zpt::http::req _req;
 	size_t _size = 0;
