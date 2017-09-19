@@ -1,16 +1,16 @@
 import zpt
 import re
 
-METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head']
+PERFORMATIVES = ['get', 'post', 'put', 'patch', 'delete', 'head']
 PARAM_PATTERN = re.compile(r'(\{[^\}]+\})')
 
 class RestHandler(object):
 
     def __init__(self):
-        self.base_topic = None
-        self.relayed_topic = None
-        self.relayed_topic_params = None
-        self.methods_allowed = METHODS
+        self.resource_topic = None
+        self.datum_topic = None
+        self.datum_topic_params = None
+        self.allowed_performatives = PERFORMATIVES
         self.unauthorized_status = 401
         self.unauthorized_code = 1019
         self.unauthorized_text = 'unauthorized access to this resource'
@@ -21,23 +21,23 @@ class RestHandler(object):
             return object.__getattribute__(self, name)
         except Exception as e:
 
-            if name in self.methods_allowed:
+            if name in self.allowed_performatives:
                 return self.dispatch
-            elif name in ['{}_callback'.format(method) for method in self.methods_allowed]:
+            elif name in ['{}_callback'.format(method) for method in self.allowed_performatives]:
                 return self.default_callback
 
         super(RestHandler, self).__getattribute__(name)
 
     def __setattribute__(self, name, value):
 
-        if name == 'methods_allowed':
-            return [method for method in self.__methods_allowed if method in METHODS]
+        if name == 'allowed_performatives':
+            return [method for method in self.__allowed_performatives if method in PERFORMATIVES]
 
         super(RestHandler, self).__setattribute__(name, value)
         
     def authorize(self, method, topic, envelope, context):
 
-        identity = zpt.authorize(self.base_topic, envelope)
+        identity = zpt.authorize(self.resource_topic, envelope)
         
         if not identity:
             zpt.reply(envelope, {
@@ -89,14 +89,14 @@ class RestHandler(object):
         if not identity:
             return # cancel the dispatch
 
-        endpoint, variables = self.path_discover(self.base_topic, topic, self.relayed_topic)
+        endpoint, variables = self.path_discover(self.resource_topic, topic, self.datum_topic)
 
         zpt.route(
             method,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
-                'params': zpt.merge(envelope.get('params'), self.variable_resolver(self.relayed_topic_params, variables)),
+                'params': zpt.merge(envelope.get('params'), self.variable_resolver(self.datum_topic_params, variables)),
                 'payload': envelope.get('payload') 
             },
             {'context': envelope },

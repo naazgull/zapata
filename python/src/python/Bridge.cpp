@@ -411,8 +411,6 @@ auto zpt::python::module::authorization_headers(PyObject* _self, PyObject* _args
 auto zpt::python::module::merge(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	assertz_mandatory(_params[0], "", 412);
-	assertz_mandatory(_params[1], "", 412);
 	zpt::json _lhs = _params[0];
 	zpt::json _rhs = _params[1];
 	return **_bridge->to< zpt::python::object >(_lhs + _rhs);

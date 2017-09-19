@@ -93,6 +93,9 @@ auto zpt::Generator::load() -> void {
 	if (!this->__options["api_version"]->ok()) {
 		this->__options << "api_version" << (std::string("v") + std::string(this->__options["version"][0]));
 	}
+	if (!this->__options["resource-mode"]->ok()) {
+		this->__options << "resource-mode" << zpt::json{ zpt::array, "lambda" };
+	}
 
 	for (auto _file : this->__options["files"]->arr()) {
 		std::ifstream _ifs(_file->str().data());
@@ -2459,9 +2462,9 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 		std::string _cxx_file = std::string(this->__options["resource-out-cxx"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + std::string(this->__spec["name"]) + std::string(".cpp");
 
 		std::string _handler_h;
-		zpt::load_path("/usr/share/zapata/gen/Handlers.h", _handler_h);
+		zpt::load_path(std::string("/usr/share/zapata/gen/Handlers_") + std::string(this->__options["resource-mode"][0]) + std::string(".h"), _handler_h);
 		std::string _handler_cxx;
-		zpt::load_path("/usr/share/zapata/gen/Handlers_lambda.cpp", _handler_cxx);
+		zpt::load_path(std::string("/usr/share/zapata/gen/Handlers_") + std::string(this->__options["resource-mode"][0]) + std::string(".cpp"), _handler_cxx);
 
 		std::string _include = zpt::r_replace(_h_file, std::string(this->__options["prefix-h"][0]), "");
 		if (_include.front() == '/') {
@@ -2480,6 +2483,9 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			_namespaces_begin += std::string("namespace ") + std::string(_part) + std::string(" {\n");
 			_namespaces_end += "}\n";
 		}
+		zpt::replace(_handler_cxx, "$[namespaces.begin]", _namespaces_begin);
+		zpt::replace(_handler_cxx, "$[namepsaces.end]", _namespaces_end);
+
 		_namespaces_begin += std::string("namespace ") + std::string(this->__spec["type"]) + std::string("s {\n");
 		_namespaces_end += "}\n";
 		_namespaces_begin += std::string("namespace ") + std::string(zpt::r_replace(this->__spec["name"]->str(), "-", "_")) + std::string(" {\n");
@@ -2487,8 +2493,6 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	
 		zpt::replace(_handler_h, "$[namespaces.begin]", _namespaces_begin);
 		zpt::replace(_handler_h, "$[namepsaces.end]", _namespaces_end);
-		zpt::replace(_handler_cxx, "$[namespaces.begin]", _namespaces_begin);
-		zpt::replace(_handler_cxx, "$[namepsaces.end]", _namespaces_end);
 
 		zpt::replace(_handler_h, "$[resource.type]", std::string(this->__spec["type"]));
 		zpt::replace(_handler_cxx, "$[resource.type]", std::string(this->__spec["type"]));
@@ -2621,7 +2625,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	}
 	if (this->__options["resource-out-lang"]->ok() && std::find(std::begin(this->__options["resource-out-lang"]->arr()), std::end(this->__options["resource-out-lang"]->arr()), zpt::json::string("python")) != std::end(this->__options["resource-out-lang"]->arr())) {
 		std::string _handler_py;
-		zpt::load_path("/usr/share/zapata/gen/Handlers.py", _handler_py);
+		zpt::load_path(std::string("/usr/share/zapata/gen/Handlers_") + std::string(this->__options["resource-mode"][0]) + std::string(".py"), _handler_py);
 		std::string _py_file = std::string(this->__options["resource-out-scripts"][0]) + std::string("/") + std::string(_parent_name) + std::string("/") + std::string(this->__spec["type"]) + std::string("s/") + zpt::r_replace(std::string(this->__spec["name"]), "-", "_") + std::string(".py");
 
 		zpt::json _performatives = { zpt::array, "get", "post", "put", "patch", "delete", "head" };
@@ -2663,13 +2667,32 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 			_first = false;
 				
 		}
+		zpt::replace(_handler_py, "$[resource.topic]", std::string(this->__spec["topic"]));
 		zpt::replace(_handler_py, "$[resource.topic.regex]", zpt::gen::url_pattern_to_regexp(this->__spec["topic"]));
+		zpt::replace(_handler_py, "$[resource.allowed.performatives]", zpt::r_replace(std::string(this->__spec["performatives"]), "\"", "'"));
+
+		std::string _relay;
+		if (this->__spec["datum"]->is_object() && this->__spec["datum"]["ref"]->is_string()) {
+			_relay = std::string("self.datum_topic = '") + std::string(this->__spec["datum"]["ref"]) + std::string("'\n");
+			if (this->__spec["datum"]["rel"]->is_string()) {
+				zpt::json _rel = zpt::uri::query::parse(std::string(this->__spec["datum"]["rel"]));
+				std::string _params;
+				for (auto _param : _rel->obj()) {
+					if (_params.length() != 0) {
+						_params += std::string(", ");
+					}
+					_params += std::string("'") + _param.first + std::string("' : '") + std::string(_param.second) + std::string("'");
+				}
+				_relay += std::string("        self.datum_topic_params = { ") + _params + std::string(" }\n");
+			}
+		}
+		zpt::replace(_handler_py, "$[resource.topic.relay]", _relay);
 
 		std::string _resource_opts("{ ");
 		if (this->__spec["protocols"]->is_array()) {
 			for (auto _proto : this->__spec["protocols"]->arr()) {
 				if (_resource_opts.length() != 2) _resource_opts += std::string(", ");
-				_resource_opts += std::string(" \"") + _proto->str() + std::string("\" : True");
+				_resource_opts += std::string(" '") + _proto->str() + std::string("' : True");
 			}
 			_resource_opts += std::string(" }");
 		}
