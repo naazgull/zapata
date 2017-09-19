@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -94,6 +94,7 @@ namespace zpt {
 
 		auto not_found(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto bad_request(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
+		auto unsupported_media_type(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto accepted(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto no_content(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
 		auto temporary_redirect(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;

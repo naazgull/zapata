@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -439,6 +439,7 @@ namespace zpt {
 	private:
 		zpt::socketstream_ptr __underlying;
 		short __state;
+		std::string __cid;
 	};
 
 	namespace net {

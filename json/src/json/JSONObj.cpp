@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1645,8 +1645,8 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				}
 				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$any"]->ok()) {
-				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
+			if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
+				_callback(_parent_path + std::string(".") + _key, _key, * _parent);
 			}
 			else {
 				if (*this == _pattern) {
@@ -1659,7 +1659,7 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$any"]->ok()) {
+			if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
 				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 			}
 			else {

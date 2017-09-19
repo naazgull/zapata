@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <naazgull@dfz.pt>
+Copyright (c) 2017 n@zgul <naazgull@dfz.pt>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +50,7 @@ auto zpt::Connector::insert(std::string _collection, std::string _href_prefix, z
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "insert", zpt::r_replace(std::string(_record["href"]), std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "insert", "href", _record["href"], "new", _record },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "insert", "href", _record["href"], "new", _record },
 		{ "mqtt", true }
 	);
 	return std::string(_record["href"]);
@@ -65,7 +65,7 @@ auto zpt::Connector::save(std::string _collection, std::string _href, zpt::json 
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "replace", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "save", "href", _href, "new", _record },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "save", "href", _href, "new", _record },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -76,7 +76,7 @@ auto zpt::Connector::set(std::string _collection, std::string _href, zpt::json _
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "update", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "set", "href", _href, "changes", _record },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "set", "href", _href, "changes", _record },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -88,7 +88,7 @@ auto zpt::Connector::set(std::string _collection, zpt::json _pattern, zpt::json 
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "replace", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "set", "href", _href, "changes", _record, "filter", _pattern },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "set", "href", _href, "changes", _record, "filter", _pattern },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -99,7 +99,7 @@ auto zpt::Connector::unset(std::string _collection, std::string _href, zpt::json
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "update", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "unset", "href", _href, "changes", _record },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "unset", "href", _href, "changes", _record },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -111,7 +111,7 @@ auto zpt::Connector::unset(std::string _collection, zpt::json _pattern, zpt::jso
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "update", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "unset", "href", _href, "changes", _record, "filter", _pattern },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "unset", "href", _href, "changes", _record, "filter", _pattern },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -122,7 +122,7 @@ auto zpt::Connector::remove(std::string _collection, std::string _href, zpt::jso
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "remove", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "remove", "href", _href, "removed", _opts["removed"] },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "remove", "href", _href, "removed", _opts["removed"] },
 		{ "mqtt", true }
 	);
 	return 0;
@@ -134,7 +134,7 @@ auto zpt::Connector::remove(std::string _collection, zpt::json _pattern, zpt::js
 	this->events()->route(
 		zpt::ev::Reply,
 		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "remove", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
-		{ "headers", _opts["headers"], "performative", "remove", "href", _href, "filter", _pattern, "removed", _opts["removed"] },
+		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "remove", "href", _href, "filter", _pattern, "removed", _opts["removed"] },
 		{ "mqtt", true }
 	);
 	return 0;

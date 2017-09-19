@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -219,11 +219,12 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 			this->__emitter->reply(_envelope, _envelope);
 		}
 		catch(zpt::assertion& _e) {
-			zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description(), zpt::emergency);
+			zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace() + std::string("| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
 		}
 		catch(std::exception& _e) {
-			zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what(), zpt::emergency);
+			zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what() + std::string("\n| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
 		}
+		this->clean_up(_socket);
 	}
 	else {
 		try {

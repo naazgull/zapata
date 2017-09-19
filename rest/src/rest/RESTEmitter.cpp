@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -289,7 +289,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 		);
 		return;
 	}
-	
+
 	this->resolve(_method, _url, _envelope, _opts + zpt::json{ "broker", true }, _callback);
 }
 
@@ -359,7 +359,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		}
 		catch (zpt::assertion& _e) {
 			zpt::json _out = zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
-			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::error);
 			this->reply(_envelope, _out);
 			return;
 		}
@@ -397,6 +397,11 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			case ZMQ_HTTP_RAW : {
 				_client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
 				break;
+			}
+			default : {
+				zpt::json _out = zpt::ev::unsupported_media_type(_url);
+				this->reply(_envelope, _out);
+				return;
 			}
 		}
 		this->__poll->poll(_client);

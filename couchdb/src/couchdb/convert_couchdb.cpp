@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 			continue;
 		}
 		else if (_key == "page_start_index") {
-			_query << "offset" << ((unsigned long) _value);
+			_query << "skip" << ((unsigned long) _value);
 			continue;
 		}
 		else if (_key == "order_by" && (_value->is_string() || _value->is_array())) {

@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -240,8 +240,7 @@ auto zpt::mysql::Client::save(std::string _collection, std::string _href, zpt::j
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
-	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::mysql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
@@ -277,8 +276,7 @@ auto zpt::mysql::Client::set(std::string _collection, std::string _href, zpt::js
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
-	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::mysql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
@@ -352,8 +350,7 @@ auto zpt::mysql::Client::unset(std::string _collection, std::string _href, zpt::
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
-	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::mysql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
@@ -415,8 +412,7 @@ auto zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt:
 	catch(std::exception& _e) {}
 
 	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
-	assertz(_size != 0, std::string("mysql: no such record: ") + _expression, 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {

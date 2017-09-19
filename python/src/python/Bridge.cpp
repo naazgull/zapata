@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -245,22 +245,28 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	zpt::json _performative = _params[0];
 	assertz_mandatory(_params[0], "", 412);
 	assertz_mandatory(_params[1], "", 412);
+
+	return zpt::python::module::route(_self, _params);
+}
+
+auto zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject* {
+	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
+	zpt::json _performative = _params[0];
 	zpt::json _topic = _params[1];
 	zpt::json _envelope = _params[2];
 	zpt::json _opts = _params[3];
 	zpt::json _callback = _params[4];
 
 	_opts >> "bubble-error";
-	
+
 	if (_callback->is_lambda()) {
 		PyObject* _func = **_bridge->to< zpt::python::object >(_callback);
 		std::string _lambda = std::string(zpt::python::to_ref(_func));
 		Py_INCREF(_func);	
 		zpt::json _context = _opts["context"];
-		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts,
+		_bridge->events()->route(zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))), std::string(_topic), _envelope, _opts,
 			[ _lambda, _context ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) mutable -> void {
 				zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 				PyObject* _func = zpt::python::from_ref(zpt::json::string(_lambda));
@@ -297,9 +303,10 @@ auto zpt::python::module::route(PyObject* _self, PyObject* _args) -> PyObject* {
 		);
 	}
 	else {
-		_bridge->events()->route(zpt::ev::performative(int(_performative)), std::string(_topic), _envelope, _opts);
+		_bridge->events()->route(zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))), std::string(_topic), _envelope, _opts);
 	}
 	Py_RETURN_TRUE;
+	
 }
 
 auto zpt::python::module::reply(PyObject* _self, PyObject* _args) -> PyObject* {
@@ -321,8 +328,13 @@ auto zpt::python::module::validate_authorization(PyObject* _self, PyObject* _arg
 	zpt::json _topic = _params[0];
 	zpt::json _envelope = _params[1];
 	zpt::json _roles = _params[2];
-	zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
-	return **_bridge->to< zpt::python::object >(_identity);
+	try {
+		zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
+		return **_bridge->to< zpt::python::object >(_identity);
+	}
+	catch(zpt::assertion& _e) {
+		Py_RETURN_NONE;
+	}
 }
 
 auto zpt::python::module::options(PyObject* _self, PyObject* _args) -> PyObject* {
@@ -352,7 +364,6 @@ auto zpt::python::module::hook(PyObject* _self, PyObject* _args) -> PyObject* {
 auto zpt::python::module::log(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	assertz_mandatory(_params[0], "", 412);
 	assertz_mandatory(_params[1], "", 412);
 	std::string _text = std::string(_params[0]);
 	int _level = int(_params[1]);
@@ -400,8 +411,6 @@ auto zpt::python::module::authorization_headers(PyObject* _self, PyObject* _args
 auto zpt::python::module::merge(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 	zpt::json _params = _bridge->from< zpt::python::object >(zpt::python::object(_args));
-	assertz_mandatory(_params[0], "", 412);
-	assertz_mandatory(_params[1], "", 412);
 	zpt::json _lhs = _params[0];
 	zpt::json _rhs = _params[1];
 	return **_bridge->to< zpt::python::object >(_lhs + _rhs);

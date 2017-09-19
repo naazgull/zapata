@@ -1,3 +1,15 @@
+zapata-mqtt (0.9.7-1yakkety30) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 17:28:48 +0100
+
+zapata-mqtt (0.9.7-1yakkety29) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 11:40:22 +0100
+
 zapata-mqtt (0.9.7-1yakkety28) yakkety; urgency=medium
 
   * Version bump
