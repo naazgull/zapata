@@ -1,5 +1,5 @@
 import zpt
-from zpt.rest import RestHandler
+from zapata.rest import RestHandler
 
 class $[resource.handler.class.name](RestHandler) :
 
