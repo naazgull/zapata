@@ -14,3 +14,4 @@ src/zapata/gen/Handlers_lambda.py /usr/share/zapata/gen/
 src/zapata/gen/Handlers_lambda.cpp /usr/share/zapata/gen/
 src/zapata/gen/Mutations.cpp /usr/share/zapata/gen/
 src/zapata/gen/Mutations.h  /usr/share/zapata/gen/
+src/zapata/gen/MutationsLoad.cpp  /usr/share/zapata/gen/
