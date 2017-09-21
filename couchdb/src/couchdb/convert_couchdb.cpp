@@ -168,7 +168,14 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 						_selector << std::string(_key) << zpt::json{ comp, _expression };
 					}
 					else if (_command == "elemMatch") {
-						_selector << std::string(_key) << zpt::json{ comp, { (std::string("$") + _options), _expression } };
+						std::string other_comp("$");
+						other_comp.insert(other_comp.length(), _options);
+						if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
+							_selector << std::string(_key) << zpt::json{ comp, { other_comp, _expression } };
+						}
+						else {
+							_selector << std::string(_key) << zpt::json{ comp, { _options, _expression } };
+						}
 					}
 					else if (_options == "n") {
 						istringstream iss(_expression);
