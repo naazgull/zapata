@@ -23,7 +23,7 @@ class RestHandler(object):
 
             if name in self.allowed_performatives:
                 return self.dispatch
-            elif name in PERFOMATIVES:
+            elif name in PERFORMATIVES:
                 return self.performative_not_accepted
             elif name in ['{}_callback'.format(performative) for performative in self.allowed_performatives]:
                 return RestHandler.default_callback
