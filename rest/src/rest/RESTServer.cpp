@@ -308,8 +308,24 @@ void zpt::RESTServer::start() {
 				}
 			);
 			this->__mqtt->on("disconnect",
-				[] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-					_mqtt->reconnect();
+				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+					this->__poll->vanished(this->__mqtt.get(),
+						[ = ] (zpt::ev::emitter _emitter) -> void {
+							std::thread _connector(
+								[ this ] () -> void {
+									do {
+										if (this->__mqtt->reconnect()) {
+											break;
+										}
+										sleep(2);
+									}
+									while(true);//(_attempts < 6);
+									this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+								}
+							);
+							_connector.detach();
+						}
+					);
 				}
 			);
 			this->__mqtt->on("message",

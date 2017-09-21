@@ -112,7 +112,7 @@ namespace zpt {
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 		 */
 		virtual auto connect(std::string _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) ->  void;
-		virtual auto reconnect() -> void;
+		virtual auto reconnect() -> bool;
 
 		/**
 		 * Subscribes to a given topic. See also http://mosquitto.org/man/mqtt-7.html for topic subscription patterns.

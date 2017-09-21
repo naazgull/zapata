@@ -135,7 +135,7 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 #endif	       
 }
 
-auto zpt::MQTT::reconnect() -> void {
+auto zpt::MQTT::reconnect() -> bool {
 	std::lock_guard< std::mutex > _lock(this->__mtx_conn);
 
 #if defined(ZPT_USE_MOSQUITTO)
@@ -143,8 +143,9 @@ auto zpt::MQTT::reconnect() -> void {
 	 * Connects to the MQTT server.
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 	 */
-	if (mosquitto_reconnect(this->__mosq) != MOSQ_ERR_SUCCESS) {
-	}
+	bool _return = mosquitto_reconnect(this->__mosq) == MOSQ_ERR_SUCCESS;
+	zlog(std::string("trying to reconnect to MQTT: ") + (_return ? std::string("success!") : std::string("failed!")), zpt::notice);
+	return _return;
 #elif false && defined(ZPT_USE_PAHO)		
 #endif	       
 }
@@ -273,7 +274,9 @@ auto zpt::MQTT::on_connect(struct mosquitto * _mosq, void * _ptr, int _rc) -> vo
 			for (auto _topic : _self->__postponed->obj()) {
 				zlog(std::string("subscribing MQTT topic ") + _topic.first, zpt::notice);
 				mosquitto_subscribe(_mosq, & _return, _topic.first.data(), 0);
+				mosquitto_loop_write(_mosq, 1);
 			}
+			mosquitto_loop_misc(_mosq);
 			_self->__connected = true; }
 	}
 	zpt::mqtt::data _data(new MQTTData());
@@ -422,6 +425,7 @@ auto zpt::MQTT::buffer(zpt::json _envelope) -> void {
 
 auto zpt::MQTT::recv() -> zpt::json {
 	mosquitto_loop_read(this->__mosq, 1);
+	mosquitto_loop_misc(this->__mosq);
 	zpt::json _return = this->__buffer;
 	this->__buffer = zpt::undefined;
 	return _return;
@@ -429,6 +433,7 @@ auto zpt::MQTT::recv() -> zpt::json {
 
 auto zpt::MQTT::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	this->publish(_resource, _payload);
+	mosquitto_loop_misc(this->__mosq);
 	return zpt::undefined;
 }
 
