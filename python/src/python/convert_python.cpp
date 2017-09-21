@@ -499,21 +499,35 @@ auto zpt::python::to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt:
 }
 
 auto zpt::python::from_ref(zpt::json _in) -> PyObject* {
-	std::string _s_ref = std::string(_in);
-	zpt::replace(_s_ref, "ref(", "");
-	zpt::replace(_s_ref, ")", "");
-	unsigned long _ref = 0;
-	std::istringstream _iss;
-	_iss.str(_s_ref);
-	_iss >> std::hex >> _ref;
-	return (PyObject*) _ref;
+	if (_in->is_lambda()) {
+		unsigned long _ref = 0;
+		std::istringstream _iss;
+		_iss.str(_in->lbd()->name());
+		_iss >> std::hex >> _ref;
+		return (PyObject*) _ref;
+	}
+	else {
+		std::string _s_ref = std::string(_in);
+		zpt::replace(_s_ref, "ref(", "");
+		zpt::replace(_s_ref, ")", "");
+		unsigned long _ref = 0;
+		std::istringstream _iss;
+		_iss.str(_s_ref);
+		_iss >> std::hex >> _ref;
+		return (PyObject*) _ref;
+	}
 }
 
 auto zpt::python::to_ref(PyObject* _in) -> zpt::json {
 	std::ostringstream _oss;
 	_oss << _in << flush;
 	Py_INCREF(_in);
-	return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
+	if (PyFunction_Check(_in)) {
+		return zpt::json::lambda(_oss.str(), 0);
+	}
+	else {
+		return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
+	}
 }
 
 auto zpt::python::to_python(zpt::json _in) -> PyObject* {
