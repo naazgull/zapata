@@ -242,7 +242,7 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 		for (auto _handler : _callbacks->obj()) {
 			zpt::ev::performative _performative = zpt::ev::from_str(_handler.first);
 			PyObject* _func = **_bridge->to< zpt::python::object >(_handler.second);
-			std::string _lambda = zpt::python::to_ref(_func);
+			zpt::json _lambda = zpt::python::to_ref(_func);
 			Py_INCREF(_func);
 			_handlers.insert(
 				std::make_pair(_performative,
