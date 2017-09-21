@@ -91,8 +91,6 @@ class RestHandler(object):
 
     def dispatch(self, performative, topic, envelope, context=None):
 
-        print('>>> hey')
-
         if self.datum_topic is None:
             return self.performative_not_accepted(performative, topic, envelope, context)
     
