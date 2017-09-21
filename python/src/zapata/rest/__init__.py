@@ -23,6 +23,8 @@ class RestHandler(object):
 
             if name in self.allowed_performatives:
                 return self.dispatch
+            elif name in PERFOMATIVES:
+                return self.performative_not_accepted
             elif name in ['{}_callback'.format(performative) for performative in self.allowed_performatives]:
                 return RestHandler.default_callback
 
@@ -40,20 +42,16 @@ class RestHandler(object):
         identity = zpt.authorize(self.resource_topic, envelope)
         
         if not identity:
-            zpt.reply(envelope, {
-                'status': self.unauthorized_status,
-                'payload': {
-                    'code': self.unauthorized_code,
-                    'text': self.unauthorized_text
-                }
+            return RestHandler.reply(envelope, status=self.unauthorized_status, payload={
+                'code': self.unauthorized_code,
+                'text': self.unauthorized_text
             })
-            return None
 
         return identity
 
     @staticmethod
     def default_callback(performative, topic, reply, context):
-        zpt.reply(context, reply)
+        return zpt.reply(context, reply)
 
     def path_discover(self, template_path, original_path, endpoint):
 
@@ -85,16 +83,18 @@ class RestHandler(object):
 
         return data_template
 
-    def dispatch(self, performative, topic, envelope, context = None):
-        if self.datum_topic == None :
-            zpt.reply(envelope, {
-                'status': 405,
-                'payload': {
-                    'code': 1300,
-                    'text': 'Performative is not accepted for the given resource'
-                }
-            })
-            return
+    def performative_not_accepted(self, performative, topic, envelope, context=None):
+        return RestHandler.reply(envelope, status=405, payload={
+            'code': 1300,
+            'text': 'Performative is not accepted for the given resource'
+        })
+
+    def dispatch(self, performative, topic, envelope, context=None):
+
+        print('>>> hey')
+
+        if self.datum_topic is None:
+            return self.performative_not_accepted(performative, topic, envelope, context)
     
         identity = self.authorize(performative, topic, envelope, context)
 
@@ -104,15 +104,25 @@ class RestHandler(object):
         endpoint, variables = self.path_discover(self.resource_topic, topic, self.datum_topic)
         extra_params = self.variable_resolver(self.datum_topic_params, variables)
 
-        zpt.route(
+        params = zpt.merge(envelope.get('params'), extra_params) if envelope.get('params') else extra_params
+        payload = zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else extra_params
+
+        return self.datum_request(performative, endpoint, envelope, identity, params=params, payload=payload)
+
+    def datum_request(self, performative, endpoint, envelope, identity, params = None, payload = None, callback = None):
+        return zpt.route(
             performative,
             endpoint,
             {
                 'headers': zpt.auth_headers(identity),
-                'params': zpt.merge(envelope.get('params'), extra_params) if envelope.get('params') else extra_params, # TODO: remove the if condition after merge function is working with a nil object
-                'payload': zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else extra_params # TODO: remove the if condition after merge function is working with a nil object
+                'params': params, # TODO: remove the if condition after merge function is working with a nil object
+                'payload': payload # TODO: remove the if condition after merge function is working with a nil object
             },
-            {'context': envelope },
-            getattr(self, '{}_callback'.format(performative))
+            {'context': envelope},
+            getattr(self, '{}_callback'.format(performative)) if not callback else callback
         )
+
+    @staticmethod
+    def reply(envelope, **kwargs):
+        return zpt.reply(envelope, kwargs)
 
