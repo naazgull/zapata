@@ -154,6 +154,7 @@ namespace zpt {
 		virtual auto detach() -> void;
 		virtual auto close() -> void;
 		virtual auto available() -> bool;
+		virtual auto buffer(zpt::json _envelope) -> void;
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
@@ -206,5 +207,6 @@ namespace zpt {
 		zpt::mqtt::broker __self;
 		bool __connected;
 		zpt::json __postponed;
+		zpt::json __buffer;
 	};
 }

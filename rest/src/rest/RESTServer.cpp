@@ -314,7 +314,8 @@ void zpt::RESTServer::start() {
 			);
 			this->__mqtt->on("message",
 				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-					this->route_mqtt(_data);
+					zpt::json _envelope = this->route_mqtt(_data);
+					this->__mqtt->buffer(_envelope);
 				}
 			);
 			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
@@ -381,7 +382,44 @@ void zpt::RESTServer::start() {
 	}
 }
 
-bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
+// auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> bool {
+// 	zpt::json _envelope = zpt::json::object();
+// 	_envelope << "performative" << int(zpt::ev::Reply);
+// 	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
+// 		_envelope << "channel" << zpt::generate::r_uuid();
+// 	}
+// 	else {
+// 		_envelope << "channel" << _data->__message["channel"];
+// 	}
+// 	if (!_data->__message["resource"]->ok()) {
+// 		_envelope << "resource" << _data->__topic;
+// 	}
+// 	else {
+// 		_envelope << "resource" << _data->__message["resource"];
+// 	}
+// 	if (!_data->__message["payload"]->ok()) {
+// 		_envelope << "payload" << _data->__message;
+// 	}
+// 	else {
+// 		_envelope << "payload" << _data->__message["payload"];
+// 	}
+// 	if (_data->__message["headers"]->ok()) {
+// 		_envelope << "headers" << _data->__message["headers"];
+// 	}
+// 	if (_data->__message["params"]->ok()) {
+// 		_envelope << "params" << _data->__message["params"];
+// 	}
+// 	_envelope << "protocol" << this->__mqtt->protocol();
+// 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
+// 	zverbose(zpt::ev::pretty(_envelope));
+// 	try {
+// 		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
+// 	}
+// 	catch(...) {}
+// 	return true;
+// }
+
+auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
 	zpt::json _envelope = zpt::json::object();
 	_envelope << "performative" << int(zpt::ev::Reply);
 	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
@@ -411,11 +449,7 @@ bool zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) {
 	_envelope << "protocol" << this->__mqtt->protocol();
 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
 	zverbose(zpt::ev::pretty(_envelope));
-	try {
-		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
-	}
-	catch(...) {}
-	return true;
+	return _envelope;;
 }
 
 auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {

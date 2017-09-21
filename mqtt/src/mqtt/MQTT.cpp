@@ -416,9 +416,15 @@ auto zpt::MQTT::available() -> bool {
 	return true;
 }
 
+auto zpt::MQTT::buffer(zpt::json _envelope) -> void {
+	this->__buffer = _envelope;
+}
+
 auto zpt::MQTT::recv() -> zpt::json {
 	mosquitto_loop_read(this->__mosq, 1);
-	return zpt::undefined;
+	zpt::json _return = this->__buffer;
+	this->__buffer = zpt::undefined;
+	return _return;
 }
 
 auto zpt::MQTT::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {

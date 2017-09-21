@@ -110,7 +110,8 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 		
-		virtual bool route_mqtt(zpt::mqtt::data _data);
+		//virtual auto route_mqtt(zpt::mqtt::data _data) -> bool;
+		virtual auto route_mqtt(zpt::mqtt::data _data) -> zpt::json;
 		virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
 		virtual auto publish(std::string _topic, zpt::json _payload) -> void;
 		virtual auto broadcast(zpt::json _envelope) -> void;

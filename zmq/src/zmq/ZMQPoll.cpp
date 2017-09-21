@@ -215,14 +215,19 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
 
 	if (_performative == zpt::ev::Reply) {
-		try {
-			this->__emitter->reply(_envelope, _envelope);
+		if (this->__emitter->has_pending(_envelope)) {
+			try {
+				this->__emitter->reply(_envelope, _envelope);
+			}
+			catch(zpt::assertion& _e) {
+				zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace() + std::string("| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
+			}
+			catch(std::exception& _e) {
+				zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what() + std::string("\n| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
+			}
 		}
-		catch(zpt::assertion& _e) {
-			zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace() + std::string("| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
-		}
-		catch(std::exception& _e) {
-			zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what() + std::string("\n| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
+		else {
+		 	this->__emitter->trigger(_performative, _envelope["resource"]->str(), _envelope);
 		}
 		this->clean_up(_socket);
 	}
