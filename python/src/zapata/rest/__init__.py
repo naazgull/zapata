@@ -70,19 +70,22 @@ class RestHandler(object):
 
         return (endpoint.format(**params), params)
 
-    def variables_resolver(self, data_template, variables):
+    def variables_resolver(self, _object, _variables):
 
-        if not data_template or type(data_template) is not dict:
-            return {}
+        _object_type = type(_object)
 
-        for key in data_template.keys():
+        if _object_type is str:
+            return re.sub(VARIABLE_PATTERN, r'{\1}', _object).format(**_variables)
+            
+        elif _object_type is dict:
+            for key, value in _object.items():
+                _object[key] = self.variables_resolver(value, _variables)
+                                 
+        elif _object_type is list:
+            for item in _object:
+                item = self.variables_resolver(item, _variables)
 
-            value = data_template[key]
-
-            if type(value) is str:
-                data_template[key] = value.format(**variables) if value else None
-
-        return data_template
+        return _object
 
     def variables_extractor(self, _object, result={}):
 
