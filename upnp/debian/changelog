@@ -1,3 +1,9 @@
+zapata-upnp (0.9.7-1yakkety36) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 26 Sep 2017 22:16:45 +0100
+
 zapata-upnp (0.9.7-1yakkety35) yakkety; urgency=medium
 
   * Version bump
