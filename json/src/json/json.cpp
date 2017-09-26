@@ -334,6 +334,44 @@ auto zpt::uri::authority::parse(std::string _authority) -> zpt::json {
 	return _return;
 }
 
+auto zpt::uri::to_str(zpt::json _uri, zpt::json _opts) -> std::string {
+	std::string _authority = (
+		(_uri["authority"]->ok() ?
+			std::string(_uri["authority"]) :
+			(
+				((!_opts["user"]->ok() || bool(_opts["user"])) && _uri["user"]->ok() ?
+					std::string(_uri["user"]) +
+					((!_opts["password"]->ok() || bool(_opts["password"])) && _uri["password"]->ok() ?
+						std::string(":") + std::string(_uri["password"]) :
+						std::string("")
+					) + std::string("@") :
+					std::string("")
+				) +
+				std::string(_uri["address"]) +
+				((!_opts["port"]->ok() || bool(_opts["port"])) && _uri["port"]->ok() ?
+					std::string(":") + std::string(_uri["port"]) :
+					std::string("")
+				)
+			)
+		)
+	);
+	std::string _query;
+	if ((!_opts["query"]->ok() || bool(_opts["query"])) && _uri["query"]->is_object() && _uri["query"]->obj()->size() != 0) {
+		_query += std::string("?");
+		for (auto _p : _uri["query"]->obj()) {
+			if (_query.length() != 1) {
+				_query += std::string("&");
+			}
+			_query += _p.first + std::string("=") + zpt::url::r_encode(_p.second);
+		}
+	}
+	std::string _fragment;
+	if ((!_opts["fragment"]->ok() || bool(_opts["fragment"])) && _uri["fragment"]->is_string()) {
+		_fragment += std::string("#") + std::string(_uri["fragment"]);
+	}
+	return std::string(_uri["scheme"]) + std::string("://") + _authority + std::string(_uri["path"]) + _query + _fragment;
+}
+
 auto zpt::test::location(zpt::json _location) -> bool {
 	return (_location->is_object() && _location["longitude"]->is_number() && _location["latitude"]->is_number()) || (_location->is_array() && _location->arr()->size() == 2 && _location[0]->is_number() && _location[1]->is_number());
 }

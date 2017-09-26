@@ -654,7 +654,7 @@ auto zpt::ev::pretty(zpt::json _envelope) -> std::string {
 		_ret += _protocol + std::string(" \033[1;") + _color + std::string("m") + std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\033[0m\n"); 
 	}
 	else {
-		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" \033[1;35m") + _envelope["resource"]->str() + std::string("\033[0m");
+		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) + std::string(" \033[1;35m") + std::string(_envelope["resource"]) + std::string("\033[0m");
 		if (_envelope["params"]->is_object()) {
 			_ret += std::string("?");
 			bool _first = true;

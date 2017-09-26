@@ -1580,7 +1580,7 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 				_message.assign(std::string(zpt::rest::zmq2http_req(_envelope, this->__underlying->host() + std::string(":") + std::to_string(this->__underlying->port()))));
 				this->__state = HTTP_REQ;
 				this->__cid = std::string(_envelope["channel"]);
-				//zdbg(this->__cid);
+				this->__resource = std::string(_envelope["resource"]);
 			}
 			(*this->__underlying) << _message << flush; }
 
@@ -1608,8 +1608,10 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 				(*this->__underlying) >> _reply;
 				this->__state = HTTP_REP;
 				if (_reply->header("X-Cid") == "") {
-					//zdbg(this->__cid);
 					_reply->header("X-Cid", this->__cid);
+				}
+				if (_reply->header("X-Resource") == "") {
+					_reply->header("X-Resource", this->__resource);
 				}
 				_in = zpt::rest::http2zmq(_reply);
 			}
