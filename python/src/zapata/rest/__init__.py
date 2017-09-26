@@ -3,6 +3,7 @@ import re
 
 PERFORMATIVES = ['get', 'post', 'put', 'patch', 'delete', 'head']
 PARAM_PATTERN = re.compile(r'(\{[^\}]+\})')
+VARIABLE_PATTERN = re.compile(r'\{(?P<variable>[^\}:]+):?(?P<type>[^\}:]+)?:?(?P<extra>[^\}]+)?\}')
 
 class RestHandler(object):
 
@@ -69,19 +70,52 @@ class RestHandler(object):
 
         return (endpoint.format(**params), params)
 
-    def variable_resolver(self, data_template, variables):
+    def variables_resolver(self, _object, _variables):
 
-        if not data_template or type(data_template) is not dict:
-            return {}
+        _object_type = type(_object)
 
-        for key in data_template.keys():
+        if _object_type is str:
+            return re.sub(VARIABLE_PATTERN, r'{\1}', _object).format(**_variables)
+            
+        elif _object_type is dict:
+            for key, value in _object.items():
+                _object[key] = self.variables_resolver(value, _variables)
+                                 
+        elif _object_type is list:
+            for item in _object:
+                item = self.variables_resolver(item, _variables)
 
-            value = data_template[key]
+        return _object
 
-            if type(value) is str:
-                data_template[key] = value.format(**variables) if value else None
+    def variables_extractor(self, _object, result={}):
 
-        return data_template
+        _object_type = type(_object)
+
+        if _object_type is str:
+            
+            variables = {}
+            
+            for item in re.findall(VARIABLE_PATTERN, _object):
+
+                _name, _type, _extra = item
+                variables.update({_name: '{_type}|{_extra}'.format(
+                    _type=_type if _type else 'string',
+                    _extra=_extra if _extra else 'required'
+                )})
+                
+            return variables
+                                 
+        elif _object_type is dict:
+
+            for key, value in _object.items():
+                 result.update(self.variables_extractor(value, result=result))
+                                 
+        elif _object_type is list:
+                                 
+            for item in _object:
+                result.update(self.variables_extractor(item, result=result))
+
+        return result
 
     def performative_not_accepted(self, performative, topic, envelope, context=None):
         return RestHandler.reply(envelope, status=405, payload={
@@ -100,7 +134,7 @@ class RestHandler(object):
             return # cancel the dispatch
 
         endpoint, variables = self.path_discover(self.resource_topic, topic, self.datum_topic)
-        extra_params = self.variable_resolver(self.datum_topic_params, variables)
+        extra_params = self.variables_resolver(self.datum_topic_params, variables)
 
         params = zpt.merge(envelope.get('params'), extra_params) if envelope.get('params') else extra_params
         payload = zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else extra_params
