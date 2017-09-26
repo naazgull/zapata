@@ -65,7 +65,8 @@ zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _nam
 		return _server;
 	}
 	catch (zpt::assertion& _e) {
-		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		throw;
 	}
 	catch (std::exception& _e) {
@@ -141,7 +142,8 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	}
 	catch (zpt::assertion& _e) {
 		_server->unbind();
-		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		return -1;
 	}
 	catch (std::exception& _e) {
@@ -229,7 +231,8 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 		}
 	}
 	catch (zpt::assertion& _e) {
-		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		this->__suicidal = true;
 	}
 	catch (std::exception& _e) {
@@ -249,7 +252,7 @@ auto zpt::RESTServer::suicidal() -> bool {
 }
 
 auto zpt::RESTServer::unbind() -> void {
-	this->__self.reset();
+	// this->__self.reset();
 }
 
 auto zpt::RESTServer::name() -> std::string {
@@ -289,7 +292,7 @@ void zpt::RESTServer::start() {
 		}
 
 		if (this->credentials()["endpoints"]["mqtt"]->ok() || (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
-			zpt::json _uri = zpt::uri::parse(std::string(this->credentials()["endpoints"]["mqtt"]->ok() ? this->credentials()["endpoints"]["mqtt"] : this->__options["mqtt"]["bind"]));
+			zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]->ok() ? this->__options["mqtt"]["bind"] : this->credentials()["endpoints"]["mqtt"]));
 			if (!_uri["port"]->ok()) {
 				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
 			}
@@ -317,7 +320,7 @@ void zpt::RESTServer::start() {
 										if (this->__mqtt->reconnect()) {
 											break;
 										}
-										sleep(2);
+										sleep(1);
 									}
 									while(true);//(_attempts < 6);
 									this->__poll->poll(this->__poll->add(this->__mqtt.get()));
@@ -334,10 +337,28 @@ void zpt::RESTServer::start() {
 					this->__mqtt->buffer(_envelope);
 				}
 			);
-			this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]));
-			zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
-
-			this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+			
+			if (!this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]))) {
+				std::thread _connector(
+					[ this ] (zpt::json _uri) -> void {
+						do {
+							sleep(1);
+							if (this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]))) {
+								break;
+							}
+						}
+						while(true);//(_attempts < 6);
+						zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+						this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+					},
+					_uri
+				);
+				_connector.detach();				
+			}
+			else {
+				zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
+				this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+			}
 		}
 
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {

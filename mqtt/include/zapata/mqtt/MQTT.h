@@ -111,7 +111,7 @@ namespace zpt {
 		 * Connects to the MQTT server.
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 		 */
-		virtual auto connect(std::string _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) ->  void;
+		virtual auto connect(std::string _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) ->  bool;
 		virtual auto reconnect() -> bool;
 
 		/**

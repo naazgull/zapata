@@ -359,7 +359,8 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 		}
 		catch (zpt::assertion& _e) {
 			zpt::json _out = zpt::ev::assertion_error(std::string(_envelope["resource"]), _e, zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) + this->options()["$defaults"]["headers"]["response"] + zpt::json{ "X-Sender", this->uuid() });
-			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::error);
+			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+			zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 			this->reply(_envelope, _out);
 			return;
 		}
@@ -472,7 +473,7 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 
 	if (_container["uuid"] == zpt::json::string(this->uuid()) && _handlers.size() > _method && _handlers[_method] != nullptr) {		
 		try {
-			zpt::json _result;
+			zpt::json _result = zpt::json::object();
 			this->pending(_envelope,
 				[ = ] (zpt::ev::performative _p_performtive, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _p_emitter) mutable -> void {
 					_result << "result" << _p_result;
@@ -500,6 +501,7 @@ auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method, std::string _
 		}
 		catch (zpt::assertion& _e) {
 			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() + std::string(", ") + _e.description(), zpt::error);
+			zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 			if (bool(_opts["bubble-error"])) {
 				throw;
 			}

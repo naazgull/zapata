@@ -230,7 +230,8 @@ auto zpt::ZMQPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
 				this->__emitter->reply(_envelope, _envelope);
 			}
 			catch(zpt::assertion& _e) {
-				zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace() + std::string("| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
+				zlog(std::string("uncaught assertion while processing response, unable to proceed: ") + _e.what() + std::string(": ") + _e.description() + std::string("\n| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
+				zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 			}
 			catch(std::exception& _e) {
 				zlog(std::string("uncaught exception while processing response, unable to proceed: ") + _e.what() + std::string("\n| received message was:") + zpt::ev::pretty(_envelope), zpt::emergency);
@@ -413,7 +414,8 @@ auto zpt::ZMQPoll::loop() -> void {
 		}
 	}
 	catch(zpt::assertion& _e) {
-		zlog(_e.what() + std::string(": ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		zlog(_e.what() + std::string(": ") + _e.description(), zpt::emergency);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		exit(-1);
 	}
 }

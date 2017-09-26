@@ -34,6 +34,16 @@ namespace zpt {
 zpt::lisp::Bridge::Bridge(zpt::json _options) : zpt::Bridge(_options), __self(this), __lambdas(new std::map<std::string, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > >()), __modules(new std::map<std::string, std::string>()), __consistency(new std::map<std::string, std::function< bool (const std::string, const std::string) > >())  {
 	char _arg[] = { 'z', 'p', 't', '\0'};
 	char* _argv[] = { _arg };
+
+	if (!_options["lisp"]["repl"]->ok() || !bool(_options["lisp"]["repl"])) {
+		ecl_set_option(ECL_OPT_TRAP_SIGSEGV, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGFPE, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGINT, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGILL, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_INTERRUPT_SIGNAL, FALSE);
+		ecl_set_option(ECL_OPT_SIGNAL_HANDLING_THREAD, FALSE);
+	}
+	
 	cl_boot(1, _argv);
 	atexit(cl_shutdown);
 }
@@ -409,8 +419,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				{ "type", "string", "label", "request performative" },
 				{ "type", "string", "label", "request topic pattern" },
 				{ "type", "object", "label", "envelope to send" },
-				{ "type", "object", "label", "send options", "optional", true },
-				{ "type", "string", "label", "callback", "optional", true }
+				{ "type", "object", "label", "send options", "optional", true }
 			}
 		},
 		[] (int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
@@ -420,26 +429,9 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			std::string _topic = std::string(_bridge->from< zpt::lisp::object >(_args[1]));
 			zpt::json _payload = _bridge->from< zpt::lisp::object >(_args[2]);
 			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[3]);
-			std::string _callback = std::string(_bridge->from< zpt::lisp::object >(_args[4]));
 
-			if (_callback.length() == 0) {	
-				zpt::json _result = _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
-				return _bridge->to< zpt::lisp::object >(_result);
-			}
-			else {
-				_bridge->events()->route(_performative, _topic, _payload, _opts,
-					[ _callback ] (zpt::ev::performative _p_performative, std::string _p_topic, zpt::json _p_result, zpt::ev::emitter _emitter) -> void {
-						zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
-						zpt::lisp::object _args[] = {
-							_bridge->to< zpt::lisp::object >(zpt::json::integer(_p_performative)),
-							_bridge->to< zpt::lisp::object >(zpt::json::string(_p_topic)),
-							_bridge->to< zpt::lisp::object >(_p_result)
-						};
-						((zpt::lisp::bridge*) _bridge.get())->call(_callback.data(), 3, _args);
-					}
-				);
-			}
-			return zpt::lisp::object(ecl_make_bool(true));
+			zpt::json _result = _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
+			return _bridge->to< zpt::lisp::object >(_result);
 		}
 	);
 	_bridge->deflbd(

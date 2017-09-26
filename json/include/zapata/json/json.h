@@ -128,6 +128,8 @@ namespace zpt {
 		namespace authority {
 			auto parse(std::string _authority) -> zpt::json;
 		}
+
+		auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;
 	}
 	
 	namespace conf {

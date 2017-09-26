@@ -442,6 +442,7 @@ namespace zpt {
 		zpt::socketstream_ptr __underlying;
 		short __state;
 		std::string __cid;
+		std::string __resource;;
 	};
 
 	namespace net {
