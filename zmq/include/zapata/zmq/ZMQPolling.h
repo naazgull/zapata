@@ -35,7 +35,7 @@ SOFTWARE.
 #include <zapata/zmq/SocketStreams.h>
 #include <zapata/http/HTTPObj.h>
 #include <poll.h>
-#include <zmq_utils.h>
+#include <zmq.h>
 
 using namespace std;
 #if !defined __APPLE__
