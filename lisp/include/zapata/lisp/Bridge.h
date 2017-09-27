@@ -56,6 +56,7 @@ namespace zpt {
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::lisp::object;
 			virtual auto initialize() -> void;
+			virtual auto load_module(std::string _module) -> void;
 			virtual auto deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback) -> void;
 			virtual auto defop(zpt::json _conf) -> void;
 			virtual auto defchk(std::function< bool (const std::string, const std::string) > _callback) -> void;

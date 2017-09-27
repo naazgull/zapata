@@ -202,29 +202,30 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 					if (!zpt::bridge::is_booted< zpt::python::bridge >()) {
 						zpt::bridge::boot< zpt::python::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
 					}
-					continue;
+					zpt::bridge::instance< zpt::python::bridge >()->load_module(_i->str());
 				}
-				if (_i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
+				else if (_i->str().find(".lisp") != std::string::npos || _i->str().find(".fasb") != std::string::npos) {
 					if (!zpt::bridge::is_booted< zpt::lisp::bridge >()) {
 						zpt::bridge::boot< zpt::lisp::bridge >(this->__options, ((zpt::RESTEmitter*) this->__emitter.get())->self());
 					}
-					continue;
+					zpt::bridge::instance< zpt::lisp::bridge >()->load_module(_i->str());
 				}
-			
-				std::string _lib_file("lib");
-				_lib_file.append((std::string) _i);
-				_lib_file.append(".so");
+				else {
+					std::string _lib_file("lib");
+					_lib_file.append((std::string) _i);
+					_lib_file.append(".so");
 
-				if (_lib_file.length() > 6) {
-					zlog(std::string("loading module '") + _lib_file + std::string("'"), zpt::notice);
-					void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
-					if (hndl == nullptr) {
-						zlog(std::string(dlerror()), zpt::error);
-					}
-					else {
-						void (*_populate)();
-						_populate = (void (*)()) dlsym(hndl, "_zpt_load_");
-						_populate();
+					if (_lib_file.length() > 6) {
+						zlog(std::string("loading module '") + _lib_file + std::string("'"), zpt::notice);
+						void *hndl = dlopen(_lib_file.data(), RTLD_NOW);
+						if (hndl == nullptr) {
+							zlog(std::string(dlerror()), zpt::error);
+						}
+						else {
+							void (*_populate)();
+							_populate = (void (*)()) dlsym(hndl, "_zpt_load_");
+							_populate();
+						}
 					}
 				}
 			}
@@ -284,7 +285,11 @@ auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
 }
 
 void zpt::RESTServer::start() {
-	try {
+	try {			
+		if (bool(this->__options["rest"]["discoverable"])) {
+			this->notify_peers();
+		}
+
 		if (this->__options["rest"]["credentials"]["client_id"]->is_string() && this->__options["rest"]["credentials"]["client_secret"]->is_string() && this->__options["rest"]["credentials"]["server"]->is_string() && this->__options["rest"]["credentials"]["grant_type"]->is_string()) {
 			zlog(std::string("going to retrieve credentials ") + std::string(this->__options["rest"]["credentials"]["client_id"]) + std::string(" @ ") + std::string(this->__options["rest"]["credentials"]["server"]), zpt::info);
 			zpt::json _credentials = this->__emitter->gatekeeper()->get_credentials(this->__options["rest"]["credentials"]["client_id"], this->__options["rest"]["credentials"]["client_secret"], this->__options["rest"]["credentials"]["server"], this->__options["rest"]["credentials"]["grant_type"], this->__options["rest"]["credentials"]["scope"]);
@@ -396,10 +401,6 @@ void zpt::RESTServer::start() {
 				}
 			);
 			_http.detach();
-		}
-		
-		if (bool(this->__options["rest"]["discoverable"])) {
-			this->notify_peers();
 		}
 		
 		for (auto _callback : this->__initializers) {

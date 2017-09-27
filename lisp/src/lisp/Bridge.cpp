@@ -97,15 +97,14 @@ auto zpt::lisp::Bridge::initialize() -> void {
 		"			,@forms"
 		"			,temphash)))"
 	);
-	if (this->options()["rest"]["modules"]->ok()) {
-		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
-			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
-				zlog(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
-				this->eval(std::string("(load \"") + ((std::string) _lisp_script) + std::string("\")"));
-			}
-		}
-	}
 	ztrace(std::string("LISP bridge initialized"));
+}
+
+auto zpt::lisp::Bridge::load_module(std::string _module) -> void {
+	if (_module.find(".lisp") != std::string::npos || _module.find(".fasb") != std::string::npos) {
+		zlog(std::string("loading module '") + _module + std::string("'"), zpt::notice);
+		this->eval(std::string("(load \"") + _module + std::string("\")"));
+	}
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -267,7 +266,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		3
 	);
 	zpt::lisp::builtin_operators(_bridge);
-	zlog(std::string("LISP bridge booted"), zpt::notice);
+	ztrace(std::string("LISP bridge booted"));
 }
 
 zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type >(new zpt::lisp::Type(_target)) {
@@ -404,7 +403,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 					)
 				);
 			}
-	
+
 			_bridge->events()->on(_topic, _handlers, _opts);
 			return zpt::lisp::object(ecl_make_bool(true));
 		}

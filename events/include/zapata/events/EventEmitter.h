@@ -180,6 +180,7 @@ namespace zpt {
 		virtual auto events(zpt::ev::emitter _emitter) -> void = 0;
 		virtual auto events() -> zpt::ev::emitter = 0;
 		virtual auto initialize() -> void = 0;
+		virtual auto load_module(std::string _module) -> void = 0;
 		virtual auto self() const -> zpt::bridge = 0;
 		virtual auto unbind() -> void = 0;
 

@@ -386,7 +386,7 @@ auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _perf
 auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::get<0>(_connection) << "connect" << zpt::r_replace(std::string(std::get<0>(_connection)["connect"]), "tcp://*:", std::string("tcp://127.0.0.1:"));
-	if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
+	if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["REPLY"]->ok() && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
 		this->__emitter->route(
 			zpt::ev::Notify,
 			"*",
@@ -596,16 +596,11 @@ auto zpt::EventDirectoryGraph::list(std::string _uuid) -> zpt::json {
 	zpt::json _return;
 	
 	if (_containers->is_object()) {
-		if (_uuid.length() != 0) {
-			_return = zpt::json::array();
-			for (auto _container : _containers["peers"]->arr()) {
-				if (_container["uuid"] == zpt::json::string(_uuid)) {
-					_return << _container;
-				}
+		_return = zpt::json::array();
+		for (auto _container : _containers["peers"]->arr()) {
+			if (!_container["performatives"]["REPLY"]->ok() && (_uuid.length() == 0 || _container["uuid"] == zpt::json::string(_uuid))) {
+				_return << _container;
 			}
-		}
-		else {
-			_return = _containers["peers"]->clone();
 		}
 	}
 	else {

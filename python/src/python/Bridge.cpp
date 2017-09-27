@@ -67,16 +67,16 @@ auto zpt::python::Bridge::eval(std::string _call) -> zpt::python::object {
 }
 
 auto zpt::python::Bridge::initialize() -> void {
-	if (this->options()["rest"]["modules"]->ok()) {
-		for (auto _python_script : this->options()["rest"]["modules"]->arr()) {
-			if (_python_script->str().find(".py") != std::string::npos) {
-				zlog(std::string("loading module '") + _python_script->str() + std::string("'"), zpt::notice);
-				FILE* _fp = ::fopen(_python_script->str().data(), "r");
-				PyRun_SimpleFileEx(_fp, _python_script->str().data(), true);
-			}
-		}
-	}
 	ztrace(std::string("PYTHON bridge initialized"));
+}
+
+
+auto zpt::python::Bridge::load_module(std::string _module) -> void {
+	if (_module.find(".py") != std::string::npos) {
+		zlog(std::string("loading module '") + _module + std::string("'"), zpt::notice);
+		FILE* _fp = ::fopen(_module.data(), "r");
+		PyRun_SimpleFileEx(_fp, _module.data(), true);
+	}
 }
 
 auto zpt::python::Bridge::deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void {

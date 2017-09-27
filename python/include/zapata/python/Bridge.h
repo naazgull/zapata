@@ -58,6 +58,7 @@ namespace zpt {
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::python::object;
 			virtual auto initialize() -> void;
+			virtual auto load_module(std::string _module) -> void;
 			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void;
 
 			static auto instance() -> zpt::bridge;
