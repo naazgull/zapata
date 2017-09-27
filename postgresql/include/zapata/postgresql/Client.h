@@ -36,79 +36,79 @@ using namespace __gnu_cxx;
 #define psql_catch_block(s) \
 	catch(pqxx::feature_not_supported& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 400, s + 2);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 400, s + 2); \
 	}\
 	catch(pqxx::insufficient_privilege& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 403, s + 3);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 403, s + 3); \
 	}\
 	catch(pqxx::disk_full& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 500, s + 4);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 4); \
 	}\
 	catch(pqxx::out_of_memory& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 500, s + 5);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 5); \
 	}\
 	catch(pqxx::insufficient_resources& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 500, s + 6);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 6); \
 	}\
 	catch(pqxx::check_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 7);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 7); \
 	}\
 	catch(pqxx::foreign_key_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 8);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 8); \
 	}\
 	catch(pqxx::not_null_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 9);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 9); \
 	}\
 	catch(pqxx::restrict_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 10);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 10); \
 	}\
 	catch(pqxx::unique_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 11);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 11); \
 	}\
 	catch(pqxx::integrity_constraint_violation& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 12);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 12); \
 	}\
 	catch(pqxx::invalid_cursor_name& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 404, s + 13);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 13); \
 	}\
 	catch(pqxx::invalid_cursor_state& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 14);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 14); \
 	}\
 	catch(pqxx::invalid_sql_statement_name& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 404, s + 15);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 15); \
 	}\
 	catch(pqxx::undefined_column& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 404, s + 16);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 16); \
 	}\
 	catch(pqxx::undefined_function& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 404, s + 17);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 17); \
 	}\
 	catch(pqxx::undefined_table& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 404, s + 18);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 18); \
 	}\
 	catch(pqxx::syntax_error& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 19);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 19); \
 	} \
 	catch(pqxx::sql_error& _e) {\
 		zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ")  + _e.what(), zpt::trace); \
-		assertz(false, _e.what(), 412, s + 1);\
+		assertz(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 1); \
 	}\
 	
 
