@@ -1282,7 +1282,7 @@ zpt::JSONPtr zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) {
 		return _lhs;
 	}
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-	assertz(this->__target.__type == zpt::JSArray || (this->__target.type != zpt::JSObject && _rhs.__target.__type == zpt::JSArray) || this->__target.__type == _rhs.__target.__type, "can't substract JSON objects of different types", 500, 0);
+	assertz(this->__target.__type == zpt::JSArray || (this->__target.__type != zpt::JSObject && _rhs.__target.__type == zpt::JSArray) || this->__target.__type == _rhs.__target.__type, "can't substract JSON objects of different types", 500, 0);
 	switch(this->__target.__type) {
 		case zpt::JSObject : {
 			zpt::JSONPtr _lhs = this->clone();
