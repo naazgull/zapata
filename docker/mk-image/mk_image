@@ -2,6 +2,10 @@
 
 echo "#!/bin/bash
 
+apt-get -y update
+apt-get -yy upgrade
+apt-get -yy dist-upgrade
+
 pushd /root/zapata
 
 git pull
