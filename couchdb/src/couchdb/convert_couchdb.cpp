@@ -170,11 +170,23 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 					else if (_command == "elemMatch") {
 						std::string other_comp("$");
 						other_comp.insert(other_comp.length(), _options);
-						if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
-							_selector << std::string(_key) << zpt::json{ comp, { other_comp, _expression } };
+						zpt::json _json_expression;
+						try {
+							_json_expression = zpt::json(_expression);
+							if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
+								_selector << std::string(_key) << zpt::json{ comp, { other_comp, _json_expression } };
+							}
+							else {
+								_selector << std::string(_key) << zpt::json{ comp, { _options, _json_expression } };
+							}
 						}
-						else {
-							_selector << std::string(_key) << zpt::json{ comp, { _options, _expression } };
+						catch(std::exception& _e) {
+							if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
+								_selector << std::string(_key) << zpt::json{ comp, { other_comp, _expression } };
+							}
+							else {
+								_selector << std::string(_key) << zpt::json{ comp, { _options, _expression } };
+							}
 						}
 					}
 					else if (_options == "n") {
@@ -204,13 +216,12 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 						}
 					}
 					else if (_options == "j") {
-						istringstream iss(_expression);
-						zpt::json _json;
 						try {
-							iss >> _json;
+							zpt::json _json = zpt::json(_expression);
 							_selector << std::string(_key) << zpt::json{ comp, _json };
 						}
-						catch(std::exception& _e) {}
+						catch(std::exception& _e) {
+						}
 					}
 					else if (_options == "d") {
 						zpt::json _json({ "time", zpt::timestamp(_expression) });

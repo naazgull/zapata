@@ -80,7 +80,7 @@ namespace zpt {
 		
 		typedef std::function<void (zpt::ev::emitter)> initializer;
 		typedef std::vector< zpt::ev::initializer > OnStartStack;
-
+		
 		auto split(std::string _url, zpt::json _orphans) -> zpt::json;
 		auto join(zpt::json _info, std::size_t _orphans) -> std::string;
 

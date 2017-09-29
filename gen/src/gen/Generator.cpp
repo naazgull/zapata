@@ -279,7 +279,7 @@ auto zpt::Generator::build_docs() -> void {
 				_apiary += std::string(
 					"\n| FIELD | TYPE | DESCRIPTION |\n"
 					"|:------|:----:|:-------|\n"
-					"| _**id**_ | uuid | Primary key and index. This field is: _mandatory; index; primary-key_ |\n"
+					"| _**id**_ | ") + (_datum["index_type"]->ok() ? std::string(_datum["index_type"]) : std::string("uuid")) + std::string(" | Primary key and index. This field is: _mandatory; index; primary-key_ |\n"
 					"| _**href**_ | uri | Record access URI. This field is: _mandatory_ |\n"
 				);
 
@@ -2908,6 +2908,14 @@ auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std:
 	return _return;
 }
 
+auto zpt::GenResource::normalize_var_name(zpt::json _var) -> std::string {
+	std::string _return = std::string(_var);
+	zpt::replace(_return, " ", "_");
+	zpt::replace(_return, "-", "_");
+	std::transform(std::begin(_return), std::end(_return), std::begin(_return), ::tolower);
+	return _return;
+}
+
 auto zpt::GenResource::build_get() -> std::string {
 	zpt::json _performatives = this->__spec["performatives"];
 	if (_performatives->ok() && std::find(std::begin(_performatives->arr()), std::end(_performatives->arr()), zpt::json::string("get")) == std::end(_performatives->arr())) {
@@ -2968,9 +2976,10 @@ auto zpt::GenResource::build_get() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -2979,10 +2988,10 @@ auto zpt::GenResource::build_get() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3036,7 +3045,7 @@ auto zpt::GenResource::build_post() -> std::string {
 				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
-					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 				}
 				_topic_transform = std::string("\n_topic = zpt::path::join({ zpt::array") + _topic + std::string(" });\n");
 			}
@@ -3051,9 +3060,10 @@ auto zpt::GenResource::build_post() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -3062,10 +3072,10 @@ auto zpt::GenResource::build_post() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3119,7 +3129,7 @@ auto zpt::GenResource::build_put() -> std::string {
 				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
-					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 				}
 				_topic_transform = std::string("\n_topic = zpt::path::join({ zpt::array") + _topic + std::string(" });\n");
 			}
@@ -3134,9 +3144,10 @@ auto zpt::GenResource::build_put() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -3145,10 +3156,10 @@ auto zpt::GenResource::build_put() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", (_envelope[\"payload\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3202,7 +3213,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
-					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 				}
 				_topic_transform = std::string("\n_topic = zpt::path::join({ zpt::array") + _topic + std::string(" });\n");
 			}
@@ -3217,9 +3228,10 @@ auto zpt::GenResource::build_patch() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -3228,10 +3240,10 @@ auto zpt::GenResource::build_patch() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Patch,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", _envelope[\"payload\"], \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3285,7 +3297,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
-					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 				}
 				_topic_transform = std::string("\n_topic = zpt::path::join({ zpt::array") + _topic + std::string(" });\n");
 			}
@@ -3300,9 +3312,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -3311,10 +3324,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}
@@ -3368,7 +3381,7 @@ auto zpt::GenResource::build_head() -> std::string {
 				zpt::json _url_params = zpt::gen::url_pattern_to_params(this->__spec["topic"]);
 				zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["href"]), "/");
 				for (auto _part : _splited->arr()) {
-					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+					_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 				}
 				_topic_transform = std::string("\n_topic = zpt::path::join({ zpt::array") + _topic + std::string(" });\n");
 			}
@@ -3383,9 +3396,10 @@ auto zpt::GenResource::build_head() -> std::string {
 		
 		zpt::json _splited = zpt::split(std::string(this->__spec["datum"]["ref"]), "/");
 		for (auto _part : _splited->arr()) {
-			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string("std::string(") + std::string(_url_params[_part->str()]) + std::string(")") : std::string("\"") + _part->str() + std::string("\""));
+			_topic += std::string(", ") + (_url_params[_part->str()]->ok() ? std::string(_url_params[_part->str()]) : std::string("\"") + _part->str() + std::string("\""));
 		}
 
+		std::string _var_name = this->normalize_var_name(_url_params[std::string(_splited[_splited->arr()->size() - 1])]->ok() ? _url_params[std::string(_splited[_splited->arr()->size() - 1])] : _splited[_splited->arr()->size() - 1]);
 		if (_rel->obj()->size() != 0) {
 			std::string _params;
 			for (auto _param : _rel->obj()) {
@@ -3394,10 +3408,10 @@ auto zpt::GenResource::build_head() -> std::string {
 				}
 				_params += std::string("\"") + _param.first + std::string("\", ") + (_url_params[_param.second->str()]->ok() ? std::string(_url_params[_param.second->str()]) : std::string("\"") + std::string(_param.second->str()) + std::string("\""));
 			}
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", (_envelope[\"params\"] + zpt::json({ ") + _params + std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		else {
-			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _c_performative, std::string _c_topic, zpt::json _c_result, zpt::ev::emitter _c_emitter) mutable -> void {\n_c_emitter->reply(_envelope, _c_result);\n}\n);\n");
+			_remote_invoke += std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic + std::string(" }),\n{ \"headers\", zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", _envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") + _var_name + std::string(", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") + _var_name + std::string(");\n}\n);\n");
 		}
 		zpt::replace(_return, "/* ---> YOUR CODE HERE <---*/", _remote_invoke);
 	}

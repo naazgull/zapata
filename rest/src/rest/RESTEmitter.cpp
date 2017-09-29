@@ -573,3 +573,83 @@ auto zpt::RESTEmitter::instance() -> zpt::ev::emitter {
 auto zpt::rest::url_pattern(zpt::json _to_join) -> std::string {
 	return std::string("^") + zpt::path::join(_to_join) + std::string("$");
 }		
+ 
+auto zpt::rest::collect(zpt::json _args, zpt::json _to_collect_from, zpt::rest::step _step, zpt::rest::end _end) -> void {
+	zpt::ev::emitter _emitter = zpt::emitter< zpt::rest::emitter >();
+	zpt::rest::_collect(_args, _to_collect_from, 0, zpt::undefined, _step, _end, _emitter);
+}
+
+auto zpt::rest::_collect(zpt::json _args, zpt::json _to_collect_from, size_t _idx, zpt::json _previous, zpt::rest::step _step, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void {
+	assertz_array(_to_collect_from, "", 412);
+	assertz_array(_args, "", 412);
+
+	if (_idx == _to_collect_from->arr()->size()) {
+		_end(_emitter);
+		return;
+	}
+
+	zpt::json _expanded = zpt::rest::_collect_variables({ "source", _to_collect_from[_idx], "previous", _previous }, _args);
+	zdbg(_expanded);
+	_emitter->route(
+		zpt::ev::performative(int(_expanded[0])),
+		std::string(_expanded[1]),
+		_expanded[2],
+		[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _result, zpt::ev::emitter _emitter) mutable -> void {
+			_step(_performative, _topic, _result, _emitter);
+			zpt::rest::_collect(_args, _to_collect_from, _idx + 1, _result, _step, _end, _emitter);
+		}
+	);
+}
+
+auto zpt::rest::_collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json {
+	switch (_args->type()) {
+		case zpt::JSObject: {
+			zpt::json _return = zpt::json::object();
+			for (auto _o : _args->obj()) {
+				_return << _o.first << zpt::rest::_collect_variables(_kb, _o.second);
+			}
+			return _return;
+		}
+		case zpt::JSArray: {
+			zpt::json _return = zpt::json::array();
+			for (auto _o : _args->arr()) {
+				_return << zpt::rest::_collect_variables(_kb, _o);
+			}
+			return _return;
+		}
+		case zpt::JSString: {
+			zpt::json _return;
+			std::string _found = std::string(_args);
+			std::string _value = std::string(_args);
+
+			for (size_t _idx = _found.find("$"); _idx != std::string::npos; _idx = _found.find("$", _idx + 1)) {
+				std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
+				zpt::replace(_var, "@", "source");
+				zpt::replace(_var, "#", "previous");
+				_return = _kb->getPath(_var);
+				if (_return->ok()) {
+					return _return;
+				}
+			}
+			return _args->clone();
+		}
+		case zpt::JSBoolean: {
+			return _args->clone();
+		}
+		case zpt::JSDouble: {
+			return _args->clone();
+		}
+		case zpt::JSInteger: {
+			return _args->clone();
+		}
+		case zpt::JSLambda : {
+			return _args->clone();
+		}
+		case zpt::JSNil: {
+			return _args->clone();
+		}
+		default: {
+			return zpt::undefined;
+		}
+	}
+}

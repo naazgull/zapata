@@ -181,6 +181,7 @@ namespace zpt {
 
 		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
 		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+		virtual auto normalize_var_name(zpt::json _var) -> std::string;
 		virtual auto build_get() -> std::string;
 		virtual auto build_post() -> std::string;
 		virtual auto build_put() -> std::string;

@@ -72,6 +72,9 @@ namespace zpt {
 		typedef std::map< std::string, std::vector< std::pair<std::regex, zpt::ev::handlers > > > HandlerStack;
 
 		extern zpt::rest::emitter* __emitter;
+
+		typedef zpt::ev::handler step;
+		typedef zpt::ev::initializer end;
 	}
 
 	class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
@@ -186,6 +189,9 @@ namespace zpt {
 	namespace rest {
 		
 		auto url_pattern(zpt::json _to_join) -> std::string;
+		auto collect(zpt::json _args, zpt::json _to_collect_from, zpt::rest::step _step, zpt::rest::end _end) -> void;
+		auto _collect(zpt::json _args, zpt::json _to_collect_from, size_t _idx, zpt::json _previous, zpt::rest::step _step, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void;
+		auto _collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json;
 
 	}
 
