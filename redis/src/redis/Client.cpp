@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -65,13 +65,6 @@ auto zpt::redis::Client::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::redis::Client::events() -> zpt::ev::emitter {
 	return this->__events;
-}
-
-auto zpt::redis::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::redis::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
 }
 
 auto zpt::redis::Client::connect() -> void {
@@ -336,6 +329,9 @@ auto zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt
  	_key.insert(0, (std::string) this->connection()["db"]);
 
 	zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		zpt::json _removed;
 		if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _record["href"]->str());

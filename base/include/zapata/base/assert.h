@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,9 +60,37 @@ SOFTWARE.
 #define assertz_location(x,y,z) if (std::string(y).length() == 0) { assertz(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) && zpt::test::location(x)), std::string(x), z, 1017) } else { assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017) }
 #define assertz_phone(x,y,z) if (std::string(y).length() == 0) { assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())), std::string(x), z, 1018) } else { assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018) }
 
-#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__)); assertz(__result__.size() != 0, std::string(y), z, 1018); }
+#define assertz_intersects(x,y,z) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__), [] (zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; }); assertz(__result__.size() != 0, std::string(y), z, 1018); }
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019) 
 #define assertz_valid_values(x,y,z) assertz(x, std::string(y), z, 1020) 
+
+
+#define assertz_reply(x,y,z,c,e,r) if (! (x)) { e->reply(r, { "status", z, "payload", { "text", y, "code", c, "assertion_failed", (std::string("'") + std::string(#x) + std::string("' failed on file ") + std::string(__FILE__) + std::string(", line ") + std::to_string(__LINE__)) } } ); }
+
+#define assertz_mandatory_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(x->ok(), std::string(x), z, 1000, e, r) } else { assertz_reply(x[y]->ok(), std::string(y), z, 1000, e, r) }
+#define assertz_string_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001, e, r) }
+#define assertz_integer_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002, e, r) }
+#define assertz_double_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003, e, r) }
+#define assertz_timestamp_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() ==  zpt::JSDate || (x->type() == zpt::JSString && zpt::test::timestamp(x)), std::string(x), z, 1004, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSDate || (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])), std::string(y), z, 1004, e, r) }
+#define assertz_boolean_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005, e, r) }
+#define assertz_complex_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray, std::string(x), z, 1006, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray, std::string(y), z, 1006, e, r) }
+#define assertz_object_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007, e, r) }
+#define assertz_array_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008, e, r) }
+#define assertz_int_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009, e, r) } else { assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009, e, r) }
+
+#define assertz_uuid_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())), std::string(x), z, 1010, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())), std::string(y), z, 1010, e, r) }
+#define assertz_utf8_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())), std::string(x), z, 1011, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())), std::string(y), z, 1011, e, r) }
+#define assertz_ascii_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())), std::string(x), z, 1012, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())), std::string(y), z, 1012, e, r) }
+#define assertz_hash_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())), std::string(x), z, 1013, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1013, e, r) }
+#define assertz_token_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())), std::string(x), z, 1014, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())), std::string(y), z, 1014, e, r) }
+#define assertz_uri_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())), std::string(x), z, 1015, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())), std::string(y), z, 1015, e, r) }
+#define assertz_email_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())), std::string(x), z, 1016, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())), std::string(y), z, 1016, e, r); if (x[y]->is_string()) { std::string _email = std::string(x[y]); std::transform(_email.begin(), _email.end(), _email.begin(), ::tolower); x << y << _email; } }
+#define assertz_location_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) && zpt::test::location(x)), std::string(x), z, 1017, e, r) } else { assertz_reply(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && zpt::test::location(x[y])), std::string(y), z, 1017, e, r) }
+#define assertz_phone_reply(x,y,z,e,r) if (std::string(y).length() == 0) { assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())), std::string(x), z, 1018, e, r) } else { assertz_reply(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())), std::string(y), z, 1018, e, r) }
+
+#define assertz_intersects_reply(x,y,z,e,r) { std::vector< zpt::json > __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__), [] (zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; }); assertz_reply(__result__.size() != 0, std::string(y), z, 1018, e, r); }
+#define assertz_unauthorized_reply(x,e,r) assertz_reply(x, std::string(#x), 401, 1019, e, r) 
+#define assertz_valid_values_reply(x,y,z,e,r) assertz_reply(x, std::string(y), z, 1020, e, r) 
 
 typedef struct epoll_event epoll_event_t;
 
@@ -80,25 +108,15 @@ namespace zpt {
 			Head = 4,
 			Options = 5,
 			Patch = 6,
-			Reply = 7
+			Reply = 7,
+			Search = 8,
+			Notify = 9,
+			Trace = 10,
+			Connect = 11
 		};
 
 		auto to_str(zpt::ev::performative _performative) -> std::string;
 		auto from_str(std::string _performative) -> zpt::ev::performative;
-	}
-
-	namespace mutation {
-		enum operation {
-			Insert = 0,
-			Remove = 1,
-			Update = 2,
-			Replace = 3,
-			Connect = 4,
-			Reconnect = 5
-		};
-
-		auto to_str(zpt::mutation::operation _operation) -> std::string;
-		auto from_str(std::string _operation) -> zpt::mutation::operation;
 	}
 
 	extern std::string* tz;

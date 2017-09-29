@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -166,53 +166,89 @@ auto zpt::tostr(time_t i, const char* f) -> std::string {
 }
 
 auto zpt::fromstr(std::string s, int* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		int r = std::stoi(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 #ifdef __LP64__
 auto zpt::fromstr(std::string s, unsigned int* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		unsigned int r = std::stoul(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 #endif
 
 auto zpt::fromstr(std::string s, size_t* i) -> void {
-#ifdef __LP64__
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
-#else
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
-#endif
+	size_t sz = 0;
+	try {
+		size_t r = std::stoull(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, long* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		long r = std::stol(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, long long* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		int r = std::stoll(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, float* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		float r = std::stof(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, double* i) -> void {
-	std::istringstream _in;
-	_in.str(s);
-	_in >> (* i);
+	size_t sz = 0;
+	try {
+		double r = std::stod(s, &sz);
+		if (sz != s.length()) {
+			return;
+		}
+		*i = r;
+	}
+	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, char* i) -> void {

@@ -4,9 +4,14 @@ src/zapata/gen/Container.py /usr/share/zapata/gen/
 src/zapata/gen/Datum.sql /usr/share/zapata/gen/
 src/zapata/gen/Datum.cpp /usr/share/zapata/gen/
 src/zapata/gen/Datum.h /usr/share/zapata/gen/
-src/zapata/gen/Handlers.cpp /usr/share/zapata/gen/
-src/zapata/gen/Handlers.h /usr/share/zapata/gen/
+src/zapata/gen/Datum.sh /usr/share/zapata/gen/
 src/zapata/gen/Handlers.lisp /usr/share/zapata/gen/
-src/zapata/gen/Handlers.py /usr/share/zapata/gen/
+src/zapata/gen/Handlers_oo.h /usr/share/zapata/gen/
+src/zapata/gen/Handlers_oo.py /usr/share/zapata/gen/
+src/zapata/gen/Handlers_oo.cpp /usr/share/zapata/gen/
+src/zapata/gen/Handlers_lambda.h /usr/share/zapata/gen/
+src/zapata/gen/Handlers_lambda.py /usr/share/zapata/gen/
+src/zapata/gen/Handlers_lambda.cpp /usr/share/zapata/gen/
 src/zapata/gen/Mutations.cpp /usr/share/zapata/gen/
 src/zapata/gen/Mutations.h  /usr/share/zapata/gen/
+src/zapata/gen/MutationsLoad.cpp  /usr/share/zapata/gen/

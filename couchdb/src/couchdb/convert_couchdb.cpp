@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,31 +25,38 @@ SOFTWARE.
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^")
+#define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^$elemMatch^")
 
 auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
-	if (!_in->is_object()) {
-		return zpt::undefined;
-	}
-	zpt::json _selector = zpt::json::object();
+	zpt::json _selector = { "_id", { "$lt", "_" } };
 	zpt::json _query = { "selector", _selector };
+	if (!_in->is_object()) {
+		_query << "limit" << INT_MAX;
+		return _query;
+	}
 	for (auto _i : _in->obj()) {
 		std::string _key = _i.first;
 		zpt::json _value = _i.second;
 
 		if (_key == "page_size") {
-			_query << "limit" << _value;
+			_query << "limit" << ((unsigned long) _value);
 			continue;
 		}
 		else if (_key == "page_start_index") {
-			_query << "offset" << _value;
+			_query << "skip" << ((unsigned long) _value);
 			continue;
 		}
-		else if (_key == "order_by") {
+		else if (_key == "order_by" && (_value->is_string() || _value->is_array())) {
 			if (!_query["sort"]->is_array()) {
 				_query << "sort" << zpt::json::array();
 			}
-			zpt::json _splited = zpt::split(std::string(_value), ",", true);
+			zpt::json _splited;
+			if (_value->is_string()) {
+				_splited = zpt::split(std::string(_value), ",", true);
+			}
+			else {
+				_splited = _value;
+			}
 			for (auto _field : _splited->arr()) {
 				std::string _name = std::string(_field);
 				std::string _direction;
@@ -68,8 +75,8 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 			}
 			continue;
 		}
-		else if (_key == "fields") {
-			_query << "fields" << zpt::split(std::string(_value), ",", true);
+		else if (_key == "fields" && (_value->is_string() || _value->is_array())) {
+			_query << "fields" << (_value->is_string() ? zpt::split(_value->str(), ",", true) : _value);
 			continue;
 		}
 		else if (_key == "embed") {
@@ -160,6 +167,28 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 					if (_bar_count == 2) {
 						_selector << std::string(_key) << zpt::json{ comp, _expression };
 					}
+					else if (_command == "elemMatch") {
+						std::string other_comp("$");
+						other_comp.insert(other_comp.length(), _options);
+						zpt::json _json_expression;
+						try {
+							_json_expression = zpt::json(_expression);
+							if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
+								_selector << std::string(_key) << zpt::json{ comp, { other_comp, _json_expression } };
+							}
+							else {
+								_selector << std::string(_key) << zpt::json{ comp, { _options, _json_expression } };
+							}
+						}
+						catch(std::exception& _e) {
+							if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
+								_selector << std::string(_key) << zpt::json{ comp, { other_comp, _expression } };
+							}
+							else {
+								_selector << std::string(_key) << zpt::json{ comp, { _options, _expression } };
+							}
+						}
+					}
 					else if (_options == "n") {
 						istringstream iss(_expression);
 						int i = 0;
@@ -187,13 +216,12 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 						}
 					}
 					else if (_options == "j") {
-						istringstream iss(_expression);
-						zpt::json _json;
 						try {
-							iss >> _json;
+							zpt::json _json = zpt::json(_expression);
 							_selector << std::string(_key) << zpt::json{ comp, _json };
 						}
-						catch(std::exception& _e) {}
+						catch(std::exception& _e) {
+						}
 					}
 					else if (_options == "d") {
 						zpt::json _json({ "time", zpt::timestamp(_expression) });
@@ -208,5 +236,26 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 		_selector << std::string(_key) << _value;
 	}
 
+	if (!_query["limit"]->ok()) {
+		_query << "limit" << INT_MAX;
+	}
+
 	return _query;
+}
+
+auto zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+	zpt::json _fields = _opts["fields"];
+	if (_fields->ok()) {
+		if (_fields->is_string()) {
+			_fields = zpt::split(std::string(_opts["fields"]), ",");
+		}
+		if (_fields->is_array()) {
+			for (auto _f : _fields->arr()) {
+				_return << std::string(_f) << true;
+			}
+			_return << "_id" << true;
+		}
+	}
+	return _return;
 }

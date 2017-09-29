@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -128,6 +128,8 @@ namespace zpt {
 		namespace authority {
 			auto parse(std::string _authority) -> zpt::json;
 		}
+
+		auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;
 	}
 	
 	namespace conf {

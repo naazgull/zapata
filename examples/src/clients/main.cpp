@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ SOFTWARE.
 #include <string>
 
 #include <zapata/couchdb.h>
+#include <zapata/upnp.h>
 #include <zapata/rest.h>
 #include <zapata/mem/usage.h>
 #include <semaphore.h>
@@ -41,6 +42,23 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {	
 	try {
+		if (argc == 1) {
+			zpt::upnp::broker _upnp(zpt::undefined);
+			for (; true; ) {
+				std::cout << "listening..." << endl << flush;
+				try {
+					std::cout << std::string(_upnp->listen()) << flush;
+				}
+				catch (...) {}
+			}
+			return 0;
+		}
+		else {
+			zpt::upnp::broker _upnp(zpt::undefined);
+			_upnp->search("urn:schemas-upnp-org:service:/v3/data-layer/tokens");		
+			return 0;
+		}
+		
 		std::cout << std::string(zpt::email::parse("pedro.figueiredo@muzzley.com")) << endl << flush;
 		std::cout << std::string(zpt::email::parse("\"José Paulo\" <pedro.figueiredo@muzzley.com>")) << endl << flush;
 		std::cout << std::string(zpt::email::parse("<pedro.figueiredo@muzzley.com>")) << endl << flush;
@@ -55,36 +73,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "NO DST: " << _now << " " << std::put_time(_tm_now.get(), "%c %Z") << " > " << _tm_now->tm_gmtoff << endl << flush;
 		return 0;
 		
-		zpt::rest::client _api = zpt::rest::client::launch(argc, argv);
-
-		size_t _max = 10100;
-		size_t * _n = new size_t();
-		_api->events()->on(zpt::ev::Reply, zpt::rest::url_pattern({ _api->events()->version(), "apps" }),
-			[ _n, _max ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {
-				(* _n)++;
-				zlog(std::to_string(* _n), zpt::debug);
-				if ((* _n) == (_max - 100)) {
-					cout << "PROCESSED " << (* _n) << " MESSAGES" << endl << flush;
-				exit(0);
-				}
-				return zpt::undefined;
-			}
-		);
-		zpt::socket_ref _client = _api->bind("zmq");
-		zpt::json _message({ "name", "m/(.*)/i" });
-		std::thread _sender(
-			[ & ] () -> void {
-				for (size_t _k = 0; _k != _max; _k++) {
-					_client->send(zpt::ev::Get, zpt::path::join({_api->events()->version(), "apps"}), _message);
-				}
-				if (_api->options()["zmq"]["type"]->str() == "req") {
-					cout << "PROCESSED " << (_max) << " MESSAGES" << endl << flush;
-					exit(0);				
-				}
-			}
-		);
-		_api->start();
-		_sender.join();
 	}
 	catch (zpt::assertion& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);

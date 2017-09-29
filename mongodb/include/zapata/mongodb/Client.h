@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -46,8 +46,6 @@ namespace zpt {
 			virtual auto options() -> zpt::json;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
 			virtual auto events() -> zpt::ev::emitter;
-			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
-			virtual auto mutations() -> zpt::mutation::emitter;
 
 			virtual auto connect() -> void;
 			virtual auto reconnect() -> void;

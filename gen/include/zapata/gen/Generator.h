@@ -1,7 +1,7 @@
 /*    
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,9 +50,11 @@ namespace zpt {
 		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
 		auto url_pattern_to_var_decl(zpt::json _url) -> std::string;
 		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
+		auto url_pattern_to_vars_python(std::string _url) -> std::string;
 		auto url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string;
 		auto url_pattern_to_params(zpt::json _url) -> zpt::json;
 		auto url_pattern_to_params_lisp(zpt::json _url) -> zpt::json;
+		auto url_pattern_to_params_python(zpt::json _url) -> zpt::json;
 
 		auto get_opts(zpt::json _field) -> zpt::json;
 		auto get_fields_array(zpt::json _fields) -> std::string;
@@ -77,6 +79,8 @@ namespace zpt {
 	public:
 		static std::map< std::string, zpt::gen::datum > datums;
 		static std::map< std::string, zpt::gen::resource > resources;
+		static std::map< std::string, zpt::gen::datum > included_datums;
+		static std::map< std::string, zpt::gen::resource > included_resources;
 		static std::string datum_includes;
 		static std::map< std::string, std::string > alias;
 
@@ -89,6 +93,10 @@ namespace zpt {
 		virtual auto build_data_layer() -> void;
 		virtual auto build_container() -> void;
 		virtual auto build_mutations() -> void;
+		virtual auto build_docs() -> void;
+		virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
+		virtual auto generate_title_performative(zpt::json _resource, std::string _performative) -> std::string;
+		virtual auto get_fields(zpt::json _resource, int* _parent_type = nullptr) -> zpt::json;
 
 		static auto get_datum(std::string _ref) -> std::string;
 
@@ -107,7 +115,8 @@ namespace zpt {
 		virtual auto build() -> std::string;
 		virtual auto build_data_layer() -> std::string;
 		virtual auto build_query(zpt::json _field) -> std::string;
-		virtual auto build_params(zpt::json _rel, bool _multi) -> std::string;
+		virtual auto build_doc_query(zpt::json _field, std::string _name) -> std::string;
+		virtual auto build_params(zpt::json _rel, bool _multi, std::string _var_name = "") -> std::string;
 		virtual auto build_inverted_params(zpt::json _rel) -> std::string;
 		virtual auto build_topic(zpt::json _topic) -> std::string;
 		virtual auto build_dbms_source() -> std::string;
@@ -128,6 +137,10 @@ namespace zpt {
 		virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_insert(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_update(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_remove(std::string _name, zpt::json _field) -> std::string;
+		virtual auto build_associations_for_replace(std::string _name, zpt::json _field) -> std::string;
 		virtual auto build_associations_get() -> std::string;
 		virtual auto build_associations_query() -> std::string;
 		virtual auto build_associations_insert() -> std::string;
@@ -145,6 +158,7 @@ namespace zpt {
 
 		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
 		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
+		static auto build_ordered_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
 		static auto get_type(zpt::json _field) -> std::string;
 		static auto get_restrictions(zpt::json _field) -> std::string;
 
@@ -167,6 +181,7 @@ namespace zpt {
 
 		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
 		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+		virtual auto normalize_var_name(zpt::json _var) -> std::string;
 		virtual auto build_get() -> std::string;
 		virtual auto build_post() -> std::string;
 		virtual auto build_put() -> std::string;

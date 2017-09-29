@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9)
 
 Package: zapata-mqtt
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, libmosquitto-dev, zapata-base (>=0.9), zapata-json (>=0.9)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, libmosquitto-dev, zapata-base (>=0.9), zapata-json (>=0.9), zapata-zmq (>=0.9)
 Description: RESTful API's C++ toolkit named after Emiliano Zapata - MQTT support classes
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides an MQTT wrapping

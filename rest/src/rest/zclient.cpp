@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,12 +54,12 @@ int main(int argc, char* argv[]) {
 		zpt::json _uri = zpt::uri::parse(std::string(_opts["files"][0]));
 		
 		if (std::string(_opts["N"][0]) == "req") {
-			std::cout << "* connecting to " << (std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"])) << "..." << endl << flush;
+			std::cout << "* \033[4;37mconnecting to " << (std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"])) << "\033[0m" << endl << flush;
 			zpt::ZMQReq _socket(std::string(">") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]), _opts);
 			zpt::json _envelope = {
-				"channel", std::string(_uri["path"]),
 				"performative", zpt::ev::from_str(std::string(_opts["X"][0])),
 				"resource", std::string(_uri["path"]),
+				"headers", zpt::ev::init_request(),
 				"params", _uri["query"],
 				"payload", (_opts["d"]->ok() ? zpt::json(std::string(_opts["d"][0])) : zpt::undefined)
 			};
@@ -69,11 +69,17 @@ int main(int argc, char* argv[]) {
 					zpt::json _splited = zpt::split(_header->str(), ":");
 					_headers << zpt::r_trim(_splited[0]->str()) << zpt::r_trim(_splited[1]->str());
 				}
-				_envelope << "headers" << _headers;
+				_envelope << "headers" << (_envelope["headers"] + _headers);
 			}
-			zpt::json _reply = _socket.send(_envelope);
-			std::cout << "> " << zpt::r_replace(zpt::json::pretty(_envelope), "\n", "\n> ") << endl << endl << flush;
-			std::cout << "< " << zpt::r_replace(zpt::json::pretty(_reply), "\n", "\n< ") << endl << flush;
+			_socket.send(_envelope);
+			zpt::json _reply = _socket.recv();
+			if (_opts["q"]->ok()) {
+				std::cout << "* request termnated with status " << std::string(_reply["status"]) << endl << endl << flush;
+			}
+			else {
+				std::cout << "*" << endl << "> " << zpt::r_replace(zpt::ev::pretty(_envelope), "\n", "\n> ") << endl << flush;
+				std::cout << "< " << zpt::r_replace(zpt::ev::pretty(_reply), "\n", "\n< ") << endl << flush;
+			}
 			return 0;
 		}
 		else if (std::string(_opts["N"][0]) == "pub-sub") {

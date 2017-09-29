@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -56,13 +56,6 @@ auto zpt::redis::ZList::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::redis::ZList::events() -> zpt::ev::emitter {
 	return this->__events;
-}
-
-auto zpt::redis::ZList::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::redis::ZList::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
 }
 
 auto zpt::redis::ZList::connect() -> void {

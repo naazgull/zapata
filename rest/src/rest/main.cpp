@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,8 @@ int main(int argc, char* argv[]) {
 		zpt::rest::server::launch(argc, argv);
 	}
 	catch (zpt::assertion& _e) {
-		zlog(_e.what() + std::string(" | ") + _e.description() + std::string("\n") + _e.backtrace(), zpt::emergency);
+		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		exit(-10);
 	}
 	catch (std::exception& _e) {

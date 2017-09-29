@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,16 @@ namespace zpt {
 zpt::lisp::Bridge::Bridge(zpt::json _options) : zpt::Bridge(_options), __self(this), __lambdas(new std::map<std::string, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > >()), __modules(new std::map<std::string, std::string>()), __consistency(new std::map<std::string, std::function< bool (const std::string, const std::string) > >())  {
 	char _arg[] = { 'z', 'p', 't', '\0'};
 	char* _argv[] = { _arg };
+
+	if (!_options["lisp"]["repl"]->ok() || !bool(_options["lisp"]["repl"])) {
+		ecl_set_option(ECL_OPT_TRAP_SIGSEGV, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGFPE, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGINT, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_SIGILL, FALSE);
+		ecl_set_option(ECL_OPT_TRAP_INTERRUPT_SIGNAL, FALSE);
+		ecl_set_option(ECL_OPT_SIGNAL_HANDLING_THREAD, FALSE);
+	}
+	
 	cl_boot(1, _argv);
 	atexit(cl_shutdown);
 }
@@ -51,13 +61,6 @@ auto zpt::lisp::Bridge::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::lisp::Bridge::events() -> zpt::ev::emitter {
 	return this->__events;
-}
-
-auto zpt::lisp::Bridge::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::lisp::Bridge::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
 }
 
 auto zpt::lisp::Bridge::self() const -> zpt::bridge {
@@ -94,15 +97,14 @@ auto zpt::lisp::Bridge::initialize() -> void {
 		"			,@forms"
 		"			,temphash)))"
 	);
-	if (this->options()["rest"]["modules"]->ok()) {
-		for (auto _lisp_script : this->options()["rest"]["modules"]->arr()) {
-			if (_lisp_script->str().find(".lisp") != std::string::npos || _lisp_script->str().find(".fasb") != std::string::npos) {
-				zlog(std::string("LISP bridge loading module '") + _lisp_script->str() + std::string("'"), zpt::notice);
-				this->eval(std::string("(load \"") + ((std::string) _lisp_script) + std::string("\")"));
-			}
-		}
-	}
 	ztrace(std::string("LISP bridge initialized"));
+}
+
+auto zpt::lisp::Bridge::load_module(std::string _module) -> void {
+	if (_module.find(".lisp") != std::string::npos || _module.find(".fasb") != std::string::npos) {
+		zlog(std::string("loading module '") + _module + std::string("'"), zpt::notice);
+		this->eval(std::string("(load \"") + _module + std::string("\")"));
+	}
 }
 
 auto zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
@@ -264,7 +266,7 @@ auto zpt::lisp::Bridge::boot(zpt::json _options) -> void {
 		3
 	);
 	zpt::lisp::builtin_operators(_bridge);
-	zlog(std::string("LISP bridge booted"), zpt::notice);
+	ztrace(std::string("LISP bridge booted"));
 }
 
 zpt::lisp::Object::Object(cl_object _target) : std::shared_ptr< zpt::lisp::Type >(new zpt::lisp::Type(_target)) {
@@ -393,15 +395,15 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				std::string _name = std::string(_lambda.second);
 				_handlers.insert(
 					std::make_pair(_performative,
-						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> zpt::json {
+						[ _name ] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 							zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 							zpt::lisp::object _ret = _bridge->eval< zpt::lisp::object >(std::string("(") + _name + std::string(" \"") + zpt::ev::to_str(_performative) + std::string("\" \"") + _resource + std::string("\" ") + zpt::lisp::to_lisp_string(_envelope) + std::string(")"));
-							return _bridge->from< zpt::lisp::object >(_ret);
+							_emitter->reply(_envelope, _bridge->from< zpt::lisp::object >(_ret));
 						}
 					)
 				);
 			}
-	
+
 			_bridge->events()->on(_topic, _handlers, _opts);
 			return zpt::lisp::object(ecl_make_bool(true));
 		}
@@ -427,7 +429,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::json _payload = _bridge->from< zpt::lisp::object >(_args[2]);
 			zpt::json _opts = _bridge->from< zpt::lisp::object >(_args[3]);
 
-			zpt::json _result = _bridge->events()->route(_performative, _topic, _payload, _opts);
+			zpt::json _result = _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
 			return _bridge->to< zpt::lisp::object >(_result);
 		}
 	);
@@ -573,7 +575,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			zpt::bridge _bridge = zpt::bridge::instance< zpt::lisp::bridge >();
 			
 			zpt::json _identity = _bridge->from< zpt::lisp::object >(_args[0]);
-			zpt::json _return = { "Authorization", (std::string("OAuth2.0 ") + std::string(_identity["access_token"])) };
+			zpt::json _return = { "Authorization", (std::string("Bearer ") + std::string(_identity["access_token"])) };
 	
 			return _bridge->to< zpt::lisp::object >(_return);
 		}

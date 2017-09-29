@@ -31,7 +31,7 @@ a) Ubuntu 16.04 PPA repositories, containing acceptable PostgreSQL and Python ve
 a) Add GPG key and repository to your 'sources.list.d'
 
 	$ wget -O - https://repo.dfz.pt/apt/dfz_apt.key | sudo apt-key add -
-	$ echo "deb https://repo.dfz.pt/apt/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/naazgull.list
+	$ echo "deb [arch=amd64] https://repo.dfz.pt/apt/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/zapata.list
 
 b) Update your repository cache and install base packages:
 
@@ -44,11 +44,11 @@ a) Install Zapata's PostgreSQL support packages:
 
 	$ sudo apt-get install zapata-postgresql
 
-### 3) MariaDB support ###
+### 3) MySQL support ###
 
-a) Install Zapata's MariaDB support packages:
+a) Install Zapata's MySQL support packages:
 
-	$ sudo apt-get install zapata-mariadb
+	$ sudo apt-get install zapata-mysql
 
 ### 4) MongoDB support ###
 

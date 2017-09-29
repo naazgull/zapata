@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,8 @@ SOFTWARE.
 #include <mutex>
 #include <zapata/zmq/SocketStreams.h>
 #include <zapata/http/HTTPObj.h>
+#include <poll.h>
+#include <zmq.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -45,12 +47,15 @@ using namespace __gnu_cxx;
 #define ZMQ_ROUTER_DEALER -3
 #define ZMQ_ASSYNC_REQ -4
 #define ZMQ_HTTP_RAW -5
+#define ZMQ_MQTT_RAW -6
+#define ZMQ_UPNP_RAW -7
 
 #define ZPT_SELF_CERTIFICATE 0
 #define ZPT_PEER_CERTIFICATE 1
 
 namespace zmq {
 	typedef std::shared_ptr< zmq::socket_t > socket_ptr;
+	// auto __poll(zmq_pollitem_t *items_, int nitems_, long timeout_) -> int;
 }
 
 namespace zpt {
@@ -106,8 +111,12 @@ namespace zpt {
 		virtual auto add(short _type, std::string _connection, bool _new_connection = false) -> zpt::socket_ref;
 		virtual auto add(zpt::ZMQ* _underlying) -> zpt::socket_ref;
 		virtual auto remove(zpt::socket_ref _socket) -> void;
+		virtual auto vanished(std::string _connection, zpt::ev::initializer _callback = nullptr) -> void;
+		virtual auto vanished(zpt::ZMQ* _underlying, zpt::ev::initializer _callback = nullptr) -> void;
+		virtual auto pretty() -> std::string;
 
 		virtual auto poll(zpt::socket_ref _socket) -> void;
+		virtual auto clean_up(zpt::socket_ref _socket, bool _force = false) -> void;
 		
 		virtual auto loop() -> void;
 			
@@ -121,7 +130,10 @@ namespace zpt {
 		std::mutex __mtx[2];
 		zpt::ZMQPollPtr __self;
 		zpt::ev::emitter __emitter;
-		
+		bool __needs_rebuild;
+		std::map< zpt::socket_ref, std::string > __to_add;
+		std::map< zpt::socket_ref, zpt::ev::initializer > __to_remove;
+
 		auto bind(short _type, std::string _connection) -> zpt::ZMQ*;
 		auto signal(std::string _message) -> void;
 		auto notify(std::string _message) -> void;
@@ -148,6 +160,7 @@ namespace zpt {
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
+		virtual auto loop_iteration() -> void;
 				
 		virtual auto socket() -> zmq::socket_ptr = 0;
 		virtual auto in() -> zmq::socket_ptr = 0;
@@ -156,6 +169,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex& = 0;
 		virtual auto out_mtx() -> std::mutex& = 0;
 		virtual auto type() -> short int = 0;
+		virtual auto protocol() -> std::string = 0;
 		
 	private:
 		zpt::json __options;
@@ -174,7 +188,7 @@ namespace zpt {
 		ZMQReq(std::string _connection, zpt::json _options);
 		virtual ~ZMQReq();
 		
-		virtual zpt::json send(zpt::json _envelope);
+		// virtual zpt::json send(zpt::json _envelope);
 		
 		virtual auto socket() -> zmq::socket_ptr;
 		virtual auto in() -> zmq::socket_ptr;
@@ -183,6 +197,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -201,6 +216,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -219,6 +235,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -238,6 +255,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		virtual void subscribe(std::string _prefix);
 		
@@ -261,6 +279,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -281,6 +300,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		virtual void subscribe(std::string _prefix);
 		
@@ -302,6 +322,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -322,6 +343,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -340,6 +362,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -362,6 +385,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -387,6 +411,7 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 
 		
 	private:
@@ -401,6 +426,7 @@ namespace zpt {
 		virtual auto recv() -> zpt::json;
 		virtual auto send(zpt::json _envelope) -> zpt::json;
 
+		virtual auto underlying() -> zpt::socketstream_ptr;
 		virtual auto socket() -> zmq::socket_ptr;
 		virtual auto in() -> zmq::socket_ptr;
 		virtual auto out() -> zmq::socket_ptr;
@@ -408,23 +434,26 @@ namespace zpt {
 		virtual auto in_mtx() -> std::mutex&;
 		virtual auto out_mtx() -> std::mutex&;
 		virtual auto type() -> short int;
+		virtual auto protocol() -> std::string;
 		virtual auto close() -> void;
 		virtual auto available() -> bool;
 		
 	private:
-		zmq::socket_ptr __socket;
 		zpt::socketstream_ptr __underlying;
+		short __state;
+		std::string __cid;
+		std::string __resource;;
 	};
 
 	namespace net {
-		auto getip() -> std::string;
+		auto getip(std::string _if = "") -> std::string;
 	}
-
 
 	namespace rest {
 		auto http2zmq(zpt::http::req _request) -> zpt::json;
 		auto http2zmq(zpt::http::rep _reply) -> zpt::json;
-		auto zmq2http(zpt::json _out) -> zpt::HTTPRep;
+		auto zmq2http_rep(zpt::json _out) -> zpt::http::rep;
+		auto zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::req;
 
 		namespace http {
 			zpt::json deserialize(std::string _body);

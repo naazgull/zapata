@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,13 +58,6 @@ auto zpt::pgsql::Client::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::pgsql::Client::events() -> zpt::ev::emitter {
 	return this->__events;
-}
-
-auto zpt::pgsql::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::pgsql::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
 }
 
 auto zpt::pgsql::Client::connect() -> void {
@@ -202,8 +195,7 @@ auto zpt::pgsql::Client::save(std::string _collection, std::string _href, zpt::j
 	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::json _document, zpt::json _opts) -> int {
@@ -230,8 +222,7 @@ auto zpt::pgsql::Client::set(std::string _collection, std::string _href, zpt::js
 	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::pgsql::Client::set(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
@@ -289,8 +280,7 @@ auto zpt::pgsql::Client::unset(std::string _collection, std::string _href, zpt::
 	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
-	assertz(_size != 0, "no such record", 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::pgsql::Client::unset(std::string _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts) -> int {
@@ -347,8 +337,7 @@ auto zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt:
 	psql_catch_block(1200);
 
 	if (_size != 0 && !bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _href, _opts + zpt::json{ "removed", _removed });
-	assertz(_size != 0, "no such record", 404, 2200);
-	return 1;
+	return _size;
 }
 
 auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
@@ -356,6 +345,9 @@ auto zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt
 		assertz(this->__conn.get() != nullptr, std::string("connection to PostgreSQL at ") + this->name() + std::string(" has not been established."), 500, 0); }
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		std::string _expression = std::string("DELETE FROM ") + zpt::pgsql::escape_name(_collection) + std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_record["id"]);
 		int _size = 0;
@@ -380,7 +372,7 @@ auto zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::js
 	_expression += zpt::pgsql::escape_name(_collection);
 	zpt::json _splited = zpt::split(_href, "/");
 	_expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->arr()->back());
-	return this->query(_collection, _expression, _opts)[0];
+	return this->query(_collection, _expression, _opts)["elements"][0];
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts) -> zpt::json {
@@ -398,7 +390,10 @@ auto zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zp
 		}
 	}
 	psql_catch_block(1200);
-	return _elements;
+	if (_elements->arr()->size() == 0) {
+		return zpt::undefined;
+	}
+	return { "size", _elements->arr()->size(), "elements", _elements };
 }
 
 auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
@@ -417,11 +412,26 @@ auto zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt:
 		}
 	}
 	zpt::pgsql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	pqxx::result _result;
+	try {
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_result = _stmt.exec(_count_expression); }
+	}
+	psql_catch_block(1200);
+	size_t _size = 0;
+	for (auto _r : _result) {
+		_size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 }
 
@@ -433,11 +443,26 @@ auto zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::j
 	_expression += zpt::pgsql::escape_name(_collection);
 	_count_expression += zpt::pgsql::escape_name(_collection);
 	zpt::pgsql::get_opts(_opts, _expression);
-	size_t _size = size_t(this->query(_collection, _count_expression, _opts)[0]["count"]);
-	zpt::json _return = {
-		"size", _size, 
-		"elements", this->query(_collection, _expression, _opts)
-	};
+
+	pqxx::result _result;
+	try {
+		{ std::lock_guard< std::mutex > _lock(this->__mtx);
+			pqxx::work _stmt(this->conn());
+			_result = _stmt.exec(_count_expression); }
+	}
+	psql_catch_block(1200);
+	size_t _size = 0;
+	for (auto _r : _result) {
+		_size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
+	}
+	if (_size == 0) {
+		return zpt::undefined;
+	}
+
+	zpt::json _return = this->query(_collection, _expression, _opts);
+	if (_return->ok()) {
+		_return << "size" << _size;
+	}
 	return _return;
 }
 

@@ -6,4 +6,4 @@ libzapata_events_la_CPPFLAGS = -O3 -std=c++14 -I../../include
 
 libzapata_events_la_SOURCES = \
 ./EventEmitter.cpp \
-./MutationEmitter.cpp
+./Connector.cpp

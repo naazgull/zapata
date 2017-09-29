@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -404,7 +404,13 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 			assertz(Py_TYPE(_exp) != &_PyNamespace_Type, std::string("unmanaged python type _PyNamespace"), 500, 0);
 		}
 		else if (PyType_Check(_exp)) {
-			assertz(Py_TYPE(_exp) != &PyType_Type, std::string("unmanaged python type PyType"), 500, 0);
+			zpt::json _value = zpt::json::string(((PyTypeObject*)_exp)->tp_name);
+			if (_parent->is_object() || _parent->is_array()) {
+				_parent << _value;
+			}
+			else {
+				_parent = _value;
+			}
 		}
 		else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
 			assertz(Py_TYPE(_exp) != &PyBaseObject_Type, std::string("unmanaged python type PyBaseObject"), 500, 0);
@@ -481,7 +487,8 @@ auto zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
 		}
 	}
 	catch (zpt::assertion& _e) {
-		zlog(_e.description() + std::string("\n") + _e.backtrace(), zpt::error);
+		zlog(_e.description(), zpt::error);
+		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 	}
 	catch (std::exception& _e) {
 		zlog(_e.what(), zpt::error);
@@ -493,17 +500,35 @@ auto zpt::python::to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt:
 }
 
 auto zpt::python::from_ref(zpt::json _in) -> PyObject* {
-	unsigned long _ref = 0;
-	std::istringstream _iss;
-	_iss.str(std::string(_in));
-	_iss >> std::hex >> _ref;
-	return (PyObject*) _ref;
+	if (_in->is_lambda()) {
+		unsigned long _ref = 0;
+		std::istringstream _iss;
+		_iss.str(_in->lbd()->name());
+		_iss >> std::hex >> _ref;
+		return (PyObject*) _ref;
+	}
+	else {
+		std::string _s_ref = std::string(_in);
+		zpt::replace(_s_ref, "ref(", "");
+		zpt::replace(_s_ref, ")", "");
+		unsigned long _ref = 0;
+		std::istringstream _iss;
+		_iss.str(_s_ref);
+		_iss >> std::hex >> _ref;
+		return (PyObject*) _ref;
+	}
 }
 
 auto zpt::python::to_ref(PyObject* _in) -> zpt::json {
 	std::ostringstream _oss;
 	_oss << _in << flush;
-	return zpt::json::string(_oss.str());
+	Py_INCREF(_in);
+	if (PyFunction_Check(_in)) {
+		return zpt::json::lambda(_oss.str(), 0);
+	}
+	else {
+		return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
+	}
 }
 
 auto zpt::python::to_python(zpt::json _in) -> PyObject* {
@@ -532,8 +557,13 @@ auto zpt::python::to_python(zpt::json _in) -> PyObject* {
 		}
 		case zpt::JSString: {
 			//_ret = PyUnicode_DecodeFSDefault(std::string(_in).data());
-			_ret = PyUnicode_DecodeLocale(std::string(_in).data(), nullptr);
-			Py_INCREF(_ret);
+			if (std::string(_in).find("ref(") == 0) {
+				_ret = zpt::python::from_ref(_in);
+			}
+			else {
+				_ret = PyUnicode_DecodeLocale(std::string(_in).data(), nullptr);
+				Py_INCREF(_ret);
+			}
 			break;
 		}
 		case zpt::JSDate: {

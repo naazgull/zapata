@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1282,7 +1282,7 @@ zpt::JSONPtr zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) {
 		return _lhs;
 	}
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-	assertz(this->__target.__type == zpt::JSArray || _rhs.__target.__type == zpt::JSArray || this->__target.__type == _rhs.__target.__type, "can't substract JSON objects of different types", 500, 0);
+	assertz(this->__target.__type == zpt::JSArray || (this->__target.type != zpt::JSObject && _rhs.__target.__type == zpt::JSArray) || this->__target.__type == _rhs.__target.__type, "can't substract JSON objects of different types", 500, 0);
 	switch(this->__target.__type) {
 		case zpt::JSObject : {
 			zpt::JSONPtr _lhs = this->clone();
@@ -1506,6 +1506,52 @@ zpt::JSONPtr zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) {
 	return zpt::undefined;
 }
 
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::json _rhs) {
+	return (* this) | (* _rhs);
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::JSONPtr _rhs) {
+	return (* this) | (* _rhs);
+}
+
+zpt::JSONPtr zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) {
+	if (this->__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _rrhs = _rhs.clone();
+		return _rrhs;
+	}
+	if (_rhs.__target.__type == zpt::JSNil) {
+		zpt::JSONPtr _lhs = this->clone();
+		return _lhs;
+	}
+	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+	assertz(this->__target.__type == _rhs.__target.__type, "can't add JSON objects of different types", 500, 0);
+	switch(this->__target.__type) {
+		case zpt::JSObject : {
+			zpt::JSONPtr _lhs = this->clone();
+			for (auto _e : _rhs.obj()) {
+				if (_lhs[_e.first]->type() == zpt::JSObject) {
+					_lhs << _e.first << (_lhs[_e.first] | _e.second);
+				}
+				else {
+					_lhs << _e.first << _e.second;
+				}
+			}
+			return _lhs;
+		}
+		case zpt::JSArray : 
+		case zpt::JSString : 
+		case zpt::JSInteger : 
+		case zpt::JSDouble : 
+		case zpt::JSBoolean : 
+		case zpt::JSNil : 
+		case zpt::JSDate : 
+		case zpt::JSLambda : {
+			return zpt::undefined;
+		}
+	}
+	return zpt::undefined;
+}
+
 zpt::JSONPtr zpt::JSONElementT::getPath(std::string _path, std::string _separator) {
 	assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
 	switch(this->__target.__type) {
@@ -1599,8 +1645,8 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 				}
 				_o.second->inspect(_pattern, _callback, this, _o.first, (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$any"]->ok()) {
-				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
+			if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
+				_callback(_parent_path + std::string(".") + _key, _key, * _parent);
 			}
 			else {
 				if (*this == _pattern) {
@@ -1613,7 +1659,7 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 			for (size_t _i = 0; _i != this->arr()->size(); _i++) {
 				this->arr()[_i]->inspect(_pattern, _callback, this, std::to_string(_i), (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
 			}
-			if (_pattern["$any"]->ok()) {
+			if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
 				_callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key), _key, * _parent);
 			}
 			else {
@@ -2330,11 +2376,12 @@ void zpt::JSONArrT::pop(const char* _idx) {
 }
 
 void zpt::JSONArrT::pop(std::string _idx) {
-	size_t _i = 0;
+	long _i = -1;
 	zpt::fromstr(_idx, &_i);
-
-	assertz(_i < this->size(), "the index of the element you want to remove must be lower than the array size", 500, 0);
-	this->erase(this->begin() + _i);
+	if (_i > 0) {
+		assertz((size_t) _i < this->size(), "the index of the element you want to remove must be lower than the array size", 500, 0);
+		this->erase(this->begin() + _i);
+	}
 }
 
 void zpt::JSONArrT::pop(size_t _idx) {
@@ -2364,12 +2411,14 @@ zpt::JSONPtr zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
 	zpt::JSONPtr _current = (* this)[_part];
 	if (!_current->ok()) {
 		if (_part == "*" && _remainder.length() != 0) {
+			zpt::json _return = zpt::json::array();
 			for (auto _a : (* this)) {
 				_current = _a->getPath(_remainder, _separator);
 				if (_current->ok()) {
-					return _current;
+					_return << _current;
 				}
 			}
+			return _return;
 		}
 		return zpt::undefined;
 	}

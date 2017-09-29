@@ -21,7 +21,7 @@ AC_HAVE_LIBRARY(zapata-zmq)
 AC_HAVE_LIBRARY(zapata-http)
 AC_HAVE_LIBRARY(zapata-rest)
 AC_HAVE_LIBRARY(zapata-postgresql)
-AC_HAVE_LIBRARY(zapata-mariadb)
+AC_HAVE_LIBRARY(zapata-mysql)
 AC_HAVE_LIBRARY(zapata-mongodb)
 AC_HAVE_LIBRARY(zapata-redis)
 
@@ -46,7 +46,6 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile
-        src/applications/Makefile
         src/clients/Makefile)
 
 AC_OUTPUT

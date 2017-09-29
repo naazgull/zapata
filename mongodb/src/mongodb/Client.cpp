@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -57,13 +57,6 @@ auto zpt::mongodb::Client::events(zpt::ev::emitter _emitter) -> void {
 
 auto zpt::mongodb::Client::events() -> zpt::ev::emitter {
 	return this->__events;
-}
-
-auto zpt::mongodb::Client::mutations(zpt::mutation::emitter _emitter) -> void {
-}
-
-auto zpt::mongodb::Client::mutations() -> zpt::mutation::emitter {
-	return this->__events->mutations();
 }
 
 auto zpt::mongodb::Client::conn() -> mongo::ScopedDbConnection& {
@@ -278,9 +271,12 @@ auto zpt::mongodb::Client::remove(std::string _collection, std::string _href, zp
 	_full_collection.insert(0, ".");
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
+	zpt::json _removed;
+	if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
 	_conn->remove(_full_collection, BSON( "_id" << _href ));
 	_conn.done();
 
+	if (!bool(_opts["mutated-event"])) zpt::Connector::remove(_collection, _removed["href"]->str(), _opts + zpt::json{ "removed", _removed });
 	return 1;
 }
 
@@ -295,6 +291,9 @@ auto zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, z
 	_full_collection.insert(0, (std::string) this->connection()["db"]);
 
 	zpt::json _selected = this->query(_collection, _pattern, _opts);
+	if (!_selected->ok()) {
+		return 0;
+	}
 	for (auto _record : _selected["elements"]->arr()) {
 		_conn->remove(_full_collection, BSON( "id" << _record["id"]->str()));
 		

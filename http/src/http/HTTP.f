@@ -72,6 +72,14 @@ string	d_chunked;
 	begin(StartCondition__::request);
 	return 257;
 }
+"M-SEARCH" {
+	begin(StartCondition__::request);
+	return 257;
+}
+"NOTIFY" {
+	begin(StartCondition__::request);
+	return 257;
+}
 "HTTP/1.0" {
 	begin(StartCondition__::reply);
 	return 258;

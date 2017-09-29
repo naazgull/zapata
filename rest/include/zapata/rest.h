@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,4 +28,3 @@ SOFTWARE.
 #include <zapata/rest/config.h>
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/RESTServer.h>
-#include <zapata/rest/MutationEmitter.h>

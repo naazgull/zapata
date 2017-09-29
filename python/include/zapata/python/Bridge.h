@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,12 +54,11 @@ namespace zpt {
 			virtual auto name() -> std::string;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
 			virtual auto events() -> zpt::ev::emitter;
-			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
-			virtual auto mutations() -> zpt::mutation::emitter;
 			virtual auto self() const -> zpt::bridge;
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::python::object;
 			virtual auto initialize() -> void;
+			virtual auto load_module(std::string _module) -> void;
 			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void;
 
 			static auto instance() -> zpt::bridge;
@@ -116,13 +115,16 @@ namespace zpt {
 			auto init() -> PyObject*;
 			auto on(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto route(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto split(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto topic_var(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto route(PyObject* _self, zpt::json _params) -> PyObject*;
+			auto reply(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto options(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto hook(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto log(PyObject* _self, PyObject* _args) -> PyObject*;
 			auto assertion(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto path_join(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto authorization_headers(PyObject* _self, PyObject* _args) -> PyObject*;
+			auto merge(PyObject* _self, PyObject* _args) -> PyObject*;
 			
 			extern PyMethodDef methods[];
 			extern PyModuleDef spec;

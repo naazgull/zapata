@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -52,12 +52,11 @@ namespace zpt {
 			virtual auto name() -> std::string;
 			virtual auto events(zpt::ev::emitter _emitter) -> void;
 			virtual auto events() -> zpt::ev::emitter;
-			virtual auto mutations(zpt::mutation::emitter _emitter) -> void;
-			virtual auto mutations() -> zpt::mutation::emitter;
 			virtual auto self() const -> zpt::bridge;
 			virtual auto unbind() -> void;
 			virtual auto eval(std::string _expr) -> zpt::lisp::object;
 			virtual auto initialize() -> void;
+			virtual auto load_module(std::string _module) -> void;
 			virtual auto deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback) -> void;
 			virtual auto defop(zpt::json _conf) -> void;
 			virtual auto defchk(std::function< bool (const std::string, const std::string) > _callback) -> void;

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-rest, 0.9.7-1yakkety29, n@zgul <n@zgul.me>)
+AC_INIT(zapata-rest, 0.9.7-1yakkety38, n@zgul <n@zgul.me>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -24,6 +24,7 @@ AC_CHECK_LIB(zapata-events, zpt_events)
 AC_CHECK_LIB(zapata-zmq, zpt_zmq)
 AC_CHECK_LIB(zapata-http, zpt_http)
 AC_CHECK_LIB(zapata-mqtt, zpt_mqtt)
+AC_CHECK_LIB(zapata-upnp, zpt_upnp)
 AC_CHECK_LIB(zapata-lisp, zpt_lisp)
 AC_CHECK_LIB(zapata-python, zpt_python)
 
