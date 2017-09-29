@@ -346,18 +346,20 @@ auto zpt::ZMQPoll::loop() -> void {
 
 					if (bool(_envelope["error"])) {
 						if (*_socket != nullptr) {
-							_socket->send(_envelope +
-								zpt::json{
-									"channel", _envelope["channel"],
-									"performative", zpt::ev::Reply,
-									"status", 400,
-									"resource", "/bad-request"
-								}
-							);
+							// _socket->send(_envelope +
+							// 	zpt::json{
+							// 		"channel", _envelope["channel"],
+							// 		"performative", zpt::ev::Reply,
+							// 		"status", 400,
+							// 		"resource", "/bad-request"
+							// 	}
+							// );
 							// zdbg(std::string("could not consume data from socket: ") + _socket->protocol() + std::string(" ") + _socket->connection());
+							// this->clean_up(_socket);
+							_socket->loop_iteration();
 							this->clean_up(_socket);
-							continue;
 						}
+						continue;
 					}
 					else if (_envelope->ok()) {
 						_socket->loop_iteration();
