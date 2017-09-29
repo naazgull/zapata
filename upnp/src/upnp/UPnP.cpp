@@ -29,15 +29,15 @@ zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_str
 	this->__underlying->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
 	this->__send->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
 	
-	char _no_lo = 0;
-	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_no_lo, sizeof(_no_lo));
+	char _accept_lo = 1;
+	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_accept_lo, sizeof(_accept_lo));
 
 	std::string _ip;
 	if (_options["upnp"]["interface"]->is_string()) {
 		_ip = zpt::net::getip(_options["upnp"]["interface"]->str());
-		if (_ip == "127.0.0.1") {
-			_ip = "0.0.0.0";
-		}
+		// if (_ip == "127.0.0.1") {
+		// 	_ip = "0.0.0.0";
+		// }
 	}
 	else {
 		_ip = "0.0.0.0";

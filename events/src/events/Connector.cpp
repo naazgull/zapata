@@ -87,7 +87,7 @@ auto zpt::Connector::set(std::string _collection, zpt::json _pattern, zpt::json 
 	std::string _href = std::string(_opts["href"]);
 	this->events()->route(
 		zpt::ev::Reply,
-		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "replace", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
+		zpt::path::join({ zpt::array, this->events()->version(), "mutations", "update", zpt::r_replace(_href, std::string("/") + this->events()->version() + std::string("/"), "") }),
 		{ "headers", (_opts["headers"] + zpt::json{ "X-Connector", this->name() }), "performative", "set", "href", _href, "changes", _record, "filter", _pattern },
 		{ "mqtt", true }
 	);
