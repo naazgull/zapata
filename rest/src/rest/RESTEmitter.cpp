@@ -589,7 +589,6 @@ auto zpt::rest::_collect(zpt::json _args, zpt::json _to_collect_from, size_t _id
 	}
 
 	zpt::json _expanded = zpt::rest::_collect_variables({ "source", _to_collect_from[_idx], "previous", _previous }, _args);
-	zdbg(_expanded);
 	_emitter->route(
 		zpt::ev::performative(int(_expanded[0])),
 		std::string(_expanded[1]),
@@ -623,13 +622,22 @@ auto zpt::rest::_collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json 
 			std::string _value = std::string(_args);
 
 			for (size_t _idx = _found.find("$"); _idx != std::string::npos; _idx = _found.find("$", _idx + 1)) {
+				size_t _end = _found.find("}", _idx);
 				std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
 				zpt::replace(_var, "@", "source");
 				zpt::replace(_var, "#", "previous");
 				_return = _kb->getPath(_var);
+				
 				if (_return->ok()) {
-					return _return;
+					if (_idx == 0 && _end == _found.length() - 1) {
+						return _return;
+					}
+					else {
+						_value.erase(_value.begin() + _idx, _value.begin() + _end + 1);
+						_value.insert(_idx, std::string(_return));
+					}
 				}
+				return zpt::json::string(_value);
 			}
 			return _args->clone();
 		}
