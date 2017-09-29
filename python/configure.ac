@@ -47,6 +47,7 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile
-        src/python/Makefile)
+        src/python/Makefile
+	src/Makefile)
 
 AC_OUTPUT
