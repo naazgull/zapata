@@ -1,3 +1,9 @@
+zapata-base (0.9.7-1yakkety42) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 21:27:36 +0100
+
 zapata-base (0.9.7-1yakkety41) yakkety; urgency=medium
 
   * Version bump
