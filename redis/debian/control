@@ -13,3 +13,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - Redis acces
  RESTful API's. This library offers a set of function and methods
  to use Redis key/value Hash functionalities as collections of
  documents.
+
+Package: zapata-redis-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-redis (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - Redis access management library

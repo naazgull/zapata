@@ -1,5 +1,9 @@
 #!/usr/bin/make -f
 
+.PHONY: override_dh_strip
+override_dh_strip:
+	dh_strip --dbg-package=zapata-upnp-dbg
+
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 

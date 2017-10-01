@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - MongoDB man
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This library offers a set of functions and methods
  to access and manage MongoDB collections.
+
+Package: zapata-mongodb-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-mongodb (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - MongoDB management utilities

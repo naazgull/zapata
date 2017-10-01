@@ -11,3 +11,10 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=
 Description: RESTful API's C++ toolkit named after Emiliano Zapata - OAuth2.0 support
  Provides a set of C++ tool libraries for the development of 
  RESTful API's.
+
+Package: zapata-oauth2-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-oauth2 (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - OAuth2.0 support

@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - UPNP suppor
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides a UPnP wrapping
  classes.
+
+Package: zapata-upnp-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-upnp (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - UPNP support classes

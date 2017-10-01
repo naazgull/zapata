@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - SMTP suppor
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides an SMTP wrapping
  classes.
+
+Package: zapata-smtp-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-smtp (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - SMTP support classes

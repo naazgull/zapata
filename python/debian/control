@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - Python brid
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This library offers a set of functions and methods
  to bridge with Python programs.
+
+Package: zapata-python-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-python (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - Python bridging utilities

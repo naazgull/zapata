@@ -11,3 +11,10 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, g++(>=4.9), build-essential, autoco
 Description: RESTful API's C++ toolkit named after Emiliano Zapata
  Provides a set of C++ tool libraries for the development of 
  RESTful API's.
+
+Package: zapata-base-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-base (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata

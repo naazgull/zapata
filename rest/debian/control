@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful ser
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides an HTTP server, event 
  listening registering support and multi-threading support.
+
+Package: zapata-rest-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-rest (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support

@@ -12,3 +12,10 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata - MQTT suppor
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This package provides an MQTT wrapping
  classes.
+
+Package: zapata-mqtt-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-mqtt (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - MQTT support classes

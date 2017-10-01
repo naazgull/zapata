@@ -8,7 +8,14 @@ Build-Depends: debhelper (>= 9)
 Package: zapata-mysql
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=0.9), zapata-json (>=0.9), zapata-events (>=0.9), libmysqlcppconn-dev
-Description: RESTful API's C++ toolkit named after Emiliano Zapata - MongoDB management utilities
+Description: RESTful API's C++ toolkit named after Emiliano Zapata - MySQL management utilities
  Provides a set of C++ tool libraries for the development of 
  RESTful API's. This library offers a set of functions and methods
- to access and manage MongoDB collections.
+ to access and manage MySQL collections.
+
+Package: zapata-mysql-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-mysql (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - MySQL management utilities
