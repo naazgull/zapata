@@ -1,6 +1,5 @@
 #!/usr/bin/make -f
 
-.PHONY: override_dh_strip
 override_dh_strip:
 	dh_strip --dbg-package=zapata-upnp-dbg
 
@@ -9,6 +8,12 @@ override_dh_shlibdeps:
 
 override_dh_auto_configure:
 	dh_auto_configure -- --libdir=/usr/lib --libexecdir=/usr/lib
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tmp
+
+override_dh_install:
+	dh_install --sourcedir=debian/tmp --list-missing
 
 %:
 	dh $@

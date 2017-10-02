@@ -22,7 +22,7 @@ do
     then
 	exit -1
     fi
-    sudo mv ../$no_version_prefix\_$version-$revision\_amd64.deb ../../
+    sudo mv ../*.deb ../../
     if [[ $? != 0 ]]
     then
 	exit -1
@@ -31,4 +31,3 @@ do
     popd
 done
 rm -rfv upstream/
-
