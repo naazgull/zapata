@@ -107,7 +107,6 @@ namespace zpt {
 		auto from_python(PyObject* _in) -> zpt::json;
 		auto from_python(PyObject* _in, zpt::json& _parent) -> void;
 		auto from_ref(zpt::json _in) -> PyObject*;
-		auto from_ref(std::string _in) -> PyObject*;
 		auto to_ref(PyObject* _in) -> zpt::json;
 		auto to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt::python::object;
 		auto to_python(zpt::json _in) -> PyObject*;

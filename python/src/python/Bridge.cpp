@@ -184,7 +184,7 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 
 	if (_params[1]->is_string() && std::string(_params[1]).find("ref(") == 0) {
 		std::string _topic = std::string(_params[0]);
-		std::string _ref = _params[1];
+		zpt::json _ref = _params[1];
 		zpt::json _opts = _params[2];
 		std::vector< std::string > _performatives = { "get", "post", "put", "patch", "delete", "head", "reply" };
 
