@@ -1,3 +1,9 @@
+zapata-http (0.9.7-1yakkety45) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 03:57:13 +0100
+
 zapata-http (0.9.7-1yakkety44) yakkety; urgency=medium
 
   * Version bump
