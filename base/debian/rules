@@ -1,5 +1,4 @@
 #!/usr/bin/make -f
-export DH_VERBOSE=1
 
 override_dh_strip:
 	dh_strip --dbg-package=zapata-base-dbg

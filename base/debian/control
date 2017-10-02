@@ -14,5 +14,7 @@ Description: RESTful API's C++ toolkit named after Emiliano Zapata
 
 Package: zapata-base-dbg
 Architecture: any
+Section: debug
+Priority: extra
 Depends: zapata-base (= ${binary:Version})
 Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata

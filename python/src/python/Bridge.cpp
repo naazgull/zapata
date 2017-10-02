@@ -196,7 +196,7 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 						zpt::bridge _bridge = zpt::bridge::instance< zpt::python::bridge >();
 						std::string _s_performative = zpt::ev::to_str(_performative);
 						std::transform(_s_performative.begin(), _s_performative.end(), _s_performative.begin(), ::tolower);
-						PyObject* _instance = zpt::python::from_ref(_ref);
+						PyObject* _instance = zpt::python::from_ref(zpt::json::string(_ref));
 
 						try {
 							PyErr_Clear();
