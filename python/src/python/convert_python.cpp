@@ -508,15 +508,19 @@ auto zpt::python::from_ref(zpt::json _in) -> PyObject* {
 		return (PyObject*) _ref;
 	}
 	else {
-		std::string _s_ref = std::string(_in);
-		zpt::replace(_s_ref, "ref(", "");
-		zpt::replace(_s_ref, ")", "");
-		unsigned long _ref = 0;
-		std::istringstream _iss;
-		_iss.str(_s_ref);
-		_iss >> std::hex >> _ref;
-		return (PyObject*) _ref;
+		return zpt::python::from_ref(std::string(_in));
 	}
+}
+
+auto zpt::python::from_ref(std::string _in) -> PyObject* {
+	std::string _s_ref = _in;
+	zpt::replace(_s_ref, "ref(", "");
+	zpt::replace(_s_ref, ")", "");
+	unsigned long _ref = 0;
+	std::istringstream _iss;
+	_iss.str(_s_ref);
+	_iss >> std::hex >> _ref;
+	return (PyObject*) _ref;
 }
 
 auto zpt::python::to_ref(PyObject* _in) -> zpt::json {
