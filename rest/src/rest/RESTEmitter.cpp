@@ -105,6 +105,10 @@ auto zpt::RESTEmitter::shutdown() -> void {
 	this->directory()->shutdown(this->uuid());
 }
 
+auto zpt::RESTEmitter::make_available() -> void {
+	this->directory()->make_available(this->uuid());
+}
+
 auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts) -> void {
 	std::regex _url_pattern(_regex);
 
@@ -294,7 +298,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url, zp
 }
 
 auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts, zpt::ev::handler _callback) -> void {
-	zpt::ev::node _found = this->lookup(_url, _method);	
+	zpt::ev::node _found = this->lookup(_url, _method);
 	zpt::json _container = std::get<0>(_found);
 	zpt::ev::handlers _handlers = std::get<1>(_found);
 
@@ -406,12 +410,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method, std::string _url, 
 			}
 		}
 		this->__poll->poll(_client);
-		// this->pending(_envelope,
-		//  	[ & ] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) mutable -> void {
-		//  		this->__poll->clean_up(_client);
-		//  		zdbg(_envelope);
-		//  	}
-		// );
 		_client->send(_envelope);
 		if (_no_answer && !_has_callback) {
 			this->reply(_envelope, zpt::ev::accepted(_url));

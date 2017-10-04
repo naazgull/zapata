@@ -314,6 +314,7 @@ namespace zpt {
 		virtual auto events(zpt::ev::emitter _emitter) -> void final;
 		virtual auto lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node;
 		virtual auto notify(std::string _topic, zpt::ev::node _connection) -> void;
+		virtual auto make_available(std::string _uuid) -> void;
 		virtual auto shutdown(std::string _uuid) -> void;
 		virtual auto vanished(std::string _uuid) -> void;
 		virtual auto list(std::string _uuid = "") -> zpt::json;
