@@ -386,16 +386,27 @@ auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _perf
 auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) -> void {
 	std::lock_guard< std::mutex > _lock(this->__mtx);
 	std::get<0>(_connection) << "connect" << zpt::r_replace(std::string(std::get<0>(_connection)["connect"]), "tcp://*:", std::string("tcp://127.0.0.1:"));
-	if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["REPLY"]->ok() && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
+	// if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 && !std::get<0>(_connection)["performatives"]["REPLY"]->ok() && !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() && !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
+	// 	this->__emitter->route(
+	// 		zpt::ev::Notify,
+	// 		"*",
+	// 		{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + _topic), "Location", std::get<0>(_connection)["connect"] },
+	// 			"payload", std::get<0>(_connection) },
+	// 		{ "upnp", true }
+	// 	);
+	// }
+	this->__services->insert(_topic, _connection);
+}
+
+auto zpt::EventDirectory::make_available(std::string _uuid) -> void {
+	if (bool(this->__options["rest"]["discoverable"])) {
 		this->__emitter->route(
 			zpt::ev::Notify,
 			"*",
-			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + _topic), "Location", std::get<0>(_connection)["connect"] },
-				"payload", std::get<0>(_connection) },
+			{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:container:available", "X-UUID", _uuid, "Location", this->__options["zmq"][0]["connect"] } },
 			{ "upnp", true }
 		);
 	}
-	this->__services->insert(_topic, _connection);
 }
 
 auto zpt::EventDirectory::shutdown(std::string _uuid) -> void {
@@ -510,7 +521,7 @@ auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _p
 		}
 		zpt::json _uri = zpt::uri::parse(_topic);
 		std::string _connect = std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["authority"]);
-		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", zpt::r_replace(_topic, _connect, ""), "type", (_uri["scheme"] == zpt::json::string("tcp") ? "req" : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));
+		return std::make_tuple(zpt::json{ "peers", { zpt::array, { "topic", _uri["path"], "type", (_uri["scheme"] == zpt::json::string("tcp") ? zpt::json::string("dealer") : _uri["scheme"]), "connect",  _connect, "regex", ".*" } }, "next", 0 }, zpt::ev::handlers(), std::regex(".*"));
 	}
 	return this->find(_topic, _splited, _performative);
 }
