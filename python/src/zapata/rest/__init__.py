@@ -1,9 +1,24 @@
 import zpt
 import re
+from ast import literal_eval
+import builtins
+import importlib
+from functools import reduce
 
-PERFORMATIVES = ['get', 'post', 'put', 'patch', 'delete', 'head']
+PERFORMATIVES = ['get', 'post', 'put', 'patch', 'delete', 'remove', 'head']
 PARAM_PATTERN = re.compile(r'(\{[^\}]+\})')
 VARIABLE_PATTERN = re.compile(r'\{(?P<variable>[^\}:]+):?(?P<type>[^\}:]+)?:?(?P<extra>[^\}]+)?\}')
+MUZZCRIPT_ALLOWED_CONDITIONALS = {
+    '$eq': '==',
+    '$neq': '!=',
+    '$gt': '>',
+    '$gte': '>=',
+    '$lt': '<',
+    '$lte': '<=',
+    '$in': 'in',
+    '$nin': 'not in'
+}
+
 
 class RestHandler(object):
 
@@ -66,32 +81,74 @@ class RestHandler(object):
         params = {}
 
         for group in groups:
-            params[re.sub(r'[\{\}]', '', group)] = original_path_parts[template_path_parts.index(group)]
+            params[re.sub(r'[\{\}]', '', group)] = original_path_parts[
+                template_path_parts.index(group)
+            ]
 
         return (endpoint.format(**params), params)
+    
+    def deep_get(self, _dict, keys, default=None):
+
+        if not isinstance(keys, list):
+            raise Exception('Keys must be list of strings')
+
+        def _reducer(d, key):
+            if isinstance(d, dict):
+                return d.get(key, default)
+            elif isinstance(d, list):
+                try:
+                    return d[int(key)]
+                except Exception as e:
+                    pass
+            return default
+
+        return reduce(_reducer, keys, _dict)
+
+    def try_to_cast(self, _object, _type):
+        try:
+            if _type in ['dict', 'list']:
+                return literal_eval(_object)
+        
+            cls = getattr(builtins, _type)
+            return cls(_object)
+        except Exception as e:
+            return _object
 
     def variables_resolver(self, _object, _variables):
 
-        _object_type = type(_object)
+        if isinstance(_object, str):
 
-        if _object_type is str:
-            return re.sub(VARIABLE_PATTERN, r'{\1}', _object).format(**_variables)
-            
-        elif _object_type is dict:
+            for item in re.findall(VARIABLE_PATTERN, _object):
+
+                _key, _type, extra = item
+                _s_key = _key.split('.')
+
+                _value = self.deep_get(
+                    _variables,
+                    _s_key if isinstance(_s_key,  list) else [_s_key],
+                    default=''
+                )
+
+                _result = self.try_to_cast(
+                    re.sub(r'\{' + _key + '(:[^\}]+)?\}', str(_value), _object),
+                    _type if _type else 'str',
+                )
+
+            return _result
+        
+        elif isinstance(_object, dict):
             for key, value in _object.items():
                 _object[key] = self.variables_resolver(value, _variables)
                                  
-        elif _object_type is list:
-            for item in _object:
-                item = self.variables_resolver(item, _variables)
+        elif isinstance(_object, list):
+            for i in range(len(_object)):
+                _object[i] = self.variables_resolver(_object[i], _variables)
 
         return _object
 
     def variables_extractor(self, _object, result={}):
 
-        _object_type = type(_object)
-
-        if _object_type is str:
+        if isinstance(_object, str):
             
             variables = {}
             
@@ -105,12 +162,12 @@ class RestHandler(object):
                 
             return variables
                                  
-        elif _object_type is dict:
+        elif isinstance(_object, dict):
 
             for key, value in _object.items():
                  result.update(self.variables_extractor(value, result=result))
                                  
-        elif _object_type is list:
+        elif isinstance(_object, list):
                                  
             for item in _object:
                 result.update(self.variables_extractor(item, result=result))
@@ -136,10 +193,24 @@ class RestHandler(object):
         endpoint, variables = self.path_discover(self.resource_topic, topic, self.datum_topic)
         extra_params = self.variables_resolver(self.datum_topic_params, variables)
 
-        params = zpt.merge(envelope.get('params'), extra_params) if envelope.get('params') else extra_params
-        payload = zpt.merge(envelope.get('payload'), extra_params) if envelope.get('payload') else extra_params
+        params = zpt.merge(
+            envelope.get('params'),
+            extra_params
+        ) if envelope.get('params') else extra_params
 
-        return self.datum_request(performative, endpoint, envelope, identity, params=params, payload=payload)
+        payload = zpt.merge(
+            envelope.get('payload'),
+            extra_params
+        ) if envelope.get('payload') else extra_params
+
+        return self.datum_request(
+            performative,
+            endpoint,
+            envelope,
+            identity,
+            params=params,
+            payload=payload
+        )
 
     def datum_request(self, performative, endpoint, envelope, identity, params = None, payload = None, callback = None):
         return zpt.route(
@@ -157,4 +228,43 @@ class RestHandler(object):
     @staticmethod
     def reply(envelope, **kwargs):
         return zpt.reply(envelope, kwargs)
+
+    def muzzcript_test(self, rules):
+
+        if not isinstance(rules, list):
+            raise Exception('The Rules must be a list')
+
+        for rule in rules:
+
+            for _cond, _test in rule.items():
+
+                _op = MUZZCRIPT_ALLOWED_CONDITIONALS.get(_cond)
+
+                if not _op:
+                    raise Exception('Operator not allowed. Check the allowed list: {}'.format(
+                        ', '.join(MUZZCRIPT_ALLOWED_CONDITIONALS.keys())
+                    ))
+
+                if not isinstance(_test, list) or len(_test) != 2:
+                    raise Exception('Test values malformatted. It must to be a list and the list size equal 2')
+                
+                _expression = 'True if {left} {op} {right} else False'.format(
+                    left=self.auto_quote(_test[0]),
+                    op=MUZZCRIPT_ALLOWED_CONDITIONALS.get(_cond),
+                    right=self.auto_quote(_test[1])
+                )
+
+                passed = eval(_expression)
+
+                if not passed:
+                    return False
+
+        return True
+
+    def auto_quote(self, _object):
+        
+        if isinstance(_object, int):
+            return _object
+        else:
+            return "'{}'".format(_object)
 
