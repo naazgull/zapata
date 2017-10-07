@@ -7,7 +7,7 @@ apt-get -yy dist-upgrade
 pushd /root/zapata
 
 git pull
-sed -i 's#yakkety#xenial#g' $(grep -l -R yakkety *)
+sed -i 's#yakkety#zesty#g' $(grep -l -R yakkety *)
 make config && make && make distcheck && make deb
 cp $(find . -name *.deb) /var/cache/zapata
 

@@ -512,17 +512,53 @@ auto zpt::RESTServer::broadcast(zpt::json _envelope) -> void {
 }
 
 auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
-	this->__emitter->on("(.*)",
+	this->__emitter->on("([/]*)\\*",
 		{
 			{ zpt::ev::Notify,
 				[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
 					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
 						return;
 					}
+					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:available") {
+						_emitter->route(
+							zpt::ev::Search,
+							std::string(_envelope["headers"]["Location"]) + std::string("/*"),
+							{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
+							[ = ] (zpt::ev::performative _pfv1, std::string _tpc1, zpt::json _r_services, zpt::ev::emitter _emitter) mutable -> void {
+								if (_r_services["status"] != zpt::json::integer(200)) {
+									return;
+								}
+
+								for (auto _service : _r_services["payload"]["elements"]->arr()) {
+									_emitter->directory()->notify(std::string(_service["regex"]), std::make_tuple(_service, zpt::ev::handlers(), std::regex(std::string(_service["regex"]))));
+								}
+								// zdbg(_emitter->directory()->pretty());
+							}
+						);
+						zpt::json _services = _emitter->directory()->list(_emitter->uuid());
+						//zdbg(zpt::json::pretty(_services));
+						if (_services->is_array() && _services->arr()->size() != 0) {
+							_emitter->route(
+								zpt::ev::Notify,
+								std::string(_envelope["headers"]["Location"]) + std::string("/*"),
+								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*", "Location", _emitter->options()["zmq"][0]["connect"] }, "payload", { "size", _services->arr()->size(), "elements", _services }  }
+							);
+						}
+						
+						//std::cout << _emitter->directory()->pretty() << endl << flush;
+						return;
+					}
 					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:container:shutdown") {
 						_emitter->directory()->vanished(std::string(_envelope["headers"]["X-UUID"]));
 						((zpt::RESTEmitter*) _emitter.get())->server()->poll()->vanished(std::string(_envelope["headers"]["Location"]));
 						//std::cout << _emitter->directory()->pretty() << endl << flush;
+						return;
+					}
+					if (_envelope["headers"]["ST"]->is_string() && _envelope["headers"]["Location"]->is_string() && std::string(_envelope["headers"]["ST"]) == "urn:schemas-upnp-org:service:*") {
+						for (auto _service : _envelope["payload"]["elements"]->arr()) {
+							_emitter->directory()->notify(std::string(_service["regex"]), std::make_tuple(_service, zpt::ev::handlers(), std::regex(std::string(_service["regex"]))));
+						}
+						// zdbg(_emitter->directory()->pretty());
 						return;
 					}
 					if (_envelope["payload"]["connect"]->ok()) {
@@ -534,7 +570,6 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 			},
 			{ zpt::ev::Search,
 				[] (zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, zpt::ev::emitter _emitter) -> void {
-					//zdbg(zpt::ev::pretty(_envelope));
 					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
 						return;
 					}
@@ -543,41 +578,49 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 					if (_search_term == "*") {
 						zpt::json _services = _emitter->directory()->list(_emitter->uuid());
 						//zdbg(zpt::json::pretty(_services));
-						for (auto _found : _services->arr()) {
-							_emitter->route(
-								zpt::ev::Notify,
-								"*",
-								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + std::string(_found["regex"])), "Location", _found["connect"] },
-									"payload", _found },
-								{ "upnp", true }
-							);
-							usleep(10000);
+						if (_services->is_array() && _services->arr()->size() != 0) {
+							_emitter->reply(_envelope, { "status", 200, "payload", { "size", _services->arr()->size(), "elements", _services } });
 						}
+						else {
+							_emitter->reply(_envelope, { "status", 204 });
+						}
+						// _emitter->route(
+						// 	zpt::ev::Notify,
+						// 	"*",
+						// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + std::string(_found["regex"])), "Location", _found["connect"] },
+						// 		"payload", { "size", _service->_services->arr()->size(), "elements", _services },
+						// 	{ "upnp", true }
+						// );
 					}
 					else {
 						zpt::json _found = std::get<0>(_emitter->directory()->lookup(_search_term, zpt::ev::Connect));
 						if (_found["uuid"] == zpt::json::string(_emitter->uuid())) {
-							_emitter->route(
-								zpt::ev::Notify,
-								"*",
-								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
-									"payload", _found },
-								{ "upnp", true }
-							);
+							_emitter->reply(_envelope, { "status", 200, "payload", _found });
+							// _emitter->route(
+							// 	zpt::ev::Notify,
+							// 	"*",
+							// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
+							// 		"payload", _found },
+							// 	{ "upnp", true }
+							// );
+						}
+						else {
+							_emitter->reply(_envelope, { "status", 204 });
 						}
 					}
 				}
 			}
 		},
-		{ "upnp", true }
+		{ "upnp", true, "0mq", true }
 	);
 
-	this->__emitter->route(
-		zpt::ev::Search,
-		"*",
-		{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
-		{ "upnp", true }
-	);
+	zpt::rest::__emitter->make_available();
+	// this->__emitter->route(
+	// 	zpt::ev::Search,
+	// 	"*",
+	// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
+	// 	{ "upnp", true }
+	// );
 }
 
 std::string zpt::rest::scopes::serialize(zpt::json _info) {

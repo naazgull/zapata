@@ -163,6 +163,7 @@ namespace zpt {
 
 		virtual auto hook(zpt::ev::initializer _callback) -> void;
 		virtual auto shutdown() -> void;
+		virtual auto make_available() -> void;
 
 		virtual auto pending(zpt::json _envelope, zpt::ev::handler _callback) -> void;
 		virtual auto has_pending(zpt::json _envelope) -> bool;
