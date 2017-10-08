@@ -1,3 +1,9 @@
+zapata-redis (0.9.7-1yakkety48) yakkety; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 09 Oct 2017 00:35:59 +0100
+
 zapata-redis (0.9.7-1yakkety47) yakkety; urgency=medium
 
   * Version bump
