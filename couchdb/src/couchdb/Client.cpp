@@ -93,7 +93,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 	bool _is_ssl = this->connection()["uri"]["scheme"] == zpt::json::string("https");
 	zpt::http::rep _rep;
 	this->init_request(_req);
-	// zdbg(_req);
+	// zverbose(_req);
 	if (this->__pool_size) {
 		int _k = 0;
 		{ std::lock_guard< std::mutex> _l(this->__global);
@@ -136,7 +136,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 		catch (zpt::SyntaxErrorException& _e) { }
 		_socket.close();
 	}
-	//zdbg(_rep);
+	// zverbose(_rep);
 	return _rep;
 }
 

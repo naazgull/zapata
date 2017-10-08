@@ -291,6 +291,7 @@ auto zpt::ZMQPoll::loop() -> void {
 
 		uint64_t _sd_watchdog_usec = 100000;
 		bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
+		uint64_t _poll_timeout = std::min(uint64_t(50), _sd_watchdog_usec / 1000 / 2);
 		zlog(std::string("watchdog flag is ") + (_sd_watchdog_enabled ? std::string("enabled") + std::string(" and timeout is set to ") + std::to_string(_sd_watchdog_usec / 1000 / 1000) + std::string(" seconds") : std::string("disabled")), zpt::notice);
 		
 		for(; true; ) {
@@ -298,7 +299,7 @@ auto zpt::ZMQPoll::loop() -> void {
 			// zdbg(std::string("socket list size is ") + std::to_string(this->__items.size()));
 			
 			int _n_events = 0;
-			_n_events = zmq::poll(&this->__items[0], this->__items.size(), _sd_watchdog_usec / 1000 / 2);
+			_n_events = zmq::poll(&this->__items[0], this->__items.size(), _poll_timeout);
 			if (_sd_watchdog_enabled) {
 				sd_notify(0, "WATCHDOG=1");
 			}

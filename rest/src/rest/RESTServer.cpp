@@ -466,12 +466,9 @@ auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
 	else {
 		_envelope << "channel" << _data->__message["channel"];
 	}
-	if (!_data->__message["resource"]->ok()) {
-		_envelope << "resource" << _data->__topic;
-	}
-	else {
-		_envelope << "resource" << _data->__message["resource"];
-	}
+
+	_envelope << "resource" << _data->__topic;
+
 	if (!_data->__message["payload"]->ok()) {
 		_envelope << "payload" << _data->__message;
 	}
