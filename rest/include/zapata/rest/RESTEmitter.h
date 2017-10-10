@@ -192,8 +192,8 @@ namespace zpt {
 		auto url_pattern(zpt::json _to_join) -> std::string;
 		auto collect(zpt::json _args, zpt::json _to_collect_from, zpt::rest::step _step, zpt::rest::end _end) -> void;
 		auto _collect(zpt::json _args, zpt::json _to_collect_from, size_t _idx, zpt::json _previous, zpt::rest::step _step, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void;
-		auto iterate(zpt::json _args, zpt::json _to_iterate_over, zpt::rest::end _end) -> void;
-		auto _iterate(zpt::json _args, zpt::json _to_iterate_over, size_t _idx, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void;
+		auto iterate(zpt::json _to_iterate_over, zpt::rest::end _end) -> void;
+		auto _iterate(zpt::json _to_iterate_over, size_t _idx, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void;
 		auto _collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json;
 
 	}
