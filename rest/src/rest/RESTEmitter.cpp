@@ -598,6 +598,31 @@ auto zpt::rest::_collect(zpt::json _args, zpt::json _to_collect_from, size_t _id
 	);
 }
 
+auto zpt::rest::iterate(zpt::json _args, zpt::json _to_iterate_over, zpt::rest::end _end) -> void {
+	zpt::ev::emitter _emitter = zpt::emitter< zpt::rest::emitter >();
+	zpt::rest::_iterate(_args, _to_iterate_over, 0, _end, _emitter);
+}
+
+auto zpt::rest::_iterate(zpt::json _args, zpt::json _to_iterate_over, size_t _idx, zpt::rest::end _end, zpt::ev::emitter _emitter) -> void {
+	assertz_array(_to_iterate_over, "", 412);
+	assertz_array(_args, "", 412);
+
+	if (_idx == _to_iterate_over->arr()->size()) {
+		_end(_emitter);
+		return;
+	}
+
+	zpt::json _expanded = zpt::rest::_collect_variables({ "source", _to_iterate_over[_idx] }, _args);
+	_emitter->route(
+		zpt::ev::performative(int(_expanded[0])),
+		std::string(_expanded[1]),
+		_expanded[2],
+		[ = ] (zpt::ev::performative _performative, std::string _topic, zpt::json _result, zpt::ev::emitter _emitter) mutable -> void {
+			zpt::rest::_iterate(_args, _to_iterate_over, _idx + 1, _end, _emitter);
+		}
+	);
+}
+
 auto zpt::rest::_collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json {
 	switch (_args->type()) {
 		case zpt::JSObject: {

@@ -420,43 +420,6 @@ void zpt::RESTServer::start() {
 	}
 }
 
-// auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> bool {
-// 	zpt::json _envelope = zpt::json::object();
-// 	_envelope << "performative" << int(zpt::ev::Reply);
-// 	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
-// 		_envelope << "channel" << zpt::generate::r_uuid();
-// 	}
-// 	else {
-// 		_envelope << "channel" << _data->__message["channel"];
-// 	}
-// 	if (!_data->__message["resource"]->ok()) {
-// 		_envelope << "resource" << _data->__topic;
-// 	}
-// 	else {
-// 		_envelope << "resource" << _data->__message["resource"];
-// 	}
-// 	if (!_data->__message["payload"]->ok()) {
-// 		_envelope << "payload" << _data->__message;
-// 	}
-// 	else {
-// 		_envelope << "payload" << _data->__message["payload"];
-// 	}
-// 	if (_data->__message["headers"]->ok()) {
-// 		_envelope << "headers" << _data->__message["headers"];
-// 	}
-// 	if (_data->__message["params"]->ok()) {
-// 		_envelope << "params" << _data->__message["params"];
-// 	}
-// 	_envelope << "protocol" << this->__mqtt->protocol();
-// 	ztrace(std::string("MQTT ") + std::string(_data->__topic));
-// 	zverbose(zpt::ev::pretty(_envelope));
-// 	try {
-// 		this->events()->trigger(zpt::ev::Reply, std::string(_data->__topic), _envelope);
-// 	}
-// 	catch(...) {}
-// 	return true;
-// }
-
 auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
 	zpt::json _envelope = zpt::json::object();
 	_envelope << "performative" << int(zpt::ev::Reply);
@@ -581,25 +544,11 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 						else {
 							_emitter->reply(_envelope, { "status", 204 });
 						}
-						// _emitter->route(
-						// 	zpt::ev::Notify,
-						// 	"*",
-						// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", (std::string("urn:schemas-upnp-org:service:") + std::string(_found["regex"])), "Location", _found["connect"] },
-						// 		"payload", { "size", _service->_services->arr()->size(), "elements", _services },
-						// 	{ "upnp", true }
-						// );
 					}
 					else {
 						zpt::json _found = std::get<0>(_emitter->directory()->lookup(_search_term, zpt::ev::Connect));
 						if (_found["uuid"] == zpt::json::string(_emitter->uuid())) {
 							_emitter->reply(_envelope, { "status", 200, "payload", _found });
-							// _emitter->route(
-							// 	zpt::ev::Notify,
-							// 	"*",
-							// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", _envelope["headers"]["ST"], "Location", _found["connect"] },
-							// 		"payload", _found },
-							// 	{ "upnp", true }
-							// );
 						}
 						else {
 							_emitter->reply(_envelope, { "status", 204 });
@@ -612,12 +561,6 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 	);
 
 	zpt::rest::__emitter->make_available();
-	// this->__emitter->route(
-	// 	zpt::ev::Search,
-	// 	"*",
-	// 	{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*" } },
-	// 	{ "upnp", true }
-	// );
 }
 
 std::string zpt::rest::scopes::serialize(zpt::json _info) {
