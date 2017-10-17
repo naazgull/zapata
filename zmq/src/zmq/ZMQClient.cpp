@@ -1577,7 +1577,7 @@ auto zpt::ZMQHttp::send(zpt::json _envelope) -> zpt::json {
 				this->__state = HTTP_REP;
 			}
 			else {
-				_message.assign(std::string(zpt::rest::zmq2http_req(_envelope, this->__underlying->host() + std::string(":") + std::to_string(this->__underlying->port()))));
+				_message.assign(std::string(zpt::rest::zmq2http_req(_envelope, this->__underlying->host() + ((this->__underlying->ssl() && this->__underlying->port() == 443) || (!this->__underlying->ssl() && this->__underlying->port() == 80) ? std::string("") : std::string(":") + std::to_string(this->__underlying->port())))));
 				this->__state = HTTP_REQ;
 				this->__cid = std::string(_envelope["channel"]);
 				this->__resource = std::string(_envelope["resource"]);
@@ -1921,12 +1921,14 @@ auto zpt::rest::zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::re
 	_return->method(zpt::ev::performative(int(_out["performative"])));
 	_return->url(std::string(_out["resource"]));
 	
-	_return->header("Host", _host);
-	if (_out["headers"]->is_object()) {;
-		for (auto _header : _out["headers"]->obj()) {
-			_return->header(_header.first, ((std::string) _header.second));
-		}
-	}	
+	if (!_out["headers"]->is_object()) {
+		_out << "headers" << zpt::json::object();
+	}
+	_out["headers"] << "Host" << _host;
+	for (auto _header : _out["headers"]->obj()) {
+		_return->header(_header.first, ((std::string) _header.second));
+	}
+
 	if (_out["channel"]->ok()) {
 		_return->header("X-Cid", std::string(_out["channel"]));
 	}
