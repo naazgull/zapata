@@ -8,7 +8,7 @@ from functools import reduce
 PERFORMATIVES = ['get', 'post', 'put', 'patch', 'delete', 'remove', 'head']
 PARAM_PATTERN = re.compile(r'(\{[^\}]+\})')
 VARIABLE_PATTERN = re.compile(r'\{(?P<variable>[^\}:]+):?(?P<type>[^\}:]+)?:?(?P<extra>[^\}]+)?\}')
-MUZZCRIPT_ALLOWED_CONDITIONALS = {
+RULES_ALLOWED_CONDITIONALS = {
     '$eq': '==',
     '$neq': '!=',
     '$gt': '>',
@@ -129,12 +129,12 @@ class RestHandler(object):
                     default=''
                 )
 
-                _result = self.try_to_cast(
+                _object = self.try_to_cast(
                     re.sub(r'\{' + _key + '(:[^\}]+)?\}', str(_value), _object),
                     _type if _type else 'str',
                 )
 
-            return _result
+            return _object
         
         elif isinstance(_object, dict):
             for key, value in _object.items():
@@ -229,7 +229,7 @@ class RestHandler(object):
     def reply(envelope, **kwargs):
         return zpt.reply(envelope, kwargs)
 
-    def muzzcript_test(self, rules):
+    def assert_rules(self, rules):
 
         if not isinstance(rules, list):
             raise Exception('The Rules must be a list')
@@ -238,11 +238,11 @@ class RestHandler(object):
 
             for _cond, _test in rule.items():
 
-                _op = MUZZCRIPT_ALLOWED_CONDITIONALS.get(_cond)
+                _op = RULES_ALLOWED_CONDITIONALS.get(_cond)
 
                 if not _op:
                     raise Exception('Operator not allowed. Check the allowed list: {}'.format(
-                        ', '.join(MUZZCRIPT_ALLOWED_CONDITIONALS.keys())
+                        ', '.join(RULES_ALLOWED_CONDITIONALS.keys())
                     ))
 
                 if not isinstance(_test, list) or len(_test) != 2:
@@ -250,7 +250,7 @@ class RestHandler(object):
                 
                 _expression = 'True if {left} {op} {right} else False'.format(
                     left=self.auto_quote(_test[0]),
-                    op=MUZZCRIPT_ALLOWED_CONDITIONALS.get(_cond),
+                    op=RULES_ALLOWED_CONDITIONALS.get(_cond),
                     right=self.auto_quote(_test[1])
                 )
 
@@ -262,9 +262,9 @@ class RestHandler(object):
         return True
 
     def auto_quote(self, _object):
-        
-        if isinstance(_object, int):
+
+        if type(_object) in [int, list]:
             return _object
         else:
-            return "'{}'".format(_object)
+            return '"{}"'.format(re.escape(_object))
 
