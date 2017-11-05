@@ -56,3 +56,4 @@ json/src/json/zjson
 */**/docker-data
 rest/src/rest/zsysd
 */**/__pycache__/
+mysql/src/mysql/zblreader
