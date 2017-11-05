@@ -16,7 +16,7 @@
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `hiredis' library (-lhiredis). */
-#define HAVE_LIBHIREDIS 1
+/* #undef HAVE_LIBHIREDIS */
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
@@ -79,7 +79,7 @@
 #define PACKAGE_NAME "zapata-redis"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-redis 0.9.7-1yakkety49"
+#define PACKAGE_STRING "zapata-redis 0.9.7-1yakkety50"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-redis"
@@ -88,10 +88,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.7-1yakkety49"
+#define PACKAGE_VERSION "0.9.7-1yakkety50"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.7-1yakkety49"
+#define VERSION "0.9.7-1yakkety50"

@@ -27,3 +27,4 @@ SOFTWARE.
 #include <zapata/mysql/config.h>
 #include <zapata/mysql/convert_sql.h>
 #include <zapata/mysql/Client.h>
+#include <zapata/mysql/LogEvent.h>
