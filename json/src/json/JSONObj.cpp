@@ -98,7 +98,7 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 		std::for_each(_list.begin(), _list.end(),
 			[ & ] (const zpt::JSONElementT& _element) {
 				if ((*_pidx) % 2 == 0) {
-					this->__target.__object->push(std::string(_element.__target.__string->data()));
+					this->__target.__object->push(*_element.__target.__string);
 				}
 				else {
 					zpt::JSONElementT* _other = new zpt::JSONElementT();
@@ -117,7 +117,7 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 							break;
 						}
 						case zpt::JSString : {
-							_other->__target.__string = make_shared<std::string>(std::string(_element.__target.__string->data()));
+							_other->__target.__string = std::make_shared< std::string >(*_element.__target.__string);
 							break;
 						}
 						case zpt::JSInteger : {
@@ -173,7 +173,7 @@ zpt::JSONElementT::JSONElementT(std::initializer_list<JSONElementT> _list) : __p
 						break;
 					}
 					case zpt::JSString : {
-						_other->__target.__string = make_shared<std::string>(std::string(_element.__target.__string->data()));
+						_other->__target.__string = std::make_shared<std::string>(*_element.__target.__string);
 						break;
 					}
 					case zpt::JSInteger : {
@@ -272,8 +272,8 @@ zpt::JSONElementT::JSONElementT(JSONArr& _value) : __parent( nullptr ) {
 }
 
 zpt::JSONElementT::JSONElementT(std::string _value) : __parent( nullptr ) {
-	this->type( zpt::JSString);
-	this->__target.__string = make_shared< std::string >(std::string(_value.data()));
+	this->type(zpt::JSString);
+	this->__target.__string = std::make_shared< std::string >(_value);
 }
 
 zpt::JSONElementT::JSONElementT(const char* _value) : __parent( nullptr ) {
@@ -365,7 +365,7 @@ string zpt::JSONElementT::demangle() {
 
 void zpt::JSONElementT::type(zpt::JSONType _in) {
 	assertz(_in >= 0, "the type must be a valid value", 500, 0);
-	
+
 	if (_in == this->__target.__type) {
 		return;
 	}
@@ -418,7 +418,7 @@ void zpt::JSONElementT::type(zpt::JSONType _in) {
 		}
 		default : {
 			break;
-		}		
+		}
 	}
 
 	this->__target.__type = _in;
@@ -684,7 +684,7 @@ zpt::JSONPtr zpt::JSONElementT::clone() {
 			return zpt::json::lambda(this->lbd()->name(), this->lbd()->n_args());
 		}
 	}
-	return zpt::undefined;	
+	return zpt::undefined;
 }
 
 zpt::JSONElementT& zpt::JSONElementT::operator<<(const char* _in) {
@@ -1538,13 +1538,13 @@ zpt::JSONPtr zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) {
 			}
 			return _lhs;
 		}
-		case zpt::JSArray : 
-		case zpt::JSString : 
-		case zpt::JSInteger : 
-		case zpt::JSDouble : 
-		case zpt::JSBoolean : 
-		case zpt::JSNil : 
-		case zpt::JSDate : 
+		case zpt::JSArray :
+		case zpt::JSString :
+		case zpt::JSInteger :
+		case zpt::JSDouble :
+		case zpt::JSBoolean :
+		case zpt::JSNil :
+		case zpt::JSDate :
 		case zpt::JSLambda : {
 			return zpt::undefined;
 		}
@@ -1688,7 +1688,7 @@ void zpt::JSONElementT::inspect(zpt::JSONPtr _pattern, std::function< void (std:
 			}
 			break;
 		}
-	}	
+	}
 }
 
 void zpt::JSONElementT::stringify(ostream& _out) {
@@ -1894,7 +1894,7 @@ zpt::JSONContext::~JSONContext() {
 void* zpt::JSONContext::unpack() {
 	return this->__target;
 }
-		
+
 zpt::context::context(void* _target) : std::shared_ptr< zpt::JSONContext >(new zpt::JSONContext(_target)) {
 }
 
@@ -2013,7 +2013,7 @@ std::string zpt::JSONLambda::signature() {
 
 zpt::json zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) {
 	return zpt::lambda::call(this->__name, _args, _ctx);
-}		
+}
 
 /*JSON OBJECT*/
 zpt::JSONObjT::JSONObjT() {
@@ -2151,7 +2151,7 @@ zpt::JSONPtr zpt::JSONObjT::clone() {
 	zpt::JSONObj _return;
 	for (auto _f : * this) {
 		_return << _f.first << _f.second->clone();
-	}	
+	}
 	return zpt::mkptr(_return);
 }
 
@@ -2346,7 +2346,7 @@ void zpt::JSONObjT::prettify(ostream& _out, uint _n_tabs) {
 		_out << std::string(_n_tabs + 1, '\t') << "\"" << _i.first << "\" : " << flush;
 		_i.second->prettify(_out, _n_tabs + 1);
 	}
-	if (!_first) {		
+	if (!_first) {
 		_out << "\n" << std::string(_n_tabs, '\t') << flush;
 	}
 	_out << "}" << flush;
@@ -2452,7 +2452,7 @@ void zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string 
 		}
 		else {
 			this->pop(_part);
-			(* this)[std::stoi(_part)] = _value;			
+			(* this)[std::stoi(_part)] = _value;
 		}
 	}
 }
@@ -2487,7 +2487,7 @@ zpt::JSONPtr zpt::JSONArrT::clone() {
 	zpt::JSONArr _return;
 	for (auto _f : * this) {
 		_return << _f->clone();
-	}	
+	}
 	return zpt::mkptr(_return);
 }
 
@@ -2639,7 +2639,7 @@ void zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) {
 		_i->prettify(_out, _n_tabs + 1);
 	}
 	if (!_first) {
-		_out.insert(_out.length(), "\n");	
+		_out.insert(_out.length(), "\n");
 		_out.insert(_out.length(), std::string(_n_tabs, '\t'));
 	}
 	_out.insert(_out.length(), "]");
@@ -3109,7 +3109,7 @@ zpt::JSONPtr::operator JSONArr&() {
 
 zpt::JSONPtr::operator zpt::lambda() {
 	assertz(this->get() != nullptr && this->get()->type() == zpt::JSLambda, std::string("this element is not of type JSLambda: ") + ((std::string) * this), 0, 0);
-	return this->get()->lbd();	
+	return this->get()->lbd();
 }
 
 void zpt::JSONPtr::parse(istream& _in) {

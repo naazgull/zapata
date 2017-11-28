@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/text/convert.h>
+#include <zapata/log/log.h>
 
 #include <unistd.h>
 #include <iomanip>

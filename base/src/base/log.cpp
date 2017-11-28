@@ -51,7 +51,11 @@ namespace zpt {
 	};
 }
 
-int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string _file) {
+auto zpt::to_string(const char* _in) -> std::string {
+	return std::string(_in);
+}
+
+int zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file) {
 	if (zpt::log_fd == nullptr) {
 		return - 1;
 	}
@@ -59,7 +63,7 @@ int zpt::log(string _text, zpt::LogLevel _level, string _host, int _line, string
 		(*zpt::log_fd) << _text << endl << flush;
 		return 0;
 	}
-	
+
 	struct timeval _tp;
 	gettimeofday(& _tp, nullptr);
 

@@ -36,8 +36,10 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
+	auto to_string(zpt::json _in) -> std::string;
+
 	class csv : public std::string {
-	public: 
+	public:
 		inline csv() : std::string() {
 		};
 		inline csv(std::string _rhs) : std::string(_rhs) {
@@ -121,7 +123,7 @@ namespace zpt {
 
 	namespace uri {
 		auto parse(std::string _uri) -> zpt::json;
-		
+
 		namespace query {
 			auto parse(std::string _query) -> zpt::json;
 		}
@@ -131,7 +133,7 @@ namespace zpt {
 
 		auto to_str(zpt::json _uri, zpt::json _opts = zpt::undefined) -> std::string;
 	}
-	
+
 	namespace conf {
 		auto getopt(int _argc, char* _argv[]) -> zpt::json;
 		auto setup(zpt::json _options) -> void;

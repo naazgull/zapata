@@ -87,7 +87,7 @@ auto zpt::tostr(std::string& s, char i) -> void {
 	s.insert(s.length(), _oss.str());
 }
 
-auto zpt::tostr(string& s, time_t i, const char* f) -> void {
+auto zpt::tostr(std::string& s, time_t i, const char* f) -> void {
 	struct tm _ptm;
 	char _buffer_date[80];
 	bzero(_buffer_date, 80);

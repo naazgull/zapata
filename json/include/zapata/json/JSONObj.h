@@ -36,6 +36,7 @@ SOFTWARE.
 #include <zapata/base/assert.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
+#include <zapata/log/log.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -57,7 +58,7 @@ namespace zpt {
 	class json;
 
 	class pretty : public std::string {
-	public: 
+	public:
 		inline pretty(std::string _rhs) : std::string(_rhs) {
 		};
 		inline pretty(const char * _rhs) : std::string(_rhs) {
@@ -158,37 +159,37 @@ namespace zpt {
 		bool operator>=(T _rhs);
 		/**
 		 * \brief Operator '<<' override form injecting values into *this* instance object. This is a convenience wrapper method for the zpt::JSONObjT or zpt::JSONArrT **push** methods.
-		 * 
+		 *
 		 * According to *this* object type, behaviors differ:
 		 *
 		 * to add attributes to your object:
-		 * 
+		 *
 		 *     zpt::JSONObj _o;
 		 *     _o << "name" << "Mr zapata";
 		 *     _o << "serial" << 123;
 		 *     _o << "sorting_field" << "name";
-		 * 
+		 *
 		 * or
-		 * 
+		 *
 		 *     zpt::JSONObj _o;
-		 *     _o << 
+		 *     _o <<
 		 *       "name" << "Mr zapata" <<
 		 *       "serial" << 123 <<
 		 *       "sorting_field" << "name";
 		 *     // this one is more JSON like
 		 *
 		 * (when *this* object is a zpt::JSONObj and *T* is std::string, it will either be injected as an attribute name or as an attribute value, depending on whether or not you've already injected an attribute name)
-		 * 
+		 *
 		 * to add a JSON array, use the *zpt::JSONArr* class:
-		 * 
+		 *
 		 *     zpt::JSONArr _a;
 		 *     _a << 123 << 345 << 67 << 78;
-		 * 
+		 *
 		 *     zpt::JSONArr _b;
 		 *     _b << "lions" << 345 << "horses" << 78;
-		 * 
+		 *
 		 *     zpt::JSONObj _o;
-		 *     _o << 
+		 *     _o <<
 		 *       "name" << "Mr zapata" <<
 		 *       "serial" << 123 <<
 		 *       "sorting_field" << "name" <<
@@ -212,7 +213,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_obj["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * Allowed types for *T* are: std::string, const char*, size_t.
 		 *
 		 * @return            the pointer to the child object if it exists or zpt::undefined otherwise
@@ -235,8 +236,8 @@ namespace zpt {
 		operator zpt::pretty();
 
 		/**
-		 * \brief Casting operator for the *bool* basic type. **All** JSON types as castable to a *bool* value: 
-		 * 
+		 * \brief Casting operator for the *bool* basic type. **All** JSON types as castable to a *bool* value:
+		 *
 		 * - anything equals to a numerical zero or is empty, is castable to **false**
 		 * - anything instantiated and different from a numerical zero is castable to **true**.
 		 *
@@ -244,8 +245,8 @@ namespace zpt {
 		 */
 		operator bool();
 		/**
-		 * \brief Casting operator for the *int* basic type. **All** JSON types as castable to a *int* value: 
-		 * 
+		 * \brief Casting operator for the *int* basic type. **All** JSON types as castable to a *int* value:
+		 *
 		 * - anything numerical is truncated to *int*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as an *int*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *int*
@@ -256,8 +257,8 @@ namespace zpt {
 		 */
 		operator int();
 		/**
-		 * \brief Casting operator for the *long* basic type. **All** JSON types as castable to a *long* value: 
-		 * 
+		 * \brief Casting operator for the *long* basic type. **All** JSON types as castable to a *long* value:
+		 *
 		 * - anything numerical is truncated to *long*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *long*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *long*
@@ -268,8 +269,8 @@ namespace zpt {
 		 */
 		operator long();
 		/**
-		 * \brief Casting operator for the *long long* basic type. **All** JSON types as castable to a *long long* value: 
-		 * 
+		 * \brief Casting operator for the *long long* basic type. **All** JSON types as castable to a *long long* value:
+		 *
 		 * - anything numerical is truncated to *long long*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *long long*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *long long*
@@ -281,8 +282,8 @@ namespace zpt {
 		operator long long();
 #ifdef __LP64__
 		/**
-		 * \brief Casting operator for the *unsigned int* basic type. **All** JSON types as castable to a *unsigned int* value: 
-		 * 
+		 * \brief Casting operator for the *unsigned int* basic type. **All** JSON types as castable to a *unsigned int* value:
+		 *
 		 * - anything numerical is truncated to *unsigned int*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as an *unsigned int*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *unsigned int*
@@ -294,8 +295,8 @@ namespace zpt {
 		operator unsigned int();
 #endif
 		/**
-		 * \brief Casting operator for the *size_t* basic type. **All** JSON types as castable to a *size_t* value: 
-		 * 
+		 * \brief Casting operator for the *size_t* basic type. **All** JSON types as castable to a *size_t* value:
+		 *
 		 * - anything numerical is truncated to *size_t*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *size_t*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *size_t*
@@ -306,8 +307,8 @@ namespace zpt {
 		 */
 		operator size_t();
 		/**
-		 * \brief Casting operator for the *double* basic type. **All** JSON types as castable to a *double* value: 
-		 * 
+		 * \brief Casting operator for the *double* basic type. **All** JSON types as castable to a *double* value:
+		 *
 		 * - anything numerical is truncated to *double*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *double*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *double*
@@ -318,8 +319,8 @@ namespace zpt {
 		 */
 		operator double();
 		/**
-		 * \brief Casting operator for the *zpt::timestamp_t* basic type. **All** JSON types as castable to a *zpt::timestamp_t* value: 
-		 * 
+		 * \brief Casting operator for the *zpt::timestamp_t* basic type. **All** JSON types as castable to a *zpt::timestamp_t* value:
+		 *
 		 * - anything numerical is truncated to *zpt::timestamp_t*
 		 * - if *this* object instance is a JSON string that an attempt is made to parse the string value as a *zpt::timestamp_t*, zero is returned if unsuccessful
 		 * - if *this* object instance is a JSON object, the number of attributes is returned, truncated to *zpt::timestamp_t*
@@ -390,10 +391,10 @@ namespace zpt {
 	 * \brief Convenience global variable that represents the *undefined* JSON type, to be used in comparisons and default return values.
 	 *
 	 * Example:
-	 * 
+	 *
 	 *     if (my_json_object["some_attribute"] == zpt::undefined) {
 	 *         ...
-	 *     } 
+	 *     }
 	 */
 	extern JSONPtr undefined;
 	extern JSONPtr nilptr;
@@ -403,10 +404,10 @@ namespace zpt {
 	 * \brief Class that represents the *object* JSON type. It inherits from the std::map class and is composed of std::string and zpt::JSONPtr key-value pairs.
 	 */
 	class JSONObjT : public std::map< string, JSONPtr > {
-	public: 
+	public:
 		/**
 		 * \brief Creates a new JSONObjT instance.
-		 */		
+		 */
 		JSONObjT();
 		/**
 		 * \brief Destroys the current JSONObjT instance, freeing all allocated memory. It will free the objects pointed by each zpt::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
@@ -442,21 +443,21 @@ namespace zpt {
 		virtual void prettify(ostream& _out, uint _n_tabs = 0);
 
 		/**
-		 * \brief Write-access method that inserts an std::string into *this* object map. 
-		 * 
+		 * \brief Write-access method that inserts an std::string into *this* object map.
+		 *
 		 * If there isn't any std::string in context to be used as name/key the *name* string will be used as one. If there is an std::string in context, then the *name* string is used as value.
 		 *
 		 * @param _name the attribute name or attribute value
 		 */
 		virtual void push(string _name);
 		/**
-		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map.
 		 *
 		 * @param _value [description]
 		 */
 		virtual void push(JSONElementT& _value);
 		/**
-		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* object map.
 		 *
 		 * @param _value [description]
 		 */
@@ -498,7 +499,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
@@ -520,7 +521,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
@@ -541,7 +542,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
@@ -701,7 +702,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_obj["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -713,7 +714,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_obj["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -725,7 +726,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_obj["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -737,7 +738,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_obj["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -760,10 +761,10 @@ namespace zpt {
 	 * \brief Class that represents the *array* JSON type. It inherits from the std::vector class and is composed of zpt::JSONPtr elements.
 	 */
 	class JSONArrT : public vector<JSONPtr > {
-	public: 
+	public:
 		/**
 		 * \brief Creates a new JSONArrT instance.
-		 */		
+		 */
 		JSONArrT();
 		/**
 		 * \brief Destroys the current JSONArrT instance, freeing all allocated memory. It will free the objects pointed by each zpt::JSONPtr smart pointer only if there aren't any more std::shared_ptr pointing to it.
@@ -799,13 +800,13 @@ namespace zpt {
 		virtual void prettify(ostream& _out, uint _n_tabs = 0);
 
 		/**
-		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector.
 		 *
 		 * @param _value [description]
 		 */
 		virtual void push(JSONElementT& _value);
 		/**
-		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector. 
+		 * \brief Write-access method that inserts a zpt::JSONElementT object into *this* array vector.
 		 *
 		 * @param _value [description]
 		 */
@@ -850,7 +851,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_array->getPath("1.some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_array->getPath("1/some_array/0/first_field/name", "/");
 		 *
@@ -872,7 +873,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
@@ -893,7 +894,7 @@ namespace zpt {
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array.0.first_field.name");
 		 *
-		 * or 
+		 * or
 		 *
 		 *     zpt::JSONPtr child = my_json_object->getPath("some_array/0/first_field/name", "/");
 		 *
@@ -1053,7 +1054,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_arr[1]["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -1065,7 +1066,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_arr[1]["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -1077,7 +1078,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_arr[1]["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -1089,7 +1090,7 @@ namespace zpt {
 		 * Returns the attribute or array element identified by *idx*. It allows chaining, for instance:
 		 *
 		 *     my_json_arr[1]["some_array"][2]["first_value"] ...
-		 * 
+		 *
 		 * @param  _idx the child object identifier
 		 *
 		 * @return  the pointer to the child object if it exists or zpt::undefined otherwise
@@ -1104,7 +1105,7 @@ namespace zpt {
 			return _out;
 		};
 
-	};	
+	};
 
 	/**
 	 * \brief Smart shared pointer to a zpt::JSONObjT object.
@@ -1131,13 +1132,13 @@ namespace zpt {
 		virtual ~JSONObj();
 
 		/**
-		 * \brief Retrieves an iterator pointing to the beginning of *this* object attribute list. 
+		 * \brief Retrieves an iterator pointing to the beginning of *this* object attribute list.
 		 *
 		 * @return the iterator pointing to the beginning of *this* object attribute list
 		 */
 		JSONObjT::iterator begin();
 		/**
-		 * \brief Retrieves an iterator pointing to the end of *this* object attribute list. 
+		 * \brief Retrieves an iterator pointing to the end of *this* object attribute list.
 		 *
 		 * @return the iterator pointing to the end of *this* object attribute list
 		 */
@@ -1245,7 +1246,7 @@ namespace zpt {
 		friend ostream& operator<<(ostream& _out, JSONObj& _in) {
 			_in->stringify(_out);
 			return _out;
-		};		
+		};
 	};
 
 	class JSONArr : public std::shared_ptr<JSONArrT> {
@@ -1311,27 +1312,27 @@ namespace zpt {
 		friend ostream& operator<<(ostream& _out, JSONArr& _in) {
 			_in->stringify(_out);
 			return _out;
-		};		
+		};
 	};
 	typedef std::shared_ptr< std::string > JSONStr;
 
 	class JSONContext  {
-	public:		
+	public:
 		JSONContext(void* _target);
 		virtual ~JSONContext();
 
 		virtual void* unpack();
-		
+
 	private:
 		void* __target;
 	};
-	
+
 	class context : public std::shared_ptr< zpt::JSONContext > {
-	public:		
+	public:
 		context(void* _target);
 		virtual ~context();
 	};
-	
+
 	typedef std::function< zpt::json (zpt::json, unsigned short, zpt::context) > symbol;
 	typedef std::shared_ptr< std::map< std::string, std::tuple< std::string, unsigned short, zpt::symbol > > > symbol_table;
 	extern zpt::symbol_table __lambdas;
@@ -1347,10 +1348,10 @@ namespace zpt {
 		virtual ~lambda();
 
 		virtual zpt::json operator ()(zpt::json _args, zpt::context _ctx);
-		
+
 		static void add(std::string _signature, zpt::symbol _lambda);
 		static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
-		
+
 		static zpt::json call(std::string _name, zpt::json _args, zpt::context _ctx);
 
 		static std::string stringify(std::string _name, unsigned short _n_args);
@@ -1373,15 +1374,15 @@ namespace zpt {
 		virtual std::string name();
 		virtual unsigned short n_args();
 		virtual std::string signature();
-		
+
 	private:
 		std::string __name;
 		unsigned short __n_args;
 	};
-	
+
 	typedef struct JSONStruct {
 		JSONStruct() : __type(JSNil) { };
-		~JSONStruct() { 
+		~JSONStruct() {
 			switch(__type) {
 				case zpt::JSObject : {
 					__object.~JSONObj();
@@ -1402,7 +1403,7 @@ namespace zpt {
 				default : {
 					break;
 				}
-			} 
+			}
 		};
 
 		JSONStruct(JSONStruct const&) = delete;
@@ -1485,7 +1486,7 @@ namespace zpt {
 		virtual auto is_date() -> bool;
 		virtual auto is_lambda() -> bool;
 		virtual auto is_nil() -> bool;
-		
+
 		virtual JSONObj& obj();
 		virtual JSONArr& arr();
 		virtual std::string str();
@@ -1563,7 +1564,7 @@ namespace zpt {
 		template <typename T>
 		bool operator!=(T _in) {
 			if (_in == nullptr) {
-				return this->__target.__type == zpt::JSNil; 
+				return this->__target.__type == zpt::JSNil;
 			}
 			JSONElementT _rhs(_in);
 			return (* this) == _rhs;
@@ -1643,7 +1644,7 @@ namespace zpt {
 	zpt::timestamp_t timestamp(std::string _json_date = "");
 
 	class json : public zpt::JSONPtr {
-	public: 
+	public:
 		inline json() : zpt::JSONPtr() {
 		};
 		inline json(zpt::JSONPtr _target) : zpt::JSONPtr(_target) {
@@ -1657,7 +1658,7 @@ namespace zpt {
 			_iss.str(_rhs);
 			_iss >> (*this);
 		};
-		inline json(const char * _rhs) {	
+		inline json(const char * _rhs) {
 			std::istringstream _iss;
 			_iss.str(std::string(_rhs));
 			_iss >> (*this);
@@ -1669,7 +1670,7 @@ namespace zpt {
 		};
 		template <typename T>
 		zpt::json operator[](T _idx);
-		
+
 		static void stringify(std::string& _str);
 
 		inline static zpt::json object() {
@@ -1712,12 +1713,12 @@ namespace zpt {
 		};
 	};
 
-	template <typename T>	
+	template <typename T>
 	zpt::JSONElementT * mkelem(T& _e) {
 		return new zpt::JSONElementT(_e);
 	}
 
-	template <typename T>	
+	template <typename T>
 	zpt::json mkptr(T _v) {
 		T _e(_v);
 		return zpt::json(new zpt::JSONElementT(_e));

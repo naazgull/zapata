@@ -28,6 +28,7 @@ SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 #include <zapata/base/config.h>
 
 using namespace std;
@@ -36,11 +37,10 @@ using namespace __gnu_cxx;
 #endif
 
 #define __HOST__ string(zpt::log_hostname())
-#define zlog(x,y) (y <= zpt::log_lvl ? zpt::log(std::string(x), y, __HOST__, __LINE__, __FILE__) : 0)
-#define zdbg(x) zlog(std::string(x), zpt::debug)
-#define ztrace(x) zlog(std::string(x), zpt::trace)
-#define ztrace_v(x) zlog(std::string(x) + std::string(" | ") + std::string(__PRETTY_FUNCTION__), zpt::trace)
-#define zverbose(x) zlog(std::string(x), zpt::verbose)
+#define zlog(x,y) (y <= zpt::log_lvl ? zpt::log(x, y, __HOST__, __LINE__, __FILE__) : 0)
+#define zdbg(x) zlog(x, zpt::debug)
+#define ztrace(x) zlog(x, zpt::trace)
+#define zverbose(x) zlog(x, zpt::verbose)
 
 namespace zpt {
 	extern short int log_lvl;
@@ -65,6 +65,14 @@ namespace zpt {
 		verbose = 9
 	};
 
-	int log(string _text, zpt::LogLevel _level, string _host, int _line, string _file);
+	using std::to_string;
+
+	auto to_string(const char* _in) -> std::string;
+
+	int log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file);
+	template < typename T >
+	int log(T _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file) {
+		return zpt::log(to_string(_text), _level, _host, _line, _file);
+	}
 	char * log_hostname();
 }

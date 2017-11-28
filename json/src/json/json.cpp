@@ -28,6 +28,10 @@ SOFTWARE.
 #include <zapata/exceptions/SyntaxErrorException.h>
 #include <regex>
 
+auto zpt::to_string(zpt::json _in) -> std::string {
+	return std::string(_in);
+}
+
 auto zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::json {
 	zpt::json _ret = zpt::json::array();
 	if (_to_split.length() == 0 || _separator.length() == 0) {
@@ -223,7 +227,7 @@ auto zpt::conf::env(zpt::json _options) -> void {
 
 			for (size_t _idx = _found.find("$"); _idx != std::string::npos; _idx = _found.find("$", _idx + 1)) {
 				std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
-				
+
 				const char * _var_val = std::getenv(_var.data());
 				if (_var_val != nullptr) {
 					zpt::replace(_value, std::string("${") + _var + std::string("}"), zpt::r_trim(_var_val));
@@ -271,7 +275,7 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 		"(?:\\?([^#]*))?"             // ?query
 		"(?:#(.*))?"		      // #fragment
 	);
-	
+
 	std::smatch _uri_matches;
 	std::regex_match(_uri, _uri_matches, _uri_rgx);
 
@@ -308,7 +312,7 @@ auto zpt::uri::query::parse(std::string _query) -> zpt::json {
 		std::smatch _match = *_i;
 		_return << (std::string) _match[2] << zpt::url::r_decode((std::string) _match[3]);
 	}
-	
+
 	return _return;
 }
 
@@ -320,7 +324,7 @@ auto zpt::uri::authority::parse(std::string _authority) -> zpt::json {
 	);
 
 	std::smatch _match;
-	std::regex_match(_authority, _match, _auth_rgx);	
+	std::regex_match(_authority, _match, _auth_rgx);
 	std::string _port = ((std::string) _match[5]);
 	std::string _user = ((std::string) _match[2]);
 	std::string _password = ((std::string) _match[3]);
@@ -404,7 +408,7 @@ auto zpt::http::cookies::deserialize(std::string _cookie_header) -> zpt::json {
 		std::string _value = std::string(_part);
 		zpt::trim(_value);
 		if (_first) {
-			_return << "value" << zpt::json::string(_value); 
+			_return << "value" << zpt::json::string(_value);
 			_first = false;
 		}
 		else {
