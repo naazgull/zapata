@@ -1619,6 +1619,7 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 	}
 	catch(zpt::SyntaxErrorException& _e) {
 		zlog(std::string("error while parsing HTTP request: syntax error exception"), zpt::error);
+		this->__state = HTTP_REQ;
 		return { "protocol", this->protocol(), "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
 	}
 	_in << "protocol" << this->protocol();
