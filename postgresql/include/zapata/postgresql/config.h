@@ -22,10 +22,10 @@
 #define HAVE_LIBOSSP_UUID__ 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
-/* #undef HAVE_LIBPQ */
+#define HAVE_LIBPQ 1
 
 /* Define to 1 if you have the `pqxx' library (-lpqxx). */
-/* #undef HAVE_LIBPQXX */
+#define HAVE_LIBPQXX 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1

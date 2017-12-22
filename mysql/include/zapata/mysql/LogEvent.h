@@ -11,11 +11,14 @@ Copyright (c) 2016
 
 typedef unsigned long long ulonglong;
 
+#define MAX_DBS_IN_EVENT_MTS 16
+#define NAME_LEN 64*3
+
 namespace zpt {
 	namespace mysql {
 
-		uint8_t* post_header_lengths = nullptr;
-		uint16_t post_header_lengths_size = 0x0;
+		extern uint8_t* post_header_lengths;
+		extern uint16_t post_header_lengths_size;
 
 		auto arr2str(char* _arr, size_t _arr_len) -> std::string;
 
@@ -76,58 +79,21 @@ namespace zpt {
 			PREVIOUS_GTIDS_LOG_EVENT= 35
 		};
 
-		std::string event_names[] = {
-			"unknown_event",
-			"start_event_v3",
-			"query_event",
-			"stop_event",
-			"rotate_event",
-			"intvar_event",
-			"load_event",
-			"slave_event",
-			"create_file_event",
-			"append_block_event",
-			"exec_load_event",
-			"delete_file_event",
-			"new_load_event",
-			"rand_event",
-			"user_var_event",
-			"format_description_event",
-			"xid_event",
-			"begin_load_query_event",
-			"execute_load_query_event",
-			"table_map_event",
-			"pre_ga_write_rows_event",
-			"pre_ga_update_rows_event",
-			"pre_ga_delete_rows_event",
-			"write_rows_event",
-			"update_rows_event",
-			"delete_rows_event",
-			"incident_event",
-			"heartbeat_log_event",
-			"ignorable_log_event",
-			"rows_query_log_event",
-			"o_write_rows_event",
-			"o_update_rows_event",
-			"o_delete_rows_event",
-			"gtid_log_event",
-			"anonymous_gtid_log_event",
-			"previous_gtids_log_event"
-		};
+		extern std::string event_names[];
 
 		namespace lengths {
-			size_t magic_number = 4;
-			size_t header = 19;
-			size_t timestamp = 4;
-			size_t type_code = 1;
-			size_t server_id = 4;
-			size_t event_length = 4;
-			size_t next_position = 4;
-			size_t flags = 2;
+			extern size_t magic_number;
+			extern size_t header;
+			extern size_t timestamp;
+			extern size_t type_code;
+			extern size_t server_id;
+			extern size_t event_length;
+			extern size_t next_position;
+			extern size_t flags;
 
 			namespace fixed {
-				size_t start_event = 56;
-				size_t query_event = 13;
+				extern size_t start_event;
+				extern size_t query_event;
 			}
 		}
 
@@ -201,21 +167,17 @@ namespace zpt {
 			Q_CATALOG_NZ_CODE = 6, // Value is the catalog name: a length byte followed by that many bytes. Value is always std. This variable is present only if the catalog name is non-empty.
 			Q_LC_TIME_NAMES_CODE = 7, // Value is a 2-byte unsigned integer representing the lc_time_names number. This variable is present only if the value is not 0 (that is, not en_US).
 			Q_CHARSET_DATABASE_CODE = 8, // Value is a 2-byte unsigned integer representing the collation_database system variable.
-			Q_TABLE_MAP_FOR_UPDATE_CODE = 9 // Value is 8 bytes representing the table map to be updated by a multiple-table update statement. Each bit of this variable represents a table, and is set to 1 if the corresponding table is to be updated by the statement.
+			Q_TABLE_MAP_FOR_UPDATE_CODE = 9, // Value is 8 bytes representing the table map to be updated by a multiple-table update statement. Each bit of this variable represents a table, and is set to 1 if the corresponding table is to be updated by the statement.
+			Q_MASTER_DATA_WRITTEN_CODE = 10,
+			Q_INVOKER = 11,
+			Q_UPDATED_DB_NAMES = 12,
+			Q_MICROSECONDS = 13,
+			Q_COMMIT_TS = 14,
+			Q_COMMIT_TS2 = 15,
+			Q_EXPLICIT_DEFAULTS_FOR_TIMESTAMP = 16
 		};
 
-		std::string query_var_names[] = {
-			"flags2_code",
-			"sql_mode_code",
-			"catalog_code",
-			"auto_increment",
-			"charset_code",
-			"time_zone_code",
-			"catalog_nz_code",
-			"lc_time_names_code",
-			"charset_database_code",
-			"table_map_for_update_code"
-		};
+		extern std::string query_var_names[];
 
 		typedef struct q_variables {
 			q_variables() : __type(zpt::mysql::Q_NONE) { };
@@ -272,6 +234,35 @@ namespace zpt {
 					}
 					case zpt::mysql::Q_TABLE_MAP_FOR_UPDATE_CODE : {// Value is 8 bytes representing the table map to be updated by a multiple-table update statement. Each bit of this variable represents a table, and is set to 1 if the corresponding table is to be updated by the statement.
 						__table_map_for_update_code = _other.__table_map_for_update_code;
+						break;
+					}
+					case zpt::mysql::Q_MASTER_DATA_WRITTEN_CODE : {
+						__master_data_written_code = _other.__master_data_written_code;
+						break;
+					}
+					case zpt::mysql::Q_INVOKER : {
+						new (&__invoker) std::tuple< std::string, std::string >;
+						std::get<0>(__invoker) = std::get<0>(_other.__invoker);
+						std::get<1>(__invoker) = std::get<1>(_other.__invoker);
+						break;
+					}
+					case zpt::mysql::Q_UPDATED_DB_NAMES : {
+						new (&__updated_db_names) std::vector< std::string >;
+						__updated_db_names = _other.__updated_db_names;
+						break;
+					}
+					case zpt::mysql::Q_MICROSECONDS : {
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS : {
+						__commit_ts = _other.__commit_ts;
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS2 : {
+						__commit_ts2 = _other.__commit_ts2;
+						break;
+					}
+					case zpt::mysql::Q_EXPLICIT_DEFAULTS_FOR_TIMESTAMP : {
 						break;
 					}
 				}
@@ -331,6 +322,35 @@ namespace zpt {
 						__table_map_for_update_code = _other.__table_map_for_update_code;
 						break;
 					}
+					case zpt::mysql::Q_MASTER_DATA_WRITTEN_CODE : {
+						__master_data_written_code = _other.__master_data_written_code;
+						break;
+					}
+					case zpt::mysql::Q_INVOKER : {
+						new (&__invoker) std::tuple< std::string, std::string >;
+						std::get<0>(__invoker) = std::get<0>(_other.__invoker);
+						std::get<1>(__invoker) = std::get<1>(_other.__invoker);
+						break;
+					}
+					case zpt::mysql::Q_UPDATED_DB_NAMES : {
+						new (&__updated_db_names) std::vector< std::string >;
+						__updated_db_names = _other.__updated_db_names;
+						break;
+					}
+					case zpt::mysql::Q_MICROSECONDS : {
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS : {
+						__commit_ts = _other.__commit_ts;
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS2 : {
+						__commit_ts2 = _other.__commit_ts2;
+						break;
+					}
+					case zpt::mysql::Q_EXPLICIT_DEFAULTS_FOR_TIMESTAMP : {
+						break;
+					}
 				}
 			};
 			~q_variables() {
@@ -357,6 +377,14 @@ namespace zpt {
 					}
 					case zpt::mysql::Q_CATALOG_NZ_CODE : {
 						__catalog_nz_code.~string();
+						break;
+					}
+					case zpt::mysql::Q_INVOKER : {
+						__invoker.~tuple< std::string, std::string >();
+						break;
+					}
+					case zpt::mysql::Q_UPDATED_DB_NAMES : {
+						__updated_db_names.~vector< std::string >();
 						break;
 					}
 					default : {
@@ -400,6 +428,33 @@ namespace zpt {
 					case zpt::mysql::Q_TABLE_MAP_FOR_UPDATE_CODE : {
 						return zpt::json::ulong(__table_map_for_update_code);
 					}
+					case zpt::mysql::Q_MASTER_DATA_WRITTEN_CODE : {
+						return zpt::json::ulong(__master_data_written_code);
+					}
+					case zpt::mysql::Q_INVOKER : {
+						return { "user", std::get<0>(__invoker), "host", std::get<1>(__invoker) };
+					}
+					case zpt::mysql::Q_UPDATED_DB_NAMES : {
+						zpt::json _ret = zpt::json::array();
+						for (auto _e : __updated_db_names) {
+							_ret << _e;
+						}
+						return _ret;
+					}
+					case zpt::mysql::Q_MICROSECONDS : {
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS : {
+						return zpt::json::ulong(__commit_ts);
+						break;
+					}
+					case zpt::mysql::Q_COMMIT_TS2 : {
+						return zpt::json::ulong(__commit_ts2);
+						break;
+					}
+					case zpt::mysql::Q_EXPLICIT_DEFAULTS_FOR_TIMESTAMP : {
+						break;
+					}
 				}
 				return zpt::undefined;
 			};
@@ -416,6 +471,13 @@ namespace zpt {
 				uint16_t __lc_time_names_code;
 				uint16_t __charset_database_code;
 				uint64_t __table_map_for_update_code;
+				uint32_t __master_data_written_code;
+				std::tuple< std::string, std::string > __invoker;
+				std::vector< std::string> __updated_db_names;
+				uint64_t __microseconds;
+				uint64_t __commit_ts;
+				uint64_t __commit_ts2;
+				uint64_t __explicit_defaults_for_timestam;
 			};
 		} query_variable;
 
@@ -585,7 +647,7 @@ namespace zpt {
 
 			uint64_t __table_id;
 			uint64_t __number_of_columns;
-			std::vector< bool > __nullable_columns;			
+			std::vector< bool > __nullable_columns;
 		};
 
 		class IncidentEvent : public zpt::mysql::LogEvent {
@@ -630,44 +692,7 @@ namespace zpt {
 			static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 		};
 
-		std::vector< std::function< zpt::mysql::event (zpt::mysql::event_header _header, std::istream& _in) > > consumers = {
-			nullptr,
-			zpt::mysql::StartEvent::consume,
-			zpt::mysql::QueryEvent::consume,
-			zpt::mysql::StopEvent::consume,
-			zpt::mysql::RotateEvent::consume,
-			zpt::mysql::IntvarEvent::consume,
-			zpt::mysql::LoadEvent::consume,
-			zpt::mysql::SlaveEvent::consume,
-			zpt::mysql::CreateFileEvent::consume,
-			zpt::mysql::AppendBlockEvent::consume,
-			zpt::mysql::ExecLoadEvent::consume,
-			zpt::mysql::DeleteFileEvent::consume,
-			zpt::mysql::NewLoadEvent::consume,
-			zpt::mysql::RandEvent::consume,
-			zpt::mysql::UserVarEvent::consume,
-			zpt::mysql::FormatDescriptionEvent::consume,
-			zpt::mysql::XidEvent::consume,
-			zpt::mysql::BeginLoadQueryEvent::consume,
-			zpt::mysql::ExecuteLoadQueryEvent::consume,
-			zpt::mysql::TableMapEvent::consume,
-			zpt::mysql::PreGAWriteRowsEvent::consume,
-			zpt::mysql::PreGAUpdateRowsEvent::consume,
-			zpt::mysql::PreGADeleteRowsEvent::consume,
-			zpt::mysql::WriteRowsEvent::consume,
-			zpt::mysql::UpdateRowsEvent::consume,
-			zpt::mysql::DeleteRowsEvent::consume,
-			zpt::mysql::IncidentEvent::consume,
-			zpt::mysql::HeartbeatLogEvent::consume,
-			zpt::mysql::IgnorableLogEvent::consume,
-			zpt::mysql::RowsQueryLogEvent::consume,
-			zpt::mysql::WriteRowsEvent::consume,
-			zpt::mysql::UpdateRowsEvent::consume,
-			zpt::mysql::DeleteRowsEvent::consume,
-			zpt::mysql::GTIDLogEvent::consume,
-			zpt::mysql::AnonymousGTIDLogEvent::consume,
-			zpt::mysql::PreviousGTIDSLogEvent::consume
-		};
+		extern std::vector< std::function< zpt::mysql::event (zpt::mysql::event_header _header, std::istream& _in) > > consumers;
 
 		class LogEventPtr : public std::shared_ptr< zpt::mysql::LogEvent > {
 		public:
@@ -704,6 +729,7 @@ namespace zpt {
 			};
 
 			static auto instance(zpt::mysql::LogEventType _type) -> zpt::mysql::event;
+			static auto register_callback(zpt::mysql::LogEventType _event_type, std::function< zpt::mysql::event (zpt::mysql::event_header, std::istream& _in) > _consumer) -> void;
 
 		};
 

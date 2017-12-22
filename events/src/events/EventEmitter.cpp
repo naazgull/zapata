@@ -29,7 +29,199 @@ SOFTWARE.
 namespace zpt {
 	namespace ev {
 		std::string* __default_authorization = nullptr;
+		emitter __emitter;
 	}
+}
+
+zpt::PollPtr::PollPtr(zpt::Poll * _ptr) : std::shared_ptr<zpt::Poll>(_ptr) {
+}
+
+zpt::PollPtr::~PollPtr() {
+}
+
+zpt::Poll::Poll() {
+}
+
+zpt::Poll::~Poll() {
+}
+
+zpt::socket_ref::socket_ref() : std::string(), __poll(nullptr) {
+}
+
+zpt::socket_ref::socket_ref(const zpt::socket_ref& _rhs) : std::string(_rhs.data()), __poll(_rhs.__poll) {
+}
+
+zpt::socket_ref::socket_ref(std::string _rhs, zpt::poll _poll) : std::string(_rhs), __poll(_poll) {
+}
+
+auto zpt::socket_ref::poll(zpt::poll _poll) -> void {
+	this->__poll = _poll;
+}
+
+auto zpt::socket_ref::poll() -> zpt::poll {
+	return this->__poll;
+}
+
+auto zpt::socket_ref::operator->() -> zpt::Channel* {
+	return this->__poll->relay(this->data());
+}
+
+auto zpt::socket_ref::operator*() -> zpt::Channel* {
+	return this->__poll->relay(this->data());
+}
+
+zpt::Channel::Channel(std::string _connection, zpt::json _options) : __options( _options ), __connection(_connection.data()),  __poll(nullptr) {
+	this->__id.assign(zpt::generate::r_uuid());
+}
+
+zpt::Channel::~Channel() {
+	//zdbg(std::string("disposing of ") + this->id());
+}
+
+auto zpt::Channel::id() -> std::string {
+	return this->__id;
+}
+
+auto zpt::Channel::options() -> zpt::json {
+	return this->__options;
+}
+
+auto zpt::Channel::connection() -> std::string {
+	return this->__connection;
+}
+
+auto zpt::Channel::connection(std::string _connection) -> void{
+	this->__connection.assign(_connection);
+}
+
+auto zpt::Channel::uri(size_t _idx) -> zpt::json {
+	return this->__uri[_idx];
+}
+
+auto zpt::Channel::uri(std::string _uris) -> void{
+	this->__uri = zpt::json::array();
+
+	zpt::json _addresses = zpt::split(_uris, ",", true);
+	for (auto _address : _addresses->arr()) {
+		zpt::json _uri = zpt::uri::parse(std::string(_address));
+		if (!_uri["type"]->is_string()) {
+			_uri << "type" << ">";
+		}
+		if (!_uri["port"]->is_string()) {
+			_uri << "port" << "*";
+		}
+		this->__uri << _uri;
+	}
+}
+
+auto zpt::Channel::detach() -> void {
+	if (this->uri()["type"] == zpt::json::string("@")) {
+		this->in()->unbind(std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
+	}
+	else {
+		this->in()->disconnect(std::string(this->uri()["scheme"]) + std::string("://") + std::string(this->uri()["domain"]) + std::string(":") + std::string(this->uri()["port"]));
+	}
+}
+
+auto zpt::Channel::close() -> void {
+	this->in()->close();
+	this->out()->close();
+}
+
+auto zpt::Channel::available() -> bool {
+	return true;
+}
+
+auto zpt::Channel::recv() -> zpt::json {
+	zmq::message_t _frame1;
+	zmq::message_t _frame2;
+
+	try {
+		int64_t _more = 0;
+		size_t _more_size = sizeof _more;
+
+		{ std::lock_guard< std::mutex > _lock(this->in_mtx());
+			this->in()->recv(&_frame1);
+			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
+			if (_more != 0) {
+				this->in()->recv(&_frame2);
+			} }
+	
+		std::string _directive(static_cast<char*>(_frame1.data()), _frame1.size());
+		std::string _raw(static_cast<char*>(_frame2.data()), _frame2.size());
+		try {
+			zpt::json _envelope(_raw);
+			_envelope << "protocol" << this->protocol();
+			ztrace(std::string("< ") + _directive);
+			zverbose(zpt::ev::pretty(_envelope));
+			return _envelope;
+		}
+		catch(zpt::SyntaxErrorException& _e) {
+			return { "protocol", this->protocol(), "error", true, "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1060 } };
+		}
+	}
+	catch(zmq::error_t& _e) {
+		throw;
+	}
+	return { "protocol", this->protocol(), "error", true, "status", 503, "payload", { "text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061 } };	
+}
+
+auto zpt::Channel::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
+	return this->send(
+		{
+			"channel", zpt::generate::r_uuid(),
+			"performative", _performative,
+			"resource", _resource, 
+			"payload", _payload
+		}
+	);
+}
+
+auto zpt::Channel::send(zpt::json _envelope) -> zpt::json {
+	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(), "'performative' and 'resource' attributes are required", 412, 0);
+	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject, "'headers' must be of type JSON object", 412, 0);
+
+	if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
+		_envelope << "channel" << zpt::generate::r_uuid();
+	}
+
+	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
+	_envelope <<
+	"resource" << _uri["path"] <<
+	"protocol" << this->protocol() <<
+	"params" << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
+	
+	zpt::ev::performative _performative = (zpt::ev::performative) ((int) _envelope["performative"]);
+	if (_performative == zpt::ev::Reply) {
+		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
+		_envelope["headers"] << "X-Status" << _envelope["status"];
+	}
+	if (!_envelope["payload"]->ok()) {
+		_envelope << "payload" << zpt::json::object();
+	}
+	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
+		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
+	}
+	int _status = (int) _envelope["headers"]["X-Status"];
+
+	std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() + (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));
+	std::string _buffer(_envelope);
+	
+	zmq::message_t _frame1(_directive.length());
+	zmq::message_t _frame2(_buffer.length());
+	memcpy(_frame1.data(), _directive.data(), _directive.length());
+	memcpy(_frame2.data(), _buffer.data(), _buffer.length());
+
+	std::lock_guard< std::mutex > _lock(this->out_mtx());
+	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
+	ztrace(std::string("> ") + _directive);
+	zverbose(zpt::ev::pretty(_envelope));
+
+	return zpt::undefined;
+}
+
+auto zpt::Channel::loop_iteration() -> void {
 }
 
 zpt::BridgePtr::BridgePtr(zpt::Bridge* _target) : std::shared_ptr< zpt::Bridge >(_target) {

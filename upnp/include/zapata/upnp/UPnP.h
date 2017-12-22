@@ -42,7 +42,7 @@ namespace zpt {
 		typedef zpt::UPnPPtr broker;
 	}
 	
-	class UPnP : public zpt::ZMQ {
+	class UPnP : public zpt::Channel {
 	public:
 		UPnP(zpt::json _options);
 		virtual ~UPnP();

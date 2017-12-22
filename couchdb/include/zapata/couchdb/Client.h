@@ -55,8 +55,10 @@ namespace zpt {
 			virtual auto reconnect() -> void;
 
 			virtual auto send(zpt::http::req _req) -> zpt::http::rep;
+			virtual auto send_assync(zpt::json _envelope, zpt::ev::handler _callback) -> void;
 
 			virtual auto init_request(zpt::http::req _req) -> void;
+			virtual auto init_request(zpt::json _envelope) -> void;
 			virtual auto create_database(std::string _db_name) -> void;
 			virtual auto create_index(std::string _collection, zpt::json _fields) -> void;
 			

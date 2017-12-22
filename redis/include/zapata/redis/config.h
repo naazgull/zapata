@@ -16,7 +16,7 @@
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `hiredis' library (-lhiredis). */
-/* #undef HAVE_LIBHIREDIS */
+#define HAVE_LIBHIREDIS 1
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1

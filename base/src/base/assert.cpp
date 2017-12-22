@@ -131,6 +131,6 @@ auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
 
 zpt::tm_ptr zpt::get_time(time_t _t) {
 	std::tm* _tm = new std::tm();
-	std::memcpy(_tm, localtime(&_t), sizeof(std::tm));
+	std::memcpy(_tm, localtime(&_t), sizeof (std::tm));
 	return zpt::tm_ptr(_tm);
 }

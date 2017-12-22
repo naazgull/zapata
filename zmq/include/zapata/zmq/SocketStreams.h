@@ -65,7 +65,7 @@ namespace zpt {
 
 	protected:
 
-		static const int char_size = sizeof(__char_type);
+		static const int char_size = sizeof (__char_type);
 		static const int SIZE = 1024;
 		__char_type obuf[SIZE];
 		__char_type ibuf[SIZE];
@@ -97,12 +97,12 @@ namespace zpt {
 		void set_socket(int _sock) {
 			this->__sock = _sock;
 			if (_sock != 0) {
-				int iOption = 1; 
-				setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof(int));
+				int iOption = 1;
+				setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof (int));
 				struct linger a;
 				a.l_onoff = 1;
 				a.l_linger = 5;
-				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof(a));
+				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof a);
 			}
 		}
 
@@ -166,7 +166,7 @@ namespace zpt {
 					case IPPROTO_UDP: {
 						int _num = __buf_type::pptr() - __buf_type::pbase();
 						int _actually_written = -1;
-						if ((_actually_written = ::sendto(__sock, reinterpret_cast<char*>(obuf), _num * char_size, 0, (struct sockaddr *) & __server, sizeof(__server))) < 0) {
+						if ((_actually_written = ::sendto(__sock, reinterpret_cast<char*>(obuf), _num * char_size, 0, (struct sockaddr *) & __server, sizeof __server)) < 0) {
 							if (_actually_written < 0) {
 								::shutdown(this->__sock, SHUT_RDWR);
 								::close(this->__sock);
@@ -253,7 +253,7 @@ namespace zpt {
 					}
 					case IPPROTO_UDP : {
 						int _actually_read = -1;
-						socklen_t _peer_addr_len = sizeof(__peer);
+						socklen_t _peer_addr_len = sizeof __peer;
 						if ((_actually_read = ::recvfrom(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0, (struct sockaddr *) & __peer, &_peer_addr_len)) < 0) {
 							::shutdown(this->__sock, SHUT_RDWR);
 							::close(this->__sock);
@@ -386,7 +386,7 @@ namespace zpt {
 			__buf.port() = _port;
 			__buf.protocol() = _protocol;
 			__buf.ssl() = _ssl;
-			
+
 			::hostent *_he = gethostbyname(_host.c_str());
 			if (_he == nullptr) {
 				return false;
@@ -396,12 +396,12 @@ namespace zpt {
 			std::copy(_addr.c_str(), _addr.c_str() + _addr.length(), reinterpret_cast<char*>(& __buf.server().sin_addr.s_addr));
 			__buf.server().sin_family = AF_INET;
 			__buf.server().sin_port = htons(_port);
-			
+
 			if (!_ssl) {
 				switch(_protocol) {
 					case IPPROTO_IP: {
-						int _sd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-						if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof(__buf.server())) < 0) {
+						int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+						if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof __buf.server()) < 0) {
 							__stream_type::setstate(std::ios::failbit);
 							__buf.set_socket(0);
 							__is_error = true;
@@ -413,13 +413,13 @@ namespace zpt {
 						return true;
 					}
 					case IPPROTO_UDP: {
-						int _sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+						int _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 						int _reuse = 1;
-						setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char *) &_reuse, sizeof(_reuse));
+						setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char *) &_reuse, sizeof _reuse);
 						int _ret = inet_aton(__buf.host().c_str(), & __buf.server().sin_addr);
 						if (_ret == 0) {
 							struct addrinfo _hints, * _result = NULL;
-							std::memset(& _hints, 0, sizeof(_hints));
+							std::memset(& _hints, 0, sizeof _hints);
 							_hints.ai_family = AF_INET;
 							_hints.ai_socktype = SOCK_DGRAM;
 
@@ -431,7 +431,7 @@ namespace zpt {
 								return false;
 							}
 							struct sockaddr_in* _host_addr = (struct sockaddr_in *) _result->ai_addr;
-							memcpy(& __buf.server().sin_addr, & _host_addr->sin_addr, sizeof(struct in_addr));
+							memcpy(& __buf.server().sin_addr, & _host_addr->sin_addr, sizeof (struct in_addr));
 							freeaddrinfo(_result);
 						}
 						__buf.set_socket(_sd);
@@ -444,8 +444,8 @@ namespace zpt {
 				return false;
 			}
 			else {
-				int _sd = socket(AF_INET, SOCK_STREAM, 0);
-				if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.server()), sizeof(__buf.server())) < 0) {
+				int _sd = ::socket(AF_INET, SOCK_STREAM, 0);
+				if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.server()), sizeof __buf.server()) < 0) {
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
 					__is_error = true;
@@ -476,7 +476,7 @@ namespace zpt {
 
 	// typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
 	// typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
-	
+
 	class socketstream_ptr : public std::shared_ptr< zpt::socketstream > {
 	public:
 		socketstream_ptr() : std::shared_ptr< zpt::socketstream >(new zpt::socketstream()) {}
@@ -484,7 +484,7 @@ namespace zpt {
 		socketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::socketstream >(new zpt::socketstream(_fd, _ssl, _protocol)) {}
 		virtual ~socketstream_ptr() {}
 	};
-	
+
 	class wsocketstream_ptr : public std::shared_ptr< zpt::wsocketstream > {
 	public:
 		wsocketstream_ptr() : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream()) {}
@@ -492,7 +492,7 @@ namespace zpt {
 		wsocketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream(_fd, _ssl, _protocol)) {}
 		virtual ~wsocketstream_ptr() {}
 	};
-	
+
 	template<typename Char>
 	class basic_serversocketstream {
 	protected:
@@ -526,13 +526,13 @@ namespace zpt {
 		}
 
 		bool bind(uint16_t _port) {
-			this->__sockfd = socket(AF_INET, SOCK_STREAM, 0);
+			this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
 			if (this->__sockfd < 0) {
 				return false;
 			}
 
 			int _opt = 1;
-			if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &_opt, sizeof(_opt)) == SO_ERROR) {
+			if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &_opt, sizeof _opt) == SO_ERROR) {
 				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = 0;
@@ -540,11 +540,11 @@ namespace zpt {
 			}
 
 			struct sockaddr_in _serv_addr;
-			bzero((char *) &_serv_addr, sizeof(_serv_addr));
+			bzero((char *) &_serv_addr, sizeof _serv_addr);
 			_serv_addr.sin_family = AF_INET;
 			_serv_addr.sin_addr.s_addr = INADDR_ANY;
 			_serv_addr.sin_port = htons(_port);
-			if (::bind(this->__sockfd, (struct sockaddr *) &_serv_addr, sizeof(_serv_addr)) < 0) {
+			if (::bind(this->__sockfd, (struct sockaddr *) &_serv_addr, sizeof _serv_addr) < 0) {
 				::shutdown(this->__sockfd, SHUT_RDWR);
 				::close(this->__sockfd);
 				this->__sockfd = 0;
@@ -557,7 +557,7 @@ namespace zpt {
 		bool accept(socketstream* _out) {
 			if (this->__sockfd != -1) {
 				struct sockaddr_in* _cli_addr = new struct sockaddr_in();
-				socklen_t _clilen = sizeof(struct sockaddr_in);
+				socklen_t _clilen = sizeof (struct sockaddr_in);
 				int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
 
 				if (_newsockfd < 0) {
@@ -577,7 +577,7 @@ namespace zpt {
 		bool accept(int* _out) {
 			if (this->__sockfd != -1) {
 				struct sockaddr_in* _cli_addr = new struct sockaddr_in();
-				socklen_t _clilen = sizeof(struct sockaddr_in);
+				socklen_t _clilen = sizeof (struct sockaddr_in);
 				int _newsockfd = ::accept(this->__sockfd, (struct sockaddr *) _cli_addr, &_clilen);
 
 				if (_newsockfd < 0) {
@@ -605,7 +605,7 @@ namespace zpt {
 		serversocketstream_ptr(int _fd) : std::shared_ptr< zpt::serversocketstream >(new zpt::serversocketstream(_fd)) {}
 		virtual ~serversocketstream_ptr() {}
 	};
-	
+
 	class wserversocketstream_ptr : public std::shared_ptr< zpt::wserversocketstream > {
 	public:
 		wserversocketstream_ptr() : std::shared_ptr< zpt::wserversocketstream >(new zpt::wserversocketstream()) {}
@@ -613,7 +613,7 @@ namespace zpt {
 		wserversocketstream_ptr(int _fd) : std::shared_ptr< zpt::wserversocketstream >(new zpt::wserversocketstream(_fd)) {}
 		virtual ~wserversocketstream_ptr() {}
 	};
-	
+
 	#define CRLF "\r\n"
 
 }

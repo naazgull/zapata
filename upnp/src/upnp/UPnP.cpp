@@ -23,14 +23,14 @@ zpt::UPnPPtr::UPnPPtr(zpt::json _options) : std::shared_ptr<zpt::UPnP>(new zpt::
 zpt::UPnPPtr::~UPnPPtr() {
 }
 
-zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str() : "udp://239.255.255.250:1991"), _options), __underlying(), __send() {
+zpt::UPnP::UPnP(zpt::json _options) : zpt::Channel((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str() : "udp://239.255.255.250:1991"), _options), __underlying(), __send() {
 	this->uri(this->connection());
 
 	this->__underlying->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
 	this->__send->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
 	
 	char _accept_lo = 1;
-	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_accept_lo, sizeof(_accept_lo));
+	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_LOOP, (char *) &_accept_lo, sizeof _accept_lo);
 
 	std::string _ip;
 	if (_options["upnp"]["interface"]->is_string()) {
@@ -45,24 +45,24 @@ zpt::UPnP::UPnP(zpt::json _options) : zpt::ZMQ((_options["upnp"]["bind"]->is_str
 	
 	struct in_addr _local_interface;
 	_local_interface.s_addr = inet_addr(_ip.data());
-	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_IF, (char *) &_local_interface, sizeof(_local_interface));
+	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_MULTICAST_IF, (char *) &_local_interface, sizeof _local_interface);
 
 	struct sockaddr_in _local_addr;
-	memset((char *) &_local_addr, 0, sizeof(_local_addr));
+	memset((char *) &_local_addr, 0, sizeof _local_addr);
 	_local_addr.sin_family = AF_INET;
 	_local_addr.sin_port = htons(int(this->uri()["port"]));
 	_local_addr.sin_addr.s_addr = INADDR_ANY;
-	::bind(this->__underlying->buffer().get_socket(), (struct sockaddr*) &_local_addr, sizeof(_local_addr));
+	::bind(this->__underlying->buffer().get_socket(), (struct sockaddr*) &_local_addr, sizeof _local_addr);
 
 	struct ip_mreq _group_addr;
 	_group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->str().data());
 	_group_addr.imr_interface.s_addr = inet_addr(_ip.data());
-	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &_group_addr, sizeof(_group_addr));
+	setsockopt(this->__underlying->buffer().get_socket(), IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &_group_addr, sizeof _group_addr);
 
 	struct timeval _tv;
 	_tv.tv_sec = 0;
 	_tv.tv_usec = 500000;
-	setsockopt(this->__underlying->buffer().get_socket(), SOL_SOCKET, SO_RCVTIMEO, (char *) &_tv,sizeof(struct timeval));
+	setsockopt(this->__underlying->buffer().get_socket(), SOL_SOCKET, SO_RCVTIMEO, (char *) &_tv,sizeof (struct timeval));
 
 }
 

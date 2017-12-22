@@ -40,6 +40,7 @@ zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options),
 	}
 
 	zpt::rest::__emitter = this;
+	zpt::ev::__emitter = this->self();
 	this->directory()->events(this->self());
 	
 	this->__default_options = [] (zpt::ev::performative _performative, std::string _resource, zpt::json _envelope, zpt::ev::emitter _events) -> zpt::json {

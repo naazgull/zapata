@@ -79,7 +79,7 @@ namespace zpt {
 
 	//typedef std::shared_ptr<zpt::MQTT> MQTTPtr;
 	
-	class MQTT : public zpt::ZMQ {
+	class MQTT : public zpt::Channel {
 	public:
 		/**
 		 * Init mosquitto.

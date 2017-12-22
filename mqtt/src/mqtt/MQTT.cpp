@@ -156,7 +156,7 @@
 // 	int max_inflight_messages;
 // };
 
-zpt::MQTT::MQTT() : zpt::ZMQ("", zpt::undefined), __self(this), __connected(false), __postponed(zpt::json::object()) {
+zpt::MQTT::MQTT() : zpt::Channel("", zpt::undefined), __self(this), __connected(false), __postponed(zpt::json::object()) {
 	this->__mosq =  nullptr;
 	/**
 	 * Init mosquitto.

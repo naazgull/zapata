@@ -140,6 +140,16 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 	return _rep;
 }
 
+auto zpt::couchdb::Client::send_assync(zpt::json _envelope, zpt::ev::handler _callback) -> void {
+	this->init_request(_envelope);
+	zpt::emitter()->route(
+		zpt::ev::performative(int(_envelope["performative"])),
+		zpt::uri::to_str(this->connection()["uri"]) + std::string(_envelope["resource"]),
+		_envelope,
+		_callback
+	);
+}
+
 auto zpt::couchdb::Client::init_request(zpt::http::req _req) -> void {
 	_req->header("Host", std::string(this->connection()["uri"]["authority"]));
 	_req->header("Accept", "*/*");
@@ -147,6 +157,22 @@ auto zpt::couchdb::Client::init_request(zpt::http::req _req) -> void {
 	if (this->connection()["user"]->ok() && this->connection()["passwd"]->ok()) {
 		_req->header("Authorization", std::string("Basic ") + zpt::base64::r_encode(std::string(this->connection()["user"]) + std::string(":") + std::string(this->connection()["passwd"])));
 	}
+}
+
+auto zpt::couchdb::Client::init_request(zpt::json _envelope) -> void {
+	_envelope << "headers" << (_envelope["headers"] +
+		zpt::json{
+			"Host", std::string(this->connection()["uri"]["authority"]),
+			"Accept", "*/*",
+			"Connection", "keep-alive"
+		} +
+		(this->connection()["user"]->ok() && this->connection()["passwd"]->ok() ? 
+			zpt::json{
+			"Authorization", std::string("Basic ") + zpt::base64::r_encode(std::string(this->connection()["user"]) + std::string(":") + std::string(this->connection()["passwd"]))
+			} :
+			zpt::undefined
+		)
+	);
 }
 
 auto zpt::couchdb::Client::create_database(std::string _collection) -> void {
