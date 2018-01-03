@@ -1,3 +1,15 @@
+zapata-postgresql (0.9.7-1yakkety52) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:29 +0000
+
+zapata-postgresql (0.9.7-1yakkety51) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:20 +0000
+
 zapata-postgresql (0.9.7-1yakkety50) yakkety; urgency=medium
 
   * Version bump
