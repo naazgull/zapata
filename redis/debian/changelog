@@ -1,3 +1,15 @@
+zapata-redis (0.9.7-1artful55) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 16:00:05 +0000
+
+zapata-redis (0.9.7-1artful54) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 15:58:32 +0000
+
 zapata-redis (0.9.7-1artful53) artful; urgency=medium
 
   * Version bump
