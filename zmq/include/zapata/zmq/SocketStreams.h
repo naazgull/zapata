@@ -103,6 +103,12 @@ namespace zpt {
 				a.l_onoff = 1;
 				a.l_linger = 5;
 				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof a);
+				if (this->__timeout) {
+					struct timeval _tv;
+					_tv.tv_sec = 5;
+					_tv.tv_usec = 0;
+					setsockopt(this->__sock, SOL_SOCKET, SO_RCVTIMEO, (const char*) &_tv, sizeof(struct timeval));
+				}
 			}
 		}
 
@@ -136,6 +142,10 @@ namespace zpt {
 
 		short& protocol() {
 			return this->__protocol;
+		}
+
+		zpt::time_t timeout() {
+			return this->__timeout;
 		}
 
 		virtual bool __good() {
@@ -401,6 +411,7 @@ namespace zpt {
 				switch(_protocol) {
 					case IPPROTO_IP: {
 						int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+
 						if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof __buf.server()) < 0) {
 							__stream_type::setstate(std::ios::failbit);
 							__buf.set_socket(0);
