@@ -79,6 +79,7 @@ namespace zpt {
 		short __protocol;
 		SSL* __sslstream;
 		SSL_CTX* __context;
+		unsigned long long __timeout;
 
 	public:
 		basic_socketbuf() : __sock(0), __ssl(false), __port(-1), __protocol(0), __sslstream(nullptr), __context(nullptr) {
@@ -144,7 +145,7 @@ namespace zpt {
 			return this->__protocol;
 		}
 
-		zpt::time_t timeout() {
+		unsigned long long timeout() {
 			return this->__timeout;
 		}
 
