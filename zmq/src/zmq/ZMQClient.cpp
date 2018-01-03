@@ -1420,7 +1420,13 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 				zpt::http::req _request;
 				(*this->__underlying) >> _request;
 				this->__state = HTTP_REQ;
-				_in = zpt::rest::http2zmq(_request);
+				try {
+					_in = zpt::rest::http2zmq(_request);
+				}
+				catch(zpt::SyntaxErrorException& _e) {
+					zlog(std::string("error while parsing HTTP message body: syntax error exception"), zpt::error);
+					return { "protocol", this->protocol(), "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
+				}
 				this->__cid = std::string(_in["channel"]);
 			}
 			else {
@@ -1433,7 +1439,13 @@ auto zpt::ZMQHttp::recv() -> zpt::json {
 				if (_reply->header("X-Resource") == "") {
 					_reply->header("X-Resource", this->__resource);
 				}
-				_in = zpt::rest::http2zmq(_reply);
+				try {
+					_in = zpt::rest::http2zmq(_reply);
+				}
+				catch(zpt::SyntaxErrorException& _e) {
+					zlog(std::string("error while parsing HTTP message body: syntax error exception"), zpt::error);
+					return { "protocol", this->protocol(), "status", 400, "payload", { "text", _e.what(), "assertion_failed", _e.what(), "code", 1062 } };
+				}
 			}
 		}
 	}
@@ -1604,11 +1616,7 @@ auto zpt::rest::http2zmq(zpt::http::req _request) -> zpt::json {
 			_payload = zpt::rest::http::deserialize(_request->body());
 		}
 		else if (_request->header("Content-Type").find("application/json") != std::string::npos) {
-			try {
-				_payload = zpt::json(_request->body());
-			}
-			catch(zpt::SyntaxErrorException& _e) {
-			}
+			_payload = zpt::json(_request->body());
 		}
 		else {
 			_payload = { "text", _request->body() };
@@ -1651,11 +1659,7 @@ auto zpt::rest::http2zmq(zpt::http::rep _reply) -> zpt::json {
 			_payload = zpt::rest::http::deserialize(_reply->body());
 		}
 		else if (_reply->header("Content-Type").find("application/json") != std::string::npos) {
-			try {
-				_payload = zpt::json(_reply->body());
-			}
-			catch(zpt::SyntaxErrorException& _e) {
-			}
+			_payload = zpt::json(_reply->body());
 		}
 		else {
 			_payload = { "text", _reply->body() };
