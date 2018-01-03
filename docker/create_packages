@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+pushd ${HOME}/Develop/zapata/docker
+./build trusty
+./build xenial
+./build yakkety
+./build zesty
+./build artful
+popd
