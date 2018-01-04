@@ -24,7 +24,7 @@ a) Ubuntu 16.04 PPA repositories, containing acceptable PostgreSQL and Python ve
 	$ sudo add-apt-repository ppa:deadsnakes/ppa
 	$ sudo apt-get update
 
-## Ubuntu 16.04 / 16.10 / 17.04
+## Ubuntu 16.04 / 16.10 / 17.04 / 17.10
 
 ### 1) Zapata RESTful libraries ###
 
