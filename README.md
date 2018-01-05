@@ -21,10 +21,10 @@ it has a really neat JSON support. It still lacks documentation, that's a work i
 a) Ubuntu 16.04 PPA repositories, containing acceptable PostgreSQL and Python versions:
 
 	$ sudo add-apt-repository ppa:jtv/ppa
-	$ sudo add-apt-repository ppa:fkrull/deadsnakes
+	$ sudo add-apt-repository ppa:deadsnakes/ppa
 	$ sudo apt-get update
 
-## Ubuntu 16.04 / 16.10 / 17.04
+## Ubuntu 16.04 / 16.10 / 17.04 / 17.10
 
 ### 1) Zapata RESTful libraries ###
 
