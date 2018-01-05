@@ -12,8 +12,8 @@ namespace zpt
 
 inline void HTTPTokenizer::error(char const *msg)
 {
-    //std::cerr << msg << '\n';
-   throw zpt::SyntaxErrorException(string(msg));
+    // std::cerr << msg << '\n';
+    throw zpt::SyntaxErrorException(string(msg));
 }
 
 // $insert lex
@@ -22,12 +22,12 @@ inline int HTTPTokenizer::lex()
     return d_scanner.lex();
 }
 
-inline void HTTPTokenizer::print()         
+inline void HTTPTokenizer::print()
 {
     print__();           // displays tokens if --print was specified
 }
 
-inline void HTTPTokenizer::exceptionHandler__(std::exception const &exc)         
+inline void HTTPTokenizer::exceptionHandler__(std::exception const &exc)
 {
     throw;              // re-implement to handle exceptions thrown by actions
 }
@@ -35,7 +35,7 @@ inline void HTTPTokenizer::exceptionHandler__(std::exception const &exc)
 // $insert namespace-close
 }
 
-    // Add here includes that are only required for the compilation 
+    // Add here includes that are only required for the compilation
     // of HTTPTokenizer's sources.
 
 
