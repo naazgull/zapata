@@ -59,7 +59,7 @@ zpt::RESTServerPtr::~RESTServerPtr() {
 zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _name) {
 	if (_name.length() == 0){
 		_name = _options->obj()->begin()->first;
-	}	
+	}
 	try {
 		zpt::rest::server _server(_name, _options);
 		return _server;
@@ -90,7 +90,7 @@ auto zpt::rest::terminate(int _signal) -> void {
 	zpt::rest::interrupted = true;
 }
 
-int zpt::RESTServerPtr::launch(int argc, char* argv[]) {	
+int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::conf::setup(_ptr);
 
@@ -115,14 +115,14 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 			delete _lf;
 		}
 	}
-		
+
 	zpt::json _options = _ptr["boot"][0];
 
 	::signal(SIGINT, zpt::rest::shutdown);
 	::signal(SIGTERM, zpt::rest::terminate);
 	::signal(SIGABRT, zpt::rest::terminate);
 	::signal(SIGSEGV, zpt::rest::terminate);
-	
+
 	std::string _name = std::string(_options["name"]);
 	if (_name.length() != 0) {
 		delete zpt::log_pname;
@@ -167,7 +167,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 			this->__poll->poll(this->__poll->add(this->__upnp.get()));
 			zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") + std::string(this->__upnp->uri()["scheme"]) + std::string("://") + std::string(this->__upnp->uri()["domain"]) + std::string(":") + std::string(this->__upnp->uri()["port"]), zpt::info);
 		}
-		
+
 		((zpt::RESTEmitter*) this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*) this->__emitter.get())->server(this->__self);
 
@@ -195,7 +195,7 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options) : __name(_nam
 				zlog(std::string("binding ") + _socket->protocol() + std::string(" listener to ") + _socket->connection(), zpt::info);
 			}
 		}
-		
+
 		if (this->__options["rest"]["modules"]->ok()) {
 			for (auto _i : this->__options["rest"]["modules"]->arr()) {
 				if (_i->str().find(".py") != std::string::npos) {
@@ -285,7 +285,7 @@ auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void {
 }
 
 void zpt::RESTServer::start() {
-	try {			
+	try {
 		if (bool(this->__options["rest"]["discoverable"])) {
 			this->notify_peers();
 		}
@@ -307,7 +307,7 @@ void zpt::RESTServer::start() {
 			else if (this->credentials()["client_id"]->is_string() && this->credentials()["access_token"]->is_string()) {
 				this->__mqtt->credentials(std::string(this->credentials()["client_id"]), std::string(this->credentials()["access_token"]));
 			}
-			
+
 			this->__mqtt->on("connect",
 				[ this ] (zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
 					if (_data->__rc == 0) {
@@ -342,7 +342,7 @@ void zpt::RESTServer::start() {
 					this->__mqtt->buffer(_envelope);
 				}
 			);
-			
+
 			if (!this->__mqtt->connect(std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]))) {
 				std::thread _connector(
 					[ this ] (zpt::json _uri) -> void {
@@ -358,7 +358,7 @@ void zpt::RESTServer::start() {
 					},
 					_uri
 				);
-				_connector.detach();				
+				_connector.detach();
 			}
 			else {
 				zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") + std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]), zpt::info);
@@ -373,7 +373,7 @@ void zpt::RESTServer::start() {
 					if (!_uri["port"]->ok()) {
 						_uri << "port" << 80;
 					}
-						
+
 					zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
 					if (!_ss->bind((uint) _uri["port"])) {
 						zlog(std::string("couldn't bind HTTP listener to ") + std::string(this->__options["http"]["bind"]), zpt::alert);
@@ -388,7 +388,7 @@ void zpt::RESTServer::start() {
 						int _fd = -1;
 						_ss->accept(& _fd);
 						if (_fd >= 0) {
-							zpt::socketstream_ptr _cs(_fd, _is_ssl);
+							zpt::socketstream_ptr _cs(_fd, _is_ssl, IPPROTO_IP, (this->__options["http"]["read_timeout"]->ok() ? zpt::timestamp_t(this->__options["http"]["read_timeout"]) : 2500));
 							this->__poll->poll(this->__poll->add(new ZMQHttp(_cs, this->__options)));
 						}
 						else {
@@ -402,7 +402,7 @@ void zpt::RESTServer::start() {
 			);
 			_http.detach();
 		}
-		
+
 		for (auto _callback : this->__initializers) {
 			_callback(this->__emitter);
 		}
@@ -412,7 +412,7 @@ void zpt::RESTServer::start() {
 		zlog(std::string("loaded *") + _NAME + std::string("*"), zpt::notice);
 
 		sd_notify(0, "READY=1");
-		
+
 		this->__poll->loop();
 	}
 	catch (zpt::InterruptedException& e) {
@@ -504,7 +504,7 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 								{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST", "urn:schemas-upnp-org:service:*", "Location", _emitter->options()["zmq"][0]["connect"] }, "payload", { "size", _services->arr()->size(), "elements", _services }  }
 							);
 						}
-						
+
 						//std::cout << _emitter->directory()->pretty() << endl << flush;
 						return;
 					}
@@ -533,7 +533,7 @@ auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
 					if (_envelope["headers"]["X-Sender"] == zpt::json::string(_emitter->uuid())) {
 						return;
 					}
-						
+
 					std::string _search_term = zpt::r_replace(std::string(_envelope["headers"]["ST"]), "urn:schemas-upnp-org:service:", "");
 					if (_search_term == "*") {
 						zpt::json _services = _emitter->directory()->list(_emitter->uuid());
@@ -692,7 +692,7 @@ auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 					}
 					break;
 				}
-				case ')' : 
+				case ')' :
 				case ']' : {
 					if (!_escaped) {
 						_state--;
@@ -735,7 +735,7 @@ auto zpt::rest::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
 						_return.push_back(_c);
 					}
 				}
-			}		
+			}
 		}
 		if (_regex) {
 			if (_return.back() != '/') {
@@ -759,7 +759,7 @@ auto zpt::conf::rest::init(int argc, char* argv[]) -> zpt::json {
 		zlog("unable to start client: a valid configuration file must be provided", zpt::error);
 		exit(-10);
 	}
-	
+
 	short _log_level = (_args["l"]->ok() ? int(_args["l"][0]) : -1);
 	std::string _conf_file = std::string(_args["c"][0]);
 	zpt::log_format = (bool(_args["r"]) ? 0 : (bool(_args["j"]) ? 2 : 1));

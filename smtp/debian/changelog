@@ -1,208 +1,244 @@
-zapata-smtp (0.9.7-1yakkety50) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful56) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 05 Jan 2018 23:05:48 +0000
+
+zapata-smtp (0.9.7-1artful55) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 16:00:04 +0000
+
+zapata-smtp (0.9.7-1artful54) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 15:58:31 +0000
+
+zapata-smtp (0.9.7-1artful53) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:55:18 +0000
+
+zapata-smtp (0.9.7-1artful52) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:28 +0000
+
+zapata-smtp (0.9.7-1artful51) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:18 +0000
+
+zapata-smtp (0.9.7-1artful50) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 18 Oct 2017 00:40:47 +0100
 
-zapata-smtp (0.9.7-1yakkety49) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful49) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 10 Oct 2017 22:12:30 +0100
 
-zapata-smtp (0.9.7-1yakkety48) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful48) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 09 Oct 2017 00:35:58 +0100
 
-zapata-smtp (0.9.7-1yakkety47) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful47) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 04 Oct 2017 02:34:15 +0100
 
-zapata-smtp (0.9.7-1yakkety46) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful46) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 17:15:25 +0100
 
-zapata-smtp (0.9.7-1yakkety45) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful45) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 03:57:13 +0100
 
-zapata-smtp (0.9.7-1yakkety44) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful44) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Sun, 01 Oct 2017 22:43:55 +0100
 
-zapata-smtp (0.9.7-1yakkety43) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful43) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 22:04:09 +0100
 
-zapata-smtp (0.9.7-1yakkety42) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful42) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 21:27:37 +0100
 
-zapata-smtp (0.9.7-1yakkety41) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful41) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 16:40:34 +0100
 
-zapata-smtp (0.9.7-1yakkety40) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful40) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 11:24:09 +0100
 
-zapata-smtp (0.9.7-1yakkety39) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful39) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 10:37:13 +0100
 
-zapata-smtp (0.9.7-1yakkety38) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful38) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 13:02:56 +0100
 
-zapata-smtp (0.9.7-1yakkety37) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful37) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 10:18:09 +0100
 
-zapata-smtp (0.9.7-1yakkety36) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful36) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 26 Sep 2017 22:16:44 +0100
 
-zapata-smtp (0.9.7-1yakkety35) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful35) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 18:46:14 +0100
 
-zapata-smtp (0.9.7-1yakkety34) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful34) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 15:40:19 +0100
 
-zapata-smtp (0.9.7-1yakkety33) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful33) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 13:11:21 +0100
 
-zapata-smtp (0.9.7-1yakkety32) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful32) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 20 Sep 2017 16:47:00 +0100
 
-zapata-smtp (0.9.7-1yakkety31) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful31) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 19 Sep 2017 14:04:58 +0100
 
-zapata-smtp (0.9.7-1yakkety30) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful30) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 17:28:48 +0100
 
-zapata-smtp (0.9.7-1yakkety29) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful29) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 11:40:22 +0100
 
-zapata-smtp (0.9.7-1yakkety28) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful28) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 05 Sep 2017 00:10:31 +0100
 
-zapata-smtp (0.9.7-1yakkety27) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful27) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 26 Jul 2017 15:45:45 +0100
 
-zapata-smtp (0.9.7-1yakkety26) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful26) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 11:28:03 +0100
 
-zapata-smtp (0.9.7-1yakkety25) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful25) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 11:26:58 +0100
 
-zapata-smtp (0.9.7-1yakkety24) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful24) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 10:33:50 +0100
 
-zapata-smtp (0.9.7-1yakkety23) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful23) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 24 Jul 2017 17:13:48 +0100
 
-zapata-smtp (0.9.7-1yakkety22) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful22) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 05 Jul 2017 14:56:09 +0100
 
-zapata-smtp (0.9.7-1yakkety21) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful21) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 05 Jul 2017 13:19:08 +0100
 
-zapata-smtp (0.9.7-1yakkety20) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful20) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 30 Jun 2017 04:10:25 +0100
 
-zapata-smtp (0.9.7-1yakkety19) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful19) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 22 Jun 2017 15:43:26 +0100
 
-zapata-smtp (0.9.7-1yakkety18) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful18) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 22:02:47 +0100
 
-zapata-smtp (0.9.7-1yakkety17) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful17) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 15:35:44 +0100
 
-zapata-smtp (0.9.7-1yakkety16) yakkety; urgency=medium
+zapata-smtp (0.9.7-1artful16) artful; urgency=medium
 
   * Initial commit
 

@@ -1,142 +1,178 @@
-zapata-upnp (0.9.7-1yakkety50) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful56) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 05 Jan 2018 23:05:49 +0000
+
+zapata-upnp (0.9.7-1artful55) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 16:00:04 +0000
+
+zapata-upnp (0.9.7-1artful54) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 15:58:32 +0000
+
+zapata-upnp (0.9.7-1artful53) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:55:19 +0000
+
+zapata-upnp (0.9.7-1artful52) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:28 +0000
+
+zapata-upnp (0.9.7-1artful51) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:19 +0000
+
+zapata-upnp (0.9.7-1artful50) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 18 Oct 2017 00:40:47 +0100
 
-zapata-upnp (0.9.7-1yakkety49) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful49) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 10 Oct 2017 22:12:31 +0100
 
-zapata-upnp (0.9.7-1yakkety48) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful48) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 09 Oct 2017 00:35:58 +0100
 
-zapata-upnp (0.9.7-1yakkety47) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful47) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 04 Oct 2017 02:34:15 +0100
 
-zapata-upnp (0.9.7-1yakkety46) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful46) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 17:15:26 +0100
 
-zapata-upnp (0.9.7-1yakkety45) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful45) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 03:57:14 +0100
 
-zapata-upnp (0.9.7-1yakkety44) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful44) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Sun, 01 Oct 2017 22:43:56 +0100
 
-zapata-upnp (0.9.7-1yakkety43) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful43) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 22:04:10 +0100
 
-zapata-upnp (0.9.7-1yakkety42) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful42) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 21:27:38 +0100
 
-zapata-upnp (0.9.7-1yakkety41) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful41) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 16:40:34 +0100
 
-zapata-upnp (0.9.7-1yakkety40) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful40) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 11:24:10 +0100
 
-zapata-upnp (0.9.7-1yakkety39) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful39) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 10:37:13 +0100
 
-zapata-upnp (0.9.7-1yakkety38) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful38) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 13:02:56 +0100
 
-zapata-upnp (0.9.7-1yakkety37) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful37) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 10:18:09 +0100
 
-zapata-upnp (0.9.7-1yakkety36) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful36) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 26 Sep 2017 22:16:45 +0100
 
-zapata-upnp (0.9.7-1yakkety35) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful35) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 18:46:15 +0100
 
-zapata-upnp (0.9.7-1yakkety34) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful34) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 15:40:20 +0100
 
-zapata-upnp (0.9.7-1yakkety33) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful33) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 13:11:22 +0100
 
-zapata-upnp (0.9.7-1yakkety32) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful32) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 20 Sep 2017 16:47:01 +0100
 
-zapata-upnp (0.9.7-1yakkety31) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful31) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 19 Sep 2017 14:04:58 +0100
 
-zapata-upnp (0.9.7-1yakkety30) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful30) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 17:28:49 +0100
 
-zapata-upnp (0.9.7-1yakkety29) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful29) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 11:40:23 +0100
 
-zapata-upnp (0.9.7-1yakkety28) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful28) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 05 Sep 2017 00:10:32 +0100
 
-zapata-upnp (0.9.7-1yakkety27) yakkety; urgency=medium
+zapata-upnp (0.9.7-1artful27) artful; urgency=medium
 
   * Initial release
 

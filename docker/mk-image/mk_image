@@ -24,7 +24,7 @@ COPY build /root/
 RUN apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade && apt-get -y install software-properties-common" > Dockerfile
 if [[ "$2" == "14.04" || "$2" == "16.04" ]]
 then
-    echo "RUN add-apt-repository -y ppa:fkrull/deadsnakes && add-apt-repository -y ppa:jtv/ppa && apt-get update" >> Dockerfile
+    echo "RUN add-apt-repository -y ppa:deadsnakes/ppa && add-apt-repository -y ppa:jtv/ppa && apt-get update" >> Dockerfile
 fi
 if [[ "$2" == "14.04" ]]
 then

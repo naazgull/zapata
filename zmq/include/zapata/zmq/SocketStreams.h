@@ -41,6 +41,7 @@ SOFTWARE.
 #include <openssl/tls1.h>
 #include <openssl/err.h>
 #include <zapata/base/assert.h>
+#include <zapata/log/log.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
@@ -51,6 +52,8 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zpt {
+
+	class PartialMessageException : public std::exception {};
 
 	std::string ssl_error_print(SSL * _ssl, int _ret);
 
@@ -79,9 +82,10 @@ namespace zpt {
 		short __protocol;
 		SSL* __sslstream;
 		SSL_CTX* __context;
+		unsigned long long __timeout;
 
 	public:
-		basic_socketbuf() : __sock(0), __ssl(false), __port(-1), __protocol(0), __sslstream(nullptr), __context(nullptr) {
+		basic_socketbuf() : __sock(0), __ssl(false), __port(-1), __protocol(0), __sslstream(nullptr), __context(nullptr), __timeout(0) {
 			__buf_type::setp(obuf, obuf + (SIZE - 1));
 			__buf_type::setg(ibuf, ibuf, ibuf);
 		};
@@ -97,12 +101,18 @@ namespace zpt {
 		void set_socket(int _sock) {
 			this->__sock = _sock;
 			if (_sock != 0) {
-				int iOption = 1;
-				setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof (int));
+				// int iOption = 1;
+				// setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char *) &iOption,  sizeof (int));
 				struct linger a;
 				a.l_onoff = 1;
 				a.l_linger = 5;
 				setsockopt(this->__sock, SOL_SOCKET, SO_LINGER, (char*) &a, sizeof a);
+				if (this->__timeout != 0) {
+					struct timeval _tv;
+					_tv.tv_sec = int(this->__timeout / 1000);
+					_tv.tv_usec = (this->__timeout % 1000) * 1000;
+					setsockopt(this->__sock, SOL_SOCKET, SO_RCVTIMEO, (const char*) &_tv, sizeof(struct timeval));
+				}
 			}
 		}
 
@@ -136,6 +146,10 @@ namespace zpt {
 
 		short& protocol() {
 			return this->__protocol;
+		}
+
+		unsigned long long& timeout() {
+			return this->__timeout;
 		}
 
 		virtual bool __good() {
@@ -240,10 +254,15 @@ namespace zpt {
 					case IPPROTO_IP: {
 						int _actually_read = -1;
 						if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) < 0) {
-							::shutdown(this->__sock, SHUT_RDWR);
-							::close(this->__sock);
-							this->__sock = 0;
-							assertz(_actually_read > 0, "read operation failed", 503, 0);
+							if (this->__timeout != 0 && errno == EAGAIN) {
+								throw zpt::PartialMessageException();
+							}
+							else {
+								::shutdown(this->__sock, SHUT_RDWR);
+								::close(this->__sock);
+								this->__sock = 0;
+								assertz(_actually_read > 0, "read operation failed", 503, 0);
+							}
 						}
 						if (_actually_read == 0) {
 							return __traits_type::eof();
@@ -273,14 +292,19 @@ namespace zpt {
 				do {
 					if ((_actually_read = SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
 						if (SSL_get_error(this->__sslstream, _actually_read) != SSL_ERROR_WANT_READ) {
-							SSL_free(this->__sslstream);
-							SSL_CTX_free(this->__context);
-							::shutdown(this->__sock, SHUT_RDWR);
-							::close(this->__sock);
-							this->__sock = 0;
-							this->__sslstream = nullptr;
-							this->__context = nullptr;
-							assertz(_actually_read > 0, std::string("read operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_read), 503, 0);
+							if (this->__timeout != 0 && errno == EAGAIN) {
+								throw zpt::PartialMessageException();
+							}
+							else {
+								SSL_free(this->__sslstream);
+								SSL_CTX_free(this->__context);
+								::shutdown(this->__sock, SHUT_RDWR);
+								::close(this->__sock);
+								this->__sock = 0;
+								this->__sslstream = nullptr;
+								this->__context = nullptr;
+								assertz(_actually_read > 0, std::string("read operation failed: ") + zpt::ssl_error_print(this->__sslstream, _actually_read), 503, 0);
+							}
 						}
 					}
 				}
@@ -313,7 +337,8 @@ namespace zpt {
 		basic_socketstream() : __stream_type(&__buf), __is_error(false) {
 		};
 
-		basic_socketstream(int s, bool _ssl = false, short _protocol = IPPROTO_IP) : __stream_type(&__buf), __is_error(false) {
+		basic_socketstream(int s, bool _ssl = false, short _protocol = IPPROTO_IP, unsigned long long _timeout = 0) : __stream_type(&__buf), __is_error(false) {
+			__buf.timeout() = _timeout;
 			__buf.set_socket(s);
 			__buf.protocol() = _protocol;
 			__buf.ssl() = _ssl;
@@ -401,6 +426,7 @@ namespace zpt {
 				switch(_protocol) {
 					case IPPROTO_IP: {
 						int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+
 						if (::connect(_sd, reinterpret_cast<sockaddr*>(& __buf.server()), sizeof __buf.server()) < 0) {
 							__stream_type::setstate(std::ios::failbit);
 							__buf.set_socket(0);
@@ -481,7 +507,7 @@ namespace zpt {
 	public:
 		socketstream_ptr() : std::shared_ptr< zpt::socketstream >(new zpt::socketstream()) {}
 		socketstream_ptr(zpt::socketstream* _new) : std::shared_ptr< zpt::socketstream >(_new) {}
-		socketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::socketstream >(new zpt::socketstream(_fd, _ssl, _protocol)) {}
+		socketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP, unsigned long long _timeout = 0) : std::shared_ptr< zpt::socketstream >(new zpt::socketstream(_fd, _ssl, _protocol, _timeout)) {}
 		virtual ~socketstream_ptr() {}
 	};
 
@@ -489,7 +515,7 @@ namespace zpt {
 	public:
 		wsocketstream_ptr() : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream()) {}
 		wsocketstream_ptr(zpt::wsocketstream* _new) : std::shared_ptr< zpt::wsocketstream >(_new) {}
-		wsocketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP) : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream(_fd, _ssl, _protocol)) {}
+		wsocketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP, unsigned long long _timeout = 0) : std::shared_ptr< zpt::wsocketstream >(new zpt::wsocketstream(_fd, _ssl, _protocol, _timeout)) {}
 		virtual ~wsocketstream_ptr() {}
 	};
 
