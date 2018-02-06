@@ -142,11 +142,11 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 						if (!iss.eof()) {
 							std::string bexpr(_expression.data());
 							std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
-							if (bexpr != std::string("true") && bexpr != std::string("false")) {
+							if (bexpr != "true" && bexpr != "false") {
 								_selector << std::string(_key) << _expression;
 							}
 							else {
-								_selector << std::string(_key) << zpt::json::boolean(bexpr == std::string("true"));
+								_selector << std::string(_key) << zpt::json::boolean(bexpr == "true");
 							}
 						}
 						else {
@@ -200,11 +200,11 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 							if (!iss.eof()) {
 								std::string bexpr(_expression.data());
 								std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
-								if (bexpr != std::string("true") && bexpr != std::string("false")) {
+								if (bexpr != "true" && bexpr != "false") {
 									_selector << std::string(_key) << zpt::json{ comp, _expression };
 								}
 								else {
-									_selector << std::string(_key) << zpt::json{ comp, zpt::json::boolean(bexpr == std::string("true")) };
+									_selector << std::string(_key) << zpt::json{ comp, zpt::json::boolean(bexpr == "true") };
 								}
 							}
 							else {
@@ -232,12 +232,8 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 
 			}
 		}
-
-		if (_value->ok() && _value->is_string() && (_value->str() == std::string("true") || _value->str() == std::string("false"))) {
-			_selector << std::string(_key) << zpt::json::boolean(_value->str() == std::string("true"));
-		} else {
-			_selector << std::string(_key) << _value;
-		}
+		
+		_selector << std::string(_key) << _value;
 
 	}
 
