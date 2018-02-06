@@ -146,7 +146,7 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 								_selector << std::string(_key) << _expression;
 							}
 							else {
-								_selector << std::string(_key) << bexpr == "true";
+								_selector << std::string(_key) << zpt::json::boolean(bexpr == "true");
 							}
 						}
 						else {
@@ -204,7 +204,7 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 									_selector << std::string(_key) << zpt::json{ comp, _expression };
 								}
 								else {
-									_selector << std::string(_key) << zpt::json{ comp, (bexpr == "true") };
+									_selector << std::string(_key) << zpt::json{ comp, zpt::json::boolean(bexpr == "true") };
 								}
 							}
 							else {
@@ -232,8 +232,9 @@ auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
 
 			}
 		}
-
+		
 		_selector << std::string(_key) << _value;
+
 	}
 
 	if (!_query["limit"]->ok()) {
