@@ -34,7 +34,5 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace python {
-		
-	}
+namespace python {}
 }

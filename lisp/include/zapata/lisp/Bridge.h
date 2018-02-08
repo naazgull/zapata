@@ -35,87 +35,83 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace lisp {
-		
-		class Bridge;
-		class Type;
-		class Object;
+namespace lisp {
 
-		typedef Object object;
-		typedef Bridge bridge;
+class Bridge;
+class Type;
+class Object;
 
-		class Bridge : public zpt::Bridge {
-		public:
-			Bridge(zpt::json _options);
-			virtual ~Bridge();
-		
-			virtual auto name() -> std::string;
-			virtual auto events(zpt::ev::emitter _emitter) -> void;
-			virtual auto events() -> zpt::ev::emitter;
-			virtual auto self() const -> zpt::bridge;
-			virtual auto unbind() -> void;
-			virtual auto eval(std::string _expr) -> zpt::lisp::object;
-			virtual auto initialize() -> void;
-			virtual auto load_module(std::string _module) -> void;
-			virtual auto deflbd(zpt::json _conf, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > _callback) -> void;
-			virtual auto defop(zpt::json _conf) -> void;
-			virtual auto defchk(std::function< bool (const std::string, const std::string) > _callback) -> void;
-			virtual auto defmod(std::string _module) -> void;
-			virtual auto call(const char* _c_name, int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object;
-			virtual auto check(const std::string _op1, const std::string _op2) -> bool;
+typedef Object object;
+typedef Bridge bridge;
 
-			static auto instance() -> zpt::bridge;
-			static auto is_booted() -> bool;
-			static auto boot(zpt::json _options) -> void;
-				
-		private:
-			zpt::bridge __self;
-			zpt::ev::emitter __events;
-			std::shared_ptr< std::map< std::string, std::function< zpt::lisp::object (int, zpt::lisp::object[]) > > > __lambdas;
-			std::shared_ptr< std::map< std::string, std::string > >__modules;
-			std::shared_ptr< std::map< std::string, std::function< bool (const std::string, const std::string) > > > __consistency;
-			std::string __current;
+class Bridge : public zpt::Bridge {
+      public:
+	Bridge(zpt::json _options);
+	virtual ~Bridge();
 
-			virtual auto defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void;
-			
-		};
+	virtual auto name() -> std::string;
+	virtual auto events(zpt::ev::emitter _emitter) -> void;
+	virtual auto events() -> zpt::ev::emitter;
+	virtual auto self() const -> zpt::bridge;
+	virtual auto unbind() -> void;
+	virtual auto eval(std::string _expr) -> zpt::lisp::object;
+	virtual auto initialize() -> void;
+	virtual auto load_module(std::string _module) -> void;
+	virtual auto deflbd(zpt::json _conf, std::function<zpt::lisp::object(int, zpt::lisp::object[])> _callback)
+	    -> void;
+	virtual auto defop(zpt::json _conf) -> void;
+	virtual auto defchk(std::function<bool(const std::string, const std::string)> _callback) -> void;
+	virtual auto defmod(std::string _module) -> void;
+	virtual auto call(const char* _c_name, int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object;
+	virtual auto check(const std::string _op1, const std::string _op2) -> bool;
 
-		class Object : public std::shared_ptr< zpt::lisp::Type > {
-		public:
-			Object(cl_object _target);
-			Object();
+	static auto instance() -> zpt::bridge;
+	static auto is_booted() -> bool;
+	static auto boot(zpt::json _options) -> void;
 
-			static auto bridge() -> zpt::lisp::bridge*;
-			static auto fromjson(zpt::json _in) -> zpt::lisp::object;
-		};
-		
-		class Type {
-		public:
-			Type(cl_object _target);
-			Type();
+      private:
+	zpt::bridge __self;
+	zpt::ev::emitter __events;
+	std::shared_ptr<std::map<std::string, std::function<zpt::lisp::object(int, zpt::lisp::object[])>>> __lambdas;
+	std::shared_ptr<std::map<std::string, std::string>> __modules;
+	std::shared_ptr<std::map<std::string, std::function<bool(const std::string, const std::string)>>> __consistency;
+	std::string __current;
 
-			inline cl_object operator -> () {
-				return this->__target;
-			}
+	virtual auto defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void;
+};
 
-			inline cl_object operator * () {
-				return this->__target;
-			}
-			
-			virtual auto tojson() -> zpt::json;
+class Object : public std::shared_ptr<zpt::lisp::Type> {
+      public:
+	Object(cl_object _target);
+	Object();
 
-		private:
-			cl_object __target;
-		};
+	static auto bridge() -> zpt::lisp::bridge*;
+	static auto fromjson(zpt::json _in) -> zpt::lisp::object;
+};
 
-		extern zpt::lisp::bridge* __instance;
-		
-		auto cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object _args) -> cl_object;
-		auto builtin_operators(zpt::lisp::bridge* _bridge) -> void;
-		
-		auto from_lisp(cl_object _in) -> zpt::json;
-		auto from_lisp(cl_object _in, zpt::json& _parent) -> void;
-		auto to_lisp(zpt::json _in, zpt::lisp::bridge* _bridge) -> zpt::lisp::object;
-		auto to_lisp_string(zpt::json _json) -> std::string;
-	}	
+class Type {
+      public:
+	Type(cl_object _target);
+	Type();
+
+	inline cl_object operator->() { return this->__target; }
+
+	inline cl_object operator*() { return this->__target; }
+
+	virtual auto tojson() -> zpt::json;
+
+      private:
+	cl_object __target;
+};
+
+extern zpt::lisp::bridge* __instance;
+
+auto cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object _args) -> cl_object;
+auto builtin_operators(zpt::lisp::bridge* _bridge) -> void;
+
+auto from_lisp(cl_object _in) -> zpt::json;
+auto from_lisp(cl_object _in, zpt::json& _parent) -> void;
+auto to_lisp(zpt::json _in, zpt::lisp::bridge* _bridge) -> zpt::lisp::object;
+auto to_lisp_string(zpt::json _json) -> std::string;
+}
 }

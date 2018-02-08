@@ -33,13 +33,11 @@ auto zpt::tostr(std::string& s, int i) -> void {
 	s.insert(s.length(), _oss.str());
 }
 
-auto zpt::tostr(std::string& s, bool b) -> void {
-	s.insert(s.length(), b ? "true" : "false");
-}
+auto zpt::tostr(std::string& s, bool b) -> void { s.insert(s.length(), b ? "true" : "false"); }
 
 auto zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) -> void {
 	char oss[512];
-	sprintf(oss,"%x", i);
+	sprintf(oss, "%x", i);
 	s.insert(s.length(), oss);
 }
 
@@ -102,13 +100,11 @@ auto zpt::tostr(int i) -> std::string {
 	return _oss.str();
 }
 
-auto zpt::tostr(bool b) -> std::string {
-	return b ? "true" : "false";
-}
+auto zpt::tostr(bool b) -> std::string { return b ? "true" : "false"; }
 
 auto zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) -> std::string {
 	char oss[512];
-	sprintf(oss,"%x", i);
+	sprintf(oss, "%x", i);
 	return string(oss);
 }
 
@@ -173,8 +169,8 @@ auto zpt::fromstr(std::string s, int* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 #ifdef __LP64__
@@ -186,8 +182,8 @@ auto zpt::fromstr(std::string s, unsigned int* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 #endif
 
@@ -199,8 +195,8 @@ auto zpt::fromstr(std::string s, size_t* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, long* i) -> void {
@@ -211,8 +207,8 @@ auto zpt::fromstr(std::string s, long* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, long long* i) -> void {
@@ -223,8 +219,8 @@ auto zpt::fromstr(std::string s, long long* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, float* i) -> void {
@@ -235,8 +231,8 @@ auto zpt::fromstr(std::string s, float* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, double* i) -> void {
@@ -247,19 +243,17 @@ auto zpt::fromstr(std::string s, double* i) -> void {
 			return;
 		}
 		*i = r;
+	} catch (std::exception& _e) {
 	}
-	catch (std::exception& _e) {}
 }
 
 auto zpt::fromstr(std::string s, char* i) -> void {
 	std::istringstream _in;
 	_in.str(s);
-	_in >> (* i);
+	_in >> (*i);
 }
 
-auto zpt::fromstr(std::string s, bool* i) -> void {
-	*i = s == string("true");
-}
+auto zpt::fromstr(std::string s, bool* i) -> void { *i = s == string("true"); }
 
 auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void {
 	/*
@@ -269,14 +263,13 @@ auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) ->
 	if (_no_timezone) {
 		time_t _localtime = time(nullptr);
 		struct tm* local_tm = std::localtime(&_localtime);
-		struct tm tm[1] = { { 0 } };
+		struct tm tm[1] = {{0}};
 		strptime(s.data(), f, tm);
 		*i = std::mktime(tm) - (local_tm->tm_isdst ? 3600 : 0);
-	}
-	else {
+	} else {
 		time_t _localtime = time(nullptr);
 		struct tm* local_tm = std::localtime(&_localtime);
-		struct tm tm[1] = { { 0 } };
+		struct tm tm[1] = {{0}};
 		strptime(s.data(), f, tm);
 		time_t _local_offset = local_tm->tm_gmtoff - (local_tm->tm_isdst ? 3600 : 0);
 		time_t _target_offset = tm->tm_gmtoff - (tm->tm_isdst ? 3600 : 0);
@@ -286,7 +279,7 @@ auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) ->
 
 auto zpt::timezone_offset() -> time_t {
 	time_t t;
-	tm *ptr;
+	tm* ptr;
 	int day;
 	unsigned long num[2];
 	t = time(NULL);
@@ -299,17 +292,14 @@ auto zpt::timezone_offset() -> time_t {
 	// If not the same then get difference
 	if (day == ptr->tm_mday) { // No date difference
 		if (num[0] < num[1]) {
-			return (num[1] - num[0]);// Positive ex. CUT +1
+			return (num[1] - num[0]); // Positive ex. CUT +1
+		} else if (num[0] > num[1]) {
+			return -(num[0] - num[1]); // Negative ex. Pacific -8
 		}
-		else if (num[0] > num[1]) {
-			return -(num[0] - num[1]);// Negative ex. Pacific -8
-		}
-	}
-	else if (day < ptr->tm_mday) {// Ex. 1: 30 am Jan 1 : 11: 30 pm Dec 31
+	} else if (day < ptr->tm_mday) { // Ex. 1: 30 am Jan 1 : 11: 30 pm Dec 31
 		return (86400 - num[0]) + num[1];
-	}
-	else {
-		return -((86400 - num[1]) + num[0]);// Opposite
+	} else {
+		return -((86400 - num[1]) + num[0]); // Opposite
 	}
 	return 0;
 }

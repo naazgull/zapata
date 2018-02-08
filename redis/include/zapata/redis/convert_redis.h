@@ -30,9 +30,8 @@ SOFTWARE.
 
 namespace zpt {
 
-	namespace redis {
+namespace redis {
 
-		auto to_regex(zpt::json _regex) -> std::string;
-
-	}
+auto to_regex(zpt::json _regex) -> std::string;
+}
 }

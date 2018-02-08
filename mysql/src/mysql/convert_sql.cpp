@@ -24,57 +24,57 @@ SOFTWARE.
 #include <zapata/mysql/convert_sql.h>
 
 namespace zpt {
-	namespace mysql {
+namespace mysql {
 
-		std::map<std::string, std::string> OPS = { { "gt", ">" }, { "gte", ">=" }, { "lt", "<" }, { "lte", "<=" }, { "ne", "<>" }, { "exists", "EXISTS" }, { "in", "IN" } };
-		
-	}
+std::map<std::string, std::string> OPS = {
+    {"gt", ">"}, {"gte", ">="}, {"lt", "<"}, {"lte", "<="}, {"ne", "<>"}, {"exists", "EXISTS"}, {"in", "IN"}};
+}
 }
 
 auto zpt::mysql::fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void {
 	sql::ResultSetMetaData* _metadata = _in->getMetaData();
 	for (size_t _i = 0; _i != _metadata->getColumnCount(); _i++) {
-		switch(_metadata->getColumnType(_i + 1)) {
-			case sql::DataType::UNKNOWN : {
-				break;
-			}
-			case sql::DataType::TINYINT: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << _in->getBoolean(_i + 1);
-				break;					
-			}
-			case sql::DataType::SMALLINT:
-			case sql::DataType::MEDIUMINT:
-			case sql::DataType::INTEGER: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << _in->getInt(_i + 1);
-				break;
-			}
-			case sql::DataType::BIGINT: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << (long long int) _in->getInt64(_i + 1);
-				break;
-			}
-			case sql::DataType::REAL:
-			case sql::DataType::DOUBLE:
-			case sql::DataType::DECIMAL:
-			case sql::DataType::NUMERIC: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << (double) _in->getDouble(_i + 1);
-				break;
-			}
-			case sql::DataType::CHAR:
-			case sql::DataType::VARCHAR:
-			case sql::DataType::LONGVARCHAR: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << (std::string) _in->getString(_i + 1);
-				break;
-			}
-			case sql::DataType::TIMESTAMP: {
-				std::string _ts(_in->getString(_i + 1) + std::string(".000Z"));
-				zpt::replace(_ts, " ", "T");
-				_out << (std::string) _metadata->getColumnName(_i + 1) << (zpt::timestamp_t) zpt::mkptr(_ts);
-				break;
-			}
-			case sql::DataType::SQLNULL: {
-				_out << (std::string) _metadata->getColumnName(_i + 1) << zpt::undefined;
-				break;
-			}
+		switch (_metadata->getColumnType(_i + 1)) {
+		case sql::DataType::UNKNOWN: {
+			break;
+		}
+		case sql::DataType::TINYINT: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << _in->getBoolean(_i + 1);
+			break;
+		}
+		case sql::DataType::SMALLINT:
+		case sql::DataType::MEDIUMINT:
+		case sql::DataType::INTEGER: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << _in->getInt(_i + 1);
+			break;
+		}
+		case sql::DataType::BIGINT: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << (long long int)_in->getInt64(_i + 1);
+			break;
+		}
+		case sql::DataType::REAL:
+		case sql::DataType::DOUBLE:
+		case sql::DataType::DECIMAL:
+		case sql::DataType::NUMERIC: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << (double)_in->getDouble(_i + 1);
+			break;
+		}
+		case sql::DataType::CHAR:
+		case sql::DataType::VARCHAR:
+		case sql::DataType::LONGVARCHAR: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << (std::string)_in->getString(_i + 1);
+			break;
+		}
+		case sql::DataType::TIMESTAMP: {
+			std::string _ts(_in->getString(_i + 1) + std::string(".000Z"));
+			zpt::replace(_ts, " ", "T");
+			_out << (std::string)_metadata->getColumnName(_i + 1) << (zpt::timestamp_t)zpt::mkptr(_ts);
+			break;
+		}
+		case sql::DataType::SQLNULL: {
+			_out << (std::string)_metadata->getColumnName(_i + 1) << zpt::undefined;
+			break;
+		}
 		}
 	}
 }
@@ -85,7 +85,7 @@ auto zpt::mysql::fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json {
 	return _return;
 }
 
-auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
+auto zpt::mysql::get_query(zpt::json _in, std::string& _queryr) -> void {
 	if (!_in->is_object()) {
 		return;
 	}
@@ -93,7 +93,8 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 		std::string _key = _i.first;
 		zpt::json _v = _i.second;
 
-		if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" || _key == "embed") {
+		if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" ||
+		    _key == "embed") {
 			continue;
 		}
 
@@ -101,7 +102,7 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 			_queryr += std::string(" AND ");
 		}
 
-		std::string _value = (std::string) _v;
+		std::string _value = (std::string)_v;
 		if (_value.length() > 3 && _value.find('/') != std::string::npos) {
 			int _bar_count = 0;
 			std::istringstream _lss(_value);
@@ -114,33 +115,30 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 				if (_bar_count == 0) {
 					_command = _part;
 					++_bar_count;
-				}
-				else if (_bar_count == 1) {
+				} else if (_bar_count == 1) {
 					_expression.append(_part);
 
-					if (_expression.length() == 0 || _expression[_expression.length() - 1] != '\\') {
+					if (_expression.length() == 0 ||
+					    _expression[_expression.length() - 1] != '\\') {
 						++_bar_count;
-					}
-					else {
+					} else {
 						if (_expression.length() > 0) {
 							_expression[_expression.length() - 1] = '/';
 						}
 					}
-				}
-				else if (_bar_count == 2) {
+				} else if (_bar_count == 2) {
 					_options = _part;
 					++_bar_count;
-				}
-				else {
+				} else {
 					++_bar_count;
 				}
 			}
 
 			if (_command == "m") {
-				_queryr += zpt::mysql::escape(_key) + std::string("=") + zpt::mysql::escape(_expression);
+				_queryr +=
+				    zpt::mysql::escape(_key) + std::string("=") + zpt::mysql::escape(_expression);
 				continue;
-			}
-			else if (_command == "n") {
+			} else if (_command == "n") {
 				if (_bar_count == 2) {
 					std::istringstream iss(_expression);
 					int i = 0;
@@ -151,31 +149,32 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 						iss >> d;
 						if (!iss.eof()) {
 							std::string _bexpr(_expression.data());
-							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+							std::transform(
+							    _bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr += zpt::mysql::escape(_key) + std::string("=") + zpt::mysql::escape(_expression);
+								_queryr += zpt::mysql::escape(_key) + std::string("=") +
+									   zpt::mysql::escape(_expression);
+							} else {
+								_queryr += zpt::mysql::escape(_key) + std::string("=") +
+									   _bexpr;
 							}
-							else {
-								_queryr += zpt::mysql::escape(_key) + std::string("=") + _bexpr;
-							}
+						} else {
+							_queryr += zpt::mysql::escape(_key) + std::string("=") +
+								   std::to_string(d);
 						}
-						else {
-							_queryr += zpt::mysql::escape(_key) + std::string("=") + std::to_string(d);
-						}
-					}
-					else {
-						_queryr += zpt::mysql::escape(_key) + std::string("=") + std::to_string(i);
+					} else {
+						_queryr +=
+						    zpt::mysql::escape(_key) + std::string("=") + std::to_string(i);
 					}
 					continue;
 				}
-			}
-			else {
+			} else {
 				std::map<std::string, std::string>::iterator _found = zpt::mysql::OPS.find(_command);
 				if (_found != zpt::mysql::OPS.end()) {
 					if (_bar_count == 2) {
-						_queryr += zpt::mysql::escape(_key) + _found->second + zpt::mysql::escape(_expression);
-					}
-					else if (_options == "n") {
+						_queryr += zpt::mysql::escape(_key) + _found->second +
+							   zpt::mysql::escape(_expression);
+					} else if (_options == "n") {
 						std::istringstream iss(_expression);
 						int i = 0;
 						iss >> i;
@@ -185,30 +184,34 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 							iss >> d;
 							if (!iss.eof()) {
 								std::string _bexpr(_expression.data());
-								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+								std::transform(_bexpr.begin(),
+									       _bexpr.end(),
+									       _bexpr.begin(),
+									       ::tolower);
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += zpt::mysql::escape(_key) + _found->second + zpt::mysql::escape(_expression);
+									_queryr += zpt::mysql::escape(_key) +
+										   _found->second +
+										   zpt::mysql::escape(_expression);
+								} else {
+									_queryr += zpt::mysql::escape(_key) +
+										   _found->second + _bexpr;
 								}
-								else {
-									_queryr += zpt::mysql::escape(_key) + _found->second + _bexpr;
-								}
+							} else {
+								_queryr += zpt::mysql::escape(_key) + _found->second +
+									   std::to_string(d);
 							}
-							else {
-								_queryr += zpt::mysql::escape(_key) + _found->second + std::to_string(d);
-							}
+						} else {
+							_queryr += zpt::mysql::escape(_key) + _found->second +
+								   std::to_string(i);
 						}
-						else {
-							_queryr += zpt::mysql::escape(_key) + _found->second + std::to_string(i);
-						}
-					}
-					else if (_options == "j") {
-					}
-					else if (_options == "d") {
-						_queryr += zpt::mysql::escape(_key) + _found->second + std::string("TIMESTAMP('") + zpt::mysql::escape(_expression) + std::string("')");
+					} else if (_options == "j") {
+					} else if (_options == "d") {
+						_queryr += zpt::mysql::escape(_key) + _found->second +
+							   std::string("TIMESTAMP('") +
+							   zpt::mysql::escape(_expression) + std::string("')");
 					}
 					continue;
 				}
-
 			}
 		}
 
@@ -216,7 +219,7 @@ auto zpt::mysql::get_query(zpt::json _in, std::string&  _queryr) -> void {
 	}
 }
 
-auto zpt::mysql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
+auto zpt::mysql::get_opts(zpt::json _in, std::string& _queryr) -> void {
 	if (!_in->is_object()) {
 		return;
 	}
@@ -229,13 +232,13 @@ auto zpt::mysql::get_opts(zpt::json _in, std::string&  _queryr) -> void {
 	}
 	if (_in["order_by"]) {
 		_queryr += std::string(" ORDER BY ");
-		std::istringstream lss(((std::string) _in["order_by"]).data());
+		std::istringstream lss(((std::string)_in["order_by"]).data());
 		std::string _part;
 		bool _first = true;
 		while (std::getline(lss, _part, ',')) {
 			if (_part.length() > 0) {
 				std::string _dir = "ASC";
-				
+
 				if (_part[0] == '-') {
 					_dir = "DESC";
 				}
@@ -255,15 +258,14 @@ auto zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::
 	std::string _columns;
 	if (_opts["fields"]->ok()) {
 		if (!_document->ok()) {
-			for (auto _c : _opts["fields"]->arr()){
+			for (auto _c : _opts["fields"]->arr()) {
 				if (_columns.length() != 0) {
 					_columns += std::string(",");
 				}
 				_columns += zpt::mysql::escape_name(std::string(_c));
-			}			
-		}
-		else {
-			for (auto _c : _opts["fields"]->arr()){
+			}
+		} else {
+			for (auto _c : _opts["fields"]->arr()) {
 				if (!_document[std::string(_c)]->ok()) {
 					continue;
 				}
@@ -271,14 +273,13 @@ auto zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::
 					_columns += std::string(",");
 				}
 				_columns += zpt::mysql::escape_name(std::string(_c));
-			}			
+			}
 		}
-	}
-	else {
+	} else {
 		if (!_document->ok()) {
 			return "*";
 		}
-		for (auto _c : _document->obj()){
+		for (auto _c : _document->obj()) {
 			if (_columns.length() != 0) {
 				_columns += std::string(",");
 			}
@@ -293,9 +294,8 @@ auto zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std:
 	if (_opts["fields"]->ok()) {
 		if (!_document->ok()) {
 			return "";
-		}
-		else {
-			for (auto _c : _opts["fields"]->arr()){
+		} else {
+			for (auto _c : _opts["fields"]->arr()) {
 				if (!_document[std::string(_c)]->ok()) {
 					continue;
 				}
@@ -303,14 +303,13 @@ auto zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std:
 					_values += std::string(",");
 				}
 				_values += zpt::mysql::escape(_document[std::string(_c)]);
-			}			
+			}
 		}
-	}
-	else {
+	} else {
 		if (!_document->ok()) {
 			return "";
 		}
-		for (auto _c : _document->obj()){
+		for (auto _c : _document->obj()) {
 			if (_values.length() != 0) {
 				_values += std::string(",");
 			}
@@ -321,10 +320,6 @@ auto zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std:
 	return _values;
 }
 
-auto zpt::mysql::escape_name(std::string _in) -> std::string {
-	return _in;
-}
+auto zpt::mysql::escape_name(std::string _in) -> std::string { return _in; }
 
-auto zpt::mysql::escape(zpt::json _in) -> std::string {
-	return std::string(_in);
-}
+auto zpt::mysql::escape(zpt::json _in) -> std::string { return std::string(_in); }

@@ -37,16 +37,15 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	zpt::HTTPReq& fromhttpfile(ifstream& _in, zpt::HTTPReq& _out) ;
-	zpt::HTTPRep& fromhttpfile(ifstream& _in, zpt::HTTPRep& _out) ;
-	zpt::HTTPReq& fromhttpstream(istream& _in, zpt::HTTPReq& _out) ;
-	zpt::HTTPRep& fromhttpstream(istream& _in, zpt::HTTPRep& _out) ;
-	zpt::HTTPReq& fromhttpstr(string& _in, zpt::HTTPReq& _out) ;
-	zpt::HTTPRep& fromhttpstr(string& _in, zpt::HTTPRep& _out) ;
+zpt::HTTPReq& fromhttpfile(ifstream& _in, zpt::HTTPReq& _out);
+zpt::HTTPRep& fromhttpfile(ifstream& _in, zpt::HTTPRep& _out);
+zpt::HTTPReq& fromhttpstream(istream& _in, zpt::HTTPReq& _out);
+zpt::HTTPRep& fromhttpstream(istream& _in, zpt::HTTPRep& _out);
+zpt::HTTPReq& fromhttpstr(string& _in, zpt::HTTPReq& _out);
+zpt::HTTPRep& fromhttpstr(string& _in, zpt::HTTPRep& _out);
 
-	void tostr(string& _out, HTTPReq& _in) ;
-	void tostr(string& _out, HTTPRep& _in) ;
-	void tostr(ostream& _out, HTTPReq& _in) ;
-	void tostr(ostream& _out, HTTPRep& _in) ;
+void tostr(string& _out, HTTPReq& _in);
+void tostr(string& _out, HTTPRep& _in);
+void tostr(ostream& _out, HTTPReq& _in);
+void tostr(ostream& _out, HTTPRep& _in);
 }
-

@@ -26,9 +26,8 @@ SOFTWARE.
 #include <fstream>
 
 namespace zpt {
-	
-	std::string* tz = nullptr;
-	
+
+std::string* tz = nullptr;
 }
 
 std::string zpt::get_tz() {
@@ -39,8 +38,7 @@ std::string zpt::get_tz() {
 		if (_tzf.is_open()) {
 			_tzf >> (*zpt::tz);
 			_tzf.close();
-		}
-		else {
+		} else {
 			zpt::tz->assign("UTC");
 		}
 	}
@@ -48,43 +46,43 @@ std::string zpt::get_tz() {
 }
 
 auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
-	switch(_performative) {
-		case zpt::ev::Get : {
-			return "GET";
-		}
-		case zpt::ev::Put : {
-			return "PUT";
-		}
-		case zpt::ev::Post : {
-			return "POST";
-		}
-		case zpt::ev::Delete : {
-			return "DELETE";
-		}
-		case zpt::ev::Head : {
-			return "HEAD";
-		}
-		case zpt::ev::Options : {
-			return "OPTIONS";
-		}
-		case zpt::ev::Patch : {
-			return "PATCH";
-		}
-		case zpt::ev::Reply : {
-			return "REPLY";
-		}
-		case zpt::ev::Search : {
-			return "M-SEARCH";
-		}
-		case zpt::ev::Notify : {
-			return "NOTIFY";
-		}
-		case zpt::ev::Trace : {
-			return "TRACE";
-		}
-		case zpt::ev::Connect : {
-			return "CONNECT";
-		}
+	switch (_performative) {
+	case zpt::ev::Get: {
+		return "GET";
+	}
+	case zpt::ev::Put: {
+		return "PUT";
+	}
+	case zpt::ev::Post: {
+		return "POST";
+	}
+	case zpt::ev::Delete: {
+		return "DELETE";
+	}
+	case zpt::ev::Head: {
+		return "HEAD";
+	}
+	case zpt::ev::Options: {
+		return "OPTIONS";
+	}
+	case zpt::ev::Patch: {
+		return "PATCH";
+	}
+	case zpt::ev::Reply: {
+		return "REPLY";
+	}
+	case zpt::ev::Search: {
+		return "M-SEARCH";
+	}
+	case zpt::ev::Notify: {
+		return "NOTIFY";
+	}
+	case zpt::ev::Trace: {
+		return "TRACE";
+	}
+	case zpt::ev::Connect: {
+		return "CONNECT";
+	}
 	}
 	return "HEAD";
 }
@@ -131,6 +129,6 @@ auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
 
 zpt::tm_ptr zpt::get_time(time_t _t) {
 	std::tm* _tm = new std::tm();
-	std::memcpy(_tm, localtime(&_t), sizeof (std::tm));
+	std::memcpy(_tm, localtime(&_t), sizeof(std::tm));
 	return zpt::tm_ptr(_tm);
 }

@@ -64,7 +64,7 @@ void zpt::base64::encode(string& _out) {
 		buff2[3] = buff1[2] & 0x3f;
 
 		for (j = 0; j < (i + 1); j++)
-			_out.push_back(encodeCharacterTable[(uint8_t) buff2[j]]);
+			_out.push_back(encodeCharacterTable[(uint8_t)buff2[j]]);
 
 		while (i++ < 3)
 			_out.push_back('=');
@@ -90,11 +90,11 @@ void zpt::base64::decode(string& _out) {
 	while (in.readsome(&buff2[i], 1) && buff2[i] != '=') {
 		if (++i == 4) {
 			for (i = 0; i != 4; i++)
-				buff2[i] = decodeCharacterTable[(uint8_t) buff2[i]];
+				buff2[i] = decodeCharacterTable[(uint8_t)buff2[i]];
 
-			_out.push_back((char) ((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4)));
-			_out.push_back((char) (((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2)));
-			_out.push_back((char) (((buff2[2] & 0x3) << 6) + buff2[3]));
+			_out.push_back((char)((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4)));
+			_out.push_back((char)(((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2)));
+			_out.push_back((char)(((buff2[2] & 0x3) << 6) + buff2[3]));
 
 			i = 0;
 		}
@@ -104,14 +104,14 @@ void zpt::base64::decode(string& _out) {
 		for (j = i; j < 4; j++)
 			buff2[j] = '\0';
 		for (j = 0; j < 4; j++)
-			buff2[j] = decodeCharacterTable[(uint8_t) buff2[j]];
+			buff2[j] = decodeCharacterTable[(uint8_t)buff2[j]];
 
 		buff1[0] = (buff2[0] << 2) + ((buff2[1] & 0x30) >> 4);
 		buff1[1] = ((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2);
 		buff1[2] = ((buff2[2] & 0x3) << 6) + buff2[3];
 
 		for (j = 0; j < (i - 1); j++)
-			_out.push_back((char) buff1[j]);
+			_out.push_back((char)buff1[j]);
 	}
 }
 
@@ -139,7 +139,7 @@ void zpt::base64::encode(istream& _in, ostream& _out) {
 		buff2[3] = buff1[2] & 0x3f;
 
 		for (j = 0; j < (i + 1); j++)
-			_out << encodeCharacterTable[(uint8_t) buff2[j]];
+			_out << encodeCharacterTable[(uint8_t)buff2[j]];
 
 		while (i++ < 3)
 			_out << '=';
@@ -154,11 +154,11 @@ void zpt::base64::decode(istream& _in, ostream& _out) {
 	while (_in.readsome(&buff2[i], 1) && buff2[i] != '=') {
 		if (++i == 4) {
 			for (i = 0; i != 4; i++)
-				buff2[i] = decodeCharacterTable[(uint8_t) buff2[i]];
+				buff2[i] = decodeCharacterTable[(uint8_t)buff2[i]];
 
-			_out << (char) ((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4));
-			_out << (char) (((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2));
-			_out << (char) (((buff2[2] & 0x3) << 6) + buff2[3]);
+			_out << (char)((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4));
+			_out << (char)(((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2));
+			_out << (char)(((buff2[2] & 0x3) << 6) + buff2[3]);
 
 			i = 0;
 		}
@@ -168,14 +168,14 @@ void zpt::base64::decode(istream& _in, ostream& _out) {
 		for (j = i; j < 4; j++)
 			buff2[j] = '\0';
 		for (j = 0; j < 4; j++)
-			buff2[j] = decodeCharacterTable[(uint8_t) buff2[j]];
+			buff2[j] = decodeCharacterTable[(uint8_t)buff2[j]];
 
 		buff1[0] = (buff2[0] << 2) + ((buff2[1] & 0x30) >> 4);
 		buff1[1] = ((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2);
 		buff1[2] = ((buff2[2] & 0x3) << 6) + buff2[3];
 
 		for (j = 0; j < (i - 1); j++)
-			_out << (char) buff1[j];
+			_out << (char)buff1[j];
 	}
 }
 
@@ -213,10 +213,10 @@ void zpt::base64::url_encode(string& _out) {
 		buff2[3] = buff1[2] & 0x3f;
 
 		for (j = 0; j < (i + 1); j++)
-			out << encodeCharacterTableUrl[(uint8_t) buff2[j]];
+			out << encodeCharacterTableUrl[(uint8_t)buff2[j]];
 
-//		while (i++ < 3)
-//			out << '=';
+		//		while (i++ < 3)
+		//			out << '=';
 	}
 	out << flush;
 	_out.assign(out.str());
@@ -238,11 +238,11 @@ void zpt::base64::url_decode(string& _out) {
 	while (in.readsome(&buff2[i], 1) && buff2[i] != '=') {
 		if (++i == 4) {
 			for (i = 0; i != 4; i++)
-				buff2[i] = decodeCharacterTableUrl[(uint8_t) buff2[i]];
+				buff2[i] = decodeCharacterTableUrl[(uint8_t)buff2[i]];
 
-			out << (char) ((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4));
-			out << (char) (((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2));
-			out << (char) (((buff2[2] & 0x3) << 6) + buff2[3]);
+			out << (char)((buff2[0] << 2) + ((buff2[1] & 0x30) >> 4));
+			out << (char)(((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2));
+			out << (char)(((buff2[2] & 0x3) << 6) + buff2[3]);
 
 			i = 0;
 		}
@@ -252,14 +252,14 @@ void zpt::base64::url_decode(string& _out) {
 		for (j = i; j < 4; j++)
 			buff2[j] = '\0';
 		for (j = 0; j < 4; j++)
-			buff2[j] = decodeCharacterTableUrl[(uint8_t) buff2[j]];
+			buff2[j] = decodeCharacterTableUrl[(uint8_t)buff2[j]];
 
 		buff1[0] = (buff2[0] << 2) + ((buff2[1] & 0x30) >> 4);
 		buff1[1] = ((buff2[1] & 0xf) << 4) + ((buff2[2] & 0x3c) >> 2);
 		buff1[2] = ((buff2[2] & 0x3) << 6) + buff2[3];
 
 		for (j = 0; j < (i - 1); j++)
-			out << (char) buff1[j];
+			out << (char)buff1[j];
 	}
 	out << flush;
 	_out.assign(out.str());

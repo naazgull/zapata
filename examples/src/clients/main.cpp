@@ -40,43 +40,46 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-int main(int argc, char* argv[]) {	
+int main(int argc, char* argv[]) {
 	try {
 		if (argc == 1) {
 			zpt::upnp::broker _upnp(zpt::undefined);
-			for (; true; ) {
+			for (; true;) {
 				std::cout << "listening..." << endl << flush;
 				try {
 					std::cout << std::string(_upnp->listen()) << flush;
+				} catch (...) {
 				}
-				catch (...) {}
 			}
 			return 0;
-		}
-		else {
+		} else {
 			zpt::upnp::broker _upnp(zpt::undefined);
-			_upnp->search("urn:schemas-upnp-org:service:/v3/data-layer/tokens");		
+			_upnp->search("urn:schemas-upnp-org:service:/v3/data-layer/tokens");
 			return 0;
 		}
-		
+
 		std::cout << std::string(zpt::email::parse("pedro.figueiredo@muzzley.com")) << endl << flush;
-		std::cout << std::string(zpt::email::parse("\"José Paulo\" <pedro.figueiredo@muzzley.com>")) << endl << flush;
+		std::cout << std::string(zpt::email::parse("\"José Paulo\" <pedro.figueiredo@muzzley.com>")) << endl
+			  << flush;
 		std::cout << std::string(zpt::email::parse("<pedro.figueiredo@muzzley.com>")) << endl << flush;
 		return 0;
-		
+
 		time_t _now = time(nullptr);
 		zpt::tm_ptr _tm_now = zpt::get_time(_now);
 		time_t _then = _now - (3600 * 24 * 30);
 		zpt::tm_ptr _tm_then = zpt::get_time(_then);
 
-		std::cout << "DST: " << _then << " " << std::put_time(_tm_then.get(), "%c %Z") << " > " << _tm_then->tm_gmtoff << endl << flush;
-		std::cout << "NO DST: " << _now << " " << std::put_time(_tm_now.get(), "%c %Z") << " > " << _tm_now->tm_gmtoff << endl << flush;
+		std::cout << "DST: " << _then << " " << std::put_time(_tm_then.get(), "%c %Z") << " > "
+			  << _tm_then->tm_gmtoff << endl
+			  << flush;
+		std::cout << "NO DST: " << _now << " " << std::put_time(_tm_now.get(), "%c %Z") << " > "
+			  << _tm_now->tm_gmtoff << endl
+			  << flush;
 		return 0;
-		
-	}
-	catch (zpt::assertion& _e) {
+
+	} catch (zpt::assertion& _e) {
 		zlog(_e.what() + string("\n") + _e.description(), zpt::error);
 	}
-	
+
 	return 0;
 }

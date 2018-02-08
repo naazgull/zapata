@@ -35,19 +35,14 @@ bool zpt::ws::handshake(zpt::socketstream& _s) {
 		if (_line.find("Sec-WebSocket-Key:") != std::string::npos) {
 			_key.assign(_line.substr(19));
 		}
-	}
-	while (_line != "");
+	} while (_line != "");
 
 	_key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
 	_key.assign(zpt::hash::SHA1(_key));
 	zpt::base64::encode(_key);
 
-	_s << 
-		"HTTP/1.1 101 Switching Protocols" << CRLF <<
-		"Upgrade: websocket" << CRLF << 
-		"Connection: Upgrade" << CRLF <<
-		"Sec-WebSocket-Accept: " << _key << CRLF <<
-		CRLF << flush;
+	_s << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF << "Connection: Upgrade"
+	   << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF << flush;
 	return true;
 }
 
@@ -65,64 +60,59 @@ bool zpt::ws::read(zpt::socketstream& _s, string& _out, int* _op_code) {
 	int _len = _hdr & 0x7F;
 	if (_len == 126) {
 		_s >> noskipws >> _hdr;
-		_len = (int) _hdr;
+		_len = (int)_hdr;
 		_len <<= 8;
 		_s >> noskipws >> _hdr;
-		_len += (int) _hdr;
-	}
-	else if (_len == 127) {
+		_len += (int)_hdr;
+	} else if (_len == 127) {
 		_s >> noskipws >> _hdr;
-		_len = (int) _hdr;
+		_len = (int)_hdr;
 		for (int _i = 0; _i < 7; _i++) {
 			_len <<= 8;
 			_s >> noskipws >> _hdr;
-			_len += (int) _hdr;
+			_len += (int)_hdr;
 		}
 	}
 
 	if (_mask) {
 		for (int _i = 0; _i < 4; _i++) {
 			_s >> noskipws >> _hdr;
-			_masking.push_back((char) _hdr);
+			_masking.push_back((char)_hdr);
 		}
 	}
 
-
 	for (int _i = 0; _i != _len; _i++) {
 		_s >> noskipws >> _hdr;
-		_masked.push_back((char) _hdr);
+		_masked.push_back((char)_hdr);
 	}
 
 	if (_mask) {
 		for (size_t _i = 0; _i < _masked.length(); _i++) {
 			_out.push_back(_masked[_i] ^ _masking[_i % 4]);
 		}
-	}
-	else {
+	} else {
 		_out.assign(_masked);
 	}
 
 	return _fin;
 }
 
-bool zpt::ws::write(zpt::socketstream& _s, string _in){
+bool zpt::ws::write(zpt::socketstream& _s, string _in) {
 	int _len = _in.length();
 
-	_s << (unsigned char) 0x81;
+	_s << (unsigned char)0x81;
 	if (_len > 125) {
-		_s << (unsigned char) 0xFE;
-		_s << ((unsigned char) (_len >> 8));
-		_s << ((unsigned char) (_len & 0xFF));
-	}
-	else {
-		_s << (unsigned char) (0x80 | ((unsigned char) _len));
+		_s << (unsigned char)0xFE;
+		_s << ((unsigned char)(_len >> 8));
+		_s << ((unsigned char)(_len & 0xFF));
+	} else {
+		_s << (unsigned char)(0x80 | ((unsigned char)_len));
 	}
 	for (int _i = 0; _i != 4; _i++) {
-		_s << (unsigned char) 0x00;
+		_s << (unsigned char)0x00;
 	}
 
 	_s << _in << flush;
 
 	return true;
-
 }

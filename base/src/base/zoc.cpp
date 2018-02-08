@@ -58,46 +58,38 @@ int main(int _argc, char* _argv[]) {
 						_to_trim += 3;
 						_state = PARAGRAPH;
 					}
-				}
-				else if (_line.find("***/") != std::string::npos) {
+				} else if (_line.find("***/") != std::string::npos) {
 					_state = OUTSIDE;
-				}
-				else {
+				} else {
 					if (_line.length() >= _to_trim) {
 						_line.assign(_line.substr(_to_trim));
 						if (_line.length() != 0) {
 							if (_line[0] == '#') {
 								cout << endl << flush;
 								_state = HEADER;
-							}
-							else if (_line[0] == '-') {
+							} else if (_line[0] == '-') {
 								if (_state != LIST) {
 									cout << endl << flush;
 								}
 								_state = LIST;
-							}
-							else if (_line[0] == '`') {
+							} else if (_line[0] == '`') {
 								if (_state == CODE) {
 									_state = PARAGRAPH;
-								}
-								else {
+								} else {
 									cout << endl << flush;
 									_state = CODE;
 								}
-							}
-							else {
+							} else {
 								if (_state != CODE && _state != PARAGRAPH) {
 									cout << endl << flush;
 								}
 								_state = PARAGRAPH;
 							}
 							cout << _line << endl << flush;
-						}
-						else if (_state == CODE || _state == PARAGRAPH) {
+						} else if (_state == CODE || _state == PARAGRAPH) {
 							cout << endl << flush;
 						}
-					}
-					else if (_state == CODE || _state == PARAGRAPH) {
+					} else if (_state == CODE || _state == PARAGRAPH) {
 						cout << endl << flush;
 					}
 				}
@@ -106,6 +98,4 @@ int main(int _argc, char* _argv[]) {
 		}
 	}
 	return 0;
-
 }
-

@@ -34,15 +34,14 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class ClosedException: public std::exception {
-		private:
-			string __what;
+class ClosedException : public std::exception {
+      private:
+	string __what;
 
-		public:
-			ClosedException(string _what);
-			virtual ~ClosedException() throw();
+      public:
+	ClosedException(string _what);
+	virtual ~ClosedException() throw();
 
-			const char* what();
-	};
-
+	const char* what();
+};
 }

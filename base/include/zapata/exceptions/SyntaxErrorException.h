@@ -34,15 +34,14 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class SyntaxErrorException: public std::exception {
-		private:
-			string __what;
+class SyntaxErrorException : public std::exception {
+      private:
+	string __what;
 
-		public:
-			SyntaxErrorException(string _what);
-			virtual ~SyntaxErrorException() throw();
+      public:
+	SyntaxErrorException(string _what);
+	virtual ~SyntaxErrorException() throw();
 
-			const char* what();
-	};
-
+	const char* what();
+};
 }

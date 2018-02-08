@@ -34,10 +34,10 @@ SOFTWARE.
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/sendfile.h>
-	
+
 int zpt::ls(std::string dir, std::vector<string>& result, bool recursive) {
-	DIR *dp;
-	struct dirent *dirp;
+	DIR* dp;
+	struct dirent* dirp;
 	if ((dp = opendir(dir.c_str())) == NULL) {
 		return errno;
 	}
@@ -51,7 +51,6 @@ int zpt::ls(std::string dir, std::vector<string>& result, bool recursive) {
 			if (recursive) {
 				zpt::ls(cname, result, true);
 			}
-
 		}
 	}
 
@@ -133,7 +132,6 @@ bool zpt::load_path(std::string _in, std::wstring& _out) {
 	return false;
 }
 
-
 bool zpt::dump_path(std::string _in, std::string& _content) {
 	ofstream _ofs;
 	_ofs.open(_in.data());
@@ -153,8 +151,8 @@ bool zpt::dump_path(std::string _in, wstring& _content) {
 }
 
 int zpt::globRegexp(std::string& dir, vector<string>& result, std::regex& pattern, short recursion) {
-	DIR *dp;
-	struct dirent *dirp;
+	DIR* dp;
+	struct dirent* dirp;
 	vector<string> torecurse;
 
 	if ((dp = opendir(dir.c_str())) == NULL) {
@@ -173,7 +171,6 @@ int zpt::globRegexp(std::string& dir, vector<string>& result, std::regex& patter
 			if (std::regex_match(std::string(dirp->d_name), pattern)) {
 				result.insert(result.begin(), cname);
 			}
-
 		}
 	}
 	closedir(dp);
@@ -193,7 +190,7 @@ int zpt::glob(std::string dir, vector<string>& result, std::string pattern, shor
 
 bool zpt::is_dir(std::string _path) {
 	struct stat _s;
-	if( stat(_path.data(), & _s) == 0 ) {
+	if (stat(_path.data(), &_s) == 0) {
 		return _s.st_mode & S_IFDIR;
 	}
 	return false;

@@ -35,5 +35,5 @@ using namespace __gnu_cxx;
 #endif
 
 namespace zpt {
-	bool sendmail(string _to, string _from, string _subject, string _message, string _replyto = "");
+bool sendmail(string _to, string _from, string _subject, string _message, string _replyto = "");
 }

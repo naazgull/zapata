@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libzapata-mysql.la libzapata-mysql-binlog-stream.la
 
 libzapata_mysql_la_LIBADD = -lpthread -lssl -lcrypto -lmysqlcppconn -lzapata-base -lzapata-json
 libzapata_mysql_la_LDFLAGS = -version-info 9:7:9
-libzapata_mysql_la_CPPFLAGS = -O3 -std=c++14 -I../../include
+libzapata_mysql_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 libzapata_mysql_la_SOURCES = \
 ./convert_sql.cpp \
@@ -20,7 +20,7 @@ bin_PROGRAMS = zblreader
 
 zblreader_LDADD = -lpthread -lzapata-base -lzapata-json -lzapata-mysql-binlog-stream
 zblreader_LDFLAGS =  -L./.libs
-zblreader_CPPFLAGS = -O3 -std=c++14 -I../../include
+zblreader_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 zblreader_SOURCES = \
 ./reader.cpp

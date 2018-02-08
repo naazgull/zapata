@@ -26,7 +26,7 @@ SOFTWARE.
 
 bool zpt::sendmail(string _to, string _from, string _subject, string _message, string _replyto) {
 	bool _retval = false;
-	FILE *_mailpipe = popen("/usr/sbin/sendmail -t", "w");
+	FILE* _mailpipe = popen("/usr/sbin/sendmail -t", "w");
 	if (_mailpipe != nullptr) {
 		fprintf(_mailpipe, "To: %s\n", _to.data());
 		fprintf(_mailpipe, "From: %s\n", _from.data());

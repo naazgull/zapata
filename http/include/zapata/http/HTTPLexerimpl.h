@@ -8,6 +8,6 @@
 #include <sstream>
 
 // $insert namespace-use
-    // UN-comment the next using-declaration if you want to use
-    // symbols from the namespace zpt without prefixing zpt::
-//using namespace zpt;
+// UN-comment the next using-declaration if you want to use
+// symbols from the namespace zpt without prefixing zpt::
+// using namespace zpt;

@@ -28,23 +28,10 @@ SOFTWARE.
 #include <zapata/exceptions/CastException.h>
 
 namespace zpt {
-	string nil_header = "";
+string nil_header = "";
 
-	const char* method_names[] = {
-		"GET",
-		"PUT",
-		"POST",
-		"DELETE",
-		"HEAD",
-		"OPTIONS",
-		"PATCH",
-		"REPLY",
-		"M-SEARCH",
-		"NOTIFY",
-		"TRACE",
-		"CONNECT"
-	};
-
+const char* method_names[] = {
+    "GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS", "PATCH", "REPLY", "M-SEARCH", "NOTIFY", "TRACE", "CONNECT"};
 }
 
 void zpt::init(HTTPReq& _req) {
@@ -73,7 +60,6 @@ void zpt::init(HTTPReq& _req) {
 	_req->header("Cache-Control", "max-age=3600");
 	_req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
 	_req->header("Date", string(_buffer_date));
-
 }
 
 void zpt::init(HTTPRep& _rep) {
@@ -93,32 +79,21 @@ void zpt::init(HTTPRep& _rep) {
 	_rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
 	_rep->header("Date", string(_buffer_date));
 	_rep->header("Expires", string(_buffer_expires));
-
 }
 
-zpt::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {
-}
+zpt::HTTPPtr::HTTPPtr(HTTPObj* _target) : shared_ptr<HTTPObj>(_target) {}
 
-zpt::HTTPPtr::~HTTPPtr(){
-}
+zpt::HTTPPtr::~HTTPPtr() {}
 
-zpt::HTTPObj::HTTPObj() {
-}
+zpt::HTTPObj::HTTPObj() {}
 
-zpt::HTTPObj::~HTTPObj() {
-}
+zpt::HTTPObj::~HTTPObj() {}
 
-string& zpt::HTTPObj::body() {
-	return this->__body;
-}
+string& zpt::HTTPObj::body() { return this->__body; }
 
-void zpt::HTTPObj::body(string _body) {
-	this->__body.assign(_body.data());
-}
+void zpt::HTTPObj::body(string _body) { this->__body.assign(_body.data()); }
 
-zpt::HeaderMap& zpt::HTTPObj::headers() {
-	return this->__headers;
-}
+zpt::HeaderMap& zpt::HTTPObj::headers() { return this->__headers; }
 
 string zpt::HTTPObj::header(const char* _idx) {
 	string _name(_idx);
@@ -137,7 +112,7 @@ void zpt::HTTPObj::header(const char* _name, const char* _value) {
 	if (_found != this->__headers.end()) {
 		this->__headers.erase(_found);
 	}
-	this->__headers.insert(pair< string, string> (_n, _value));
+	this->__headers.insert(pair<string, string>(_n, _value));
 }
 
 void zpt::HTTPObj::header(const char* _name, string _value) {
@@ -147,7 +122,7 @@ void zpt::HTTPObj::header(const char* _name, string _value) {
 	if (_found != this->__headers.end()) {
 		this->__headers.erase(_found);
 	}
-	this->__headers.insert(pair< string, string> (_n, _value));
+	this->__headers.insert(pair<string, string>(_n, _value));
 }
 
 void zpt::HTTPObj::header(string _name, string _value) {
@@ -157,12 +132,10 @@ void zpt::HTTPObj::header(string _name, string _value) {
 	if (_found != this->__headers.end()) {
 		this->__headers.erase(_found);
 	}
-	this->__headers.insert(pair< string, string> (_n, _value));
+	this->__headers.insert(pair<string, string>(_n, _value));
 }
 
-zpt::HTTPObj::operator std::string() {
-	return this->to_string();
-}
+zpt::HTTPObj::operator std::string() { return this->to_string(); }
 
 std::string zpt::HTTPObj::to_string() {
 	std::string _return;

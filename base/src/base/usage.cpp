@@ -45,10 +45,9 @@ void zpt::process_mem_usage(double& vm_usage, double& resident_set) {
 	unsigned long vsize;
 	long rss;
 
-	stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
-			>> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
-			>> utime >> stime >> cutime >> cstime >> priority >> nice
-			>> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+	stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags >> minflt >>
+	    cminflt >> majflt >> cmajflt >> utime >> stime >> cutime >> cstime >> priority >> nice >> O >>
+	    itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
 
 	stat_stream.close();
 
@@ -56,5 +55,3 @@ void zpt::process_mem_usage(double& vm_usage, double& resident_set) {
 	vm_usage = vsize / 1024.0;
 	resident_set = rss * page_size_kb;
 }
-
-

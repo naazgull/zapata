@@ -11,7 +11,6 @@
 #include <zapata/applications/datums/MyUsers.h>
 #include <zapata/applications/mutations/MyUsers.h>
 
-
 using namespace std;
 #if !defined __APPLE__
 using namespace __gnu_cxx;
@@ -27,5 +26,3 @@ auto restify(zpt::ev::emitter _emitter) -> void;
 }
 }
 }
-
-

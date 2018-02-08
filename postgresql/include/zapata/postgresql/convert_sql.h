@@ -37,19 +37,18 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace pgsql {
+namespace pgsql {
 
-		extern std::map<std::string, std::string> OPS;
+extern std::map<std::string, std::string> OPS;
 
-		auto fromsql(pqxx::tuple _in, zpt::json _out) -> void;
-		auto fromsql_r(pqxx::tuple _in) -> zpt::json;
-		auto get_query(zpt::json _in, std::string&  _queryr) -> void;
-		auto get_opts(zpt::json _in, std::string&  _queryr) -> void;
-		auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
-		auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
-		auto get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
-		auto escape_name(std::string _in) -> std::string;
-		auto escape(zpt::json _in) -> std::string;
-
-	}
+auto fromsql(pqxx::tuple _in, zpt::json _out) -> void;
+auto fromsql_r(pqxx::tuple _in) -> zpt::json;
+auto get_query(zpt::json _in, std::string& _queryr) -> void;
+auto get_opts(zpt::json _in, std::string& _queryr) -> void;
+auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
+auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
+auto get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
+auto escape_name(std::string _in) -> std::string;
+auto escape(zpt::json _in) -> std::string;
+}
 }

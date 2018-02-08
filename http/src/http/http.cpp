@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2017 n@zgul <n@zgul.me>
+Copyright (c) 2017 n@zgul <n@zgul.me>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,24 +80,18 @@ zpt::HTTPRep& zpt::fromhttpstream(istream& _in, zpt::HTTPRep& _out) {
 	return _out;
 }
 
-void zpt::tostr(string& _out, HTTPRep& _in)  {
-	_in->stringify(_out);
-}
+void zpt::tostr(string& _out, HTTPRep& _in) { _in->stringify(_out); }
 
-void zpt::tostr(string& _out, HTTPReq& _in)  {
-	_in->stringify(_out);
-}
+void zpt::tostr(string& _out, HTTPReq& _in) { _in->stringify(_out); }
 
-void zpt::tostr(ostream& _out, HTTPRep& _in)  {
+void zpt::tostr(ostream& _out, HTTPRep& _in) {
 	_in->stringify(_out);
 	_out << flush;
 }
 
-void zpt::tostr(ostream& _out, HTTPReq& _in)  {
+void zpt::tostr(ostream& _out, HTTPReq& _in) {
 	_in->stringify(_out);
 	_out << flush;
 }
 
-extern "C" auto zpt_http() -> int {
-	return 1;
-}
+extern "C" auto zpt_http() -> int { return 1; }

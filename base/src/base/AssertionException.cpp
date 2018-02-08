@@ -27,26 +27,38 @@ SOFTWARE.
 #include <sstream>
 #include <zapata/text/convert.h>
 
-zpt::AssertionException::AssertionException(string _in, int _http_code, int _code, string _desc, int _line, string _file) : std::exception(), __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line), __file(_file){
+zpt::AssertionException::AssertionException(
+    string _in, int _http_code, int _code, string _desc, int _line, string _file)
+    : std::exception(), __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line),
+      __file(_file) {
 	zpt::replace(this->__what, "\"", "");
 	zpt::replace(this->__description, "\"", "");
 	this->__description.insert(0, "'");
 	if (this->__line != 0) {
 		this->__description.insert(this->__description.length(), "' failed on file ");
 		this->__description.insert(this->__description.length(), this->__file);
-		this->__description.insert(this->__description.length(),  ", line ");
+		this->__description.insert(this->__description.length(), ", line ");
 		zpt::tostr(this->__description, this->__line);
 	}
 }
 
-zpt::AssertionException::AssertionException(string _in, int _http_code, int _code, string _desc, int _line, string _file, char** _backtrace, size_t _backtrace_size) : std::exception(), __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line), __file(_file) {
+zpt::AssertionException::AssertionException(string _in,
+					    int _http_code,
+					    int _code,
+					    string _desc,
+					    int _line,
+					    string _file,
+					    char** _backtrace,
+					    size_t _backtrace_size)
+    : std::exception(), __what(_in), __http_code(_http_code), __code(_code), __description(_desc), __line(_line),
+      __file(_file) {
 	zpt::replace(this->__what, "\"", "");
 	zpt::replace(this->__description, "\"", "");
 	this->__description.insert(0, "'");
 	if (this->__line != 0) {
 		this->__description.insert(this->__description.length(), "' failed on file ");
 		this->__description.insert(this->__description.length(), this->__file);
-		this->__description.insert(this->__description.length(),  ", line ");
+		this->__description.insert(this->__description.length(), ", line ");
 		zpt::tostr(this->__description, this->__line);
 	}
 
@@ -57,25 +69,14 @@ zpt::AssertionException::AssertionException(string _in, int _http_code, int _cod
 	free(_backtrace);
 }
 
-zpt::AssertionException::~AssertionException() throw() {
-}
+zpt::AssertionException::~AssertionException() throw() {}
 
-const char* zpt::AssertionException::what() {
-	return this->__what.data();
-}
+const char* zpt::AssertionException::what() { return this->__what.data(); }
 
-const char* zpt::AssertionException::description() {
-	return this->__description.data();
-}
+const char* zpt::AssertionException::description() { return this->__description.data(); }
 
-const char* zpt::AssertionException::backtrace() {
-	return this->__backtrace.data();
-}
+const char* zpt::AssertionException::backtrace() { return this->__backtrace.data(); }
 
-int zpt::AssertionException::code() {
-	return this->__code;
-}
+int zpt::AssertionException::code() { return this->__code; }
 
-int zpt::AssertionException::status() {
-	return this->__http_code;
-}
+int zpt::AssertionException::status() { return this->__http_code; }
