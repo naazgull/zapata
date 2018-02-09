@@ -40,20 +40,16 @@ using namespace __gnu_cxx;
 int main(int argc, char* argv[]) {
 	try {
 		zpt::rest::server::launch(argc, argv);
-	}
-	catch (zpt::assertion& _e) {
+	} catch (zpt::assertion& _e) {
 		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
 		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 		exit(-10);
-	}
-	catch (std::exception& _e) {
+	} catch (std::exception& _e) {
 		zlog(_e.what(), zpt::emergency);
 		exit(-10);
 	}
-	
+
 	return 0;
 }
 
-extern "C" auto zpt_rest() -> int {
-	return 1;
-}
+extern "C" auto zpt_rest() -> int { return 1; }

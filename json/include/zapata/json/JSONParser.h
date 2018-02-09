@@ -30,17 +30,15 @@ SOFTWARE.
 
 namespace zpt {
 
-	class JSONParser: public JSONTokenizer {
-	public:
-		JSONParser(std::istream &_in = std::cin, std::ostream &_out = std::cout);
-		virtual ~JSONParser();
+class JSONParser : public JSONTokenizer {
+      public:
+	JSONParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+	virtual ~JSONParser();
 
-		void switchRoots(JSONPtr& _root);
-		void switchStreams(std::istream &_in = std::cin, std::ostream &_out = std::cout);
+	void switchRoots(JSONPtr& _root);
+	void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 
-	private:
-		std::mutex __mtx;
-		
-	};
-
+      private:
+	std::mutex __mtx;
+};
 }

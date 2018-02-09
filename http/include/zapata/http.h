@@ -38,4 +38,3 @@ SOFTWARE.
 #include <zapata/http/HTTPTokenizerbase.h>
 #include <zapata/http/HTTPTokenizerimpl.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
-

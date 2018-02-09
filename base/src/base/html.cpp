@@ -36,23 +36,18 @@ using namespace __gnu_cxx;
 void zpt::html::entities_encode(wstring s, ostream& out, bool quote, bool tags) {
 	ostringstream oss;
 	for (size_t i = 0; i != s.length(); i++) {
-		if (((unsigned char) s[i]) > 127) {
-			oss << "&#" << dec << ((int) s.at(i)) << ";";
-		}
-		else if (s[i] == '"' && quote) {
+		if (((unsigned char)s[i]) > 127) {
+			oss << "&#" << dec << ((int)s.at(i)) << ";";
+		} else if (s[i] == '"' && quote) {
 			oss << "&quot;";
-		}
-		else if (s[i] == '<' && tags) {
+		} else if (s[i] == '<' && tags) {
 			oss << "&lt;";
-		}
-		else if (s[i] == '>' && tags) {
+		} else if (s[i] == '>' && tags) {
 			oss << "&gt;";
-		}
-		else if (s[i] == '&') {
+		} else if (s[i] == '&') {
 			oss << "&amp;";
-		}
-		else {
-			oss << ((char) s.at(i));
+		} else {
+			oss << ((char)s.at(i));
 		}
 	}
 	oss << flush;
@@ -80,11 +75,10 @@ void zpt::html::entities_decode(string& _out) {
 			}
 			int c;
 			ss >> c;
-			oss << ((wchar_t) c);
+			oss << ((wchar_t)c);
 			i = j;
-		}
-		else {
-			oss << ((wchar_t) _out[i]);
+		} else {
+			oss << ((wchar_t)_out[i]);
 		}
 	}
 	oss << flush;

@@ -1,4 +1,4 @@
-/*    
+/*
 The MIT License (MIT)
 
 Copyright (c) 2017 n@zgul <n@zgul.me>
@@ -33,186 +33,184 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class Generator;
-	class GeneratorPtr;
-	class GenDatum;
-	class GenResource;
+class Generator;
+class GeneratorPtr;
+class GenDatum;
+class GenResource;
 
-	typedef std::shared_ptr<zpt::GenDatum> GenDatumPtr;
-	typedef std::shared_ptr<zpt::GenResource> GenResourcePtr;
+typedef std::shared_ptr<zpt::GenDatum> GenDatumPtr;
+typedef std::shared_ptr<zpt::GenResource> GenResourcePtr;
 
-	namespace gen {
-		typedef zpt::GeneratorPtr worker;
-		typedef zpt::GenDatumPtr datum;
-		typedef zpt::GenResourcePtr resource;
+namespace gen {
+typedef zpt::GeneratorPtr worker;
+typedef zpt::GenDatumPtr datum;
+typedef zpt::GenResourcePtr resource;
 
-		auto url_pattern_to_regexp(zpt::json _url_pattern) -> std::string;
-		auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
-		auto url_pattern_to_var_decl(zpt::json _url) -> std::string;
-		auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
-		auto url_pattern_to_vars_python(std::string _url) -> std::string;
-		auto url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string;
-		auto url_pattern_to_params(zpt::json _url) -> zpt::json;
-		auto url_pattern_to_params_lisp(zpt::json _url) -> zpt::json;
-		auto url_pattern_to_params_python(zpt::json _url) -> zpt::json;
+auto url_pattern_to_regexp(zpt::json _url_pattern) -> std::string;
+auto url_pattern_to_vars(std::string _url_pattern) -> std::string;
+auto url_pattern_to_var_decl(zpt::json _url) -> std::string;
+auto url_pattern_to_vars_lisp(std::string _url) -> std::string;
+auto url_pattern_to_vars_python(std::string _url) -> std::string;
+auto url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string;
+auto url_pattern_to_params(zpt::json _url) -> zpt::json;
+auto url_pattern_to_params_lisp(zpt::json _url) -> zpt::json;
+auto url_pattern_to_params_python(zpt::json _url) -> zpt::json;
 
-		auto get_opts(zpt::json _field) -> zpt::json;
-		auto get_fields_array(zpt::json _fields) -> std::string;
-	}
+auto get_opts(zpt::json _field) -> zpt::json;
+auto get_fields_array(zpt::json _fields) -> std::string;
+}
 
-	namespace conf {
-		namespace gen {
-			auto init(int argc, char* argv[]) -> zpt::json;
-		}
-	}
+namespace conf {
+namespace gen {
+auto init(int argc, char* argv[]) -> zpt::json;
+}
+}
 
-	class GeneratorPtr : public std::shared_ptr<zpt::Generator> {
-	public:
-		GeneratorPtr(zpt::json _options);
-		GeneratorPtr(zpt::Generator * _ptr);
-		virtual ~GeneratorPtr();
+class GeneratorPtr : public std::shared_ptr<zpt::Generator> {
+      public:
+	GeneratorPtr(zpt::json _options);
+	GeneratorPtr(zpt::Generator* _ptr);
+	virtual ~GeneratorPtr();
 
-		static auto launch(int argc, char* argv[]) -> int;
-	};
+	static auto launch(int argc, char* argv[]) -> int;
+};
 
-	class Generator {
-	public:
-		static std::map< std::string, zpt::gen::datum > datums;
-		static std::map< std::string, zpt::gen::resource > resources;
-		static std::map< std::string, zpt::gen::datum > included_datums;
-		static std::map< std::string, zpt::gen::resource > included_resources;
-		static std::string datum_includes;
-		static std::map< std::string, std::string > alias;
+class Generator {
+      public:
+	static std::map<std::string, zpt::gen::datum> datums;
+	static std::map<std::string, zpt::gen::resource> resources;
+	static std::map<std::string, zpt::gen::datum> included_datums;
+	static std::map<std::string, zpt::gen::resource> included_resources;
+	static std::string datum_includes;
+	static std::map<std::string, std::string> alias;
 
-		Generator(zpt::json _options);
-		virtual ~Generator();
+	Generator(zpt::json _options);
+	virtual ~Generator();
 
-		virtual auto options() -> zpt::json;
-		virtual auto load() -> void;
-		virtual auto build() -> void;
-		virtual auto build_data_layer() -> void;
-		virtual auto build_container() -> void;
-		virtual auto build_mutations() -> void;
-		virtual auto build_docs() -> void;
-		virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
-		virtual auto generate_title_performative(zpt::json _resource, std::string _performative) -> std::string;
-		virtual auto get_fields(zpt::json _resource, int* _parent_type = nullptr) -> zpt::json;
+	virtual auto options() -> zpt::json;
+	virtual auto load() -> void;
+	virtual auto build() -> void;
+	virtual auto build_data_layer() -> void;
+	virtual auto build_container() -> void;
+	virtual auto build_mutations() -> void;
+	virtual auto build_docs() -> void;
+	virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
+	virtual auto generate_title_performative(zpt::json _resource, std::string _performative) -> std::string;
+	virtual auto get_fields(zpt::json _resource, int* _parent_type = nullptr) -> zpt::json;
 
-		static auto get_datum(std::string _ref) -> std::string;
+	static auto get_datum(std::string _ref) -> std::string;
 
-		
-	private:
-		zpt::json __options;
-		zpt::json __specs;
-	};
-	
-	class GenDatum {
-	public:
-		GenDatum(zpt::json _spec, zpt::json _options);
-		virtual ~GenDatum();
+      private:
+	zpt::json __options;
+	zpt::json __specs;
+};
 
-		virtual auto spec() -> zpt::json;
-		virtual auto build() -> std::string;
-		virtual auto build_data_layer() -> std::string;
-		virtual auto build_query(zpt::json _field) -> std::string;
-		virtual auto build_doc_query(zpt::json _field, std::string _name) -> std::string;
-		virtual auto build_params(zpt::json _rel, bool _multi, std::string _var_name = "") -> std::string;
-		virtual auto build_inverted_params(zpt::json _rel) -> std::string;
-		virtual auto build_topic(zpt::json _topic) -> std::string;
-		virtual auto build_dbms_source() -> std::string;
-		virtual auto build_dbms() -> std::string;
-		virtual auto build_get(zpt::json _resource) -> std::string;
-		virtual auto build_post(zpt::json _resource) -> std::string;
-		virtual auto build_put(zpt::json _resource) -> std::string;
-		virtual auto build_patch(zpt::json _resource) -> std::string;
-		virtual auto build_delete(zpt::json _resource) -> std::string;
-		virtual auto build_head(zpt::json _resource) -> std::string;
-		virtual auto build_mutations(std::string _parent_name, std::string _child_includes) -> std::string;
-		virtual auto build_insert() -> std::string;
-		virtual auto build_update() -> std::string;
-		virtual auto build_remove() -> std::string;
-		virtual auto build_replace() -> std::string;
-		virtual auto build_validation() -> std::string;
-		virtual auto build_associations_insert(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_for_insert(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_for_update(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_for_remove(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_for_replace(std::string _name, zpt::json _field) -> std::string;
-		virtual auto build_associations_get() -> std::string;
-		virtual auto build_associations_query() -> std::string;
-		virtual auto build_associations_insert() -> std::string;
-		virtual auto build_associations_save() -> std::string;
-		virtual auto build_associations_set() -> std::string;
-		virtual auto build_associations_remove() -> std::string;
-		virtual auto build_extends_get() -> std::string;
-		virtual auto build_extends_query() -> std::string;
-		virtual auto build_extends_insert() -> std::string;
-		virtual auto build_extends_save() -> std::string;
-		virtual auto build_extends_set_topic() -> std::string;
-		virtual auto build_extends_set_pattern() -> std::string;
-		virtual auto build_extends_remove_topic() -> std::string;
-		virtual auto build_extends_remove_pattern() -> std::string;
+class GenDatum {
+      public:
+	GenDatum(zpt::json _spec, zpt::json _options);
+	virtual ~GenDatum();
 
-		static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
-		static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
-		static auto build_ordered_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
-		static auto get_type(zpt::json _field) -> std::string;
-		static auto get_restrictions(zpt::json _field) -> std::string;
+	virtual auto spec() -> zpt::json;
+	virtual auto build() -> std::string;
+	virtual auto build_data_layer() -> std::string;
+	virtual auto build_query(zpt::json _field) -> std::string;
+	virtual auto build_doc_query(zpt::json _field, std::string _name) -> std::string;
+	virtual auto build_params(zpt::json _rel, bool _multi, std::string _var_name = "") -> std::string;
+	virtual auto build_inverted_params(zpt::json _rel) -> std::string;
+	virtual auto build_topic(zpt::json _topic) -> std::string;
+	virtual auto build_dbms_source() -> std::string;
+	virtual auto build_dbms() -> std::string;
+	virtual auto build_get(zpt::json _resource) -> std::string;
+	virtual auto build_post(zpt::json _resource) -> std::string;
+	virtual auto build_put(zpt::json _resource) -> std::string;
+	virtual auto build_patch(zpt::json _resource) -> std::string;
+	virtual auto build_delete(zpt::json _resource) -> std::string;
+	virtual auto build_head(zpt::json _resource) -> std::string;
+	virtual auto build_mutations(std::string _parent_name, std::string _child_includes) -> std::string;
+	virtual auto build_insert() -> std::string;
+	virtual auto build_update() -> std::string;
+	virtual auto build_remove() -> std::string;
+	virtual auto build_replace() -> std::string;
+	virtual auto build_validation() -> std::string;
+	virtual auto build_associations_insert(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_for_insert(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_for_update(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_for_remove(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_for_replace(std::string _name, zpt::json _field) -> std::string;
+	virtual auto build_associations_get() -> std::string;
+	virtual auto build_associations_query() -> std::string;
+	virtual auto build_associations_insert() -> std::string;
+	virtual auto build_associations_save() -> std::string;
+	virtual auto build_associations_set() -> std::string;
+	virtual auto build_associations_remove() -> std::string;
+	virtual auto build_extends_get() -> std::string;
+	virtual auto build_extends_query() -> std::string;
+	virtual auto build_extends_insert() -> std::string;
+	virtual auto build_extends_save() -> std::string;
+	virtual auto build_extends_set_topic() -> std::string;
+	virtual auto build_extends_set_pattern() -> std::string;
+	virtual auto build_extends_remove_topic() -> std::string;
+	virtual auto build_extends_remove_pattern() -> std::string;
 
-	private:
-		zpt::json __spec;
-		zpt::json __options;
+	static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
+	static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace) -> std::string;
+	static auto build_ordered_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace)
+	    -> std::string;
+	static auto get_type(zpt::json _field) -> std::string;
+	static auto get_restrictions(zpt::json _field) -> std::string;
 
-	};
+      private:
+	zpt::json __spec;
+	zpt::json __options;
+};
 
-	class GenResource {
-	public:
-		GenResource(zpt::json _spec, zpt::json _options);
-		virtual ~GenResource();
+class GenResource {
+      public:
+	GenResource(zpt::json _spec, zpt::json _options);
+	virtual ~GenResource();
 
-		virtual auto spec() -> zpt::json;
-		virtual auto build() -> std::string;
-		virtual auto build_data_layer() -> std::string;
-		virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;
-		virtual auto build_mutations() -> std::string;
+	virtual auto spec() -> zpt::json;
+	virtual auto build() -> std::string;
+	virtual auto build_data_layer() -> std::string;
+	virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;
+	virtual auto build_mutations() -> std::string;
 
-		virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
-		virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
-		virtual auto normalize_var_name(zpt::json _var) -> std::string;
-		virtual auto build_get() -> std::string;
-		virtual auto build_post() -> std::string;
-		virtual auto build_put() -> std::string;
-		virtual auto build_patch() -> std::string;
-		virtual auto build_delete() -> std::string;
-		virtual auto build_head() -> std::string;
-		virtual auto build_reply() -> std::string;
+	virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
+	virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto normalize_var_name(zpt::json _var) -> std::string;
+	virtual auto build_get() -> std::string;
+	virtual auto build_post() -> std::string;
+	virtual auto build_put() -> std::string;
+	virtual auto build_patch() -> std::string;
+	virtual auto build_delete() -> std::string;
+	virtual auto build_head() -> std::string;
+	virtual auto build_reply() -> std::string;
 
-		virtual auto build_lisp_validation(zpt::ev::performative _performative) -> std::string;
-		virtual auto build_lisp_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
-		virtual auto build_lisp_get() -> std::string;
-		virtual auto build_lisp_post() -> std::string;
-		virtual auto build_lisp_put() -> std::string;
-		virtual auto build_lisp_patch() -> std::string;
-		virtual auto build_lisp_delete() -> std::string;
-		virtual auto build_lisp_head() -> std::string;
-		virtual auto build_lisp_reply() -> std::string;
-		
-		virtual auto build_python_validation(zpt::ev::performative _performative) -> std::string;
-		virtual auto build_python_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
-		virtual auto build_python_get() -> std::string;
-		virtual auto build_python_post() -> std::string;
-		virtual auto build_python_put() -> std::string;
-		virtual auto build_python_patch() -> std::string;
-		virtual auto build_python_delete() -> std::string;
-		virtual auto build_python_head() -> std::string;
-		virtual auto build_python_reply() -> std::string;
-		
-	private:
-		zpt::json __spec;
-		zpt::json __options;
+	virtual auto build_lisp_validation(zpt::ev::performative _performative) -> std::string;
+	virtual auto build_lisp_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto build_lisp_get() -> std::string;
+	virtual auto build_lisp_post() -> std::string;
+	virtual auto build_lisp_put() -> std::string;
+	virtual auto build_lisp_patch() -> std::string;
+	virtual auto build_lisp_delete() -> std::string;
+	virtual auto build_lisp_head() -> std::string;
+	virtual auto build_lisp_reply() -> std::string;
 
-	};
+	virtual auto build_python_validation(zpt::ev::performative _performative) -> std::string;
+	virtual auto build_python_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto build_python_get() -> std::string;
+	virtual auto build_python_post() -> std::string;
+	virtual auto build_python_put() -> std::string;
+	virtual auto build_python_patch() -> std::string;
+	virtual auto build_python_delete() -> std::string;
+	virtual auto build_python_head() -> std::string;
+	virtual auto build_python_reply() -> std::string;
+
+      private:
+	zpt::json __spec;
+	zpt::json __options;
+};
 }

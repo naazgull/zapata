@@ -27,21 +27,18 @@ SOFTWARE.
 
 auto zpt::redis::to_regex(zpt::json _regexp) -> std::string {
 	std::string _return;
-	if( _regexp->type() == zpt::JSObject) {
+	if (_regexp->type() == zpt::JSObject) {
 		for (auto _r : _regexp->obj()) {
 			_return += std::string("*\"") + _r.first + std::string("\":") + zpt::redis::to_regex(_r.second);
-		}	
-	}
-	else if (_regexp->type() == zpt::JSArray) {
+		}
+	} else if (_regexp->type() == zpt::JSArray) {
 		for (auto _r : _regexp->arr()) {
-			_return +=  std::string("*") + zpt::redis::to_regex(_r);
-		}	
-	}
-	else {
+			_return += std::string("*") + zpt::redis::to_regex(_r);
+		}
+	} else {
 		std::string _value;
 		_regexp->stringify(_value);
 		return _value;
 	}
 	return _return;
 }
-

@@ -34,15 +34,14 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class CastException: public std::exception {
-		private:
-			string __what;
+class CastException : public std::exception {
+      private:
+	string __what;
 
-		public:
-			CastException(string _what);
-			virtual ~CastException() throw();
+      public:
+	CastException(string _what);
+	virtual ~CastException() throw();
 
-			const char* what();
-	};
-
+	const char* what();
+};
 }

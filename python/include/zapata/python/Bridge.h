@@ -35,99 +35,97 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	namespace python {
-		extern std::shared_ptr< std::vector< std::pair< std::string, PyObject* (*)(void) > > > __modules;
-		extern zpt::json __sys_path;
-		
-		class Bridge;
-		class Type;
-		class Object;
+namespace python {
+extern std::shared_ptr<std::vector<std::pair<std::string, PyObject* (*)(void)>>> __modules;
+extern zpt::json __sys_path;
 
-		typedef Object object;
-		typedef Bridge bridge;
+class Bridge;
+class Type;
+class Object;
 
-		class Bridge : public zpt::Bridge {
-		public:
-			Bridge(zpt::json _options);
-			virtual ~Bridge();
-		
-			virtual auto name() -> std::string;
-			virtual auto events(zpt::ev::emitter _emitter) -> void;
-			virtual auto events() -> zpt::ev::emitter;
-			virtual auto self() const -> zpt::bridge;
-			virtual auto unbind() -> void;
-			virtual auto eval(std::string _expr) -> zpt::python::object;
-			virtual auto initialize() -> void;
-			virtual auto load_module(std::string _module) -> void;
-			virtual auto deflbd(zpt::json _conf, std::function< zpt::python::object (int, zpt::python::object[]) > _callback) -> void;
+typedef Object object;
+typedef Bridge bridge;
 
-			static auto instance() -> zpt::bridge;
-			static auto is_booted() -> bool;
-			static auto boot(zpt::json _options) -> void;
-			static auto defmdl(std::string _name, PyObject* (*initfunc)(void)) -> void;
-			static auto add_syspath(std::string _name) -> void;
-				
-		private:
-			zpt::bridge __self;
-			zpt::ev::emitter __events;
-			std::shared_ptr< std::map< std::string, std::function< zpt::python::object (int, zpt::python::object[]) > > > __lambdas;
-		};
+class Bridge : public zpt::Bridge {
+      public:
+	Bridge(zpt::json _options);
+	virtual ~Bridge();
 
-		class Object : public std::shared_ptr< zpt::python::Type > {
-		public:
-			Object(PyObject* _target);
-			Object();
+	virtual auto name() -> std::string;
+	virtual auto events(zpt::ev::emitter _emitter) -> void;
+	virtual auto events() -> zpt::ev::emitter;
+	virtual auto self() const -> zpt::bridge;
+	virtual auto unbind() -> void;
+	virtual auto eval(std::string _expr) -> zpt::python::object;
+	virtual auto initialize() -> void;
+	virtual auto load_module(std::string _module) -> void;
+	virtual auto deflbd(zpt::json _conf, std::function<zpt::python::object(int, zpt::python::object[])> _callback)
+	    -> void;
 
-			static auto bridge() -> zpt::python::bridge*;
-			static auto fromjson(zpt::json _in) -> zpt::python::object;
-		};
-		
-		class Type {
-		public:
-			Type(PyObject* _target);
-			Type();
-			virtual ~Type();
+	static auto instance() -> zpt::bridge;
+	static auto is_booted() -> bool;
+	static auto boot(zpt::json _options) -> void;
+	static auto defmdl(std::string _name, PyObject* (*initfunc)(void)) -> void;
+	static auto add_syspath(std::string _name) -> void;
 
-			inline PyObject* operator -> () {
-				return this->__target;
-			}
+      private:
+	zpt::bridge __self;
+	zpt::ev::emitter __events;
+	std::shared_ptr<std::map<std::string, std::function<zpt::python::object(int, zpt::python::object[])>>>
+	    __lambdas;
+};
 
-			inline PyObject* operator * () {
-				return this->__target;
-			}
-			
-			virtual auto tojson() -> zpt::json;
+class Object : public std::shared_ptr<zpt::python::Type> {
+      public:
+	Object(PyObject* _target);
+	Object();
 
-		private:
-			PyObject* __target;
-		};
+	static auto bridge() -> zpt::python::bridge*;
+	static auto fromjson(zpt::json _in) -> zpt::python::object;
+};
 
-		extern zpt::python::bridge* __instance;
-		
-		auto from_python(PyObject* _in) -> zpt::json;
-		auto from_python(PyObject* _in, zpt::json& _parent) -> void;
-		auto from_ref(zpt::json _in) -> PyObject*;
-		auto to_ref(PyObject* _in) -> zpt::json;
-		auto to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt::python::object;
-		auto to_python(zpt::json _in) -> PyObject*;
+class Type {
+      public:
+	Type(PyObject* _target);
+	Type();
+	virtual ~Type();
 
-		namespace module {
-			auto init() -> PyObject*;
-			auto on(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto route(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto route(PyObject* _self, zpt::json _params) -> PyObject*;
-			auto reply(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto options(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto hook(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto log(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto assertion(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto path_join(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto authorization_headers(PyObject* _self, PyObject* _args) -> PyObject*;
-			auto merge(PyObject* _self, PyObject* _args) -> PyObject*;
-			
-			extern PyMethodDef methods[];
-			extern PyModuleDef spec;
-		}
-	}	
+	inline PyObject* operator->() { return this->__target; }
+
+	inline PyObject* operator*() { return this->__target; }
+
+	virtual auto tojson() -> zpt::json;
+
+      private:
+	PyObject* __target;
+};
+
+extern zpt::python::bridge* __instance;
+
+auto from_python(PyObject* _in) -> zpt::json;
+auto from_python(PyObject* _in, zpt::json& _parent) -> void;
+auto from_ref(zpt::json _in) -> PyObject*;
+auto to_ref(PyObject* _in) -> zpt::json;
+auto to_python(zpt::json _in, zpt::python::bridge* _bridge) -> zpt::python::object;
+auto to_python(zpt::json _in) -> PyObject*;
+
+namespace module {
+auto init() -> PyObject*;
+auto on(PyObject* _self, PyObject* _args) -> PyObject*;
+auto route(PyObject* _self, PyObject* _args) -> PyObject*;
+auto route(PyObject* _self, zpt::json _params) -> PyObject*;
+auto reply(PyObject* _self, PyObject* _args) -> PyObject*;
+auto validate_authorization(PyObject* _self, PyObject* _args) -> PyObject*;
+auto options(PyObject* _self, PyObject* _args) -> PyObject*;
+auto hook(PyObject* _self, PyObject* _args) -> PyObject*;
+auto log(PyObject* _self, PyObject* _args) -> PyObject*;
+auto assertion(PyObject* _self, PyObject* _args) -> PyObject*;
+auto path_join(PyObject* _self, PyObject* _args) -> PyObject*;
+auto authorization_headers(PyObject* _self, PyObject* _args) -> PyObject*;
+auto merge(PyObject* _self, PyObject* _args) -> PyObject*;
+
+extern PyMethodDef methods[];
+extern PyModuleDef spec;
+}
+}
 }

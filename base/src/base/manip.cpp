@@ -39,17 +39,20 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-void zpt::ltrim(std::string &_in_out) {
-        _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+void zpt::ltrim(std::string& _in_out) {
+	_in_out.erase(_in_out.begin(),
+		      std::find_if(_in_out.begin(), _in_out.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 }
 
-void zpt::rtrim(std::string &_in_out) {
-        _in_out.erase(std::find_if(_in_out.rbegin(), _in_out.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), _in_out.end());
+void zpt::rtrim(std::string& _in_out) {
+	_in_out.erase(
+	    std::find_if(_in_out.rbegin(), _in_out.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+	    _in_out.end());
 }
 
-void zpt::trim(std::string &_in_out) {
-        zpt::ltrim(_in_out);
-        zpt::rtrim(_in_out);
+void zpt::trim(std::string& _in_out) {
+	zpt::ltrim(_in_out);
+	zpt::rtrim(_in_out);
 }
 
 auto zpt::replace(std::string& str, std::string find, std::string replace) -> void {
@@ -70,14 +73,12 @@ void zpt::normalize_path(std::string& _in_out, bool _with_trailing) {
 		if (_in_out[_in_out.length() - 1] != '/') {
 			_in_out.insert(_in_out.length(), "/");
 		}
-	}
-	else {
+	} else {
 		if (_in_out[_in_out.length() - 1] == '/') {
 			_in_out.erase(_in_out.length() - 1, 1);
 		}
 	}
 }
-
 
 void zpt::cipher(std::string _in, std::string _key, std::string& _out) {
 	unsigned int _ikey = _key.length(), iIn = _in.length(), x = 0;
@@ -92,17 +93,15 @@ void zpt::cipher(std::string _in, std::string _key, std::string& _out) {
 	_out.assign(_s_encrypted);
 }
 
-void zpt::decipher(std::string _in, std::string _key, std::string& _out) {
-	zpt::cipher(_in, _key, _out);
-}
+void zpt::decipher(std::string _in, std::string _key, std::string& _out) { zpt::cipher(_in, _key, _out); }
 
 void zpt::encrypt(std::string& _out, std::string _in, std::string _key) {
 	Bytef* src = new Bytef[_in.length()];
-	size_t destLen = (size_t) (_in.length() * 1.1 + 12);
+	size_t destLen = (size_t)(_in.length() * 1.1 + 12);
 	Bytef* dest = new Bytef[destLen];
 
 	for (size_t i = 0; i != _in.length(); i++) {
-		src[i]  = (Bytef) _in[i];
+		src[i] = (Bytef)_in[i];
 	}
 
 	compress(dest, &destLen, src, _in.length());
@@ -139,14 +138,14 @@ void zpt::decrypt(std::string& _out, std::string _in, std::string _key) {
 	zpt::base64::decode(_encrypted);
 
 	string _decrypted;
-	zpt::decipher(_encrypted, _key,  _decrypted);
+	zpt::decipher(_encrypted, _key, _decrypted);
 
 	Bytef* src = new Bytef[_decrypted.length()];
 	size_t destLen = _size;
 	Bytef* dest = new Bytef[destLen];
 
 	for (size_t i = 0; i != _decrypted.length(); i++) {
-		src[i]  = (Bytef) _decrypted[i];
+		src[i] = (Bytef)_decrypted[i];
 	}
 
 	uncompress(dest, &destLen, src, _decrypted.length());
@@ -180,20 +179,23 @@ void zpt::prettify_header_name(std::string& name) {
 
 std::string zpt::r_ltrim(std::string _in_out) {
 	std::string _return(_in_out.data());
-        _return.erase(_return.begin(), std::find_if(_return.begin(), _return.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+	_return.erase(_return.begin(),
+		      std::find_if(_return.begin(), _return.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 	return _return;
 }
 
 std::string zpt::r_rtrim(std::string _in_out) {
 	std::string _return(_in_out.data());
-        _return.erase(std::find_if(_return.rbegin(), _return.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), _return.end());
+	_return.erase(
+	    std::find_if(_return.rbegin(), _return.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+	    _return.end());
 	return _return;
 }
 
 std::string zpt::r_trim(std::string _in_out) {
 	std::string _return(_in_out.data());
-        zpt::ltrim(_return);
-        zpt::rtrim(_return);
+	zpt::ltrim(_return);
+	zpt::rtrim(_return);
 	return _return;
 }
 
@@ -203,15 +205,14 @@ std::string zpt::r_replace(std::string str, std::string find, std::string replac
 		if (_return.length() == 0) {
 			return _return;
 		}
-		
+
 		size_t start = 0;
-		
+
 		while ((start = _return.find(find, start)) != std::string::npos) {
 			_return.replace(start, find.size(), replace);
 			start += replace.length();
 		}
-	}
-	catch (std::exception& _e) {
+	} catch (std::exception& _e) {
 		std::cout << (_e.what()) << endl << flush;
 	}
 	return _return;
@@ -223,15 +224,13 @@ std::string zpt::r_normalize_path(std::string _in_out, bool _with_trailing) {
 		if (_return[_return.length() - 1] != '/') {
 			_return.insert(_return.length(), "/");
 		}
-	}
-	else {
+	} else {
 		if (_return[_return.length() - 1] == '/') {
 			_return.erase(_return.length() - 1, 1);
 		}
 	}
 	return _return;
 }
-
 
 std::string zpt::r_cipher(std::string _in, std::string _key) {
 	std::string _out;
@@ -248,18 +247,16 @@ std::string zpt::r_cipher(std::string _in, std::string _key) {
 	return _out;
 }
 
-std::string zpt::r_decipher(std::string _in, std::string _key) {
-	return zpt::r_cipher(_in, _key);
-}
+std::string zpt::r_decipher(std::string _in, std::string _key) { return zpt::r_cipher(_in, _key); }
 
 std::string zpt::r_encrypt(std::string _in, std::string _key) {
 	std::string _out;
 	Bytef* src = new Bytef[_in.length()];
-	size_t destLen = (size_t) (_in.length() * 1.1 + 12);
+	size_t destLen = (size_t)(_in.length() * 1.1 + 12);
 	Bytef* dest = new Bytef[destLen];
 
 	for (size_t i = 0; i != _in.length(); i++) {
-		src[i]  = (Bytef) _in[i];
+		src[i] = (Bytef)_in[i];
 	}
 
 	compress(dest, &destLen, src, _in.length());
@@ -298,14 +295,14 @@ std::string zpt::r_decrypt(std::string _in, std::string _key) {
 	zpt::base64::decode(_encrypted);
 
 	string _decrypted;
-	zpt::decipher(_encrypted, _key,  _decrypted);
+	zpt::decipher(_encrypted, _key, _decrypted);
 
 	Bytef* src = new Bytef[_decrypted.length()];
 	size_t destLen = _size;
 	Bytef* dest = new Bytef[destLen];
 
 	for (size_t i = 0; i != _decrypted.length(); i++) {
-		src[i]  = (Bytef) _decrypted[i];
+		src[i] = (Bytef)_decrypted[i];
 	}
 
 	uncompress(dest, &destLen, src, _decrypted.length());
@@ -324,7 +321,7 @@ std::string zpt::r_decrypt(std::string _in, std::string _key) {
 }
 
 std::string zpt::r_prettify_header_name(std::string name) {
-	std::string _return(name.data());	
+	std::string _return(name.data());
 	std::transform(_return.begin(), _return.begin() + 1, _return.begin(), ::toupper);
 
 	stringstream iss;

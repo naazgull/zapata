@@ -48,40 +48,46 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 		_conf = _global_conf + _conf;
 		zpt::conf::setup(_conf);
 
-		_conf << "!warning" << "AUTOMATIC GENERATED FILE, do NOT edit by hand";
+		_conf << "!warning"
+		      << "AUTOMATIC GENERATED FILE, do NOT edit by hand";
 		_conf << "$source" << _to_add;
-				
+
 		if (!_conf["boot"][0]["name"]->is_string()) {
-			std::cout << "no bootable configuration found in /etc/zapata/backend-available/" << std::string(_to_add) << ".conf" << endl << flush;
+			std::cout << "no bootable configuration found in /etc/zapata/backend-available/"
+				  << std::string(_to_add) << ".conf" << endl
+				  << flush;
 			exit(-1);
 		}
 
 		std::ofstream _ofs;
-		_ofs.open((std::string("/etc/zapata/backend-enabled/") + std::string(_conf["boot"][0]["name"]) + std::string(".conf")).data(), std::ios::out | std::ios::trunc);
+		_ofs.open((std::string("/etc/zapata/backend-enabled/") + std::string(_conf["boot"][0]["name"]) +
+			   std::string(".conf"))
+			      .data(),
+			  std::ios::out | std::ios::trunc);
 		_ofs << zpt::json::pretty(_conf) << flush;
 		_ofs.close();
-		std::cout << "> wrote /etc/zapata/backend-enabled/" << std::string(_conf["boot"][0]["name"]) << ".conf" << endl << flush;
+		std::cout << "> wrote /etc/zapata/backend-enabled/" << std::string(_conf["boot"][0]["name"]) << ".conf"
+			  << endl
+			  << flush;
 
-		std::string _sysd(
-			"[Unit]\n"
-			"Description=${name}\n"
-			"${dependencies}\n"
-			"${requirements}\n"
-			"\n"
-			"[Service]\n"
-			"LimitNOFILE=${fd_max}\n"
-			"Type=notify\n"
-			"TimeoutStartSec=0\n"
-			"TimeoutStopSec=2\n"
-			"Restart=${restart}\n"
-			"RemainAfterExit=no\n"
-			"WatchdogSec=${keep_alive}\n"
-			"\n"
-			"ExecStart=/usr/bin/zpt -c /etc/zapata/backend-enabled/${name}.conf\n"
-			"\n"
-			"[Install]\n"
-			"WantedBy=multi-user.target\n"
-		);
+		std::string _sysd("[Unit]\n"
+				  "Description=${name}\n"
+				  "${dependencies}\n"
+				  "${requirements}\n"
+				  "\n"
+				  "[Service]\n"
+				  "LimitNOFILE=${fd_max}\n"
+				  "Type=notify\n"
+				  "TimeoutStartSec=0\n"
+				  "TimeoutStopSec=2\n"
+				  "Restart=${restart}\n"
+				  "RemainAfterExit=no\n"
+				  "WatchdogSec=${keep_alive}\n"
+				  "\n"
+				  "ExecStart=/usr/bin/zpt -c /etc/zapata/backend-enabled/${name}.conf\n"
+				  "\n"
+				  "[Install]\n"
+				  "WantedBy=multi-user.target\n");
 
 		std::string _after;
 		std::string _requires;
@@ -95,45 +101,47 @@ auto generate(zpt::json _to_add, zpt::json _global_conf) -> void {
 		zpt::replace(_sysd, "${dependencies}", _after);
 		zpt::replace(_sysd, "${requirements}", _requires);
 		zpt::replace(_sysd, "${name}", std::string(_conf["boot"][0]["name"]));
-		
+
 		if (_conf["boot"][0]["keep_alive"]->ok()) {
 			zpt::replace(_sysd, "${keep_alive}", std::string(_conf["boot"][0]["keep_alive"]));
-		}
-		else {
+		} else {
 			zpt::replace(_sysd, "${keep_alive}", "0");
 		}
 
 		if (_conf["boot"][0]["fd_max"]->ok()) {
 			zpt::replace(_sysd, "${fd_max}", std::string(_conf["boot"][0]["fd_max"]));
-		}
-		else {
+		} else {
 			zpt::replace(_sysd, "${fd_max}", "0");
 		}
 
 		if (_conf["boot"][0]["restart_policy"]->ok()) {
 			zpt::replace(_sysd, "${restart}", std::string(_conf["boot"][0]["restart_policy"]));
-		}
-		else {
+		} else {
 			zpt::replace(_sysd, "${restart}", "no");
 		}
 
 		std::ofstream _sfs;
-		_sfs.open((std::string("/lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) + std::string(".service")).data());
+		_sfs.open((std::string("/lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) +
+			   std::string(".service"))
+			      .data());
 		if (_sfs.is_open()) {
 			_sfs << _sysd << endl << flush;
 			_sfs.close();
-			std::cout << "> wrote /lib/systemd/system/" << std::string(_conf["boot"][0]["name"]) << ".service" << endl << flush;
-		}
-		else {
-			std::cout << "couldn't write to /lib/systemd/system/" << std::string(_conf["boot"][0]["name"]) << ".service" << endl << flush;
+			std::cout << "> wrote /lib/systemd/system/" << std::string(_conf["boot"][0]["name"])
+				  << ".service" << endl
+				  << flush;
+		} else {
+			std::cout << "couldn't write to /lib/systemd/system/" << std::string(_conf["boot"][0]["name"])
+				  << ".service" << endl
+				  << flush;
 			exit(-1);
 		}
-	}
-	else {
-		std::cout << "no such file named /etc/zapata/backend-available/" << std::string(_to_add) << ".conf" << endl << flush;
+	} else {
+		std::cout << "no such file named /etc/zapata/backend-available/" << std::string(_to_add) << ".conf"
+			  << endl
+			  << flush;
 		exit(-1);
 	}
-	
 }
 
 int main(int argc, char* argv[]) {
@@ -148,13 +156,12 @@ int main(int argc, char* argv[]) {
 			_zfs >> _conf;
 			_zfs.close();
 		}
-		
+
 		for (auto _to_add : _args["add"]->arr()) {
 			generate(_to_add, _global_conf);
 		}
-						
-	}
-	else if (_args["reconfigure"]) {
+
+	} else if (_args["reconfigure"]) {
 		zpt::json _global_conf;
 		std::ifstream _zfs;
 		_zfs.open((std::string("/etc/zapata/zapata.conf")).data());
@@ -164,9 +171,9 @@ int main(int argc, char* argv[]) {
 			_zfs.close();
 		}
 
-		std::vector< std::string > _files;
+		std::vector<std::string> _files;
 		zpt::glob("/etc/zapata/backend-enabled/", _files, "(.*)\\.conf");
-		
+
 		for (auto _file : _files) {
 			std::ifstream _ifs;
 			_ifs.open(_file.data());
@@ -175,32 +182,40 @@ int main(int argc, char* argv[]) {
 				_ifs >> _conf;
 				_ifs.close();
 				generate(_conf["$source"], _global_conf);
-			}
-			else {
+			} else {
 				std::cout << "no such file named " << _file << endl << flush;
 				exit(-1);
 			}
 		}
-						
-	}
-	else if (_args["remove"]) {
+
+	} else if (_args["remove"]) {
 		for (auto _to_remove : _args["remove"]->arr()) {
 			std::ifstream _ifs;
-			_ifs.open((std::string("/etc/zapata/backend-available/") + std::string(_to_remove) + std::string(".conf")).data());
+			_ifs.open((std::string("/etc/zapata/backend-available/") + std::string(_to_remove) +
+				   std::string(".conf"))
+				      .data());
 			if (_ifs.is_open()) {
 				zpt::json _conf;
 				_ifs >> _conf;
 				_ifs.close();
-				
-				if (system((std::string("rm -rf /etc/zapata/backend-enabled/") + std::string(_conf["boot"][0]["name"]) + std::string(".conf")).data())) {
+
+				if (system((std::string("rm -rf /etc/zapata/backend-enabled/") +
+					    std::string(_conf["boot"][0]["name"]) + std::string(".conf"))
+					       .data())) {
 				}
-				std::cout << "> removing /etc/zapata/backend-enabled/" << std::string(_conf["boot"][0]["name"]) << ".conf" << endl << flush;
-				if (system((std::string("rm -rf /lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) + std::string(".service")).data())) {
+				std::cout << "> removing /etc/zapata/backend-enabled/"
+					  << std::string(_conf["boot"][0]["name"]) << ".conf" << endl
+					  << flush;
+				if (system((std::string("rm -rf /lib/systemd/system/") +
+					    std::string(_conf["boot"][0]["name"]) + std::string(".service"))
+					       .data())) {
 				}
-				std::cout << "> removing /lib/systemd/system/" << std::string(_conf["boot"][0]["name"]) << ".service" << endl << flush;
+				std::cout << "> removing /lib/systemd/system/" << std::string(_conf["boot"][0]["name"])
+					  << ".service" << endl
+					  << flush;
 			}
 		}
 	}
-	
+
 	return 0;
 }

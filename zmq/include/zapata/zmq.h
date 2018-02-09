@@ -36,4 +36,3 @@ SOFTWARE.
 #include <zapata/zmq/WebSocket.h>
 #include <zapata/zmq/ZMQPolling.h>
 #include <zapata/http/HTTPObj.h>
-

@@ -9,31 +9,29 @@
 #include <zapata/http/HTTPLexer.h>
 
 // $insert namespace-open
-namespace zpt
-{
+namespace zpt {
 
 #undef HTTPTokenizer
-class HTTPTokenizer: public HTTPTokenizerBase
-{
-    // $insert scannerobject
-    Scanner d_scanner;
-        
-    public:
-        int parse();
+class HTTPTokenizer : public HTTPTokenizerBase {
+	// $insert scannerobject
+	Scanner d_scanner;
 
-    private:
-        void error(char const *msg);    // called on (syntax) errors
-        int lex();                      // returns the next token from the
-                                        // lexical scanner. 
-        void print();                   // use, e.g., d_token, d_loc
+      public:
+	int parse();
 
-    // support functions for parse():
-        void executeAction(int ruleNr);
-        void errorRecovery();
-        int lookup(bool recovery);
-        void nextToken();
-        void print__();
-        void exceptionHandler__(std::exception const &exc);
+      private:
+	void error(char const* msg); // called on (syntax) errors
+	int lex();		     // returns the next token from the
+	// lexical scanner.
+	void print(); // use, e.g., d_token, d_loc
+
+	// support functions for parse():
+	void executeAction(int ruleNr);
+	void errorRecovery();
+	int lookup(bool recovery);
+	void nextToken();
+	void print__();
+	void exceptionHandler__(std::exception const& exc);
 };
 
 // $insert namespace-close

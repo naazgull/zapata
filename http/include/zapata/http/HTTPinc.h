@@ -29,6 +29,7 @@ SOFTWARE.
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
-#define Scanner public: HTTPTokenizerLexer
-namespace zpt {
-}
+#define Scanner                                                                                                        \
+      public:                                                                                                          \
+	HTTPTokenizerLexer
+namespace zpt {}

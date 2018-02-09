@@ -29,30 +29,29 @@ SOFTWARE.
 
 namespace zpt {
 
-	class JSONTokenizerLexer: public JSONLexer {
-	public:
-		JSONTokenizerLexer(std::istream &_in = std::cin, std::ostream &_out = std::cout);
-		virtual ~JSONTokenizerLexer();
-		
-		void switchRoots(zpt::JSONPtr& _root);
-		
-		void result(zpt::JSONType _in);
-		void finish(zpt::JSONType _in);
-		
-		void init(zpt::JSONType _in_type, const string _in_str);
-		void init(zpt::JSONType _in_type);
-		void init(bool _in);
-		void init(long long _in);
-		void init(double _in);
-		void init(std::string _in);
-		void init(zpt::lambda _in);
-		void init();
-		
-		void add();
-		
-		zpt::JSONElementT* __root;
-		zpt::JSONType __root_type;
-		zpt::JSONElementT* __parent;
-	};
+class JSONTokenizerLexer : public JSONLexer {
+      public:
+	JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+	virtual ~JSONTokenizerLexer();
 
+	void switchRoots(zpt::JSONPtr& _root);
+
+	void result(zpt::JSONType _in);
+	void finish(zpt::JSONType _in);
+
+	void init(zpt::JSONType _in_type, const string _in_str);
+	void init(zpt::JSONType _in_type);
+	void init(bool _in);
+	void init(long long _in);
+	void init(double _in);
+	void init(std::string _in);
+	void init(zpt::lambda _in);
+	void init();
+
+	void add();
+
+	zpt::JSONElementT* __root;
+	zpt::JSONType __root_type;
+	zpt::JSONElementT* __parent;
+};
 }

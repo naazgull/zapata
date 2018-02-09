@@ -34,15 +34,14 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class InterruptedException: public std::exception {
-		private:
-			string __what;
+class InterruptedException : public std::exception {
+      private:
+	string __what;
 
-		public:
-			InterruptedException(string _what);
-			virtual ~InterruptedException() throw();
+      public:
+	InterruptedException(string _what);
+	virtual ~InterruptedException() throw();
 
-			const char* what();
-	};
-
+	const char* what();
+};
 }

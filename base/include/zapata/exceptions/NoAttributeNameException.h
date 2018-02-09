@@ -34,15 +34,14 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-	class NoAttributeNameException: public std::exception {
-		private:
-			string __what;
+class NoAttributeNameException : public std::exception {
+      private:
+	string __what;
 
-		public:
-			NoAttributeNameException(string _what);
-			virtual ~NoAttributeNameException() throw();
+      public:
+	NoAttributeNameException(string _what);
+	virtual ~NoAttributeNameException() throw();
 
-			const char* what();
-	};
-
+	const char* what();
+};
 }
