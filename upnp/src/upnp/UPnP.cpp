@@ -28,7 +28,15 @@ zpt::UPnP::UPnP(zpt::json _options)
 	this->uri(this->connection());
 
 	this->__underlying->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+	assertz(!this->__underlying->is_error(),
+		std::string("upnp: error with socket: ") + this->__underlying->error_string(),
+		503,
+		this->__underlying->error_code());
 	this->__send->open(this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+	assertz(!this->__send->is_error(),
+		std::string("upnp: error with socket: ") + this->__send->error_string(),
+		503,
+		this->__send->error_code());
 
 	char _accept_lo = 1;
 	setsockopt(this->__underlying->buffer().get_socket(),

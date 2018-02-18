@@ -525,6 +525,10 @@ auto zpt::ZMQPoll::bind(short _type, std::string _connection) -> zpt::Channel* {
 		_cs->open(std::string(_uri["domain"]),
 			  _uri["port"]->ok() ? int(_uri["port"]) : (_is_ssl ? 443 : 80),
 			  _is_ssl);
+		assertz(!_cs->is_error(),
+			std::string("http: error with socket: ") + _cs->error_string(),
+			503,
+			_cs->error_code());
 		zpt::Channel* _socket = new zpt::ZMQHttp(_cs, this->__options);
 		return _socket;
 	}

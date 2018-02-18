@@ -96,12 +96,16 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 			short _n_tries = 0;
 			do {
 				if (!this->__sockets[_k]->is_open()) {
-					zdbg("couchdb: opening socket");
 					this->__sockets[_k]->open(std::string(this->connection()["uri"]["domain"]),
 								  this->connection()["uri"]["port"]->ok()
 								      ? int(this->connection()["uri"]["port"])
 								      : (_is_ssl ? 443 : 80),
 								  _is_ssl);
+					assertz(!this->__sockets[_k]->is_error(),
+						std::string("couchdb: error with socket: ") +
+						    this->__sockets[_k]->error_string(),
+						503,
+						this->__sockets[_k]->error_code());
 				}
 				try {
 					(*this->__sockets[_k]) << _req << flush;
@@ -122,6 +126,10 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 			     this->connection()["uri"]["port"]->ok() ? int(this->connection()["uri"]["port"])
 								     : (_is_ssl ? 443 : 80),
 			     _is_ssl);
+		assertz(!_socket.is_error(),
+			std::string("couchdb: error with socket: ") + _socket.error_string(),
+			503,
+			_socket.error_code());
 		_socket << _req << flush;
 		try {
 			_socket >> _rep;
