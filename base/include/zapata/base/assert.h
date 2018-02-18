@@ -222,9 +222,16 @@ SOFTWARE.
 			1018)                                                                                          \
 	}
 
-#define assertz_intersects(x, y, z)                                                                                                                                                                                                                                                                                            \
-	{                                                                                                                                                                                                                                                                                                                      \
-		std::vector<zpt::json> __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__), [] (zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; }); assertz(__result__.size() != 0, std::string(y), z, 1018); \
+#define assertz_intersects(x, y, z)                                                                                    \
+	{                                                                                                              \
+		std::vector<zpt::json> __result__;                                                                     \
+		std::set_intersection(std::begin(x->arr()),                                                            \
+				      std::end(x->arr()),                                                              \
+				      std::begin(y->arr()),                                                            \
+				      std::end(y->arr()),                                                              \
+				      std::back_inserter(__result__),                                                  \
+				      [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });            \
+		assertz(__result__.size() != 0, std::string(y), z, 1018);                                              \
 	}
 #define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019)
 #define assertz_valid_values(x, y, z) assertz(x, std::string(y), z, 1020)
@@ -479,9 +486,16 @@ SOFTWARE.
 			      r)                                                                                       \
 	}
 
-#define assertz_intersects_reply(x, y, z, e, r)                                                                                                                                                                                                                                                                                            \
-	{                                                                                                                                                                                                                                                                                                                                  \
-		std::vector<zpt::json> __result__; std::set_intersection(std::begin(x->arr()), std::end(x->arr()), std::begin(y->arr()), std::end(y->arr()), std::back_inserter((__result__), [] (zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; }); assertz_reply(__result__.size() != 0, std::string(y), z, 1018, e, r); \
+#define assertz_intersects_reply(x, y, z, e, r)                                                                        \
+	{                                                                                                              \
+		std::vector<zpt::json> __result__;                                                                     \
+		std::set_intersection(std::begin(x->arr()),                                                            \
+				      std::end(x->arr()),                                                              \
+				      std::begin(y->arr()),                                                            \
+				      std::end(y->arr()),                                                              \
+				      std::back_inserter(__result__),                                                  \
+				      [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });            \
+		assertz_reply(__result__.size() != 0, std::string(y), z, 1018, e, r);                                  \
 	}
 #define assertz_unauthorized_reply(x, e, r) assertz_reply(x, std::string(#x), 401, 1019, e, r)
 #define assertz_valid_values_reply(x, y, z, e, r) assertz_reply(x, std::string(y), z, 1020, e, r)
