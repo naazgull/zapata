@@ -61,3 +61,10 @@ std::string zpt::ssl_error_print(SSL* _ssl, int _ret) {
 	}
 	return "UNKNOW ERROR";
 }
+
+std::string zpt::ssl_error_print(unsigned long _error) {
+	if (_error == 0) {
+		_error = ERR_get_error();
+	}
+	return std::string("SSL_ERROR_") + std::to_string(_error) + std::string(": ") + std::string(ERR_error_string(_error, nullptr));
+}

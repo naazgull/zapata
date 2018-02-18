@@ -54,6 +54,7 @@ using namespace __gnu_cxx;
 namespace zpt {
 
 std::string ssl_error_print(SSL* _ssl, int _ret);
+std::string ssl_error_print(unsigned long _error = 0);
 
 template <typename Char> class basic_socketbuf : public std::basic_streambuf<Char> {
       public:
@@ -123,6 +124,7 @@ template <typename Char> class basic_socketbuf : public std::basic_streambuf<Cha
 		this->__ssl = true;
 		this->__context = _ctx;
 		this->__sslstream = SSL_new(_ctx);
+		SSL_set_tlsext_host_name(this->__sslstream, this->__host.data());
 		SSL_set_fd(this->__sslstream, this->__sock);
 		SSL_connect(this->__sslstream);
 	}
@@ -141,9 +143,9 @@ template <typename Char> class basic_socketbuf : public std::basic_streambuf<Cha
 
 	unsigned long long timeout() { return this->__timeout; }
 
-	unsigned int error_code() { return this->__error_code; }
+	unsigned int& error_code() { return this->__error_code; }
 
-	std::string error_string() { return this->__error_string; }
+	std::string& error_string() { return this->__error_string; }
 
 	virtual bool __good() {
 		return this->__sock != 0 &&
@@ -430,6 +432,8 @@ template <typename Char> class basic_socketstream : public std::basic_iostream<C
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
 					__is_error = true;
+					this->__buf.error_code() = errno;
+					this->__buf.error_string() = std::strerror(errno);
 					return false;
 				} else {
 					__buf.set_socket(_sd);
@@ -452,6 +456,8 @@ template <typename Char> class basic_socketstream : public std::basic_iostream<C
 						__stream_type::setstate(std::ios::failbit);
 						__buf.set_socket(0);
 						__is_error = true;
+						this->__buf.error_code() = errno;
+						this->__buf.error_string() = std::strerror(errno);
 						return false;
 					}
 					struct sockaddr_in* _host_addr = (struct sockaddr_in*)_result->ai_addr;
@@ -470,6 +476,8 @@ template <typename Char> class basic_socketstream : public std::basic_iostream<C
 				__stream_type::setstate(std::ios::failbit);
 				__buf.set_socket(0);
 				__is_error = true;
+				this->__buf.error_code() = errno;
+				this->__buf.error_string() = std::strerror(errno);
 				return false;
 			} else {
 				SSL_library_init();
@@ -480,6 +488,8 @@ template <typename Char> class basic_socketstream : public std::basic_iostream<C
 					__stream_type::setstate(std::ios::failbit);
 					__buf.set_socket(0);
 					__is_error = true;
+					this->__buf.error_code() = ERR_get_error();
+					this->__buf.error_string() = zpt::ssl_error_print(this->__buf.error_code());
 					return false;
 				} else {
 					this->assign(_sd, _context);
