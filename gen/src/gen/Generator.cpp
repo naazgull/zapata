@@ -2624,6 +2624,17 @@ auto zpt::GenDatum::build_validation() -> std::string {
 					   std::string("\", 412);\n");
 			}
 
+			if (_opts["enum"]->ok()) {
+				_return +=
+				    std::string("assertz_intersects(_document[\"") + _field.first +
+				    std::string("\"], zpt::json({ zpt::array, ") +
+				    zpt::r_replace(
+					zpt::r_replace(std::string(zpt::split(_opts["enum"]->str(), ",")), "[", ""),
+					"]",
+					"") +
+				    std::string(" }), 412);\n");
+			}
+
 			if (!_opts["read-only"]->ok()) {
 				if (_type == "json") {
 					_return += std::string("assertz_complex(_document, \"") + _field.first +
@@ -3444,6 +3455,17 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 			}
 
 			if (_perf != zpt::ev::Get && _perf != zpt::ev::Head && _perf != zpt::ev::Delete) {
+				if (_opts["enum"]->ok()) {
+					_return += std::string("assertz_intersects(_document[\"") + _field.first +
+						   std::string("\"], zpt::json({ zpt::array, ") +
+						   zpt::r_replace(
+						       zpt::r_replace(
+							   std::string(zpt::split(_opts["enum"]->str(), ",")), "[", ""),
+						       "]",
+						       "") +
+						   std::string(" }), 412);\n");
+				}
+
 				if (!_opts["read-only"]->ok()) {
 					if (_type == "json") {
 						_return += std::string("assertz_complex(_envelope[\"payload\"], \"") +
