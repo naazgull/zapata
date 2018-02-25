@@ -302,7 +302,6 @@ auto zpt::MQTT::reconnect() -> bool {
 	int _rc = 0;
 	{
 		std::lock_guard<std::mutex> _lock(this->__mtx_conn);
-
 		/**
 		 * Connects to the MQTT server.
 		 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
@@ -515,6 +514,7 @@ auto zpt::MQTT::detach() -> void {}
 
 auto zpt::MQTT::close() -> void {
 	if (this->__mosq != nullptr) {
+		std::lock_guard<std::mutex> _lock(this->__mtx_conn);
 		mosquitto_destroy(this->__mosq);
 		mosquitto_lib_cleanup();
 		this->__mosq = nullptr;
@@ -523,9 +523,24 @@ auto zpt::MQTT::close() -> void {
 
 auto zpt::MQTT::available() -> bool { return true; }
 
-auto zpt::MQTT::buffer(zpt::json _envelope) -> void { this->__buffer = _envelope; }
+auto zpt::MQTT::buffer(zpt::json _envelope) -> void {
+	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
+	this->__buffer = _envelope;
+}
 
 auto zpt::MQTT::recv() -> zpt::json {
+	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
+	if (!this->__connected) {
+		return {
+		    "protocol",
+		    this->protocol(),
+		    "error",
+		    true,
+		    "status",
+		    502,
+		    "payload",
+		    {"text", "connection lost to MQTT server", "assertion_failed", "this->__connected", "code", 1062}};
+	}
 	mosquitto_loop_read(this->__mosq, 1);
 	mosquitto_loop_misc(this->__mosq);
 	zpt::json _return = this->__buffer;
@@ -535,7 +550,10 @@ auto zpt::MQTT::recv() -> zpt::json {
 
 auto zpt::MQTT::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	this->publish(_resource, _payload);
-	mosquitto_loop_misc(this->__mosq);
+	{
+		std::lock_guard<std::mutex> _lock(this->__mtx_conn);
+		mosquitto_loop_misc(this->__mosq);
+	}
 	return zpt::undefined;
 }
 
@@ -548,7 +566,10 @@ auto zpt::MQTT::send(zpt::json _envelope) -> zpt::json {
 	return zpt::undefined;
 }
 
-auto zpt::MQTT::loop_iteration() -> void { mosquitto_loop_misc(this->__mosq); }
+auto zpt::MQTT::loop_iteration() -> void {
+	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
+	mosquitto_loop_misc(this->__mosq);
+}
 
 auto zpt::MQTT::socket() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
@@ -556,7 +577,10 @@ auto zpt::MQTT::in() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
 auto zpt::MQTT::out() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
-auto zpt::MQTT::fd() -> int { return mosquitto_socket(this->__mosq); }
+auto zpt::MQTT::fd() -> int {
+	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
+	return mosquitto_socket(this->__mosq);
+}
 
 auto zpt::MQTT::in_mtx() -> std::mutex& { return this->__mtx_conn; }
 
