@@ -523,10 +523,7 @@ auto zpt::MQTT::close() -> void {
 
 auto zpt::MQTT::available() -> bool { return true; }
 
-auto zpt::MQTT::buffer(zpt::json _envelope) -> void {
-	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
-	this->__buffer = _envelope;
-}
+auto zpt::MQTT::buffer(zpt::json _envelope) -> void { this->__buffer = _envelope; }
 
 auto zpt::MQTT::recv() -> zpt::json {
 	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
