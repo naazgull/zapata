@@ -265,6 +265,8 @@ class RestHandler(object):
 
         if type(_object) in [int, list]:
             return _object
+        elif type(_object) in [str]:
+            return '"{}"'.format(_object)
         else:
             return '"{}"'.format(re.escape(_object))
 
