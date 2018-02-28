@@ -1,3 +1,9 @@
+zapata-base (1.0.0-1artful1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 28 Feb 2018 21:03:21 +0000
+
 zapata-base (0.9.7-1artful58) artful; urgency=medium
 
   * Version bump
