@@ -124,6 +124,7 @@ auto zpt::ZMQPoll::vanished(std::string _connection, zpt::ev::initializer _callb
 
 	if (this->relay(_key) != nullptr) {
 		zpt::socket_ref _socket(_key, this->self());
+		std::lock_guard<std::mutex> _lock(this->__mtx[0]);
 		this->__to_remove.insert(std::make_pair(_socket, _callback));
 		this->__needs_rebuild = true;
 	}
@@ -134,6 +135,7 @@ auto zpt::ZMQPoll::vanished(zpt::Channel* _underlying, zpt::ev::initializer _cal
 
 	if (this->relay(_key) != nullptr) {
 		zpt::socket_ref _socket(_key, this->self());
+		std::lock_guard<std::mutex> _lock(this->__mtx[0]);
 		this->__to_remove.insert(std::make_pair(_socket, _callback));
 		this->__needs_rebuild = true;
 	}

@@ -324,54 +324,63 @@ void zpt::RESTServer::start() {
 					     zpt::notice);
 				}
 			});
-			this->__mqtt->on("disconnect", [this](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				this->__poll->vanished(this->__mqtt.get(), [=](zpt::ev::emitter _emitter) -> void {
-					std::thread _connector([this]() -> void {
+			this->__mqtt->on(
+			    "disconnect", [this, &_uri](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+				    this->__poll->vanished(
+					this->__mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
+						int _attempts = 0;
 						do {
 							if (this->__mqtt->reconnect()) {
 								break;
 							}
+							_attempts++;
 							sleep(1);
-						} while (true); //(_attempts < 6);
-						this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+						} while (_attempts < 10);
+						if (this->__mqtt->connected()) {
+							zlog(std::string("binding ") + this->__mqtt->protocol() +
+								 std::string(" listener to ") +
+								 std::string(_uri["scheme"]) + std::string("://") +
+								 std::string(_uri["domain"]) + std::string(":") +
+								 std::string(_uri["port"]),
+							     zpt::info);
+							this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+						} else {
+							zlog(std::string("unable to bind ") + this->__mqtt->protocol() +
+								 std::string(" listener to ") +
+								 std::string(_uri["scheme"]) + std::string("://") +
+								 std::string(_uri["domain"]) + std::string(":") +
+								 std::string(_uri["port"]),
+							     zpt::warning);
+						}
 					});
-					_connector.detach();
-				});
-			});
+			    });
 			this->__mqtt->on("message", [this](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
 				zpt::json _envelope = this->route_mqtt(_data);
 				this->__mqtt->buffer(_envelope);
 			});
 
-			if (!this->__mqtt->connect(std::string(_uri["domain"]),
-						   _uri["scheme"] == zpt::json::string("mqtts"),
-						   int(_uri["port"]))) {
-				std::thread _connector(
-				    [this](zpt::json _uri) -> void {
-					    do {
-						    sleep(1);
-						    if (this->__mqtt->connect(std::string(_uri["domain"]),
-									      _uri["scheme"] ==
-										  zpt::json::string("mqtts"),
-									      int(_uri["port"]))) {
-							    break;
-						    }
-					    } while (true); //(_attempts < 6);
-					    zlog(std::string("binding ") + this->__mqtt->protocol() +
-						     std::string(" listener to ") + std::string(_uri["scheme"]) +
-						     std::string("://") + std::string(_uri["domain"]) +
-						     std::string(":") + std::string(_uri["port"]),
-						 zpt::info);
-					    this->__poll->poll(this->__poll->add(this->__mqtt.get()));
-				    },
-				    _uri);
-				_connector.detach();
-			} else {
+			int _attempts = 0;
+			do {
+				if (this->__mqtt->connect(std::string(_uri["domain"]),
+							  _uri["scheme"] == zpt::json::string("mqtts"),
+							  int(_uri["port"]))) {
+					break;
+				}
+				_attempts++;
+				sleep(1);
+			} while (_attempts < 10);
+			if (this->__mqtt->connected()) {
 				zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") +
 					 std::string(_uri["scheme"]) + std::string("://") +
 					 std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]),
 				     zpt::info);
 				this->__poll->poll(this->__poll->add(this->__mqtt.get()));
+			} else {
+				zlog(std::string("unable to bind ") + this->__mqtt->protocol() +
+					 std::string(" listener to ") + std::string(_uri["scheme"]) +
+					 std::string("://") + std::string(_uri["domain"]) + std::string(":") +
+					 std::string(_uri["port"]),
+				     zpt::warning);
 			}
 		}
 
