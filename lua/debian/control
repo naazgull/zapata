@@ -1,0 +1,21 @@
+Source: zapata-lua
+Maintainer: n@zgul <n@zgul.me>
+Section: Development
+Priority: optional
+Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 9)
+
+Package: zapata-lua
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=0.9), zapata-json (>=0.9), liblua3.6-dev
+Description: RESTful API's C++ toolkit named after Emiliano Zapata - Lua bridging utilities
+ Provides a set of C++ tool libraries for the development of 
+ RESTful API's. This library offers a set of functions and methods
+ to bridge with Lua programs.
+
+Package: zapata-lua-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: zapata-lua (= ${binary:Version})
+Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - Lua bridging utilities
