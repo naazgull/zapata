@@ -5,157 +5,6 @@
 #include <zapata/mqtt/MQTT.h>
 #include <ossp/uuid++.hh>
 
-// typedef int mosq_sock_t;
-
-// enum mosquitto_msg_direction {
-// 	mosq_md_in = 0,
-// 	mosq_md_out = 1
-// };
-
-// enum mosquitto_msg_state {
-// 	mosq_ms_invalid = 0,
-// 	mosq_ms_publish_qos0 = 1,
-// 	mosq_ms_publish_qos1 = 2,
-// 	mosq_ms_wait_for_puback = 3,
-// 	mosq_ms_publish_qos2 = 4,
-// 	mosq_ms_wait_for_pubrec = 5,
-// 	mosq_ms_resend_pubrel = 6,
-// 	mosq_ms_wait_for_pubrel = 7,
-// 	mosq_ms_resend_pubcomp = 8,
-// 	mosq_ms_wait_for_pubcomp = 9,
-// 	mosq_ms_send_pubrec = 10,
-// 	mosq_ms_queued = 11
-// };
-
-// enum mosquitto_client_state {
-// 	mosq_cs_new = 0,
-// 	mosq_cs_connected = 1,
-// 	mosq_cs_disconnecting = 2,
-// 	mosq_cs_connect_async = 3,
-// 	mosq_cs_connect_pending = 4,
-// 	mosq_cs_connect_srv = 5,
-// 	mosq_cs_disconnect_ws = 6,
-// 	mosq_cs_disconnected = 7,
-// 	mosq_cs_socks5_new = 8,
-// 	mosq_cs_socks5_start = 9,
-// 	mosq_cs_socks5_request = 10,
-// 	mosq_cs_socks5_reply = 11,
-// 	mosq_cs_socks5_auth_ok = 12,
-// 	mosq_cs_socks5_userpass_reply = 13,
-// 	mosq_cs_socks5_send_userpass = 14,
-// 	mosq_cs_expiring = 15,
-// };
-
-// enum _mosquitto_protocol {
-// 	mosq_p_invalid = 0,
-// 	mosq_p_mqtt31 = 1,
-// 	mosq_p_mqtt311 = 2,
-// 	mosq_p_mqtts = 3
-// };
-
-// enum _mosquitto_transport {
-// 	mosq_t_invalid = 0,
-// 	mosq_t_tcp = 1,
-// 	mosq_t_ws = 2,
-// 	mosq_t_sctp = 3
-// };
-
-// struct _mosquitto_packet{
-// 	uint8_t *payload;
-// 	struct _mosquitto_packet *next;
-// 	uint32_t remaining_mult;
-// 	uint32_t remaining_length;
-// 	uint32_t packet_length;
-// 	uint32_t to_process;
-// 	uint32_t pos;
-// 	uint16_t mid;
-// 	uint8_t command;
-// 	int8_t remaining_count;
-// };
-
-// struct mosquitto_message_all{
-// 	struct mosquitto_message_all *next;
-// 	time_t timestamp;
-// 	//enum mosquitto_msg_direction direction;
-// 	enum mosquitto_msg_state state;
-// 	bool dup;
-// 	struct mosquitto_message msg;
-// };
-
-// struct mosquitto {
-// 	mosq_sock_t sock;
-// 	mosq_sock_t sockpairR, sockpairW;
-// 	enum _mosquitto_protocol protocol;
-// 	char *address;
-// 	char *id;
-// 	char *username;
-// 	char *password;
-// 	uint16_t keepalive;
-// 	uint16_t last_mid;
-// 	enum mosquitto_client_state state;
-// 	time_t last_msg_in;
-// 	time_t last_msg_out;
-// 	time_t ping_t;
-// 	struct _mosquitto_packet in_packet;
-// 	struct _mosquitto_packet *current_out_packet;
-// 	struct _mosquitto_packet *out_packet;
-// 	struct mosquitto_message *will;
-// 	SSL *ssl;
-// 	SSL_CTX *ssl_ctx;
-// 	char *tls_cafile;
-// 	char *tls_capath;
-// 	char *tls_certfile;
-// 	char *tls_keyfile;
-// 	int (*tls_pw_callback)(char *buf, int size, int rwflag, void *userdata);
-// 	char *tls_version;
-// 	char *tls_ciphers;
-// 	char *tls_psk;
-// 	char *tls_psk_identity;
-// 	int tls_cert_reqs;
-// 	bool tls_insecure;
-// 	bool want_write;
-// 	bool want_connect;
-// 	pthread_mutex_t callback_mutex;
-// 	pthread_mutex_t log_callback_mutex;
-// 	pthread_mutex_t msgtime_mutex;
-// 	pthread_mutex_t out_packet_mutex;
-// 	pthread_mutex_t current_out_packet_mutex;
-// 	pthread_mutex_t state_mutex;
-// 	pthread_mutex_t in_message_mutex;
-// 	pthread_mutex_t out_message_mutex;
-// 	pthread_mutex_t mid_mutex;
-// 	pthread_t thread_id;
-// 	bool clean_session;
-// 	void *userdata;
-// 	bool in_callback;
-// 	unsigned int message_retry;
-// 	time_t last_retry_check;
-// 	struct mosquitto_message_all *in_messages;
-// 	struct mosquitto_message_all *in_messages_last;
-// 	struct mosquitto_message_all *out_messages;
-// 	struct mosquitto_message_all *out_messages_last;
-// 	void (*on_connect)(struct mosquitto *, void *userdata, int rc);
-// 	void (*on_disconnect)(struct mosquitto *, void *userdata, int rc);
-// 	void (*on_publish)(struct mosquitto *, void *userdata, int mid);
-// 	void (*on_message)(struct mosquitto *, void *userdata, const struct mosquitto_message *message);
-// 	void (*on_subscribe)(struct mosquitto *, void *userdata, int mid, int qos_count, const int *granted_qos);
-// 	void (*on_unsubscribe)(struct mosquitto *, void *userdata, int mid);
-// 	void (*on_log)(struct mosquitto *, void *userdata, int level, const char *str);
-// 	//void (*on_error)();
-// 	char *host;
-// 	int port;
-// 	int in_queue_len;
-// 	int out_queue_len;
-// 	char *bind_address;
-// 	unsigned int reconnect_delay;
-// 	unsigned int reconnect_delay_max;
-// 	bool reconnect_exponential_backoff;
-// 	bool threaded;
-// 	struct _mosquitto_packet *out_packet_last;
-// 	int inflight_messages;
-// 	int max_inflight_messages;
-// };
-
 zpt::MQTT::MQTT()
     : zpt::Channel("", zpt::undefined), __self(this), __connected(false), __postponed(zpt::json::object()) {
 	this->__mosq = nullptr;
@@ -230,6 +79,8 @@ auto zpt::MQTT::connected() -> bool {
 	std::lock_guard<std::mutex> _lock(this->__mtx_conn);
 	return this->__connected;
 }
+
+auto zpt::MQTT::connect(zpt::json _options) -> bool { return this->connect("", false, 1883, 1000); }
 
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> bool {
 	int _rc = 0;
@@ -586,5 +437,3 @@ auto zpt::MQTT::out_mtx() -> std::mutex& { return this->__mtx_conn; }
 auto zpt::MQTT::type() -> short int { return ZMQ_MQTT_RAW; }
 
 auto zpt::MQTT::protocol() -> std::string { return "MQTT/3.1"; }
-
-extern "C" auto zpt_mqtt() -> int { return 1; }

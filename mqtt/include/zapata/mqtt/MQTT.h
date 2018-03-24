@@ -9,6 +9,7 @@ Copyright (c) 2017, Muzzley
  *
  * Compile with '-lmosquitto'.
  */
+#pragma once
 
 #include <unistd.h>
 #include <iostream>
@@ -20,7 +21,7 @@ Copyright (c) 2017, Muzzley
 #include <vector>
 #include <mosquitto.h>
 #include <mutex>
-#include <zapata/zmq.h>
+#include <zapata/events.h>
 #include <zapata/json.h>
 
 using namespace std;
@@ -104,6 +105,7 @@ class MQTT : public zpt::Channel {
 	 * Connects to the MQTT server.
 	 * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
 	 */
+	virtual auto connect(zpt::json _options) -> bool;
 	virtual auto connect(std::string _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) -> bool;
 	virtual auto reconnect() -> bool;
 

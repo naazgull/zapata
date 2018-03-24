@@ -32,7 +32,7 @@ SOFTWARE.
 namespace zpt {
 namespace ev {
 std::string* __default_authorization = nullptr;
-emitter __emitter;
+emitter_factory __emitter_factory(new zpt::EventEmitterFactory());
 }
 }
 
@@ -58,14 +58,16 @@ auto zpt::socket_ref::operator-> () -> zpt::Channel* { return this->__poll->rela
 
 auto zpt::socket_ref::operator*() -> zpt::Channel* { return this->__poll->relay(this->data()); }
 
+zpt::ChannelFactory::ChannelFactory() {}
+
+zpt::ChannelFactory::~ChannelFactory() {}
+
 zpt::Channel::Channel(std::string _connection, zpt::json _options)
     : __options(_options), __connection(_connection.data()), __poll(nullptr) {
 	this->__id.assign(zpt::generate::r_uuid());
 }
 
-zpt::Channel::~Channel() {
-	// zdbg(std::string("disposing of ") + this->id());
-}
+zpt::Channel::~Channel() {}
 
 auto zpt::Channel::id() -> std::string { return this->__id; }
 
@@ -297,6 +299,151 @@ auto zpt::EventEmitter::connector(std::string _name) -> zpt::connector {
 		500,
 		0);
 	return _found->second;
+}
+
+auto zpt::EventEmitter::channel(std::string _name, zpt::socket_factory _channel_factory) -> void {
+	auto _found = this->__channel.find(_name);
+	if (_found == this->__channel.end()) {
+		ztrace(std::string("registering channel factory") + _name);
+		this->__channel.insert(std::make_pair(_name, _channel_factory));
+	}
+}
+
+auto zpt::EventEmitter::channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void {
+	for (auto _channel_factory : _channel_factories) {
+		this->channel(_channel_factory.first, _channel_factory.second);
+	}
+}
+
+auto zpt::EventEmitter::channel(std::string _name) -> zpt::socket_factory {
+	auto _found = this->__channel.find(_name);
+	assertz(_found != this->__channel.end(),
+		std::string("theres isn't any channel factory by the name '") + _name + std::string("'"),
+		500,
+		0);
+	return _found->second;
+}
+
+zpt::EventEmitterFactory::EventEmitterFactory() {}
+
+zpt::EventEmitterFactory::~EventEmitterFactory() {}
+
+auto zpt::EventEmitterFactory::enroll(zpt::ev::emitter _emitter) -> void { this->__emitters.push_back(_emitter); }
+
+auto zpt::EventEmitterFactory::unroll(zpt::ev::emitter _emitter) -> void {
+	auto _found = std::find_if(this->__emitters.begin(), this->__emitters.end(), [_emitter](zpt::ev::emitter _e) {
+		return _e.get() == _emitter.get();
+	});
+	if (_found != this->__emitters.end()) {
+		this->__emitters.erase(_found);
+	}
+}
+
+auto zpt::EventEmitterFactory::connector(std::string _name, zpt::connector _connector) -> void {
+	std::for_each(this->__emitters.begin(),
+		      this->__emitters.end(),
+		      [_name, _connector](const zpt::ev::emitter& _e) { _e->connector(_name, _connector); });
+}
+
+auto zpt::EventEmitterFactory::connector(std::map<std::string, zpt::connector> _connectors) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_connectors](const zpt::ev::emitter& _e) {
+		_e->connector(_connectors);
+	});
+}
+
+auto zpt::EventEmitterFactory::connector(std::string _name) -> std::vector<zpt::connector> {
+	std::vector<zpt::connector> _return;
+	for (auto _emitter : this->__emitters) {
+		try {
+			_return.push_back(_emitter->connector(_name));
+		} catch (...) {
+		}
+	};
+	assertz(_return.size() != 0,
+		std::string("theres isn't any connector by the name '") + _name + std::string("'"),
+		500,
+		0);
+	return _return;
+}
+
+auto zpt::EventEmitterFactory::channel(std::string _name, zpt::socket_factory _channel) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_name, _channel](const zpt::ev::emitter& _e) {
+		_e->channel(_name, _channel);
+	});
+}
+
+auto zpt::EventEmitterFactory::channel(std::map<std::string, zpt::socket_factory> _channels) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_channels](const zpt::ev::emitter& _e) {
+		_e->channel(_channels);
+	});
+}
+
+auto zpt::EventEmitterFactory::channel(std::string _name) -> std::vector<zpt::socket_factory> {
+	std::vector<zpt::socket_factory> _return;
+	for (auto _emitter : this->__emitters) {
+		try {
+			_return.push_back(_emitter->channel(_name));
+		} catch (...) {
+		}
+	};
+	assertz(_return.size() != 0,
+		std::string("theres isn't any channel factory by the name '") + _name + std::string("'"),
+		500,
+		0);
+	return _return;
+}
+
+auto zpt::EventEmitterFactory::trigger(zpt::ev::performative _method,
+				       std::string _resource,
+				       zpt::json _payload,
+				       zpt::json _opts,
+				       zpt::ev::handler _callback) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) {
+		_e->trigger(_method, _resource, _payload, _opts, _callback);
+	});
+}
+
+auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
+				     std::string _resource,
+				     zpt::json _payload,
+				     zpt::json _opts,
+				     zpt::ev::handler _callback) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) {
+		_e->route(_method, _resource, _payload, _opts, _callback);
+	});
+}
+
+auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
+				     std::string _resource,
+				     zpt::json _payload,
+				     zpt::ev::handler _callback) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) {
+		_e->route(_method, _resource, _payload, _callback);
+	});
+}
+
+auto zpt::EventEmitterFactory::sync_route(zpt::ev::performative _method,
+					  std::string _url,
+					  zpt::json _envelope,
+					  zpt::json _opts) -> zpt::json {
+	std::vector<zpt::socket_factory> _return;
+	for (auto _emitter : this->__emitters) {
+		try {
+			return _emitter->sync_route(_method, _url, _envelope, _opts);
+		} catch (...) {
+		}
+	};
+	bool _no_such_registered_service = false;
+	assertz(_no_such_registered_service,
+		std::string("theres is no such service to process '") + _url + std::string("'"),
+		404,
+		0);
+	return zpt::undefined;
+}
+
+auto zpt::EventEmitterFactory::hook(zpt::ev::initializer _callback) -> void {
+	std::for_each(
+	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _e->hook(_callback); });
 }
 
 auto zpt::ev::split(std::string _url, zpt::json _orphans) -> zpt::json {
