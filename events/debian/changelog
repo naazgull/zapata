@@ -1,4 +1,4 @@
-zapata-events (1.0.0-1artful1) artful; urgency=medium
+zapata-events (0.9.9-1artful1) artful; urgency=medium
 
   * Version bump
 
@@ -783,4 +783,3 @@ zapata-events (0.9.1-1) artful; urgency=medium
   * Clean up and refactoring
 
  -- n@zgul <n@zgul.me>  Tue, 08 Mar 2016 13:06:51 +0000
-

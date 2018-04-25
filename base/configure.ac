@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-base, 1.0.0-1artful1, n@zgul <n@zgul.me>)
+AC_INIT(zapata-base, 0.9.9-1artful1, n@zgul <n@zgul.me>)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -30,13 +30,13 @@ AM_INIT_AUTOMAKE([subdir-objects tar-pax])
 
 dnl this allows us specify individual liking flags for each target
 AC_PROG_CXX
-AM_PROG_CC_C_O 
+AM_PROG_CC_C_O
 
 dnl Initialize Libtool
 LT_INIT
 
 dnl Check if Libtool is present
-dnl Libtool is used for building share libraries 
+dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile

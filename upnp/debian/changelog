@@ -1,4 +1,4 @@
-zapata-upnp (1.0.0-1artful1) artful; urgency=medium
+zapata-upnp (0.9.9-1artful1) artful; urgency=medium
 
   * Version bump
 
@@ -195,4 +195,3 @@ zapata-upnp (0.9.7-1artful27) artful; urgency=medium
   * Initial release
 
  -- n@zgul <n@zgul.me>  Wed, 26 Jul 2017 15:45:45 +0100
-
