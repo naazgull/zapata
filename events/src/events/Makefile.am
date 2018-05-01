@@ -6,4 +6,5 @@ libzapata_events_la_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 libzapata_events_la_SOURCES = \
 ./EventEmitter.cpp \
+./Polling.cpp \
 ./Connector.cpp

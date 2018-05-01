@@ -27,7 +27,7 @@ SOFTWARE.
 #include <future>
 #include <chrono>
 
-zpt::ChannelPoll::ChannelPoll(zpt::json _options, zpt::ev::emitter _emiter)
+zpt::ChannelPoll::ChannelPoll(zpt::json _options, zpt::ev::emitter_factory _emiter)
     : zpt::Poll(), __options(_options), __id(0), __self(this), __emitter(_emiter),
       __needs_rebuild(true) /*, __context(0)*/
 {
@@ -48,7 +48,7 @@ zpt::ChannelPoll::~ChannelPoll() {
 
 auto zpt::ChannelPoll::options() -> zpt::json { return this->__options; }
 
-auto zpt::ChannelPoll::emitter() -> zpt::ev::emitter { return this->__emitter; }
+auto zpt::ChannelPoll::emitter() -> zpt::ev::emitter_factory { return this->__emitter; }
 
 auto zpt::ChannelPoll::self() const -> zpt::poll { return this->__self; }
 
@@ -67,7 +67,8 @@ auto zpt::ChannelPoll::relay(std::string _key) -> zpt::Channel* {
 	return nullptr;
 }
 
-auto zpt::ChannelPoll::add(short _type, std::string _connection, bool _new_connection) -> zpt::socket_ref {
+auto zpt::ChannelPoll::add(std::string _type, std::string _connection, bool _new_connection)
+    -> zpt::socket_ref {
 	std::string _key;
 
 	if (!_new_connection) {
@@ -83,19 +84,20 @@ auto zpt::ChannelPoll::add(short _type, std::string _connection, bool _new_conne
 		}
 	}
 
-	zpt::Channel* _underlying = this->bind(_type, _connection);
-	assertz(_underlying != nullptr,
-		std::string("could not connection to ") + zpt::type2str(_type) + std::string("@") + _connection,
+	std::vector<zpt::socket> _underlying = this->bind(_type, _connection);
+	assertz(_underlying.size() != 0,
+		std::string("could not connection to ") + _type + std::string("@") + _connection,
 		500,
 		0);
 
-	if (_new_connection) {
-		_key.assign(_underlying->id());
-	}
-
-	{
-		std::lock_guard<std::mutex> _lock(this->__mtx[0]);
-		this->__by_refs.insert(std::make_pair(_key, _underlying));
+	for (auto _u : _underlying) {
+		if (_new_connection) {
+			_key.assign(_u->id());
+		}
+		{
+			std::lock_guard<std::mutex> _lock(this->__mtx[0]);
+			this->__by_refs.insert(std::make_pair(_key, _u.get()));
+		}
 	}
 	return zpt::socket_ref(_key, this->self());
 }
@@ -197,7 +199,6 @@ auto zpt::ChannelPoll::repoll() -> void {
 	if (!this->__needs_rebuild) {
 		return;
 	}
-	// zdbg("rebuilding");
 	this->__items.clear();
 	this->__items.resize(0);
 
@@ -323,8 +324,6 @@ auto zpt::ChannelPoll::loop() -> void {
 
 		for (; true;) {
 			this->repoll();
-			// zdbg(std::string("socket list size is ") +
-			// std::to_string(this->__items.size()));
 
 			int _n_events = 0;
 			_n_events = zmq::poll(&this->__items[0], this->__items.size(), _poll_timeout);
@@ -339,8 +338,6 @@ auto zpt::ChannelPoll::loop() -> void {
 				}
 				continue;
 			}
-			// zdbg(std::string("events ") + std::to_string(_n_events));
-			// zdbg(this->pretty());
 
 			for (size_t _k = 0; _k != this->__items.size() - 1; _k++) {
 				if (this->__items[_k].revents & ZMQ_POLLIN) {
@@ -405,7 +402,6 @@ auto zpt::ChannelPoll::loop() -> void {
 
 			for (auto _pair : this->__to_remove) {
 				zpt::socket_ref _socket = _pair.first;
-				// zdbg(std::string("removing socket ") + _socket);
 				for (size_t _k = 0; _k != this->__by_socket.size(); _k++) {
 					if (this->__by_socket[_k] == _socket) {
 						this->__by_socket.erase(this->__by_socket.begin() + _k);
@@ -413,11 +409,10 @@ auto zpt::ChannelPoll::loop() -> void {
 					}
 				}
 				if (_pair.second == nullptr) {
-					// zdbg("... and also cleaning it UP");
 					_socket->close();
 					this->remove(_socket);
 				} else {
-					_pair.second(this->__emitter);
+					this->__emitter->for_each(_pair.second);
 				}
 				this->__needs_rebuild = true;
 			}
@@ -425,7 +420,6 @@ auto zpt::ChannelPoll::loop() -> void {
 
 			for (auto _pair : this->__to_add) {
 				zpt::socket_ref _socket = _pair.first;
-				// zdbg(std::string("adding socket ") + _socket);
 				this->__by_socket.push_back(_socket);
 				this->__needs_rebuild = true;
 			}
@@ -438,169 +432,256 @@ auto zpt::ChannelPoll::loop() -> void {
 	}
 }
 
-auto zpt::ChannelPoll::bind(short _type, std::string _connection) -> zpt::Channel* {
-	switch (_type) {
-	case ZMQ_ROUTER_DEALER: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
+auto zpt::ChannelPoll::bind(std::string _type, std::string _connection) -> std::vector<zpt::socket> {
+	std::vector<zpt::socket> _return;
+	for (auto _factory : this->__emitter->channel(_type)) {
+		if (_factory->is_reusable(_type)) {
+			zpt::socket_ref _found = this->get(_connection);
+			if ((*_found) != nullptr) {
+				_return.push_back(zpt::socket(*_found));
+				continue;
+			}
 		}
-		zpt::Channel* _socket = new zpt::ZMQRouterDealer(_connection, this->__options);
-		return _socket;
+		_return.push_back(_factory->produce({"connection", _connection, "type", _type}));
 	}
-	case ZMQ_ROUTER: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQRouter(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_DEALER: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQDealer(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_REQ: {
-		zpt::Channel* _socket = new zpt::ZMQReq(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_REP: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQRep(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_XPUB_XSUB: {
-		zpt::Channel* _socket = new zpt::ZMQXPubXSub(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_PUB_SUB: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQPubSub(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_PUB: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQPub(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_SUB: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQSub(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_PUSH: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQPush(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_PULL: {
-		zpt::socket_ref _found = this->get(_connection);
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		zpt::Channel* _socket = new zpt::ZMQPull(_connection, this->__options);
-		return _socket;
-	}
-	case ZMQ_HTTP_RAW: {
-		zpt::json _uri = zpt::uri::parse(_connection);
-		bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
-		zpt::socketstream_ptr _cs;
-		_cs->open(std::string(_uri["domain"]),
-			  _uri["port"]->ok() ? int(_uri["port"]) : (_is_ssl ? 443 : 80),
-			  _is_ssl);
-		assertz(!_cs->is_error(),
-			std::string("http: error with socket: ") + _cs->error_string(),
-			503,
-			_cs->error_code());
-		zpt::Channel* _socket = new zpt::ZMQHttp(_cs, this->__options);
-		return _socket;
-	}
-	case ZMQ_MQTT_RAW: {
-		zpt::socket_ref _found = this->get("__mqtt_connection__");
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		break;
-	}
-	case ZMQ_UPNP_RAW: {
-		zpt::socket_ref _found = this->get("__upnp_connection__");
-		if ((*_found) != nullptr) {
-			return *_found;
-		}
-		break;
-	}
-	}
-	return nullptr;
+	return _return;
 }
 
 auto zpt::ChannelPoll::clean_up(zpt::socket_ref _socket, bool _force) -> void {
-	switch (_socket->type()) {
-	case ZMQ_ROUTER_DEALER: {
-		break;
-	}
-	case ZMQ_ROUTER: {
-		break;
-	}
-	case ZMQ_DEALER: {
-		break;
-	}
-	case ZMQ_REQ: {
+	if (!_socket->is_reusable()) {
 		this->__to_remove.insert(std::make_pair(_socket, nullptr));
 		this->__needs_rebuild = true;
-		break;
 	}
-	case ZMQ_REP: {
-		break;
-	}
-	case ZMQ_XPUB_XSUB: {
-		break;
-	}
-	case ZMQ_PUB_SUB: {
-		break;
-	}
-	case ZMQ_PUB: {
-		break;
-	}
-	case ZMQ_SUB: {
-		break;
-	}
-	case ZMQ_PUSH: {
-		break;
-	}
-	case ZMQ_PULL: {
-		break;
-	}
-	case ZMQ_HTTP_RAW: {
-		if (_force || ((zpt::ZMQHttp*)*_socket)->underlying()->host() != "" || !_socket->available()) {
-			this->__to_remove.insert(std::make_pair(_socket, nullptr));
-			this->__needs_rebuild = true;
+}
+
+auto zpt::http2internal(zpt::http::req _request) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+	_return << "channel"
+		<< (_request->header("X-Cid").length() != 0 ? _request->header("X-Cid") : zpt::generate::r_uuid())
+		<< "performative" << _request->method() << "resource" << _request->url();
+
+	zpt::json _payload;
+	if (_request->body() != "") {
+		if (_request->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
+			_payload = zpt::http::deserialize(_request->body());
+		} else if (_request->header("Content-Type").find("application/json") != std::string::npos) {
+			_payload = zpt::json(_request->body());
+		} else {
+			_payload = {"text", _request->body()};
 		}
-		break;
 	}
-	case ZMQ_MQTT_RAW: {
-		break;
+	_return << "payload" << _payload;
+
+	if (_request->params().size() != 0) {
+		zpt::json _params = zpt::json::object();
+		for (auto _param : _request->params()) {
+			_params << _param.first << zpt::url::r_decode(_param.second);
+		}
+		_return << "params" << _params;
 	}
-	case ZMQ_UPNP_RAW: {
-		break;
+
+	zpt::json _headers = zpt::json::object();
+	for (auto _header : _request->headers()) {
+		_headers << _header.first << _header.second;
 	}
+	if (_headers->obj()->size() != 0) {
+		_return << "headers" << _headers;
 	}
+
+	return _return;
+}
+
+auto zpt::http2internal(zpt::http::rep _reply) -> zpt::json {
+	zpt::json _return = zpt::json::object();
+	_return << "status" << (int)_reply->status() << "channel"
+		<< (_reply->header("X-Cid").length() != 0 ? _reply->header("X-Cid") : zpt::undefined) << "performative"
+		<< zpt::ev::Reply << "resource" << _reply->header("X-Resource");
+
+	std::string _body = _reply->body();
+	zpt::json _payload;
+	zpt::trim(_body);
+	if (_body != "") {
+		if (_reply->header("Content-Type").find("application/x-www-form-urlencoded") != std::string::npos) {
+			_payload = zpt::http::deserialize(_reply->body());
+		} else if (_reply->header("Content-Type").find("application/json") != std::string::npos) {
+			_payload = zpt::json(_reply->body());
+		} else {
+			_payload = {"text", _reply->body()};
+		}
+	}
+	_return << "payload" << _payload;
+
+	zpt::json _headers = zpt::json::object();
+	for (auto _header : _reply->headers()) {
+		_headers << _header.first << _header.second;
+	}
+	if (_headers->obj()->size() != 0) {
+		_return << "headers" << _headers;
+	}
+
+	return _return;
+}
+
+auto zpt::internal2http_rep(zpt::json _out) -> zpt::http::rep {
+	zpt::http::rep _return;
+	_return->status((zpt::HTTPStatus)((int)_out["status"]));
+
+	if (_out["headers"]->is_object()) {
+		;
+		for (auto _header : _out["headers"]->obj()) {
+			_return->header(_header.first, ((std::string)_header.second));
+		}
+	}
+	if (_out["channel"]->ok()) {
+		_return->header("X-Cid", std::string(_out["channel"]));
+	}
+	_return->header("X-Resource", _out["resource"]);
+
+	if (_return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 &&
+	    _return->status() >= zpt::HTTP200) {
+		if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) ||
+		     (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) ||
+		     (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {
+			if (_out["headers"]["Content-Type"]->ok() &&
+			    std::string(_out["headers"]["Content-Type"]) != "application/json") {
+				if (std::string(_out["headers"]["Content-Type"]) ==
+					"application/x-www-form-urlencoded" ||
+				    std::string(_out["headers"]["Content-Type"]) == "multipart/form-data") {
+					std::string _body;
+					if (_out["payload"]->is_object()) {
+						for (auto _param : _out["payload"]->obj()) {
+							if (_body.length() != 0) {
+								_body += std::string("&");
+							}
+							_body += _param.first + std::string("=") +
+								 zpt::url::r_encode(std::string(_param.second));
+						}
+					} else {
+						_body = std::string("payload=") +
+							zpt::url::r_encode(std::string(_out["payload"]));
+					}
+					zpt::trim(_body);
+					_return->header("Content-Length", std::to_string(_body.length()));
+					_return->body(_body);
+				} else {
+					std::string _body = std::string(_out["payload"]);
+					zpt::trim(_body);
+					_return->header("Content-Type", "text/plain");
+					_return->header("Content-Length", std::to_string(_body.length()));
+					_return->body(_body);
+				}
+			} else {
+				std::string _body = std::string(_out["payload"]);
+				zpt::trim(_body);
+				if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
+					_return->header("Content-Type", "application/json");
+				} else {
+					_return->header("Content-Type", "text/plain");
+				}
+				_return->body(_body);
+				_return->header("Content-Length", std::to_string(_body.length()));
+			}
+		} else {
+			_return->header("Content-Length", "0");
+		}
+	}
+	return _return;
+}
+
+auto zpt::internal2http_req(zpt::json _out, std::string _host) -> zpt::http::req {
+	zpt::http::req _return;
+	_return->method(zpt::ev::performative(int(_out["performative"])));
+	_return->url(std::string(_out["resource"]));
+
+	if (!_out["headers"]->is_object()) {
+		_out << "headers" << zpt::json::object();
+	}
+	_out["headers"] << "Host" << _host;
+	for (auto _header : _out["headers"]->obj()) {
+		_return->header(_header.first, ((std::string)_header.second));
+	}
+
+	if (_out["channel"]->ok()) {
+		_return->header("X-Cid", std::string(_out["channel"]));
+	}
+
+	if (_out["params"]->is_object()) {
+		for (auto _param : _out["params"]->obj()) {
+			_return->param(_param.first, ((std::string)_param.second));
+		}
+	}
+
+	if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) ||
+	     (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) ||
+	     (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {
+		if (_out["headers"]["Content-Type"]->ok() &&
+		    std::string(_out["headers"]["Content-Type"]) != "application/json") {
+			if (std::string(_out["headers"]["Content-Type"]) == "application/x-www-form-urlencoded" ||
+			    std::string(_out["headers"]["Content-Type"]) == "multipart/form-data") {
+				std::string _body;
+				if (_out["payload"]->is_object()) {
+					for (auto _param : _out["payload"]->obj()) {
+						if (_body.length() != 0) {
+							_body += std::string("&");
+						}
+						_body += _param.first + std::string("=") +
+							 zpt::url::r_encode(std::string(_param.second));
+					}
+				} else {
+					_body =
+					    std::string("payload=") + zpt::url::r_encode(std::string(_out["payload"]));
+				}
+				zpt::trim(_body);
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			} else {
+				std::string _body = std::string(_out["payload"]);
+				zpt::trim(_body);
+				_return->header("Content-Type", "text/plain");
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			}
+		} else {
+			std::string _body = std::string(_out["payload"]);
+			zpt::trim(_body);
+			if (_body.length() != 0) {
+				if (_out["payload"]->is_object() || _out["payload"]->is_array()) {
+					_return->header("Content-Type", "application/json");
+				} else {
+					_return->header("Content-Type", "text/plain");
+				}
+				_return->header("Content-Length", std::to_string(_body.length()));
+				_return->body(_body);
+			} else {
+				_return->header("Content-Length", "0");
+			}
+		}
+	}
+	return _return;
+}
+
+zpt::json zpt::http::deserialize(std::string _body) {
+	zpt::json _return = zpt::json::object();
+	std::string _name;
+	std::string _collected;
+	for (const auto& _c : _body) {
+		switch (_c) {
+		case '=': {
+			_name.assign(_collected.data());
+			_collected.assign("");
+			break;
+		}
+		case '&': {
+			zpt::url::decode(_collected);
+			_return << _name << _collected;
+			_name.assign("");
+			_collected.assign("");
+			break;
+		}
+		default: { _collected.push_back(_c); }
+		}
+	}
+	zpt::url::decode(_collected);
+	_return << _name << _collected;
+	return _return;
 }

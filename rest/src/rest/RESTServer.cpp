@@ -47,19 +47,19 @@ bool interrupted = false;
 }
 }
 
-zpt::RESTServerPtr::RESTServerPtr(std::string _name, zpt::json _options)
-    : std::shared_ptr<zpt::RESTServer>(new zpt::RESTServer(_name, _options)) {}
+zpt::PipelinePtr::PipelinePtr(std::string _name, zpt::json _options)
+    : std::shared_ptr<zpt::Pipeline>(new zpt::Pipeline(_name, _options)) {}
 
-zpt::RESTServerPtr::RESTServerPtr(zpt::RESTServer* _ptr) : std::shared_ptr<zpt::RESTServer>(_ptr) {}
+zpt::PipelinePtr::PipelinePtr(zpt::Pipeline* _ptr) : std::shared_ptr<zpt::Pipeline>(_ptr) {}
 
-zpt::RESTServerPtr::~RESTServerPtr() {}
+zpt::PipelinePtr::~PipelinePtr() {}
 
-zpt::rest::server zpt::RESTServerPtr::setup(zpt::json _options, std::string _name) {
+zpt::pipeline zpt::PipelinePtr::setup(zpt::json _options, std::string _name) {
 	if (_name.length() == 0) {
 		_name = _options->obj()->begin()->first;
 	}
 	try {
-		zpt::rest::server _server(_name, _options);
+		zpt::pipeline _server(_name, _options);
 		return _server;
 	} catch (zpt::assertion& _e) {
 		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
@@ -86,7 +86,7 @@ auto zpt::rest::terminate(int _signal) -> void {
 	zpt::rest::interrupted = true;
 }
 
-int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
+int zpt::PipelinePtr::launch(int argc, char* argv[]) {
 	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
 	zpt::conf::setup(_ptr);
 
@@ -129,9 +129,9 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	std::string _u_name(_name.data());
 	std::transform(_u_name.begin(), _u_name.end(), _u_name.begin(), ::toupper);
 	zlog(std::string("starting RESTful service container *") + _u_name + std::string("*"), zpt::notice);
-	zpt::rest::server _server(nullptr);
+	zpt::pipeline _server(nullptr);
 	try {
-		_server = zpt::rest::server::setup(_options, _name);
+		_server = zpt::pipeline::setup(_options, _name);
 		if (_server->suicidal()) {
 			zlog("server initialization gone wrong, server is now in 'suicidal' state", zpt::emergency);
 			return -1;
@@ -152,16 +152,16 @@ int zpt::RESTServerPtr::launch(int argc, char* argv[]) {
 	return 0;
 }
 
-zpt::RESTServer::RESTServer(std::string _name, zpt::json _options)
+zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
     : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()),
       __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this),
       __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
-		if (!this->__options["rest"]["discoverable"]->ok()) {
+		if (!this->__options["discoverable"]->ok()) {
 			this->__options["rest"] << "discoverable" << false;
 		}
 
-		if (bool(this->options()["rest"]["discoverable"])) {
+		if (bool(this->options()["discoverable"])) {
 			this->__upnp = zpt::upnp::broker(_options);
 			this->__poll->poll(this->__poll->add(this->__upnp.get()));
 			zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") +
@@ -257,31 +257,31 @@ zpt::RESTServer::RESTServer(std::string _name, zpt::json _options)
 	// std::cout << this->__emitter->directory()->pretty() << endl << flush;
 }
 
-zpt::RESTServer::~RESTServer() { this->__mqtt->unbind(); }
+zpt::Pipeline::~Pipeline() { this->__mqtt->unbind(); }
 
-auto zpt::RESTServer::suicidal() -> bool { return this->__suicidal; }
+auto zpt::Pipeline::suicidal() -> bool { return this->__suicidal; }
 
-auto zpt::RESTServer::unbind() -> void {
+auto zpt::Pipeline::unbind() -> void {
 	// this->__self.reset();
 }
 
-auto zpt::RESTServer::name() -> std::string { return this->__name; }
+auto zpt::Pipeline::name() -> std::string { return this->__name; }
 
-auto zpt::RESTServer::poll() -> zpt::poll { return this->__poll; }
+auto zpt::Pipeline::poll() -> zpt::poll { return this->__poll; }
 
-auto zpt::RESTServer::events() -> zpt::ev::emitter { return this->__emitter; }
+auto zpt::Pipeline::events() -> zpt::ev::emitter { return this->__emitter; }
 
-auto zpt::RESTServer::options() -> zpt::json { return this->__options; }
+auto zpt::Pipeline::options() -> zpt::json { return this->__options; }
 
-auto zpt::RESTServer::credentials() -> zpt::json { return this->__emitter->credentials(); }
+auto zpt::Pipeline::credentials() -> zpt::json { return this->__emitter->credentials(); }
 
-auto zpt::RESTServer::credentials(zpt::json _credentials) -> void { this->__emitter->credentials(_credentials); }
+auto zpt::Pipeline::credentials(zpt::json _credentials) -> void { this->__emitter->credentials(_credentials); }
 
-auto zpt::RESTServer::hook(zpt::ev::initializer _callback) -> void { this->__initializers.push_back(_callback); }
+auto zpt::Pipeline::hook(zpt::ev::initializer _callback) -> void { this->__initializers.push_back(_callback); }
 
-void zpt::RESTServer::start() {
+void zpt::Pipeline::start() {
 	try {
-		if (bool(this->__options["rest"]["discoverable"])) {
+		if (bool(this->__options["discoverable"])) {
 			this->notify_peers();
 		}
 
@@ -443,7 +443,7 @@ void zpt::RESTServer::start() {
 	}
 }
 
-auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
+auto zpt::Pipeline::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
 	zpt::json _envelope = zpt::json::object();
 	_envelope << "performative" << int(zpt::ev::Reply);
 	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
@@ -472,14 +472,14 @@ auto zpt::RESTServer::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
 	;
 }
 
-auto zpt::RESTServer::publish(std::string _topic, zpt::json _payload) -> void {
+auto zpt::Pipeline::publish(std::string _topic, zpt::json _payload) -> void {
 	ztrace(std::string("> PUBLISH ") + _topic);
 	zverbose(std::string("\nPUBLISH \033[1;35m") + _topic + std::string("\033[0m MQTT/3.1\n\n") +
 		 zpt::json::pretty(_payload));
 	this->__mqtt->publish(_topic, _payload);
 }
 
-auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
+auto zpt::Pipeline::subscribe(std::string _topic, zpt::json _opts) -> void {
 	if (bool(_opts["mqtt"])) {
 		zpt::json _topics = zpt::rest::uri::get_simplified_topics(_topic);
 		for (auto _t : _topics->arr()) {
@@ -488,13 +488,13 @@ auto zpt::RESTServer::subscribe(std::string _topic, zpt::json _opts) -> void {
 	}
 }
 
-auto zpt::RESTServer::broadcast(zpt::json _envelope) -> void {
-	if (bool(this->options()["rest"]["discoverable"])) {
+auto zpt::Pipeline::broadcast(zpt::json _envelope) -> void {
+	if (bool(this->options()["discoverable"])) {
 		this->__upnp->send(_envelope);
 	}
 }
 
-auto zpt::RESTServer::notify_peers() -> void { // UPnP service discovery
+auto zpt::Pipeline::notify_peers() -> void { // UPnP service discovery
 	this->__emitter->on(
 	    "([/]*)\\*",
 	    {{zpt::ev::Notify,

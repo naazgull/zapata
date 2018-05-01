@@ -1,14 +1,27 @@
 /*
-Copyright (c) 2017, Muzzley
+The MIT License (MIT)
+
+Copyright (c) 2017 n@zgul <n@zgul.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
-/**
- * This example uses the mosquitto C library (http://mosquitto.org).
- * In Ubuntu based systems is installable by executing:
- * $ sudo apt-get install libmosquitto0 libmosquitto0-dev
- *
- * Compile with '-lmosquitto'.
- */
 #include <unistd.h>
 #include <iostream>
 #include <functional>
@@ -19,12 +32,14 @@ Copyright (c) 2017, Muzzley
 #include <vector>
 #include <mutex>
 #include <zapata/json.h>
-#include <zapata/zmq.h>
+#include <zapata/events.h>
 
 using namespace std;
 #if !defined __APPLE__
 using namespace __gnu_cxx;
 #endif
+
+#define UPNP_RAW -7
 
 namespace zpt {
 
@@ -52,6 +67,7 @@ class UPnP : public zpt::Channel {
 	virtual auto listen() -> zpt::http::req;
 
 	virtual auto recv() -> zpt::json;
+	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 	virtual auto send(zpt::json _envelope) -> zpt::json;
 
 	virtual auto id() -> std::string;
@@ -66,6 +82,7 @@ class UPnP : public zpt::Channel {
 	virtual auto protocol() -> std::string;
 	virtual auto close() -> void;
 	virtual auto available() -> bool;
+	virtual auto is_reusable() -> bool;
 
       private:
 	std::mutex __mtx_underlying;

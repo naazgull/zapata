@@ -1,5 +1,25 @@
 /*
-Copyright (c) 2017, Muzzley
+The MIT License (MIT)
+
+Copyright (c) 2017 n@zgul <n@zgul.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include <zapata/upnp/UPnP.h>
@@ -125,10 +145,7 @@ auto zpt::UPnP::in() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
 auto zpt::UPnP::out() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
-auto zpt::UPnP::fd() -> int {
-	return this->__underlying->buffer().get_socket();
-	;
-}
+auto zpt::UPnP::fd() -> int { return this->__underlying->buffer().get_socket(); }
 
 auto zpt::UPnP::close() -> void {
 	this->__underlying->close();
@@ -141,9 +158,13 @@ auto zpt::UPnP::in_mtx() -> std::mutex& { return this->__mtx_underlying; }
 
 auto zpt::UPnP::out_mtx() -> std::mutex& { return this->__mtx_send; }
 
-auto zpt::UPnP::type() -> short int { return ZMQ_UPNP_RAW; }
+auto zpt::UPnP::type() -> short int { return UPNP_RAW; }
 
 auto zpt::UPnP::protocol() -> std::string { return "UPnP/1.1"; }
+
+auto zpt::UPnP::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
+	return this->send({"performative", _performative, "resource", _resource, "payload", _payload});
+}
 
 auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
 	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
@@ -166,7 +187,7 @@ auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
 			std::lock_guard<std::mutex> _lock(this->out_mtx());
 			std::string _message;
 			_message.assign(
-			    std::string(zpt::rest::zmq2http_req(_envelope,
+			    std::string(zpt::internal2http_req(_envelope,
 								this->__underlying->host() + std::string(":") +
 								    std::to_string(this->__underlying->port()))));
 			(*this->__send) << _message << flush;
@@ -189,7 +210,7 @@ auto zpt::UPnP::recv() -> zpt::json {
 		std::lock_guard<std::mutex> _lock(this->in_mtx());
 		zpt::http::req _request;
 		(*this->__underlying) >> _request;
-		_in = zpt::rest::http2zmq(_request);
+		_in = zpt::http2internal(_request);
 		_in << "resource"
 		    << "*"
 		    << "protocol" << this->protocol();
@@ -201,5 +222,7 @@ auto zpt::UPnP::recv() -> zpt::json {
 	zverbose(zpt::ev::pretty(_in));
 	return _in;
 }
+
+auto zpt::UPnP::is_reusable() -> bool { return false; }
 
 extern "C" auto zpt_upnp() -> int { return 1; }

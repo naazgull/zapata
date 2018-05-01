@@ -18,4 +18,5 @@ nobase_include_HEADERS = \
 ./zapata/text/convert.h \
 ./zapata/text/html.h \
 ./zapata/text/manip.h \
+./zapata/net/manip.h \
 ./zapata/base.h

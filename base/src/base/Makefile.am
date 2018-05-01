@@ -25,6 +25,7 @@ libzapata_base_la_SOURCES = \
 ./SyntaxErrorException.cpp \
 ./url.cpp \
 ./usage.cpp \
+./net.cpp \
 ./utf8.cpp
 
 bin_PROGRAMS = zoc

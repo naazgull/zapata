@@ -49,5 +49,5 @@ SOFTWARE.
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 #include <zapata/file/manip.h>
-
 #include <zapata/mail/manip.h>
+#include <zapata/net/manip.h>

@@ -117,11 +117,11 @@ auto zpt::generate::r_uuid() -> std::string {
 }
 
 auto zpt::test::uuid(std::string _uuid) -> bool {
-	static const std::regex _uuid_rgx("^([a-fA-f0-9]{8})-"
-					  "([a-fA-f0-9]{4})-"
-					  "([a-fA-f0-9]{4})-"
-					  "([a-fA-f0-9]{4})-"
-					  "([a-fA-f0-9]{12})$");
+	static const std::regex _uuid_rgx("^([a-fA-F0-9]{8})-"
+					  "([a-fA-F0-9]{4})-"
+					  "([a-fA-F0-9]{4})-"
+					  "([a-fA-F0-9]{4})-"
+					  "([a-fA-F0-9]{12})$");
 	return std::regex_match(_uuid, _uuid_rgx);
 }
 

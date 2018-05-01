@@ -277,18 +277,15 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method,
 			       zpt::json _envelope,
 			       zpt::json _opts,
 			       zpt::ev::handler _callback) -> void {
+	zpt::json _uri = zpt::uri::parse(_url);
 	this->resolve(
 	    _method,
-	    _url,
+	    _uri,
 	    _envelope,
 	    _opts + zpt::json{"broker",
 			      (this->options()["broker"]->ok() && std::string(this->options()["broker"]) == "true")},
 	    _callback);
 }
-
-// auto zpt::RESTEmitter::route(zpt::ev::performative _method, std::string _url,
-// zpt::json _envelope, zpt::json _opts) -> zpt::json {
-// }
 
 auto zpt::RESTEmitter::route(zpt::ev::performative _method,
 			     std::string _url,
@@ -303,6 +300,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method,
 			     zpt::json _opts,
 			     zpt::ev::handler _callback) -> void {
 	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+	zpt::json _uri = zpt::uri::parse(_url);
 
 	if (bool(_opts["mqtt"])) {
 		if (bool(_opts["no-envelope"])) {
@@ -332,15 +330,15 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method,
 		return;
 	}
 
-	this->resolve(_method, _url, _envelope, _opts + zpt::json{"broker", true}, _callback);
+	this->resolve(_method, _uri, _envelope, _opts + zpt::json{"broker", true}, _callback);
 }
 
 auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
-			       std::string _url,
+			       zpt::json _uri,
 			       zpt::json _envelope,
 			       zpt::json _opts,
 			       zpt::ev::handler _callback) -> void {
-	zpt::ev::node _found = this->lookup(_url, _method);
+	zpt::ev::node _found = this->lookup(_uri, _method);
 	zpt::json _container = std::get<0>(_found);
 	zpt::ev::handlers _handlers = std::get<1>(_found);
 
@@ -472,219 +470,6 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 			this->reply(_envelope, zpt::ev::accepted(_url));
 		}
 	}
-}
-
-auto zpt::RESTEmitter::sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts)
-    -> zpt::json {
-	assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
-
-	if (bool(_opts["mqtt"])) {
-		if (bool(_opts["no-envelope"])) {
-			this->__server->publish(_url, _envelope);
-		} else {
-			zpt::json _in =
-			    _envelope +
-			    zpt::json{"headers",
-				      (zpt::ev::init_request() + this->options()["$defaults"]["headers"]["request"] +
-				       _envelope["headers"] + zpt::json{"X-Sender", this->uuid()}),
-				      "performative",
-				      _method,
-				      "resource",
-				      _url};
-			this->__server->publish(_url, _in);
-		}
-		return zpt::undefined;
-	}
-	if (bool(_opts["upnp"])) {
-		this->__server->broadcast(_envelope +
-					  zpt::json{"headers",
-						    (_envelope["headers"] + zpt::json{"X-Sender", this->uuid()}),
-						    "performative",
-						    _method,
-						    "resource",
-						    _url});
-		return zpt::undefined;
-	}
-
-	return this->sync_resolve(_method, _url, _envelope, _opts + zpt::json{"broker", true});
-}
-
-auto zpt::RESTEmitter::sync_resolve(zpt::ev::performative _method,
-				    std::string _url,
-				    zpt::json _envelope,
-				    zpt::json _opts) -> zpt::json {
-	zpt::ev::node _found = this->lookup(_url, _method);
-	zpt::json _container = std::get<0>(_found);
-	zpt::ev::handlers _handlers = std::get<1>(_found);
-
-	if (!_container->is_object() && _handlers.size() == 0) {
-		zpt::json _out = zpt::ev::not_found(_url);
-		if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-			throw zpt::assertion(_out["payload"]["text"]->ok()
-						 ? std::string(_out["payload"]["text"])
-						 : std::string(zpt::status_names[int(_out["status"])]),
-					     int(_out["status"]),
-					     int(_out["payload"]["code"]),
-					     _out["payload"]["assertion_failed"]->ok()
-						 ? std::string(_out["payload"]["assertion_failed"])
-						 : std::string(zpt::status_names[int(_out["status"])]));
-		}
-		return _out;
-	}
-
-	_envelope = _envelope + zpt::json{"headers",
-					  (zpt::ev::init_request() +
-					   this->options()["$defaults"]["headers"]["request"] + _envelope["headers"]),
-					  "performative",
-					  _method,
-					  "resource",
-					  (_container["topic"]->ok() ? _container["topic"] : zpt::json::string(_url))};
-	if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
-		_envelope << "channel" << zpt::generate::r_uuid();
-	}
-
-	if (_container["uuid"] == zpt::json::string(this->uuid()) && _handlers.size() > _method &&
-	    _handlers[_method] != nullptr) {
-		try {
-			zpt::json _result = zpt::json::object();
-			this->pending(
-			    _envelope,
-			    [=](zpt::ev::performative _p_performtive,
-				std::string _p_topic,
-				zpt::json _p_result,
-				zpt::ev::emitter _p_emitter) mutable -> void { _result << "result" << _p_result; });
-			_handlers[_method](_method, _url, _envelope, this->self());
-			if (!this->has_pending(_envelope)) {
-				this->reply(_envelope, {"status", 204});
-			}
-			_result = _result["result"];
-			if (_result->ok()) {
-				if (bool(_opts["bubble-error"]) && int(_result["status"]) > 399) {
-					zlog(std::string("error processing '") + _url + std::string("': ") +
-						 std::string(_result["payload"]),
-					     zpt::error);
-					if (bool(_opts["bubble-error"])) {
-						throw zpt::assertion(
-						    _result["payload"]["text"]->ok()
-							? std::string(_result["payload"]["text"])
-							: std::string(zpt::status_names[int(_result["status"])]),
-						    int(_result["status"]),
-						    int(_result["payload"]["code"]),
-						    _result["payload"]["assertion_failed"]->ok()
-							? std::string(_result["payload"]["assertion_failed"])
-							: std::string(zpt::status_names[int(_result["status"])]));
-					}
-				}
-
-				_result << "performative" << zpt::ev::Reply << "headers"
-					<< (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) +
-					    this->options()["$defaults"]["headers"]["response"] + _result["headers"] +
-					    zpt::json{"X-Sender", this->uuid()});
-				return _result;
-			}
-			return zpt::ev::no_content(
-			    zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]), _envelope) +
-			    this->options()["$defaults"]["headers"]["response"] + zpt::json{"X-Sender", this->uuid()});
-		} catch (zpt::assertion& _e) {
-			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what() +
-				 std::string(", ") + _e.description(),
-			     zpt::error);
-			zlog(std::string("\n") + _e.backtrace(), zpt::trace);
-			if (bool(_opts["bubble-error"])) {
-				throw;
-			}
-			return zpt::ev::assertion_error(
-			    std::string(_envelope["resource"]),
-			    _e,
-			    zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) +
-				this->options()["$defaults"]["headers"]["response"] +
-				zpt::json{"X-Sender", this->uuid()});
-		} catch (std::exception& _e) {
-			zlog(std::string("error processing '") + _url + std::string("': ") + _e.what(), zpt::error);
-			if (bool(_opts["bubble-error"])) {
-				throw;
-			}
-			return zpt::ev::internal_server_error(
-			    std::string(_envelope["resource"]),
-			    _e,
-			    zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) +
-				this->options()["$defaults"]["headers"]["response"] +
-				zpt::json{"X-Sender", this->uuid()});
-		}
-	} else {
-		short _type = zpt::str2type(_container["type"]->str());
-		switch (_type) {
-		case ZMQ_ROUTER_DEALER:
-		case ZMQ_ROUTER:
-		case ZMQ_DEALER:
-		case ZMQ_REP:
-		case ZMQ_REQ: {
-			zpt::socket_ref _client = this->__poll->add(ZMQ_REQ, _container["connect"]->str(), true);
-			_client->send(_envelope);
-			zpt::json _out = _client->recv();
-			if (!_out["status"]->ok() || ((int)_out["status"]) < 100) {
-				_out << "status" << 501 << zpt::json{"payload",
-								     {"text",
-								      "required protocol is not implemented",
-								      "code",
-								      1105,
-								      "assertion_failed",
-								      "_out[\"status\"]->ok()"}};
-			}
-			if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-				throw zpt::assertion(_out["payload"]["text"]->ok()
-							 ? std::string(_out["payload"]["text"])
-							 : std::string(zpt::status_names[int(_out["status"])]),
-						     int(_out["status"]),
-						     int(_out["payload"]["code"]),
-						     _out["payload"]["assertion_failed"]->ok()
-							 ? std::string(_out["payload"]["assertion_failed"])
-							 : std::string(zpt::status_names[int(_out["status"])]));
-			}
-			this->__poll->remove(_client);
-			return _out;
-		}
-		case ZMQ_PUB_SUB: {
-			std::string _connect = _container["connect"]->str();
-			zpt::socket_ref _client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
-			_client->send(_envelope);
-			return zpt::ev::accepted(_url);
-		}
-		case ZMQ_PUSH: {
-			zpt::socket_ref _client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
-			_client->send(_envelope);
-			return zpt::ev::accepted(_url);
-		}
-		case ZMQ_HTTP_RAW: {
-			zpt::socket_ref _client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
-			_client->send(_envelope);
-			zpt::json _out = _client->recv();
-			if (!_out["status"]->ok() || ((int)_out["status"]) < 100) {
-				_out << "status" << 501 << zpt::json{"payload",
-								     {"text",
-								      "required protocol is not implemented",
-								      "code",
-								      1105,
-								      "assertion_failed",
-								      "_out[\"status\"]->ok()"}};
-			}
-			if (bool(_opts["bubble-error"]) && int(_out["status"]) > 399) {
-				throw zpt::assertion(_out["payload"]["text"]->ok()
-							 ? std::string(_out["payload"]["text"])
-							 : std::string(zpt::status_names[int(_out["status"])]),
-						     int(_out["status"]),
-						     int(_out["payload"]["code"]),
-						     _out["payload"]["assertion_failed"]->ok()
-							 ? std::string(_out["payload"]["assertion_failed"])
-							 : std::string(zpt::status_names[int(_out["status"])]));
-			}
-			this->__poll->remove(_client);
-			return _out;
-		}
-		}
-	}
-
-	return zpt::undefined;
 }
 
 auto zpt::RESTEmitter::instance() -> zpt::ev::emitter {

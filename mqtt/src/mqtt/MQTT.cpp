@@ -1,5 +1,25 @@
 /*
-  Copyright (c) 2017, Muzzley
+The MIT License (MIT)
+
+Copyright (c) 2017 n@zgul <n@zgul.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include <zapata/mqtt/MQTT.h>
@@ -80,7 +100,15 @@ auto zpt::MQTT::connected() -> bool {
 	return this->__connected;
 }
 
-auto zpt::MQTT::connect(zpt::json _options) -> bool { return this->connect("", false, 1883, 1000); }
+auto zpt::MQTT::connect(zpt::json _options) -> bool {
+	if (_options["uri"]["user"]->ok() && _options["uri"]["password"]->ok()) {
+		this->credentials(_options["uri"]["user"]->str(), _options["uri"]["password"]->str());
+	}
+	return this->connect(_options["uri"]["domain"]->str(),
+			     _options["uri"]["scheme"]->str() == "mqtts",
+			     _options["uri"]["port"]->intr(),
+			     1000);
+}
 
 auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> bool {
 	int _rc = 0;
@@ -434,6 +462,8 @@ auto zpt::MQTT::in_mtx() -> std::mutex& { return this->__mtx_conn; }
 
 auto zpt::MQTT::out_mtx() -> std::mutex& { return this->__mtx_conn; }
 
-auto zpt::MQTT::type() -> short int { return ZMQ_MQTT_RAW; }
+auto zpt::MQTT::type() -> short int { return MQTT_RAW; }
 
 auto zpt::MQTT::protocol() -> std::string { return "MQTT/3.1"; }
+
+auto zpt::MQTT::is_reusable() -> bool { return true; }

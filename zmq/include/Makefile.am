@@ -4,5 +4,5 @@ nobase_include_HEADERS = \
 ./zapata/zmq/unconfig.h \
 ./zapata/zmq/SocketStreams.h \
 ./zapata/zmq/WebSocket.h \
-./zapata/zmq/ZMQPolling.h \
+./zapata/zmq/ZMQFactory.h \
 ./zapata/zmq.h

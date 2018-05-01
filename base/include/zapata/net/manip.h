@@ -22,36 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/mqtt/MQTTFactory.h>
+#pragma once
 
-zpt::MQTTFactory::MQTTFactory() : zpt::ChannelFactory() {}
+#include <string>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <memory>
+#include <cstring>
 
-zpt::MQTTFactory::~MQTTFactory() {}
-
-auto zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
-	zpt::socket _return;
-	auto _found = this->__channels.find(_options["connection"]->str());
-	if (_found != this->__channels.end()) {
-		_return = _found->second;
-	} else {
-		zpt::MQTT* _mqtt = new zpt::MQTT();
-		_mqtt->connect(zpt::uri::parse(_options["connection"]->str()));
-		_return = zpt::socket(_mqtt);
-	}
-	return _return;
+namespace zpt {
+namespace net {
+auto getip(std::string _if = "") -> std::string;
 }
-
-auto zpt::MQTTFactory::is_reusable(std::string _type) -> bool  {
-	return true;
-}
-
-auto zpt::MQTTFactory::clean(zpt::socket _socket) -> bool  {
-	return false;
-}
-
-extern "C" void _zpt_load_() {
-	zpt::ev::emitter_factory _emitter = zpt::emitter();
-	_emitter->channel({
-	    {"zmq", zpt::socket_factory(new zpt::MQTTFactory())},
-	});
 }

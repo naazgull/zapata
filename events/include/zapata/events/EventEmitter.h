@@ -160,7 +160,7 @@ class Poll {
 	virtual ~Poll();
 
 	virtual auto options() -> zpt::json = 0;
-	virtual auto emitter() -> zpt::ev::emitter = 0;
+	virtual auto emitter() -> zpt::ev::emitter_factory = 0;
 
 	virtual auto get(std::string _uuid) -> zpt::socket_ref = 0;
 	virtual auto relay(std::string _key) -> zpt::Channel* = 0;
@@ -192,8 +192,8 @@ class Channel {
 	virtual auto close() -> void;
 	virtual auto available() -> bool;
 
-	virtual auto recv() -> zpt::json;
-	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
+	virtual auto recv() -> zpt::json = 0;
+	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json = 0;
 	virtual auto send(zpt::json _envelope) -> zpt::json;
 	virtual auto loop_iteration() -> void;
 
@@ -205,6 +205,7 @@ class Channel {
 	virtual auto out_mtx() -> std::mutex& = 0;
 	virtual auto type() -> short int = 0;
 	virtual auto protocol() -> std::string = 0;
+	virtual auto is_reusable() -> bool = 0;
 
       private:
 	zpt::json __options;
@@ -223,8 +224,8 @@ class ChannelFactory {
 	virtual ~ChannelFactory();
 
 	virtual auto produce(zpt::json _options) -> zpt::socket = 0;
-	virtual auto is_reusable() -> bool = 0;
 	virtual auto clean(zpt::socket _socket) -> bool = 0;
+	virtual auto is_reusable(std::string _type) -> bool = 0;
 };
 
 class Connector {
@@ -319,6 +320,16 @@ class Bridge {
 
       private:
 	zpt::json __options;
+};
+
+class Protocol {
+public:
+	virtual auto
+	compose_reply(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
+	    -> zpt::json = 0;
+	virtual auto
+	compose_request(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
+	    -> zpt::json = 0;
 };
 
 class EventEmitter {
@@ -426,6 +437,9 @@ class EventEmitterFactory {
 				zpt::json _envelope,
 				zpt::json _opts = zpt::undefined) -> zpt::json;
 	virtual auto hook(zpt::ev::initializer _callback) -> void;
+	virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
+	virtual auto has_pending(zpt::json _envelope) -> bool;
+	virtual auto for_each(zpt::ev::initializer _callback) -> void;
 
       private:
 	std::vector<zpt::ev::emitter> __emitters;
@@ -522,7 +536,5 @@ class EventListener {
 	std::string __regex;
 };
 
-inline auto emitter() -> zpt::ev::emitter_factory {
-	return zpt::ev::__emitter_factory;
-}
+inline auto emitter() -> zpt::ev::emitter_factory { return zpt::ev::__emitter_factory; }
 }

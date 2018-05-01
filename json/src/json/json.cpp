@@ -279,12 +279,15 @@ auto zpt::uri::parse(std::string _uri) -> zpt::json {
 	std::string _q_str = (std::string)_uri_matches[6];
 	zpt::json _query = zpt::uri::query::parse(_q_str);
 	zpt::json _authority = zpt::uri::authority::parse((std::string)_uri_matches[4]);
+	std::string _scheme = (std::string)_uri_matches[2];
 
 	return {"type",
 		(((std::string)_uri_matches[1]).length() == 0 ? zpt::undefined
 							      : zpt::json::string((std::string)_uri_matches[1])),
 		"scheme",
-		(std::string)_uri_matches[2],
+		_scheme,
+		"scheme_parts",
+		zpt::split(_scheme, "+"),
 		"authority",
 		(std::string)_uri_matches[4],
 		"domain",

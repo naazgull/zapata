@@ -116,54 +116,6 @@ auto zpt::Channel::close() -> void {
 
 auto zpt::Channel::available() -> bool { return true; }
 
-auto zpt::Channel::recv() -> zpt::json {
-	zmq::message_t _frame1;
-	zmq::message_t _frame2;
-
-	try {
-		int64_t _more = 0;
-		size_t _more_size = sizeof _more;
-
-		{
-			std::lock_guard<std::mutex> _lock(this->in_mtx());
-			this->in()->recv(&_frame1);
-			this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-			if (_more != 0) {
-				this->in()->recv(&_frame2);
-			}
-		}
-
-		std::string _directive(static_cast<char*>(_frame1.data()), _frame1.size());
-		std::string _raw(static_cast<char*>(_frame2.data()), _frame2.size());
-		try {
-			zpt::json _envelope(_raw);
-			_envelope << "protocol" << this->protocol();
-			ztrace(std::string("< ") + _directive);
-			zverbose(zpt::ev::pretty(_envelope));
-			return _envelope;
-		} catch (zpt::SyntaxErrorException& _e) {
-			return {"protocol",
-				this->protocol(),
-				"error",
-				true,
-				"status",
-				400,
-				"payload",
-				{"text", _e.what(), "assertion_failed", _e.what(), "code", 1060}};
-		}
-	} catch (zmq::error_t& _e) {
-		throw;
-	}
-	return {"protocol",
-		this->protocol(),
-		"error",
-		true,
-		"status",
-		503,
-		"payload",
-		{"text", "upstream container not reachable", "assertion_failed", "sock->is_open()", "code", 1061}};
-}
-
 auto zpt::Channel::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	return this->send({"channel",
 			   zpt::generate::r_uuid(),
@@ -173,56 +125,6 @@ auto zpt::Channel::send(zpt::ev::performative _performative, std::string _resour
 			   _resource,
 			   "payload",
 			   _payload});
-}
-
-auto zpt::Channel::send(zpt::json _envelope) -> zpt::json {
-	assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
-		"'performative' and 'resource' attributes are required",
-		412,
-		0);
-	assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
-		"'headers' must be of type JSON object",
-		412,
-		0);
-
-	if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
-		_envelope << "channel" << zpt::generate::r_uuid();
-	}
-
-	zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
-	_envelope << "resource" << _uri["path"] << "protocol" << this->protocol() << "params"
-		  << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
-
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
-	if (_performative == zpt::ev::Reply) {
-		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
-		_envelope["headers"] << "X-Status" << _envelope["status"];
-	}
-	if (!_envelope["payload"]->ok()) {
-		_envelope << "payload" << zpt::json::object();
-	}
-	if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
-		_envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
-	}
-	int _status = (int)_envelope["headers"]["X-Status"];
-
-	std::string _directive(
-	    zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() +
-	    (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status) : std::string("")));
-	std::string _buffer(_envelope);
-
-	zmq::message_t _frame1(_directive.length());
-	zmq::message_t _frame2(_buffer.length());
-	memcpy(_frame1.data(), _directive.data(), _directive.length());
-	memcpy(_frame2.data(), _buffer.data(), _buffer.length());
-
-	std::lock_guard<std::mutex> _lock(this->out_mtx());
-	assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-	assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
-	ztrace(std::string("> ") + _directive);
-	zverbose(zpt::ev::pretty(_envelope));
-
-	return zpt::undefined;
 }
 
 auto zpt::Channel::loop_iteration() -> void {}
@@ -444,6 +346,26 @@ auto zpt::EventEmitterFactory::sync_route(zpt::ev::performative _method,
 auto zpt::EventEmitterFactory::hook(zpt::ev::initializer _callback) -> void {
 	std::for_each(
 	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _e->hook(_callback); });
+}
+
+auto zpt::EventEmitterFactory::reply(zpt::json _request, zpt::json _reply) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) {
+		_e->reply(_request, _reply);
+	});
+}
+
+auto zpt::EventEmitterFactory::has_pending(zpt::json _envelope) -> bool {
+	for (auto _e : this->__emitters) {
+		if (_e->has_pending(_envelope)) {
+			return true;
+		}
+	};
+	return false;
+}
+
+auto zpt::EventEmitterFactory::for_each(zpt::ev::initializer _callback) -> void {
+	std::for_each(
+	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _callback(_e); });
 }
 
 auto zpt::ev::split(std::string _url, zpt::json _orphans) -> zpt::json {
@@ -689,24 +611,11 @@ auto zpt::EventDirectory::notify(std::string _topic, zpt::ev::node _connection) 
 	std::get<0>(_connection) << "connect" << zpt::r_replace(std::string(std::get<0>(_connection)["connect"]),
 								"tcp://*:",
 								std::string("tcp://127.0.0.1:"));
-	// if (bool(this->__options["rest"]["discoverable"]) && std::get<1>(_connection).size() != 0 &&
-	// !std::get<0>(_connection)["performatives"]["REPLY"]->ok() &&
-	// !std::get<0>(_connection)["performatives"]["NOTIFY"]->ok() &&
-	// !std::get<0>(_connection)["performatives"]["SEARCH"]->ok()) {
-	// 	this->__emitter->route(
-	// 		zpt::ev::Notify,
-	// 		"*",
-	// 		{ "headers", { "MAN", "\"ssdp:discover\"", "MX", "3", "ST",
-	// (std::string("urn:schemas-upnp-org:service:") + _topic), "Location", std::get<0>(_connection)["connect"] },
-	// 			"payload", std::get<0>(_connection) },
-	// 		{ "upnp", true }
-	// 	);
-	// }
 	this->__services->insert(_topic, _connection);
 }
 
 auto zpt::EventDirectory::make_available(std::string _uuid) -> void {
-	if (bool(this->__options["rest"]["discoverable"])) {
+	if (bool(this->__options["discoverable"])) {
 		this->__emitter->route(zpt::ev::Notify,
 				       "*",
 				       {"headers",
@@ -719,13 +628,13 @@ auto zpt::EventDirectory::make_available(std::string _uuid) -> void {
 					 "X-UUID",
 					 _uuid,
 					 "Location",
-					 this->__options["zmq"][0]["connect"]}},
+					 this->__options["upnp"][0]["connect"]}},
 				       {"upnp", true});
 	}
 }
 
 auto zpt::EventDirectory::shutdown(std::string _uuid) -> void {
-	if (bool(this->__options["rest"]["discoverable"])) {
+	if (bool(this->__options["discoverable"])) {
 		this->__emitter->route(zpt::ev::Notify,
 				       "*",
 				       {"headers",
@@ -738,7 +647,7 @@ auto zpt::EventDirectory::shutdown(std::string _uuid) -> void {
 					 "X-UUID",
 					 _uuid,
 					 "Location",
-					 this->__options["zmq"][0]["connect"]}},
+					 this->__options["upnp"][0]["connect"]}},
 				       {"upnp", true});
 	}
 }
@@ -800,8 +709,7 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 				bool _found = false;
 				for (auto _c : _containers->arr()) {
 					if (_new_container["connect"] == _c["connect"]) {
-						_c << "uuid" << _new_container["uuid"] << "type"
-						   << _new_container["type"];
+						_c << "uuid" << _new_container["uuid"];
 						_found = true;
 						break;
 					}

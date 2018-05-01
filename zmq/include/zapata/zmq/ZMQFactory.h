@@ -69,7 +69,7 @@ class ZMQPoll : public zpt::Poll {
 	virtual ~ZMQPoll();
 
 	virtual auto options() -> zpt::json;
-	virtual auto emitter() -> zpt::ev::emitter;
+	virtual auto emitter() -> zpt::ev::emitter_factory;
 	virtual auto self() const -> zpt::poll;
 
 	virtual auto get(std::string _uuid) -> zpt::socket_ref;
@@ -108,7 +108,16 @@ class ZMQPoll : public zpt::Poll {
 	auto reply(zpt::json _envelope, zpt::socket_ref _socket) -> void;
 };
 
-class ZMQReq : public zpt::Channel {
+class ZMQChannel : public zpt::Channel {
+      public:
+	ZMQChannel(std::string _connection, zpt::json _options);
+	virtual ~ZMQChannel();
+
+	auto recv() -> zpt::json;
+	auto send(zpt::json _envelope) -> zpt::json;
+};
+
+class ZMQReq : public zpt::ZMQChannel {
       public:
 	ZMQReq(std::string _connection, zpt::json _options);
 	virtual ~ZMQReq();
@@ -128,7 +137,7 @@ class ZMQReq : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQRep : public zpt::Channel {
+class ZMQRep : public zpt::ZMQChannel {
       public:
 	ZMQRep(std::string _connection, zpt::json _options);
 	virtual ~ZMQRep();
@@ -146,7 +155,7 @@ class ZMQRep : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQXPubXSub : public zpt::Channel {
+class ZMQXPubXSub : public zpt::ZMQChannel {
       public:
 	ZMQXPubXSub(std::string _connection, zpt::json _options);
 	virtual ~ZMQXPubXSub();
@@ -165,7 +174,7 @@ class ZMQXPubXSub : public zpt::Channel {
 	zmq::socket_ptr __socket_pub;
 };
 
-class ZMQPubSub : public zpt::Channel {
+class ZMQPubSub : public zpt::ZMQChannel {
       public:
 	ZMQPubSub(std::string _connection, zpt::json _options);
 	virtual ~ZMQPubSub();
@@ -187,7 +196,7 @@ class ZMQPubSub : public zpt::Channel {
 	std::mutex __out_mtx;
 };
 
-class ZMQPub : public zpt::Channel {
+class ZMQPub : public zpt::ZMQChannel {
       public:
 	ZMQPub(std::string _connection, zpt::json _options);
 	virtual ~ZMQPub();
@@ -207,7 +216,7 @@ class ZMQPub : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQSub : public zpt::Channel {
+class ZMQSub : public zpt::ZMQChannel {
       public:
 	ZMQSub(std::string _connection, zpt::json _options);
 	virtual ~ZMQSub();
@@ -229,7 +238,7 @@ class ZMQSub : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQPush : public zpt::Channel {
+class ZMQPush : public zpt::ZMQChannel {
       public:
 	ZMQPush(std::string _connection, zpt::json _options);
 	virtual ~ZMQPush();
@@ -249,7 +258,7 @@ class ZMQPush : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQPull : public zpt::Channel {
+class ZMQPull : public zpt::ZMQChannel {
       public:
 	ZMQPull(std::string _connection, zpt::json _options);
 	virtual ~ZMQPull();
@@ -269,7 +278,7 @@ class ZMQPull : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQRouterDealer : public zpt::Channel {
+class ZMQRouterDealer : public zpt::ZMQChannel {
       public:
 	ZMQRouterDealer(std::string _connection, zpt::json _options);
 	virtual ~ZMQRouterDealer();
@@ -288,7 +297,7 @@ class ZMQRouterDealer : public zpt::Channel {
 	zmq::socket_ptr __socket_dealer;
 };
 
-class ZMQRouter : public zpt::Channel {
+class ZMQRouter : public zpt::ZMQChannel {
       public:
 	ZMQRouter(std::string _connection, zpt::json _options);
 	virtual ~ZMQRouter();
@@ -313,7 +322,7 @@ class ZMQRouter : public zpt::Channel {
 	std::mutex __out_mtx;
 };
 
-class ZMQDealer : public zpt::Channel {
+class ZMQDealer : public zpt::ZMQChannel {
       public:
 	ZMQDealer(std::string _connection, zpt::json _options);
 	virtual ~ZMQDealer();
@@ -334,7 +343,7 @@ class ZMQDealer : public zpt::Channel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQHttp : public zpt::Channel {
+class ZMQHttp : public zpt::ZMQChannel {
       public:
 	ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options);
 	virtual ~ZMQHttp();
@@ -362,18 +371,15 @@ class ZMQHttp : public zpt::Channel {
 	;
 };
 
-namespace net {
-auto getip(std::string _if = "") -> std::string;
-}
+class ZMQFactory : public zpt::ChannelFactory {
+      public:
+	ZMQFactory();
+	virtual ~ZMQFactory();
+	virtual auto produce(zpt::json _options) -> zpt::socket;
+	virtual auto is_reusable(std::string _type) -> bool;
+	virtual auto clean(zpt::socket _socket) -> bool;
 
-namespace rest {
-auto http2zmq(zpt::http::req _request) -> zpt::json;
-auto http2zmq(zpt::http::rep _reply) -> zpt::json;
-auto zmq2http_rep(zpt::json _out) -> zpt::http::rep;
-auto zmq2http_req(zpt::json _out, std::string _host) -> zpt::http::req;
-
-namespace http {
-zpt::json deserialize(std::string _body);
-}
-}
+      private:
+	std::map<std::string, zpt::socket> __channels;
+};
 }

@@ -42,14 +42,6 @@ using namespace std;
 using namespace __gnu_cxx;
 #endif
 
-#define ZMQ_PUB_SUB -1
-#define ZMQ_XPUB_XSUB -2
-#define ZMQ_ROUTER_DEALER -3
-#define ZMQ_ASSYNC_REQ -4
-#define ZMQ_HTTP_RAW -5
-#define ZMQ_MQTT_RAW -6
-#define ZMQ_UPNP_RAW -7
-
 #define ZPT_SELF_CERTIFICATE 0
 #define ZPT_PEER_CERTIFICATE 1
 
@@ -65,16 +57,17 @@ typedef std::function<std::string(zpt::json _envelope)> reply_fn;
 
 class ChannelPoll : public zpt::Poll {
       public:
-	ChannelPoll(zpt::json _options, zpt::ev::emitter _emiter = nullptr);
+	ChannelPoll(zpt::json _options, zpt::ev::emitter_factory _emiter = nullptr);
 	virtual ~ChannelPoll();
 
 	virtual auto options() -> zpt::json;
-	virtual auto emitter() -> zpt::ev::emitter;
+	virtual auto emitter() -> zpt::ev::emitter_factory;
 	virtual auto self() const -> zpt::poll;
 
 	virtual auto get(std::string _uuid) -> zpt::socket_ref;
 	virtual auto relay(std::string _key) -> zpt::Channel*;
-	virtual auto add(short _type, std::string _connection, bool _new_connection = false) -> zpt::socket_ref;
+	virtual auto add(std::string _type, std::string _connection, bool _new_connection = false)
+	    -> zpt::socket_ref;
 	virtual auto add(zpt::Channel* _underlying) -> zpt::socket_ref;
 	virtual auto remove(zpt::socket_ref _socket) -> void;
 	virtual auto vanished(std::string _connection, zpt::ev::initializer _callback = nullptr) -> void;
@@ -95,12 +88,12 @@ class ChannelPoll : public zpt::Poll {
 	zmq::socket_ptr __sync[2];
 	std::mutex __mtx[2];
 	zpt::poll __self;
-	zpt::ev::emitter __emitter;
+	zpt::ev::emitter_factory __emitter;
 	bool __needs_rebuild;
 	std::map<zpt::socket_ref, std::string> __to_add;
 	std::map<zpt::socket_ref, zpt::ev::initializer> __to_remove;
 
-	auto bind(short _type, std::string _connection) -> zpt::Channel*;
+	auto bind(std::string _type, std::string _connection) -> std::vector<zpt::socket>;
 	auto signal(std::string _message) -> void;
 	auto notify(std::string _message) -> void;
 	auto wait() -> void;
@@ -108,4 +101,12 @@ class ChannelPoll : public zpt::Poll {
 	auto reply(zpt::json _envelope, zpt::socket_ref _socket) -> void;
 };
 
+auto http2internal(zpt::http::req _request) -> zpt::json;
+auto http2internal(zpt::http::rep _reply) -> zpt::json;
+auto internal2http_rep(zpt::json _out) -> zpt::http::rep;
+auto internal2http_req(zpt::json _out, std::string _host) -> zpt::http::req;
+
+namespace http {
+zpt::json deserialize(std::string _body);
+}
 }
