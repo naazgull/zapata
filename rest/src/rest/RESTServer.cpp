@@ -153,9 +153,8 @@ int zpt::PipelinePtr::launch(int argc, char* argv[]) {
 }
 
 zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
-    : __name(_name), __emitter((new zpt::RESTEmitter(_options))->self()),
-      __poll((new zpt::ZMQPoll(_options, __emitter))->self()), __options(_options), __self(this),
-      __mqtt(new zpt::MQTT()), __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
+    : __name(_name), __options(_options), __self(this),
+      __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
 		if (!this->__options["discoverable"]->ok()) {
 			this->__options["rest"] << "discoverable" << false;

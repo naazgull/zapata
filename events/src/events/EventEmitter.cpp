@@ -32,7 +32,6 @@ SOFTWARE.
 namespace zpt {
 namespace ev {
 std::string* __default_authorization = nullptr;
-emitter_factory __emitter_factory(new zpt::EventEmitterFactory());
 }
 }
 
@@ -295,6 +294,15 @@ auto zpt::EventEmitterFactory::channel(std::string _name) -> std::vector<zpt::so
 	return _return;
 }
 
+auto zpt::EventEmitterFactory::ontology(zpt::ev::ontology _ontology) -> void {
+	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_ontology](const zpt::ev::emitter& _e) {
+		_e->ontology(_ontology);
+	});
+	this->__ontology = _ontology;
+}
+
+auto zpt::EventEmitterFactory::ontology() -> zpt::ev::ontology { return this->__ontology; }
+
 auto zpt::EventEmitterFactory::trigger(zpt::ev::performative _method,
 				       std::string _resource,
 				       zpt::json _payload,
@@ -324,25 +332,6 @@ auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
 	});
 }
 
-auto zpt::EventEmitterFactory::sync_route(zpt::ev::performative _method,
-					  std::string _url,
-					  zpt::json _envelope,
-					  zpt::json _opts) -> zpt::json {
-	std::vector<zpt::socket_factory> _return;
-	for (auto _emitter : this->__emitters) {
-		try {
-			return _emitter->sync_route(_method, _url, _envelope, _opts);
-		} catch (...) {
-		}
-	};
-	bool _no_such_registered_service = false;
-	assertz(_no_such_registered_service,
-		std::string("theres is no such service to process '") + _url + std::string("'"),
-		404,
-		0);
-	return zpt::undefined;
-}
-
 auto zpt::EventEmitterFactory::hook(zpt::ev::initializer _callback) -> void {
 	std::for_each(
 	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _e->hook(_callback); });
@@ -368,34 +357,9 @@ auto zpt::EventEmitterFactory::for_each(zpt::ev::initializer _callback) -> void 
 	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _callback(_e); });
 }
 
-auto zpt::ev::split(std::string _url, zpt::json _orphans) -> zpt::json {
-	zpt::JSONObj _ret;
-	zpt::json _splited = zpt::split(_url, "/");
-
-	size_t _idx = 0;
-	for (auto _label : _orphans->arr()) {
-		_ret << (string)_label << (string)_splited[_idx];
-		_idx++;
-	}
-	for (; _idx < _splited->arr()->size(); _idx++) {
-		_ret << (string)_splited[_idx] << (string)_splited[_idx + 1];
-		_idx++;
-	}
-	return mkptr(_ret);
-}
-
-auto zpt::ev::join(zpt::json _info, size_t _orphans) -> std::string {
-	std::string _ret;
-	size_t _idx = 0;
-
-	for (auto _field : _info->obj()) {
-		if (_idx < _orphans) {
-			_ret += string("/") + _field.second->str();
-		} else {
-			_ret += string("/") + _field.first + string("/") + _field.second->str();
-		}
-	}
-	return _ret;
+auto zpt::EventEmitterFactory::instance() -> zpt::ev::emitter_factory {
+	static zpt::ev::emitter_factory _emitter_factory(new zpt::EventEmitterFactory());
+	return _emitter_factory;
 }
 
 auto zpt::ev::set_default_authorization(std::string _default_authorization) -> void {
@@ -494,56 +458,6 @@ zpt::EventListener::EventListener(std::string _regex) : __regex(_regex) {}
 zpt::EventListener::~EventListener() {}
 
 auto zpt::EventListener::regex() -> std::string { return this->__regex; }
-
-auto zpt::EventListener::get(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::put(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::post(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::del(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::head(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::options(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	if (_envelope["headers"]["Origin"]->ok()) {
-		_emitter->reply(
-		    _envelope,
-		    {"status", 413, "headers", zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"]))});
-	}
-	string _origin = _envelope["headers"]["Origin"];
-	_emitter->reply(_envelope,
-			{"status",
-			 200,
-			 "headers",
-			 (zpt::ev::init_reply(std::string(_envelope["headers"]["X-Cid"])) +
-			  zpt::json({"Access-Control-Allow-Origin",
-				     _envelope["headers"]["Origin"],
-				     "Access-Control-Allow-Methods",
-				     "POST,GET,PUT,DELETE,OPTIONS,HEAD,SYNC,APPLY",
-				     "Access-Control-Allow-Headers",
-				     ACCESS_CONTROL_HEADERS,
-				     "Access-Control-Expose-Headers",
-				     ACCESS_CONTROL_HEADERS,
-				     "Access-Control-Max-Age",
-				     "1728000"}))});
-}
-
-auto zpt::EventListener::patch(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {
-	assertz(false, "Performative is not accepted for the given resource", 405, 0);
-}
-
-auto zpt::EventListener::reply(std::string _resource, zpt::json _envelope, zpt::EventEmitterPtr _emitter) -> void {}
 
 zpt::EventGatekeeper::EventGatekeeper(zpt::json _options) : __options(_options), __self(this) {}
 
@@ -891,6 +805,8 @@ auto zpt::EventDirectoryGraph::pretty(std::string _tabs, bool _last) -> std::str
 	}
 	return _return;
 }
+
+auto zpt::emitter() -> zpt::ev::emitter_factory { return zpt::EventEmitterFactory::instance(); }
 
 extern "C" auto zpt_events() -> int { return 1; }
 

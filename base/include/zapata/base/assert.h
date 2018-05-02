@@ -506,21 +506,22 @@ namespace zpt {
 enum JSONType { JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda };
 
 namespace ev {
-enum performative {
-	Get = 0,
-	Put = 1,
-	Post = 2,
-	Delete = 3,
-	Head = 4,
-	Options = 5,
-	Patch = 6,
-	Reply = 7,
-	Search = 8,
-	Notify = 9,
-	Trace = 10,
-	Connect = 11
-};
+// enum performative {
+// 	Get = 0,
+// 	Put = 1,
+// 	Post = 2,
+// 	Delete = 3,
+// 	Head = 4,
+// 	Options = 5,
+// 	Patch = 6,
+// 	Reply = 7,
+// 	Search = 8,
+// 	Notify = 9,
+// 	Trace = 10,
+// 	Connect = 11
+// };
 
+typedef unsigned short performative;
 auto to_str(zpt::ev::performative _performative) -> std::string;
 auto from_str(std::string _performative) -> zpt::ev::performative;
 }

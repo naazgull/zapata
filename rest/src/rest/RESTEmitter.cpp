@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/rest/RESTEmitter.h>
+#include <zapata/events/Polling.h>
 #include <zapata/lisp.h>
 #include <zapata/python.h>
 #include <map>
@@ -76,14 +77,6 @@ auto zpt::RESTEmitter::version() -> std::string { return this->options()["rest"]
 auto zpt::RESTEmitter::credentials() -> zpt::json { return this->__credentials; }
 
 auto zpt::RESTEmitter::credentials(zpt::json _credentials) -> void { this->__credentials = _credentials; }
-
-auto zpt::RESTEmitter::poll(zpt::poll _poll) -> void { this->__poll = _poll; }
-
-auto zpt::RESTEmitter::poll() -> zpt::poll { return this->__poll; }
-
-auto zpt::RESTEmitter::server(zpt::rest::server _server) -> void { this->__server = _server; }
-
-auto zpt::RESTEmitter::server() -> zpt::rest::server { return this->__server; }
 
 auto zpt::RESTEmitter::hook(zpt::ev::initializer _callback) -> void { this->__server->hook(_callback); }
 
@@ -170,6 +163,7 @@ auto zpt::RESTEmitter::on(std::string _regex,
 
 auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> void {
 	std::regex _url_pattern(_listener->regex());
+	zpt::rest::listener _proxy(static_cast<zpt::RESTListener>(_listener.get());
 
 	zpt::ev::Handler _handler = [&](zpt::ev::performative _performative,
 					std::string _resource,
@@ -177,23 +171,23 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> void 
 					zpt::ev::emitter _emitter) -> void {
 		switch (_performative) {
 		case zpt::ev::Get: {
-			_listener->get(_resource, _envelope, _emitter);
+			_proxy->get(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Put: {
-			_listener->put(_resource, _envelope, _emitter);
+			_proxy->put(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Post: {
-			_listener->post(_resource, _envelope, _emitter);
+			_proxy->post(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Delete: {
-			_listener->del(_resource, _envelope, _emitter);
+			_proxy->del(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Head: {
-			_listener->head(_resource, _envelope, _emitter);
+			_proxy->head(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Options: {
@@ -201,11 +195,11 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> void 
 			break;
 		}
 		case zpt::ev::Patch: {
-			_listener->patch(_resource, _envelope, _emitter);
+			_proxy->patch(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Reply: {
-			_listener->reply(_resource, _envelope, _emitter);
+			_proxy->reply(_resource, _envelope, _emitter);
 			break;
 		}
 		case zpt::ev::Search:
@@ -434,28 +428,29 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 		short _type = zpt::str2type(_container["type"]->str());
 		bool _no_answer = false;
 		zpt::socket_ref _client;
+
 		switch (_type) {
 		case ZMQ_ROUTER_DEALER:
 		case ZMQ_ROUTER:
 		case ZMQ_DEALER:
 		case ZMQ_REP:
 		case ZMQ_REQ: {
-			_client = this->__poll->add(ZMQ_DEALER, _container["connect"]->str());
+			_client = zpt::poll::instance<zpt::ChannelPoll>()->add(ZMQ_DEALER, _container["connect"]->str());
 			break;
 		}
 		case ZMQ_PUB_SUB: {
 			std::string _connect = _container["connect"]->str();
-			_client = this->__poll->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
+			_client = zpt::poll::instance<zpt::ChannelPoll>()->add(ZMQ_PUB, _connect.substr(0, _connect.find(",")));
 			_no_answer = true;
 			break;
 		}
 		case ZMQ_PUSH: {
-			_client = this->__poll->add(ZMQ_PUSH, _container["connect"]->str());
+			_client = zpt::poll::instance<zpt::ChannelPoll>()->add(ZMQ_PUSH, _container["connect"]->str());
 			_no_answer = true;
 			break;
 		}
 		case ZMQ_HTTP_RAW: {
-			_client = this->__poll->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
+			_client = zpt::poll::instance<zpt::ChannelPoll>()->add(ZMQ_HTTP_RAW, _container["connect"]->str(), true);
 			break;
 		}
 		default: {
@@ -464,7 +459,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 			return;
 		}
 		}
-		this->__poll->poll(_client);
+		zpt::poll::instance<zpt::ChannelPoll>()->poll(_client);
 		_client->send(_envelope);
 		if (_no_answer && !_has_callback) {
 			this->reply(_envelope, zpt::ev::accepted(_url));

@@ -57,7 +57,7 @@ typedef std::function<std::string(zpt::json _envelope)> reply_fn;
 
 class ChannelPoll : public zpt::Poll {
       public:
-	ChannelPoll(zpt::json _options, zpt::ev::emitter_factory _emiter = nullptr);
+	ChannelPoll(zpt::json _options, zpt::ev::emitter_factory _emiter);
 	virtual ~ChannelPoll();
 
 	virtual auto options() -> zpt::json;

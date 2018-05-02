@@ -438,8 +438,8 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				zpt::json _payload = _bridge->from<zpt::lisp::object>(_args[2]);
 				zpt::json _opts = _bridge->from<zpt::lisp::object>(_args[3]);
 
-				zpt::json _result =
-				    _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
+				zpt::json _result;// =
+				    // _bridge->events()->sync_route(_performative, _topic, _payload, _opts);
 				return _bridge->to<zpt::lisp::object>(_result);
 			});
 	_bridge->deflbd({"name",

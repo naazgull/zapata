@@ -66,6 +66,7 @@ class PollPtr;
 class socket_ref;
 class Channel;
 class ChannelFactory;
+class Ontology;
 
 typedef std::weak_ptr<zpt::EventEmitter> EventEmitterWPtr;
 typedef std::shared_ptr<zpt::EventEmitter> EventEmitterPtr;
@@ -75,9 +76,10 @@ typedef std::shared_ptr<zpt::EventDirectory> EventDirectoryPtr;
 typedef std::shared_ptr<zpt::EventDirectoryGraph> EventDirectoryGraphPtr;
 typedef std::shared_ptr<zpt::Channel> socket;
 typedef std::shared_ptr<zpt::ChannelFactory> socket_factory;
+typedef std::shared_ptr<zpt::Ontology> OntologyPtr;
 
-typedef BridgePtr bridge;
-typedef PollPtr poll;
+typedef zpt::BridgePtr bridge;
+typedef zpt::PollPtr poll;
 
 namespace ev {
 extern std::string* __default_authorization;
@@ -88,11 +90,12 @@ typedef zpt::EventGatekeeperPtr gatekeeper;
 typedef zpt::EventDirectoryPtr directory;
 typedef zpt::EventDirectoryGraphPtr graph;
 typedef std::shared_ptr<zpt::EventEmitterFactory> emitter_factory;
+typedef zpt::OntologyPtr ontology;
 
 typedef std::function<void(zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> Handler;
 typedef std::function<void(zpt::ev::performative, std::string, zpt::json, zpt::ev::emitter)> handler;
-typedef Handler Callback;
-typedef handler callback;
+typedef zpt::ev::Handler Callback;
+typedef zpt::ev::handler callback;
 typedef std::vector<zpt::ev::handler> handlers;
 typedef std::map<std::string, zpt::ev::handler> ReplyHandlerStack;
 
@@ -100,9 +103,6 @@ typedef std::tuple<zpt::json, zpt::ev::handlers, std::regex> node;
 
 typedef std::function<void(zpt::ev::emitter)> initializer;
 typedef std::vector<zpt::ev::initializer> OnStartStack;
-
-auto split(std::string _url, zpt::json _orphans) -> zpt::json;
-auto join(zpt::json _info, std::size_t _orphans) -> std::string;
 
 auto set_default_authorization(std::string _default_authorization) -> void;
 auto get_default_authorization() -> std::string;
@@ -127,8 +127,6 @@ auto assertion_error(std::string _resource, zpt::assertion& _e, zpt::json _heade
 namespace uri {
 auto get_simplified_topics(std::string _pattern) -> zpt::json;
 }
-
-extern emitter_factory __emitter_factory;
 }
 
 auto is_sql(std::string _name) -> bool;
@@ -137,6 +135,12 @@ class PollPtr : public std::shared_ptr<zpt::Poll> {
       public:
 	PollPtr(zpt::Poll* _ptr);
 	virtual ~PollPtr();
+
+	template <typename T>
+	static auto instance() -> zpt::poll {
+		static T *_poll = new T();
+		return zpt::poll(_poll);
+	}
 };
 
 class socket_ref : public std::string {
@@ -322,14 +326,18 @@ class Bridge {
 	zpt::json __options;
 };
 
-class Protocol {
-public:
+class Ontology {
+      public:
 	virtual auto
 	compose_reply(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json = 0;
 	virtual auto
 	compose_request(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json = 0;
+	virtual auto extract_from_reply(zpt::json _envelope)
+	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> = 0;
+	virtual auto extract_from_request(zpt::json _envelope)
+	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> = 0;
 };
 
 class EventEmitter {
@@ -376,10 +384,6 @@ class EventEmitter {
 	virtual auto
 	route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback)
 	    -> void = 0;
-	virtual auto sync_route(zpt::ev::performative _method,
-				std::string _url,
-				zpt::json _envelope,
-				zpt::json _opts = zpt::undefined) -> zpt::json = 0;
 	virtual auto reply(zpt::json _request, zpt::json _reply) -> void = 0;
 	virtual auto has_pending(zpt::json _envelope) -> bool = 0;
 
@@ -393,6 +397,9 @@ class EventEmitter {
 	virtual auto channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void final;
 	virtual auto channel(std::string _name) -> zpt::socket_factory final;
 
+	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
+	virtual auto ontology() -> zpt::ev::ontology  final;
+
       private:
 	zpt::json __options;
 	zpt::ev::emitter __self;
@@ -401,6 +408,7 @@ class EventEmitter {
 	std::map<std::string, zpt::connector> __connector;
 	std::map<std::string, zpt::socket_factory> __channel;
 	std::string __uuid;
+	zpt::ev::ontology __ontology;
 };
 
 class EventEmitterFactory {
@@ -419,6 +427,9 @@ class EventEmitterFactory {
 	virtual auto channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void final;
 	virtual auto channel(std::string _name) -> std::vector<zpt::socket_factory> final;
 
+	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
+	virtual auto ontology() -> zpt::ev::ontology  final;
+
 	virtual auto trigger(zpt::ev::performative _method,
 			     std::string _resource,
 			     zpt::json _payload,
@@ -432,17 +443,16 @@ class EventEmitterFactory {
 	virtual auto
 	route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback)
 	    -> void;
-	virtual auto sync_route(zpt::ev::performative _method,
-				std::string _url,
-				zpt::json _envelope,
-				zpt::json _opts = zpt::undefined) -> zpt::json;
 	virtual auto hook(zpt::ev::initializer _callback) -> void;
 	virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
 	virtual auto has_pending(zpt::json _envelope) -> bool;
 	virtual auto for_each(zpt::ev::initializer _callback) -> void;
 
+	static auto instance() -> zpt::ev::emitter_factory;
+
       private:
 	std::vector<zpt::ev::emitter> __emitters;
+	zpt::ev::ontology __ontology;
 };
 
 class EventGatekeeper {
@@ -523,18 +533,10 @@ class EventListener {
 
 	virtual std::string regex() final;
 
-	virtual auto get(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto put(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto post(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto del(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto head(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto options(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto patch(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-	virtual auto reply(std::string _resource, zpt::json _envelope, zpt::ev::emitter _emitter) -> void;
-
       private:
 	std::string __regex;
 };
 
-inline auto emitter() -> zpt::ev::emitter_factory { return zpt::ev::__emitter_factory; }
+auto emitter() -> zpt::ev::emitter_factory;
+
 }

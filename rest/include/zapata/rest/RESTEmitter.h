@@ -60,46 +60,34 @@ enum RESTfulType {
 };
 
 class RESTEmitter;
-class RESTServer;
-class RESTClient;
-class RESTServerPtr;
+class Pipeline;
+class PipelinePtr;
 class RESTClientPtr;
 
+typedef zpt::PipelinePtr pipeline;
+
 namespace rest {
-typedef zpt::RESTServerPtr server;
-typedef zpt::RESTClientPtr client;
 typedef zpt::RESTEmitter emitter;
 typedef std::map<std::string, std::vector<std::pair<std::regex, zpt::ev::handlers>>> HandlerStack;
-
-extern zpt::rest::emitter* __emitter;
 
 typedef zpt::ev::handler step;
 typedef zpt::ev::initializer end;
 }
 
-class RESTServerPtr : public std::shared_ptr<zpt::RESTServer> {
+class PipelinePtr : public std::shared_ptr<zpt::Pipeline> {
       public:
-	RESTServerPtr(std::string _name, zpt::json _options);
-	RESTServerPtr(zpt::RESTServer* _ptr);
-	virtual ~RESTServerPtr();
+	PipelinePtr(std::string _name, zpt::json _options);
+	PipelinePtr(zpt::Pipeline* _ptr);
+	virtual ~PipelinePtr();
 
-	static zpt::rest::server setup(zpt::json _options, std::string _name);
+	static zpt::pipeline setup(zpt::json _options, std::string _name);
 	static int launch(int argc, char* argv[]);
 };
 
-class RESTClientPtr : public std::shared_ptr<zpt::RESTClient> {
+class Pipeline {
       public:
-	RESTClientPtr(zpt::json _options);
-	RESTClientPtr(zpt::RESTClient* _ptr);
-	virtual ~RESTClientPtr();
-
-	static zpt::rest::client launch(int argc, char* argv[]);
-};
-
-class RESTServer {
-      public:
-	RESTServer(std::string _name, zpt::json _options);
-	virtual ~RESTServer();
+	Pipeline(std::string _name, zpt::json _options);
+	virtual ~Pipeline();
 
 	virtual void start();
 
@@ -124,14 +112,8 @@ class RESTServer {
 
       private:
 	std::string __name;
-	zpt::ev::emitter __emitter;
-	zpt::poll __poll;
 	zpt::json __options;
-	std::vector<zpt::socket_ref> __pub_sub;
-	std::vector<zpt::socket_ref> __router_dealer;
-	zpt::rest::server __self;
-	zpt::mqtt::broker __mqtt;
-	zpt::upnp::broker __upnp;
+	zpt::pipeline __self;
 	zpt::ev::OnStartStack __initializers;
 	size_t __max_threads;
 	size_t __alloc_threads;
@@ -173,8 +155,6 @@ class RESTEmitter : public zpt::EventEmitter {
 	virtual auto
 	route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback)
 	    -> void;
-	virtual auto sync_route(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts)
-	    -> zpt::json;
 	virtual auto reply(zpt::json _request, zpt::json _reply = zpt::undefined) -> void;
 
 	virtual auto hook(zpt::ev::initializer _callback) -> void;
@@ -186,16 +166,14 @@ class RESTEmitter : public zpt::EventEmitter {
 
 	virtual auto poll(zpt::poll _poll) -> void;
 	virtual auto poll() -> zpt::poll;
-	virtual auto server(zpt::rest::server _server) -> void;
-	virtual auto server() -> zpt::rest::server;
+	virtual auto server(zpt::pipeline _server) -> void;
+	virtual auto server() -> zpt::pipeline;
 
 	static auto instance() -> zpt::ev::emitter;
 
       private:
 	zpt::ev::Handler __default_options;
 	zpt::ev::ReplyHandlerStack __pending;
-	zpt::poll __poll;
-	zpt::rest::server __server;
 	zpt::json __credentials;
 
 	auto resolve(zpt::ev::performative _method,
