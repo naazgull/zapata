@@ -224,7 +224,7 @@ auto zpt::ChannelPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> vo
 				zlog(std::string("uncaught assertion while processing response, unable "
 						 "to proceed: ") +
 					 _e.what() + std::string(": ") + _e.description() +
-					 std::string("\n| received message was:") + zpt::ev::pretty(_envelope),
+					std::string("\n| received message was:") + zpt::emitter()->ontology()->pretty(_envelope),
 				     zpt::emergency);
 				zlog(std::string("\n") + _e.backtrace(), zpt::trace);
 			} catch (std::exception& _e) {

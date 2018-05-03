@@ -106,27 +106,6 @@ typedef std::vector<zpt::ev::initializer> OnStartStack;
 
 auto set_default_authorization(std::string _default_authorization) -> void;
 auto get_default_authorization() -> std::string;
-
-auto init_request(std::string _cid = "") -> zpt::json;
-auto init_reply(std::string _cid = "", zpt::json _request = zpt::undefined) -> zpt::json;
-
-auto pretty(zpt::json _envelope) -> std::string;
-
-auto not_found(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto bad_request(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto unsupported_media_type(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto accepted(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto no_content(std::string _resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto temporary_redirect(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined)
-    -> zpt::json;
-auto see_other(std::string _resource, std::string _target_resource, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto options(std::string _resource, std::string _origin, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto internal_server_error(std::string _resource, std::exception& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
-auto assertion_error(std::string _resource, zpt::assertion& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
-
-namespace uri {
-auto get_simplified_topics(std::string _pattern) -> zpt::json;
-}
 }
 
 auto is_sql(std::string _name) -> bool;
@@ -136,9 +115,8 @@ class PollPtr : public std::shared_ptr<zpt::Poll> {
 	PollPtr(zpt::Poll* _ptr);
 	virtual ~PollPtr();
 
-	template <typename T>
-	static auto instance() -> zpt::poll {
-		static T *_poll = new T();
+	template <typename T> static auto instance() -> zpt::poll {
+		static T* _poll = new T();
 		return zpt::poll(_poll);
 	}
 };
@@ -197,7 +175,8 @@ class Channel {
 	virtual auto available() -> bool;
 
 	virtual auto recv() -> zpt::json = 0;
-	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json = 0;
+	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload)
+	    -> zpt::json = 0;
 	virtual auto send(zpt::json _envelope) -> zpt::json;
 	virtual auto loop_iteration() -> void;
 
@@ -328,12 +307,15 @@ class Bridge {
 
 class Ontology {
       public:
+	virtual auto pretty(zpt::json _envelope) -> std::string = 0;
+
 	virtual auto
 	compose_reply(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json = 0;
 	virtual auto
 	compose_request(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json = 0;
+
 	virtual auto extract_from_reply(zpt::json _envelope)
 	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> = 0;
 	virtual auto extract_from_request(zpt::json _envelope)
@@ -398,7 +380,7 @@ class EventEmitter {
 	virtual auto channel(std::string _name) -> zpt::socket_factory final;
 
 	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
-	virtual auto ontology() -> zpt::ev::ontology  final;
+	virtual auto ontology() -> zpt::ev::ontology final;
 
       private:
 	zpt::json __options;
@@ -428,7 +410,9 @@ class EventEmitterFactory {
 	virtual auto channel(std::string _name) -> std::vector<zpt::socket_factory> final;
 
 	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
-	virtual auto ontology() -> zpt::ev::ontology  final;
+	virtual auto ontology() -> zpt::ev::ontology final;
+
+	virtual auto credentials() -> zpt::json;
 
 	virtual auto trigger(zpt::ev::performative _method,
 			     std::string _resource,
@@ -538,5 +522,4 @@ class EventListener {
 };
 
 auto emitter() -> zpt::ev::emitter_factory;
-
 }

@@ -32,6 +32,7 @@ SOFTWARE.
 #include <zapata/base.h>
 #include <zapata/json.h>
 #include <zapata/events/Pipeline.h>
+#include <csignal>
 
 namespace zpt {
 namespace pipe {
@@ -64,7 +65,7 @@ zpt::pipeline zpt::PipelinePtr::setup(zpt::json _options, std::string _name) {
 	}
 }
 
-auto zpt::rest::shutdown(int _signal) -> void {
+auto zpt::pipe::shutdown(int _signal) -> void {
 	if (zpt::pipe::interrupted) {
 		exit(0);
 	}
@@ -72,7 +73,7 @@ auto zpt::rest::shutdown(int _signal) -> void {
 	zpt::pipe::interrupted = true;
 }
 
-auto zpt::rest::terminate(int _signal) -> void {
+auto zpt::pipe::terminate(int _signal) -> void {
 	if (zpt::pipe::interrupted) {
 		exit(0);
 	}
@@ -109,10 +110,10 @@ int zpt::PipelinePtr::launch(int argc, char* argv[]) {
 
 	zpt::json _options = _ptr["boot"][0];
 
-	::signal(SIGINT, zpt::rest::shutdown);
-	::signal(SIGTERM, zpt::rest::terminate);
-	::signal(SIGABRT, zpt::rest::terminate);
-	::signal(SIGSEGV, zpt::rest::terminate);
+	std::signal(SIGINT, zpt::pipe::shutdown);
+	std::signal(SIGTERM, zpt::pipe::terminate);
+	std::signal(SIGABRT, zpt::pipe::terminate);
+	std::signal(SIGSEGV, zpt::pipe::terminate);
 
 	std::string _name = std::string(_options["name"]);
 	if (_name.length() != 0) {
@@ -149,9 +150,6 @@ zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
     : __name(_name), __options(_options), __self(this),
       __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
-
-		((zpt::RESTEmitter*)this->__emitter.get())->poll(this->__poll);
-		((zpt::RESTEmitter*)this->__emitter.get())->server(this->__self);
 
 		if (this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray &&
 		    this->__options["zmq"]->arr()->size() != 0) {
@@ -281,88 +279,6 @@ void zpt::Pipeline::start() {
 			this->credentials(_credentials);
 		}
 
-		if (this->credentials()["endpoints"]["mqtt"]->ok() ||
-		    (this->__options["mqtt"]->ok() && this->__options["mqtt"]["bind"]->ok())) {
-			zpt::json _uri = zpt::uri::parse(std::string(this->__options["mqtt"]["bind"]->ok()
-									 ? this->__options["mqtt"]["bind"]
-									 : this->credentials()["endpoints"]["mqtt"]));
-			if (!_uri["port"]->ok()) {
-				_uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
-			}
-			if (_uri["user"]->ok() && _uri["password"]->ok()) {
-				this->__mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
-			} else if (this->credentials()["client_id"]->is_string() &&
-				   this->credentials()["access_token"]->is_string()) {
-				this->__mqtt->credentials(std::string(this->credentials()["client_id"]),
-							  std::string(this->credentials()["access_token"]));
-			}
-
-			this->__mqtt->on("connect", [this](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				if (_data->__rc == 0) {
-					zlog(std::string("MQTT server is up and connection authenticated"),
-					     zpt::notice);
-				}
-			});
-			this->__mqtt->on(
-			    "disconnect", [this, &_uri](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				    this->__poll->vanished(
-					this->__mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
-						int _attempts = 0;
-						do {
-							if (this->__mqtt->reconnect()) {
-								break;
-							}
-							_attempts++;
-							sleep(1);
-						} while (_attempts < 10);
-						if (this->__mqtt->connected()) {
-							zlog(std::string("binding ") + this->__mqtt->protocol() +
-								 std::string(" listener to ") +
-								 std::string(_uri["scheme"]) + std::string("://") +
-								 std::string(_uri["domain"]) + std::string(":") +
-								 std::string(_uri["port"]),
-							     zpt::info);
-							this->__poll->poll(this->__poll->add(this->__mqtt.get()));
-						} else {
-							zlog(std::string("unable to bind ") + this->__mqtt->protocol() +
-								 std::string(" listener to ") +
-								 std::string(_uri["scheme"]) + std::string("://") +
-								 std::string(_uri["domain"]) + std::string(":") +
-								 std::string(_uri["port"]),
-							     zpt::warning);
-						}
-					});
-			    });
-			this->__mqtt->on("message", [this](zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-				zpt::json _envelope = this->route_mqtt(_data);
-				this->__mqtt->buffer(_envelope);
-			});
-
-			int _attempts = 0;
-			do {
-				if (this->__mqtt->connect(std::string(_uri["domain"]),
-							  _uri["scheme"] == zpt::json::string("mqtts"),
-							  int(_uri["port"]))) {
-					break;
-				}
-				_attempts++;
-				sleep(1);
-			} while (_attempts < 10);
-			if (this->__mqtt->connected()) {
-				zlog(std::string("binding ") + this->__mqtt->protocol() + std::string(" listener to ") +
-					 std::string(_uri["scheme"]) + std::string("://") +
-					 std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]),
-				     zpt::info);
-				this->__poll->poll(this->__poll->add(this->__mqtt.get()));
-			} else {
-				zlog(std::string("unable to bind ") + this->__mqtt->protocol() +
-					 std::string(" listener to ") + std::string(_uri["scheme"]) +
-					 std::string("://") + std::string(_uri["domain"]) + std::string(":") +
-					 std::string(_uri["port"]),
-				     zpt::warning);
-			}
-		}
-
 		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
 			std::thread _http([this]() -> void {
 				zpt::json _uri = zpt::uri::parse(std::string(this->__options["http"]["bind"]));
@@ -420,35 +336,6 @@ void zpt::Pipeline::start() {
 	} catch (zpt::InterruptedException& e) {
 		return;
 	}
-}
-
-auto zpt::Pipeline::route_mqtt(zpt::mqtt::data _data) -> zpt::json {
-	zpt::json _envelope = zpt::json::object();
-	_envelope << "performative" << int(zpt::ev::Reply);
-	if (!_data->__message["channel"]->ok() || !zpt::test::uuid(std::string(_data->__message["channel"]))) {
-		_envelope << "channel" << zpt::generate::r_uuid();
-	} else {
-		_envelope << "channel" << _data->__message["channel"];
-	}
-
-	_envelope << "resource" << _data->__topic;
-
-	if (!_data->__message["payload"]->ok()) {
-		_envelope << "payload" << _data->__message;
-	} else {
-		_envelope << "payload" << _data->__message["payload"];
-	}
-	if (_data->__message["headers"]->ok()) {
-		_envelope << "headers" << _data->__message["headers"];
-	}
-	if (_data->__message["params"]->ok()) {
-		_envelope << "params" << _data->__message["params"];
-	}
-	_envelope << "protocol" << this->__mqtt->protocol();
-	ztrace(std::string("MQTT ") + std::string(_data->__topic));
-	zverbose(zpt::ev::pretty(_envelope));
-	return _envelope;
-	;
 }
 
 auto zpt::Pipeline::publish(std::string _topic, zpt::json _payload) -> void {

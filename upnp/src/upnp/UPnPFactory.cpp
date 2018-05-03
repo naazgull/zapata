@@ -46,8 +46,9 @@ auto zpt::UPnPFactory::clean(zpt::socket _socket) -> bool { return false; }
 
 extern "C" void _zpt_load_() {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
+	zpt::socket_factory _factory(new zpt::UPnPFactory());
 	_emitter->channel({
-	    {"upnp", zpt::socket_factory(new zpt::UPnPFactory())},
+	    {"upnp", _factory},
 	});
 	zpt::json _options = _emitter->options();
 
@@ -56,12 +57,13 @@ extern "C" void _zpt_load_() {
 	}
 
 	if (bool(_options["discoverable"])) {
-		this->__upnp = zpt::upnp::broker(_options);
-		this->__poll->poll(this->__poll->add(this->__upnp.get()));
-		zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") +
-			 std::string(this->__upnp->uri()["scheme"]) + std::string("://") +
-			 std::string(this->__upnp->uri()["domain"]) + std::string(":") +
-			 std::string(this->__upnp->uri()["port"]),
+		zpt::socket _upnp = _factory->produce(_options["upnp"]);
+		zpt::poll::instance<zpt::ChannelPoll>()->poll(_upnp);
+
+		zlog(std::string("binding ") + _upnp->protocol() + std::string(" listener to ") +
+			 std::string(_upnp->uri()["scheme"]) + std::string("://") +
+			 std::string(_upnp->uri()["domain"]) + std::string(":") +
+			 std::string(_upnp->uri()["port"]),
 		     zpt::info);
 	}
 }
