@@ -225,4 +225,24 @@ auto zpt::UPnP::recv() -> zpt::json {
 
 auto zpt::UPnP::is_reusable() -> bool { return false; }
 
-extern "C" auto zpt_upnp() -> int { return 1; }
+extern "C" auto _zpt_load_() -> void {
+	zpt::ev::emitter_factory _emitter = zpt::emitter();
+	_emitter->channel({
+	    {"upnp", zpt::socket_factory(new zpt::ZMQFactory())},
+	});
+
+
+		if (!this->__options["discoverable"]->ok()) {
+			this->__options["rest"] << "discoverable" << false;
+		}
+
+		if (bool(this->options()["discoverable"])) {
+			this->__upnp = zpt::upnp::broker(_options);
+			this->__poll->poll(this->__poll->add(this->__upnp.get()));
+			zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") +
+				 std::string(this->__upnp->uri()["scheme"]) + std::string("://") +
+				 std::string(this->__upnp->uri()["domain"]) + std::string(":") +
+				 std::string(this->__upnp->uri()["port"]),
+			     zpt::info);
+		}
+}

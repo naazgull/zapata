@@ -24,15 +24,12 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/http.h>
 #include <zapata/json.h>
 #include <zapata/events.h>
-#include <zapata/zmq.h>
-#include <zapata/mqtt.h>
-#include <zapata/upnp.h>
 #include <string>
 #include <map>
 #include <memory>
+#include <zapata/rest/RESTProtocol.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -60,11 +57,6 @@ enum RESTfulType {
 };
 
 class RESTEmitter;
-class Pipeline;
-class PipelinePtr;
-class RESTClientPtr;
-
-typedef zpt::PipelinePtr pipeline;
 
 namespace rest {
 typedef zpt::RESTEmitter emitter;
@@ -73,56 +65,6 @@ typedef std::map<std::string, std::vector<std::pair<std::regex, zpt::ev::handler
 typedef zpt::ev::handler step;
 typedef zpt::ev::initializer end;
 }
-
-class PipelinePtr : public std::shared_ptr<zpt::Pipeline> {
-      public:
-	PipelinePtr(std::string _name, zpt::json _options);
-	PipelinePtr(zpt::Pipeline* _ptr);
-	virtual ~PipelinePtr();
-
-	static zpt::pipeline setup(zpt::json _options, std::string _name);
-	static int launch(int argc, char* argv[]);
-};
-
-class Pipeline {
-      public:
-	Pipeline(std::string _name, zpt::json _options);
-	virtual ~Pipeline();
-
-	virtual void start();
-
-	virtual auto name() -> std::string;
-	virtual auto options() -> zpt::json;
-	virtual auto poll() -> zpt::poll;
-	virtual auto events() -> zpt::ev::emitter;
-	virtual auto credentials() -> zpt::json;
-	virtual auto credentials(zpt::json _credentials) -> void;
-	virtual auto unbind() -> void;
-
-	virtual auto hook(zpt::ev::initializer _callback) -> void;
-
-	// virtual auto route_mqtt(zpt::mqtt::data _data) -> bool;
-	virtual auto route_mqtt(zpt::mqtt::data _data) -> zpt::json;
-	virtual auto subscribe(std::string _regex, zpt::json _opts) -> void;
-	virtual auto publish(std::string _topic, zpt::json _payload) -> void;
-	virtual auto broadcast(zpt::json _envelope) -> void;
-	virtual auto notify_peers() -> void;
-
-	virtual auto suicidal() -> bool;
-
-      private:
-	std::string __name;
-	zpt::json __options;
-	zpt::pipeline __self;
-	zpt::ev::OnStartStack __initializers;
-	size_t __max_threads;
-	size_t __alloc_threads;
-	size_t __n_threads;
-	std::mutex __thread_mtx;
-	bool __suicidal;
-
-	auto get_subscription_topics(std::string _pattern) -> zpt::json;
-};
 
 class RESTEmitter : public zpt::EventEmitter {
       public:

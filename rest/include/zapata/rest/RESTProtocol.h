@@ -5,13 +5,20 @@
 
 namespace zpt {
 class RESTOntology : public zpt::Ontology {
+      public:
+	RESTOntology();
+	virtual ~RESTOntology();
+
 	virtual auto
 	compose_reply(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
-	    -> zpt::json = 0;
+	    -> zpt::json;
 	virtual auto
 	compose_request(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
-	    -> zpt::json = 0;
-
+	    -> zpt::json;
+	virtual auto extract_from_reply(zpt::json _envelope)
+	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json>;
+	virtual auto extract_from_request(zpt::json _envelope)
+	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json>;
 };
 
 class RESTListener : public zpt::EventListener {

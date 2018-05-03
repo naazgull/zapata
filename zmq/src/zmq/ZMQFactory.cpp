@@ -1616,7 +1616,7 @@ auto zpt::ZMQFactory::produce(zpt::json _options) -> zpt::socket {
 	return _return;
 }
 
-auto zpt::ZMQFactory::is_reusable(std::string _type) -> bool  {
+auto zpt::ZMQFactory::is_reusable(std::string _type) -> bool {
 	switch (_type) {
 	case ZMQ_ROUTER_DEALER: {
 		return true;
@@ -1655,7 +1655,7 @@ auto zpt::ZMQFactory::is_reusable(std::string _type) -> bool  {
 	return false;
 }
 
-auto zpt::ZMQFactory::clean(zpt::socket _socket) -> bool  {
+auto zpt::ZMQFactory::clean(zpt::socket _socket) -> bool {
 	switch (_type) {
 	case ZMQ_ROUTER_DEALER: {
 		return false;

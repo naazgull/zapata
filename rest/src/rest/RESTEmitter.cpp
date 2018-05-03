@@ -28,20 +28,7 @@ SOFTWARE.
 #include <zapata/python.h>
 #include <map>
 
-namespace zpt {
-namespace rest {
-emitter* __emitter = nullptr;
-}
-} // namespace zpt
-
-zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options), __poll(nullptr), __server(nullptr) {
-	if (zpt::rest::__emitter != nullptr) {
-		delete zpt::rest::__emitter;
-		zlog("something is definitely wrong, RESTEmitter already initialized", zpt::emergency);
-	}
-
-	zpt::rest::__emitter = this;
-	zpt::ev::__emitter = this->self();
+zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options) {
 	this->directory()->events(this->self());
 
 	this->__default_options = [](zpt::ev::performative _performative,

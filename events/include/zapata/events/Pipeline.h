@@ -24,10 +24,9 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/events.h>
-#include <zapata/zmq.h>
-#include <zapata/zmq/SocketStreams.h>
-#include <zapata/rest/RESTEmitter.h>
+#include <zapata/base.h>
+#include <zapata/events/EventEmitter.h>
+#include <zapata/events/Polling.h>
 
 using namespace std;
 #if !defined __APPLE__
@@ -36,22 +35,61 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
+class Pipeline;
+class PipelinePtr;
+typedef zpt::PipelinePtr pipeline;
+
+class PipelinePtr : public std::shared_ptr<zpt::Pipeline> {
+      public:
+	PipelinePtr(std::string _name, zpt::json _options);
+	PipelinePtr(zpt::Pipeline* _ptr);
+	virtual ~PipelinePtr();
+
+	static zpt::pipeline setup(zpt::json _options, std::string _name);
+	static int launch(int argc, char* argv[]);
+};
+
+class Pipeline {
+      public:
+	Pipeline(std::string _name, zpt::json _options);
+	virtual ~Pipeline();
+
+	virtual void start();
+
+	virtual auto name() -> std::string;
+	virtual auto options() -> zpt::json;
+	virtual auto credentials() -> zpt::json;
+	virtual auto credentials(zpt::json _credentials) -> void;
+	virtual auto unbind() -> void;
+
+	virtual auto hook(zpt::ev::initializer _callback) -> void;
+
+	virtual auto suicidal() -> bool;
+
+      private:
+	std::string __name;
+	zpt::json __options;
+	zpt::pipeline __self;
+	zpt::ev::OnStartStack __initializers;
+	size_t __max_threads;
+	size_t __alloc_threads;
+	size_t __n_threads;
+	std::mutex __thread_mtx;
+	bool __suicidal;
+};
+
 namespace conf {
-namespace rest {
+namespace pipe {
 zpt::json init(int argc, char* argv[]);
 }
 }
 
-namespace rest {
+namespace pipe {
 extern pid_t root;
 extern bool interrupted;
 
 auto terminate(int _signal) -> void;
 auto shutdown(int _signal) -> void;
-
-namespace uri {
-auto get_simplified_topics(std::string _pattern) -> zpt::json;
-}
 
 namespace authorization {
 auto serialize(zpt::json _info) -> std::string;

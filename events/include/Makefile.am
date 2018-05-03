@@ -4,4 +4,5 @@ nobase_include_HEADERS = \
 ./zapata/events/unconfig.h \
 ./zapata/events/EventEmitter.h \
 ./zapata/events/Polling.h \
+./zapata/events/Pipeline.h \
 ./zapata/events.h

@@ -28,8 +28,9 @@ SOFTWARE.
 #include <fstream>
 #include <string>
 
-#include <zapata/rest.h>
-#include <zapata/mem/usage.h>
+#include <zapata/base.h>
+#include <zapata/json.h>
+#include <zapata/events.h>
 #include <semaphore.h>
 
 using namespace std;

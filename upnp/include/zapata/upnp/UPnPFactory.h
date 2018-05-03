@@ -22,32 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/mqtt/MQTTFactory.h>
+#pragma once
 
-zpt::MQTTFactory::MQTTFactory() : zpt::ChannelFactory() {}
+#include <unistd.h>
+#include <iostream>
+#include <functional>
+#include <memory>
+#include <map>
+#include <string>
+#include <zapata/upnp/UPnP.h>
 
-zpt::MQTTFactory::~MQTTFactory() {}
+using namespace std;
+#if !defined __APPLE__
+using namespace __gnu_cxx;
+#endif
 
-auto zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
-	zpt::socket _return;
-	auto _found = this->__channels.find(_options["connection"]->str());
-	if (_found != this->__channels.end()) {
-		_return = _found->second;
-	} else {
-		zpt::MQTT* _mqtt = new zpt::MQTT();
-		_mqtt->connect(zpt::uri::parse(_options["connection"]->str()));
-		_return = zpt::socket(_mqtt);
-	}
-	return _return;
-}
+namespace zpt {
 
-auto zpt::MQTTFactory::is_reusable(std::string _type) -> bool { return true; }
+class UPnPFactory : public zpt::ChannelFactory {
+      public:
+	UPnPFactory();
+	virtual ~UPnPFactory();
+	virtual auto produce(zpt::json _options) -> zpt::socket;
+	virtual auto is_reusable(std::string _type) -> bool;
+	virtual auto clean(zpt::socket _socket) -> bool;
 
-auto zpt::MQTTFactory::clean(zpt::socket _socket) -> bool { return false; }
-
-extern "C" void _zpt_load_() {
-	zpt::ev::emitter_factory _emitter = zpt::emitter();
-	_emitter->channel({
-	    {"zmq", zpt::socket_factory(new zpt::MQTTFactory())},
-	});
+      private:
+	std::map<std::string, zpt::socket> __channels;
+};
 }

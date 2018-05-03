@@ -1,5 +1,24 @@
 #include <zapata/rest/RESTProtocol.h>
 
+zpt::RESTOntology::RESTOntology() {}
+zpt::RESTOntology::~RESTOntology() {}
+
+auto zpt::RESTOntology::compose_reply(zpt::ev::performative _method,
+				      std::string _resource,
+				      zpt::json _payload,
+				      zpt::json _headers) -> zpt::json {}
+
+auto zpt::RESTOntology::compose_request(zpt::ev::performative _method,
+					std::string _resource,
+					zpt::json _payload,
+					zpt::json _headers) -> zpt::json {}
+
+auto zpt::RESTOntology::extract_from_reply(zpt::json _envelope)
+    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> {}
+
+auto zpt::RESTOntology::extract_from_request(zpt::json _envelope)
+    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> {}
+
 zpt::RESTListener::RESTListener(std::string _regex) : zpt::EventListener(_regex) {}
 
 zpt::RESTListener::~RESTListener() {}

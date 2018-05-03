@@ -23,25 +23,18 @@ SOFTWARE.
 */
 
 #include <dlfcn.h>
-#include <zapata/exceptions/ClosedException.h>
-#include <zapata/exceptions/InterruptedException.h>
-#include <zapata/json.h>
-#include <zapata/log/log.h>
 #include <sys/sem.h>
-#include <zapata/text/convert.h>
-#include <zapata/file/manip.h>
-#include <zapata/rest/RESTServer.h>
 #include <fstream>
 #include <iterator>
 #include <string>
 #include <vector>
 #include <systemd/sd-daemon.h>
-#include <zapata/rest/codes_rest.h>
-#include <zapata/python.h>
-#include <zapata/lisp.h>
+#include <zapata/base.h>
+#include <zapata/json.h>
+#include <zapata/events/Pipeline.h>
 
 namespace zpt {
-namespace rest {
+namespace pipe {
 pid_t root = 0;
 bool interrupted = false;
 }
@@ -72,22 +65,22 @@ zpt::pipeline zpt::PipelinePtr::setup(zpt::json _options, std::string _name) {
 }
 
 auto zpt::rest::shutdown(int _signal) -> void {
-	if (zpt::rest::interrupted) {
+	if (zpt::pipe::interrupted) {
 		exit(0);
 	}
-	zpt::rest::__emitter->shutdown();
-	zpt::rest::interrupted = true;
+	zpt::emitter()->shutdown();
+	zpt::pipe::interrupted = true;
 }
 
 auto zpt::rest::terminate(int _signal) -> void {
-	if (zpt::rest::interrupted) {
+	if (zpt::pipe::interrupted) {
 		exit(0);
 	}
-	zpt::rest::interrupted = true;
+	zpt::pipe::interrupted = true;
 }
 
 int zpt::PipelinePtr::launch(int argc, char* argv[]) {
-	zpt::json _ptr = zpt::conf::rest::init(argc, argv);
+	zpt::json _ptr = zpt::conf::pipe::init(argc, argv);
 	zpt::conf::setup(_ptr);
 
 	if (!_ptr["boot"]->is_array() || _ptr["boot"]->arr()->size() == 0) {
@@ -156,19 +149,6 @@ zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
     : __name(_name), __options(_options), __self(this),
       __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
-		if (!this->__options["discoverable"]->ok()) {
-			this->__options["rest"] << "discoverable" << false;
-		}
-
-		if (bool(this->options()["discoverable"])) {
-			this->__upnp = zpt::upnp::broker(_options);
-			this->__poll->poll(this->__poll->add(this->__upnp.get()));
-			zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") +
-				 std::string(this->__upnp->uri()["scheme"]) + std::string("://") +
-				 std::string(this->__upnp->uri()["domain"]) + std::string(":") +
-				 std::string(this->__upnp->uri()["port"]),
-			     zpt::info);
-		}
 
 		((zpt::RESTEmitter*)this->__emitter.get())->poll(this->__poll);
 		((zpt::RESTEmitter*)this->__emitter.get())->server(this->__self);

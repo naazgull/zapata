@@ -22,32 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/mqtt/MQTTFactory.h>
+#include <zapata/upnp/UPnPFactory.h>
 
-zpt::MQTTFactory::MQTTFactory() : zpt::ChannelFactory() {}
+zpt::UPnPFactory::UPnPFactory() : zpt::ChannelFactory() {}
 
-zpt::MQTTFactory::~MQTTFactory() {}
+zpt::UPnPFactory::~UPnPFactory() {}
 
-auto zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
+auto zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
 	zpt::socket _return;
 	auto _found = this->__channels.find(_options["connection"]->str());
 	if (_found != this->__channels.end()) {
 		_return = _found->second;
 	} else {
-		zpt::MQTT* _mqtt = new zpt::MQTT();
-		_mqtt->connect(zpt::uri::parse(_options["connection"]->str()));
-		_return = zpt::socket(_mqtt);
+		zpt::UPnP* _upnp = new zpt::UPnP(_options);
+		_return = zpt::socket(_upnp);
 	}
 	return _return;
 }
 
-auto zpt::MQTTFactory::is_reusable(std::string _type) -> bool { return true; }
+auto zpt::UPnPFactory::is_reusable(std::string _type) -> bool { return true; }
 
-auto zpt::MQTTFactory::clean(zpt::socket _socket) -> bool { return false; }
+auto zpt::UPnPFactory::clean(zpt::socket _socket) -> bool { return false; }
 
 extern "C" void _zpt_load_() {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
 	_emitter->channel({
-	    {"zmq", zpt::socket_factory(new zpt::MQTTFactory())},
+	    {"upnp", zpt::socket_factory(new zpt::UPnPFactory())},
 	});
+	zpt::json _options = _emitter->options();
+
+	if (!_options["discoverable"]->ok()) {
+		_options["rest"] << "discoverable" << false;
+	}
+
+	if (bool(_options["discoverable"])) {
+		this->__upnp = zpt::upnp::broker(_options);
+		this->__poll->poll(this->__poll->add(this->__upnp.get()));
+		zlog(std::string("binding ") + this->__upnp->protocol() + std::string(" listener to ") +
+			 std::string(this->__upnp->uri()["scheme"]) + std::string("://") +
+			 std::string(this->__upnp->uri()["domain"]) + std::string(":") +
+			 std::string(this->__upnp->uri()["port"]),
+		     zpt::info);
+	}
 }

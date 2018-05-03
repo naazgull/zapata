@@ -4,5 +4,5 @@ nobase_include_HEADERS = \
 ./zapata/rest/unconfig.h \
 ./zapata/rest/codes_rest.h \
 ./zapata/rest/RESTEmitter.h \
-./zapata/rest/RESTServer.h \
+./zapata/rest/RESTProtocol.h \
 ./zapata/rest.h

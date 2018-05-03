@@ -26,3 +26,4 @@ SOFTWARE.
 
 #include <zapata/upnp/config.h>
 #include <zapata/upnp/UPnP.h>
+#include <zapata/upnp/UPnPFactory.h>
