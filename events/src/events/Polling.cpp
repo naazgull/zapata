@@ -432,7 +432,7 @@ auto zpt::ChannelPoll::loop() -> void {
 	}
 }
 
-auto zpt::ChannelPoll::bind(std::string _type, std::string _connection) -> std::vector<zpt::socket> {
+auto zpt::ChannelPoll::bind(std::string _type, std::string _connection) -> zpt::socket {
 	std::vector<zpt::socket> _return;
 	for (auto _factory : this->__emitter->channel(_type)) {
 		if (_factory->is_reusable(_type)) {

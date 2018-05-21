@@ -49,21 +49,24 @@ extern "C" void _zpt_load_() {
 	zpt::socket_factory _factory(new zpt::UPnPFactory());
 	_emitter->channel({
 	    {"upnp", _factory},
+	    {"upnps", _factory}
 	});
 	zpt::json _options = _emitter->options();
 
-	if (!_options["discoverable"]->ok()) {
-		_options["rest"] << "discoverable" << false;
+	if (_options["upnp"]->ok() && _options["upnp"]->is_array()) {
+		for (auto _definition : _options["upnp"]->arr()) {
+			zpt::socket _upnp = _factory->produce(_definition["bind"]);
+			zpt::poll::instance<zpt::ChannelPoll>()->poll(_upnp);
+
+			zlog(std::string("binding ") + _upnp->protocol() + std::string(" listener to ") +
+				 std::string(_upnp->uri()["scheme"]) + std::string("://") +
+				 std::string(_upnp->uri()["domain"]) + std::string(":") +
+				 std::string(_upnp->uri()["port"]),
+			     zpt::info);
+		}
 	}
 
+	_options["rest"] << "discoverable" << bool(_options["discoverable"]);
 	if (bool(_options["discoverable"])) {
-		zpt::socket _upnp = _factory->produce(_options["upnp"]);
-		zpt::poll::instance<zpt::ChannelPoll>()->poll(_upnp);
-
-		zlog(std::string("binding ") + _upnp->protocol() + std::string(" listener to ") +
-			 std::string(_upnp->uri()["scheme"]) + std::string("://") +
-			 std::string(_upnp->uri()["domain"]) + std::string(":") +
-			 std::string(_upnp->uri()["port"]),
-		     zpt::info);
 	}
 }

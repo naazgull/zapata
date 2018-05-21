@@ -150,41 +150,6 @@ zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
     : __name(_name), __options(_options), __self(this),
       __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
 	try {
-
-		if (this->__options["zmq"]->ok() && this->__options["zmq"]->type() == zpt::JSArray &&
-		    this->__options["zmq"]->arr()->size() != 0) {
-			std::string _ip = std::string("tcp://") + zpt::net::getip();
-			for (auto _definition : this->__options["zmq"]->arr()) {
-				short int _type = zpt::str2type(_definition["type"]->str());
-				zpt::socket_ref _socket;
-				switch (_type) {
-				case ZMQ_ROUTER_DEALER: {
-					_socket = this->__poll->add(ZMQ_ROUTER_DEALER, _definition["bind"]->str());
-					break;
-				}
-				case ZMQ_PUB_SUB: {
-					_socket = this->__poll->add(ZMQ_XPUB_XSUB, _definition["bind"]->str());
-					break;
-				}
-				default: {
-					_socket = this->__poll->add(_type, _definition["bind"]->str());
-					this->__poll->poll(_socket);
-					break;
-				}
-				}
-				_definition
-				    << "connect"
-				    << (_definition["public"]->is_string()
-					    ? _definition["public"]->str()
-					    : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"),
-							     "tcp://*",
-							     _ip));
-				zlog(std::string("binding ") + _socket->protocol() + std::string(" listener to ") +
-					 _socket->connection(),
-				     zpt::info);
-			}
-		}
-
 		if (this->__options["rest"]["modules"]->ok()) {
 			for (auto _i : this->__options["rest"]["modules"]->arr()) {
 				if (_i->str().find(".py") != std::string::npos) {

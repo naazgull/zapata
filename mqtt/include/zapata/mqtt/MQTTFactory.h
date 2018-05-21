@@ -47,6 +47,10 @@ class MQTTFactory : public zpt::ChannelFactory {
 	virtual auto is_reusable(std::string _type) -> bool;
 	virtual auto clean(zpt::socket _socket) -> bool;
 
+	static auto on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+	static auto on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+	static auto on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+
       private:
 	std::map<std::string, zpt::socket> __channels;
 };

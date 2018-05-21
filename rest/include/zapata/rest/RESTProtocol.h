@@ -59,8 +59,5 @@ auto options(std::string _resource, std::string _origin, zpt::json _headers = zp
 auto internal_server_error(std::string _resource, std::exception& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
 auto assertion_error(std::string _resource, zpt::assertion& _e, zpt::json _headers = zpt::undefined) -> zpt::json;
 
-namespace uri {
-auto get_simplified_topics(std::string _pattern) -> zpt::json;
-}
 }
 }

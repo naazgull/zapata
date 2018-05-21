@@ -106,6 +106,9 @@ typedef std::vector<zpt::ev::initializer> OnStartStack;
 
 auto set_default_authorization(std::string _default_authorization) -> void;
 auto get_default_authorization() -> std::string;
+namespace uri {
+auto get_simplified_topics(std::string _pattern) -> zpt::json;
+}
 }
 
 auto is_sql(std::string _name) -> bool;
@@ -175,9 +178,7 @@ class Channel {
 	virtual auto available() -> bool;
 
 	virtual auto recv() -> zpt::json = 0;
-	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload)
-	    -> zpt::json = 0;
-	virtual auto send(zpt::json _envelope) -> zpt::json;
+	virtual auto send(zpt::json _envelope) -> zpt::json = 0;
 	virtual auto loop_iteration() -> void;
 
 	virtual auto socket() -> zmq::socket_ptr = 0;
@@ -370,14 +371,7 @@ class EventEmitter {
 	virtual auto has_pending(zpt::json _envelope) -> bool = 0;
 
 	virtual auto hook(zpt::ev::initializer _callback) -> void = 0;
-
-	virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
-	virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
-	virtual auto connector(std::string _name) -> zpt::connector final;
-
-	virtual auto channel(std::string _name, zpt::socket_factory _channel_factory) -> void final;
-	virtual auto channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void final;
-	virtual auto channel(std::string _name) -> zpt::socket_factory final;
+	virtual auto shutdown() -> void = 0;
 
 	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
 	virtual auto ontology() -> zpt::ev::ontology final;
@@ -387,8 +381,6 @@ class EventEmitter {
 	zpt::ev::emitter __self;
 	zpt::ev::gatekeeper __keeper;
 	zpt::ev::directory __directory;
-	std::map<std::string, zpt::connector> __connector;
-	std::map<std::string, zpt::socket_factory> __channel;
 	std::string __uuid;
 	zpt::ev::ontology __ontology;
 };
@@ -403,11 +395,11 @@ class EventEmitterFactory {
 
 	virtual auto connector(std::string _name, zpt::connector _connector) -> void final;
 	virtual auto connector(std::map<std::string, zpt::connector> _connectors) -> void final;
-	virtual auto connector(std::string _name) -> std::vector<zpt::connector> final;
+	virtual auto connector(std::string _name) -> zpt::connector final;
 
 	virtual auto channel(std::string _name, zpt::socket_factory _channel_factory) -> void final;
 	virtual auto channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void final;
-	virtual auto channel(std::string _name) -> std::vector<zpt::socket_factory> final;
+	virtual auto channel(std::string _name) -> zpt::socket_factory final;
 
 	virtual auto ontology(zpt::ev::ontology _ontology) -> void final;
 	virtual auto ontology() -> zpt::ev::ontology final;
@@ -431,11 +423,14 @@ class EventEmitterFactory {
 	virtual auto reply(zpt::json _request, zpt::json _reply) -> void;
 	virtual auto has_pending(zpt::json _envelope) -> bool;
 	virtual auto for_each(zpt::ev::initializer _callback) -> void;
+	virtual auto shutdown() -> void;
 
 	static auto instance() -> zpt::ev::emitter_factory;
 
       private:
 	std::vector<zpt::ev::emitter> __emitters;
+	std::map<std::string, zpt::connector> __connector;
+	std::map<std::string, zpt::socket_factory> __channel;
 	zpt::ev::ontology __ontology;
 };
 

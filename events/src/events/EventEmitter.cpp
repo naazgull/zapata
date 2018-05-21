@@ -115,17 +115,6 @@ auto zpt::Channel::close() -> void {
 
 auto zpt::Channel::available() -> bool { return true; }
 
-auto zpt::Channel::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
-	return this->send({"channel",
-			   zpt::generate::r_uuid(),
-			   "performative",
-			   _performative,
-			   "resource",
-			   _resource,
-			   "payload",
-			   _payload});
-}
-
 auto zpt::Channel::loop_iteration() -> void {}
 
 zpt::BridgePtr::BridgePtr(zpt::Bridge* _target) : std::shared_ptr<zpt::Bridge>(_target) {}
@@ -172,59 +161,6 @@ auto zpt::EventEmitter::lookup(std::string _topic, zpt::ev::performative _perfor
 	return this->__directory->lookup(_topic, _performative);
 }
 
-auto zpt::EventEmitter::connector(std::string _name, zpt::connector _connector) -> void {
-	auto _found = this->__connector.find(_name);
-	if (_found == this->__connector.end()) {
-		ztrace(std::string("registering connector ") + _name + std::string("@") + _connector->name());
-		_connector->events(this->__self);
-		try {
-			_connector->connect();
-		} catch (std::exception& _e) {
-			zlog(std::string(_name) + std::string(": ") + _e.what(), zpt::error);
-			return;
-		}
-		this->__connector.insert(std::make_pair(_name, _connector));
-	}
-}
-
-auto zpt::EventEmitter::connector(std::map<std::string, zpt::connector> _connectors) -> void {
-	for (auto _connector : _connectors) {
-		this->connector(_connector.first, _connector.second);
-	}
-}
-
-auto zpt::EventEmitter::connector(std::string _name) -> zpt::connector {
-	auto _found = this->__connector.find(_name);
-	assertz(_found != this->__connector.end(),
-		std::string("theres isn't any connector by the name '") + _name + std::string("'"),
-		500,
-		0);
-	return _found->second;
-}
-
-auto zpt::EventEmitter::channel(std::string _name, zpt::socket_factory _channel_factory) -> void {
-	auto _found = this->__channel.find(_name);
-	if (_found == this->__channel.end()) {
-		ztrace(std::string("registering channel factory") + _name);
-		this->__channel.insert(std::make_pair(_name, _channel_factory));
-	}
-}
-
-auto zpt::EventEmitter::channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void {
-	for (auto _channel_factory : _channel_factories) {
-		this->channel(_channel_factory.first, _channel_factory.second);
-	}
-}
-
-auto zpt::EventEmitter::channel(std::string _name) -> zpt::socket_factory {
-	auto _found = this->__channel.find(_name);
-	assertz(_found != this->__channel.end(),
-		std::string("theres isn't any channel factory by the name '") + _name + std::string("'"),
-		500,
-		0);
-	return _found->second;
-}
-
 zpt::EventEmitterFactory::EventEmitterFactory() {}
 
 zpt::EventEmitterFactory::~EventEmitterFactory() {}
@@ -241,57 +177,55 @@ auto zpt::EventEmitterFactory::unroll(zpt::ev::emitter _emitter) -> void {
 }
 
 auto zpt::EventEmitterFactory::connector(std::string _name, zpt::connector _connector) -> void {
-	std::for_each(this->__emitters.begin(),
-		      this->__emitters.end(),
-		      [_name, _connector](const zpt::ev::emitter& _e) { _e->connector(_name, _connector); });
+	auto _found = this->__connector.find(_name);
+	if (_found == this->__connector.end()) {
+		ztrace(std::string("registering connector ") + _name + std::string("@") + _connector->name());
+		try {
+			_connector->connect();
+		} catch (std::exception& _e) {
+			zlog(std::string(_name) + std::string(": ") + _e.what(), zpt::error);
+			return;
+		}
+		this->__connector.insert(std::make_pair(_name, _connector));
+	}
 }
 
 auto zpt::EventEmitterFactory::connector(std::map<std::string, zpt::connector> _connectors) -> void {
-	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_connectors](const zpt::ev::emitter& _e) {
-		_e->connector(_connectors);
-	});
+	for (auto _connector : _connectors) {
+		this->connector(_connector.first, _connector.second);
+	}
 }
 
-auto zpt::EventEmitterFactory::connector(std::string _name) -> std::vector<zpt::connector> {
-	std::vector<zpt::connector> _return;
-	for (auto _emitter : this->__emitters) {
-		try {
-			_return.push_back(_emitter->connector(_name));
-		} catch (...) {
-		}
-	};
-	assertz(_return.size() != 0,
+auto zpt::EventEmitterFactory::connector(std::string _name) -> zpt::connector {
+	auto _found = this->__connector.find(_name);
+	assertz(_found != this->__connector.end(),
 		std::string("theres isn't any connector by the name '") + _name + std::string("'"),
 		500,
 		0);
-	return _return;
+	return _found->second;
 }
 
-auto zpt::EventEmitterFactory::channel(std::string _name, zpt::socket_factory _channel) -> void {
-	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_name, _channel](const zpt::ev::emitter& _e) {
-		_e->channel(_name, _channel);
-	});
+auto zpt::EventEmitterFactory::channel(std::string _name, zpt::socket_factory _channel_factory) -> void {
+	auto _found = this->__channel.find(_name);
+	if (_found == this->__channel.end()) {
+		ztrace(std::string("registering channel factory") + _name);
+		this->__channel.insert(std::make_pair(_name, _channel_factory));
+	}
 }
 
-auto zpt::EventEmitterFactory::channel(std::map<std::string, zpt::socket_factory> _channels) -> void {
-	std::for_each(this->__emitters.begin(), this->__emitters.end(), [_channels](const zpt::ev::emitter& _e) {
-		_e->channel(_channels);
-	});
+auto zpt::EventEmitterFactory::channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void {
+	for (auto _channel_factory : _channel_factories) {
+		this->channel(_channel_factory.first, _channel_factory.second);
+	}
 }
 
-auto zpt::EventEmitterFactory::channel(std::string _name) -> std::vector<zpt::socket_factory> {
-	std::vector<zpt::socket_factory> _return;
-	for (auto _emitter : this->__emitters) {
-		try {
-			_return.push_back(_emitter->channel(_name));
-		} catch (...) {
-		}
-	};
-	assertz(_return.size() != 0,
+auto zpt::EventEmitterFactory::channel(std::string _name) -> zpt::socket_factory {
+	auto _found = this->__channel.find(_name);
+	assertz(_found != this->__channel.end(),
 		std::string("theres isn't any channel factory by the name '") + _name + std::string("'"),
 		500,
 		0);
-	return _return;
+	return _found->second;
 }
 
 auto zpt::EventEmitterFactory::ontology(zpt::ev::ontology _ontology) -> void {
@@ -363,6 +297,11 @@ auto zpt::EventEmitterFactory::has_pending(zpt::json _envelope) -> bool {
 auto zpt::EventEmitterFactory::for_each(zpt::ev::initializer _callback) -> void {
 	std::for_each(
 	    this->__emitters.begin(), this->__emitters.end(), [=](const zpt::ev::emitter& _e) { _callback(_e); });
+}
+
+auto zpt::EventEmitterFactory::shutdown() -> void {
+	std::for_each(
+	    this->__emitters.begin(), this->__emitters.end(), [](const zpt::ev::emitter& _e) { _e->shutdown(); });
 }
 
 auto zpt::EventEmitterFactory::instance() -> zpt::ev::emitter_factory {
@@ -738,5 +677,95 @@ auto zpt::EventDirectoryGraph::pretty(std::string _tabs, bool _last) -> std::str
 }
 
 auto zpt::emitter() -> zpt::ev::emitter_factory { return zpt::EventEmitterFactory::instance(); }
+
+auto zpt::ev::uri::get_simplified_topics(std::string _pattern) -> zpt::json {
+	zpt::json _aliases = zpt::split(_pattern, "|");
+	zpt::json _topics = zpt::json::array();
+	char _op = '\0';
+	for (auto _alias : _aliases->arr()) {
+		std::string _return;
+		short _state = 0;
+		bool _regex = false;
+		bool _escaped = false;
+		for (auto _c : _alias->str()) {
+			switch (_c) {
+			case '/': {
+				if (_state == 0) {
+					if (_regex) {
+						if (_return.back() != '/') {
+							_return.push_back('/');
+						}
+						_return.push_back(_op);
+						_regex = false;
+					}
+					_return.push_back(_c);
+					_op = '\0';
+				} else {
+					_op = '+';
+				}
+				break;
+			}
+			case ')':
+			case ']': {
+				if (!_escaped) {
+					_state--;
+				} else {
+					_escaped = false;
+				}
+				_regex = true;
+				break;
+			}
+			case '(':
+			case '[': {
+				if (!_escaped) {
+					_state++;
+				} else {
+					_escaped = false;
+				}
+				_regex = true;
+				break;
+			}
+			case '{':
+			case '}': {
+				_op = '+';
+				_regex = true;
+				break;
+			}
+			case '+': {
+				if (_op == '\0')
+					_op = '*';
+				_regex = true;
+				break;
+			}
+			case '*': {
+				_op = '*';
+				_regex = true;
+				break;
+			}
+			case '$':
+			case '^': {
+				break;
+			}
+			case '\\': {
+				_escaped = !_escaped;
+				break;
+			}
+			default: {
+				if (_state == 0) {
+					_return.push_back(_c);
+				}
+			}
+			}
+		}
+		if (_regex) {
+			if (_return.back() != '/') {
+				_return.push_back('/');
+			}
+			_return.push_back(_op);
+		}
+		_topics << _return;
+	}
+	return _topics;
+}
 
 extern "C" auto zpt_events() -> int { return 1; }

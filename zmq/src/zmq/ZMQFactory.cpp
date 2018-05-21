@@ -1696,7 +1696,26 @@ auto zpt::ZMQFactory::clean(zpt::socket _socket) -> bool {
 
 extern "C" void _zpt_load_() {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
+	zpt::socket_factory _factory(new zpt::ZMQFactory());
 	_emitter->channel({
-	    {"tcp", zpt::socket_factory(new zpt::ZMQFactory())},
+	    {"tcp", _factory},
 	});
+
+	if (_options["zmq"]->ok() && _options["zmq"]->is_array()) {
+		std::string _ip = std::string("tcp://") + zpt::net::getip();
+		for (auto _definition : _options["zmq"]->arr()) {
+			zpt::socket _zmq = _factory->produce(_definition["bind"]);
+			zpt::poll::instance<zpt::ChannelPoll>()->poll(_zmq);
+
+			_definition << "connect"
+				    << (_definition["public"]->is_string()
+					    ? _definition["public"]->str()
+					    : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"),
+							     "tcp://*",
+							     _ip));
+			zlog(std::string("binding ") + _socket->protocol() + std::string(" listener to ") +
+				 _socket->connection(),
+			     zpt::info);
+		}
+	}
 }
