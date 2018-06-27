@@ -35,56 +35,70 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-class Pipeline;
-class PipelinePtr;
-typedef zpt::PipelinePtr pipeline;
+class pipeline;
 
-class PipelinePtr : public std::shared_ptr<zpt::Pipeline> {
+typedef std::tuple<std::string, std::function<void(zpt::json, zpt::stage&)>> initializer;
+typedef std::tuple<std::string, std::function<void(zpt::socket, zpt::stage&)>> receiver;
+typedef std::function<void(std::string, zpt::json, zpt::stage&)>> request_transformer;
+typedef std::tuple<
+    std::string,
+    std::map<zpt::performative, std::function<void(zpt::ev::performative, std::string, zpt::json, zpt::stage&)>>>
+    replier;
+typedef std::function<void(zpt::json, zpt::stage&)>> reply_transformer;
+
+class stage {
       public:
-	PipelinePtr(std::string _name, zpt::json _options);
-	PipelinePtr(zpt::Pipeline* _ptr);
-	virtual ~PipelinePtr();
+	stage(std::string _name, zpt::json _options);
+	stage(const zpt::stage& _rhs);
+	stage(zpt::stage&& _rhs);
+	virtual ~stage();
 
-	static zpt::pipeline setup(zpt::json _options, std::string _name);
-	static int launch(int argc, char* argv[]);
+	auto operator=(const zpt::stage& _rhs) -> zpt::stage&;
+	auto operator=(zpt::stage&& _rhs) -> zpt::stage&;
+
+	auto forward(zpt::json _msg) -> void;
+	auto reply(zpt::json _reply) -> void;
 };
 
-class Pipeline {
+class pipeline {
       public:
-	Pipeline(std::string _name, zpt::json _options);
-	virtual ~Pipeline();
+	pipeline(std::string _name, zpt::json _options);
+	virtual ~pipeline();
 
 	virtual void start();
 
 	virtual auto name() -> std::string;
+	virtual auto uuid() -> std::string;
 	virtual auto options() -> zpt::json;
-	virtual auto credentials() -> zpt::json;
-	virtual auto credentials(zpt::json _credentials) -> void;
-	virtual auto unbind() -> void;
 
-	virtual auto hook(zpt::ev::initializer _callback) -> void;
+	virtual auto add(zpt::initializer _callback) -> void;
+	virtual auto add(zpt::receiver _callback) -> void;
+	virtual auto add(zpt::request_transformer _callback) -> void;
+	virtual auto add(zpt::replier _callback) -> void;
+	virtual auto add(zpt::reply_transformer _callback) -> void;
 
 	virtual auto suicidal() -> bool;
 
       private:
 	std::string __name;
+	std::string __uuid;
 	zpt::json __options;
-	zpt::pipeline __self;
-	zpt::ev::OnStartStack __initializers;
-	size_t __max_threads;
-	size_t __alloc_threads;
-	size_t __n_threads;
-	std::mutex __thread_mtx;
 	bool __suicidal;
+	short __stage;
+	std::vector<zpt::initializer> __stage_0;
+	std::vector<zpt::receiver> __stage_1;
+	std::vector<zpt::request_transformer> __stage_2;
+	std::vector<zpt::replier> __stage_3;
+	std::vector<zpt::reply_transformer> __stage_4;
 };
 
 namespace conf {
-namespace pipe {
+namespace pipeline {
 zpt::json init(int argc, char* argv[]);
 }
 }
 
-namespace pipe {
+namespace pipeline {
 extern pid_t root;
 extern bool interrupted;
 

@@ -343,34 +343,6 @@ class ZMQDealer : public zpt::ZMQChannel {
 	zmq::socket_ptr __socket;
 };
 
-class ZMQHttp : public zpt::ZMQChannel {
-      public:
-	ZMQHttp(zpt::socketstream_ptr _underlying, zpt::json _options);
-	virtual ~ZMQHttp();
-
-	virtual auto recv() -> zpt::json;
-	virtual auto send(zpt::json _envelope) -> zpt::json;
-
-	virtual auto underlying() -> zpt::socketstream_ptr;
-	virtual auto socket() -> zmq::socket_ptr;
-	virtual auto in() -> zmq::socket_ptr;
-	virtual auto out() -> zmq::socket_ptr;
-	virtual auto fd() -> int;
-	virtual auto in_mtx() -> std::mutex&;
-	virtual auto out_mtx() -> std::mutex&;
-	virtual auto type() -> short int;
-	virtual auto protocol() -> std::string;
-	virtual auto close() -> void;
-	virtual auto available() -> bool;
-
-      private:
-	zpt::socketstream_ptr __underlying;
-	short __state;
-	std::string __cid;
-	std::string __resource;
-	;
-};
-
 class ZMQFactory : public zpt::ChannelFactory {
       public:
 	ZMQFactory();

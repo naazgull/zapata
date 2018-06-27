@@ -41,30 +41,6 @@ bool interrupted = false;
 }
 }
 
-zpt::PipelinePtr::PipelinePtr(std::string _name, zpt::json _options)
-    : std::shared_ptr<zpt::Pipeline>(new zpt::Pipeline(_name, _options)) {}
-
-zpt::PipelinePtr::PipelinePtr(zpt::Pipeline* _ptr) : std::shared_ptr<zpt::Pipeline>(_ptr) {}
-
-zpt::PipelinePtr::~PipelinePtr() {}
-
-zpt::pipeline zpt::PipelinePtr::setup(zpt::json _options, std::string _name) {
-	if (_name.length() == 0) {
-		_name = _options->obj()->begin()->first;
-	}
-	try {
-		zpt::pipeline _server(_name, _options);
-		return _server;
-	} catch (zpt::assertion& _e) {
-		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
-		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
-		throw;
-	} catch (std::exception& _e) {
-		zlog(_e.what(), zpt::emergency);
-		throw;
-	}
-}
-
 auto zpt::pipe::shutdown(int _signal) -> void {
 	if (zpt::pipe::interrupted) {
 		exit(0);
@@ -80,113 +56,33 @@ auto zpt::pipe::terminate(int _signal) -> void {
 	zpt::pipe::interrupted = true;
 }
 
-int zpt::PipelinePtr::launch(int argc, char* argv[]) {
-	zpt::json _ptr = zpt::conf::pipe::init(argc, argv);
-	zpt::conf::setup(_ptr);
-
-	if (!_ptr["boot"]->is_array() || _ptr["boot"]->arr()->size() == 0) {
-		std::cout << "nothing to boot..." << endl << flush;
-		exit(0);
-	}
-
-	if (zpt::log_lvl == -1 && _ptr["$log"]["level"]->ok()) {
-		zpt::log_lvl = (int)_ptr["$log"]["level"];
-	}
-	if (_ptr["$log"]["format"]->ok()) {
-		zpt::log_format = (_ptr["$log"]["format"] == zpt::json::string("raw")
-				       ? 0
-				       : (_ptr["$log"]["format"] == zpt::json::string("json") ? 2 : 1));
-	}
-	if (_ptr["$log"]["file"]->is_string() && _ptr["$log"]["file"]->str().length() != 0) {
-		std::ofstream* _lf = new std::ofstream();
-		_lf->open(((std::string)_ptr["$log"]["file"]).data(),
-			  std::ofstream::out | std::ofstream::app | std::ofstream::ate);
-		if (_lf->is_open()) {
-			zpt::log_fd = _lf;
-		} else {
-			delete _lf;
-		}
-	}
-
-	zpt::json _options = _ptr["boot"][0];
-
-	std::signal(SIGINT, zpt::pipe::shutdown);
-	std::signal(SIGTERM, zpt::pipe::terminate);
-	std::signal(SIGABRT, zpt::pipe::terminate);
-	std::signal(SIGSEGV, zpt::pipe::terminate);
-
-	std::string _name = std::string(_options["name"]);
-	if (_name.length() != 0) {
-		delete zpt::log_pname;
-		zpt::log_pname = new string(_name.data());
-	}
-	std::string _u_name(_name.data());
-	std::transform(_u_name.begin(), _u_name.end(), _u_name.begin(), ::toupper);
-	zlog(std::string("starting RESTful service container *") + _u_name + std::string("*"), zpt::notice);
-	zpt::pipeline _server(nullptr);
+zpt::pipeline::pipeline(std::string _name, zpt::json _options)
+    : __name(_name), __uuid(zpt::generate::r_uuid()), __options(_options), __suicidal(false), __stage(0) {
 	try {
-		_server = zpt::pipeline::setup(_options, _name);
-		if (_server->suicidal()) {
-			zlog("server initialization gone wrong, server is now in 'suicidal' state", zpt::emergency);
-			return -1;
-		}
-		_server->start();
-	} catch (zpt::assertion& _e) {
-		_server->unbind();
-		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
-		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
-		return -1;
-	} catch (std::exception& _e) {
-		_server->unbind();
-		zlog(_e.what(), zpt::emergency);
-		return -1;
-	}
-	_server->unbind();
+		if (this->__options["modules"]->ok()) {
+			for (auto _i : this->__options["modules"]->arr()) {
+				std::string _lib_file("lib");
+				_lib_file.append((std::string)_i);
+				_lib_file.append(".so");
 
-	return 0;
-}
-
-zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
-    : __name(_name), __options(_options), __self(this),
-      __max_threads(0), __alloc_threads(0), __n_threads(0), __suicidal(false) {
-	try {
-		if (this->__options["rest"]["modules"]->ok()) {
-			for (auto _i : this->__options["rest"]["modules"]->arr()) {
-				if (_i->str().find(".py") != std::string::npos) {
-					if (!zpt::bridge::is_booted<zpt::python::bridge>()) {
-						zpt::bridge::boot<zpt::python::bridge>(
-						    this->__options,
-						    ((zpt::RESTEmitter*)this->__emitter.get())->self());
-					}
-					zpt::bridge::instance<zpt::python::bridge>()->load_module(_i->str());
-				} else if (_i->str().find(".lisp") != std::string::npos ||
-					   _i->str().find(".fasb") != std::string::npos) {
-					if (!zpt::bridge::is_booted<zpt::lisp::bridge>()) {
-						zpt::bridge::boot<zpt::lisp::bridge>(
-						    this->__options,
-						    ((zpt::RESTEmitter*)this->__emitter.get())->self());
-					}
-					zpt::bridge::instance<zpt::lisp::bridge>()->load_module(_i->str());
-				} else {
-					std::string _lib_file("lib");
-					_lib_file.append((std::string)_i);
-					_lib_file.append(".so");
-
-					if (_lib_file.length() > 6) {
-						zlog(std::string("loading module '") + _lib_file + std::string("'"),
-						     zpt::notice);
-						void* hndl = dlopen(_lib_file.data(), RTLD_NOW);
-						if (hndl == nullptr) {
-							zlog(std::string(dlerror()), zpt::error);
-						} else {
-							void (*_populate)();
-							_populate = (void (*)())dlsym(hndl, "_zpt_load_");
-							_populate();
-						}
+				if (_lib_file.length() > 6) {
+					zlog(std::string("loading module '") + _lib_file + std::string("'"),
+					     zpt::notice);
+					void* hndl = dlopen(_lib_file.data(), RTLD_NOW);
+					if (hndl == nullptr) {
+						zlog(std::string(dlerror()), zpt::error);
+					} else {
+						void (*_populate)();
+						_populate = (void (*)())dlsym(hndl, "_zpt_load_");
+						_populate();
 					}
 				}
 			}
 		}
+		for (auto _callback : this->__stage_0) {
+			_callback.second(_options, *this);
+		}
+		this->__stage++;
 	} catch (zpt::assertion& _e) {
 		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
 		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
@@ -195,33 +91,49 @@ zpt::Pipeline::Pipeline(std::string _name, zpt::json _options)
 		zlog(_e.what(), zpt::emergency);
 		this->__suicidal = true;
 	}
-
-	// std::cout << this->__emitter->directory()->pretty() << endl << flush;
 }
 
-zpt::Pipeline::~Pipeline() { this->__mqtt->unbind(); }
+zpt::pipeline::~pipeline() { }
 
-auto zpt::Pipeline::suicidal() -> bool { return this->__suicidal; }
+auto zpt::pipeline::suicidal() -> bool { return this->__suicidal; }
 
-auto zpt::Pipeline::unbind() -> void {
-	// this->__self.reset();
+auto zpt::pipeline::name() -> std::string { return this->__name; }
+
+auto zpt::pipeline::uuid() -> std::string { return this->__uuid; }
+
+auto zpt::pipeline::options() -> zpt::json { return this->__options; }
+
+auto zpt::pipeline::add(zpt::initializer _callback) -> void {
+	this->__stage_0.push_back(_callback);
 }
 
-auto zpt::Pipeline::name() -> std::string { return this->__name; }
+auto zpt::pipeline::add(zpt::receiver _callback) -> void {
+	this->__stage_1.push_back(_callback);
+}
 
-auto zpt::Pipeline::poll() -> zpt::poll { return this->__poll; }
+auto zpt::pipeline::add(zpt::request_transformer _callback) -> void {
+	this->__stage_2.push_back(_callback);
+}
 
-auto zpt::Pipeline::events() -> zpt::ev::emitter { return this->__emitter; }
+auto zpt::pipeline::add(zpt::replier _callback) -> void {
+	this->__stage_3.push_back(_callback);
+}
 
-auto zpt::Pipeline::options() -> zpt::json { return this->__options; }
+auto zpt::pipeline::add(zpt::reply_transformer _callback) -> void {
+	this->__stage_4.push_back(_callback);
+}
 
-auto zpt::Pipeline::credentials() -> zpt::json { return this->__emitter->credentials(); }
+auto zpt::pipeline::operator=(const zpt::pipeline& _rhs) -> zpt::pipeline& {}
 
-auto zpt::Pipeline::credentials(zpt::json _credentials) -> void { this->__emitter->credentials(_credentials); }
+auto zpt::pipeline::operator=(zpt::pipeline&& _rhs) -> zpt::pipeline& {}
 
-auto zpt::Pipeline::hook(zpt::ev::initializer _callback) -> void { this->__initializers.push_back(_callback); }
+auto zpt::pipeline::forward(zpt::json _msg) -> void {
+}
 
-void zpt::Pipeline::start() {
+auto zpt::pipeline::reply(zpt::json _reply) -> void {
+}
+
+void zpt::pipeline::start() {
 	try {
 		if (bool(this->__options["discoverable"])) {
 			this->notify_peers();
@@ -244,49 +156,6 @@ void zpt::Pipeline::start() {
 			this->credentials(_credentials);
 		}
 
-		if (this->__options["http"]->ok() && this->__options["http"]["bind"]->ok()) {
-			std::thread _http([this]() -> void {
-				zpt::json _uri = zpt::uri::parse(std::string(this->__options["http"]["bind"]));
-				if (!_uri["port"]->ok()) {
-					_uri << "port" << 80;
-				}
-
-				zpt::serversocketstream_ptr _ss(new zpt::serversocketstream());
-				if (!_ss->bind((uint)_uri["port"])) {
-					zlog(std::string("couldn't bind HTTP listener to ") +
-						 std::string(this->__options["http"]["bind"]),
-					     zpt::alert);
-					return;
-				}
-				std::string _scheme = std::string(_uri["scheme"]);
-				std::transform(std::begin(_scheme), std::end(_scheme), std::begin(_scheme), ::toupper);
-				zlog(std::string("binding ") + _scheme + std::string("/1.1 listener to ") +
-					 std::string(_uri["scheme"]) + std::string("://") +
-					 std::string(_uri["domain"]) + std::string(":") + std::string(_uri["port"]),
-				     zpt::info);
-
-				bool _is_ssl = _uri["scheme"] == zpt::json::string("https");
-				for (; true;) {
-					int _fd = -1;
-					_ss->accept(&_fd);
-					if (_fd >= 0) {
-						zpt::socketstream_ptr _cs(_fd, _is_ssl);
-						this->__poll->poll(
-						    this->__poll->add(new ZMQHttp(_cs, this->__options)));
-					} else {
-						zlog("please, check your soft and hard limits for allowed number of "
-						     "opened file descriptors,",
-						     zpt::warning);
-						zlog("unable to accept HTTP sockets, going to disable HTTP server.",
-						     zpt::emergency);
-						_ss->close();
-						return;
-					}
-				}
-			});
-			_http.detach();
-		}
-
 		for (auto _callback : this->__initializers) {
 			_callback(this->__emitter);
 		}
@@ -303,14 +172,14 @@ void zpt::Pipeline::start() {
 	}
 }
 
-auto zpt::Pipeline::publish(std::string _topic, zpt::json _payload) -> void {
+auto zpt::pipeline::publish(std::string _topic, zpt::json _payload) -> void {
 	ztrace(std::string("> PUBLISH ") + _topic);
 	zverbose(std::string("\nPUBLISH \033[1;35m") + _topic + std::string("\033[0m MQTT/3.1\n\n") +
 		 zpt::json::pretty(_payload));
 	this->__mqtt->publish(_topic, _payload);
 }
 
-auto zpt::Pipeline::subscribe(std::string _topic, zpt::json _opts) -> void {
+auto zpt::pipeline::subscribe(std::string _topic, zpt::json _opts) -> void {
 	if (bool(_opts["mqtt"])) {
 		zpt::json _topics = zpt::rest::uri::get_simplified_topics(_topic);
 		for (auto _t : _topics->arr()) {
@@ -319,13 +188,13 @@ auto zpt::Pipeline::subscribe(std::string _topic, zpt::json _opts) -> void {
 	}
 }
 
-auto zpt::Pipeline::broadcast(zpt::json _envelope) -> void {
+auto zpt::pipeline::broadcast(zpt::json _envelope) -> void {
 	if (bool(this->options()["discoverable"])) {
 		this->__upnp->send(_envelope);
 	}
 }
 
-auto zpt::Pipeline::notify_peers() -> void { // UPnP service discovery
+auto zpt::pipeline::notify_peers() -> void { // UPnP service discovery
 	this->__emitter->on(
 	    "([/]*)\\*",
 	    {{zpt::ev::Notify,

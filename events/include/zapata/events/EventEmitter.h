@@ -101,9 +101,6 @@ typedef std::map<std::string, zpt::ev::handler> ReplyHandlerStack;
 
 typedef std::tuple<zpt::json, zpt::ev::handlers, std::regex> node;
 
-typedef std::function<void(zpt::ev::emitter)> initializer;
-typedef std::vector<zpt::ev::initializer> OnStartStack;
-
 auto set_default_authorization(std::string _default_authorization) -> void;
 auto get_default_authorization() -> std::string;
 namespace uri {
