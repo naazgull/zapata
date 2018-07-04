@@ -301,10 +301,11 @@ auto zpt::MQTT::reconnect() -> bool {
 		
 		errno = 0;
 		bool _run = true;
-
-		int _ret = mosquitto_loop(this->__mosq, 100, 1);
 		
 		do {
+
+			int _ret = mosquitto_loop(this->__mosq, 100, 1);
+			
 			if (zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error) != MOSQ_ERR_SUCCESS) {
 				return false;
 			}
