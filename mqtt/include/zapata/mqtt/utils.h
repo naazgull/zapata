@@ -20,9 +20,13 @@ using namespace __gnu_cxx;
 
 namespace zpt {
 
-    namespace mqtt_utils {
+    namespace mqtt {
 
-        auto check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int;
+        namespace utils {
+
+            auto check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int;
+
+        }
 
     }
 

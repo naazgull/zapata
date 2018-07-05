@@ -1,6 +1,6 @@
-#include <zapata/mqtt/mqtt_utils.h>
+#include <zapata/mqtt/utils.h>
 
-auto zpt::mqtt_utils::check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int {
+auto zpt::mqtt::utils::check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int {
 
     if (_return == MOSQ_ERR_SUCCESS) {
         return _return;

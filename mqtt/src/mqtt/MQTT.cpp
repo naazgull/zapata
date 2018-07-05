@@ -4,7 +4,7 @@
 
 #include <zapata/mqtt/MQTT.h>
 #include <ossp/uuid++.hh>
-#include <zapata/mqtt/mqtt_utils.h>
+#include <zapata/mqtt/utils.h>
 
 // typedef int mosq_sock_t;
 
