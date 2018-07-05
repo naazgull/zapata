@@ -215,7 +215,7 @@ auto zpt::MQTT::credentials(std::string _user, std::string _passwd) -> void {
 	 */
 	errno = 0;
 	int _ret = mosquitto_username_pw_set(this->__mosq, _user.data(), _passwd.data());
-	zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error);
+	zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
 }
 
 auto zpt::MQTT::user() -> std::string { return this->__user; }
@@ -240,13 +240,13 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 			
 			errno = 0;
 			int _ret = mosquitto_tls_insecure_set(this->__mosq, false);
-			zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error);
+			zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
 	
 			errno = 0, _ret = mosquitto_tls_opts_set(this->__mosq, 1, nullptr, nullptr);
-			zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error);
+			zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
 
 			errno = 0, _ret = mosquitto_tls_set(this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
-			zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error);
+			zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
 
 		}
 
@@ -267,7 +267,7 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 			
 			int _ret = mosquitto_loop(this->__mosq, 100, 1);
 
-			if (zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error) != MOSQ_ERR_SUCCESS) {
+			if (zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error) != MOSQ_ERR_SUCCESS) {
 				return false;
 			}
 			{
@@ -279,7 +279,7 @@ auto zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive
 		zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"), zpt::notice);
 
 	} else {
-		zpt::mqtt_utils::check_err(_rc, errno, this->connection(), zpt::warning);
+		zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning);
 	}
 
 	return this->__connected;
@@ -306,7 +306,7 @@ auto zpt::MQTT::reconnect() -> bool {
 
 			int _ret = mosquitto_loop(this->__mosq, 100, 1);
 			
-			if (zpt::mqtt_utils::check_err(_ret, errno, this->connection(), zpt::error) != MOSQ_ERR_SUCCESS) {
+			if (zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error) != MOSQ_ERR_SUCCESS) {
 				return false;
 			}
 			{
@@ -318,7 +318,7 @@ auto zpt::MQTT::reconnect() -> bool {
 		zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"), zpt::notice);
 
 	} else {
-		zpt::mqtt_utils::check_err(_rc, errno, this->connection(), zpt::warning);
+		zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning);
 	}
 
 	return this->__connected;
