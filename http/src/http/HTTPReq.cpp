@@ -33,9 +33,9 @@ zpt::HTTPReqT::HTTPReqT() : __method(zpt::ev::Get) {}
 
 zpt::HTTPReqT::~HTTPReqT() {}
 
-zpt::ev::performative zpt::HTTPReqT::method() { return this->__method; }
+zpt::performative zpt::HTTPReqT::method() { return this->__method; }
 
-void zpt::HTTPReqT::method(zpt::ev::performative _method) { this->__method = _method; }
+void zpt::HTTPReqT::method(zpt::performative _method) { this->__method = _method; }
 
 string& zpt::HTTPReqT::url() { return this->__url; }
 

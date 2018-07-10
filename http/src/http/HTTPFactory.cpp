@@ -71,7 +71,7 @@ auto zpt::HTTP::type() -> short int { return ZMQ_HTTP_RAW; }
 auto zpt::HTTP::protocol() -> std::string { return "HTTP/1.1"; }
 
 auto zpt::HTTP::send(zpt::json _envelope) -> zpt::json {
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
+	zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
 	assertz((_performative == zpt::ev::Reply && this->__state == HTTP_REQ) ||
 		    (_performative != zpt::ev::Reply && this->__state != HTTP_REQ),
@@ -199,8 +199,8 @@ auto zpt::HTTP::recv() -> zpt::json {
 			{"text", _e.what(), "assertion_failed", _e.what(), "code", 1062}};
 	}
 	_in << "protocol" << this->protocol();
-	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") +
-	       _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply
+	ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) + std::string(" ") +
+	       _in["resource"]->str() + (zpt::performative(int(_in["performative"])) == zpt::ev::Reply
 					     ? std::string(" ") + std::string(_in["status"])
 					     : std::string("")));
 	zverbose(zpt::ev::pretty(_in));
@@ -222,7 +222,7 @@ auto zpt::HTTPFactory::clean(zpt::socket _socket) -> bool { return true; }
 
 extern "C" void _zpt_load_() {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
-	zpt::socket_factory _factory(new zpt::HTTPFactory());
+	zpt::channel_factory _factory(new zpt::HTTPFactory());
 	_emitter->channel({
 	    {"http", _factory},
 	    {"https", _factory}

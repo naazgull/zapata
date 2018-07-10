@@ -214,7 +214,7 @@ auto zpt::ChannelPoll::repoll() -> void {
 }
 
 auto zpt::ChannelPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
+	zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
 	if (_performative == zpt::ev::Reply) {
 		if (this->__emitter->has_pending(_envelope)) {
@@ -245,7 +245,7 @@ auto zpt::ChannelPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> vo
 			    _envelope["resource"]->str(),
 			    _envelope,
 			    zpt::undefined,
-			    [=](zpt::ev::performative _p_performative,
+			    [=](zpt::performative _p_performative,
 				std::string _p_topic,
 				zpt::json _result,
 				zpt::ev::emitter _p_emitter) mutable -> void {
@@ -590,7 +590,7 @@ auto zpt::internal2http_rep(zpt::json _out) -> zpt::http::rep {
 
 auto zpt::internal2http_req(zpt::json _out, std::string _host) -> zpt::http::req {
 	zpt::http::req _return;
-	_return->method(zpt::ev::performative(int(_out["performative"])));
+	_return->method(zpt::performative(int(_out["performative"])));
 	_return->url(std::string(_out["resource"]));
 
 	if (!_out["headers"]->is_object()) {

@@ -424,7 +424,7 @@ auto zpt::MQTT::recv() -> zpt::json {
 	return _return;
 }
 
-auto zpt::MQTT::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
+auto zpt::MQTT::send(zpt::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	this->publish(_resource, _payload);
 	{
 		std::lock_guard<std::mutex> _lock(this->__mtx_conn);

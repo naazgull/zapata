@@ -505,7 +505,6 @@ typedef struct epoll_event epoll_event_t;
 namespace zpt {
 enum JSONType { JSObject, JSArray, JSString, JSInteger, JSDouble, JSBoolean, JSNil, JSDate, JSLambda };
 
-namespace ev {
 // enum performative {
 // 	Get = 0,
 // 	Put = 1,
@@ -522,9 +521,8 @@ namespace ev {
 // };
 
 typedef unsigned short performative;
-auto to_str(zpt::ev::performative _performative) -> std::string;
-auto from_str(std::string _performative) -> zpt::ev::performative;
-}
+auto to_str(zpt::performative _performative) -> std::string;
+auto from_str(std::string _performative) -> zpt::performative;
 
 extern std::string* tz;
 std::string get_tz();

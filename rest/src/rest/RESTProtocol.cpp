@@ -5,21 +5,21 @@ zpt::RESTOntology::~RESTOntology() {}
 
 auto zpt::RESTOntology::pretty(zpt::json _envelope) -> std::string {}
 
-auto zpt::RESTOntology::compose_reply(zpt::ev::performative _method,
+auto zpt::RESTOntology::compose_reply(zpt::performative _method,
 				      std::string _resource,
 				      zpt::json _payload,
 				      zpt::json _headers) -> zpt::json {}
 
-auto zpt::RESTOntology::compose_request(zpt::ev::performative _method,
+auto zpt::RESTOntology::compose_request(zpt::performative _method,
 					std::string _resource,
 					zpt::json _payload,
 					zpt::json _headers) -> zpt::json {}
 
 auto zpt::RESTOntology::extract_from_reply(zpt::json _envelope)
-    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> {}
+    -> std::tuple<zpt::performative, std::string, zpt::json, zpt::json> {}
 
 auto zpt::RESTOntology::extract_from_request(zpt::json _envelope)
-    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json> {}
+    -> std::tuple<zpt::performative, std::string, zpt::json, zpt::json> {}
 
 zpt::RESTListener::RESTListener(std::string _regex) : zpt::EventListener(_regex) {}
 
@@ -167,7 +167,7 @@ auto zpt::rest::pretty(zpt::json _envelope) -> std::string {
 		_ret += _protocol + std::string(" \033[1;") + _color + std::string("m") +
 			std::string(zpt::status_names[int(_envelope["status"])]) + std::string("\033[0m\n");
 	} else {
-		_ret += zpt::ev::to_str(zpt::ev::performative(int(_envelope["performative"]))) +
+		_ret += zpt::ev::to_str(zpt::performative(int(_envelope["performative"]))) +
 			std::string(" \033[1;35m") + std::string(_envelope["resource"]) + std::string("\033[0m");
 		if (_envelope["params"]->is_object()) {
 			_ret += std::string("?");

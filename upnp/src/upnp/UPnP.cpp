@@ -162,12 +162,12 @@ auto zpt::UPnP::type() -> short int { return UPNP_RAW; }
 
 auto zpt::UPnP::protocol() -> std::string { return "UPnP/1.1"; }
 
-auto zpt::UPnP::send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
+auto zpt::UPnP::send(zpt::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json {
 	return this->send({"performative", _performative, "resource", _resource, "payload", _payload});
 }
 
 auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
+	zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
 	if (_performative != zpt::ev::Search && _performative != zpt::ev::Notify) {
 		return zpt::undefined;
@@ -215,8 +215,8 @@ auto zpt::UPnP::recv() -> zpt::json {
 		    << "*"
 		    << "protocol" << this->protocol();
 	}
-	ztrace(std::string("< ") + zpt::ev::to_str(zpt::ev::performative(int(_in["performative"]))) + std::string(" ") +
-	       _in["resource"]->str() + (zpt::ev::performative(int(_in["performative"])) == zpt::ev::Reply
+	ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) + std::string(" ") +
+	       _in["resource"]->str() + (zpt::performative(int(_in["performative"])) == zpt::ev::Reply
 					     ? std::string(" ") + std::string(_in["status"])
 					     : std::string("")));
 	zverbose(zpt::ev::pretty(_in));
@@ -228,7 +228,7 @@ auto zpt::UPnP::is_reusable() -> bool { return false; }
 extern "C" auto _zpt_load_() -> void {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
 	_emitter->channel({
-	    {"upnp", zpt::socket_factory(new zpt::ZMQFactory())},
+	    {"upnp", zpt::channel_factory(new zpt::ZMQFactory())},
 	});
 
 

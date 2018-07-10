@@ -42,7 +42,7 @@ void zpt::HTTPTokenizerLexer::init(zpt::HTTPType _in_type) {
 	switch (_in_type) {
 	case zpt::HTTPRequest: {
 		string _ms(this->matched());
-		zpt::ev::performative _m = zpt::ev::from_str(_ms);
+		zpt::performative _m = zpt::ev::from_str(_ms);
 		this->__root_req->method(_m);
 		break;
 	}

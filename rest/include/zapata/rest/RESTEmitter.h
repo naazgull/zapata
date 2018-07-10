@@ -75,27 +75,27 @@ class RESTEmitter : public zpt::EventEmitter {
 	virtual auto credentials() -> zpt::json;
 	virtual auto credentials(zpt::json _credentials) -> void;
 
-	virtual auto on(zpt::ev::performative _method,
+	virtual auto on(zpt::performative _method,
 			std::string _regex,
 			zpt::ev::Handler _handler,
 			zpt::json _opts = zpt::undefined) -> void;
 	virtual auto on(std::string _regex,
-			std::map<zpt::ev::performative, zpt::ev::Handler> _handlers,
+			std::map<zpt::performative, zpt::ev::Handler> _handlers,
 			zpt::json _opts = zpt::undefined) -> void;
 	virtual auto on(zpt::ev::listener _listener, zpt::json _opts = zpt::undefined) -> void;
 
-	virtual auto trigger(zpt::ev::performative _method,
+	virtual auto trigger(zpt::performative _method,
 			     std::string _resource,
 			     zpt::json _payload,
 			     zpt::json _opts = zpt::undefined,
 			     zpt::ev::handler _callback = nullptr) -> void;
-	virtual auto route(zpt::ev::performative _method,
+	virtual auto route(zpt::performative _method,
 			   std::string _resource,
 			   zpt::json _payload,
 			   zpt::json _opts = zpt::undefined,
 			   zpt::ev::handler _callback = nullptr) -> void;
 	virtual auto
-	route(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback)
+	route(zpt::performative _method, std::string _resource, zpt::json _payload, zpt::ev::handler _callback)
 	    -> void;
 	virtual auto reply(zpt::json _request, zpt::json _reply = zpt::undefined) -> void;
 
@@ -118,12 +118,12 @@ class RESTEmitter : public zpt::EventEmitter {
 	zpt::ev::ReplyHandlerStack __pending;
 	zpt::json __credentials;
 
-	auto resolve(zpt::ev::performative _method,
+	auto resolve(zpt::performative _method,
 		     std::string _url,
 		     zpt::json _envelope,
 		     zpt::json _opts,
 		     zpt::ev::handler _callback = nullptr) -> void;
-	auto sync_resolve(zpt::ev::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts)
+	auto sync_resolve(zpt::performative _method, std::string _url, zpt::json _envelope, zpt::json _opts)
 	    -> zpt::json;
 };
 

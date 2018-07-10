@@ -167,7 +167,7 @@ class MQTT : public zpt::Channel {
 	virtual auto available() -> bool;
 	virtual auto buffer(zpt::json _envelope) -> void;
 	virtual auto recv() -> zpt::json;
-	virtual auto send(zpt::ev::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
+	virtual auto send(zpt::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
 	virtual auto send(zpt::json _envelope) -> zpt::json;
 	virtual auto loop_iteration() -> void;
 	virtual auto socket() -> zmq::socket_ptr;

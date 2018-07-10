@@ -33,7 +33,7 @@ auto zpt::authenticator::OAuth2::options() -> zpt::json { return this->__options
 
 auto zpt::authenticator::OAuth2::name() -> std::string { return "oauth2.0"; }
 
-auto zpt::authenticator::OAuth2::authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts)
+auto zpt::authenticator::OAuth2::authorize(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
     -> zpt::json {
 	std::string _param;
 	if (_performative == zpt::ev::Post) {
@@ -298,7 +298,7 @@ auto zpt::authenticator::OAuth2::authorize(std::string _topic, zpt::json _envelo
 	return _identity;
 }
 
-auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts)
+auto zpt::authenticator::OAuth2::token(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
     -> zpt::json {
 	std::string _param;
 	if (_performative == zpt::ev::Post) {
@@ -315,7 +315,7 @@ auto zpt::authenticator::OAuth2::token(zpt::ev::performative _performative, zpt:
 	return {"status", 200, "payload", _token};
 }
 
-auto zpt::authenticator::OAuth2::refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts)
+auto zpt::authenticator::OAuth2::refresh(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
     -> zpt::json {
 	std::string _param;
 	if (_performative == zpt::ev::Post) {

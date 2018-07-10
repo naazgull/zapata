@@ -4,7 +4,7 @@ auto zpt::apps::collections::roles::restify(zpt::ev::emitter _emitter) -> void {
 	_emitter->on(
 	    "^/v2/datum/roles$",
 	    {{zpt::ev::Get,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -18,7 +18,7 @@ auto zpt::apps::collections::roles::restify(zpt::ev::emitter _emitter) -> void {
 
 	      }},
 	     {zpt::ev::Post,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -40,7 +40,7 @@ auto zpt::apps::collections::roles::restify(zpt::ev::emitter _emitter) -> void {
 
 	     ,
 	     {zpt::ev::Patch,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -57,7 +57,7 @@ auto zpt::apps::collections::roles::restify(zpt::ev::emitter _emitter) -> void {
 
 	      }},
 	     {zpt::ev::Delete,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -71,7 +71,7 @@ auto zpt::apps::collections::roles::restify(zpt::ev::emitter _emitter) -> void {
 
 	      }},
 	     {zpt::ev::Head,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {

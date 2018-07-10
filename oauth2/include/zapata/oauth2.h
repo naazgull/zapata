@@ -49,10 +49,10 @@ class OAuth2 {
 	virtual auto options() -> zpt::json;
 	virtual auto name() -> std::string;
 
-	virtual auto authorize(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+	virtual auto authorize(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 	virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json;
-	virtual auto token(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
-	virtual auto refresh(zpt::ev::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+	virtual auto token(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
+	virtual auto refresh(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
 	virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
 
 	virtual auto retrieve_owner(zpt::json _envelope) -> zpt::json = 0;

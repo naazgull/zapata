@@ -158,7 +158,7 @@ auto zpt::python::module::init() -> PyObject* { return PyModule_Create(&zpt::pyt
 auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance<zpt::python::bridge>();
 	zpt::json _params = _bridge->from<zpt::python::object>(zpt::python::object(_args));
-	std::map<zpt::ev::performative, zpt::ev::Handler> _handlers;
+	std::map<zpt::performative, zpt::ev::Handler> _handlers;
 	assertz_mandatory(_params[0], "", 412);
 	assertz_mandatory(_params[1], "", 412);
 
@@ -169,10 +169,10 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 		std::vector<std::string> _performatives = {"get", "post", "put", "patch", "delete", "head", "reply"};
 
 		for (auto _p : _performatives) {
-			zpt::ev::performative _performative = zpt::ev::from_str(_p);
+			zpt::performative _performative = zpt::ev::from_str(_p);
 			_handlers.insert(std::make_pair(
 			    _performative,
-			    [_ref](zpt::ev::performative _performative,
+			    [_ref](zpt::performative _performative,
 				   std::string _resource,
 				   zpt::json _envelope,
 				   zpt::ev::emitter _emitter) mutable -> void {
@@ -235,13 +235,13 @@ auto zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 		_opts >> "bubble-error";
 
 		for (auto _handler : _callbacks->obj()) {
-			zpt::ev::performative _performative = zpt::ev::from_str(_handler.first);
+			zpt::performative _performative = zpt::ev::from_str(_handler.first);
 			PyObject* _func = **_bridge->to<zpt::python::object>(_handler.second);
 			zpt::json _lambda = zpt::python::to_ref(_func);
 			Py_INCREF(_func);
 			_handlers.insert(std::make_pair(
 			    _performative,
-			    [_lambda, _instance](zpt::ev::performative _performative,
+			    [_lambda, _instance](zpt::performative _performative,
 						 std::string _resource,
 						 zpt::json _envelope,
 						 zpt::ev::emitter _emitter) mutable -> void {
@@ -320,11 +320,11 @@ auto zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject*
 		Py_INCREF(_func);
 		zpt::json _context = _opts["context"];
 		_bridge->events()->route(
-		    zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))),
+		    zpt::performative(int(zpt::ev::from_str(std::string(_performative)))),
 		    std::string(_topic),
 		    _envelope,
 		    _opts,
-		    [_lambda, _context](zpt::ev::performative _p_performative,
+		    [_lambda, _context](zpt::performative _p_performative,
 					std::string _p_topic,
 					zpt::json _p_result,
 					zpt::ev::emitter _emitter) mutable -> void {
@@ -367,7 +367,7 @@ auto zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject*
 			    }
 		    });
 	} else {
-		_bridge->events()->route(zpt::ev::performative(int(zpt::ev::from_str(std::string(_performative)))),
+		_bridge->events()->route(zpt::performative(int(zpt::ev::from_str(std::string(_performative)))),
 					 std::string(_topic),
 					 _envelope,
 					 _opts);
@@ -410,7 +410,7 @@ auto zpt::python::module::options(PyObject* _self, PyObject* _args) -> PyObject*
 auto zpt::python::module::hook(PyObject* _self, PyObject* _args) -> PyObject* {
 	zpt::bridge _bridge = zpt::bridge::instance<zpt::python::bridge>();
 	zpt::json _params = _bridge->from<zpt::python::object>(zpt::python::object(_args));
-	std::map<zpt::ev::performative, zpt::ev::Handler> _handlers;
+	std::map<zpt::performative, zpt::ev::Handler> _handlers;
 	assertz_mandatory(_params[0], "", 412);
 	zpt::json _lambda = _params[0];
 	zpt::json _ref = _params[1];

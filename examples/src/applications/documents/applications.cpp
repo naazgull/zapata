@@ -4,7 +4,7 @@ auto zpt::apps::documents::applications::restify(zpt::ev::emitter _emitter) -> v
 	_emitter->on(
 	    "^/v2/datums/applications/([^/]+)$",
 	    {{zpt::ev::Get,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -65,7 +65,7 @@ auto zpt::apps::documents::applications::restify(zpt::ev::emitter _emitter) -> v
 
 	     ,
 	     {zpt::ev::Put,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -140,7 +140,7 @@ auto zpt::apps::documents::applications::restify(zpt::ev::emitter _emitter) -> v
 
 	      }},
 	     {zpt::ev::Patch,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -213,7 +213,7 @@ auto zpt::apps::documents::applications::restify(zpt::ev::emitter _emitter) -> v
 
 	      }},
 	     {zpt::ev::Delete,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {
@@ -230,7 +230,7 @@ auto zpt::apps::documents::applications::restify(zpt::ev::emitter _emitter) -> v
 
 	      }},
 	     {zpt::ev::Head,
-	      [](zpt::ev::performative _performative,
+	      [](zpt::performative _performative,
 		 std::string _topic,
 		 zpt::json _envelope,
 		 zpt::ev::emitter _emitter) -> zpt::json {

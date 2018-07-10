@@ -391,14 +391,14 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 				std::string _topic = std::string(_bridge->from<zpt::lisp::object>(_args[0]));
 				zpt::json _lambdas = _bridge->from<zpt::lisp::object>(_args[1]);
 				zpt::json _opts = _bridge->from<zpt::lisp::object>(_args[2]);
-				std::map<zpt::ev::performative, zpt::ev::Handler> _handlers;
+				std::map<zpt::performative, zpt::ev::Handler> _handlers;
 
 				for (auto _lambda : _lambdas->obj()) {
-					zpt::ev::performative _performative = zpt::ev::from_str(_lambda.first);
+					zpt::performative _performative = zpt::ev::from_str(_lambda.first);
 					std::string _name = std::string(_lambda.second);
 					_handlers.insert(std::make_pair(
 					    _performative,
-					    [_name](zpt::ev::performative _performative,
+					    [_name](zpt::performative _performative,
 						    std::string _resource,
 						    zpt::json _envelope,
 						    zpt::ev::emitter _emitter) -> void {
@@ -432,7 +432,7 @@ auto zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
 			[](int _n_args, zpt::lisp::object _args[]) -> zpt::lisp::object {
 				zpt::bridge _bridge = zpt::bridge::instance<zpt::lisp::bridge>();
 
-				zpt::ev::performative _performative =
+				zpt::performative _performative =
 				    zpt::ev::from_str(std::string(_bridge->from<zpt::lisp::object>(_args[0])));
 				std::string _topic = std::string(_bridge->from<zpt::lisp::object>(_args[1]));
 				zpt::json _payload = _bridge->from<zpt::lisp::object>(_args[2]);

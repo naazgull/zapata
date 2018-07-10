@@ -43,80 +43,6 @@ zpt::Poll::Poll() {}
 
 zpt::Poll::~Poll() {}
 
-zpt::socket_ref::socket_ref() : std::string(), __poll(nullptr) {}
-
-zpt::socket_ref::socket_ref(const zpt::socket_ref& _rhs) : std::string(_rhs.data()), __poll(_rhs.__poll) {}
-
-zpt::socket_ref::socket_ref(std::string _rhs, zpt::poll _poll) : std::string(_rhs), __poll(_poll) {}
-
-auto zpt::socket_ref::poll(zpt::poll _poll) -> void { this->__poll = _poll; }
-
-auto zpt::socket_ref::poll() -> zpt::poll { return this->__poll; }
-
-auto zpt::socket_ref::operator-> () -> zpt::Channel* { return this->__poll->relay(this->data()); }
-
-auto zpt::socket_ref::operator*() -> zpt::Channel* { return this->__poll->relay(this->data()); }
-
-zpt::ChannelFactory::ChannelFactory() {}
-
-zpt::ChannelFactory::~ChannelFactory() {}
-
-zpt::Channel::Channel(std::string _connection, zpt::json _options)
-    : __options(_options), __connection(_connection.data()), __poll(nullptr) {
-	this->__id.assign(zpt::generate::r_uuid());
-}
-
-zpt::Channel::~Channel() {}
-
-auto zpt::Channel::id() -> std::string { return this->__id; }
-
-auto zpt::Channel::options() -> zpt::json { return this->__options; }
-
-auto zpt::Channel::connection() -> std::string { return this->__connection; }
-
-auto zpt::Channel::connection(std::string _connection) -> void { this->__connection.assign(_connection); }
-
-auto zpt::Channel::uri(size_t _idx) -> zpt::json { return this->__uri[_idx]; }
-
-auto zpt::Channel::uri(std::string _uris) -> void {
-	this->__uri = zpt::json::array();
-
-	zpt::json _addresses = zpt::split(_uris, ",", true);
-	for (auto _address : _addresses->arr()) {
-		zpt::json _uri = zpt::uri::parse(std::string(_address));
-		if (!_uri["type"]->is_string()) {
-			_uri << "type"
-			     << ">";
-		}
-		if (!_uri["port"]->is_string()) {
-			_uri << "port"
-			     << "*";
-		}
-		this->__uri << _uri;
-	}
-}
-
-auto zpt::Channel::detach() -> void {
-	if (this->uri()["type"] == zpt::json::string("@")) {
-		this->in()->unbind(std::string(this->uri()["scheme"]) + std::string("://") +
-				   std::string(this->uri()["domain"]) + std::string(":") +
-				   std::string(this->uri()["port"]));
-	} else {
-		this->in()->disconnect(std::string(this->uri()["scheme"]) + std::string("://") +
-				       std::string(this->uri()["domain"]) + std::string(":") +
-				       std::string(this->uri()["port"]));
-	}
-}
-
-auto zpt::Channel::close() -> void {
-	this->in()->close();
-	this->out()->close();
-}
-
-auto zpt::Channel::available() -> bool { return true; }
-
-auto zpt::Channel::loop_iteration() -> void {}
-
 zpt::BridgePtr::BridgePtr(zpt::Bridge* _target) : std::shared_ptr<zpt::Bridge>(_target) {}
 
 zpt::BridgePtr::BridgePtr() : std::shared_ptr<zpt::Bridge>(nullptr) {}
@@ -157,7 +83,7 @@ auto zpt::EventEmitter::authorize(std::string _topic, zpt::json _envelope, zpt::
 	return this->__keeper->authorize(_topic, _envelope, _roles_needed);
 }
 
-auto zpt::EventEmitter::lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
+auto zpt::EventEmitter::lookup(std::string _topic, zpt::performative _performative) -> zpt::ev::node {
 	return this->__directory->lookup(_topic, _performative);
 }
 
@@ -205,7 +131,7 @@ auto zpt::EventEmitterFactory::connector(std::string _name) -> zpt::connector {
 	return _found->second;
 }
 
-auto zpt::EventEmitterFactory::channel(std::string _name, zpt::socket_factory _channel_factory) -> void {
+auto zpt::EventEmitterFactory::channel(std::string _name, zpt::channel_factory _channel_factory) -> void {
 	auto _found = this->__channel.find(_name);
 	if (_found == this->__channel.end()) {
 		ztrace(std::string("registering channel factory") + _name);
@@ -213,13 +139,13 @@ auto zpt::EventEmitterFactory::channel(std::string _name, zpt::socket_factory _c
 	}
 }
 
-auto zpt::EventEmitterFactory::channel(std::map<std::string, zpt::socket_factory> _channel_factories) -> void {
+auto zpt::EventEmitterFactory::channel(std::map<std::string, zpt::channel_factory> _channel_factories) -> void {
 	for (auto _channel_factory : _channel_factories) {
 		this->channel(_channel_factory.first, _channel_factory.second);
 	}
 }
 
-auto zpt::EventEmitterFactory::channel(std::string _name) -> zpt::socket_factory {
+auto zpt::EventEmitterFactory::channel(std::string _name) -> zpt::channel_factory {
 	auto _found = this->__channel.find(_name);
 	assertz(_found != this->__channel.end(),
 		std::string("theres isn't any channel factory by the name '") + _name + std::string("'"),
@@ -245,7 +171,7 @@ auto zpt::EventEmitterFactory::credentials() -> zpt::json {
 	return _return;
 }
 
-auto zpt::EventEmitterFactory::trigger(zpt::ev::performative _method,
+auto zpt::EventEmitterFactory::trigger(zpt::performative _method,
 				       std::string _resource,
 				       zpt::json _payload,
 				       zpt::json _opts,
@@ -255,7 +181,7 @@ auto zpt::EventEmitterFactory::trigger(zpt::ev::performative _method,
 	});
 }
 
-auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
+auto zpt::EventEmitterFactory::route(zpt::performative _method,
 				     std::string _resource,
 				     zpt::json _payload,
 				     zpt::json _opts,
@@ -265,7 +191,7 @@ auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
 	});
 }
 
-auto zpt::EventEmitterFactory::route(zpt::ev::performative _method,
+auto zpt::EventEmitterFactory::route(zpt::performative _method,
 				     std::string _resource,
 				     zpt::json _payload,
 				     zpt::ev::handler _callback) -> void {
@@ -372,7 +298,7 @@ auto zpt::EventDirectory::events() -> zpt::ev::emitter { return this->__emitter;
 
 auto zpt::EventDirectory::events(zpt::ev::emitter _emitter) -> void { this->__emitter = _emitter; }
 
-auto zpt::EventDirectory::lookup(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
+auto zpt::EventDirectory::lookup(std::string _topic, zpt::performative _performative) -> zpt::ev::node {
 	std::lock_guard<std::mutex> _lock(this->__mtx);
 	zpt::ev::node _found = this->__services->find(_topic, _performative);
 	if (std::get<0>(_found)->is_object()) {
@@ -457,9 +383,9 @@ auto zpt::EventDirectoryGraph::merge(zpt::ev::node _service) -> void {
 		if (_lh_callback == nullptr && _rh_callback != nullptr) {
 			std::get<1>(this->__service)[_idx] = _rh_callback;
 			std::get<0>(this->__service)["peers"][0]["performatives"]
-			    << zpt::ev::to_str(zpt::ev::performative(_idx)) << true;
+			    << zpt::ev::to_str(zpt::performative(_idx)) << true;
 		} else if (_lh_callback != nullptr && _rh_callback != nullptr) {
-			std::get<1>(this->__service)[_idx] = ([=](zpt::ev::performative _performative,
+			std::get<1>(this->__service)[_idx] = ([=](zpt::performative _performative,
 								  std::string _topic,
 								  zpt::json _envelope,
 								  zpt::ev::emitter _emitter) mutable -> void {
@@ -525,7 +451,7 @@ auto zpt::EventDirectoryGraph::insert(zpt::json _topic, zpt::ev::node _service) 
 	_child->second->insert(_topic, _service);
 }
 
-auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _performative) -> zpt::ev::node {
+auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::performative _performative) -> zpt::ev::node {
 	zpt::json _splited = zpt::path::split(_topic);
 	if (std::string(_splited[0]).find(":") != std::string::npos) {
 		if (!zpt::test::uri(_topic)) {
@@ -554,7 +480,7 @@ auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::ev::performative _p
 	return this->find(_topic, _splited, _performative);
 }
 
-auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::json _splited, zpt::ev::performative _performative)
+auto zpt::EventDirectoryGraph::find(std::string _topic, zpt::json _splited, zpt::performative _performative)
     -> zpt::ev::node {
 	zpt::json _containers = std::get<0>(this->__service);
 	if (_containers->is_object()) {

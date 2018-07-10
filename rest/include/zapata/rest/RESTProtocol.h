@@ -12,16 +12,16 @@ class RESTOntology : public zpt::Ontology {
 	virtual auto pretty(zpt::json _envelope) -> std::string;
 
 	virtual auto
-	compose_reply(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
+	compose_reply(zpt::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json;
 	virtual auto
-	compose_request(zpt::ev::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
+	compose_request(zpt::performative _method, std::string _resource, zpt::json _payload, zpt::json _headers)
 	    -> zpt::json;
 
 	virtual auto extract_from_reply(zpt::json _envelope)
-	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json>;
+	    -> std::tuple<zpt::performative, std::string, zpt::json, zpt::json>;
 	virtual auto extract_from_request(zpt::json _envelope)
-	    -> std::tuple<zpt::ev::performative, std::string, zpt::json, zpt::json>;
+	    -> std::tuple<zpt::performative, std::string, zpt::json, zpt::json>;
 };
 
 class RESTListener : public zpt::EventListener {

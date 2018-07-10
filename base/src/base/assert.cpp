@@ -45,86 +45,87 @@ std::string zpt::get_tz() {
 	return *zpt::tz;
 }
 
-auto zpt::ev::to_str(zpt::ev::performative _performative) -> std::string {
-	switch (_performative) {
-	case zpt::ev::Get: {
-		return "GET";
-	}
-	case zpt::ev::Put: {
-		return "PUT";
-	}
-	case zpt::ev::Post: {
-		return "POST";
-	}
-	case zpt::ev::Delete: {
-		return "DELETE";
-	}
-	case zpt::ev::Head: {
-		return "HEAD";
-	}
-	case zpt::ev::Options: {
-		return "OPTIONS";
-	}
-	case zpt::ev::Patch: {
-		return "PATCH";
-	}
-	case zpt::ev::Reply: {
-		return "REPLY";
-	}
-	case zpt::ev::Search: {
-		return "M-SEARCH";
-	}
-	case zpt::ev::Notify: {
-		return "NOTIFY";
-	}
-	case zpt::ev::Trace: {
-		return "TRACE";
-	}
-	case zpt::ev::Connect: {
-		return "CONNECT";
-	}
-	}
-	return "HEAD";
+auto zpt::to_str(zpt::performative _performative) -> std::string {
+	// switch (_performative) {
+	// case zpt::Get: {
+	// 	return "GET";
+	// }
+	// case zpt::Put: {
+	// 	return "PUT";
+	// }
+	// case zpt::Post: {
+	// 	return "POST";
+	// }
+	// case zpt::Delete: {
+	// 	return "DELETE";
+	// }
+	// case zpt::Head: {
+	// 	return "HEAD";
+	// }
+	// case zpt::Options: {
+	// 	return "OPTIONS";
+	// }
+	// case zpt::Patch: {
+	// 	return "PATCH";
+	// }
+	// case zpt::Reply: {
+	// 	return "REPLY";
+	// }
+	// case zpt::Search: {
+	// 	return "M-SEARCH";
+	// }
+	// case zpt::Notify: {
+	// 	return "NOTIFY";
+	// }
+	// case zpt::Trace: {
+	// 	return "TRACE";
+	// }
+	// case zpt::Connect: {
+	// 	return "CONNECT";
+	// }
+	// }
+	// return "HEAD";
+	return "";
 }
 
-auto zpt::ev::from_str(std::string _performative) -> zpt::ev::performative {
-	if (_performative == "GET" || _performative == "get") {
-		return zpt::ev::Get;
-	}
-	if (_performative == "PUT" || _performative == "put") {
-		return zpt::ev::Put;
-	}
-	if (_performative == "POST" || _performative == "post") {
-		return zpt::ev::Post;
-	}
-	if (_performative == "DELETE" || _performative == "delete") {
-		return zpt::ev::Delete;
-	}
-	if (_performative == "HEAD" || _performative == "head") {
-		return zpt::ev::Head;
-	}
-	if (_performative == "OPTIONS" || _performative == "options") {
-		return zpt::ev::Options;
-	}
-	if (_performative == "PATCH" || _performative == "patch") {
-		return zpt::ev::Patch;
-	}
-	if (_performative == "REPLY" || _performative == "reply") {
-		return zpt::ev::Reply;
-	}
-	if (_performative == "M-SEARCH" || _performative == "m-search") {
-		return zpt::ev::Search;
-	}
-	if (_performative == "NOTIFY" || _performative == "notify") {
-		return zpt::ev::Notify;
-	}
-	if (_performative == "TRACE" || _performative == "trace") {
-		return zpt::ev::Search;
-	}
-	if (_performative == "CONNECT" || _performative == "connect") {
-		return zpt::ev::Search;
-	}
-	return zpt::ev::Head;
+auto zpt::from_str(std::string _performative) -> zpt::performative {
+	// if (_performative == "GET" || _performative == "get") {
+	// 	return zpt::Get;
+	// }
+	// if (_performative == "PUT" || _performative == "put") {
+	// 	return zpt::Put;
+	// }
+	// if (_performative == "POST" || _performative == "post") {
+	// 	return zpt::Post;
+	// }
+	// if (_performative == "DELETE" || _performative == "delete") {
+	// 	return zpt::Delete;
+	// }
+	// if (_performative == "HEAD" || _performative == "head") {
+	// 	return zpt::Head;
+	// }
+	// if (_performative == "OPTIONS" || _performative == "options") {
+	// 	return zpt::Options;
+	// }
+	// if (_performative == "PATCH" || _performative == "patch") {
+	// 	return zpt::Patch;
+	// }
+	// if (_performative == "REPLY" || _performative == "reply") {
+	// 	return zpt::Reply;
+	// }
+	// if (_performative == "M-SEARCH" || _performative == "m-search") {
+	// 	return zpt::Search;
+	// }
+	// if (_performative == "NOTIFY" || _performative == "notify") {
+	// 	return zpt::Notify;
+	// }
+	// if (_performative == "TRACE" || _performative == "trace") {
+	// 	return zpt::Search;
+	// }
+	// if (_performative == "CONNECT" || _performative == "connect") {
+	// 	return zpt::Search;
+	// }
+	return 0;
 }
 
 zpt::tm_ptr zpt::get_time(time_t _t) {

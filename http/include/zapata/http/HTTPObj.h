@@ -155,8 +155,8 @@ class HTTPReqT : public HTTPObj {
 	HTTPReqT();
 	virtual ~HTTPReqT();
 
-	zpt::ev::performative method();
-	void method(zpt::ev::performative);
+	zpt::performative method();
+	void method(zpt::performative);
 	string& url();
 	void url(string);
 	string& query();
@@ -173,7 +173,7 @@ class HTTPReqT : public HTTPObj {
       private:
 	string __url;
 	string __query;
-	zpt::ev::performative __method;
+	zpt::performative __method;
 	ParameterMap __params;
 };
 

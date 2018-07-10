@@ -109,7 +109,7 @@ auto zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
 	_envelope << "resource" << _uri["path"] << "protocol" << this->protocol() << "params"
 		  << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
+	zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
@@ -517,7 +517,7 @@ void zpt::ZMQPubSub::subscribe(std::string _prefix) {
 	std::lock_guard<std::mutex> _lock(this->in_mtx());
 	for (size_t _p = 0; _p != 8; _p++) {
 		this->__socket_sub->setsockopt(
-		    ZMQ_SUBSCRIBE, (zpt::ev::to_str((zpt::ev::performative)_p) + std::string(" ") + _prefix).data(), 0);
+		    ZMQ_SUBSCRIBE, (zpt::ev::to_str((zpt::performative)_p) + std::string(" ") + _prefix).data(), 0);
 	}
 }
 
@@ -673,7 +673,7 @@ void zpt::ZMQSub::subscribe(std::string _prefix) {
 	std::lock_guard<std::mutex> _lock(this->in_mtx());
 	for (size_t _p = 0; _p != 8; _p++) {
 		this->__socket->setsockopt(
-		    ZMQ_SUBSCRIBE, (zpt::ev::to_str((zpt::ev::performative)_p) + std::string(" ") + _prefix).data(), 0);
+		    ZMQ_SUBSCRIBE, (zpt::ev::to_str((zpt::performative)_p) + std::string(" ") + _prefix).data(), 0);
 	}
 }
 
@@ -1054,7 +1054,7 @@ auto zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 	_envelope << "resource" << _uri["path"] << "protocol" << this->protocol() << "params"
 		  << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
 
-	zpt::ev::performative _performative = (zpt::ev::performative)((int)_envelope["performative"]);
+	zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 	if (_performative == zpt::ev::Reply) {
 		assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
 		_envelope["headers"] << "X-Status" << _envelope["status"];
@@ -1521,7 +1521,7 @@ auto zpt::ZMQFactory::clean(zpt::socket _socket) -> bool {
 
 extern "C" void _zpt_load_() {
 	zpt::ev::emitter_factory _emitter = zpt::emitter();
-	zpt::socket_factory _factory(new zpt::ZMQFactory());
+	zpt::channel_factory _factory(new zpt::ZMQFactory());
 	_emitter->channel({
 	    {"tcp", _factory},
 	});

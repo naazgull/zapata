@@ -178,8 +178,8 @@ class GenResource {
 	virtual auto build_handlers(std::string _parent_name, std::string _child_includes) -> std::string;
 	virtual auto build_mutations() -> std::string;
 
-	virtual auto build_validation(zpt::ev::performative _performative) -> std::string;
-	virtual auto build_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto build_validation(zpt::performative _performative) -> std::string;
+	virtual auto build_handler_header(zpt::performative _per = zpt::ev::Get) -> std::string;
 	virtual auto normalize_var_name(zpt::json _var) -> std::string;
 	virtual auto build_get() -> std::string;
 	virtual auto build_post() -> std::string;
@@ -189,8 +189,8 @@ class GenResource {
 	virtual auto build_head() -> std::string;
 	virtual auto build_reply() -> std::string;
 
-	virtual auto build_lisp_validation(zpt::ev::performative _performative) -> std::string;
-	virtual auto build_lisp_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto build_lisp_validation(zpt::performative _performative) -> std::string;
+	virtual auto build_lisp_handler_header(zpt::performative _per = zpt::ev::Get) -> std::string;
 	virtual auto build_lisp_get() -> std::string;
 	virtual auto build_lisp_post() -> std::string;
 	virtual auto build_lisp_put() -> std::string;
@@ -199,8 +199,8 @@ class GenResource {
 	virtual auto build_lisp_head() -> std::string;
 	virtual auto build_lisp_reply() -> std::string;
 
-	virtual auto build_python_validation(zpt::ev::performative _performative) -> std::string;
-	virtual auto build_python_handler_header(zpt::ev::performative _per = zpt::ev::Get) -> std::string;
+	virtual auto build_python_validation(zpt::performative _performative) -> std::string;
+	virtual auto build_python_handler_header(zpt::performative _per = zpt::ev::Get) -> std::string;
 	virtual auto build_python_get() -> std::string;
 	virtual auto build_python_post() -> std::string;
 	virtual auto build_python_put() -> std::string;

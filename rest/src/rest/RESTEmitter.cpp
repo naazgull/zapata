@@ -31,7 +31,7 @@ SOFTWARE.
 zpt::RESTEmitter::RESTEmitter(zpt::json _options) : zpt::EventEmitter(_options) {
 	this->directory()->events(this->self());
 
-	this->__default_options = [](zpt::ev::performative _performative,
+	this->__default_options = [](zpt::performative _performative,
 				     std::string _resource,
 				     zpt::json _envelope,
 				     zpt::ev::emitter _events) -> zpt::json {
@@ -71,7 +71,7 @@ auto zpt::RESTEmitter::shutdown() -> void { this->directory()->shutdown(this->uu
 
 auto zpt::RESTEmitter::make_available() -> void { this->directory()->make_available(this->uuid()); }
 
-auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts)
+auto zpt::RESTEmitter::on(zpt::performative _event, std::string _regex, zpt::ev::Handler _handler, zpt::json _opts)
     -> void {
 	std::regex _url_pattern(_regex);
 
@@ -102,11 +102,11 @@ auto zpt::RESTEmitter::on(zpt::ev::performative _event, std::string _regex, zpt:
 }
 
 auto zpt::RESTEmitter::on(std::string _regex,
-			  std::map<zpt::ev::performative, zpt::ev::Handler> _handler_set,
+			  std::map<zpt::performative, zpt::ev::Handler> _handler_set,
 			  zpt::json _opts) -> void {
 	std::regex _url_pattern(_regex);
 
-	std::map<zpt::ev::performative, zpt::ev::Handler>::iterator _found;
+	std::map<zpt::performative, zpt::ev::Handler>::iterator _found;
 	zpt::ev::handlers _handlers;
 	_handlers.push_back((_found = _handler_set.find(zpt::ev::Get)) == _handler_set.end() ? nullptr
 											     : _found->second);
@@ -152,7 +152,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> void 
 	std::regex _url_pattern(_listener->regex());
 	zpt::rest::listener _proxy(static_cast<zpt::RESTListener>(_listener.get());
 
-	zpt::ev::Handler _handler = [&](zpt::ev::performative _performative,
+	zpt::ev::Handler _handler = [&](zpt::performative _performative,
 					std::string _resource,
 					zpt::json _envelope,
 					zpt::ev::emitter _emitter) -> void {
@@ -202,7 +202,7 @@ auto zpt::RESTEmitter::on(zpt::ev::listener _listener, zpt::json _opts) -> void 
 	zpt::ev::handlers _handlers;
 	for (short _idx = zpt::ev::Get; _idx != zpt::ev::Reply + 1; _idx++) {
 		_handlers.push_back(_handler);
-		_performatives << zpt::ev::to_str((zpt::ev::performative)_idx) << true;
+		_performatives << zpt::ev::to_str((zpt::performative)_idx) << true;
 	}
 
 	this->directory()->notify(
@@ -224,7 +224,7 @@ auto zpt::RESTEmitter::pending(zpt::json _envelope, zpt::ev::handler _callback) 
 		this->__pending.erase(_exists);
 		this->__pending.insert(
 		    std::make_pair(std::string(_envelope["channel"]),
-				   [_first_callback, _callback](zpt::ev::performative _p_performative,
+				   [_first_callback, _callback](zpt::performative _p_performative,
 								std::string _p_topic,
 								zpt::json _p_envelope,
 								zpt::ev::emitter _p_emitter) mutable -> void {
@@ -253,7 +253,7 @@ auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 	}
 }
 
-auto zpt::RESTEmitter::trigger(zpt::ev::performative _method,
+auto zpt::RESTEmitter::trigger(zpt::performative _method,
 			       std::string _url,
 			       zpt::json _envelope,
 			       zpt::json _opts,
@@ -268,14 +268,14 @@ auto zpt::RESTEmitter::trigger(zpt::ev::performative _method,
 	    _callback);
 }
 
-auto zpt::RESTEmitter::route(zpt::ev::performative _method,
+auto zpt::RESTEmitter::route(zpt::performative _method,
 			     std::string _url,
 			     zpt::json _envelope,
 			     zpt::ev::handler _callback) -> void {
 	this->route(_method, _url, _envelope, zpt::undefined, _callback);
 }
 
-auto zpt::RESTEmitter::route(zpt::ev::performative _method,
+auto zpt::RESTEmitter::route(zpt::performative _method,
 			     std::string _url,
 			     zpt::json _envelope,
 			     zpt::json _opts,
@@ -314,7 +314,7 @@ auto zpt::RESTEmitter::route(zpt::ev::performative _method,
 	this->resolve(_method, _uri, _envelope, _opts + zpt::json{"broker", true}, _callback);
 }
 
-auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
+auto zpt::RESTEmitter::resolve(zpt::performative _method,
 			       zpt::json _uri,
 			       zpt::json _envelope,
 			       zpt::json _opts,
@@ -338,7 +338,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 	if (_callback != nullptr) {
 		if (_opts["bubble-error"]->is_object()) {
 			this->pending(_envelope,
-				      [_opts, _callback](zpt::ev::performative _performative,
+				      [_opts, _callback](zpt::performative _performative,
 							 std::string _topic,
 							 zpt::json _reply,
 							 zpt::ev::emitter _emitter) mutable -> void {
@@ -354,7 +354,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 		_has_callback = true;
 	} else if (_opts["bubble-response"]->is_object()) {
 		this->pending(_envelope,
-			      [_opts](zpt::ev::performative _performative,
+			      [_opts](zpt::performative _performative,
 				      std::string _topic,
 				      zpt::json _reply,
 				      zpt::ev::emitter _emitter) mutable -> void {
@@ -363,7 +363,7 @@ auto zpt::RESTEmitter::resolve(zpt::ev::performative _method,
 		_has_callback = true;
 	} else if (_opts["bubble-error"]->is_object()) {
 		this->pending(_envelope,
-			      [_opts](zpt::ev::performative _performative,
+			      [_opts](zpt::performative _performative,
 				      std::string _topic,
 				      zpt::json _reply,
 				      zpt::ev::emitter _emitter) mutable -> void {
@@ -488,10 +488,10 @@ auto zpt::rest::_collect(zpt::json _args,
 
 	zpt::json _expanded =
 	    zpt::rest::_collect_variables({"source", _to_collect_from[_idx], "previous", _previous}, _args);
-	_emitter->route(zpt::ev::performative(int(_expanded[0])),
+	_emitter->route(zpt::performative(int(_expanded[0])),
 			std::string(_expanded[1]),
 			_expanded[2],
-			[=](zpt::ev::performative _performative,
+			[=](zpt::performative _performative,
 			    std::string _topic,
 			    zpt::json _result,
 			    zpt::ev::emitter _emitter) mutable -> void {
@@ -521,10 +521,10 @@ auto zpt::rest::_iterate(zpt::json _to_iterate_over,
 		return;
 	}
 
-	_emitter->route(zpt::ev::performative(int(_to_iterate_over[_idx][0])),
+	_emitter->route(zpt::performative(int(_to_iterate_over[_idx][0])),
 			std::string(_to_iterate_over[_idx][1]),
 			_to_iterate_over[_idx][2],
-			[=](zpt::ev::performative _performative,
+			[=](zpt::performative _performative,
 			    std::string _topic,
 			    zpt::json _result,
 			    zpt::ev::emitter _emitter) mutable -> void {

@@ -143,7 +143,7 @@ auto zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
 
 auto zpt::couchdb::Client::send_assync(zpt::json _envelope, zpt::ev::handler _callback) -> void {
 	this->init_request(_envelope);
-	zpt::emitter()->route(zpt::ev::performative(int(_envelope["performative"])),
+	zpt::emitter()->route(zpt::performative(int(_envelope["performative"])),
 			      zpt::uri::to_str(this->connection()["uri"]) + std::string(_envelope["resource"]),
 			      _envelope,
 			      _callback);

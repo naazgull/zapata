@@ -2308,7 +2308,7 @@ auto zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _fiel
 		} else {
 			_return += std::string("zpt::undefined");
 		}
-		_return += std::string(", zpt::undefined, \n[ & ] (zpt::ev::performative _p_performative, std::string "
+		_return += std::string(", zpt::undefined, \n[ & ] (zpt::performative _p_performative, std::string "
 				       "_p_topic, zpt::json _p_envelope, zpt::ev::emitter _p_emitter) -> void {\n");
 		_return += std::string("zpt::json _r_") + _name + std::string(" = _p_envelope[\"payload\"];\n");
 		if (_field["type"] == zpt::json::string("array")) {
@@ -3421,7 +3421,7 @@ auto zpt::GenResource::build_handlers(std::string _parent_name, std::string _chi
 	       std::string("::restify(_emitter);\n");
 }
 
-auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_validation(zpt::performative _perf) -> std::string {
 	if (!this->__spec["datum"]["name"]->ok() && !this->__spec["datum"]["fields"]->ok()) {
 		return "";
 	}
@@ -3609,7 +3609,7 @@ auto zpt::GenResource::build_validation(zpt::ev::performative _perf) -> std::str
 	return _return;
 }
 
-auto zpt::GenResource::build_handler_header(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_handler_header(zpt::performative _perf) -> std::string {
 	std::string _return;
 
 	_return += this->build_validation(_perf);
@@ -3681,10 +3681,10 @@ auto zpt::GenResource::build_get() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Get,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Get,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto get(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto get(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Get);
@@ -3767,7 +3767,7 @@ auto zpt::GenResource::build_get() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
 					"(_envelope[\"params\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -3777,7 +3777,7 @@ auto zpt::GenResource::build_get() -> std::string {
 			    std::string("_emitter->route(\nzpt::ev::Get,\nzpt::path::join({ zpt::array") + _topic +
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
-					"_envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string "
+					"_envelope[\"params\"] },\n[ = ] (zpt::performative _pfv, std::string "
 					"_tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
@@ -3807,10 +3807,10 @@ auto zpt::GenResource::build_post() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Post,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Post,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto post(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto post(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Post);
@@ -3888,7 +3888,7 @@ auto zpt::GenResource::build_post() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
 					"(_envelope[\"payload\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -3898,7 +3898,7 @@ auto zpt::GenResource::build_post() -> std::string {
 			    std::string("_emitter->route(\nzpt::ev::Post,\nzpt::path::join({ zpt::array") + _topic +
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
-					"_envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _pfv, std::string "
+					"_envelope[\"payload\"] },\n[ = ] (zpt::performative _pfv, std::string "
 					"_tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
@@ -3928,10 +3928,10 @@ auto zpt::GenResource::build_put() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Put,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Put,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto put(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto put(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Put);
@@ -4009,7 +4009,7 @@ auto zpt::GenResource::build_put() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
 					"(_envelope[\"payload\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -4019,7 +4019,7 @@ auto zpt::GenResource::build_put() -> std::string {
 			    std::string("_emitter->route(\nzpt::ev::Put,\nzpt::path::join({ zpt::array") + _topic +
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
-					"_envelope[\"payload\"] },\n[ = ] (zpt::ev::performative _pfv, std::string "
+					"_envelope[\"payload\"] },\n[ = ] (zpt::performative _pfv, std::string "
 					"_tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
@@ -4046,10 +4046,10 @@ auto zpt::GenResource::build_patch() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Patch,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Patch,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto patch(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto patch(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Patch);
@@ -4131,7 +4131,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
 					"_envelope[\"payload\"], \"params\", (_envelope[\"params\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -4142,7 +4142,7 @@ auto zpt::GenResource::build_patch() -> std::string {
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"payload\", "
 					"_envelope[\"payload\"], \"params\", _envelope[\"params\"] },\n[ = ] "
-					"(zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+					"(zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -4169,10 +4169,10 @@ auto zpt::GenResource::build_delete() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Delete,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Delete,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto remove(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto remove(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Delete);
@@ -4254,7 +4254,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
 					"(_envelope[\"params\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -4264,7 +4264,7 @@ auto zpt::GenResource::build_delete() -> std::string {
 			    std::string("_emitter->route(\nzpt::ev::Delete,\nzpt::path::join({ zpt::array") + _topic +
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
-					"_envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string "
+					"_envelope[\"params\"] },\n[ = ] (zpt::performative _pfv, std::string "
 					"_tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
@@ -4291,10 +4291,10 @@ auto zpt::GenResource::build_head() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Head,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Head,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto head(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto head(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Head);
@@ -4376,7 +4376,7 @@ auto zpt::GenResource::build_head() -> std::string {
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
 					"(_envelope[\"params\"] + zpt::json({ ") +
 			    _params +
-			    std::string(" })) },\n[ = ] (zpt::ev::performative _pfv, std::string _tpc, zpt::json _r_") +
+			    std::string(" })) },\n[ = ] (zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
 				", zpt::ev::emitter _emitter) mutable -> void {\n_emitter->reply(_envelope, _r_") +
@@ -4386,7 +4386,7 @@ auto zpt::GenResource::build_head() -> std::string {
 			    std::string("_emitter->route(\nzpt::ev::Head,\nzpt::path::join({ zpt::array") + _topic +
 			    std::string(" }),\n{ \"headers\", "
 					"zpt::rest::authorization::headers(_identity[\"access_token\"]), \"params\", "
-					"_envelope[\"params\"] },\n[ = ] (zpt::ev::performative _pfv, std::string "
+					"_envelope[\"params\"] },\n[ = ] (zpt::performative _pfv, std::string "
 					"_tpc, zpt::json _r_") +
 			    _var_name +
 			    std::string(
@@ -4413,10 +4413,10 @@ auto zpt::GenResource::build_reply() -> std::string {
 
 	std::string _return;
 	if (this->__options["resource-mode"][0] == zpt::json::string("lambda")) {
-		_return = ("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+		_return = ("{ zpt::ev::Reply,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			   "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	} else {
-		_return = ("auto reply(zpt::ev::performative _performative, std::string _topic, zpt::json _envelope, "
+		_return = ("auto reply(zpt::performative _performative, std::string _topic, zpt::json _envelope, "
 			   "zpt::ev::emitter _emitter) -> void {\n");
 	}
 	_return += this->build_handler_header(zpt::ev::Head);
@@ -4429,7 +4429,7 @@ auto zpt::GenResource::build_reply() -> std::string {
 	return _return;
 }
 
-auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_lisp_validation(zpt::performative _perf) -> std::string {
 	if (!this->__spec["datum"]["name"]->ok() && !this->__spec["datum"]["fields"]->ok()) {
 		return "";
 	}
@@ -4573,7 +4573,7 @@ auto zpt::GenResource::build_lisp_validation(zpt::ev::performative _perf) -> std
 	return _return;
 }
 
-auto zpt::GenResource::build_lisp_handler_header(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_lisp_handler_header(zpt::performative _perf) -> std::string {
 	std::string _return;
 	_return += this->build_lisp_validation(_perf);
 	_return += std::string("  (let* ((indentity (zpt:authorize \"") + std::string(this->__spec["topic"]) +
@@ -5013,7 +5013,7 @@ auto zpt::GenResource::build_lisp_reply() -> std::string {
 		return "";
 	}
 
-	std::string _return("{ zpt::ev::Reply,\n[] (zpt::ev::performative _performative, std::string _topic, zpt::json "
+	std::string _return("{ zpt::ev::Reply,\n[] (zpt::performative _performative, std::string _topic, zpt::json "
 			    "_envelope, zpt::ev::emitter _emitter) -> void {\n");
 	_return += this->build_handler_header(zpt::ev::Head);
 	_return += std::string("return zpt::undefined;\n");
@@ -5021,7 +5021,7 @@ auto zpt::GenResource::build_lisp_reply() -> std::string {
 	return _return;
 }
 
-auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_python_validation(zpt::performative _perf) -> std::string {
 	if (!this->__spec["datum"]["name"]->ok() && !this->__spec["datum"]["fields"]->ok()) {
 		return "";
 	}
@@ -5060,7 +5060,7 @@ auto zpt::GenResource::build_python_validation(zpt::ev::performative _perf) -> s
 	return _return;
 }
 
-auto zpt::GenResource::build_python_handler_header(zpt::ev::performative _perf) -> std::string {
+auto zpt::GenResource::build_python_handler_header(zpt::performative _perf) -> std::string {
 	std::string _return;
 
 	_return += this->build_python_validation(_perf);

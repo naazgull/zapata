@@ -667,7 +667,7 @@ extern "C" void _zpt_load_() {
 	    "^/v2/datums/applications$",
 	    {
 		{zpt::ev::Get,
-		 [](zpt::ev::performative _performative,
+		 [](zpt::performative _performative,
 		    std::string _topic,
 		    zpt::json _envelope,
 		    zpt::ev::emitter _emitter) -> zpt::json {
@@ -691,7 +691,7 @@ extern "C" void _zpt_load_() {
 		 }},
 
 		{zpt::ev::Post,
-		 [](zpt::ev::performative _performative,
+		 [](zpt::performative _performative,
 		    std::string _topic,
 		    zpt::json _envelope,
 		    zpt::ev::emitter _emitter) -> zpt::json {
@@ -720,7 +720,7 @@ extern "C" void _zpt_load_() {
 		 }},
 
 		{zpt::ev::Patch,
-		 [](zpt::ev::performative _performative,
+		 [](zpt::performative _performative,
 		    std::string _topic,
 		    zpt::json _envelope,
 		    zpt::ev::emitter _emitter) -> zpt::json {
@@ -744,7 +744,7 @@ extern "C" void _zpt_load_() {
 		 }},
 
 		{zpt::ev::Delete,
-		 [](zpt::ev::performative _performative,
+		 [](zpt::performative _performative,
 		    std::string _topic,
 		    zpt::json _envelope,
 		    zpt::ev::emitter _emitter) -> zpt::json {
@@ -768,7 +768,7 @@ extern "C" void _zpt_load_() {
 		 }},
 
 		{zpt::ev::Head,
-		 [](zpt::ev::performative _performative,
+		 [](zpt::performative _performative,
 		    std::string _topic,
 		    zpt::json _envelope,
 		    zpt::ev::emitter _emitter) -> zpt::json {
@@ -800,7 +800,7 @@ extern "C" void _zpt_load_() {
 	_emitter->on("^/v2/datums/applications/([^/]+)$",
 		     {
 			 {zpt::ev::Get,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -858,7 +858,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Put,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -922,7 +922,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Patch,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -981,7 +981,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Delete,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1005,7 +1005,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Head,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1071,7 +1071,7 @@ extern "C" void _zpt_load_() {
 	_emitter->on("^/v2/datums/applications/([^/]+)/users/([^/]+)/channels$",
 		     {
 			 {zpt::ev::Get,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1100,7 +1100,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Post,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1128,7 +1128,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Patch,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1159,7 +1159,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Delete,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
@@ -1188,7 +1188,7 @@ extern "C" void _zpt_load_() {
 			  }},
 
 			 {zpt::ev::Head,
-			  [](zpt::ev::performative _performative,
+			  [](zpt::performative _performative,
 			     std::string _topic,
 			     zpt::json _envelope,
 			     zpt::ev::emitter _emitter) -> zpt::json {
