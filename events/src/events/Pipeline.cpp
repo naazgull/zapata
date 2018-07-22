@@ -37,6 +37,7 @@ SOFTWARE.
 namespace zpt {
 pid_t root = 0;
 bool interrupted = false;
+std::atomic<bool> zpt::pipeline::__ready{false};
 }
 
 auto zpt::options(int argc, char* argv[]) -> zpt::json& {
@@ -96,16 +97,18 @@ zpt::channel_factory::~channel_factory() {}
 auto zpt::channel_factory::protocol() -> std::string { return this->__protocol; }
 
 auto zpt::channel_factory::operator=(const zpt::channel_factory& _rhs) -> zpt::channel_factory& {
-	this->__procotol = _rhs.__protocol;
+	this->__protocol = _rhs.__protocol;
+	return (*this);
 }
 
 auto zpt::channel_factory::operator=(zpt::channel_factory&& _rhs) -> zpt::channel_factory& {
-	this->__procotol = _rhs.__protocol;
+	this->__protocol = _rhs.__protocol;
 	_rhs.__protocol = "";
+	return (*this);
 }
 
 zpt::abstract_channel::abstract_channel(std::string _connection, zpt::json _options)
-    : __options(_options), __connection(_connection.data()), __poll(nullptr) {
+    : __options(_options), __connection(_connection.data()) {
 	this->__id.assign(zpt::generate::r_uuid());
 }
 
@@ -113,7 +116,7 @@ zpt::abstract_channel::abstract_channel(const zpt::abstract_channel& _rhs) { (*t
 
 zpt::abstract_channel::abstract_channel(zpt::abstract_channel&& _rhs) { (*this) = _rhs; }
 
-zpt::abstract_channel::~socket() {}
+zpt::abstract_channel::~abstract_channel() {}
 
 auto zpt::abstract_channel::id() -> std::string { return this->__id; }
 
@@ -166,24 +169,23 @@ auto zpt::abstract_channel::loop_iteration() -> void {}
 
 auto zpt::abstract_channel::operator=(const zpt::abstract_channel& _rhs) -> zpt::abstract_channel& {
 	this->__options = _rhs.__options;
-	this->__connection.assign(_rhs.__connection.data());
-	this->__poll = _rhs.__poll;
-	this->__id.assign(_rhs.__id);
-	this->__uri = _rhs.__uri;
+	this->__connection = _rhs.__connection;
+ 	this->__id = _rhs.__id;
+ 	this->__uri = _rhs.__uri;
+	return (*this);
 }
 
 auto zpt::abstract_channel::operator=(zpt::abstract_channel&& _rhs) -> zpt::abstract_channel& {
 	this->__options = _rhs.__options;
-	this->__connection.assign(_rhs.__connection.data());
-	this->__poll = _rhs.__poll;
-	this->__id.assign(_rhs.__id);
-	this->__uri = _rhs.__uri;
+	this->__connection = _rhs.__connection;
+ 	this->__id = _rhs.__id;
+ 	this->__uri = _rhs.__uri;
 
 	_rhs.__options = zpt::undefined;
 	_rhs.__connection = "";
-	_rhs.__poll = nullptr;
 	_rhs.__id = "";
-	_rhs.__uri = nullptr;
+	_rhs.__uri = zpt::undefined;
+	return (*this);
 }
 
 zpt::stage::stage(zpt::json _initial, zpt::channel _channel) : __current(_initial), __channel(_channel) {}
@@ -196,12 +198,14 @@ zpt::stage::~stage() {}
 
 auto zpt::stage::operator=(const zpt::stage& _rhs) -> zpt::stage& {
 	this->__current = _rhs.__current;
-	this->__channel = _rhs.channel;
+	this->__channel = _rhs.__channel;
+	return (*this);
 }
 
 auto zpt::stage::operator=(zpt::stage&& _rhs) -> zpt::stage& {
 	this->__current = std::move(_rhs.__current);
-	this->__channel = std::move(_rhs.channel);
+	this->__channel = std::move(_rhs.__channel);
+	return (*this);
 }
 
 auto zpt::stage::forward(zpt::json _message) -> void {}
@@ -210,7 +214,8 @@ auto zpt::stage::reply(zpt::json _reply) -> void {}
 
 auto zpt::stage::route(zpt::json _request) -> void {}
 
-zpt::pipeline::pipeline() : __uuid(zpt::generate::r_uuid()), __ready(false), __stage(0) {}
+zpt::pipeline::pipeline(std::string _name, zpt::json _options)
+    : __name(_name), __uuid(zpt::generate::r_uuid()), __options(_options), __stage(0) {}
 
 zpt::pipeline::pipeline(const zpt::pipeline& _rhs) { (*this) = _rhs; }
 

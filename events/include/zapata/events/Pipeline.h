@@ -83,6 +83,8 @@ class channel_factory {
 	virtual auto clean(zpt::channel& _socket) -> bool = 0;
 	virtual auto is_reusable(std::string _type) -> bool = 0;
 
+	virtual auto protocol() -> std::string final;
+
 	auto operator=(const zpt::channel_factory& _rhs) -> zpt::channel_factory&;
 	auto operator=(zpt::channel_factory&& _rhs) -> zpt::channel_factory&;
 
@@ -174,8 +176,8 @@ class pipeline {
 	virtual auto add(zpt::replier _callback) -> void;
 	virtual auto add(zpt::reply_transformer _callback) -> void;
 
-	auto operator=(const zpt::stage& _rhs) -> zpt::stage&;
-	auto operator=(zpt::stage&& _rhs) -> zpt::stage&;
+	auto operator=(const zpt::pipeline& _rhs) -> zpt::pipeline&;
+	auto operator=(zpt::pipeline&& _rhs) -> zpt::pipeline&;
 
 	auto feed(zpt::json _request, zpt::channel _channel) -> void;
 	auto forward(zpt::json _msg) -> void;
@@ -196,7 +198,7 @@ class pipeline {
 	    __stages;
 	std::map<std::string, zpt::channel_factory> __factories;
 
-	static std::atomic<bool> __ready = ATOMIC_FLAG_INIT;
+	static std::atomic<bool> __ready;
 
 	auto init() -> void;
 };
