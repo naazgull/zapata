@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include <zapata/text/convert.h>
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <time.h>
 #include <sys/time.h>
 

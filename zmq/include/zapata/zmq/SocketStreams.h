@@ -40,7 +40,7 @@ SOFTWARE.
 #include <openssl/ssl.h>
 #include <openssl/tls1.h>
 #include <openssl/err.h>
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>

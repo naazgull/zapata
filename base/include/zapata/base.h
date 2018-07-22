@@ -30,7 +30,7 @@ SOFTWARE.
 #include <functional>
 #include <atomic>
 
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <zapata/base/config.h>
 
 #include <zapata/text/convert.h>
