@@ -25,6 +25,7 @@ SOFTWARE.
 #include <stddef.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
+#include <zapata/log/log.h>
 #include <zconf.h>
 #include <zlib.h>
 #include <algorithm>
@@ -34,7 +35,10 @@ SOFTWARE.
 #include <sstream>
 #include <string>
 
-using namespace std;
+#include <crypto++/filters.h>
+#include <crypto++/aes.h>
+#include <crypto++/gcm.h>
+
 #if !defined __APPLE__
 using namespace __gnu_cxx;
 #endif
@@ -335,4 +339,89 @@ std::string zpt::r_prettify_header_name(std::string name) {
 		std::transform(_return.begin() + pos, _return.begin() + pos + 1, _return.begin() + pos, ::toupper);
 	}
 	return _return;
+}
+
+void zpt::crypto::gcm::aes::encrypt(std::string& _out, const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size) {
+
+	try {
+		
+		CryptoPP::GCM< CryptoPP::AES >::Encryption _enc;
+		_enc.SetKeyWithIV((const byte*)_key.data(), _key.size(), (const byte*)_iv.data());
+
+		_out.clear();
+
+		CryptoPP::StringSource(_in, true, 
+			new CryptoPP::AuthenticatedEncryptionFilter(
+				_enc, new CryptoPP::StringSink(_out), false, _tag_size
+			)
+		);
+	
+	} catch (CryptoPP::InvalidArgument& _exc) {
+        
+        zlog(std::string("zpt::cypto::aes::encrypt : Caught InvalidArgument: ") + _exc.what(), zpt::error);
+
+    } catch (CryptoPP::Exception& _exc) {
+        
+        zlog(std::string("zpt::cypto::aes::encrypt : Caught Exception: ") + _exc.what(), zpt::error);
+
+    }
+
+}
+
+void zpt::crypto::gcm::aes::decrypt(std::string& _out, const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size) {
+		
+	try {
+		
+		CryptoPP::GCM< CryptoPP::AES >::Decryption _dec;
+		_dec.SetKeyWithIV((const byte*)_key.data(), _key.size(), (const byte*)_iv.data());
+
+		_out.clear();
+
+		CryptoPP::AuthenticatedDecryptionFilter _df(
+			_dec, 
+			new CryptoPP::StringSink(_out), 
+			CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS, 
+			_tag_size
+		);
+
+		CryptoPP::StringSource _ss(_in, true, new CryptoPP::Redirector(_df));
+
+		if (_df.GetLastResult()) {
+			zlog("zpt::cypto::aes::decrypt : Error to recover the encrypted text", zpt::error);
+		}
+	
+	} catch( CryptoPP::HashVerificationFilter::HashVerificationFailed& _e ) {
+		
+		zlog(std::string("zpt::cypto::aes::decrypt : HashVerificationFailed:")+ _e.what(), zpt::error);
+
+    } catch( CryptoPP::InvalidArgument& _e ) {
+		
+		zlog(std::string("zpt::cypto::aes::decrypt : Caught InvalidArgument:")+ _e.what(), zpt::error);
+
+    } catch( CryptoPP::Exception& _e ) {
+		
+		zlog(std::string("zpt::cypto::aes::decrypt : Caught Exception:")+ _e.what(), zpt::error);
+
+    }
+
+}
+
+auto zpt::crypto::gcm::aes::r_encrypt(const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size) -> std::string {
+
+	std::string _out;
+
+	zpt::crypto::gcm::aes::encrypt(_out, _in, _key, _iv, _tag_size);
+	
+	return _out;
+
+}
+
+auto zpt::crypto::gcm::aes::r_decrypt(const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size) -> std::string {
+		
+	std::string _out;
+
+	zpt::crypto::gcm::aes::decrypt(_out, _in, _key, _iv, _tag_size);
+
+	return _out;
+
 }

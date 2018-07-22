@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <zapata/file/manip.h>
 
 #include <iostream>

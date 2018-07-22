@@ -30,7 +30,7 @@ SOFTWARE.
 #include <vector>
 #include <map>
 #include <memory>
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 

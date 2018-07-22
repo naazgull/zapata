@@ -37,7 +37,7 @@
 #define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+/* #undef HAVE_LIBZAPATA_EVENTS */
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
 #define HAVE_LIBZAPATA_HTTP 1
@@ -85,7 +85,7 @@
 #define PACKAGE_NAME "zapata-postgresql"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-postgresql 0.9.7-1artful58"
+#define PACKAGE_STRING "zapata-postgresql 1.0.0-1artful1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-postgresql"
@@ -94,10 +94,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.9.7-1artful58"
+#define PACKAGE_VERSION "1.0.0-1artful1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9.7-1artful58"
+#define VERSION "1.0.0-1artful1"

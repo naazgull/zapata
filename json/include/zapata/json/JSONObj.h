@@ -33,7 +33,7 @@ SOFTWARE.
 #include <sys/time.h>
 #include <chrono>
 #include <zapata/json/config.h>
-#include <zapata/base/assert.h>
+#include <zapata/base/assertz.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 #include <zapata/log/log.h>
