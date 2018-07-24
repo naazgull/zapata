@@ -223,9 +223,7 @@ zpt::pipeline::pipeline(zpt::pipeline&& _rhs) { (*this) = _rhs; }
 
 zpt::pipeline::~pipeline() {}
 
-auto zpt::pipeline::init(std::string _name, zpt::json _options) -> void {
-	this->__name = _name;
-	this->__options = _options;
+auto zpt::pipeline::init() -> void {
 	if (not zpt::pipeline::__ready.test_and_set()) {
 		try {
 			if (this->__options["modules"]->ok()) {

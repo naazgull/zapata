@@ -62,7 +62,7 @@ namespace rest {
 typedef zpt::RESTEmitter emitter;
 typedef std::map<std::string, std::vector<std::pair<std::regex, zpt::ev::handlers>>> HandlerStack;
 
-typedef zpt::ev::handler step;
+typedef std::function<bool (zpt::performative, std::string, zpt::json, zpt::ev::emitter)> step;
 typedef zpt::ev::initializer end;
 }
 

@@ -496,7 +496,16 @@ auto zpt::rest::_collect(zpt::json _args,
 			    zpt::json _result,
 			    zpt::ev::emitter _emitter) mutable -> void {
 				if (_step != nullptr) {
-					_step(_performative, _topic, _result, _emitter);
+					if (not _step(_performative, _topic, _result, _emitter)) {
+						zpt::rest::_collect(_args,
+								    _to_collect_from,
+								    _to_collect_from->arr()->size(),
+								    _result,
+								    _step,
+								    _end,
+								    _emitter);
+						return;
+					}
 				}
 				zpt::rest::_collect(_args, _to_collect_from, _idx + 1, _result, _step, _end, _emitter);
 			});
@@ -529,7 +538,14 @@ auto zpt::rest::_iterate(zpt::json _to_iterate_over,
 			    zpt::json _result,
 			    zpt::ev::emitter _emitter) mutable -> void {
 				if (_step != nullptr) {
-					_step(_performative, _topic, _result, _emitter);
+					if (not _step(_performative, _topic, _result, _emitter)) {
+						zpt::rest::_iterate(_to_iterate_over,
+								    _to_iterate_over->arr()->size(),
+								    _step,
+								    _end,
+								    _emitter);
+						return;
+					}
 				}
 				zpt::rest::_iterate(_to_iterate_over, _idx + 1, _step, _end, _emitter);
 			});

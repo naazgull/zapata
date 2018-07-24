@@ -40,7 +40,8 @@ using namespace __gnu_cxx;
 
 int main(int argc, char* argv[]) {
 	try {
-		zpt::pipeline::launch(argc, argv);
+		zpt::options(argc, argv);
+
 	} catch (zpt::assertion& _e) {
 		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
 		zlog(std::string("\n") + _e.backtrace(), zpt::trace);

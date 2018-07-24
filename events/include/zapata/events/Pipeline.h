@@ -54,8 +54,8 @@ typedef std::tuple<
     replier;
 typedef std::function<void(zpt::json, zpt::stage&)> reply_transformer;
 
-auto static options(zpt::json _options = zpt::undefined) -> zpt::json&;
-auto static options(int argc, char* argv[]) -> zpt::json&;
+auto options(zpt::json _options = zpt::undefined) -> zpt::json&;
+auto options(int argc, char* argv[]) -> zpt::json&;
 
 // class channel_ref : public std::string {
 //       public:
