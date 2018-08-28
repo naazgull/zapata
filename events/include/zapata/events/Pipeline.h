@@ -39,20 +39,22 @@ typedef std::shared_ptr<zmq::socket_t> channel_ptr;
 
 namespace zpt {
 
-class stage;
+class drop;
 class pipeline;
-class channel_factory;
+class pipe;
+class abstract_channel_factory;
 class abstract_channel;
 
 typedef std::shared_ptr<abstract_channel> channel;
-typedef std::tuple<std::string, std::function<void(zpt::json, zpt::stage&)>> initializer;
-typedef std::tuple<std::string, std::function<void(zpt::channel, zpt::stage&)>> receiver;
-typedef std::function<void(std::string, zpt::json, zpt::stage&)> request_transformer;
+typedef std::shared_ptr<abstract_channel_factory> channel_factory;
+typedef std::tuple<std::string, std::function<void(zpt::json, zpt::drop&)>> initializer;
+typedef std::tuple<std::string, std::function<void(zpt::channel, zpt::drop&)>> receiver;
+typedef std::function<void(std::string, zpt::json, zpt::drop&)> request_transformer;
 typedef std::tuple<
     std::string,
-    std::map<zpt::performative, std::function<void(zpt::performative, std::string, zpt::json, zpt::stage&)>>>
+    std::map<zpt::performative, std::function<void(zpt::performative, std::string, zpt::json, zpt::drop&)>>>
     replier;
-typedef std::function<void(zpt::json, zpt::stage&)> reply_transformer;
+typedef std::function<void(zpt::json, zpt::drop&)> reply_transformer;
 
 auto options(zpt::json _options = zpt::undefined) -> zpt::json&;
 auto options(int argc, char* argv[]) -> zpt::json&;
@@ -72,21 +74,16 @@ auto options(int argc, char* argv[]) -> zpt::json&;
 // 	zpt::poll __poll;
 // };
 
-class channel_factory {
+class abstract_channel_factory {
       public:
-	channel_factory(std::string _protocol);
-	channel_factory(const zpt::channel_factory& _rhs);
-	channel_factory(zpt::channel_factory&& _rhs);
-	virtual ~channel_factory();
+	abstract_channel_factory(std::string _protocol);
+	virtual ~abstract_channel_factory();
 
 	virtual auto produce(zpt::json _options) -> zpt::channel&& = 0;
 	virtual auto clean(zpt::channel& _socket) -> bool = 0;
 	virtual auto is_reusable(std::string _type) -> bool = 0;
 
 	virtual auto protocol() -> std::string final;
-
-	auto operator=(const zpt::channel_factory& _rhs) -> zpt::channel_factory&;
-	auto operator=(zpt::channel_factory&& _rhs) -> zpt::channel_factory&;
 
       private:
 	std::string __protocol;
@@ -95,8 +92,6 @@ class channel_factory {
 class abstract_channel {
       public:
 	abstract_channel(std::string _connection, zpt::json _options);
-	abstract_channel(const zpt::abstract_channel& _rhs);
-	abstract_channel(zpt::abstract_channel&& _rhs);
 	virtual ~abstract_channel();
 
 	virtual auto id() -> std::string;
@@ -123,9 +118,6 @@ class abstract_channel {
 	virtual auto protocol() -> std::string = 0;
 	virtual auto is_reusable() -> bool = 0;
 
-	auto operator=(const zpt::abstract_channel& _rhs) -> zpt::abstract_channel&;
-	auto operator=(zpt::abstract_channel&& _rhs) -> zpt::abstract_channel&;
-
       private:
 	zpt::json __options;
 	std::string __connection;
@@ -134,18 +126,23 @@ class abstract_channel {
 
       protected:
 	std::mutex __mtx;
-	//zpt::poll __poll;
+	// zpt::poll __poll;
 };
 
-class stage {
+class drop {
       public:
-	stage(zpt::json _initial, zpt::channel _channel);
-	stage(const zpt::stage& _rhs);
-	stage(zpt::stage&& _rhs);
-	virtual ~stage();
+	drop();
+	drop(zpt::json _initial, zpt::channel _channel);
+	drop(const zpt::drop& _rhs);
+	drop(zpt::drop&& _rhs);
+	virtual ~drop();
 
-	auto operator=(const zpt::stage& _rhs) -> zpt::stage&;
-	auto operator=(zpt::stage&& _rhs) -> zpt::stage&;
+	auto channel(zpt::channel) -> void;
+	auto channel() -> zpt::channel;
+	auto current() -> zpt::json;
+
+	auto operator=(const zpt::drop& _rhs) -> zpt::drop&;
+	auto operator=(zpt::drop&& _rhs) -> zpt::drop&;
 
 	auto forward(zpt::json _message) -> void;
 	auto reply(zpt::json _reply) -> void;
@@ -169,7 +166,7 @@ class pipeline {
 	virtual auto uuid() -> std::string;
 	virtual auto options() -> zpt::json;
 
-	virtual auto add(zpt::channel_factory& _factory) -> void;
+	virtual auto add(zpt::channel_factory _factory) -> void;
 	virtual auto add(zpt::initializer _callback) -> void;
 	virtual auto add(zpt::receiver _callback) -> void;
 	virtual auto add(zpt::request_transformer _callback) -> void;
@@ -182,25 +179,46 @@ class pipeline {
 	auto feed(zpt::json _request, zpt::channel _channel) -> void;
 	auto forward(zpt::json _msg) -> void;
 	auto reply(zpt::json _reply) -> void;
+	auto cancel() -> void;
 
 	auto static instance() -> zpt::pipeline;
 
       private:
+	static auto process_initalizers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool;
+	static auto process_receivers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool;
+	static auto process_req_transformers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool;
+	static auto process_repliers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool;
+	static auto process_rep_transformers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool;
+
 	std::string __name;
 	std::string __uuid;
 	zpt::json __options;
-	short __stage;
+	short __drop;
+	std::vector<std::function<bool(zpt::drop&, zpt::pipeline&)>> __callbacks;
 	std::tuple<std::vector<zpt::initializer>,
 		   std::vector<zpt::receiver>,
 		   std::vector<zpt::request_transformer>,
 		   std::vector<zpt::replier>,
 		   std::vector<zpt::reply_transformer>>
-	    __stages;
+	    __drops;
 	std::map<std::string, zpt::channel_factory> __factories;
 
 	static std::atomic<bool> __ready;
 
 	auto init() -> void;
+};
+
+class pipe : public zpt::deque<zpt::drop> {
+      public:
+	pipe();
+	pipe(const zpt::pipe& _rhs);
+	pipe(zpt::pipe&& _rhs);
+	virtual ~pipe();
+
+	auto operator=(const zpt::pipe& _rhs) -> zpt::pipe&;
+	auto operator=(zpt::pipe&& _rhs) -> zpt::pipe&;
+
+      private:
 };
 
 extern pid_t root;

@@ -31,7 +31,7 @@
 #define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
+#define HAVE_LIBZAPATA_EVENTS 1
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
 #define HAVE_LIBZAPATA_HTTP 1
@@ -40,13 +40,13 @@
 #define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the `zapata-lisp' library (-lzapata-lisp). */
-/* #undef HAVE_LIBZAPATA_LISP */
+#define HAVE_LIBZAPATA_LISP 1
 
 /* Define to 1 if you have the `zapata-mqtt' library (-lzapata-mqtt). */
-/* #undef HAVE_LIBZAPATA_MQTT */
+#define HAVE_LIBZAPATA_MQTT 1
 
 /* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
-/* #undef HAVE_LIBZAPATA_PYTHON */
+#define HAVE_LIBZAPATA_PYTHON 1
 
 /* Define to 1 if you have the `zapata-upnp' library (-lzapata-upnp). */
 #define HAVE_LIBZAPATA_UPNP 1

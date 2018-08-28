@@ -1536,10 +1536,10 @@ extern "C" void _zpt_load_() {
 				    << (_definition["public"]->is_string()
 					    ? _definition["public"]->str()
 					    : zpt::r_replace(zpt::r_replace(_socket->connection(), "@tcp", ">tcp"),
-							     "tcp://*",
+		 					     "tcp://*",
 							     _ip));
 			zlog(std::string("binding ") + _socket->protocol() + std::string(" listener to ") +
-				 _socket->connection(),
+		 		 _socket->connection(),
 			     zpt::info);
 		}
 	}

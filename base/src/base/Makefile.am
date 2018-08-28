@@ -26,7 +26,8 @@ libzapata_base_la_SOURCES = \
 ./url.cpp \
 ./usage.cpp \
 ./net.cpp \
-./utf8.cpp
+./utf8.cpp \
+./deque.cpp
 
 bin_PROGRAMS = zoc
 

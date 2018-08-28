@@ -199,7 +199,7 @@ auto zpt::HTTP::recv() -> zpt::json {
 			{"text", _e.what(), "assertion_failed", _e.what(), "code", 1062}};
 	}
 	_in << "protocol" << this->protocol();
-	ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) + std::string(" ") +
+ 	ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) + std::string(" ") +
 	       _in["resource"]->str() + (zpt::performative(int(_in["performative"])) == zpt::ev::Reply
 					     ? std::string(" ") + std::string(_in["status"])
 					     : std::string("")));
