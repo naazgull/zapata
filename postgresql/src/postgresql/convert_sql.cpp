@@ -27,7 +27,7 @@ namespace zpt {
 namespace pgsql {
 
 std::map<std::string, std::string> OPS = {
-    {"gt", ">"}, {"gte", ">="}, {"lt", "<"}, {"lte", "<="}, {"ne", "<>"}, {"exists", "EXISTS"}, {"in", "IN"}};
+    {"gt", ">"}, {"gte", ">="}, {"lt", "<"}, {"lte", "<="}, {"ne", "<>"}, {"exists", "EXISTS"}, {"in", "IN"}, {"nin", "NOT IN"}};
 }
 }
 
@@ -1032,9 +1032,8 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 									}
 									_v += zpt::pgsql::escape(_e);
 								}
-								_queryr += zpt::pgsql::escape_name(_key) +
-									   _found->second + std::string("(") + _v +
-									   std::string(")");
+								_queryr += zpt::pgsql::escape_name(_key) + std::string(" ") 
+									+ _found->second + std::string("(") + _v + std::string(")");
 							}
 						} catch (std::exception& _e) {
 						}
