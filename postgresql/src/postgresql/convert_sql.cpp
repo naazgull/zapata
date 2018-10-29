@@ -892,16 +892,21 @@ auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 }
 
 auto zpt::pgsql::fromsql_r(pqxx::tuple _in) -> zpt::json {
+	
 	zpt::json _return = zpt::json::object();
 	zpt::pgsql::fromsql(_in, _return);
 	return _return;
+	
 }
 
 auto zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
+	
 	if (!_in->is_object()) {
 		return;
 	}
+	
 	for (auto _i : _in->obj()) {
+		
 		std::string _key = _i.first;
 		zpt::json _v = _i.second;
 
@@ -915,7 +920,9 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 		}
 
 		std::string _value = (std::string)_v;
+		
 		if (_value.length() > 3 && _value.find('/') != std::string::npos) {
+			
 			int _bar_count = 0;
 			std::istringstream _lss(_value);
 			std::string _part;
@@ -923,133 +930,189 @@ auto zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 			std::string _command;
 			std::string _expression;
 			std::string _options;
+			
 			while (std::getline(_lss, _part, '/')) {
+				
 				if (_bar_count == 0) {
+
 					_command = _part;
 					++_bar_count;
+
 				} else if (_bar_count == 1) {
+					
 					_expression.append(_part);
 
 					if (_expression.length() == 0 ||
-					    _expression[_expression.length() - 1] != '\\') {
+					    
+						_expression[_expression.length() - 1] != '\\') {
 						++_bar_count;
+
 					} else {
+						
 						if (_expression.length() > 0) {
 							_expression[_expression.length() - 1] = '/';
 						}
+
 					}
+
 				} else if (_bar_count == 2) {
+					
 					_options = _part;
 					++_bar_count;
+
 				} else {
+					
 					++_bar_count;
+
 				}
+
 			}
 
 			if (_command == "m") {
-				_queryr += zpt::pgsql::escape_name(_key) + std::string("=") +
+				
+				_queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") +
 					   zpt::pgsql::escape(zpt::json::string(_expression));
 				continue;
+			
 			} else if (_command == "n") {
+				
 				if (_bar_count == 2) {
+					
 					std::istringstream iss(_expression);
+					
 					int i = 0;
 					iss >> i;
+					
 					if (!iss.eof()) {
+						
 						iss.clear();
 						double d = 0;
 						iss >> d;
+						
 						if (!iss.eof()) {
+							
 							std::string _bexpr(_expression.data());
-							std::transform(
-							    _bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+							std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+							
 							if (_bexpr != "true" && _bexpr != "false") {
-								_queryr +=
-								    zpt::pgsql::escape_name(_key) + std::string("=") +
-								    zpt::pgsql::escape(zpt::json::string(_expression));
+
+								_queryr += zpt::pgsql::escape_name(_key) + 
+									std::string(" = ") + zpt::pgsql::escape(zpt::json::string(_expression));
+
 							} else {
-								_queryr += zpt::pgsql::escape_name(_key) +
-									   std::string("=") + _bexpr;
+								_queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + _bexpr;
 							}
+
 						} else {
-							_queryr += zpt::pgsql::escape_name(_key) + std::string("=") +
-								   std::to_string(d);
+							
+							_queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(d);
+
 						}
+
 					} else {
-						_queryr += zpt::pgsql::escape_name(_key) + std::string("=") +
-							   std::to_string(i);
+
+						_queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(i);
+
 					}
+
 					continue;
+
 				}
+
 			} else {
+				
 				std::map<std::string, std::string>::iterator _found = zpt::pgsql::OPS.find(_command);
+				
 				if (_found != zpt::pgsql::OPS.end()) {
+
+					std::string _op = std::string(" ") + _found->second + std::string(" ");
+
 					if (_bar_count == 2) {
-						_queryr += zpt::pgsql::escape_name(_key) + _found->second +
-							   zpt::pgsql::escape(zpt::json::string(_expression));
+						
+						_queryr += zpt::pgsql::escape_name(_key) + _op + zpt::pgsql::escape(zpt::json::string(_expression));
+
 					} else if (_options == "n") {
+						
 						std::istringstream iss(_expression);
+						
 						int i = 0;
 						iss >> i;
+						
 						if (!iss.eof()) {
+							
 							iss.clear();
 							double d = 0;
 							iss >> d;
+							
 							if (!iss.eof()) {
+								
 								std::string _bexpr(_expression.data());
-								std::transform(_bexpr.begin(),
-									       _bexpr.end(),
-									       _bexpr.begin(),
-									       ::tolower);
+								
+								std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+								
 								if (_bexpr != "true" && _bexpr != "false") {
-									_queryr += zpt::pgsql::escape_name(_key) +
-										   _found->second +
-										   zpt::pgsql::escape(
-										       zpt::json::string(_expression));
+									_queryr += zpt::pgsql::escape_name(_key) + _op + zpt::pgsql::escape(zpt::json::string(_expression));
 								} else {
-									_queryr += zpt::pgsql::escape_name(_key) +
-										   _found->second + _bexpr;
+									_queryr += zpt::pgsql::escape_name(_key) + _op + _bexpr;
 								}
+
 							} else {
-								_queryr += zpt::pgsql::escape_name(_key) +
-									   _found->second + std::to_string(d);
+								
+								_queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(d);
+
 							}
+
 						} else {
-							_queryr += zpt::pgsql::escape_name(_key) + _found->second +
-								   std::to_string(i);
+							
+							_queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(i);
+
 						}
+
 					} else if (_options == "j") {
+						
 						istringstream iss(_expression);
+						
 						zpt::json _json;
+						
 						try {
+							
 							iss >> _json;
+							
 							if (_json->is_object()) {
 							} else if (_json->is_array()) {
+								
 								std::string _v;
+								
 								for (auto _e : _json->arr()) {
 									if (_v.length() != 0) {
 										_v += ", ";
 									}
 									_v += zpt::pgsql::escape(_e);
 								}
-								_queryr += zpt::pgsql::escape_name(_key) + std::string(" ") 
-									+ _found->second + std::string("(") + _v + std::string(")");
+								
+								_queryr += zpt::pgsql::escape_name(_key) + _op + std::string("(") + _v + std::string(")");
+
 							}
+
 						} catch (std::exception& _e) {
 						}
 
 					} else if (_options == "d") {
-						_queryr += zpt::pgsql::escape_name(_key) + _found->second +
-							   std::string("TIMESTAMP('") +
-							   zpt::pgsql::escape(zpt::json::string(_expression)) +
-							   std::string("')");
+						
+						_queryr += zpt::pgsql::escape_name(_key) + _op +
+							   std::string("TIMESTAMP('") + zpt::pgsql::escape(zpt::json::string(_expression)) + std::string("')");
 					}
+
 					continue;
+
 				}
+
 			}
+
 		}
 
-		_queryr += zpt::pgsql::escape_name(_key) + std::string("=") + zpt::pgsql::escape(_v);
+		_queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + zpt::pgsql::escape(_v);
+
 	}
 }
 
