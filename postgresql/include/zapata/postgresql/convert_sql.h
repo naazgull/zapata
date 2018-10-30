@@ -49,6 +49,6 @@ auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
 auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
 auto get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
 auto escape_name(std::string _in) -> std::string;
-auto escape(zpt::json _in) -> std::string;
+auto escape(zpt::json _ins, std::string _str_delimiter = "'") -> std::string;
 }
 }

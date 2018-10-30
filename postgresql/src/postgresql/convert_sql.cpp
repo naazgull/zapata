@@ -1159,8 +1159,7 @@ auto zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
 
 				_part.erase(0, 1);
 
-				_queryr += (!_first ? ", " : "") +
-					   zpt::r_replace(zpt::pgsql::escape(zpt::json::string(_part)), "'", "\"") +
+				_queryr += (!_first ? ", " : "") + zpt::pgsql::escape(zpt::json::string(_part), "\"") +
 					   std::string(" ") + _dir;
 
 				_first = false;
@@ -1332,14 +1331,14 @@ auto zpt::pgsql::escape_name(std::string _in) -> std::string {
 	return _out;
 }
 
-auto zpt::pgsql::escape(zpt::json _in) -> std::string {
+auto zpt::pgsql::escape(zpt::json _in, std::string _str_delimiter) -> std::string {
 
 	std::string _out;
 
 	switch (_in->type()) {
 
 	case zpt::JSObject: {
-		_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in))));
+		_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in)), _str_delimiter));
 		break;
 	}
 	case zpt::JSArray: {
@@ -1347,15 +1346,15 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 			_out.assign(std::string("point") +
 				    zpt::r_replace(zpt::r_replace(std::string(_in), "[", "("), "]", ")"));
 		} else {
-			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in))));
+			_out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in)), _str_delimiter));
 		}
 		break;
 	}
 	case zpt::JSString: {
 		_out.assign(std::string(_in));
-		zpt::replace(_out, "'", "''");
-		_out.insert(0, "'");
-		_out.push_back('\'');
+		zpt::replace(_out, _str_delimiter, _str_delimiter + _str_delimiter);
+		_out.insert(0, _str_delimiter);
+		_out.push_back(_str_delimiter.at(0));
 		break;
 	}
 	case zpt::JSBoolean: {
@@ -1375,7 +1374,7 @@ auto zpt::pgsql::escape(zpt::json _in) -> std::string {
 		break;
 	}
 	case zpt::JSDate: {
-		_out.assign(std::string("TIMESTAMP '") + std::string(_in) + std::string("'"));
+		_out.assign(std::string("TIMESTAMP ") + _str_delimiter + std::string(_in) + _str_delimiter);
 		break;
 	}
 	case zpt::JSLambda: {
