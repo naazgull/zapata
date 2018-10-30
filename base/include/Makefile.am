@@ -19,5 +19,7 @@ nobase_include_HEADERS = \
 ./zapata/text/html.h \
 ./zapata/text/manip.h \
 ./zapata/net/manip.h \
-./zapata/wait_free/deque.h \
+./zapata/wf/hptr.h \
+./zapata/wf/fifo.h \
+./zapata/wf/lifo.h \
 ./zapata/base.h

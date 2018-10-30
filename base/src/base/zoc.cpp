@@ -27,8 +27,12 @@ SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
+#include <zapata/wf/hptr.h>
+#include <zapata/wf/lifo.h>
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
 
@@ -44,6 +48,37 @@ using namespace __gnu_cxx;
 #define PARAGRAPH 4
 
 int main(int _argc, char* _argv[]) {
+	size_t max_threads = 1000;
+	size_t n_elements = 1000;
+	zpt::wf::lifo<int> _list;
+	std::vector<std::thread> _threads;
+	zpt::wf::hptr<int> hptr;
+
+	for (size_t _i = 0; _i != max_threads; ++_i) {
+		_threads.emplace_back(
+		    [n_elements, &_list](int _n_thread) {
+			    for (size_t _k = 0; _k != n_elements; ++_k)
+				    if (_n_thread % 2 == 0)
+					    _list.push_back(_n_thread * n_elements + _k);
+				    else {
+					    try {
+						    _list.pop_back();
+					    } catch (std::out_of_range&) {
+					    }
+				    }
+		    },
+		    _i);
+	}
+
+	for (size_t _i = 0; _i != max_threads; ++_i)
+		_threads[_i].join();
+
+	// for (size_t _i = 0; _i != _list.size(); ++_i)
+	// 	std::cout << _list[_i] << std::endl << std::flush;
+
+	std::cout << "SIZE " << _list.size() << std::endl << std::flush;
+	return 0;
+
 	for (int _idx = 1; _idx != _argc; _idx++) {
 		std::string _input_file_name(_argv[_idx]);
 		std::ifstream _iss;
