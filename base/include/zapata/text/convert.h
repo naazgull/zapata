@@ -233,6 +233,7 @@ template <class type> type SHA512(const type input) {
 template <class type, class k_type> type HMAC_SHA256(const type& input, k_type key) {
 	unsigned char hash[EVP_MAX_MD_SIZE];
 
+#if OPENSSL_VERSION_NUMBER < 0x1010000fL
 	HMAC_CTX hmac;
 	HMAC_CTX_init(&hmac);
 	HMAC_Init_ex(&hmac, &key[0], key.length(), EVP_sha256(), NULL);
@@ -240,6 +241,14 @@ template <class type, class k_type> type HMAC_SHA256(const type& input, k_type k
 	unsigned int len = EVP_MAX_MD_SIZE;
 	HMAC_Final(&hmac, hash, &len);
 	HMAC_CTX_cleanup(&hmac);
+#else
+	HMAC_CTX *hmac = HMAC_CTX_new();
+	HMAC_Init_ex(hmac, &key[0], key.length(), EVP_sha256(), NULL);
+	HMAC_Update(hmac, (unsigned char*)&input[0], input.length());
+	unsigned int len = EVP_MAX_MD_SIZE;
+	HMAC_Final(hmac, hash, &len);
+	HMAC_CTX_free(hmac);
+#endif
 
 	std::stringstream ss;
 	ss << std::setfill('0');
