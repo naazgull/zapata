@@ -21,14 +21,14 @@ template <typename T> class queue {
     queue(queue<T>&& _rhs);
     virtual ~queue();
 
-    queue<T>& operator=(const queue<T>& _rhs);
-    queue<T>& operator=(queue<T>&& _rhs);
+    auto operator=(const queue<T>& _rhs) -> queue<T>&;
+    auto operator=(queue<T>&& _rhs) -> queue<T>&;
 
-    T front();
-    T back();
+    auto front() -> T;
+    auto back() -> T;
 
-    void push(T value);
-    T pop(bool _blocking = true);
+    auto push(T value) -> void;
+    auto pop(bool _blocking = true) -> T;
 
   protected:
     class node {
@@ -49,16 +49,16 @@ template <typename T> class queue {
         virtual ~iterator() = default;
 
         // BASIC ITERATOR METHODS //
-        iterator& operator=(const iterator& _rhs);
-        iterator& operator++();
-        reference operator*() const;
+        auto operator=(const iterator& _rhs) -> iterator&;
+        auto operator++() -> iterator&;
+        auto operator*() const -> reference;
         // END / BASIC ITERATOR METHODS //
 
         // INPUT ITERATOR METHODS //
-        iterator operator++(int);
-        pointer operator->() const;
-        bool operator==(iterator _rhs) const;
-        bool operator!=(iterator _rhs) const;
+        auto operator++(int) -> iterator;
+        auto operator-> () const -> pointer;
+        auto operator==(iterator _rhs) const -> bool;
+        auto operator!=(iterator _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
 
         // OUTPUT ITERATOR METHODS //
@@ -75,10 +75,10 @@ template <typename T> class queue {
         node* __current;
     };
 
-    iterator begin() const;
-    iterator end() const;
+    auto begin() const -> iterator;
+    auto end() const -> iterator;
 
-    friend ostream& operator<<(ostream& _out, zpt::lf::queue<T>& _in) {
+    friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
         for (auto _e : _in)
             _out << _e << " " << std::flush;
         return _out;
@@ -98,11 +98,11 @@ zpt::lf::queue<T>::queue(int _n_threads, int _n_hp_per_thread)
 
 template <typename T> zpt::lf::queue<T>::~queue() {}
 
-template <typename T> T zpt::lf::queue<T>::front() { return *this->__head.load().__value; }
+template <typename T> auto zpt::lf::queue<T>::front() -> T { return *this->__head.load().__value; }
 
-template <typename T> T zpt::lf::queue<T>::back() { return *this->__tail.load().__value; }
+template <typename T> auto zpt::lf::queue<T>::back() -> T { return *this->__tail.load().__value; }
 
-template <typename T> void zpt::lf::queue<T>::push(T _value) {
+template <typename T> auto zpt::lf::queue<T>::push(T _value) -> void {
     zpt::lf::queue<T>::node* _new = new zpt::lf::queue<T>::node{_value, nullptr};
 
     this->__hptr->add(_new);
@@ -119,7 +119,7 @@ template <typename T> void zpt::lf::queue<T>::push(T _value) {
     } while (true);
 }
 
-template <typename T> T zpt::lf::queue<T>::pop(bool _blocking) {
+template <typename T> auto zpt::lf::queue<T>::pop(bool _blocking) -> T {
     do {
         auto _head = this->__head.load();
         if (_head != nullptr) {
@@ -141,11 +141,11 @@ template <typename T> T zpt::lf::queue<T>::pop(bool _blocking) {
     return 0;
 }
 
-template <typename T> typename zpt::lf::queue<T>::iterator zpt::lf::queue<T>::begin() const {
+template <typename T> auto zpt::lf::queue<T>::begin() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{this->__head.load()};
 }
 
-template <typename T> typename zpt::lf::queue<T>::iterator zpt::lf::queue<T>::end() const {
+template <typename T> auto zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{nullptr};
 }
 
@@ -160,14 +160,14 @@ typename zpt::lf::queue<T>::iterator& zpt::lf::queue<T>::iterator::operator=(con
 }
 
 template <typename T>
-typename zpt::lf::queue<T>::iterator& zpt::lf::queue<T>::iterator::operator++() {
+auto zpt::lf::queue<T>::iterator::operator++() -> zpt::lf::queue<T>::iterator& {
     if (this->__current != nullptr) {
         this->__current = this->__current->__next;
     }
     return (*this);
 }
 
-template <typename T> T& zpt::lf::queue<T>::iterator::operator*() const {
+template <typename T> auto zpt::lf::queue<T>::iterator::operator*() const -> T& {
     return this->__current->__value;
 }
 
@@ -178,15 +178,15 @@ typename zpt::lf::queue<T>::iterator zpt::lf::queue<T>::iterator::operator++(int
     return _to_return;
 }
 
-template <typename T> T* zpt::lf::queue<T>::iterator::operator->() const {
+template <typename T> auto zpt::lf::queue<T>::iterator::operator-> () const -> T* {
     return &this->__current->__value;
 }
 
-template <typename T> bool zpt::lf::queue<T>::iterator::operator==(iterator _rhs) const {
+template <typename T> auto zpt::lf::queue<T>::iterator::operator==(iterator _rhs) const -> bool {
     return this->__current == _rhs.__current;
 }
 
-template <typename T> bool zpt::lf::queue<T>::iterator::operator!=(iterator _rhs) const {
+template <typename T> auto zpt::lf::queue<T>::iterator::operator!=(iterator _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 
