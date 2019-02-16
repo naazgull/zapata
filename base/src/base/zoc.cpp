@@ -31,8 +31,7 @@ SOFTWARE.
 #include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <zapata/wf/hptr.h>
-#include <zapata/wf/lifo.h>
+#include <zapata/lf/queue.h>
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
 
@@ -48,89 +47,58 @@ using namespace __gnu_cxx;
 #define PARAGRAPH 4
 
 int main(int _argc, char* _argv[]) {
-	size_t max_threads = 1000;
-	size_t n_elements = 1000;
-	zpt::wf::lifo<int> _list;
-	std::vector<std::thread> _threads;
-	zpt::wf::hptr<int> hptr;
-
-	for (size_t _i = 0; _i != max_threads; ++_i) {
-		_threads.emplace_back(
-		    [n_elements, &_list](int _n_thread) {
-			    for (size_t _k = 0; _k != n_elements; ++_k)
-				    if (_n_thread % 2 == 0)
-					    _list.push_back(_n_thread * n_elements + _k);
-				    else {
-					    try {
-						    _list.pop_back();
-					    } catch (std::out_of_range&) {
-					    }
-				    }
-		    },
-		    _i);
-	}
-
-	for (size_t _i = 0; _i != max_threads; ++_i)
-		_threads[_i].join();
-
-	// for (size_t _i = 0; _i != _list.size(); ++_i)
-	// 	std::cout << _list[_i] << std::endl << std::flush;
-
-	std::cout << "SIZE " << _list.size() << std::endl << std::flush;
-	return 0;
-
-	for (int _idx = 1; _idx != _argc; _idx++) {
-		std::string _input_file_name(_argv[_idx]);
-		std::ifstream _iss;
-		_iss.open(_input_file_name);
-		short _state = OUTSIDE;
-		if (_iss.is_open()) {
-			string _line;
-			size_t _to_trim = 0;
-			while (std::getline(_iss, _line)) {
-				if (_state == OUTSIDE) {
-					if ((_to_trim = _line.find("/***")) != std::string::npos) {
-						_to_trim += 3;
-						_state = PARAGRAPH;
-					}
-				} else if (_line.find("***/") != std::string::npos) {
-					_state = OUTSIDE;
-				} else {
-					if (_line.length() >= _to_trim) {
-						_line.assign(_line.substr(_to_trim));
-						if (_line.length() != 0) {
-							if (_line[0] == '#') {
-								cout << endl << flush;
-								_state = HEADER;
-							} else if (_line[0] == '-') {
-								if (_state != LIST) {
-									cout << endl << flush;
-								}
-								_state = LIST;
-							} else if (_line[0] == '`') {
-								if (_state == CODE) {
-									_state = PARAGRAPH;
-								} else {
-									cout << endl << flush;
-									_state = CODE;
-								}
-							} else {
-								if (_state != CODE && _state != PARAGRAPH) {
-									cout << endl << flush;
-								}
-								_state = PARAGRAPH;
-							}
-							cout << _line << endl << flush;
-						} else if (_state == CODE || _state == PARAGRAPH) {
-							cout << endl << flush;
-						}
-					} else if (_state == CODE || _state == PARAGRAPH) {
-						cout << endl << flush;
-					}
-				}
-			}
-			_iss.close();
-		}
-	}
-	return 0;
+    for (int _idx = 1; _idx != _argc; _idx++) {
+        std::string _input_file_name{_argv[_idx]};
+        std::ifstream _iss;
+        _iss.open(_input_file_name);
+        short _state = OUTSIDE;
+        if (_iss.is_open()) {
+            string _line;
+            size_t _to_trim = 0;
+            while (std::getline(_iss, _line)) {
+                if (_state == OUTSIDE) {
+                    if ((_to_trim = _line.find("/***")) != std::string::npos) {
+                        _to_trim += 3;
+                        _state = PARAGRAPH;
+                    }
+                } else if (_line.find("***/") != std::string::npos) {
+                    _state = OUTSIDE;
+                } else {
+                    if (_line.length() >= _to_trim) {
+                        _line.assign(_line.substr(_to_trim));
+                        if (_line.length() != 0) {
+                            if (_line[0] == '#') {
+                                cout << endl << flush;
+                                _state = HEADER;
+                            } else if (_line[0] == '-') {
+                                if (_state != LIST) {
+                                    cout << endl << flush;
+                                }
+                                _state = LIST;
+                            } else if (_line[0] == '`') {
+                                if (_state == CODE) {
+                                    _state = PARAGRAPH;
+                                } else {
+                                    cout << endl << flush;
+                                    _state = CODE;
+                                }
+                            } else {
+                                if (_state != CODE && _state != PARAGRAPH) {
+                                    cout << endl << flush;
+                                }
+                                _state = PARAGRAPH;
+                            }
+                            cout << _line << endl << flush;
+                        } else if (_state == CODE || _state == PARAGRAPH) {
+                            cout << endl << flush;
+                        }
+                    } else if (_state == CODE || _state == PARAGRAPH) {
+                        cout << endl << flush;
+                    }
+                }
+            }
+            _iss.close();
+        }
+    }
+    return 0;
 }

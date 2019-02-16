@@ -52,6 +52,5 @@ SOFTWARE.
 #include <zapata/mail/manip.h>
 #include <zapata/net/manip.h>
 
-#include <zapata/wf/hptr.h>
-#include <zapata/wf/fifo.h>
-#include <zapata/wf/lifo.h>
+#include <zapata/lf/hptr.h>
+#include <zapata/lf/queue.h>
