@@ -46,6 +46,7 @@ packages
 Makefile
 rest/src/rest/zpt
 base/src/base/zinit
+base/src/base/zlf
 json/src/json/zpt-json
 gen/src/gen/zgen
 zmq/src/zmq/zmut

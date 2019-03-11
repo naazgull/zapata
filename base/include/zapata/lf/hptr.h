@@ -28,8 +28,8 @@ template <typename T> class hptr_domain {
     auto operator=(const hptr_domain<T>& _rhs) -> hptr_domain<T>&;
     auto operator=(hptr_domain<T>&& _rhs) -> hptr_domain<T>&;
 
-    auto add(T* _ptr) -> hptr_domain<T>&;
-    auto remove(T* _ptr) -> hptr_domain<T>&;
+    auto create() -> T*;
+    auto destroy(T* _ptr) -> hptr_domain<T>&;
     auto clean() -> hptr_domain<T>&;
 
     static auto get_instance(int _n_threads = 0, int _n_hp_per_thread = 0) -> hptr_domain<T>&;
@@ -63,7 +63,7 @@ zpt::lf::hptr_domain<T>::hptr_domain(int _n_threads, int _n_hp_per_thread) : __P
         std::ceil(static_cast<double>(_n_hp_per_thread) / static_cast<double>(CACHE_LINE_PADDING));
     this->__K = _factor * CACHE_LINE_PADDING;
     this->__N = this->__P * this->__K;
-    this->__R = 2 * this->__N;
+    this->__R = 2 * this->__K;
     this->__hp = new std::atomic<T*>[this->__N](nullptr);
 }
 
@@ -105,34 +105,51 @@ auto zpt::lf::hptr_domain<T>::operator=(hptr_domain<T>&& _rhs) -> zpt::lf::hptr_
     return (*this);
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::add(T* _ptr) -> zpt::lf::hptr_domain<T>& {
+template <typename T> auto zpt::lf::hptr_domain<T>::create() -> T* {
+    T* _ptr = new T{};
     size_t _idx = zpt::lf::hptr_domain<T>::get_this_thread_idx();
 
     for (size_t _k = _idx * this->__K; _k != (_idx + 1) * this->__K; ++_k) {
         T* _null = nullptr;
         if (this->__hp[_k].compare_exchange_strong(_null, _ptr)) {
-            return (*this);
+            return _ptr;
         }
     }
+
+    delete _ptr;
     assertz(false,
             "No more hazard-pointer slots available for this thread. Please, run the `clean()` "
             "before continuing",
             500,
             0);
-    return (*this);
+    return nullptr;
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::remove(T* _ptr) -> zpt::lf::hptr_domain<T>& {
-    int _idx = zpt::lf::hptr_domain<T>::get_this_thread_idx();
+template <typename T> auto zpt::lf::hptr_domain<T>::destroy(T* _ptr) -> zpt::lf::hptr_domain<T>& {
     auto _retired = zpt::lf::hptr_domain<T>::get_retired();
-    _retired.push_back(_ptr);
+    int _idx{zpt::lf::hptr_domain<T>::get_this_thread_idx()};
+    bool _found{false};
 
     for (size_t _k = _idx * this->__K; _k != static_cast<size_t>((_idx + 1) * this->__K); ++_k) {
         if (this->__hp[_k].compare_exchange_strong(_ptr, nullptr)) {
+            _found = true;
             break;
         }
     }
 
+    if (_found) {
+        _retired.push_back(_ptr);
+    } else {
+        assertz(false,
+                "No more hazard-pointer slots available for this thread. Please, run the `clean()` "
+                "before continuing",
+                500,
+                0);
+    }
+
+    std::cout << "_thread_idx = " << _idx << " | _retired.size() = " << _retired.size()
+              << " | __R = " << this->__R << std::endl
+              << std::flush;
     if (_retired.size() == static_cast<size_t>(this->__R)) {
         this->clean();
     }
@@ -179,7 +196,7 @@ auto zpt::lf::hptr_domain<T>::set_max_threads(int _n_threads) -> zpt::lf::hptr_d
         this->__P = _n_threads;
         if (this->__K != 0) {
             this->__N = this->__P * this->__K;
-            this->__R = 2 * this->__N;
+            this->__R = 2 * this->__K;
         }
     }
     return (*this);
@@ -194,7 +211,7 @@ auto zpt::lf::hptr_domain<T>::set_max_hps_per_thread(int _n_hp_per_thread)
         this->__K = _factor * CACHE_LINE_PADDING;
         if (this->__P != 0) {
             this->__N = this->__P * this->__K;
-            this->__R = 2 * this->__N;
+            this->__R = 2 * this->__K;
         }
     }
     return (*this);
