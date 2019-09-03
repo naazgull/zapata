@@ -127,8 +127,7 @@ class queue {
             for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
                 if (_it.node()->__is_null.load())
                     continue;
-                _out << (_count % 5 == 0 ? "\n\t" : ", ") << *_it.node()
-                     << std::flush;
+                _out << (_count % 5 == 0 ? "\n\t" : ", ") << *_it.node() << std::flush;
                 _count++;
             }
         }

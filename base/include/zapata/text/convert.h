@@ -317,7 +317,7 @@ type
 HMAC_SHA256(const type& input, k_type key) {
     unsigned char hash[EVP_MAX_MD_SIZE];
 
-    HMAC_CTX *hmac = HMAC_CTX_new();
+    HMAC_CTX* hmac = HMAC_CTX_new();
     HMAC_Init_ex(hmac, &key[0], key.length(), EVP_sha256(), NULL);
     HMAC_Update(hmac, (unsigned char*)&input[0], input.length());
     unsigned int len = EVP_MAX_MD_SIZE;
