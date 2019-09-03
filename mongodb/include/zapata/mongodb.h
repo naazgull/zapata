@@ -24,6 +24,6 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/mongodb/Client.h>
 #include <zapata/mongodb/config.h>
 #include <zapata/mongodb/convert_mongo.h>
-#include <zapata/mongodb/Client.h>

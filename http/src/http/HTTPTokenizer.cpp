@@ -58,10 +58,10 @@ namespace // anonymous
 char const author[] = "Frank B. Brokken (f.b.brokken@rug.nl)";
 
 enum ReservedTokens {
-	PARSE_ACCEPT = 0, // `ACCEPT' TRANSITION
-	_UNDETERMINED_ = -2,
-	_EOF_ = -1,
-	_error_ = 256
+    PARSE_ACCEPT = 0, // `ACCEPT' TRANSITION
+    _UNDETERMINED_ = -2,
+    _EOF_ = -1,
+    _error_ = 256
 };
 enum StateType // modify statetype/data.cc when this enum changes
 { NORMAL,
@@ -75,334 +75,346 @@ enum StateType // modify statetype/data.cc when this enum changes
 };
 struct PI__ // Production Info
 {
-	size_t d_nonTerm; // identification number of this production's
-			  // non-terminal
-	size_t d_size;    // number of elements in this production
+    size_t d_nonTerm; // identification number of this production's
+    // non-terminal
+    size_t d_size; // number of elements in this production
 };
 
 struct SR__ // Shift Reduce info, see its description above
 {
-	union {
-		int _field_1_; // initializer, allowing initializations
-		// of the SR s_[] arrays
-		int d_type;
-		int d_token;
-	};
-	union {
-		int _field_2_;
+    union {
+        int _field_1_; // initializer, allowing initializations
+        // of the SR s_[] arrays
+        int d_type;
+        int d_token;
+    };
+    union {
+        int _field_2_;
 
-		int d_lastIdx;       // if negative, the state uses SHIFT
-		int d_action;	// may be negative (reduce),
-				     // postive (shift), or 0 (accept)
-		size_t d_errorState; // used with Error states
-	};
+        int d_lastIdx;       // if negative, the state uses SHIFT
+        int d_action;        // may be negative (reduce),
+                             // postive (shift), or 0 (accept)
+        size_t d_errorState; // used with Error states
+    };
 };
 
 // $insert staticdata
 
 enum // size to expand the state-stack with when
 {    // full
-	STACK_EXPANSION__ = 10
+    STACK_EXPANSION__ = 10
 };
 
 // Productions Info Records:
 PI__ const s_productionInfo[] = {
-    {0, 0},    // not used: reduction values are negative
-    {269, 10}, // 1: exp (METHOD) ->  METHOD #0001 SPACE URL #0002 params SPACE VERSION headers rest
-    {270, 0},  // 2: #0001 ->  <empty>
-    {272, 0},  // 3: #0002 ->  <empty>
-    {269, 10}, // 4: exp (VERSION) ->  VERSION #0003 SPACE STATUS #0004 SPACE STRING #0005 headers rest
-    {275, 0},  // 5: #0003 ->  <empty>
-    {276, 0},  // 6: #0004 ->  <empty>
-    {277, 0},  // 7: #0005 ->  <empty>
-    {271, 0},  // 8: params ->  <empty>
-    {271, 2},  // 9: params (QMARK) ->  QMARK paramslist
-    {278, 4},  // 10: paramslist (STRING) ->  STRING #0006 EQ paramvalue
-    {279, 0},  // 11: #0006 ->  <empty>
-    {278, 6},  // 12: paramslist (E) ->  paramslist E STRING #0007 EQ paramvalue
-    {281, 0},  // 13: #0007 ->  <empty>
-    {280, 0},  // 14: paramvalue ->  <empty>
-    {280, 1},  // 15: paramvalue (STRING) ->  STRING
-    {273, 3},  // 16: headers (CR_LF) ->  CR_LF headerslist CR_LF
-    {273, 2},  // 17: headers (CR_LF) ->  CR_LF headerslist
-    {282, 4},  // 18: headerslist (STRING) ->  STRING #0008 COLON STRING
-    {283, 0},  // 19: #0008 ->  <empty>
-    {282, 6},  // 20: headerslist (CR_LF) ->  headerslist CR_LF STRING #0009 COLON STRING
-    {284, 0},  // 21: #0009 ->  <empty>
-    {274, 1},  // 22: rest (BODY) ->  BODY
-    {274, 0},  // 23: rest ->  <empty>
-    {285, 1},  // 24: exp_$ ->  exp
+    { 0, 0 },    // not used: reduction values are negative
+    { 269, 10 }, // 1: exp (METHOD) ->  METHOD #0001 SPACE URL #0002 params SPACE
+                 // VERSION headers rest
+    { 270, 0 },  // 2: #0001 ->  <empty>
+    { 272, 0 },  // 3: #0002 ->  <empty>
+    { 269, 10 }, // 4: exp (VERSION) ->  VERSION #0003 SPACE STATUS #0004 SPACE
+                 // STRING #0005 headers rest
+    { 275, 0 },  // 5: #0003 ->  <empty>
+    { 276, 0 },  // 6: #0004 ->  <empty>
+    { 277, 0 },  // 7: #0005 ->  <empty>
+    { 271, 0 },  // 8: params ->  <empty>
+    { 271, 2 },  // 9: params (QMARK) ->  QMARK paramslist
+    { 278, 4 },  // 10: paramslist (STRING) ->  STRING #0006 EQ paramvalue
+    { 279, 0 },  // 11: #0006 ->  <empty>
+    { 278, 6 },  // 12: paramslist (E) ->  paramslist E STRING #0007 EQ paramvalue
+    { 281, 0 },  // 13: #0007 ->  <empty>
+    { 280, 0 },  // 14: paramvalue ->  <empty>
+    { 280, 1 },  // 15: paramvalue (STRING) ->  STRING
+    { 273, 3 },  // 16: headers (CR_LF) ->  CR_LF headerslist CR_LF
+    { 273, 2 },  // 17: headers (CR_LF) ->  CR_LF headerslist
+    { 282, 4 },  // 18: headerslist (STRING) ->  STRING #0008 COLON STRING
+    { 283, 0 },  // 19: #0008 ->  <empty>
+    { 282, 6 },  // 20: headerslist (CR_LF) ->  headerslist CR_LF STRING #0009
+                 // COLON STRING
+    { 284, 0 },  // 21: #0009 ->  <empty>
+    { 274, 1 },  // 22: rest (BODY) ->  BODY
+    { 274, 0 },  // 23: rest ->  <empty>
+    { 285, 1 },  // 24: exp_$ ->  exp
 };
 
 // State info and SR__ transitions for each state.
 
 SR__ const s_0[] = {
-    {{REQ_TOKEN}, {4}},
-    {{269}, {1}}, // exp
-    {{257}, {2}}, // METHOD
-    {{258}, {3}}, // VERSION
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 4 } }, { { 269 }, { 1 } }, // exp
+    { { 257 }, { 2 } },                           // METHOD
+    { { 258 }, { 3 } },                           // VERSION
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_1[] = {
-    {{REQ_TOKEN}, {2}}, {{_EOF_}, {PARSE_ACCEPT}}, {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { _EOF_ }, { PARSE_ACCEPT } },
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_2[] = {
-    {{DEF_RED}, {2}},
-    {{270}, {4}}, // #0001
-    {{0}, {-2}},
+    { { DEF_RED }, { 2 } },
+    { { 270 }, { 4 } }, // #0001
+    { { 0 }, { -2 } },
 };
 
 SR__ const s_3[] = {
-    {{DEF_RED}, {2}},
-    {{275}, {5}}, // #0003
-    {{0}, {-5}},
+    { { DEF_RED }, { 2 } },
+    { { 275 }, { 5 } }, // #0003
+    { { 0 }, { -5 } },
 };
 
 SR__ const s_4[] = {
-    {{REQ_TOKEN}, {2}},
-    {{264}, {6}}, // SPACE
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 264 }, { 6 } }, // SPACE
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_5[] = {
-    {{REQ_TOKEN}, {2}},
-    {{264}, {7}}, // SPACE
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 264 }, { 7 } }, // SPACE
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_6[] = {
-    {{REQ_TOKEN}, {2}},
-    {{259}, {8}}, // URL
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 259 }, { 8 } }, // URL
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_7[] = {
-    {{REQ_TOKEN}, {2}},
-    {{260}, {9}}, // STATUS
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 260 }, { 9 } }, // STATUS
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_8[] = {
-    {{DEF_RED}, {2}},
-    {{272}, {10}}, // #0002
-    {{0}, {-3}},
+    { { DEF_RED }, { 2 } },
+    { { 272 }, { 10 } }, // #0002
+    { { 0 }, { -3 } },
 };
 
 SR__ const s_9[] = {
-    {{DEF_RED}, {2}},
-    {{276}, {11}}, // #0004
-    {{0}, {-6}},
+    { { DEF_RED }, { 2 } },
+    { { 276 }, { 11 } }, // #0004
+    { { 0 }, { -6 } },
 };
 
 SR__ const s_10[] = {
-    {{REQ_DEF}, {3}},
-    {{271}, {12}}, // params
-    {{266}, {13}}, // QMARK
-    {{0}, {-8}},
+    { { REQ_DEF }, { 3 } },
+    { { 271 }, { 12 } }, // params
+    { { 266 }, { 13 } }, // QMARK
+    { { 0 }, { -8 } },
 };
 
 SR__ const s_11[] = {
-    {{REQ_TOKEN}, {2}},
-    {{264}, {14}}, // SPACE
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 264 }, { 14 } }, // SPACE
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_12[] = {
-    {{REQ_TOKEN}, {2}},
-    {{264}, {15}}, // SPACE
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 264 }, { 15 } }, // SPACE
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_13[] = {
-    {{REQ_TOKEN}, {3}},
-    {{278}, {16}}, // paramslist
-    {{263}, {17}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 3 } },
+    { { 278 }, { 16 } }, // paramslist
+    { { 263 }, { 17 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_14[] = {
-    {{REQ_TOKEN}, {2}},
-    {{263}, {18}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 263 }, { 18 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_15[] = {
-    {{REQ_TOKEN}, {2}},
-    {{258}, {19}}, // VERSION
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 258 }, { 19 } }, // VERSION
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_16[] = {
-    {{REQ_DEF}, {2}},
-    {{268}, {20}}, // E
-    {{0}, {-9}},
+    { { REQ_DEF }, { 2 } },
+    { { 268 }, { 20 } }, // E
+    { { 0 }, { -9 } },
 };
 
 SR__ const s_17[] = {
-    {{DEF_RED}, {2}},
-    {{279}, {21}}, // #0006
-    {{0}, {-11}},
+    { { DEF_RED }, { 2 } },
+    { { 279 }, { 21 } }, // #0006
+    { { 0 }, { -11 } },
 };
 
 SR__ const s_18[] = {
-    {{DEF_RED}, {2}},
-    {{277}, {22}}, // #0005
-    {{0}, {-7}},
+    { { DEF_RED }, { 2 } },
+    { { 277 }, { 22 } }, // #0005
+    { { 0 }, { -7 } },
 };
 
 SR__ const s_19[] = {
-    {{REQ_TOKEN}, {3}},
-    {{273}, {23}}, // headers
-    {{261}, {24}}, // CR_LF
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 3 } },
+    { { 273 }, { 23 } }, // headers
+    { { 261 }, { 24 } }, // CR_LF
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_20[] = {
-    {{REQ_TOKEN}, {2}},
-    {{263}, {25}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 263 }, { 25 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_21[] = {
-    {{REQ_TOKEN}, {2}},
-    {{267}, {26}}, // EQ
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 267 }, { 26 } }, // EQ
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_22[] = {
-    {{REQ_TOKEN}, {3}},
-    {{273}, {27}}, // headers
-    {{261}, {24}}, // CR_LF
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 3 } },
+    { { 273 }, { 27 } }, // headers
+    { { 261 }, { 24 } }, // CR_LF
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_23[] = {
-    {{REQ_DEF}, {3}},
-    {{274}, {28}}, // rest
-    {{265}, {29}}, // BODY
-    {{0}, {-23}},
+    { { REQ_DEF }, { 3 } },
+    { { 274 }, { 28 } }, // rest
+    { { 265 }, { 29 } }, // BODY
+    { { 0 }, { -23 } },
 };
 
 SR__ const s_24[] = {
-    {{REQ_TOKEN}, {3}},
-    {{282}, {30}}, // headerslist
-    {{263}, {31}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 3 } },
+    { { 282 }, { 30 } }, // headerslist
+    { { 263 }, { 31 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_25[] = {
-    {{DEF_RED}, {2}},
-    {{281}, {32}}, // #0007
-    {{0}, {-13}},
+    { { DEF_RED }, { 2 } },
+    { { 281 }, { 32 } }, // #0007
+    { { 0 }, { -13 } },
 };
 
 SR__ const s_26[] = {
-    {{REQ_DEF}, {3}},
-    {{280}, {33}}, // paramvalue
-    {{263}, {34}}, // STRING
-    {{0}, {-14}},
+    { { REQ_DEF }, { 3 } },
+    { { 280 }, { 33 } }, // paramvalue
+    { { 263 }, { 34 } }, // STRING
+    { { 0 }, { -14 } },
 };
 
 SR__ const s_27[] = {
-    {{REQ_DEF}, {3}},
-    {{274}, {35}}, // rest
-    {{265}, {29}}, // BODY
-    {{0}, {-23}},
+    { { REQ_DEF }, { 3 } },
+    { { 274 }, { 35 } }, // rest
+    { { 265 }, { 29 } }, // BODY
+    { { 0 }, { -23 } },
 };
 
 SR__ const s_28[] = {
-    {{DEF_RED}, {1}}, {{0}, {-1}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -1 } },
 };
 
 SR__ const s_29[] = {
-    {{DEF_RED}, {1}}, {{0}, {-22}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -22 } },
 };
 
 SR__ const s_30[] = {
-    {{REQ_DEF}, {2}},
-    {{261}, {36}}, // CR_LF
-    {{0}, {-17}},
+    { { REQ_DEF }, { 2 } },
+    { { 261 }, { 36 } }, // CR_LF
+    { { 0 }, { -17 } },
 };
 
 SR__ const s_31[] = {
-    {{DEF_RED}, {2}},
-    {{283}, {37}}, // #0008
-    {{0}, {-19}},
+    { { DEF_RED }, { 2 } },
+    { { 283 }, { 37 } }, // #0008
+    { { 0 }, { -19 } },
 };
 
 SR__ const s_32[] = {
-    {{REQ_TOKEN}, {2}},
-    {{267}, {38}}, // EQ
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 267 }, { 38 } }, // EQ
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_33[] = {
-    {{DEF_RED}, {1}}, {{0}, {-10}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -10 } },
 };
 
 SR__ const s_34[] = {
-    {{DEF_RED}, {1}}, {{0}, {-15}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -15 } },
 };
 
 SR__ const s_35[] = {
-    {{DEF_RED}, {1}}, {{0}, {-4}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -4 } },
 };
 
 SR__ const s_36[] = {
-    {{REQ_DEF}, {2}},
-    {{263}, {39}}, // STRING
-    {{0}, {-16}},
+    { { REQ_DEF }, { 2 } },
+    { { 263 }, { 39 } }, // STRING
+    { { 0 }, { -16 } },
 };
 
 SR__ const s_37[] = {
-    {{REQ_TOKEN}, {2}},
-    {{262}, {40}}, // COLON
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 262 }, { 40 } }, // COLON
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_38[] = {
-    {{REQ_DEF}, {3}},
-    {{280}, {41}}, // paramvalue
-    {{263}, {34}}, // STRING
-    {{0}, {-14}},
+    { { REQ_DEF }, { 3 } },
+    { { 280 }, { 41 } }, // paramvalue
+    { { 263 }, { 34 } }, // STRING
+    { { 0 }, { -14 } },
 };
 
 SR__ const s_39[] = {
-    {{DEF_RED}, {2}},
-    {{284}, {42}}, // #0009
-    {{0}, {-21}},
+    { { DEF_RED }, { 2 } },
+    { { 284 }, { 42 } }, // #0009
+    { { 0 }, { -21 } },
 };
 
 SR__ const s_40[] = {
-    {{REQ_TOKEN}, {2}},
-    {{263}, {43}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 263 }, { 43 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_41[] = {
-    {{DEF_RED}, {1}}, {{0}, {-12}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -12 } },
 };
 
 SR__ const s_42[] = {
-    {{REQ_TOKEN}, {2}},
-    {{262}, {44}}, // COLON
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 262 }, { 44 } }, // COLON
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_43[] = {
-    {{DEF_RED}, {1}}, {{0}, {-18}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -18 } },
 };
 
 SR__ const s_44[] = {
-    {{REQ_TOKEN}, {2}},
-    {{263}, {45}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 263 }, { 45 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_45[] = {
-    {{DEF_RED}, {1}}, {{0}, {-20}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -20 } },
 };
 
 // State array:
@@ -412,7 +424,7 @@ SR__ const* s_state[] = {
     s_32, s_33, s_34, s_35, s_36, s_37, s_38, s_39, s_40, s_41, s_42, s_43, s_44, s_45,
 };
 
-} // anonymous namespace ends
+} // namespace
 
 // $insert namespace-open
 namespace zpt {
@@ -424,234 +436,258 @@ namespace zpt {
 // simply throwing the appropriate exceptions.
 
 HTTPTokenizerBase::HTTPTokenizerBase()
-    : // $insert requiredtokens
-      d_requiredTokens__(0),
-      d_acceptedTokens__(d_requiredTokens__), d_token__(_UNDETERMINED_), d_nextToken__(_UNDETERMINED_) {}
+  : // $insert requiredtokens
+  d_requiredTokens__(0)
+  , d_acceptedTokens__(d_requiredTokens__)
+  , d_token__(_UNDETERMINED_)
+  , d_nextToken__(_UNDETERMINED_) {}
 
-void HTTPTokenizerBase::setDebug(bool mode) {
-	d_actionCases__ = false;
-	d_debug__ = mode;
+void
+HTTPTokenizerBase::setDebug(bool mode) {
+    d_actionCases__ = false;
+    d_debug__ = mode;
 }
 
-void HTTPTokenizerBase::setDebug(DebugMode__ mode) {
-	d_actionCases__ = mode & ACTIONCASES;
-	d_debug__ = mode & ON;
+void
+HTTPTokenizerBase::setDebug(DebugMode__ mode) {
+    d_actionCases__ = mode & ACTIONCASES;
+    d_debug__ = mode & ON;
 }
 
-void HTTPTokenizer::print__() {
-	// $insert print
+void
+HTTPTokenizer::print__() {
+    // $insert print
 }
 
-void HTTPTokenizerBase::clearin() { d_token__ = d_nextToken__ = _UNDETERMINED_; }
-
-void HTTPTokenizerBase::push__(size_t state) {
-	size_t currentSize = d_stateStack__.size();
-	if (static_cast<size_t>(d_stackIdx__ + 1) == currentSize) {
-		size_t newSize = currentSize + STACK_EXPANSION__;
-		d_stateStack__.resize(newSize);
-		if (d_valueStack__.capacity() >= newSize)
-			d_valueStack__.resize(newSize);
-		else {
-			std::vector<STYPE__> enlarged(newSize);
-			for (size_t idx = 0; idx != currentSize; ++idx)
-				enlarged[idx] = std::move(d_valueStack__[idx]);
-			d_valueStack__.swap(enlarged);
-		}
-	}
-	++d_stackIdx__;
-	d_stateStack__[d_stackIdx__] = d_state__ = state;
-	*(d_vsp__ = &d_valueStack__[d_stackIdx__]) = std::move(d_val__);
+void
+HTTPTokenizerBase::clearin() {
+    d_token__ = d_nextToken__ = _UNDETERMINED_;
 }
 
-void HTTPTokenizerBase::popToken__() {
-	d_token__ = d_nextToken__;
-
-	d_val__ = std::move(d_nextVal__);
-	d_nextVal__ = STYPE__();
-
-	d_nextToken__ = _UNDETERMINED_;
+void
+HTTPTokenizerBase::push__(size_t state) {
+    size_t currentSize = d_stateStack__.size();
+    if (static_cast<size_t>(d_stackIdx__ + 1) == currentSize) {
+        size_t newSize = currentSize + STACK_EXPANSION__;
+        d_stateStack__.resize(newSize);
+        if (d_valueStack__.capacity() >= newSize)
+            d_valueStack__.resize(newSize);
+        else {
+            std::vector<STYPE__> enlarged(newSize);
+            for (size_t idx = 0; idx != currentSize; ++idx)
+                enlarged[idx] = std::move(d_valueStack__[idx]);
+            d_valueStack__.swap(enlarged);
+        }
+    }
+    ++d_stackIdx__;
+    d_stateStack__[d_stackIdx__] = d_state__ = state;
+    *(d_vsp__ = &d_valueStack__[d_stackIdx__]) = std::move(d_val__);
 }
 
-void HTTPTokenizerBase::pushToken__(int token) {
-	d_nextToken__ = d_token__;
-	d_nextVal__ = std::move(d_val__);
-	d_token__ = token;
+void
+HTTPTokenizerBase::popToken__() {
+    d_token__ = d_nextToken__;
+
+    d_val__ = std::move(d_nextVal__);
+    d_nextVal__ = STYPE__();
+
+    d_nextToken__ = _UNDETERMINED_;
 }
 
-void HTTPTokenizerBase::pop__(size_t count) {
-	if (d_stackIdx__ < static_cast<int>(count)) {
-		ABORT();
-	}
-
-	d_stackIdx__ -= count;
-	d_state__ = d_stateStack__[d_stackIdx__];
-	d_vsp__ = &d_valueStack__[d_stackIdx__];
+void
+HTTPTokenizerBase::pushToken__(int token) {
+    d_nextToken__ = d_token__;
+    d_nextVal__ = std::move(d_val__);
+    d_token__ = token;
 }
 
-inline size_t HTTPTokenizerBase::top__() const { return d_stateStack__[d_stackIdx__]; }
+void
+HTTPTokenizerBase::pop__(size_t count) {
+    if (d_stackIdx__ < static_cast<int>(count)) {
+        ABORT();
+    }
 
-void HTTPTokenizer::executeAction(int production) try {
-	if (d_token__ != _UNDETERMINED_)
-		pushToken__(d_token__); // save an already available token
-
-	switch (production) {
-	// $insert actioncases
-
-	case 1: {
-		if (d_scanner.d_content_length != 0) {
-			d_scanner.body();
-			d_scanner.d_content_length = 0;
-		} else if (d_scanner.d_chunked.length() != 0) {
-			d_scanner.body();
-			d_scanner.d_chunked_length = -1;
-			d_scanner.d_chunked.assign("");
-		}
-	} break;
-
-	case 2: {
-		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::HTTPRequest);
-	} break;
-
-	case 3: {
-		d_scanner.url();
-	} break;
-
-	case 4: {
-		if (d_scanner.d_content_length != 0) {
-			d_scanner.body();
-			d_scanner.d_content_length = 0;
-		} else if (d_scanner.d_chunked.length() != 0) {
-			d_scanner.body();
-			d_scanner.d_chunked_length = -1;
-			d_scanner.d_chunked.assign("");
-		}
-	} break;
-
-	case 5: {
-		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::HTTPReply);
-	} break;
-
-	case 6: {
-		d_scanner.status();
-	} break;
-
-	case 7: {
-	} break;
-
-	case 9: {
-	} break;
-
-	case 10: {
-		d_scanner.value();
-	} break;
-
-	case 11: {
-		d_scanner.name();
-	} break;
-
-	case 12: {
-		d_scanner.value();
-	} break;
-
-	case 13: {
-		d_scanner.name();
-	} break;
-
-	case 15: {
-		d_val__ = d_vsp__[0];
-	} break;
-
-	case 16: {
-		d_val__ = d_vsp__[-2];
-	} break;
-
-	case 17: {
-		d_val__ = d_vsp__[-1];
-	} break;
-
-	case 18: {
-		d_scanner.add();
-	} break;
-
-	case 19: {
-		d_scanner.add();
-	} break;
-
-	case 20: {
-		d_scanner.add();
-	} break;
-
-	case 21: {
-		d_scanner.add();
-	} break;
-
-	case 22: {
-		d_scanner.body();
-		d_scanner.d_content_length = 0;
-		d_scanner.d_chunked_length = -1;
-		d_scanner.d_chunked.assign("");
-	} break;
-	}
-} catch (std::exception const& exc) {
-	exceptionHandler__(exc);
+    d_stackIdx__ -= count;
+    d_state__ = d_stateStack__[d_stackIdx__];
+    d_vsp__ = &d_valueStack__[d_stackIdx__];
 }
 
-inline void HTTPTokenizerBase::reduce__(PI__ const& pi) {
-	d_token__ = pi.d_nonTerm;
-	pop__(pi.d_size);
+inline size_t
+HTTPTokenizerBase::top__() const {
+    return d_stateStack__[d_stackIdx__];
 }
 
-// If d_token__ is _UNDETERMINED_ then if d_nextToken__ is _UNDETERMINED_ another
+void
+HTTPTokenizer::executeAction(int production) try {
+    if (d_token__ != _UNDETERMINED_)
+        pushToken__(d_token__); // save an already available token
+
+    switch (production) {
+            // $insert actioncases
+
+        case 1: {
+            if (d_scanner.d_content_length != 0) {
+                d_scanner.body();
+                d_scanner.d_content_length = 0;
+            }
+            else if (d_scanner.d_chunked.length() != 0) {
+                d_scanner.body();
+                d_scanner.d_chunked_length = -1;
+                d_scanner.d_chunked.assign("");
+            }
+        } break;
+
+        case 2: {
+            d_scanner.d_content_length = 0;
+            d_scanner.init(zpt::HTTPRequest);
+        } break;
+
+        case 3: {
+            d_scanner.url();
+        } break;
+
+        case 4: {
+            if (d_scanner.d_content_length != 0) {
+                d_scanner.body();
+                d_scanner.d_content_length = 0;
+            }
+            else if (d_scanner.d_chunked.length() != 0) {
+                d_scanner.body();
+                d_scanner.d_chunked_length = -1;
+                d_scanner.d_chunked.assign("");
+            }
+        } break;
+
+        case 5: {
+            d_scanner.d_content_length = 0;
+            d_scanner.init(zpt::HTTPReply);
+        } break;
+
+        case 6: {
+            d_scanner.status();
+        } break;
+
+        case 7: {
+        } break;
+
+        case 9: {
+        } break;
+
+        case 10: {
+            d_scanner.value();
+        } break;
+
+        case 11: {
+            d_scanner.name();
+        } break;
+
+        case 12: {
+            d_scanner.value();
+        } break;
+
+        case 13: {
+            d_scanner.name();
+        } break;
+
+        case 15: {
+            d_val__ = d_vsp__[0];
+        } break;
+
+        case 16: {
+            d_val__ = d_vsp__[-2];
+        } break;
+
+        case 17: {
+            d_val__ = d_vsp__[-1];
+        } break;
+
+        case 18: {
+            d_scanner.add();
+        } break;
+
+        case 19: {
+            d_scanner.add();
+        } break;
+
+        case 20: {
+            d_scanner.add();
+        } break;
+
+        case 21: {
+            d_scanner.add();
+        } break;
+
+        case 22: {
+            d_scanner.body();
+            d_scanner.d_content_length = 0;
+            d_scanner.d_chunked_length = -1;
+            d_scanner.d_chunked.assign("");
+        } break;
+    }
+}
+catch (std::exception const& exc) {
+    exceptionHandler__(exc);
+}
+
+inline void
+HTTPTokenizerBase::reduce__(PI__ const& pi) {
+    d_token__ = pi.d_nonTerm;
+    pop__(pi.d_size);
+}
+
+// If d_token__ is _UNDETERMINED_ then if d_nextToken__ is _UNDETERMINED_
+// another
 // token is obtained from lex(). Then d_nextToken__ is assigned to d_token__.
-void HTTPTokenizer::nextToken() {
-	if (d_token__ != _UNDETERMINED_) // no need for a token: got one
-		return;			 // already
+void
+HTTPTokenizer::nextToken() {
+    if (d_token__ != _UNDETERMINED_) // no need for a token: got one
+        return;                      // already
 
-	if (d_nextToken__ != _UNDETERMINED_) {
-		popToken__(); // consume pending token
-	} else {
-		++d_acceptedTokens__; // accept another token (see
-		// errorRecover())
-		d_token__ = lex();
-		if (d_token__ <= 0)
-			d_token__ = _EOF_;
-	}
-	print();
+    if (d_nextToken__ != _UNDETERMINED_) {
+        popToken__(); // consume pending token
+    }
+    else {
+        ++d_acceptedTokens__; // accept another token (see
+        // errorRecover())
+        d_token__ = lex();
+        if (d_token__ <= 0)
+            d_token__ = _EOF_;
+    }
+    print();
 }
 
 // if the final transition is negative, then we should reduce by the rule
 // given by its positive value. Note that the `recovery' parameter is only
 // used with the --debug option
-int HTTPTokenizer::lookup(bool recovery) {
-	// $insert threading
-	SR__ const* sr = s_state[d_state__]; // get the appropriate state-table
-	int lastIdx = sr->d_lastIdx;	 // sentinel-index in the SR_ array
+int
+HTTPTokenizer::lookup(bool recovery) {
+    // $insert threading
+    SR__ const* sr = s_state[d_state__]; // get the appropriate state-table
+    int lastIdx = sr->d_lastIdx;         // sentinel-index in the SR_ array
 
-	SR__ const* lastElementPtr = sr + lastIdx;
-	SR__ const* elementPtr = sr + 1; // start the search at s_xx[1]
+    SR__ const* lastElementPtr = sr + lastIdx;
+    SR__ const* elementPtr = sr + 1; // start the search at s_xx[1]
 
-	while (elementPtr != lastElementPtr && elementPtr->d_token != d_token__)
-		++elementPtr;
+    while (elementPtr != lastElementPtr && elementPtr->d_token != d_token__)
+        ++elementPtr;
 
-	if (elementPtr == lastElementPtr) // reached the last element
-	{
-		if (elementPtr->d_action < 0) // default reduction
-		{
-			return elementPtr->d_action;
-		}
+    if (elementPtr == lastElementPtr) // reached the last element
+    {
+        if (elementPtr->d_action < 0) // default reduction
+        {
+            return elementPtr->d_action;
+        }
 
-		// No default reduction, so token not found, so error.
-		throw UNEXPECTED_TOKEN__;
-	}
+        // No default reduction, so token not found, so error.
+        throw UNEXPECTED_TOKEN__;
+    }
 
-	// not at the last element: inspect the nature of the action
-	// (< 0: reduce, 0: ACCEPT, > 0: shift)
+    // not at the last element: inspect the nature of the action
+    // (< 0: reduce, 0: ACCEPT, > 0: shift)
 
-	int action = elementPtr->d_action;
+    int action = elementPtr->d_action;
 
-	return action;
+    return action;
 }
 
 // When an error has occurred, pop elements off the stack until the top
@@ -661,78 +697,83 @@ int HTTPTokenizer::lookup(bool recovery) {
 // If EOF is encountered without being appropriate for the current state,
 // then the error recovery will fall back to the default recovery mode.
 // (i.e., parsing terminates)
-void HTTPTokenizer::errorRecovery() try {
-	if (d_acceptedTokens__ >= d_requiredTokens__) // only generate an error-
-	{					      // message if enough tokens
-		++d_nErrors__;			      // were accepted. Otherwise
-		error("Syntax error");		      // simply skip input
-	}
+void
+HTTPTokenizer::errorRecovery() try {
+    if (d_acceptedTokens__ >= d_requiredTokens__) // only generate an error-
+    {                                             // message if enough tokens
+        ++d_nErrors__;                            // were accepted. Otherwise
+        error("Syntax error");                    // simply skip input
+    }
 
-	// get the error state
-	while (not(s_state[top__()][0].d_type & ERR_ITEM)) {
-		pop__();
-	}
+    // get the error state
+    while (not(s_state[top__()][0].d_type & ERR_ITEM)) {
+        pop__();
+    }
 
-	// In the error state, lookup a token allowing us to proceed.
-	// Continuation may be possible following multiple reductions,
-	// but eventuall a shift will be used, requiring the retrieval of
-	// a terminal token. If a retrieved token doesn't match, the catch below
-	// will ensure the next token is requested in the while(true) block
-	// implemented below:
+    // In the error state, lookup a token allowing us to proceed.
+    // Continuation may be possible following multiple reductions,
+    // but eventuall a shift will be used, requiring the retrieval of
+    // a terminal token. If a retrieved token doesn't match, the catch below
+    // will ensure the next token is requested in the while(true) block
+    // implemented below:
 
-	int lastToken = d_token__; // give the unexpected token a
-				   // chance to be processed
-				   // again.
+    int lastToken = d_token__; // give the unexpected token a
+                               // chance to be processed
+                               // again.
 
-	pushToken__(_error_); // specify _error_ as next token
-	push__(lookup(true)); // push the error state
+    pushToken__(_error_); // specify _error_ as next token
+    push__(lookup(true)); // push the error state
 
-	d_token__ = lastToken; // reactivate the unexpected
-			       // token (we're now in an
-			       // ERROR state).
+    d_token__ = lastToken; // reactivate the unexpected
+                           // token (we're now in an
+                           // ERROR state).
 
-	bool gotToken = true; // the next token is a terminal
+    bool gotToken = true; // the next token is a terminal
 
-	while (true) {
-		try {
-			if (s_state[d_state__]->d_type & REQ_TOKEN) {
-				gotToken = d_token__ == _UNDETERMINED_;
-				nextToken(); // obtain next token
-			}
+    while (true) {
+        try {
+            if (s_state[d_state__]->d_type & REQ_TOKEN) {
+                gotToken = d_token__ == _UNDETERMINED_;
+                nextToken(); // obtain next token
+            }
 
-			int action = lookup(true);
+            int action = lookup(true);
 
-			if (action > 0) // push a new state
-			{
-				push__(action);
-				popToken__();
+            if (action > 0) // push a new state
+            {
+                push__(action);
+                popToken__();
 
-				if (gotToken) {
+                if (gotToken) {
 
-					d_acceptedTokens__ = 0;
-					return;
-				}
-			} else if (action < 0) {
-				// no actions executed on recovery but save an already
-				// available token:
-				if (d_token__ != _UNDETERMINED_)
-					pushToken__(d_token__);
+                    d_acceptedTokens__ = 0;
+                    return;
+                }
+            }
+            else if (action < 0) {
+                // no actions executed on recovery but save an already
+                // available token:
+                if (d_token__ != _UNDETERMINED_)
+                    pushToken__(d_token__);
 
-				// next token is the rule's LHS
-				reduce__(s_productionInfo[-action]);
-			} else
-				ABORT(); // abort when accepting during
-					 // error recovery
-		} catch (...) {
-			if (d_token__ == _EOF_)
-				ABORT(); // saw inappropriate _EOF_
+                // next token is the rule's LHS
+                reduce__(s_productionInfo[-action]);
+            }
+            else
+                ABORT(); // abort when accepting during
+                         // error recovery
+        }
+        catch (...) {
+            if (d_token__ == _EOF_)
+                ABORT(); // saw inappropriate _EOF_
 
-			popToken__(); // failing token now skipped
-		}
-	}
-} catch (ErrorRecovery__) // This is: DEFAULT_RECOVERY_MODE
+            popToken__(); // failing token now skipped
+        }
+    }
+}
+catch (ErrorRecovery__) // This is: DEFAULT_RECOVERY_MODE
 {
-	ABORT();
+    ABORT();
 }
 
 // The parsing algorithm:
@@ -763,35 +804,40 @@ void HTTPTokenizer::errorRecovery() try {
 //     default reduction. Error handling was described at the top of this
 //     file.
 
-int HTTPTokenizer::parse() try {
-	push__(0); // initial state
-	clearin(); // clear the tokens.
+int
+HTTPTokenizer::parse() try {
+    push__(0); // initial state
+    clearin(); // clear the tokens.
 
-	while (true) {
-		try {
-			if (s_state[d_state__]->d_type & REQ_TOKEN)
-				nextToken(); // obtain next token
+    while (true) {
+        try {
+            if (s_state[d_state__]->d_type & REQ_TOKEN)
+                nextToken(); // obtain next token
 
-			int action = lookup(false); // lookup d_token__ in d_state__
+            int action = lookup(false); // lookup d_token__ in d_state__
 
-			if (action > 0) // SHIFT: push a new state
-			{
-				push__(action);
-				popToken__();  // token processed
-			} else if (action < 0) // REDUCE: execute and pop.
-			{
-				executeAction(-action);
-				// next token is the rule's LHS
-				reduce__(s_productionInfo[-action]);
-			} else
-				ACCEPT();
-		} catch (ErrorRecovery__) {
-			errorRecovery();
-		}
-	}
-} catch (Return__ retValue) {
-	return retValue;
+            if (action > 0) // SHIFT: push a new state
+            {
+                push__(action);
+                popToken__(); // token processed
+            }
+            else if (action < 0) // REDUCE: execute and pop.
+            {
+                executeAction(-action);
+                // next token is the rule's LHS
+                reduce__(s_productionInfo[-action]);
+            }
+            else
+                ACCEPT();
+        }
+        catch (ErrorRecovery__) {
+            errorRecovery();
+        }
+    }
+}
+catch (Return__ retValue) {
+    return retValue;
 }
 
 // $insert namespace-close
-}
+} // namespace zpt

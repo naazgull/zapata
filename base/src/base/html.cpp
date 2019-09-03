@@ -24,75 +24,80 @@ SOFTWARE.
 
 #include <zapata/text/html.h>
 
-#include <unistd.h>
 #include <iomanip>
+#include <unistd.h>
 #include <zapata/text/manip.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
-void zpt::html::entities_encode(wstring s, ostream& out, bool quote, bool tags) {
-	ostringstream oss;
-	for (size_t i = 0; i != s.length(); i++) {
-		if (((unsigned char)s[i]) > 127) {
-			oss << "&#" << dec << ((int)s.at(i)) << ";";
-		} else if (s[i] == '"' && quote) {
-			oss << "&quot;";
-		} else if (s[i] == '<' && tags) {
-			oss << "&lt;";
-		} else if (s[i] == '>' && tags) {
-			oss << "&gt;";
-		} else if (s[i] == '&') {
-			oss << "&amp;";
-		} else {
-			oss << ((char)s.at(i));
-		}
-	}
-	oss << flush;
-	out << oss.str();
+void
+zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) {
+    std::ostringstream oss;
+    for (size_t i = 0; i != s.length(); i++) {
+        if (((unsigned char)s[i]) > 127) {
+            oss << "&#" << std::dec << ((int)s.at(i)) << ";";
+        }
+        else if (s[i] == '"' && quote) {
+            oss << "&quot;";
+        }
+        else if (s[i] == '<' && tags) {
+            oss << "&lt;";
+        }
+        else if (s[i] == '>' && tags) {
+            oss << "&gt;";
+        }
+        else if (s[i] == '&') {
+            oss << "&amp;";
+        }
+        else {
+            oss << ((char)s.at(i));
+        }
+    }
+    oss << std::flush;
+    out << oss.str();
 }
 
-void zpt::html::entities_encode(string& _out, bool quote, bool tags) {
-	wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
-	wstring ws(wc);
-	ostringstream out;
-	zpt::html::entities_encode(ws, out, quote, tags);
-	delete[] wc;
-	_out.assign(out.str());
+void
+zpt::html::entities_encode(std::string& _out, bool quote, bool tags) {
+    wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
+    std::wstring ws(wc);
+    std::ostringstream out;
+    zpt::html::entities_encode(ws, out, quote, tags);
+    delete[] wc;
+    _out.assign(out.str());
 }
 
-void zpt::html::entities_decode(string& _out) {
-	wostringstream oss;
-	for (size_t i = 0; i != _out.length(); i++) {
-		if (_out[i] == '&' && _out[i + 1] == '#') {
-			stringstream ss;
-			int j = i + 2;
-			while (_out[j] != ';') {
-				ss << _out[j];
-				j++;
-			}
-			int c;
-			ss >> c;
-			oss << ((wchar_t)c);
-			i = j;
-		} else {
-			oss << ((wchar_t)_out[i]);
-		}
-	}
-	oss << flush;
+void
+zpt::html::entities_decode(std::string& _out) {
+    std::wostringstream oss;
+    for (size_t i = 0; i != _out.length(); i++) {
+        if (_out[i] == '&' && _out[i + 1] == '#') {
+            std::stringstream ss;
+            int j = i + 2;
+            while (_out[j] != ';') {
+                ss << _out[j];
+                j++;
+            }
+            int c;
+            ss >> c;
+            oss << ((wchar_t)c);
+            i = j;
+        }
+        else {
+            oss << ((wchar_t)_out[i]);
+        }
+    }
+    oss << std::flush;
 
-	char* c = zpt::utf8::wstring_to_utf8(oss.str());
-	string os(c);
-	_out.assign(os);
+    char* c = zpt::utf8::wstring_to_utf8(oss.str());
+    std::string os(c);
+    _out.assign(os);
 
-	delete[] c;
+    delete[] c;
 }
 
-void zpt::html::content_boundary(string& _in, string& _out) {
-	size_t _idx = _in.find("boundary=");
-	if (_idx != std::string::npos) {
-		_out.assign(_in.substr(_idx + 9));
-	}
+void
+zpt::html::content_boundary(std::string& _in, std::string& _out) {
+    size_t _idx = _in.find("boundary=");
+    if (_idx != std::string::npos) {
+        _out.assign(_in.substr(_idx + 9));
+    }
 }

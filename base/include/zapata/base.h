@@ -24,18 +24,18 @@ SOFTWARE.
 
 #pragma once
 
-#include <utility>
-#include <thread>
+#include <atomic>
 #include <chrono>
 #include <functional>
-#include <atomic>
+#include <thread>
+#include <utility>
 
 #include <zapata/base/assertz.h>
 #include <zapata/base/config.h>
 
 #include <zapata/text/convert.h>
-#include <zapata/text/manip.h>
 #include <zapata/text/html.h>
+#include <zapata/text/manip.h>
 
 #include <zapata/log/log.h>
 
@@ -43,9 +43,10 @@ SOFTWARE.
 
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/ClosedException.h>
-#include <zapata/exceptions/ParserEOF.h>
-#include <zapata/exceptions/NoAttributeNameException.h>
 #include <zapata/exceptions/InterruptedException.h>
+#include <zapata/exceptions/NoAttributeNameException.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
+#include <zapata/exceptions/ParserEOF.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
 #include <zapata/file/manip.h>

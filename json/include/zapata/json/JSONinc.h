@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <zapata/json/JSONTokenizerLexer.h>
 
-#define JScanner                                                                                                       \
-      public:                                                                                                          \
-	JSONTokenizerLexer
+#define JScanner                                                                                   \
+  public:                                                                                          \
+    JSONTokenizerLexer
 namespace zpt {}

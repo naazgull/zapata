@@ -24,14 +24,15 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json/JSONObj.h>
 #include <stddef.h>
 #include <string>
+#include <zapata/json/JSONObj.h>
 
 namespace zpt {
 
 namespace redis {
 
-auto to_regex(zpt::json _regex) -> std::string;
+auto
+to_regex(zpt::json _regex) -> std::string;
 }
-}
+} // namespace zpt

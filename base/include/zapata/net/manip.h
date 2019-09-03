@@ -24,15 +24,16 @@ SOFTWARE.
 
 #pragma once
 
-#include <string>
-#include <ifaddrs.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <memory>
 #include <cstring>
+#include <ifaddrs.h>
+#include <memory>
+#include <netinet/in.h>
+#include <string>
 
 namespace zpt {
 namespace net {
-auto getip(std::string _if = "") -> std::string;
+auto
+getip(std::string _if = "") -> std::string;
 }
-}
+} // namespace zpt

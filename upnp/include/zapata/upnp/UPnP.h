@@ -22,22 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <unistd.h>
-#include <iostream>
 #include <functional>
-#include <memory>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <unistd.h>
 #include <utility>
 #include <vector>
-#include <mutex>
-#include <zapata/json.h>
 #include <zapata/events.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <zapata/json.h>
 
 #define UPNP_RAW -7
 
@@ -47,10 +42,10 @@ class UPnP;
 class UPnPPtr;
 
 class UPnPPtr : public std::shared_ptr<zpt::UPnP> {
-      public:
-	UPnPPtr();
-	UPnPPtr(zpt::json _options);
-	virtual ~UPnPPtr();
+  public:
+    UPnPPtr();
+    UPnPPtr(zpt::json _options);
+    virtual ~UPnPPtr();
 };
 
 namespace upnp {
@@ -58,36 +53,37 @@ typedef zpt::UPnPPtr broker;
 }
 
 class UPnP : public zpt::Channel {
-      public:
-	UPnP(zpt::json _options);
-	virtual ~UPnP();
+  public:
+    UPnP(zpt::json _options);
+    virtual ~UPnP();
 
-	virtual auto notify(std::string _search, std::string _location) -> void;
-	virtual auto search(std::string _search) -> void;
-	virtual auto listen() -> zpt::http::req;
+    virtual auto notify(std::string _search, std::string _location) -> void;
+    virtual auto search(std::string _search) -> void;
+    virtual auto listen() -> zpt::http::req;
 
-	virtual auto recv() -> zpt::json;
-	virtual auto send(zpt::performative _performative, std::string _resource, zpt::json _payload) -> zpt::json;
-	virtual auto send(zpt::json _envelope) -> zpt::json;
+    virtual auto recv() -> zpt::json;
+    virtual auto send(zpt::performative _performative, std::string _resource, zpt::json _payload)
+      -> zpt::json;
+    virtual auto send(zpt::json _envelope) -> zpt::json;
 
-	virtual auto id() -> std::string;
-	virtual auto underlying() -> zpt::socketstream_ptr;
-	virtual auto socket() -> zmq::socket_ptr;
-	virtual auto in() -> zmq::socket_ptr;
-	virtual auto out() -> zmq::socket_ptr;
-	virtual auto fd() -> int;
-	virtual auto in_mtx() -> std::mutex&;
-	virtual auto out_mtx() -> std::mutex&;
-	virtual auto type() -> short int;
-	virtual auto protocol() -> std::string;
-	virtual auto close() -> void;
-	virtual auto available() -> bool;
-	virtual auto is_reusable() -> bool;
+    virtual auto id() -> std::string;
+    virtual auto underlying() -> zpt::socketstream_ptr;
+    virtual auto socket() -> zmq::socket_ptr;
+    virtual auto in() -> zmq::socket_ptr;
+    virtual auto out() -> zmq::socket_ptr;
+    virtual auto fd() -> int;
+    virtual auto in_mtx() -> std::mutex&;
+    virtual auto out_mtx() -> std::mutex&;
+    virtual auto type() -> short int;
+    virtual auto protocol() -> std::string;
+    virtual auto close() -> void;
+    virtual auto available() -> bool;
+    virtual auto is_reusable() -> bool;
 
-      private:
-	std::mutex __mtx_underlying;
-	std::mutex __mtx_send;
-	zpt::socketstream_ptr __underlying;
-	zpt::socketstream_ptr __send;
+  private:
+    std::mutex __mtx_underlying;
+    std::mutex __mtx_send;
+    zpt::socketstream_ptr __underlying;
+    zpt::socketstream_ptr __send;
 };
-}
+} // namespace zpt

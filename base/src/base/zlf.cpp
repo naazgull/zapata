@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include <signal.h>
 #include <unistd.h>
+#include <csignal>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,48 +35,111 @@ SOFTWARE.
 #include <zapata/lf/queue.h>
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
+constexpr int MAX_THREADS = 100;
+constexpr int N_ELEMENTS = 10000;
+
+// #define QUEUE_USE_STRING
+// #define FIRST_PUSH_THEN_POP
+
+std::atomic<int> _pushed{ 0 };
+std::atomic<int> _poped{ 0 };
+#ifdef QUEUE_USE_STRING
+zpt::lf::queue<std::string*> _list{ MAX_THREADS, N_ELEMENTS };
+#else
+zpt::lf::queue<int> _list{ MAX_THREADS, N_ELEMENTS };
 #endif
 
-int main(int _argc, char* _argv[]) {
-    int _max_threads = 1000;
-    int _n_elements = 1000;
-    zpt::lf::queue<std::string*> _list{_max_threads, _n_elements};
-    std::vector<std::thread> _threads;
-    std::atomic<int> _count{0};
+auto
+pause(int _signal) -> void {
+    std::cout << _list.to_string() << std::endl << std::flush;
+    std::cout << "#pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "#poped -> " << _poped.load() << std::endl << std::flush;
+}
 
-    for (int _i = 0; _i != _max_threads; ++_i) {
+auto
+main(int _argc, char* _argv[]) -> int {
+    std::vector<std::thread> _threads;
+
+    std::signal(SIGINT, pause);
+
+#ifdef FIRST_PUSH_THEN_POP
+    for (int _i = 0; _i != MAX_THREADS / 2; ++_i) {
+#else
+    for (int _i = 0; _i != MAX_THREADS; ++_i) {
+#endif
         _threads.emplace_back(
-            [_n_elements, &_list, &_count](int _n_thread) {
-                if (_n_thread % 2 == 0)
-                    for (int _k = 0; _k != _n_elements; ++_k)
-                        _list.push(new string(std::to_string(_n_thread * _n_elements + _k)));
-                else {
-                    for (int _k = 0, _n_tries = 0; _k != _n_elements && (_n_tries != _n_elements); ++_n_tries)
-                        try {
-                            std::string* _value = _list.pop();
-                            if (_value != nullptr) {
-                                delete _value;
-                                ++_k;
-                                _count.fetch_add(1);
-                            } else
-                                std::this_thread::sleep_for(
-                                    std::chrono::duration<int, std::milli>{10});
-                        } catch (std::out_of_range&) {
-                        }
-                }
-            },
-            _i);
+          [](int _n_thread) {
+#ifdef FIRST_PUSH_THEN_POP
+              if (_n_thread < MAX_THREADS / 2) {
+#else
+              if (_n_thread % 2 == 0) {
+#endif
+                  for (int _k = 0; _k != N_ELEMENTS; ++_k) {
+#ifdef QUEUE_USE_STRING
+                      _list.push(new std::string(std::to_string(_n_thread * N_ELEMENTS + _k)));
+#else
+                      _list.push(_n_thread * N_ELEMENTS + _k + 1);
+#endif
+                      ++_pushed;
+                  }
+              }
+#ifndef FIRST_PUSH_THEN_POP
+              else {
+                  for (int _k = 0; _k != N_ELEMENTS;) {
+                      try {
+#ifdef QUEUE_USE_STRING
+                          std::string* _value = _list.pop();
+                          delete _value;
+#else
+                          int _value = _list.pop();
+#endif
+                          ++_k;
+                          ++_poped;
+                      }
+                      catch (zpt::NoMoreElementsException& e) {
+                          std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 10 });
+                      }
+                  }
+              }
+#endif
+          },
+          _i);
     }
 
-    for (int _i = 0; _i != _max_threads; ++_i)
+#ifdef FIRST_PUSH_THEN_POP
+    std::cout << "wainting for pushes to finish... " << std::flush;
+    std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 5000 });
+    std::cout << "done!" << std::endl << std::flush;
+    for (int _i = MAX_THREADS / 2; _i != MAX_THREADS; ++_i) {
+        _threads.emplace_back(
+          [](int _n_thread) {
+              for (int _k = 0; _k != N_ELEMENTS;) {
+                  try {
+#ifdef QUEUE_USE_STRING
+                      std::string* _value = _list.pop();
+                      delete _value;
+#else
+                      int _value = _list.pop();
+#endif
+                      ++_k;
+                      ++_poped;
+                  }
+                  catch (zpt::NoMoreElementsException& e) {
+                      std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 10 });
+                  }
+              }
+          },
+          _i);
+    }
+#endif
+
+    for (int _i = 0; _i != MAX_THREADS; ++_i)
         _threads[_i].join();
 
-    std::cout << "Processed " << _count << " elements" << std::endl << std::flush;
-    std::cout << _list << std::endl << std::flush;
+    std::cout << "Processed " << _poped << " elements" << std::endl << std::flush;
+    std::cout << _list.to_string() << std::endl << std::flush;
 
     return 0;
 }

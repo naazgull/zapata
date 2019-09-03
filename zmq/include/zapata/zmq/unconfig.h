@@ -1,4 +1,5 @@
-/* include/zapata/zmq/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/zmq/config.h.in.  Generated from configure.ac by autoheader.
+ */
 
 #pragma once
 
@@ -66,7 +67,7 @@
 #undef HAVE_UNISTD_H
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+ */
 #undef LT_OBJDIR
 
 /* Name of package */

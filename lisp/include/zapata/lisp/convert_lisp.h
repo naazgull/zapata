@@ -27,12 +27,7 @@ SOFTWARE.
 #include <stddef.h>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
 
 namespace lisp {}
-}
+} // namespace zpt

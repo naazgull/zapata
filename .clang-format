@@ -1,5 +1,5 @@
 
-BasedOnStyle: LLVM
+BasedOnStyle: Mozilla
 ColumnLimit: 100
 Standard: Cpp11
 IndentWidth: 4
@@ -11,3 +11,18 @@ BinPackParameters: false
 Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: true
+    BeforeElse: true
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false

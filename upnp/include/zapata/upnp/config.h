@@ -10,34 +10,34 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-#define HAVE_LIBCRYPTO 1
+/* #undef HAVE_LIBCRYPTO */
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
-#define HAVE_LIBMAGIC 1
+/* #undef HAVE_LIBMAGIC */
 
 /* Define to 1 if you have the `mosquitto' library (-lmosquitto). */
-#define HAVE_LIBMOSQUITTO 1
+/* #undef HAVE_LIBMOSQUITTO */
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
-#define HAVE_LIBSSL 1
+/* #undef HAVE_LIBSSL */
 
 /* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_LIBZ 1
+/* #undef HAVE_LIBZ */
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+/* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-#define HAVE_LIBZAPATA_HTTP 1
+/* #undef HAVE_LIBZAPATA_HTTP */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* #undef HAVE_LIBZAPATA_JSON */
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-#define HAVE_LIBZAPATA_ZMQ 1
+/* #undef HAVE_LIBZAPATA_ZMQ */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

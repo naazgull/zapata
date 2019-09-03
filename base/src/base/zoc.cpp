@@ -35,25 +35,21 @@ SOFTWARE.
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 #define OUTSIDE 0
 #define HEADER 1
 #define LIST 2
 #define CODE 3
 #define PARAGRAPH 4
 
-int main(int _argc, char* _argv[]) {
+int
+main(int _argc, char* _argv[]) {
     for (int _idx = 1; _idx != _argc; _idx++) {
-        std::string _input_file_name{_argv[_idx]};
+        std::string _input_file_name{ _argv[_idx] };
         std::ifstream _iss;
         _iss.open(_input_file_name);
         short _state = OUTSIDE;
         if (_iss.is_open()) {
-            string _line;
+            std::string _line;
             size_t _to_trim = 0;
             while (std::getline(_iss, _line)) {
                 if (_state == OUTSIDE) {
@@ -61,39 +57,47 @@ int main(int _argc, char* _argv[]) {
                         _to_trim += 3;
                         _state = PARAGRAPH;
                     }
-                } else if (_line.find("***/") != std::string::npos) {
+                }
+                else if (_line.find("***/") != std::string::npos) {
                     _state = OUTSIDE;
-                } else {
+                }
+                else {
                     if (_line.length() >= _to_trim) {
                         _line.assign(_line.substr(_to_trim));
                         if (_line.length() != 0) {
                             if (_line[0] == '#') {
-                                cout << endl << flush;
+                                std::cout << std::endl << std::flush;
                                 _state = HEADER;
-                            } else if (_line[0] == '-') {
+                            }
+                            else if (_line[0] == '-') {
                                 if (_state != LIST) {
-                                    cout << endl << flush;
+                                    std::cout << std::endl << std::flush;
                                 }
                                 _state = LIST;
-                            } else if (_line[0] == '`') {
+                            }
+                            else if (_line[0] == '`') {
                                 if (_state == CODE) {
                                     _state = PARAGRAPH;
-                                } else {
-                                    cout << endl << flush;
+                                }
+                                else {
+                                    std::cout << std::endl << std::flush;
                                     _state = CODE;
                                 }
-                            } else {
+                            }
+                            else {
                                 if (_state != CODE && _state != PARAGRAPH) {
-                                    cout << endl << flush;
+                                    std::cout << std::endl << std::flush;
                                 }
                                 _state = PARAGRAPH;
                             }
-                            cout << _line << endl << flush;
-                        } else if (_state == CODE || _state == PARAGRAPH) {
-                            cout << endl << flush;
+                            std::cout << _line << std::endl << std::flush;
                         }
-                    } else if (_state == CODE || _state == PARAGRAPH) {
-                        cout << endl << flush;
+                        else if (_state == CODE || _state == PARAGRAPH) {
+                            std::cout << std::endl << std::flush;
+                        }
+                    }
+                    else if (_state == CODE || _state == PARAGRAPH) {
+                        std::cout << std::endl << std::flush;
                     }
                 }
             }

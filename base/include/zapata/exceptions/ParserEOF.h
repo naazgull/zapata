@@ -27,21 +27,15 @@ SOFTWARE.
 #include <exception>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
-
 class ParserEOF : public std::exception {
-      private:
-	string __what;
+  private:
+    std::string __what;
 
-      public:
-	ParserEOF(string _what);
-	virtual ~ParserEOF() throw();
+  public:
+    ParserEOF(std::string _what);
+    virtual ~ParserEOF() throw();
 
-	const char* what();
+    const char* what();
 };
-}
+} // namespace zpt

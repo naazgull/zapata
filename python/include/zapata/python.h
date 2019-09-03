@@ -24,6 +24,6 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/python/Bridge.h>
 #include <zapata/python/config.h>
 #include <zapata/python/convert_python.h>
-#include <zapata/python/Bridge.h>

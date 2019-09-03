@@ -33,8 +33,11 @@ SOFTWARE.
 namespace zpt {
 
 namespace ws {
-bool handshake(zpt::socketstream& _s);
-bool read(zpt::socketstream& _s, string& _out, int* _op_code);
-bool write(zpt::socketstream& _s, string _in);
-}
-}
+bool
+handshake(zpt::socketstream& _s);
+bool
+read(zpt::socketstream& _s, string& _out, int* _op_code);
+bool
+write(zpt::socketstream& _s, string _in);
+} // namespace ws
+} // namespace zpt

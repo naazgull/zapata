@@ -10,52 +10,52 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-#define HAVE_LIBCRYPTO 1
+/* #undef HAVE_LIBCRYPTO */
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
-#define HAVE_LIBMAGIC 1
+/* #undef HAVE_LIBMAGIC */
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-#define HAVE_LIBOSSP_UUID__ 1
+/* #undef HAVE_LIBOSSP_UUID__ */
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
-#define HAVE_LIBSSL 1
+/* #undef HAVE_LIBSSL */
 
 /* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_LIBZ 1
+/* #undef HAVE_LIBZ */
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+/* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-#define HAVE_LIBZAPATA_EVENTS 1
+/* #undef HAVE_LIBZAPATA_EVENTS */
 
 /* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-#define HAVE_LIBZAPATA_HTTP 1
+/* #undef HAVE_LIBZAPATA_HTTP */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* #undef HAVE_LIBZAPATA_JSON */
 
 /* Define to 1 if you have the `zapata-lisp' library (-lzapata-lisp). */
-#define HAVE_LIBZAPATA_LISP 1
+/* #undef HAVE_LIBZAPATA_LISP */
 
 /* Define to 1 if you have the `zapata-mqtt' library (-lzapata-mqtt). */
-#define HAVE_LIBZAPATA_MQTT 1
+/* #undef HAVE_LIBZAPATA_MQTT */
 
 /* Define to 1 if you have the `zapata-python' library (-lzapata-python). */
-#define HAVE_LIBZAPATA_PYTHON 1
+/* #undef HAVE_LIBZAPATA_PYTHON */
 
 /* Define to 1 if you have the `zapata-upnp' library (-lzapata-upnp). */
-#define HAVE_LIBZAPATA_UPNP 1
+/* #undef HAVE_LIBZAPATA_UPNP */
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
-#define HAVE_LIBZAPATA_ZMQ 1
+/* #undef HAVE_LIBZAPATA_ZMQ */
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */
-#define HAVE_LIBZMQ 1
+/* #undef HAVE_LIBZMQ */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

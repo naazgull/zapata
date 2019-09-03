@@ -23,80 +23,95 @@ SOFTWARE.
 */
 #pragma once
 
-#include <zapata/mysql/convert_sql.h>
-#include <zapata/events.h>
-#include <ossp/uuid++.hh>
 #include <mutex>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <ossp/uuid++.hh>
+#include <zapata/events.h>
+#include <zapata/mysql/convert_sql.h>
 
 namespace zpt {
 
 namespace mysql {
 
 class Client : public zpt::Connector {
-      public:
-	Client(zpt::json _options, std::string _conf_path);
-	virtual ~Client();
+  public:
+    Client(zpt::json _options, std::string _conf_path);
+    virtual ~Client();
 
-	virtual auto name() -> std::string;
-	virtual auto options() -> zpt::json;
-	virtual auto events(zpt::ev::emitter _emitter) -> void;
-	virtual auto events() -> zpt::ev::emitter;
+    virtual auto name() -> std::string;
+    virtual auto options() -> zpt::json;
+    virtual auto events(zpt::ev::emitter _emitter) -> void;
+    virtual auto events() -> zpt::ev::emitter;
 
-	virtual auto connect() -> void;
-	virtual auto reconnect() -> void;
+    virtual auto connect() -> void;
+    virtual auto reconnect() -> void;
 
-	virtual auto
-	insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> std::string;
-	virtual auto
-	upsert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> std::string;
-	virtual auto
-	save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto
-	set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> int;
-	virtual auto
-	unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto
-	unset(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto remove(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto query(std::string _collection, std::string _query, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto insert(std::string _collection,
+                        std::string _href_prefix,
+                        zpt::json _record,
+                        zpt::json _opts = zpt::undefined) -> std::string;
+    virtual auto upsert(std::string _collection,
+                        std::string _href_prefix,
+                        zpt::json _record,
+                        zpt::json _opts = zpt::undefined) -> std::string;
+    virtual auto save(std::string _collection,
+                      std::string _href,
+                      zpt::json _record,
+                      zpt::json _opts = zpt::undefined) -> int;
+    virtual auto set(std::string _collection,
+                     std::string _href,
+                     zpt::json _record,
+                     zpt::json _opts = zpt::undefined) -> int;
+    virtual auto set(std::string _collection,
+                     zpt::json _query,
+                     zpt::json _record,
+                     zpt::json _opts = zpt::undefined) -> int;
+    virtual auto unset(std::string _collection,
+                       std::string _href,
+                       zpt::json _record,
+                       zpt::json _opts = zpt::undefined) -> int;
+    virtual auto unset(std::string _collection,
+                       zpt::json _query,
+                       zpt::json _record,
+                       zpt::json _opts = zpt::undefined) -> int;
+    virtual auto remove(std::string _collection,
+                        std::string _href,
+                        zpt::json _opts = zpt::undefined) -> int;
+    virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> int;
+    virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined)
+      -> zpt::json;
+    virtual auto query(std::string _collection,
+                       std::string _query,
+                       zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> zpt::json;
+    virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
 
-      private:
-	zpt::json __options;
-	std::mutex __mtx;
-	std::unique_ptr<sql::Connection> __conn;
-	std::string _conn_str;
-	zpt::ev::emitter __events;
+  private:
+    zpt::json __options;
+    std::mutex __mtx;
+    std::unique_ptr<sql::Connection> __conn;
+    std::string _conn_str;
+    zpt::ev::emitter __events;
 };
 
 class ClientPtr : public std::shared_ptr<zpt::mysql::Client> {
-      public:
-	/**
-	 * @brief Creates an std::shared_ptr to an Self instance.
-	 *
-	 * @param _options the configuration object retrieved from the configuration JSON file
-	 */
-	ClientPtr(zpt::mysql::Client* _target);
-	ClientPtr(zpt::json _options, std::string _conf_path);
+  public:
+    /**
+     * @brief Creates an std::shared_ptr to an Self instance.
+     *
+     * @param _options the configuration object retrieved from the configuration
+     * JSON file
+     */
+    ClientPtr(zpt::mysql::Client* _target);
+    ClientPtr(zpt::json _options, std::string _conf_path);
 
-	/**
-	 * @brief Destroys the current Self instance, freeing all allocated memory.
-	 */
-	virtual ~ClientPtr();
+    /**
+     * @brief Destroys the current Self instance, freeing all allocated memory.
+     */
+    virtual ~ClientPtr();
 };
 
 typedef zpt::mysql::ClientPtr client;
-}
-}
+} // namespace mysql
+} // namespace zpt

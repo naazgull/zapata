@@ -24,23 +24,18 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/base.h>
-#include <zapata/json.h>
-#include <zapata/events.h>
-#include <string>
 #include <map>
 #include <memory>
-#include <zmq.hpp>
 #include <mutex>
-#include <zapata/zmq/SocketStreams.h>
-#include <zapata/http/HTTPObj.h>
 #include <poll.h>
+#include <string>
+#include <zapata/base.h>
+#include <zapata/events.h>
+#include <zapata/http/HTTPObj.h>
+#include <zapata/json.h>
+#include <zapata/zmq/SocketStreams.h>
 #include <zmq.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <zmq.hpp>
 
 #define ZMQ_PUB_SUB -1
 #define ZMQ_XPUB_XSUB -2
@@ -56,38 +51,38 @@ using namespace __gnu_cxx;
 namespace zpt {
 
 class HTTP : public zpt::Channel {
-      public:
-	HTTP(zpt::socketstream_ptr _underlying, zpt::json _options);
-	virtual ~HTTP();
+  public:
+    HTTP(zpt::socketstream_ptr _underlying, zpt::json _options);
+    virtual ~HTTP();
 
-	virtual auto recv() -> zpt::json;
-	virtual auto send(zpt::json _envelope) -> zpt::json;
+    virtual auto recv() -> zpt::json;
+    virtual auto send(zpt::json _envelope) -> zpt::json;
 
-	virtual auto underlying() -> zpt::socketstream_ptr;
-	virtual auto socket() -> zmq::socket_ptr;
-	virtual auto in() -> zmq::socket_ptr;
-	virtual auto out() -> zmq::socket_ptr;
-	virtual auto fd() -> int;
-	virtual auto in_mtx() -> std::mutex&;
-	virtual auto out_mtx() -> std::mutex&;
-	virtual auto type() -> short int;
-	virtual auto protocol() -> std::string;
-	virtual auto close() -> void;
-	virtual auto available() -> bool;
+    virtual auto underlying() -> zpt::socketstream_ptr;
+    virtual auto socket() -> zmq::socket_ptr;
+    virtual auto in() -> zmq::socket_ptr;
+    virtual auto out() -> zmq::socket_ptr;
+    virtual auto fd() -> int;
+    virtual auto in_mtx() -> std::mutex&;
+    virtual auto out_mtx() -> std::mutex&;
+    virtual auto type() -> short int;
+    virtual auto protocol() -> std::string;
+    virtual auto close() -> void;
+    virtual auto available() -> bool;
 
-      private:
-	zpt::socketstream_ptr __underlying;
-	short __state;
-	std::string __cid;
-	std::string __resource;
+  private:
+    zpt::socketstream_ptr __underlying;
+    short __state;
+    std::string __cid;
+    std::string __resource;
 };
 
 class HTTPFactory : public zpt::ChannelFactory {
-      public:
-	HTTPFactory();
-	virtual ~HTTPFactory();
-	virtual auto produce(zpt::json _options) -> zpt::socket;
-	virtual auto is_reusable(std::string _type) -> bool;
-	virtual auto clean(zpt::socket _socket) -> bool;
+  public:
+    HTTPFactory();
+    virtual ~HTTPFactory();
+    virtual auto produce(zpt::json _options) -> zpt::socket;
+    virtual auto is_reusable(std::string _type) -> bool;
+    virtual auto clean(zpt::socket _socket) -> bool;
 };
-}
+} // namespace zpt

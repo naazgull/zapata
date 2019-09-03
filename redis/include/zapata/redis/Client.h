@@ -24,83 +24,98 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json.h>
-#include <zapata/events.h>
 #include <hiredis/hiredis.h>
-#include <zapata/redis/convert_redis.h>
-#include <ossp/uuid++.hh>
 #include <mutex>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <ossp/uuid++.hh>
+#include <zapata/events.h>
+#include <zapata/json.h>
+#include <zapata/redis/convert_redis.h>
 
 namespace zpt {
 
 namespace redis {
 
 class Client : public zpt::Connector {
-      public:
-	Client(zpt::json _options, std::string _conf_path);
-	virtual ~Client();
+  public:
+    Client(zpt::json _options, std::string _conf_path);
+    virtual ~Client();
 
-	virtual auto name() -> std::string;
-	virtual auto options() -> zpt::json;
-	virtual auto events(zpt::ev::emitter _emitter) -> void;
-	virtual auto events() -> zpt::ev::emitter;
+    virtual auto name() -> std::string;
+    virtual auto options() -> zpt::json;
+    virtual auto events(zpt::ev::emitter _emitter) -> void;
+    virtual auto events() -> zpt::ev::emitter;
 
-	virtual auto connect() -> void;
-	virtual auto reconnect() -> void;
+    virtual auto connect() -> void;
+    virtual auto reconnect() -> void;
 
-	virtual auto
-	insert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> std::string;
-	virtual auto
-	upsert(std::string _collection, std::string _href_prefix, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> std::string;
-	virtual auto
-	save(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto
-	set(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto set(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined)
-	    -> int;
-	virtual auto
-	unset(std::string _collection, std::string _href, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto
-	unset(std::string _collection, zpt::json _query, zpt::json _record, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto remove(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
-	virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto query(std::string _collection, std::string _query, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
-	virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto insert(std::string _collection,
+                        std::string _href_prefix,
+                        zpt::json _record,
+                        zpt::json _opts = zpt::undefined) -> std::string;
+    virtual auto upsert(std::string _collection,
+                        std::string _href_prefix,
+                        zpt::json _record,
+                        zpt::json _opts = zpt::undefined) -> std::string;
+    virtual auto save(std::string _collection,
+                      std::string _href,
+                      zpt::json _record,
+                      zpt::json _opts = zpt::undefined) -> int;
+    virtual auto set(std::string _collection,
+                     std::string _href,
+                     zpt::json _record,
+                     zpt::json _opts = zpt::undefined) -> int;
+    virtual auto set(std::string _collection,
+                     zpt::json _query,
+                     zpt::json _record,
+                     zpt::json _opts = zpt::undefined) -> int;
+    virtual auto unset(std::string _collection,
+                       std::string _href,
+                       zpt::json _record,
+                       zpt::json _opts = zpt::undefined) -> int;
+    virtual auto unset(std::string _collection,
+                       zpt::json _query,
+                       zpt::json _record,
+                       zpt::json _opts = zpt::undefined) -> int;
+    virtual auto remove(std::string _collection,
+                        std::string _href,
+                        zpt::json _opts = zpt::undefined) -> int;
+    virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> int;
+    virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined)
+      -> zpt::json;
+    virtual auto query(std::string _collection,
+                       std::string _query,
+                       zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> zpt::json;
+    virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
 
-      private:
-	zpt::json __options;
-	std::mutex __mtx;
-	redisContext* __conn;
-	std::string __host;
-	uint __port;
-	zpt::ev::emitter __events;
+  private:
+    zpt::json __options;
+    std::mutex __mtx;
+    redisContext* __conn;
+    std::string __host;
+    uint __port;
+    zpt::ev::emitter __events;
 };
 
 class ClientPtr : public std::shared_ptr<zpt::redis::Client> {
-      public:
-	/**
-	 * @brief Creates an std::shared_ptr to an Self instance.
-	 *
-	 * @param _options the configuration object retrieved from the configuration JSON file
-	 */
-	ClientPtr(zpt::redis::Client* _target);
-	ClientPtr(zpt::json _options, std::string _conf_path);
+  public:
+    /**
+     * @brief Creates an std::shared_ptr to an Self instance.
+     *
+     * @param _options the configuration object retrieved from the configuration
+     * JSON file
+     */
+    ClientPtr(zpt::redis::Client* _target);
+    ClientPtr(zpt::json _options, std::string _conf_path);
 
-	/**
-	 * @brief Destroys the current Self instance, freeing all allocated memory.
-	 */
-	virtual ~ClientPtr();
+    /**
+     * @brief Destroys the current Self instance, freeing all allocated memory.
+     */
+    virtual ~ClientPtr();
 };
 
 typedef zpt::redis::ClientPtr client;
-}
-}
+} // namespace redis
+} // namespace zpt

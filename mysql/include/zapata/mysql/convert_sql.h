@@ -24,21 +24,16 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json.h>
-#include <stddef.h>
-#include <string>
-#include <mysql_connection.h>
-#include <mysql_driver.h>
+#include <cppconn/datatype.h>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
-#include <cppconn/datatype.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <mysql_connection.h>
+#include <mysql_driver.h>
+#include <stddef.h>
+#include <string>
+#include <zapata/json.h>
 
 namespace zpt {
 
@@ -46,13 +41,21 @@ namespace mysql {
 
 extern std::map<std::string, std::string> OPS;
 
-auto fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void;
-auto fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json;
-auto get_query(zpt::json _in, std::string& _queryr) -> void;
-auto get_opts(zpt::json _in, std::string& _queryr) -> void;
-auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
-auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
-auto escape_name(std::string _in) -> std::string;
-auto escape(zpt::json _in) -> std::string;
-}
-}
+auto
+fromsql(std::shared_ptr<sql::ResultSet> _in, zpt::json _out) -> void;
+auto
+fromsql_r(std::shared_ptr<sql::ResultSet> _in) -> zpt::json;
+auto
+get_query(zpt::json _in, std::string& _queryr) -> void;
+auto
+get_opts(zpt::json _in, std::string& _queryr) -> void;
+auto
+get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
+auto
+get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
+auto
+escape_name(std::string _in) -> std::string;
+auto
+escape(zpt::json _in) -> std::string;
+} // namespace mysql
+} // namespace zpt

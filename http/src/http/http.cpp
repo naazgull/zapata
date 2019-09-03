@@ -24,74 +24,91 @@ SOFTWARE.
 #include <zapata/http/config.h>
 #include <zapata/http/http.h>
 
-zpt::HTTPReq& zpt::fromhttpstr(string& _in, zpt::HTTPReq& _out) {
-	istringstream _ss;
-	_ss.str(_in);
-	zpt::HTTPParser _p;
-	_p.switchRoots(_out);
-	_p.switchStreams(_ss);
-	_p.parse();
-	return _out;
+zpt::HTTPReq&
+zpt::fromhttpstr(string& _in, zpt::HTTPReq& _out) {
+    istringstream _ss;
+    _ss.str(_in);
+    zpt::HTTPParser _p;
+    _p.switchRoots(_out);
+    _p.switchStreams(_ss);
+    _p.parse();
+    return _out;
 }
 
-zpt::HTTPRep& zpt::fromhttpstr(string& _in, zpt::HTTPRep& _out) {
-	istringstream _ss;
-	_ss.str(_in);
-	zpt::HTTPParser _p;
-	_p.switchRoots(_out);
-	_p.switchStreams(_ss);
-	_p.parse();
-	return _out;
+zpt::HTTPRep&
+zpt::fromhttpstr(string& _in, zpt::HTTPRep& _out) {
+    istringstream _ss;
+    _ss.str(_in);
+    zpt::HTTPParser _p;
+    _p.switchRoots(_out);
+    _p.switchStreams(_ss);
+    _p.parse();
+    return _out;
 }
 
-zpt::HTTPReq& zpt::fromhttpfile(ifstream& _in, zpt::HTTPReq& _out) {
-	if (_in.is_open()) {
-		zpt::HTTPParser _p;
-		_p.switchRoots(_out);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-	return _out;
+zpt::HTTPReq&
+zpt::fromhttpfile(ifstream& _in, zpt::HTTPReq& _out) {
+    if (_in.is_open()) {
+        zpt::HTTPParser _p;
+        _p.switchRoots(_out);
+        _p.switchStreams(_in);
+        _p.parse();
+    }
+    return _out;
 }
 
-zpt::HTTPRep& zpt::fromhttpfile(ifstream& _in, zpt::HTTPRep& _out) {
-	if (_in.is_open()) {
-		zpt::HTTPParser _p;
-		_p.switchRoots(_out);
-		_p.switchStreams(_in);
-		_p.parse();
-	}
-	return _out;
+zpt::HTTPRep&
+zpt::fromhttpfile(ifstream& _in, zpt::HTTPRep& _out) {
+    if (_in.is_open()) {
+        zpt::HTTPParser _p;
+        _p.switchRoots(_out);
+        _p.switchStreams(_in);
+        _p.parse();
+    }
+    return _out;
 }
 
-zpt::HTTPReq& zpt::fromhttpstream(istream& _in, zpt::HTTPReq& _out) {
-	zpt::HTTPParser _p;
-	_p.switchRoots(_out);
-	_p.switchStreams(_in);
-	_p.parse();
-	return _out;
+zpt::HTTPReq&
+zpt::fromhttpstream(istream& _in, zpt::HTTPReq& _out) {
+    zpt::HTTPParser _p;
+    _p.switchRoots(_out);
+    _p.switchStreams(_in);
+    _p.parse();
+    return _out;
 }
 
-zpt::HTTPRep& zpt::fromhttpstream(istream& _in, zpt::HTTPRep& _out) {
-	zpt::HTTPParser _p;
-	_p.switchRoots(_out);
-	_p.switchStreams(_in);
-	_p.parse();
-	return _out;
+zpt::HTTPRep&
+zpt::fromhttpstream(istream& _in, zpt::HTTPRep& _out) {
+    zpt::HTTPParser _p;
+    _p.switchRoots(_out);
+    _p.switchStreams(_in);
+    _p.parse();
+    return _out;
 }
 
-void zpt::tostr(string& _out, HTTPRep& _in) { _in->stringify(_out); }
-
-void zpt::tostr(string& _out, HTTPReq& _in) { _in->stringify(_out); }
-
-void zpt::tostr(ostream& _out, HTTPRep& _in) {
-	_in->stringify(_out);
-	_out << flush;
+void
+zpt::tostr(string& _out, HTTPRep& _in) {
+    _in->stringify(_out);
 }
 
-void zpt::tostr(ostream& _out, HTTPReq& _in) {
-	_in->stringify(_out);
-	_out << flush;
+void
+zpt::tostr(string& _out, HTTPReq& _in) {
+    _in->stringify(_out);
 }
 
-extern "C" auto zpt_http() -> int { return 1; }
+void
+zpt::tostr(ostream& _out, HTTPRep& _in) {
+    _in->stringify(_out);
+    _out << std::flush;
+}
+
+void
+zpt::tostr(ostream& _out, HTTPReq& _in) {
+    _in->stringify(_out);
+    _out << std::flush;
+}
+
+extern "C" auto
+zpt_http() -> int {
+    return 1;
+}

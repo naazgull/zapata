@@ -26,9 +26,9 @@ SOFTWARE.
 
 #include <zapata/json/JSONObj.h>
 #undef INVALID_SOCKET
-#include <mongo/client/dbclient.h>
 #include <mongo/bson/bsonelement.h>
 #include <mongo/bson/bsonobjbuilder.h>
+#include <mongo/client/dbclient.h>
 #define INVALID_SOCKET -1
 #include <stddef.h>
 #include <string>
@@ -37,32 +37,28 @@ namespace mongo {
 class ScopedDbConnection;
 }
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
-#define assertz_close(x, y, z, c)                                                                                      \
-	if (!(x)) {                                                                                                    \
-		_conn.done();                                                                                          \
-		throw zpt::assertion(y, z, c, #x, __LINE__, __FILE__);                                                 \
-	}
-
 namespace zpt {
-
 namespace mongodb {
+void
+frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out);
+void
+frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out);
 
-void frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out);
-void frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out);
+void
+tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out);
+void
+tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out);
+void
+tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, string _prefix = "");
+void
+tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, string _prefix);
 
-void tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out);
-void tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out);
-void tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, string _prefix = "");
-void tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, string _prefix);
+void
+get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr);
+auto
+get_fields(zpt::json _opts) -> zpt::json;
 
-void get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr);
-auto get_fields(zpt::json _opts) -> zpt::json;
-
-float valid_mongo_version();
-}
-}
+float
+valid_mongo_version();
+} // namespace mongodb
+} // namespace zpt

@@ -24,6 +24,6 @@ SOFTWARE.
 
 #pragma once
 
+#include <zapata/lisp/Bridge.h>
 #include <zapata/lisp/config.h>
 #include <zapata/lisp/convert_lisp.h>
-#include <zapata/lisp/Bridge.h>

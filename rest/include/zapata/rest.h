@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/rest/codes_rest.h>
-#include <zapata/rest/config.h>
 #include <zapata/rest/RESTEmitter.h>
 #include <zapata/rest/RESTProtocol.h>
+#include <zapata/rest/codes_rest.h>
+#include <zapata/rest/config.h>

@@ -24,16 +24,16 @@ SOFTWARE.
 
 #pragma once
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
-bool sendmail(string _to, string _from, string _subject, string _message, string _replyto = "");
+bool
+sendmail(std::string _to,
+         std::string _from,
+         std::string _subject,
+         std::string _message,
+         std::string _replyto = "");
 }

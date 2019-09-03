@@ -27,21 +27,15 @@ SOFTWARE.
 #include <exception>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
-
 class SyntaxErrorException : public std::exception {
-      private:
-	string __what;
+  private:
+    std::string __what;
 
-      public:
-	SyntaxErrorException(string _what);
-	virtual ~SyntaxErrorException() throw();
+  public:
+    SyntaxErrorException(std::string _what);
+    virtual ~SyntaxErrorException() throw();
 
-	const char* what();
+    const char* what();
 };
-}
+} // namespace zpt

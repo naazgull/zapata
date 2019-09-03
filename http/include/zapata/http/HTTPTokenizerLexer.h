@@ -26,33 +26,33 @@ SOFTWARE.
 
 #include <zapata/http/config.h>
 
-#include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPLexer.h>
+#include <zapata/http/HTTPObj.h>
 
 namespace zpt {
 
 class HTTPTokenizerLexer : public HTTPLexer {
-      public:
-	HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
-	virtual ~HTTPTokenizerLexer();
+  public:
+    HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    virtual ~HTTPTokenizerLexer();
 
-	void switchRoots(HTTPReq& _root);
-	void switchRoots(HTTPRep& _root);
-	void justLeave();
+    void switchRoots(HTTPReq& _root);
+    void switchRoots(HTTPRep& _root);
+    void justLeave();
 
-	void init(zpt::HTTPType _in_type);
-	void body();
-	void url();
-	void status();
+    void init(zpt::HTTPType _in_type);
+    void body();
+    void url();
+    void status();
 
-	void add();
-	void name();
-	void value();
+    void add();
+    void name();
+    void value();
 
-	string __header_name;
-	string __param_name;
-	HTTPReqT* __root_req;
-	HTTPRepT* __root_rep;
-	HTTPType __root_type;
+    string __header_name;
+    string __param_name;
+    HTTPReqT* __root_req;
+    HTTPRepT* __root_rep;
+    HTTPType __root_type;
 };
-}
+} // namespace zpt

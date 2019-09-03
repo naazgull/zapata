@@ -24,32 +24,30 @@ SOFTWARE.
 
 #pragma once
 
-#include <string.h>
+#include <algorithm>
+#include <errno.h>
+#include <fstream>
+#include <iostream>
+#include <memory.h>
+#include <sstream>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <string>
 #include <wchar.h>
 #include <wctype.h>
-#include <stdint.h>
-#include <iostream>
-#include <errno.h>
-#include <sstream>
-#include <memory.h>
-#include <algorithm>
-#include <fstream>
-#include <zapata/text/manip.h>
 #include <zapata/text/convert.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <zapata/text/manip.h>
 
 namespace zpt {
-
 namespace html {
-void entities_encode(wstring s, ostream& out, bool quote = true, bool tags = false);
-void entities_encode(string& out, bool quote = true, bool tags = false);
-void entities_decode(string& out);
-void content_boundary(string& _in, string& _out);
-}
-}
+void
+entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false);
+void
+entities_encode(std::string& out, bool quote = true, bool tags = false);
+void
+entities_decode(std::string& out);
+void
+content_boundary(std::string& _in, std::string& _out);
+} // namespace html
+} // namespace zpt

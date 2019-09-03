@@ -27,21 +27,16 @@ SOFTWARE.
 #include <exception>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
 
 class NoHeaderNameException : public std::exception {
-      private:
-	string __what;
+  private:
+    string __what;
 
-      public:
-	NoHeaderNameException(string _what);
-	virtual ~NoHeaderNameException() throw();
+  public:
+    NoHeaderNameException(string _what);
+    virtual ~NoHeaderNameException() throw();
 
-	const char* what();
+    const char* what();
 };
-}
+} // namespace zpt

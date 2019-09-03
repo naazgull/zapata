@@ -27,21 +27,15 @@ SOFTWARE.
 #include <exception>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
-
 class ClosedException : public std::exception {
-      private:
-	string __what;
+  private:
+    std::string __what;
 
-      public:
-	ClosedException(string _what);
-	virtual ~ClosedException() throw();
+  public:
+    ClosedException(std::string _what);
+    virtual ~ClosedException() throw();
 
-	const char* what();
+    const char* what();
 };
-}
+} // namespace zpt

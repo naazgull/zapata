@@ -24,6 +24,6 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json.h>
-#include <zapata/couchdb/config.h>
 #include <zapata/couchdb/Client.h>
+#include <zapata/couchdb/config.h>
+#include <zapata/json.h>

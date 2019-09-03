@@ -24,15 +24,17 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json/JSONObj.h>
 #include <stddef.h>
 #include <string>
+#include <zapata/json/JSONObj.h>
 
 namespace zpt {
 
 namespace couchdb {
 
-auto get_query(zpt::json _params) -> zpt::json;
-auto get_fields(zpt::json _opts) -> zpt::json;
-}
-}
+auto
+get_query(zpt::json _params) -> zpt::json;
+auto
+get_fields(zpt::json _opts) -> zpt::json;
+} // namespace couchdb
+} // namespace zpt

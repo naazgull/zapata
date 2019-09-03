@@ -24,14 +24,9 @@ SOFTWARE.
 
 #pragma once
 
-#include <zmq.hpp>
-#include <zmq.h>
 #include <zapata/base.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <zmq.h>
+#include <zmq.hpp>
 
 namespace zmq {
 typedef std::shared_ptr<zmq::socket_t> channel_ptr;
@@ -51,14 +46,16 @@ typedef std::tuple<std::string, std::function<void(zpt::json, zpt::drop&)>> init
 typedef std::tuple<std::string, std::function<void(zpt::channel, zpt::drop&)>> receiver;
 typedef std::function<void(std::string, zpt::json, zpt::drop&)> request_transformer;
 typedef std::tuple<
-    std::string,
-    std::map<zpt::performative,
-             std::function<void(zpt::performative, std::string, zpt::json, zpt::drop&)>>>
-    replier;
+  std::string,
+  std::map<zpt::performative,
+           std::function<void(zpt::performative, std::string, zpt::json, zpt::drop&)>>>
+  replier;
 typedef std::function<void(zpt::json, zpt::drop&)> reply_transformer;
 
-auto options(zpt::json _options = zpt::undefined) -> zpt::json&;
-auto options(int argc, char* argv[]) -> zpt::json&;
+auto
+options(zpt::json _options = zpt::undefined) -> zpt::json&;
+auto
+options(int argc, char* argv[]) -> zpt::json&;
 
 // class channel_ref : public std::string {
 //       public:
@@ -201,7 +198,7 @@ class pipeline {
                std::vector<zpt::request_transformer>,
                std::vector<zpt::replier>,
                std::vector<zpt::reply_transformer>>
-        __drops;
+      __drops;
     std::map<std::string, zpt::channel_factory> __factories;
 
     static std::atomic<bool> __ready;
@@ -243,7 +240,9 @@ extern bool interrupted;
 // namespace scopes {
 // std::string serialize(zpt::json _info);
 // zpt::json deserialize(std::string _scope);
-// bool has_permission(std::string _scope, std::string _ns, std::string _permissions);
-// bool has_permission(zpt::json _scope, std::string _ns, std::string _permissions);
+// bool has_permission(std::string _scope, std::string _ns, std::string
+// _permissions);
+// bool has_permission(zpt::json _scope, std::string _ns, std::string
+// _permissions);
 // }
-}
+} // namespace zpt

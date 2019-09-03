@@ -27,41 +27,41 @@ SOFTWARE.
 #include <exception>
 #include <string>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
 namespace zpt {
 
 class AssertionException : public std::exception {
-      private:
-	string __what;
-	int __http_code;
-	int __code;
-	string __description;
-	int __line;
-	string __file;
-	string __backtrace;
+  private:
+    std::string __what;
+    int __http_code;
+    int __code;
+    std::string __description;
+    int __line;
+    std::string __file;
+    std::string __backtrace;
 
-      public:
-	AssertionException(string _what, int _http_code, int _code, string _desc, int _line = 0, string _file = "");
-	AssertionException(string _in,
-			   int _http_code,
-			   int _code,
-			   string _desc,
-			   int _line,
-			   string _file,
-			   char** _backtrace,
-			   size_t _backtrace_size);
-	virtual ~AssertionException() throw();
+  public:
+    AssertionException(std::string _what,
+                       int _http_code,
+                       int _code,
+                       std::string _desc,
+                       int _line = 0,
+                       std::string _file = "");
+    AssertionException(std::string _in,
+                       int _http_code,
+                       int _code,
+                       std::string _desc,
+                       int _line,
+                       std::string _file,
+                       char** _backtrace,
+                       size_t _backtrace_size);
+    virtual ~AssertionException() throw();
 
-	virtual const char* what();
-	virtual const char* description();
-	virtual const char* backtrace();
-	virtual int code();
-	virtual int status();
+    virtual const char* what();
+    virtual const char* description();
+    virtual const char* backtrace();
+    virtual int code();
+    virtual int status();
 };
 
-typedef AssertionException assertion;
-}
+using assertion = AssertionException;
+} // namespace zpt

@@ -24,16 +24,11 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json.h>
+#include <pqxx/except>
+#include <pqxx/pqxx>
 #include <stddef.h>
 #include <string>
-#include <pqxx/pqxx>
-#include <pqxx/except>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <zapata/json.h>
 
 namespace zpt {
 
@@ -41,14 +36,23 @@ namespace pgsql {
 
 extern std::map<std::string, std::string> OPS;
 
-auto fromsql(pqxx::tuple _in, zpt::json _out) -> void;
-auto fromsql_r(pqxx::tuple _in) -> zpt::json;
-auto get_query(zpt::json _in, std::string& _queryr) -> void;
-auto get_opts(zpt::json _in, std::string& _queryr) -> void;
-auto get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
-auto get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
-auto get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
-auto escape_name(std::string _in) -> std::string;
-auto escape(zpt::json _in, std::string _str_delimiter = "'") -> std::string;
-}
-}
+auto
+fromsql(pqxx::tuple _in, zpt::json _out) -> void;
+auto
+fromsql_r(pqxx::tuple _in) -> zpt::json;
+auto
+get_query(zpt::json _in, std::string& _queryr) -> void;
+auto
+get_opts(zpt::json _in, std::string& _queryr) -> void;
+auto
+get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
+auto
+get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
+auto
+get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
+auto
+escape_name(std::string _in) -> std::string;
+auto
+escape(zpt::json _in, std::string _str_delimiter = "'") -> std::string;
+} // namespace pgsql
+} // namespace zpt

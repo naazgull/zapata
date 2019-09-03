@@ -1,12 +1,23 @@
+/*
+  Zapata project <https://github.com/naazgull/zapata>
+  Author: n@zgul <n@zgul.me>
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 #pragma once
 
-#include <memory>
-#include <iterator>
 #include <atomic>
-#include <math.h>
-#include <unistd.h>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <math.h>
+#include <memory>
+#include <unistd.h>
 #include <vector>
 
 #include <zapata/base/assertz.h>
@@ -14,7 +25,8 @@
 namespace zpt {
 namespace lf {
 
-template <typename T> class hptr_domain {
+template<typename T>
+class hptr_domain {
   public:
     using size_type = size_t;
     using hptr_pending_list = std::vector<T*>;
@@ -42,7 +54,7 @@ template <typename T> class hptr_domain {
     int __N;
     int __R;
     std::atomic<T*>* __hp;
-    std::atomic<int> __next_thr_idx{0};
+    std::atomic<int> __next_thr_idx{ 0 };
 
     hptr_domain();
     hptr_domain(int _n_threads, int _n_hp_per_thread);
@@ -54,28 +66,37 @@ template <typename T> class hptr_domain {
     static auto get_retired() -> hptr_pending_list&;
 };
 
-template <typename T>
-zpt::lf::hptr_domain<T>::hptr_domain() : __P{0}, __K{0}, __N{0}, __R{0}, __hp{nullptr} {}
+template<typename T>
+zpt::lf::hptr_domain<T>::hptr_domain()
+  : __P{ 0 }
+  , __K{ 0 }
+  , __N{ 0 }
+  , __R{ 0 }
+  , __hp{ nullptr } {}
 
-template <typename T>
-zpt::lf::hptr_domain<T>::hptr_domain(int _n_threads, int _n_hp_per_thread) : __P{_n_threads} {
+template<typename T>
+zpt::lf::hptr_domain<T>::hptr_domain(int _n_threads, int _n_hp_per_thread)
+  : __P{ _n_threads } {
     int _factor =
-        std::ceil(static_cast<double>(_n_hp_per_thread) / static_cast<double>(CACHE_LINE_PADDING));
+      std::ceil(static_cast<double>(_n_hp_per_thread) / static_cast<double>(CACHE_LINE_PADDING));
     this->__K = _factor * CACHE_LINE_PADDING;
     this->__N = this->__P * this->__K;
     this->__R = 2 * this->__K;
     this->__hp = new std::atomic<T*>[this->__N](nullptr);
 }
 
-template <typename T> zpt::lf::hptr_domain<T>::hptr_domain(const hptr_domain<T>& _rhs) {
+template<typename T>
+zpt::lf::hptr_domain<T>::hptr_domain(const hptr_domain<T>& _rhs) {
     (*this) = _rhs;
 }
 
-template <typename T> zpt::lf::hptr_domain<T>::hptr_domain(hptr_domain<T>&& _rhs) {
+template<typename T>
+zpt::lf::hptr_domain<T>::hptr_domain(hptr_domain<T>&& _rhs) {
     (*this) = _rhs;
 }
 
-template <typename T> zpt::lf::hptr_domain<T>::~hptr_domain() {
+template<typename T>
+zpt::lf::hptr_domain<T>::~hptr_domain() {
     delete[] this->__hp;
     this->__hp = nullptr;
     for (auto _hptr : zpt::lf::hptr_domain<T>::get_retired()) {
@@ -84,8 +105,9 @@ template <typename T> zpt::lf::hptr_domain<T>::~hptr_domain() {
     zpt::lf::hptr_domain<T>::get_retired().clear();
 }
 
-template <typename T>
-auto zpt::lf::hptr_domain<T>::operator=(const hptr_domain<T>& _rhs) -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::operator=(const hptr_domain<T>& _rhs) -> zpt::lf::hptr_domain<T>& {
     this->__P = _rhs.__P;
     this->__K = _rhs.__K;
     this->__N = _rhs.__N;
@@ -94,8 +116,9 @@ auto zpt::lf::hptr_domain<T>::operator=(const hptr_domain<T>& _rhs) -> zpt::lf::
     return (*this);
 }
 
-template <typename T>
-auto zpt::lf::hptr_domain<T>::operator=(hptr_domain<T>&& _rhs) -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::operator=(hptr_domain<T>&& _rhs) -> zpt::lf::hptr_domain<T>& {
     this->__P = _rhs.__P;
     this->__K = _rhs.__K;
     this->__N = _rhs.__N;
@@ -105,7 +128,9 @@ auto zpt::lf::hptr_domain<T>::operator=(hptr_domain<T>&& _rhs) -> zpt::lf::hptr_
     return (*this);
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::create() -> T* {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::create() -> T* {
     T* _ptr = new T{};
     size_t _idx = zpt::lf::hptr_domain<T>::get_this_thread_idx();
 
@@ -118,17 +143,20 @@ template <typename T> auto zpt::lf::hptr_domain<T>::create() -> T* {
 
     delete _ptr;
     assertz(false,
-            "No more hazard-pointer slots available for this thread. Please, run the `clean()` "
+            "No more hazard-pointer slots available for this thread. "
+            "Please, run the `clean()` "
             "before continuing",
             500,
             0);
     return nullptr;
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::destroy(T* _ptr) -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::destroy(T* _ptr) -> zpt::lf::hptr_domain<T>& {
     auto _retired = zpt::lf::hptr_domain<T>::get_retired();
-    int _idx{zpt::lf::hptr_domain<T>::get_this_thread_idx()};
-    bool _found{false};
+    int _idx{ zpt::lf::hptr_domain<T>::get_this_thread_idx() };
+    bool _found{ false };
 
     for (size_t _k = _idx * this->__K; _k != static_cast<size_t>((_idx + 1) * this->__K); ++_k) {
         if (this->__hp[_k].compare_exchange_strong(_ptr, nullptr)) {
@@ -139,24 +167,25 @@ template <typename T> auto zpt::lf::hptr_domain<T>::destroy(T* _ptr) -> zpt::lf:
 
     if (_found) {
         _retired.push_back(_ptr);
-    } else {
+    }
+    else {
         assertz(false,
-                "No more hazard-pointer slots available for this thread. Please, run the `clean()` "
+                "No more hazard-pointer slots available for this thread. "
+                "Please, run the `clean()` "
                 "before continuing",
                 500,
                 0);
     }
 
-    std::cout << "_thread_idx = " << _idx << " | _retired.size() = " << _retired.size()
-              << " | __R = " << this->__R << std::endl
-              << std::flush;
     if (_retired.size() == static_cast<size_t>(this->__R)) {
         this->clean();
     }
     return (*this);
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::clean() -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::clean() -> zpt::lf::hptr_domain<T>& {
     auto _retired = zpt::lf::hptr_domain<T>::get_retired();
 
     std::map<T*, size_t> _to_process;
@@ -182,16 +211,18 @@ template <typename T> auto zpt::lf::hptr_domain<T>::clean() -> zpt::lf::hptr_dom
     return (*this);
 }
 
-template <typename T>
-auto zpt::lf::hptr_domain<T>::get_instance(int _n_threads, int _n_hp_per_thread)
-    -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::get_instance(int _n_threads, int _n_hp_per_thread)
+  -> zpt::lf::hptr_domain<T>& {
     static zpt::lf::hptr_domain<T> _instance;
     _instance.set_max_threads(_n_threads).set_max_hps_per_thread(_n_hp_per_thread).verify();
     return _instance;
 }
 
-template <typename T>
-auto zpt::lf::hptr_domain<T>::set_max_threads(int _n_threads) -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::set_max_threads(int _n_threads) -> zpt::lf::hptr_domain<T>& {
     if (this->__P == 0) {
         this->__P = _n_threads;
         if (this->__K != 0) {
@@ -202,9 +233,9 @@ auto zpt::lf::hptr_domain<T>::set_max_threads(int _n_threads) -> zpt::lf::hptr_d
     return (*this);
 }
 
-template <typename T>
-auto zpt::lf::hptr_domain<T>::set_max_hps_per_thread(int _n_hp_per_thread)
-    -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::set_max_hps_per_thread(int _n_hp_per_thread) -> zpt::lf::hptr_domain<T>& {
     if (this->__K == 0) {
         int _factor = std::ceil(static_cast<double>(_n_hp_per_thread) /
                                 static_cast<double>(CACHE_LINE_PADDING));
@@ -217,30 +248,38 @@ auto zpt::lf::hptr_domain<T>::set_max_hps_per_thread(int _n_hp_per_thread)
     return (*this);
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::verify() -> zpt::lf::hptr_domain<T>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::verify() -> zpt::lf::hptr_domain<T>& {
     if (this->__hp == nullptr && this->__N != 0) {
         this->__hp = new std::atomic<T*>[this->__N]();
     }
     return (*this);
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::get_retired() -> std::vector<T*>& {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::get_retired() -> std::vector<T*>& {
     thread_local static hptr_pending_list _retired;
     return _retired;
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::get_this_thread_idx() -> int {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::get_this_thread_idx() -> int {
     thread_local static int _idx =
-        zpt::lf::hptr_domain<T>::get_instance().__next_thr_idx.fetch_add(1);
+      zpt::lf::hptr_domain<T>::get_instance().__next_thr_idx.fetch_add(1);
     return _idx;
 }
 
-template <typename T> auto zpt::lf::hptr_domain<T>::clean_this_thread() -> void {
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::clean_this_thread() -> void {
     for (auto _hptr : zpt::lf::hptr_domain<T>::get_retired()) {
         delete _hptr;
     }
     zpt::lf::hptr_domain<T>::get_retired().clear();
 }
 
-} // namespace wf
-} // namespaace zpt
+} // namespace lf
+} // namespace zpt

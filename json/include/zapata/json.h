@@ -27,16 +27,16 @@ SOFTWARE.
 #include <zapata/base/assertz.h>
 
 #include <zapata/text/convert.h>
-#include <zapata/text/manip.h>
 #include <zapata/text/html.h>
+#include <zapata/text/manip.h>
 
 #include <zapata/log/log.h>
 
-#include <zapata/exceptions/NoAttributeNameException.h>
 #include <zapata/exceptions/InterruptedException.h>
+#include <zapata/exceptions/NoAttributeNameException.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-#include <zapata/json/config.h>
 #include <zapata/json/JSONObj.h>
-#include <zapata/json/json.h>
 #include <zapata/json/JSONParser.h>
+#include <zapata/json/config.h>
+#include <zapata/json/json.h>

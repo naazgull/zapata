@@ -21,15 +21,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include <zapata/http/config.h>
 #include <zapata/http/HTTPParser.h>
+#include <zapata/http/config.h>
 
-zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) { this->d_scanner.switchStreams(_in, _out); }
+zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) {
+    this->d_scanner.switchStreams(_in, _out);
+}
 
 zpt::HTTPParser::~HTTPParser() {}
 
-void zpt::HTTPParser::switchRoots(HTTPReq& _root) { this->d_scanner.switchRoots(_root); }
+void
+zpt::HTTPParser::switchRoots(HTTPReq& _root) {
+    this->d_scanner.switchRoots(_root);
+}
 
-void zpt::HTTPParser::switchRoots(HTTPRep& _root) { this->d_scanner.switchRoots(_root); }
+void
+zpt::HTTPParser::switchRoots(HTTPRep& _root) {
+    this->d_scanner.switchRoots(_root);
+}
 
-void zpt::HTTPParser::switchStreams(std::istream& _in, std::ostream& _out) { this->d_scanner.switchStreams(_in, _out); }
+void
+zpt::HTTPParser::switchStreams(std::istream& _in, std::ostream& _out) {
+    this->d_scanner.switchStreams(_in, _out);
+}

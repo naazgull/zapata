@@ -22,21 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <signal.h>
-#include <unistd.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <signal.h>
 #include <string>
+#include <unistd.h>
 
 #include <zapata/gen.h>
 #include <zapata/mem/usage.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
-
-int main(int argc, char* argv[]) {
-	zpt::gen::worker::launch(argc, argv);
-	return 0;
+int
+main(int argc, char* argv[]) {
+    zpt::gen::worker::launch(argc, argv);
+    return 0;
 }

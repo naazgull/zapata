@@ -27,15 +27,15 @@ SOFTWARE.
 namespace zpt {
 // start at 0
 enum ErrorCodeRest {
-	ERRGeneric = 0,
-	ERRBodyEntityMustBeProvided = 1,
-	ERRBodyEntityWrongContentType = 2,
-	ERRRequiredField = 3,
-	ERRFileNotFound = 4,
-	ERRFilePermissions = 5,
-	ERRResourceNotFound = 6,
-	ERRResourceIsEmpty = 7,
-	ERRResourceDuplicate = 8,
-	ERRConfigParameterNotFound = 9
+    ERRGeneric = 0,
+    ERRBodyEntityMustBeProvided = 1,
+    ERRBodyEntityWrongContentType = 2,
+    ERRRequiredField = 3,
+    ERRFileNotFound = 4,
+    ERRFilePermissions = 5,
+    ERRResourceNotFound = 6,
+    ERRResourceIsEmpty = 7,
+    ERRResourceDuplicate = 8,
+    ERRConfigParameterNotFound = 9
 };
-}
+} // namespace zpt

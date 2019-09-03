@@ -24,20 +24,22 @@ SOFTWARE.
 
 #pragma once
 
-#include <unistd.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+#include <unistd.h>
 
 namespace zpt {
-template <typename T> struct is_pointer { static const bool value = false; };
-
-template <typename T> struct is_pointer<T*> { static const bool value = true; };
-
-void process_mem_usage(double& vm_usage, double& resident_set);
+template<typename T>
+struct is_pointer {
+    static const bool value = false;
 };
+
+template<typename T>
+struct is_pointer<T*> {
+    static const bool value = true;
+};
+
+void
+process_mem_usage(double& vm_usage, double& resident_set);
+}; // namespace zpt

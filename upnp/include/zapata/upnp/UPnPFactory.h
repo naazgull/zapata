@@ -24,30 +24,25 @@ SOFTWARE.
 
 #pragma once
 
-#include <unistd.h>
-#include <iostream>
 #include <functional>
-#include <memory>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
+#include <unistd.h>
 #include <zapata/upnp/UPnP.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
 
 namespace zpt {
 
 class UPnPFactory : public zpt::ChannelFactory {
-      public:
-	UPnPFactory();
-	virtual ~UPnPFactory();
-	virtual auto produce(zpt::json _options) -> zpt::socket;
-	virtual auto is_reusable(std::string _type) -> bool;
-	virtual auto clean(zpt::socket _socket) -> bool;
+  public:
+    UPnPFactory();
+    virtual ~UPnPFactory();
+    virtual auto produce(zpt::json _options) -> zpt::socket;
+    virtual auto is_reusable(std::string _type) -> bool;
+    virtual auto clean(zpt::socket _socket) -> bool;
 
-      private:
-	std::map<std::string, zpt::socket> __channels;
+  private:
+    std::map<std::string, zpt::socket> __channels;
 };
-}
+} // namespace zpt

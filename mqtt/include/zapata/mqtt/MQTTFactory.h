@@ -24,34 +24,29 @@ SOFTWARE.
 
 #pragma once
 
-#include <unistd.h>
-#include <iostream>
 #include <functional>
-#include <memory>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
+#include <unistd.h>
 #include <zapata/mqtt/MQTT.h>
-
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
 
 namespace zpt {
 
 class MQTTFactory : public zpt::ChannelFactory {
-      public:
-	MQTTFactory();
-	virtual ~MQTTFactory();
-	virtual auto produce(zpt::json _options) -> zpt::socket;
-	virtual auto is_reusable(std::string _type) -> bool;
-	virtual auto clean(zpt::socket _socket) -> bool;
+  public:
+    MQTTFactory();
+    virtual ~MQTTFactory();
+    virtual auto produce(zpt::json _options) -> zpt::socket;
+    virtual auto is_reusable(std::string _type) -> bool;
+    virtual auto clean(zpt::socket _socket) -> bool;
 
-	static auto on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
-	static auto on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
-	static auto on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+    static auto on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+    static auto on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
+    static auto on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;
 
-      private:
-	std::map<std::string, zpt::socket> __channels;
+  private:
+    std::map<std::string, zpt::socket> __channels;
 };
-}
+} // namespace zpt

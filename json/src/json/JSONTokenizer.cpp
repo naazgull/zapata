@@ -58,10 +58,10 @@ namespace // anonymous
 char const author[] = "Frank B. Brokken (f.b.brokken@rug.nl)";
 
 enum ReservedTokens {
-	PARSE_ACCEPT = 0, // `ACCEPT' TRANSITION
-	_UNDETERMINED_ = -2,
-	_EOF_ = -1,
-	_error_ = 256
+    PARSE_ACCEPT = 0, // `ACCEPT' TRANSITION
+    _UNDETERMINED_ = -2,
+    _EOF_ = -1,
+    _error_ = 256
 };
 enum StateType // modify statetype/data.cc when this enum changes
 { NORMAL,
@@ -75,293 +75,306 @@ enum StateType // modify statetype/data.cc when this enum changes
 };
 struct PI__ // Production Info
 {
-	size_t d_nonTerm; // identification number of this production's
-			  // non-terminal
-	size_t d_size;    // number of elements in this production
+    size_t d_nonTerm; // identification number of this production's
+    // non-terminal
+    size_t d_size; // number of elements in this production
 };
 
 struct SR__ // Shift Reduce info, see its description above
 {
-	union {
-		int _field_1_; // initializer, allowing initializations
-		// of the SR s_[] arrays
-		int d_type;
-		int d_token;
-	};
-	union {
-		int _field_2_;
+    union {
+        int _field_1_; // initializer, allowing initializations
+        // of the SR s_[] arrays
+        int d_type;
+        int d_token;
+    };
+    union {
+        int _field_2_;
 
-		int d_lastIdx;       // if negative, the state uses SHIFT
-		int d_action;	// may be negative (reduce),
-				     // postive (shift), or 0 (accept)
-		size_t d_errorState; // used with Error states
-	};
+        int d_lastIdx;       // if negative, the state uses SHIFT
+        int d_action;        // may be negative (reduce),
+                             // postive (shift), or 0 (accept)
+        size_t d_errorState; // used with Error states
+    };
 };
 
 // $insert staticdata
 
 enum // size to expand the state-stack with when
 {    // full
-	STACK_EXPANSION__ = 10
+    STACK_EXPANSION__ = 10
 };
 
 // Productions Info Records:
 PI__ const s_productionInfo[] = {
-    {0, 0},   // not used: reduction values are negative
-    {269, 1}, // 1: exp ->  object
-    {269, 1}, // 2: exp ->  array
-    {270, 4}, // 3: object (LCB) ->  LCB #0001 opt_pairlist RCB
-    {273, 0}, // 4: #0001 ->  <empty>
-    {271, 4}, // 5: array (LB) ->  LB #0002 opt_valuelist RB
-    {275, 0}, // 6: #0002 ->  <empty>
-    {272, 0}, // 7: opt_pairlist ->  <empty>
-    {272, 1}, // 8: opt_pairlist ->  pairlist
-    {276, 4}, // 9: pairlist (STRING) ->  STRING #0003 COLON value
-    {277, 0}, // 10: #0003 ->  <empty>
-    {276, 6}, // 11: pairlist (COMMA) ->  pairlist COMMA STRING #0004 COLON value
-    {279, 0}, // 12: #0004 ->  <empty>
-    {274, 0}, // 13: opt_valuelist ->  <empty>
-    {274, 1}, // 14: opt_valuelist ->  valuelist
-    {280, 1}, // 15: valuelist ->  value
-    {280, 3}, // 16: valuelist (COMMA) ->  valuelist COMMA value
-    {278, 1}, // 17: value ->  object
-    {278, 1}, // 18: value ->  array
-    {278, 1}, // 19: value (STRING) ->  STRING
-    {278, 1}, // 20: value (BOOLEAN) ->  BOOLEAN
-    {278, 1}, // 21: value (INTEGER) ->  INTEGER
-    {278, 1}, // 22: value (DOUBLE) ->  DOUBLE
-    {278, 1}, // 23: value (LAMBDA) ->  LAMBDA
-    {278, 1}, // 24: value (NIL) ->  NIL
-    {281, 1}, // 25: exp_$ ->  exp
+    { 0, 0 },   // not used: reduction values are negative
+    { 269, 1 }, // 1: exp ->  object
+    { 269, 1 }, // 2: exp ->  array
+    { 270, 4 }, // 3: object (LCB) ->  LCB #0001 opt_pairlist RCB
+    { 273, 0 }, // 4: #0001 ->  <empty>
+    { 271, 4 }, // 5: array (LB) ->  LB #0002 opt_valuelist RB
+    { 275, 0 }, // 6: #0002 ->  <empty>
+    { 272, 0 }, // 7: opt_pairlist ->  <empty>
+    { 272, 1 }, // 8: opt_pairlist ->  pairlist
+    { 276, 4 }, // 9: pairlist (STRING) ->  STRING #0003 COLON value
+    { 277, 0 }, // 10: #0003 ->  <empty>
+    { 276, 6 }, // 11: pairlist (COMMA) ->  pairlist COMMA STRING #0004 COLON value
+    { 279, 0 }, // 12: #0004 ->  <empty>
+    { 274, 0 }, // 13: opt_valuelist ->  <empty>
+    { 274, 1 }, // 14: opt_valuelist ->  valuelist
+    { 280, 1 }, // 15: valuelist ->  value
+    { 280, 3 }, // 16: valuelist (COMMA) ->  valuelist COMMA value
+    { 278, 1 }, // 17: value ->  object
+    { 278, 1 }, // 18: value ->  array
+    { 278, 1 }, // 19: value (STRING) ->  STRING
+    { 278, 1 }, // 20: value (BOOLEAN) ->  BOOLEAN
+    { 278, 1 }, // 21: value (INTEGER) ->  INTEGER
+    { 278, 1 }, // 22: value (DOUBLE) ->  DOUBLE
+    { 278, 1 }, // 23: value (LAMBDA) ->  LAMBDA
+    { 278, 1 }, // 24: value (NIL) ->  NIL
+    { 281, 1 }, // 25: exp_$ ->  exp
 };
 
 // State info and SR__ transitions for each state.
 
 SR__ const s_0[] = {
-    {{REQ_TOKEN}, {6}},
-    {{269}, {1}}, // exp
-    {{270}, {2}}, // object
-    {{271}, {3}}, // array
-    {{263}, {4}}, // LCB
-    {{265}, {5}}, // LB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 6 } }, { { 269 }, { 1 } }, // exp
+    { { 270 }, { 2 } },                           // object
+    { { 271 }, { 3 } },                           // array
+    { { 263 }, { 4 } },                           // LCB
+    { { 265 }, { 5 } },                           // LB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_1[] = {
-    {{REQ_TOKEN}, {2}}, {{_EOF_}, {PARSE_ACCEPT}}, {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { _EOF_ }, { PARSE_ACCEPT } },
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_2[] = {
-    {{DEF_RED}, {1}}, {{0}, {-1}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -1 } },
 };
 
 SR__ const s_3[] = {
-    {{DEF_RED}, {1}}, {{0}, {-2}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -2 } },
 };
 
 SR__ const s_4[] = {
-    {{DEF_RED}, {2}},
-    {{273}, {6}}, // #0001
-    {{0}, {-4}},
+    { { DEF_RED }, { 2 } },
+    { { 273 }, { 6 } }, // #0001
+    { { 0 }, { -4 } },
 };
 
 SR__ const s_5[] = {
-    {{DEF_RED}, {2}},
-    {{275}, {7}}, // #0002
-    {{0}, {-6}},
+    { { DEF_RED }, { 2 } },
+    { { 275 }, { 7 } }, // #0002
+    { { 0 }, { -6 } },
 };
 
 SR__ const s_6[] = {
-    {{REQ_DEF}, {4}},
-    {{272}, {8}},  // opt_pairlist
-    {{276}, {9}},  // pairlist
-    {{257}, {10}}, // STRING
-    {{0}, {-7}},
+    { { REQ_DEF }, { 4 } }, { { 272 }, { 8 } }, // opt_pairlist
+    { { 276 }, { 9 } },                         // pairlist
+    { { 257 }, { 10 } },                        // STRING
+    { { 0 }, { -7 } },
 };
 
 SR__ const s_7[] = {
-    {{REQ_DEF}, {14}},
-    {{274}, {11}}, // opt_valuelist
-    {{280}, {12}}, // valuelist
-    {{278}, {13}}, // value
-    {{270}, {14}}, // object
-    {{271}, {15}}, // array
-    {{257}, {16}}, // STRING
-    {{258}, {17}}, // BOOLEAN
-    {{259}, {18}}, // INTEGER
-    {{260}, {19}}, // DOUBLE
-    {{262}, {20}}, // LAMBDA
-    {{261}, {21}}, // NIL
-    {{263}, {4}},  // LCB
-    {{265}, {5}},  // LB
-    {{0}, {-13}},
+    { { REQ_DEF }, { 14 } }, { { 274 }, { 11 } }, // opt_valuelist
+    { { 280 }, { 12 } },                          // valuelist
+    { { 278 }, { 13 } },                          // value
+    { { 270 }, { 14 } },                          // object
+    { { 271 }, { 15 } },                          // array
+    { { 257 }, { 16 } },                          // STRING
+    { { 258 }, { 17 } },                          // BOOLEAN
+    { { 259 }, { 18 } },                          // INTEGER
+    { { 260 }, { 19 } },                          // DOUBLE
+    { { 262 }, { 20 } },                          // LAMBDA
+    { { 261 }, { 21 } },                          // NIL
+    { { 263 }, { 4 } },                           // LCB
+    { { 265 }, { 5 } },                           // LB
+    { { 0 }, { -13 } },
 };
 
 SR__ const s_8[] = {
-    {{REQ_TOKEN}, {2}},
-    {{264}, {22}}, // RCB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 264 }, { 22 } }, // RCB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_9[] = {
-    {{REQ_DEF}, {2}},
-    {{267}, {23}}, // COMMA
-    {{0}, {-8}},
+    { { REQ_DEF }, { 2 } },
+    { { 267 }, { 23 } }, // COMMA
+    { { 0 }, { -8 } },
 };
 
 SR__ const s_10[] = {
-    {{DEF_RED}, {2}},
-    {{277}, {24}}, // #0003
-    {{0}, {-10}},
+    { { DEF_RED }, { 2 } },
+    { { 277 }, { 24 } }, // #0003
+    { { 0 }, { -10 } },
 };
 
 SR__ const s_11[] = {
-    {{REQ_TOKEN}, {2}},
-    {{266}, {25}}, // RB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 266 }, { 25 } }, // RB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_12[] = {
-    {{REQ_DEF}, {2}},
-    {{267}, {26}}, // COMMA
-    {{0}, {-14}},
+    { { REQ_DEF }, { 2 } },
+    { { 267 }, { 26 } }, // COMMA
+    { { 0 }, { -14 } },
 };
 
 SR__ const s_13[] = {
-    {{DEF_RED}, {1}}, {{0}, {-15}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -15 } },
 };
 
 SR__ const s_14[] = {
-    {{DEF_RED}, {1}}, {{0}, {-17}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -17 } },
 };
 
 SR__ const s_15[] = {
-    {{DEF_RED}, {1}}, {{0}, {-18}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -18 } },
 };
 
 SR__ const s_16[] = {
-    {{DEF_RED}, {1}}, {{0}, {-19}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -19 } },
 };
 
 SR__ const s_17[] = {
-    {{DEF_RED}, {1}}, {{0}, {-20}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -20 } },
 };
 
 SR__ const s_18[] = {
-    {{DEF_RED}, {1}}, {{0}, {-21}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -21 } },
 };
 
 SR__ const s_19[] = {
-    {{DEF_RED}, {1}}, {{0}, {-22}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -22 } },
 };
 
 SR__ const s_20[] = {
-    {{DEF_RED}, {1}}, {{0}, {-23}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -23 } },
 };
 
 SR__ const s_21[] = {
-    {{DEF_RED}, {1}}, {{0}, {-24}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -24 } },
 };
 
 SR__ const s_22[] = {
-    {{DEF_RED}, {1}}, {{0}, {-3}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -3 } },
 };
 
 SR__ const s_23[] = {
-    {{REQ_TOKEN}, {2}},
-    {{257}, {27}}, // STRING
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 257 }, { 27 } }, // STRING
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_24[] = {
-    {{REQ_TOKEN}, {2}},
-    {{268}, {28}}, // COLON
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 268 }, { 28 } }, // COLON
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_25[] = {
-    {{DEF_RED}, {1}}, {{0}, {-5}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -5 } },
 };
 
 SR__ const s_26[] = {
-    {{REQ_TOKEN}, {12}},
-    {{278}, {29}}, // value
-    {{270}, {14}}, // object
-    {{271}, {15}}, // array
-    {{257}, {16}}, // STRING
-    {{258}, {17}}, // BOOLEAN
-    {{259}, {18}}, // INTEGER
-    {{260}, {19}}, // DOUBLE
-    {{262}, {20}}, // LAMBDA
-    {{261}, {21}}, // NIL
-    {{263}, {4}},  // LCB
-    {{265}, {5}},  // LB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 12 } }, { { 278 }, { 29 } }, // value
+    { { 270 }, { 14 } },                            // object
+    { { 271 }, { 15 } },                            // array
+    { { 257 }, { 16 } },                            // STRING
+    { { 258 }, { 17 } },                            // BOOLEAN
+    { { 259 }, { 18 } },                            // INTEGER
+    { { 260 }, { 19 } },                            // DOUBLE
+    { { 262 }, { 20 } },                            // LAMBDA
+    { { 261 }, { 21 } },                            // NIL
+    { { 263 }, { 4 } },                             // LCB
+    { { 265 }, { 5 } },                             // LB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_27[] = {
-    {{DEF_RED}, {2}},
-    {{279}, {30}}, // #0004
-    {{0}, {-12}},
+    { { DEF_RED }, { 2 } },
+    { { 279 }, { 30 } }, // #0004
+    { { 0 }, { -12 } },
 };
 
 SR__ const s_28[] = {
-    {{REQ_TOKEN}, {12}},
-    {{278}, {31}}, // value
-    {{270}, {14}}, // object
-    {{271}, {15}}, // array
-    {{257}, {16}}, // STRING
-    {{258}, {17}}, // BOOLEAN
-    {{259}, {18}}, // INTEGER
-    {{260}, {19}}, // DOUBLE
-    {{262}, {20}}, // LAMBDA
-    {{261}, {21}}, // NIL
-    {{263}, {4}},  // LCB
-    {{265}, {5}},  // LB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 12 } }, { { 278 }, { 31 } }, // value
+    { { 270 }, { 14 } },                            // object
+    { { 271 }, { 15 } },                            // array
+    { { 257 }, { 16 } },                            // STRING
+    { { 258 }, { 17 } },                            // BOOLEAN
+    { { 259 }, { 18 } },                            // INTEGER
+    { { 260 }, { 19 } },                            // DOUBLE
+    { { 262 }, { 20 } },                            // LAMBDA
+    { { 261 }, { 21 } },                            // NIL
+    { { 263 }, { 4 } },                             // LCB
+    { { 265 }, { 5 } },                             // LB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_29[] = {
-    {{DEF_RED}, {1}}, {{0}, {-16}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -16 } },
 };
 
 SR__ const s_30[] = {
-    {{REQ_TOKEN}, {2}},
-    {{268}, {32}}, // COLON
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 2 } },
+    { { 268 }, { 32 } }, // COLON
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_31[] = {
-    {{DEF_RED}, {1}}, {{0}, {-9}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -9 } },
 };
 
 SR__ const s_32[] = {
-    {{REQ_TOKEN}, {12}},
-    {{278}, {33}}, // value
-    {{270}, {14}}, // object
-    {{271}, {15}}, // array
-    {{257}, {16}}, // STRING
-    {{258}, {17}}, // BOOLEAN
-    {{259}, {18}}, // INTEGER
-    {{260}, {19}}, // DOUBLE
-    {{262}, {20}}, // LAMBDA
-    {{261}, {21}}, // NIL
-    {{263}, {4}},  // LCB
-    {{265}, {5}},  // LB
-    {{0}, {0}},
+    { { REQ_TOKEN }, { 12 } }, { { 278 }, { 33 } }, // value
+    { { 270 }, { 14 } },                            // object
+    { { 271 }, { 15 } },                            // array
+    { { 257 }, { 16 } },                            // STRING
+    { { 258 }, { 17 } },                            // BOOLEAN
+    { { 259 }, { 18 } },                            // INTEGER
+    { { 260 }, { 19 } },                            // DOUBLE
+    { { 262 }, { 20 } },                            // LAMBDA
+    { { 261 }, { 21 } },                            // NIL
+    { { 263 }, { 4 } },                             // LCB
+    { { 265 }, { 5 } },                             // LB
+    { { 0 }, { 0 } },
 };
 
 SR__ const s_33[] = {
-    {{DEF_RED}, {1}}, {{0}, {-11}},
+    { { DEF_RED }, { 1 } },
+    { { 0 }, { -11 } },
 };
 
 // State array:
 SR__ const* s_state[] = {
-    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12, s_13, s_14, s_15, s_16,
-    s_17, s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33,
+    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11,
+    s_12, s_13, s_14, s_15, s_16, s_17, s_18, s_19, s_20, s_21, s_22, s_23,
+    s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33,
 };
 
-} // anonymous namespace ends
+} // namespace
 
 // $insert namespace-open
 namespace zpt {
@@ -373,233 +386,255 @@ namespace zpt {
 // simply throwing the appropriate exceptions.
 
 JSONTokenizerBase::JSONTokenizerBase()
-    : // $insert requiredtokens
-      d_requiredTokens__(0),
-      d_acceptedTokens__(d_requiredTokens__), d_token__(_UNDETERMINED_), d_nextToken__(_UNDETERMINED_) {}
+  : // $insert requiredtokens
+  d_requiredTokens__(0)
+  , d_acceptedTokens__(d_requiredTokens__)
+  , d_token__(_UNDETERMINED_)
+  , d_nextToken__(_UNDETERMINED_) {}
 
-void JSONTokenizerBase::setDebug(bool mode) {
-	d_actionCases__ = false;
-	d_debug__ = mode;
+void
+JSONTokenizerBase::setDebug(bool mode) {
+    d_actionCases__ = false;
+    d_debug__ = mode;
 }
 
-void JSONTokenizerBase::setDebug(DebugMode__ mode) {
-	d_actionCases__ = mode & ACTIONCASES;
-	d_debug__ = mode & ON;
+void
+JSONTokenizerBase::setDebug(DebugMode__ mode) {
+    d_actionCases__ = mode & ACTIONCASES;
+    d_debug__ = mode & ON;
 }
 
-void JSONTokenizer::print__() {
-	// $insert print
+void
+JSONTokenizer::print__() {
+    // $insert print
 }
 
-void JSONTokenizerBase::clearin() { d_token__ = d_nextToken__ = _UNDETERMINED_; }
-
-void JSONTokenizerBase::push__(size_t state) {
-	size_t currentSize = d_stateStack__.size();
-	if (static_cast<size_t>(d_stackIdx__ + 1) == currentSize) {
-		size_t newSize = currentSize + STACK_EXPANSION__;
-		d_stateStack__.resize(newSize);
-		if (d_valueStack__.capacity() >= newSize)
-			d_valueStack__.resize(newSize);
-		else {
-			std::vector<STYPE__> enlarged(newSize);
-			for (size_t idx = 0; idx != currentSize; ++idx)
-				enlarged[idx] = std::move(d_valueStack__[idx]);
-			d_valueStack__.swap(enlarged);
-		}
-	}
-	++d_stackIdx__;
-	d_stateStack__[d_stackIdx__] = d_state__ = state;
-	*(d_vsp__ = &d_valueStack__[d_stackIdx__]) = std::move(d_val__);
+void
+JSONTokenizerBase::clearin() {
+    d_token__ = d_nextToken__ = _UNDETERMINED_;
 }
 
-void JSONTokenizerBase::popToken__() {
-	d_token__ = d_nextToken__;
-
-	d_val__ = std::move(d_nextVal__);
-	d_nextVal__ = STYPE__();
-
-	d_nextToken__ = _UNDETERMINED_;
+void
+JSONTokenizerBase::push__(size_t state) {
+    size_t currentSize = d_stateStack__.size();
+    if (static_cast<size_t>(d_stackIdx__ + 1) == currentSize) {
+        size_t newSize = currentSize + STACK_EXPANSION__;
+        d_stateStack__.resize(newSize);
+        if (d_valueStack__.capacity() >= newSize)
+            d_valueStack__.resize(newSize);
+        else {
+            std::vector<STYPE__> enlarged(newSize);
+            for (size_t idx = 0; idx != currentSize; ++idx)
+                enlarged[idx] = std::move(d_valueStack__[idx]);
+            d_valueStack__.swap(enlarged);
+        }
+    }
+    ++d_stackIdx__;
+    d_stateStack__[d_stackIdx__] = d_state__ = state;
+    *(d_vsp__ = &d_valueStack__[d_stackIdx__]) = std::move(d_val__);
 }
 
-void JSONTokenizerBase::pushToken__(int token) {
-	d_nextToken__ = d_token__;
-	d_nextVal__ = std::move(d_val__);
-	d_token__ = token;
+void
+JSONTokenizerBase::popToken__() {
+    d_token__ = d_nextToken__;
+
+    d_val__ = std::move(d_nextVal__);
+    d_nextVal__ = STYPE__();
+
+    d_nextToken__ = _UNDETERMINED_;
 }
 
-void JSONTokenizerBase::pop__(size_t count) {
-	if (d_stackIdx__ < static_cast<int>(count)) {
-		ABORT();
-	}
-
-	d_stackIdx__ -= count;
-	d_state__ = d_stateStack__[d_stackIdx__];
-	d_vsp__ = &d_valueStack__[d_stackIdx__];
+void
+JSONTokenizerBase::pushToken__(int token) {
+    d_nextToken__ = d_token__;
+    d_nextVal__ = std::move(d_val__);
+    d_token__ = token;
 }
 
-inline size_t JSONTokenizerBase::top__() const { return d_stateStack__[d_stackIdx__]; }
+void
+JSONTokenizerBase::pop__(size_t count) {
+    if (d_stackIdx__ < static_cast<int>(count)) {
+        ABORT();
+    }
 
-void JSONTokenizer::executeAction(int production) try {
-	if (d_token__ != _UNDETERMINED_)
-		pushToken__(d_token__); // save an already available token
-
-	switch (production) {
-	// $insert actioncases
-
-	case 1: {
-		d_scanner.result(zpt::JSObject);
-	} break;
-
-	case 2: {
-		d_scanner.result(zpt::JSArray);
-	} break;
-
-	case 3: {
-		d_scanner.finish(zpt::JSObject);
-	} break;
-
-	case 4: {
-		d_scanner.init(zpt::JSObject);
-	} break;
-
-	case 5: {
-		d_scanner.finish(zpt::JSArray);
-	} break;
-
-	case 6: {
-		d_scanner.init(zpt::JSArray);
-	} break;
-
-	case 8: {
-	} break;
-
-	case 9: {
-		d_scanner.add();
-	} break;
-
-	case 10: {
-		d_scanner.init(zpt::JSObject, d_scanner.matched());
-	} break;
-
-	case 11: {
-		d_scanner.add();
-	} break;
-
-	case 12: {
-		d_scanner.init(zpt::JSObject, d_scanner.matched());
-	} break;
-
-	case 14: {
-	} break;
-
-	case 15: {
-		d_scanner.add();
-	} break;
-
-	case 16: {
-		d_scanner.add();
-	} break;
-
-	case 17: {
-	} break;
-
-	case 18: {
-	} break;
-
-	case 19: {
-		string _out(d_scanner.matched());
-		d_scanner.init(_out);
-	} break;
-
-	case 20: {
-		bool _out;
-		string _in(d_scanner.matched());
-		zpt::fromstr(_in, &_out);
-		d_scanner.init(_out);
-	} break;
-
-	case 21: {
-		long long _out;
-		string _in(d_scanner.matched());
-		zpt::fromstr(_in, &_out);
-		d_scanner.init(_out);
-	} break;
-
-	case 22: {
-		double _out;
-		string _in(d_scanner.matched());
-		zpt::fromstr(_in, &_out);
-		d_scanner.init(_out);
-	} break;
-
-	case 23: {
-		string _in(d_scanner.matched());
-		zpt::lambda _out(_in);
-		d_scanner.init(_out);
-	} break;
-
-	case 24: {
-		d_scanner.init();
-	} break;
-	}
-} catch (std::exception const& exc) {
-	exceptionHandler__(exc);
+    d_stackIdx__ -= count;
+    d_state__ = d_stateStack__[d_stackIdx__];
+    d_vsp__ = &d_valueStack__[d_stackIdx__];
 }
 
-inline void JSONTokenizerBase::reduce__(PI__ const& pi) {
-	d_token__ = pi.d_nonTerm;
-	pop__(pi.d_size);
+inline size_t
+JSONTokenizerBase::top__() const {
+    return d_stateStack__[d_stackIdx__];
 }
 
-// If d_token__ is _UNDETERMINED_ then if d_nextToken__ is _UNDETERMINED_ another
+void
+JSONTokenizer::executeAction(int production) try {
+    if (d_token__ != _UNDETERMINED_)
+        pushToken__(d_token__); // save an already available token
+
+    switch (production) {
+            // $insert actioncases
+
+        case 1: {
+            d_scanner.result(zpt::JSObject);
+        } break;
+
+        case 2: {
+            d_scanner.result(zpt::JSArray);
+        } break;
+
+        case 3: {
+            d_scanner.finish(zpt::JSObject);
+        } break;
+
+        case 4: {
+            d_scanner.init(zpt::JSObject);
+        } break;
+
+        case 5: {
+            d_scanner.finish(zpt::JSArray);
+        } break;
+
+        case 6: {
+            d_scanner.init(zpt::JSArray);
+        } break;
+
+        case 8: {
+        } break;
+
+        case 9: {
+            d_scanner.add();
+        } break;
+
+        case 10: {
+            d_scanner.init(zpt::JSObject, d_scanner.matched());
+        } break;
+
+        case 11: {
+            d_scanner.add();
+        } break;
+
+        case 12: {
+            d_scanner.init(zpt::JSObject, d_scanner.matched());
+        } break;
+
+        case 14: {
+        } break;
+
+        case 15: {
+            d_scanner.add();
+        } break;
+
+        case 16: {
+            d_scanner.add();
+        } break;
+
+        case 17: {
+        } break;
+
+        case 18: {
+        } break;
+
+        case 19: {
+            string _out(d_scanner.matched());
+            d_scanner.init(_out);
+        } break;
+
+        case 20: {
+            bool _out;
+            string _in(d_scanner.matched());
+            zpt::fromstr(_in, &_out);
+            d_scanner.init(_out);
+        } break;
+
+        case 21: {
+            long long _out;
+            string _in(d_scanner.matched());
+            zpt::fromstr(_in, &_out);
+            d_scanner.init(_out);
+        } break;
+
+        case 22: {
+            double _out;
+            string _in(d_scanner.matched());
+            zpt::fromstr(_in, &_out);
+            d_scanner.init(_out);
+        } break;
+
+        case 23: {
+            string _in(d_scanner.matched());
+            zpt::lambda _out(_in);
+            d_scanner.init(_out);
+        } break;
+
+        case 24: {
+            d_scanner.init();
+        } break;
+    }
+}
+catch (std::exception const& exc) {
+    exceptionHandler__(exc);
+}
+
+inline void
+JSONTokenizerBase::reduce__(PI__ const& pi) {
+    d_token__ = pi.d_nonTerm;
+    pop__(pi.d_size);
+}
+
+// If d_token__ is _UNDETERMINED_ then if d_nextToken__ is _UNDETERMINED_
+// another
 // token is obtained from lex(). Then d_nextToken__ is assigned to d_token__.
-void JSONTokenizer::nextToken() {
-	if (d_token__ != _UNDETERMINED_) // no need for a token: got one
-		return;			 // already
+void
+JSONTokenizer::nextToken() {
+    if (d_token__ != _UNDETERMINED_) // no need for a token: got one
+        return;                      // already
 
-	if (d_nextToken__ != _UNDETERMINED_) {
-		popToken__(); // consume pending token
-	} else {
-		++d_acceptedTokens__; // accept another token (see
-		// errorRecover())
-		d_token__ = lex();
-		if (d_token__ <= 0)
-			d_token__ = _EOF_;
-	}
-	print();
+    if (d_nextToken__ != _UNDETERMINED_) {
+        popToken__(); // consume pending token
+    }
+    else {
+        ++d_acceptedTokens__; // accept another token (see
+        // errorRecover())
+        d_token__ = lex();
+        if (d_token__ <= 0)
+            d_token__ = _EOF_;
+    }
+    print();
 }
 
 // if the final transition is negative, then we should reduce by the rule
 // given by its positive value. Note that the `recovery' parameter is only
 // used with the --debug option
-int JSONTokenizer::lookup(bool recovery) {
-	// $insert threading
-	SR__ const* sr = s_state[d_state__]; // get the appropriate state-table
-	int lastIdx = sr->d_lastIdx;	 // sentinel-index in the SR_ array
+int
+JSONTokenizer::lookup(bool recovery) {
+    // $insert threading
+    SR__ const* sr = s_state[d_state__]; // get the appropriate state-table
+    int lastIdx = sr->d_lastIdx;         // sentinel-index in the SR_ array
 
-	SR__ const* lastElementPtr = sr + lastIdx;
-	SR__ const* elementPtr = sr + 1; // start the search at s_xx[1]
+    SR__ const* lastElementPtr = sr + lastIdx;
+    SR__ const* elementPtr = sr + 1; // start the search at s_xx[1]
 
-	while (elementPtr != lastElementPtr && elementPtr->d_token != d_token__)
-		++elementPtr;
+    while (elementPtr != lastElementPtr && elementPtr->d_token != d_token__)
+        ++elementPtr;
 
-	if (elementPtr == lastElementPtr) // reached the last element
-	{
-		if (elementPtr->d_action < 0) // default reduction
-		{
-			return elementPtr->d_action;
-		}
+    if (elementPtr == lastElementPtr) // reached the last element
+    {
+        if (elementPtr->d_action < 0) // default reduction
+        {
+            return elementPtr->d_action;
+        }
 
-		// No default reduction, so token not found, so error.
-		throw UNEXPECTED_TOKEN__;
-	}
+        // No default reduction, so token not found, so error.
+        throw UNEXPECTED_TOKEN__;
+    }
 
-	// not at the last element: inspect the nature of the action
-	// (< 0: reduce, 0: ACCEPT, > 0: shift)
+    // not at the last element: inspect the nature of the action
+    // (< 0: reduce, 0: ACCEPT, > 0: shift)
 
-	int action = elementPtr->d_action;
+    int action = elementPtr->d_action;
 
-	return action;
+    return action;
 }
 
 // When an error has occurred, pop elements off the stack until the top
@@ -609,78 +644,83 @@ int JSONTokenizer::lookup(bool recovery) {
 // If EOF is encountered without being appropriate for the current state,
 // then the error recovery will fall back to the default recovery mode.
 // (i.e., parsing terminates)
-void JSONTokenizer::errorRecovery() try {
-	if (d_acceptedTokens__ >= d_requiredTokens__) // only generate an error-
-	{					      // message if enough tokens
-		++d_nErrors__;			      // were accepted. Otherwise
-		error("Syntax error");		      // simply skip input
-	}
+void
+JSONTokenizer::errorRecovery() try {
+    if (d_acceptedTokens__ >= d_requiredTokens__) // only generate an error-
+    {                                             // message if enough tokens
+        ++d_nErrors__;                            // were accepted. Otherwise
+        error("Syntax error");                    // simply skip input
+    }
 
-	// get the error state
-	while (not(s_state[top__()][0].d_type & ERR_ITEM)) {
-		pop__();
-	}
+    // get the error state
+    while (not(s_state[top__()][0].d_type & ERR_ITEM)) {
+        pop__();
+    }
 
-	// In the error state, lookup a token allowing us to proceed.
-	// Continuation may be possible following multiple reductions,
-	// but eventuall a shift will be used, requiring the retrieval of
-	// a terminal token. If a retrieved token doesn't match, the catch below
-	// will ensure the next token is requested in the while(true) block
-	// implemented below:
+    // In the error state, lookup a token allowing us to proceed.
+    // Continuation may be possible following multiple reductions,
+    // but eventuall a shift will be used, requiring the retrieval of
+    // a terminal token. If a retrieved token doesn't match, the catch below
+    // will ensure the next token is requested in the while(true) block
+    // implemented below:
 
-	int lastToken = d_token__; // give the unexpected token a
-				   // chance to be processed
-				   // again.
+    int lastToken = d_token__; // give the unexpected token a
+                               // chance to be processed
+                               // again.
 
-	pushToken__(_error_); // specify _error_ as next token
-	push__(lookup(true)); // push the error state
+    pushToken__(_error_); // specify _error_ as next token
+    push__(lookup(true)); // push the error state
 
-	d_token__ = lastToken; // reactivate the unexpected
-			       // token (we're now in an
-			       // ERROR state).
+    d_token__ = lastToken; // reactivate the unexpected
+                           // token (we're now in an
+                           // ERROR state).
 
-	bool gotToken = true; // the next token is a terminal
+    bool gotToken = true; // the next token is a terminal
 
-	while (true) {
-		try {
-			if (s_state[d_state__]->d_type & REQ_TOKEN) {
-				gotToken = d_token__ == _UNDETERMINED_;
-				nextToken(); // obtain next token
-			}
+    while (true) {
+        try {
+            if (s_state[d_state__]->d_type & REQ_TOKEN) {
+                gotToken = d_token__ == _UNDETERMINED_;
+                nextToken(); // obtain next token
+            }
 
-			int action = lookup(true);
+            int action = lookup(true);
 
-			if (action > 0) // push a new state
-			{
-				push__(action);
-				popToken__();
+            if (action > 0) // push a new state
+            {
+                push__(action);
+                popToken__();
 
-				if (gotToken) {
+                if (gotToken) {
 
-					d_acceptedTokens__ = 0;
-					return;
-				}
-			} else if (action < 0) {
-				// no actions executed on recovery but save an already
-				// available token:
-				if (d_token__ != _UNDETERMINED_)
-					pushToken__(d_token__);
+                    d_acceptedTokens__ = 0;
+                    return;
+                }
+            }
+            else if (action < 0) {
+                // no actions executed on recovery but save an already
+                // available token:
+                if (d_token__ != _UNDETERMINED_)
+                    pushToken__(d_token__);
 
-				// next token is the rule's LHS
-				reduce__(s_productionInfo[-action]);
-			} else
-				ABORT(); // abort when accepting during
-					 // error recovery
-		} catch (...) {
-			if (d_token__ == _EOF_)
-				ABORT(); // saw inappropriate _EOF_
+                // next token is the rule's LHS
+                reduce__(s_productionInfo[-action]);
+            }
+            else
+                ABORT(); // abort when accepting during
+                         // error recovery
+        }
+        catch (...) {
+            if (d_token__ == _EOF_)
+                ABORT(); // saw inappropriate _EOF_
 
-			popToken__(); // failing token now skipped
-		}
-	}
-} catch (ErrorRecovery__) // This is: DEFAULT_RECOVERY_MODE
+            popToken__(); // failing token now skipped
+        }
+    }
+}
+catch (ErrorRecovery__) // This is: DEFAULT_RECOVERY_MODE
 {
-	ABORT();
+    ABORT();
 }
 
 // The parsing algorithm:
@@ -711,35 +751,40 @@ void JSONTokenizer::errorRecovery() try {
 //     default reduction. Error handling was described at the top of this
 //     file.
 
-int JSONTokenizer::parse() try {
-	push__(0); // initial state
-	clearin(); // clear the tokens.
+int
+JSONTokenizer::parse() try {
+    push__(0); // initial state
+    clearin(); // clear the tokens.
 
-	while (true) {
-		try {
-			if (s_state[d_state__]->d_type & REQ_TOKEN)
-				nextToken(); // obtain next token
+    while (true) {
+        try {
+            if (s_state[d_state__]->d_type & REQ_TOKEN)
+                nextToken(); // obtain next token
 
-			int action = lookup(false); // lookup d_token__ in d_state__
+            int action = lookup(false); // lookup d_token__ in d_state__
 
-			if (action > 0) // SHIFT: push a new state
-			{
-				push__(action);
-				popToken__();  // token processed
-			} else if (action < 0) // REDUCE: execute and pop.
-			{
-				executeAction(-action);
-				// next token is the rule's LHS
-				reduce__(s_productionInfo[-action]);
-			} else
-				ACCEPT();
-		} catch (ErrorRecovery__) {
-			errorRecovery();
-		}
-	}
-} catch (Return__ retValue) {
-	return retValue;
+            if (action > 0) // SHIFT: push a new state
+            {
+                push__(action);
+                popToken__(); // token processed
+            }
+            else if (action < 0) // REDUCE: execute and pop.
+            {
+                executeAction(-action);
+                // next token is the rule's LHS
+                reduce__(s_productionInfo[-action]);
+            }
+            else
+                ACCEPT();
+        }
+        catch (ErrorRecovery__) {
+            errorRecovery();
+        }
+    }
+}
+catch (Return__ retValue) {
+    return retValue;
 }
 
 // $insert namespace-close
-}
+} // namespace zpt

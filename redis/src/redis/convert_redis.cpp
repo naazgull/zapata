@@ -21,24 +21,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include <zapata/redis/convert_redis.h>
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
+#include <zapata/redis/convert_redis.h>
 
-auto zpt::redis::to_regex(zpt::json _regexp) -> std::string {
-	std::string _return;
-	if (_regexp->type() == zpt::JSObject) {
-		for (auto _r : _regexp->obj()) {
-			_return += std::string("*\"") + _r.first + std::string("\":") + zpt::redis::to_regex(_r.second);
-		}
-	} else if (_regexp->type() == zpt::JSArray) {
-		for (auto _r : _regexp->arr()) {
-			_return += std::string("*") + zpt::redis::to_regex(_r);
-		}
-	} else {
-		std::string _value;
-		_regexp->stringify(_value);
-		return _value;
-	}
-	return _return;
+auto
+zpt::redis::to_regex(zpt::json _regexp) -> std::string {
+    std::string _return;
+    if (_regexp->type() == zpt::JSObject) {
+        for (auto _r : _regexp->obj()) {
+            _return +=
+              std::string("*\"") + _r.first + std::string("\":") + zpt::redis::to_regex(_r.second);
+        }
+    }
+    else if (_regexp->type() == zpt::JSArray) {
+        for (auto _r : _regexp->arr()) {
+            _return += std::string("*") + zpt::redis::to_regex(_r);
+        }
+    }
+    else {
+        std::string _value;
+        _regexp->stringify(_value);
+        return _value;
+    }
+    return _return;
 }

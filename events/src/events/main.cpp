@@ -22,36 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <signal.h>
-#include <unistd.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <signal.h>
 #include <string>
+#include <unistd.h>
 
-#include <zapata/base.h>
-#include <zapata/json.h>
-#include <zapata/events.h>
 #include <semaphore.h>
+#include <zapata/base.h>
+#include <zapata/events.h>
+#include <zapata/json.h>
 
-using namespace std;
-#if !defined __APPLE__
-using namespace __gnu_cxx;
-#endif
+int
+main(int argc, char* argv[]) {
+    try {
+        zpt::options(argc, argv);
+    }
+    catch (zpt::assertion& _e) {
+        zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
+        zlog(std::string("\n") + _e.backtrace(), zpt::trace);
+        exit(-10);
+    }
+    catch (std::exception& _e) {
+        zlog(_e.what(), zpt::emergency);
+        exit(-10);
+    }
 
-int main(int argc, char* argv[]) {
-	try {
-		zpt::options(argc, argv);
-
-	} catch (zpt::assertion& _e) {
-		zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
-		zlog(std::string("\n") + _e.backtrace(), zpt::trace);
-		exit(-10);
-	} catch (std::exception& _e) {
-		zlog(_e.what(), zpt::emergency);
-		exit(-10);
-	}
-
-	return 0;
+    return 0;
 }
 
-extern "C" auto zpt_rest() -> int { return 1; }
+extern "C" auto
+zpt_rest() -> int {
+    return 1;
+}
