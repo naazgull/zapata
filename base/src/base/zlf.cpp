@@ -25,8 +25,8 @@
 #include <zapata/text/manip.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-constexpr int N_ELEMENTS = 10000;
-constexpr int MAX_THREADS = 500;
+constexpr int N_ELEMENTS = 1000;
+constexpr int MAX_THREADS = 100;
 constexpr int PER_THREAD = 8;
 
 #define QUEUE_USE_STRING
@@ -35,22 +35,17 @@ constexpr int PER_THREAD = 8;
 std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 #ifdef QUEUE_USE_STRING
-zpt::lf::queue<std::string*, MAX_THREADS, PER_THREAD> _list{};
-auto& _hptr{ zpt::lf::hptr_domain<zpt::lf::queue<std::string*, MAX_THREADS, PER_THREAD>::node,
-                                  MAX_THREADS,
-                                  PER_THREAD>::get_instance() };
+zpt::lf::queue<std::string*> _list{ MAX_THREADS, PER_THREAD };
 #else
-zpt::lf::queue<int, MAX_THREADS, PER_THREAD> _list{};
-auto& _hptr{ zpt::lf::hptr_domain<zpt::lf::queue<int, MAX_THREADS, PER_THREAD>::node,
-                                  MAX_THREADS,
-                                  PER_THREAD>::get_instance() };
+zpt::lf::queue<int> _list{ MAX_THREADS, PER_THREAD };
 #endif
 
 auto
 pause(int _signal) -> void {
     std::cout << _list.to_string() << std::endl << std::flush;
-    std::cout << "#pushed -> " << _pushed.load() << std::endl << std::flush;
-    std::cout << "#poped -> " << _poped.load() << std::endl << std::flush;
+    std::cout << "* " << MAX_THREADS << " working threads:" << std::endl << std::flush;
+    std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 }
 
 auto
@@ -134,9 +129,9 @@ main(int _argc, char* _argv[]) -> int {
         _threads[_i].join();
 
     std::cout << _list.to_string() << std::endl << std::endl << std::flush;
-    std::cout << "#pushed -> " << _pushed.load() << std::endl << std::flush;
-    std::cout << "#poped -> " << _poped.load() << std::endl << std::flush;
-    std::cout << std::endl << _hptr << std::flush;
+    std::cout << "* " << MAX_THREADS << " working threads:" << std::endl << std::flush;
+    std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
     return 0;
 }
