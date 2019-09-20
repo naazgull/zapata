@@ -1,25 +1,13 @@
 /*
-The MIT License (MIT)
+  Zapata project <https://github.com/naazgull/zapata>
+  Author: n@zgul <n@zgul.me>
 
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <signal.h>
@@ -37,18 +25,25 @@ SOFTWARE.
 #include <zapata/text/manip.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-constexpr int MAX_THREADS = 100;
 constexpr int N_ELEMENTS = 10000;
+constexpr int MAX_THREADS = 500;
+constexpr int PER_THREAD = 8;
 
-// #define QUEUE_USE_STRING
+#define QUEUE_USE_STRING
 // #define FIRST_PUSH_THEN_POP
 
 std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 #ifdef QUEUE_USE_STRING
-zpt::lf::queue<std::string*> _list{ MAX_THREADS, N_ELEMENTS };
+zpt::lf::queue<std::string*, MAX_THREADS, PER_THREAD> _list{};
+auto& _hptr{ zpt::lf::hptr_domain<zpt::lf::queue<std::string*, MAX_THREADS, PER_THREAD>::node,
+                                  MAX_THREADS,
+                                  PER_THREAD>::get_instance() };
 #else
-zpt::lf::queue<int> _list{ MAX_THREADS, N_ELEMENTS };
+zpt::lf::queue<int, MAX_THREADS, PER_THREAD> _list{};
+auto& _hptr{ zpt::lf::hptr_domain<zpt::lf::queue<int, MAX_THREADS, PER_THREAD>::node,
+                                  MAX_THREADS,
+                                  PER_THREAD>::get_instance() };
 #endif
 
 auto
@@ -138,8 +133,10 @@ main(int _argc, char* _argv[]) -> int {
     for (int _i = 0; _i != MAX_THREADS; ++_i)
         _threads[_i].join();
 
-    std::cout << "Processed " << _poped << " elements" << std::endl << std::flush;
-    std::cout << _list.to_string() << std::endl << std::flush;
+    std::cout << _list.to_string() << std::endl << std::endl << std::flush;
+    std::cout << "#pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "#poped -> " << _poped.load() << std::endl << std::flush;
+    std::cout << std::endl << _hptr << std::flush;
 
     return 0;
 }

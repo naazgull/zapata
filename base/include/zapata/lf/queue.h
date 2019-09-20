@@ -26,23 +26,24 @@
 
 namespace zpt {
 namespace lf {
-template<typename T>
+template<typename T, int M, int P>
 class queue {
     static_assert(std::is_scalar<T>::value,
-                  "Type `T` in `zpt::lf::queue<T>` must be of scalar type");
+                  "Type `T` in `zpt::lf::queue<T, M, P>` must be of scalar type");
 
-  protected:
+  public:
     class node {
       public:
         T __value;
         std::atomic<bool> __is_null{ true };
-        std::atomic<zpt::lf::queue<T>::node*> __next{ nullptr };
+        std::atomic<zpt::lf::queue<T, M, P>::node*> __next{ nullptr };
 
         node() = default;
         node(T _value);
         virtual ~node() = default;
 
-        friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>::node& _in) -> std::ostream& {
+        friend auto operator<<(std::ostream& _out, zpt::lf::queue<T, M, P>::node& _in)
+          -> std::ostream& {
             if constexpr (std::is_pointer<T>::value) {
                 _out << "(" << std::hex << &_in << " -> " << *_in.__value << ")" << std::flush;
             }
@@ -55,7 +56,6 @@ class queue {
         }
     };
 
-  public:
     using size_type = size_t;
 
     class iterator {
@@ -65,7 +65,7 @@ class queue {
         using pointer = T;
         using reference = T;
 
-        explicit iterator(zpt::lf::queue<T>::node* _current);
+        explicit iterator(zpt::lf::queue<T, M, P>::node* _current);
         virtual ~iterator() = default;
 
         // BASIC ITERATOR METHODS //
@@ -90,37 +90,37 @@ class queue {
         // Enable support for both input and output iterator <- already enabled
         // END / FORWARD ITERATOR METHODS //
 
-        auto node() const -> zpt::lf::queue<T>::node*;
+        auto node() const -> zpt::lf::queue<T, M, P>::node*;
 
       private:
-        zpt::lf::queue<T>::node const* __initial{ nullptr };
-        zpt::lf::queue<T>::node* __current{ nullptr };
+        zpt::lf::queue<T, M, P>::node const* __initial{ nullptr };
+        zpt::lf::queue<T, M, P>::node* __current{ nullptr };
     };
 
-    queue(int _n_threads, int _n_hp_per_thread);
-    queue(const zpt::lf::queue<T>& _rhs);
-    queue(zpt::lf::queue<T>&& _rhs);
+    queue();
+    queue(const zpt::lf::queue<T, M, P>& _rhs);
+    queue(zpt::lf::queue<T, M, P>&& _rhs);
     virtual ~queue();
 
-    auto operator=(const zpt::lf::queue<T>& _rhs) -> zpt::lf::queue<T>&;
-    auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>&;
+    auto operator=(const zpt::lf::queue<T, M, P>& _rhs) -> zpt::lf::queue<T, M, P>&;
+    auto operator=(zpt::lf::queue<T, M, P>&& _rhs) -> zpt::lf::queue<T, M, P>&;
 
     auto front() -> T;
     auto back() -> T;
 
-    auto head() -> zpt::lf::queue<T>::node*;
-    auto tail() -> zpt::lf::queue<T>::node*;
+    auto head() -> zpt::lf::queue<T, M, P>::node*;
+    auto tail() -> zpt::lf::queue<T, M, P>::node*;
 
     auto push(T value) -> void;
     auto pop() -> T;
 
-    auto begin() const -> zpt::lf::queue<T>::iterator;
-    auto end() const -> zpt::lf::queue<T>::iterator;
+    auto begin() const -> zpt::lf::queue<T, M, P>::iterator;
+    auto end() const -> zpt::lf::queue<T, M, P>::iterator;
 
     std::string to_string() __attribute__((noinline));
     operator std::string();
 
-    friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
+    friend auto operator<<(std::ostream& _out, zpt::lf::queue<T, M, P>& _in) -> std::ostream& {
         size_t _count = 0;
         _out << "#items -> [" << std::flush;
         try {
@@ -155,83 +155,91 @@ class queue {
     }
 
   private:
-    std::atomic<zpt::lf::queue<T>::node*> __head{ nullptr };
-    std::atomic<zpt::lf::queue<T>::node*> __tail{ nullptr };
-    zpt::lf::hptr_domain<zpt::lf::queue<T>::node>& __hptr{ nullptr };
+    std::atomic<zpt::lf::queue<T, M, P>::node*> __head{ nullptr };
+    std::atomic<zpt::lf::queue<T, M, P>::node*> __tail{ nullptr };
+    // zpt::lf::hptr_domain<zpt::lf::queue<T, M, P>::node, M, P>& __hptr{
+    //     zpt::lf::hptr_domain<zpt::lf::queue<T, M, P>::node, M, P>::get_instance()
+    // };
 };
 
-template<typename T>
-zpt::lf::queue<T>::queue(int _n_threads, int _n_hp_per_thread)
-  : __hptr{ zpt::lf::hptr_domain<zpt::lf::queue<T>::node>::get_instance(_n_threads,
-                                                                        _n_hp_per_thread) } {
-    auto _initial = new zpt::lf::queue<T>::node();
+template<typename T, int M, int P>
+zpt::lf::queue<T, M, P>::queue() {
+    auto _initial = new zpt::lf::queue<T, M, P>::node();
     this->__head.store(_initial);
     this->__tail.store(_initial);
 }
 
-template<typename T>
-zpt::lf::queue<T>::~queue() {}
+template<typename T, int M, int P>
+zpt::lf::queue<T, M, P>::~queue() {}
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::front() -> T {
+zpt::lf::queue<T, M, P>::front() -> T {
     return this->head()->__value;
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::back() -> T {
+zpt::lf::queue<T, M, P>::back() -> T {
     return this->tail()->__value;
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::head() -> zpt::lf::queue<T>::node* {
-    zpt::lf::queue<T>::node* _front = this->__head.load();
+zpt::lf::queue<T, M, P>::head() -> zpt::lf::queue<T, M, P>::node* {
+    zpt::lf::queue<T, M, P>::node* _front = this->__head.load();
     if (_front != nullptr && !_front->__is_null.load()) {
         return _front;
     }
     throw NoMoreElementsException("there is no element in the back");
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::tail() -> zpt::lf::queue<T>::node* {
-    zpt::lf::queue<T>::node* _back = this->__tail.load();
+zpt::lf::queue<T, M, P>::tail() -> zpt::lf::queue<T, M, P>::node* {
+    zpt::lf::queue<T, M, P>::node* _back = this->__tail.load();
     if (_back != nullptr && !_back->__is_null.load()) {
         return _back;
     }
     throw NoMoreElementsException("there is no element in the back");
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::push(T _value) -> void {
-    zpt::lf::queue<T>::node* _new_node{ new zpt::lf::queue<T>::node{} };
+zpt::lf::queue<T, M, P>::push(T _value) -> void {
+    zpt::lf::queue<T, M, P>::node* _new{ new zpt::lf::queue<T, M, P>::node{} };
+
     do {
-        zpt::lf::queue<T>::node* _tail = this->__tail.load();
-        zpt::lf::queue<T>::node* _null{ nullptr };
-        if (_tail->__next.compare_exchange_strong(_null, _new_node)) {
+        zpt::lf::queue<T, M, P>::node* _tail = this->__tail.load();
+        zpt::lf::queue<T, M, P>::node* _null{ nullptr };
+        typename zpt::lf::hptr_domain<node, M, P>::guard _tail_sentry{ _tail };
+
+        if (_tail->__next.compare_exchange_strong(_null, _new)) {
             _tail->__value = _value;
             _tail->__is_null.store(false);
-            this->__tail.store(_new_node);
+            this->__tail.store(_new);
             return;
         }
     } while (true);
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::pop() -> T {
+zpt::lf::queue<T, M, P>::pop() -> T {
     do {
-        zpt::lf::queue<T>::node* _head = this->__head.load();
+        zpt::lf::queue<T, M, P>::node* _head = this->__head.load();
+        typename zpt::lf::hptr_domain<node, M, P>::guard _head_sentry{ _head };
+
         if (_head->__is_null.load()) {
             break;
         }
         else {
-            zpt::lf::queue<T>::node* _next = _head->__next.load();
+            zpt::lf::queue<T, M, P>::node* _next = _head->__next.load();
+            typename zpt::lf::hptr_domain<node, M, P>::guard _next_sentry{ _next };
+
             if (this->__head.compare_exchange_strong(_head, _next)) {
                 T _value = _head->__value;
+                _head_sentry.retire();
                 return _value;
             }
         }
@@ -239,90 +247,92 @@ zpt::lf::queue<T>::pop() -> T {
     throw NoMoreElementsException("no element to pop");
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::begin() const -> zpt::lf::queue<T>::iterator {
-    return zpt::lf::queue<T>::iterator{ this->__head.load() };
+zpt::lf::queue<T, M, P>::begin() const -> zpt::lf::queue<T, M, P>::iterator {
+    return zpt::lf::queue<T, M, P>::iterator{ this->__head.load() };
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
-    return zpt::lf::queue<T>::iterator{ nullptr };
+zpt::lf::queue<T, M, P>::end() const -> zpt::lf::queue<T, M, P>::iterator {
+    return zpt::lf::queue<T, M, P>::iterator{ nullptr };
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::to_string() -> std::string {
+zpt::lf::queue<T, M, P>::to_string() -> std::string {
     return static_cast<std::string>(*this);
 }
 
-template<typename T>
-zpt::lf::queue<T>::operator std::string() {
+template<typename T, int M, int P>
+zpt::lf::queue<T, M, P>::operator std::string() {
     std::ostringstream _oss;
     _oss << (*this) << std::flush;
     return _oss.str();
 }
 
-template<typename T>
-zpt::lf::queue<T>::node::node(T _value)
+template<typename T, int M, int P>
+zpt::lf::queue<T, M, P>::node::node(T _value)
   : __value{ _value } {}
 
-template<typename T>
-zpt::lf::queue<T>::iterator::iterator(zpt::lf::queue<T>::node* _current)
+template<typename T, int M, int P>
+zpt::lf::queue<T, M, P>::iterator::iterator(zpt::lf::queue<T, M, P>::node* _current)
   : __initial(_current)
   , __current(_current) {}
 
-template<typename T>
-typename zpt::lf::queue<T>::iterator&
-zpt::lf::queue<T>::iterator::operator=(const iterator& _rhs) {
+template<typename T, int M, int P>
+typename zpt::lf::queue<T, M, P>::iterator&
+zpt::lf::queue<T, M, P>::iterator::operator=(const iterator& _rhs) {
     this->__initial = _rhs.__initial;
     this->__current = _rhs.__current;
     return (*this);
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::iterator::operator++() -> zpt::lf::queue<T>::iterator& {
+zpt::lf::queue<T, M, P>::iterator::operator++() -> zpt::lf::queue<T, M, P>::iterator& {
     if (this->__current != nullptr) {
         this->__current = this->__current->__next.load();
     }
     return (*this);
 }
 
-template<typename T>
-auto zpt::lf::queue<T>::iterator::operator*() const -> zpt::lf::queue<T>::iterator::reference {
+template<typename T, int M, int P>
+auto zpt::lf::queue<T, M, P>::iterator::operator*() const
+  -> zpt::lf::queue<T, M, P>::iterator::reference {
     return this->__current->__value;
 }
 
-template<typename T>
-typename zpt::lf::queue<T>::iterator
-zpt::lf::queue<T>::iterator::operator++(int) {
-    zpt::lf::queue<T>::iterator _to_return = (*this);
+template<typename T, int M, int P>
+typename zpt::lf::queue<T, M, P>::iterator
+zpt::lf::queue<T, M, P>::iterator::operator++(int) {
+    zpt::lf::queue<T, M, P>::iterator _to_return = (*this);
     ++(*this);
     return _to_return;
 }
 
-template<typename T>
-auto zpt::lf::queue<T>::iterator::operator-> () const -> zpt::lf::queue<T>::iterator::pointer {
+template<typename T, int M, int P>
+auto zpt::lf::queue<T, M, P>::iterator::operator-> () const
+  -> zpt::lf::queue<T, M, P>::iterator::pointer {
     return this->__current->__value;
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::iterator::operator==(iterator _rhs) const -> bool {
+zpt::lf::queue<T, M, P>::iterator::operator==(iterator _rhs) const -> bool {
     return this->__current == _rhs.__current;
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::iterator::operator!=(iterator _rhs) const -> bool {
+zpt::lf::queue<T, M, P>::iterator::operator!=(iterator _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 
-template<typename T>
+template<typename T, int M, int P>
 auto
-zpt::lf::queue<T>::iterator::node() const -> zpt::lf::queue<T>::node* {
+zpt::lf::queue<T, M, P>::iterator::node() const -> zpt::lf::queue<T, M, P>::node* {
     return this->__current;
 }
 
