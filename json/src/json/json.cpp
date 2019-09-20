@@ -219,9 +219,9 @@ zpt::conf::dirs(zpt::json _options) -> void {
               if (_key == "$include") {
                   zpt::json _object =
                     (_object_path.rfind(".") != std::string::npos
-                       ? _options->getPath(_object_path.substr(0, _object_path.rfind(".")))
+                       ? _options->get_path(_object_path.substr(0, _object_path.rfind(".")))
                        : _options);
-                  zpt::json _to_include = _options->getPath(_object_path);
+                  zpt::json _to_include = _options->get_path(_object_path);
                   if (_to_include->is_array()) {
                       for (auto _file : _to_include->arr()) {
                           zpt::conf::dirs((std::string)_file, _object);
@@ -244,7 +244,7 @@ zpt::conf::env(zpt::json _options) -> void {
     _traversable->inspect(
       { "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
       [&](std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-          std::string _value = std::string(_options->getPath(_object_path));
+          std::string _value = std::string(_options->get_path(_object_path));
           std::string _found = std::string(_value.data());
 
           for (size_t _idx = _found.find("$"); _idx != std::string::npos;
@@ -257,7 +257,7 @@ zpt::conf::env(zpt::json _options) -> void {
                     _value, std::string("${") + _var + std::string("}"), zpt::r_trim(_var_val));
               }
           }
-          _options->setPath(_object_path, zpt::json::string(_value));
+          _options->set_path(_object_path, zpt::json::string(_value));
       });
 }
 

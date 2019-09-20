@@ -68,8 +68,8 @@ class pretty : public std::string {
       : std::string() {
         _rhs->prettify(*this);
     };
-    friend ostream& operator<<(ostream& _out, zpt::pretty& _in) {
-        _out << string(_in.data());
+    friend auto operator<<(std::ostream& _out, zpt::pretty& _in) -> std::ostream& {
+        _out << std::string(_in.data());
         return _out;
     };
 };
@@ -105,8 +105,8 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      *
      * @return the value pointed by *this* instance
      */
-    JSONElementT& value();
-    void parse(istream& _in);
+    auto value() -> JSONElementT&;
+    auto parse(std::istream& _in) -> void;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -122,7 +122,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator==(T _rhs);
+    auto operator==(T _rhs) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -135,7 +135,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are different, **false** otherwise
      */
     template<typename T>
-    bool operator!=(T _rhs);
+    auto operator!=(T _rhs) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -150,7 +150,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<(T _rhs);
+    auto operator<(T _rhs) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -165,7 +165,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>(T _rhs);
+    auto operator>(T _rhs) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -180,7 +180,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<=(T _rhs);
+    auto operator<=(T _rhs) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -195,7 +195,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>=(T _rhs);
+    auto operator>=(T _rhs) -> bool;
     /**
      * \brief Operator '<<' override form injecting values into *this* instance
      * object. This is a
@@ -249,7 +249,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
      */
     template<typename T>
-    JSONPtr& operator<<(T _in);
+    auto operator<<(T _in) -> JSONPtr&;
     /**
      * \brief Operator '>>' override for removing attributes or array elements
      * from *this* object
@@ -260,7 +260,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Allowed types for *T* are: std::string, const char*, int, size_t,.
      */
     template<typename T>
-    JSONPtr& operator>>(T _in);
+    auto operator>>(T _in) -> JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -279,7 +279,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * zpt::undefined otherwise
      */
     template<typename T>
-    JSONPtr& operator[](T _idx);
+    auto operator[](T _idx) -> JSONPtr&;
 
     /**
      * \brief Casting operator for the std::string class. **All** JSON types are
@@ -539,13 +539,13 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
     operator zpt::lambda();
 
     template<typename T>
-    JSONPtr operator+(T _in);
+    auto operator+(T _in) -> JSONPtr&;
     template<typename T>
-    JSONPtr operator-(T _in);
+    auto operator-(T _in) -> JSONPtr&;
     template<typename T>
-    JSONPtr operator/(T _in);
+    auto operator/(T _in) -> JSONPtr&;
     template<typename T>
-    JSONPtr operator|(T _in);
+    auto operator|(T _in) -> JSONPtr&;
 
     /**
      * \brief Friendly '>>' std::istream operator override that parses the textual
@@ -553,7 +553,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * available on an
      * std::istream object into a of a zpt::JSONPtr object.
      */
-    friend std::istream& operator>>(std::istream& _in, zpt::JSONPtr& _out) {
+    friend auto operator>>(std::istream& _in, zpt::JSONPtr& _out) -> std::istream& {
         _out.parse(_in);
         return _in;
     };
@@ -567,28 +567,12 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
 typedef JSONPtr JSONElement;
 
 /**
- * \brief Convenience global variable that represents the *undefined* JSON type,
- * to be used in
- * comparisons and default
- * return values.
- *
- * Example:
- *
- *     if (my_json_object["some_attribute"] == zpt::undefined) {
- *         ...
- *     }
- */
-extern JSONPtr undefined;
-extern JSONPtr nilptr;
-extern JSONPtr array;
-
-/**
  * \brief Class that represents the *object* JSON type. It inherits from the
  * std::map class and is
  * composed of
  * std::string and zpt::JSONPtr key-value pairs.
  */
-class JSONObjT : public std::map<string, JSONPtr> {
+class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
   public:
     /**
      * \brief Creates a new JSONObjT instance.
@@ -612,7 +596,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @param _out the textual representation for the JSON object
      */
-    virtual void stringify(string& _out);
+    virtual auto stringify(std::string& _out) -> zpt::JSONObjT&;
     /**
      * \brief Outputs to the std::ostring *out* the textual representation of
      * *this* JSON object
@@ -622,7 +606,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @param _out the std::ostream to output the JSON object representation to
      */
-    virtual void stringify(ostream& _out);
+    virtual auto stringify(std::ostream& _out) -> zpt::JSONObjT&;
 
     /**
      * \brief Retrieves a human readable textual representation of *this* JSON
@@ -633,7 +617,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @param _out    the textual representation for the JSON object
      * @param _n_tabs the initial number of tabs to indent
      */
-    virtual void prettify(string& _out, uint _n_tabs = 0);
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
     /**
      * \brief Outputs to the std::ostring *out* a human readable textual
      * representation of *this*
@@ -643,7 +627,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @param _out    the std::ostream to output the JSON object representation to
      * @param _n_tabs the initial number of tabs to indent
      */
-    virtual void prettify(ostream& _out, uint _n_tabs = 0);
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
 
     /**
      * \brief Write-access method that inserts an std::string into *this* object
@@ -657,21 +641,21 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @param _name the attribute name or attribute value
      */
-    virtual void push(string _name);
+    virtual auto push(std::string _name) -> zpt::JSONObjT&;
     /**
      * \brief Write-access method that inserts a zpt::JSONElementT object into
      * *this* object map.
      *
      * @param _value [description]
      */
-    virtual void push(JSONElementT& _value);
+    virtual auto push(JSONElementT& _value) -> zpt::JSONObjT&;
     /**
      * \brief Write-access method that inserts a zpt::JSONElementT object into
      * *this* object map.
      *
      * @param _value [description]
      */
-    virtual void push(JSONElementT* _value);
+    virtual auto push(JSONElementT* _value) -> zpt::JSONObjT&;
 
     /**
      * \brief Write-access method that removes the JSON element identified by
@@ -679,28 +663,28 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(int _idx);
+    virtual auto pop(int _idx) -> zpt::JSONObjT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(size_t _idx);
+    virtual auto pop(size_t _idx) -> zpt::JSONObjT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(const char* _idx);
+    virtual auto pop(const char* _idx) -> zpt::JSONObjT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(string _idx);
+    virtual auto pop(std::string _idx) -> zpt::JSONObjT&;
 
     /**
      * \brief Read-access method for retrieving a child element represented by the
@@ -718,12 +702,12 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array.0.first_field.name");
+     * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array/0/first_field/name", "/");
+     * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
      * @param  _separator the object path separator
@@ -731,7 +715,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return            the pointer to the child object if it exists or
      * zpt::undefined otherwise
      */
-    zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
+    auto get_path(std::string _path, std::string _separator = ".") -> zpt::JSONPtr;
 
     /**
      * \brief Write-access method for adding a child element represented by the
@@ -750,18 +734,19 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array.0.first_field.name");
+     * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array/0/first_field/name", "/");
+     * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param _path      the object path to search for
      * @param _value     the value to be assigned to the child element
      * @param _separator the object path separator
      */
-    void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
+    auto set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".")
+      -> zpt::JSONObjT&;
 
     /**
      * \brief Write-access method for removing a child element represented by the
@@ -779,24 +764,24 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array.0.first_field.name");
+     * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array/0/first_field/name", "/");
+     * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
      * @param  _separator the object path separator
      */
-    void delPath(std::string _path, std::string _separator = ".");
+    auto del_path(std::string _path, std::string _separator = ".") -> void;
 
     /**
      * @brief Creates a full copy of the JSON representation stored in *this*
      * *zpt::JSONObjT*
      * @return a pointer to the copy of the underlying JSON representation
      */
-    JSONPtr clone();
+    auto clone() -> zpt::JSONPtr;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -806,7 +791,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator==(JSONObjT& _in);
+    auto operator==(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
      * typed argument.
@@ -815,7 +800,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator==(JSONObj& _in);
+    auto operator==(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
      * typed argument.
@@ -830,7 +815,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator==(T _in) {
+    auto operator==(T _in) -> bool {
         return false;
     };
     /**
@@ -839,14 +824,14 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are different, **false** otherwise
      */
-    bool operator!=(JSONObjT& _in);
+    auto operator!=(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
      * @return **true** if the objects are different, **false** otherwise
      */
-    bool operator!=(JSONObj& _in);
+    auto operator!=(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -859,7 +844,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are different, **false** otherwise
      */
     template<typename T>
-    bool operator!=(T _in) {
+    auto operator!=(T _in) -> bool {
         return true;
     };
     /**
@@ -870,7 +855,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<(JSONObjT& _in);
+    auto operator<(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -879,7 +864,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<(JSONObj& _in);
+    auto operator<(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -894,7 +879,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<(T _in) {
+    auto operator<(T _in) -> bool {
         return false;
     };
     /**
@@ -905,7 +890,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>(JSONObjT& _in);
+    auto operator>(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -914,7 +899,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>(JSONObj& _in);
+    auto operator>(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -929,7 +914,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>(T _in) {
+    auto operator>(T _in) -> bool {
         return false;
     };
     /**
@@ -940,7 +925,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>=(JSONObjT& _in);
+    auto operator>=(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -949,7 +934,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>=(JSONObj& _in);
+    auto operator>=(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -964,7 +949,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>=(T _in) {
+    auto operator>=(T _in) -> bool {
         return false;
     };
     /**
@@ -975,7 +960,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<=(JSONObjT& _in);
+    auto operator<=(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -984,7 +969,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<=(JSONObj& _in);
+    auto operator<=(zpt::JSONObj& _in) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -999,7 +984,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<=(T _in) {
+    auto operator<=(T _in) -> bool {
         return false;
     };
 
@@ -1018,7 +1003,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](int _idx);
+    auto operator[](int _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1034,7 +1019,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](size_t _idx);
+    auto operator[](size_t _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1050,7 +1035,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](const char* _idx);
+    auto operator[](const char* _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1066,7 +1051,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](string _idx);
+    auto operator[](std::string _idx) -> zpt::JSONPtr&;
 
     /**
      * \brief Friendly '<<' std::ostream operator override that outputs the
@@ -1074,13 +1059,13 @@ class JSONObjT : public std::map<string, JSONPtr> {
      * of *this* object
      * instance into the *out* stream.
      */
-    friend ostream& operator<<(ostream& _out, JSONObjT& _in) {
+    friend std::ostream& operator<<(std::ostream& _out, zpt::JSONObjT& _in) {
         _in.stringify(_out);
         return _out;
     };
 
   private:
-    string __name;
+    std::string __name;
 };
 
 /**
@@ -1089,7 +1074,7 @@ class JSONObjT : public std::map<string, JSONPtr> {
  * composed of
  * zpt::JSONPtr elements.
  */
-class JSONArrT : public vector<JSONPtr> {
+class JSONArrT : public std::vector<zpt::JSONPtr> {
   public:
     /**
      * \brief Creates a new JSONArrT instance.
@@ -1113,7 +1098,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @param _out the textual representation for the JSON array
      */
-    virtual void stringify(string& _out);
+    virtual auto stringify(std::string& _out) -> zpt::JSONArrT&;
     /**
      * \brief Outputs to the std::ostring *out* the textual representation of
      * *this* JSON array
@@ -1123,7 +1108,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @param _out the std::ostream to output the JSON array representation to
      */
-    virtual void stringify(ostream& _out);
+    virtual auto stringify(std::ostream& _out) -> zpt::JSONArrT&;
 
     /**
      * \brief Retrieves a human readable textual representation of *this* JSON
@@ -1134,7 +1119,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @param _out    the textual representation for the JSON array
      * @param _n_tabs the initial number of tabs to indent
      */
-    virtual void prettify(string& _out, uint _n_tabs = 0);
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
     /**
      * \brief Outputs to the std::ostring *out* a human readable textual
      * representation of *this*
@@ -1144,7 +1129,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @param _out    the std::ostream to output the JSON array representation to
      * @param _n_tabs the initial number of tabs to indent
      */
-    virtual void prettify(ostream& _out, uint _n_tabs = 0);
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
 
     /**
      * \brief Write-access method that inserts a zpt::JSONElementT object into
@@ -1152,14 +1137,14 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @param _value [description]
      */
-    virtual void push(JSONElementT& _value);
+    virtual auto push(zpt::JSONElementT& _value) -> zpt::JSONArrT&;
     /**
      * \brief Write-access method that inserts a zpt::JSONElementT object into
      * *this* array vector.
      *
      * @param _value [description]
      */
-    virtual void push(JSONElementT* _value);
+    virtual auto push(zpt::JSONElementT* _value) -> zpt::JSONArrT&;
 
     /**
      * \brief Write-access method that removes the JSON element identified by
@@ -1167,31 +1152,32 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(int _idx);
+    virtual auto pop(int _idx) -> zpt::JSONArrT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(size_t _idx);
+    virtual auto pop(size_t _idx) -> zpt::JSONArrT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(const char* _idx);
+    virtual auto pop(const char* _idx) -> zpt::JSONArrT&;
     /**
      * \brief Write-access method that removes the JSON element identified by
      * *idx*.
      *
      * @param _idx the identification of the element to remove
      */
-    virtual void pop(string _idx);
+    virtual auto pop(std::string _idx) -> zpt::JSONArrT&;
 
-    virtual void sort();
-    virtual void sort(std::function<bool(zpt::JSONPtr, zpt::JSONPtr)> _comparator);
+    virtual auto sort() -> zpt::JSONArrT&;
+    virtual auto sort(std::function<bool(zpt::JSONPtr, zpt::JSONPtr)> _comparator)
+      -> zpt::JSONArrT&;
 
     /**
      * \brief Read-access method for retrieving a child element represented by the
@@ -1209,12 +1195,12 @@ class JSONArrT : public vector<JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_array->getPath("1.some_array.0.first_field.name");
+     * my_json_array->get_path("1.some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_array->getPath("1/some_array/0/first_field/name", "/");
+     * my_json_array->get_path("1/some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
      * @param  _separator the object path separator
@@ -1222,7 +1208,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return            the pointer to the child object if it exists or
      * zpt::undefined otherwise
      */
-    zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
+    auto get_path(std::string _path, std::string _separator = ".") -> zpt::JSONPtr;
 
     /**
      * \brief Write-access method for adding a child element represented by the
@@ -1241,18 +1227,19 @@ class JSONArrT : public vector<JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array.0.first_field.name");
+     * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array/0/first_field/name", "/");
+     * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param _path      the object path to search for
      * @param _value     the value to be assigned to the child element
      * @param _separator the object path separator
      */
-    void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
+    auto set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".")
+      -> zpt::JSONArrT&;
 
     /**
      * \brief Write-access method for removing a child element represented by the
@@ -1270,24 +1257,24 @@ class JSONArrT : public vector<JSONPtr> {
      * is analogue to
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array.0.first_field.name");
+     * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
      *     zpt::JSONPtr child =
-     * my_json_object->getPath("some_array/0/first_field/name", "/");
+     * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
      * @param  _separator the object path separator
      */
-    void delPath(std::string _path, std::string _separator = ".");
+    auto del_path(std::string _path, std::string _separator = ".") -> zpt::JSONArrT&;
 
     /**
      * @brief Creates a full copy of the JSON representation stored in *this*
      * *zpt::JSONArrT*
      * @return a pointer to the copy of the underlying JSON representation
      */
-    JSONPtr clone();
+    auto clone() -> zpt::JSONPtr;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -1297,7 +1284,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator==(JSONArrT& _in);
+    auto operator==(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1306,7 +1293,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator==(JSONArr& _in);
+    auto operator==(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1321,7 +1308,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator==(T _in) {
+    auto operator==(T _in) -> bool {
         return false;
     };
     /**
@@ -1330,14 +1317,14 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are different, **false** otherwise
      */
-    bool operator!=(JSONArrT& _in);
+    auto operator!=(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
      * @return **true** if the objects are different, **false** otherwise
      */
-    bool operator!=(JSONArr& _in);
+    auto operator!=(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1350,7 +1337,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are different, **false** otherwise
      */
     template<typename T>
-    bool operator!=(T _in) {
+    auto operator!=(T _in) -> bool {
         return true;
     };
     /**
@@ -1361,7 +1348,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<(JSONArrT& _in);
+    auto operator<(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1370,7 +1357,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<(JSONArr& _in);
+    auto operator<(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1385,7 +1372,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<(T _in) {
+    auto operator<(T _in) -> bool {
         return false;
     };
     /**
@@ -1396,7 +1383,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>(JSONArrT& _in);
+    auto operator>(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1405,7 +1392,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>(JSONArr& _in);
+    auto operator>(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1420,7 +1407,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>(T _in) {
+    auto operator>(T _in) -> bool {
         return false;
     };
     /**
@@ -1431,7 +1418,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<=(JSONArrT& _in);
+    auto operator<=(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1440,7 +1427,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator<=(JSONArr& _in);
+    auto operator<=(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1455,7 +1442,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<=(T _in) {
+    auto operator<=(T _in) -> bool {
         return false;
     };
     /**
@@ -1466,7 +1453,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>=(JSONArrT& _in);
+    auto operator>=(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1475,7 +1462,7 @@ class JSONArrT : public vector<JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
-    bool operator>=(JSONArr& _in);
+    auto operator>=(zpt::JSONArr& _in) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1490,7 +1477,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>=(T _in) {
+    auto operator>=(T _in) -> bool {
         return false;
     };
 
@@ -1509,7 +1496,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](int _idx);
+    auto operator[](int _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1525,7 +1512,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](size_t _idx);
+    auto operator[](size_t _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1541,7 +1528,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](const char* _idx);
+    auto operator[](const char* _idx) -> zpt::JSONPtr&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1557,7 +1544,7 @@ class JSONArrT : public vector<JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    JSONPtr& operator[](string _idx);
+    auto operator[](std::string _idx) -> zpt::JSONPtr&;
 
     /**
      * \brief Friendly '<<' std::ostream operator override that outputs the
@@ -1565,7 +1552,7 @@ class JSONArrT : public vector<JSONPtr> {
      * of *this* array
      * instance into the *out* stream.
      */
-    friend ostream& operator<<(ostream& _out, JSONArrT& _in) {
+    friend std::ostream& operator<<(std::ostream& _out, zpt::JSONArrT& _in) {
         _in.stringify(_out);
         return _out;
     };
@@ -1574,7 +1561,7 @@ class JSONArrT : public vector<JSONPtr> {
 /**
  * \brief Smart shared pointer to a zpt::JSONObjT object.
  */
-class JSONObj : public shared_ptr<JSONObjT> {
+class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
   public:
     /**
      * \brief Creates a new JSONObj instance, pointing to a *null* object.
@@ -1586,11 +1573,11 @@ class JSONObj : public shared_ptr<JSONObjT> {
      *
      * @param _rhs the smart pointer to copy the target from
      */
-    JSONObj(JSONObj& _rhs);
+    JSONObj(zpt::JSONObj& _rhs);
     /**
      * \brief Creates a new JSONObj instance, pointing to the *target* object.
      */
-    JSONObj(JSONObjT* _target);
+    JSONObj(zpt::JSONObjT* _target);
     /**
      * \brief Destroys the current JSONObj instance. It will only free the pointed
      * object if there
@@ -2148,9 +2135,9 @@ class JSONElementT {
         return _out;
     };
 
-    zpt::JSONPtr getPath(std::string _path, std::string _separator = ".");
-    void setPath(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
-    void delPath(std::string _path, std::string _separator = ".");
+    zpt::JSONPtr get_path(std::string _path, std::string _separator = ".");
+    void set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
+    void del_path(std::string _path, std::string _separator = ".");
 
     virtual zpt::JSONPtr flatten();
     virtual void inspect(
@@ -2259,7 +2246,7 @@ template<typename T>
 zpt::json
 mkptr(T _v) {
     T _e(_v);
-    return zpt::json(new zpt::JSONElementT(_e));
+    return zpt::json{ new zpt::JSONElementT(_e) };
 }
 
 zpt::json
@@ -2272,6 +2259,23 @@ zpt::timestamp_t
 timestamp(zpt::json _json_date);
 std::string
 timestamp(zpt::timestamp_t _timestamp);
+
+/**
+ * \brief Convenience global variable that represents the *undefined* JSON type,
+ * to be used in
+ * comparisons and default
+ * return values.
+ *
+ * Example:
+ *
+ *     if (my_json_object["some_attribute"] == zpt::undefined) {
+ *         ...
+ *     }
+ */
+static inline JSONPtr undefined;
+static inline JSONPtr nilptr = undefined;
+static inline JSONPtr array{ zpt::mkptr("1b394520-2fed-4118-b622-940f25b8b35e" };
+
 } // namespace zpt
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -2408,7 +2412,7 @@ zpt::set(std::string _path, T _value, zpt::json _target) {
     else {
         _return = zpt::json::object();
     }
-    _return->setPath(_path, zpt::mkptr(_value));
+    _return->set_path(_path, zpt::mkptr(_value));
     return _return;
 }
 

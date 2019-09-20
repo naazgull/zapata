@@ -36,10 +36,10 @@ zpt::redis::Client::Client(zpt::json _options, std::string _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     try {
-        std::string _bind((std::string)_options->getPath(_conf_path)["bind"]);
+        std::string _bind((std::string)_options->get_path(_conf_path)["bind"]);
         std::string _address(_bind.substr(0, _bind.find(":")));
         uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
-        this->connection(_options->getPath(_conf_path) +
+        this->connection(_options->get_path(_conf_path) +
                          zpt::json{ "host", _address, "port", _port });
     }
     catch (std::exception& _e) {

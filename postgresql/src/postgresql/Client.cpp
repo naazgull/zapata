@@ -35,7 +35,7 @@ zpt::pgsql::ClientPtr::~ClientPtr() {}
 zpt::pgsql::Client::Client(zpt::json _options, std::string _conf_path)
   : __options(_options)
   , __conn(nullptr) {
-    this->connection(_options->getPath(_conf_path));
+    this->connection(_options->get_path(_conf_path));
 }
 
 zpt::pgsql::Client::~Client() {}

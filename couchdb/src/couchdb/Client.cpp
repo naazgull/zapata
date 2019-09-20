@@ -36,20 +36,20 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path)
   : __options(_options)
   , __round_robin(0) {
     try {
-        zpt::json _uri = zpt::uri::parse((std::string)_options->getPath(_conf_path)["bind"]);
+        zpt::json _uri = zpt::uri::parse((std::string)_options->get_path(_conf_path)["bind"]);
         if (_uri["scheme"] == zpt::json::string("zpt")) {
             _uri << "scheme"
                  << "http";
         }
-        this->connection(_options->getPath(_conf_path) + zpt::json{ "uri", _uri });
+        this->connection(_options->get_path(_conf_path) + zpt::json{ "uri", _uri });
     }
     catch (std::exception& _e) {
         assertz(false, std::string("could not connect to CouchDB server: ") + _e.what(), 500, 0);
     }
 
     this->__pool_size = 0;
-    if (_options->getPath(_conf_path)["pool"]->ok()) {
-        this->__pool_size = int(_options->getPath(_conf_path)["pool"]);
+    if (_options->get_path(_conf_path)["pool"]->ok()) {
+        this->__pool_size = int(_options->get_path(_conf_path)["pool"]);
         for (int _k = 0; _k < this->__pool_size; _k++) {
             this->__sockets.push_back(zpt::socketstream_ptr());
             this->__mtxs.push_back(new std::mutex());
@@ -756,7 +756,7 @@ zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt::jso
     }
     else if (_result["rows"]->is_array()) {
         _size = size_t(_result["total_rows"]);
-        _return = _result->getPath("rows.*.doc");
+        _return = _result->get_path("rows.*.doc");
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -802,7 +802,7 @@ zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json
     }
     else if (_result["rows"]->is_array()) {
         _size = size_t(_result["total_rows"]) - 1;
-        _return = _result->getPath("rows.*.doc");
+        _return = _result->get_path("rows.*.doc");
     }
 
     if (!bool(_opts["mutated-event"]))

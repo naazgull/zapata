@@ -647,7 +647,7 @@ zpt::rest::_collect_variables(zpt::json _kb, zpt::json _args) -> zpt::json {
                 std::string _var = _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
                 zpt::replace(_var, "@", "source");
                 zpt::replace(_var, "#", "previous");
-                _return = _kb->getPath(_var);
+                _return = _kb->get_path(_var);
 
                 if (_return->ok()) {
                     if (_idx == 0 && _end == _found.length() - 1) {

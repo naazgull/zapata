@@ -35,7 +35,7 @@ zpt::mongodb::ClientPtr::~ClientPtr() {}
 zpt::mongodb::Client::Client(zpt::json _options, std::string _conf_path)
   : __options(_options)
   , __conn(nullptr) {
-    this->connection(_options->getPath(_conf_path));
+    this->connection(_options->get_path(_conf_path));
 }
 
 zpt::mongodb::Client::~Client() {

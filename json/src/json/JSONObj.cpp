@@ -29,9 +29,6 @@ SOFTWARE.
 #include <zapata/json/JSONParser.h>
 
 namespace zpt {
-JSONPtr undefined;
-JSONPtr nilptr = undefined;
-JSONPtr array = zpt::mkptr("1b394520-2fed-4118-b622-940f25b8b35e");
 symbol_table __lambdas = zpt::symbol_table(
   new std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
 } // namespace zpt
@@ -1723,14 +1720,14 @@ zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) {
 }
 
 zpt::JSONPtr
-zpt::JSONElementT::getPath(std::string _path, std::string _separator) {
+zpt::JSONElementT::get_path(std::string _path, std::string _separator) {
     assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            return this->__target.__object->getPath(_path, _separator);
+            return this->__target.__object->get_path(_path, _separator);
         }
         case zpt::JSArray: {
-            return this->__target.__array->getPath(_path, _separator);
+            return this->__target.__array->get_path(_path, _separator);
         }
         case zpt::JSString:
         case zpt::JSInteger:
@@ -1746,14 +1743,14 @@ zpt::JSONElementT::getPath(std::string _path, std::string _separator) {
 }
 
 void
-zpt::JSONElementT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
+zpt::JSONElementT::set_path(std::string _path, zpt::JSONPtr _value, std::string _separator) {
     assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            return this->__target.__object->setPath(_path, _value, _separator);
+            return this->__target.__object->set_path(_path, _value, _separator);
         }
         case zpt::JSArray: {
-            return this->__target.__array->setPath(_path, _value, _separator);
+            return this->__target.__array->set_path(_path, _value, _separator);
         }
         case zpt::JSString:
         case zpt::JSInteger:
@@ -1769,14 +1766,14 @@ zpt::JSONElementT::setPath(std::string _path, zpt::JSONPtr _value, std::string _
 }
 
 void
-zpt::JSONElementT::delPath(std::string _path, std::string _separator) {
+zpt::JSONElementT::del_path(std::string _path, std::string _separator) {
     assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            this->__target.__object->delPath(_path, _separator);
+            this->__target.__object->del_path(_path, _separator);
         }
         case zpt::JSArray: {
-            this->__target.__array->delPath(_path, _separator);
+            this->__target.__array->del_path(_path, _separator);
         }
         case zpt::JSString:
         case zpt::JSInteger:
@@ -1797,7 +1794,7 @@ zpt::JSONElementT::flatten() {
         this->inspect(
           { "$any", "type" },
           [&](std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-              zpt::JSONPtr _self = this->getPath(_object_path);
+              zpt::JSONPtr _self = this->get_path(_object_path);
               if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
                   _return << _object_path << _self;
               }
@@ -2314,7 +2311,7 @@ zpt::JSONObjT::pop(std::string _name) {
 }
 
 zpt::JSONPtr
-zpt::JSONObjT::getPath(std::string _path, std::string _separator) {
+zpt::JSONObjT::get_path(std::string _path, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
     std::string _remainder;
@@ -2326,7 +2323,7 @@ zpt::JSONObjT::getPath(std::string _path, std::string _separator) {
     if (!_current->ok()) {
         if (_part == "*" && _remainder.length() != 0) {
             for (auto _a : (*this)) {
-                _current = _a.second->getPath(_remainder, _separator);
+                _current = _a.second->get_path(_remainder, _separator);
                 if (_current->ok()) {
                     return _current;
                 }
@@ -2338,11 +2335,11 @@ zpt::JSONObjT::getPath(std::string _path, std::string _separator) {
     if (_remainder.length() == 0) {
         return _current;
     }
-    return _current->getPath(_remainder, _separator);
+    return _current->get_path(_remainder, _separator);
 }
 
 void
-zpt::JSONObjT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
+zpt::JSONObjT::set_path(std::string _path, zpt::JSONPtr _value, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -2353,7 +2350,7 @@ zpt::JSONObjT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
             zpt::JSONObj _new;
             _current = mkptr(_new);
             this->insert(pair<string, JSONPtr>(std::string(_part.data()), _current));
-            _current->setPath(_path.substr(_part.length() + 1), _value, _separator);
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
         else {
             this->insert(pair<string, JSONPtr>(std::string(_part.data()), _value));
@@ -2361,7 +2358,7 @@ zpt::JSONObjT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
     }
     else {
         if (_iss.good()) {
-            _current->setPath(_path.substr(_part.length() + 1), _value, _separator);
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
         else {
             this->pop(_part);
@@ -2371,7 +2368,7 @@ zpt::JSONObjT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
 }
 
 void
-zpt::JSONObjT::delPath(std::string _path, std::string _separator) {
+zpt::JSONObjT::del_path(std::string _path, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -2683,7 +2680,7 @@ zpt::JSONArrT::sort(std::function<bool(zpt::JSONPtr, zpt::JSONPtr)> _comparator)
 }
 
 zpt::JSONPtr
-zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
+zpt::JSONArrT::get_path(std::string _path, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
     std::string _remainder;
@@ -2696,7 +2693,7 @@ zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
         if (_part == "*" && _remainder.length() != 0) {
             zpt::json _return = zpt::json::array();
             for (auto _a : (*this)) {
-                _current = _a->getPath(_remainder, _separator);
+                _current = _a->get_path(_remainder, _separator);
                 if (_current->ok()) {
                     _return << _current;
                 }
@@ -2709,11 +2706,11 @@ zpt::JSONArrT::getPath(std::string _path, std::string _separator) {
     if (_remainder.length() == 0) {
         return _current;
     }
-    return _current->getPath(_remainder, _separator);
+    return _current->get_path(_remainder, _separator);
 }
 
 void
-zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string _separator) {
+zpt::JSONArrT::set_path(std::string _path, zpt::JSONPtr _value, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -2724,7 +2721,7 @@ zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
             zpt::JSONObj _new;
             _current = mkptr(_new);
             this->push_back(_current);
-            _current->setPath(_path.substr(_part.length() + 1), _value, _separator);
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
         else {
             this->push_back(_value);
@@ -2732,7 +2729,7 @@ zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
     }
     else {
         if (_iss.good()) {
-            _current->setPath(_path.substr(_part.length() + 1), _value, _separator);
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
         else {
             this->pop(_part);
@@ -2742,7 +2739,7 @@ zpt::JSONArrT::setPath(std::string _path, zpt::JSONPtr _value, std::string _sepa
 }
 
 void
-zpt::JSONArrT::delPath(std::string _path, std::string _separator) {
+zpt::JSONArrT::del_path(std::string _path, std::string _separator) {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -3548,7 +3545,7 @@ zpt::json::stringify(std::string& _str) {
 
 zpt::json
 zpt::get(std::string _path, zpt::json _source) {
-    return _source->getPath(_path);
+    return _source->get_path(_path);
 }
 
 zpt::timestamp_t
