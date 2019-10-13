@@ -58,3 +58,4 @@ rest/src/rest/zsysd
 mysql/src/mysql/zblreader
 docker/create_packages
 events/src/events/zsysd
+events/src/events/zpt

@@ -28,8 +28,8 @@ namespace zpt {
 namespace lf {
 template<typename T>
 class queue {
-    static_assert(std::is_scalar<T>::value,
-                  "Type `T` in `zpt::lf::queue<T, M, P>` must be of scalar type");
+    static_assert(std::is_copy_constructible<T>::value,
+                  "Type `T` in `zpt::lf::queue<T>` must be of copy constuctible.");
 
   public:
     class node {
@@ -193,7 +193,7 @@ zpt::lf::queue<T>::head() -> zpt::lf::queue<T>::node* {
     if (_front != nullptr && !_front->__is_null.load()) {
         return _front;
     }
-    throw NoMoreElementsException("there is no element in the back");
+    throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
 template<typename T>
@@ -203,7 +203,7 @@ zpt::lf::queue<T>::tail() -> zpt::lf::queue<T>::node* {
     if (_back != nullptr && !_back->__is_null.load()) {
         return _back;
     }
-    throw NoMoreElementsException("there is no element in the back");
+    throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
 template<typename T>

@@ -32,7 +32,7 @@ zpt::JSONParser::JSONParser(std::istream& _in, std::ostream& _out) {
 zpt::JSONParser::~JSONParser() {}
 
 void
-zpt::JSONParser::switchRoots(JSONPtr& _root) {
+zpt::JSONParser::switchRoots(zpt::json& _root) {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     this->d_scanner.switchRoots(_root);
 }

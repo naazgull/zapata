@@ -11,6 +11,7 @@ nobase_include_HEADERS = \
 ./zapata/exceptions/NoHeaderNameException.h \
 ./zapata/exceptions/ParserEOF.h \
 ./zapata/exceptions/SyntaxErrorException.h \
+./zapata/exceptions/NoMoreElementsException.h \
 ./zapata/file/manip.h \
 ./zapata/log/log.h \
 ./zapata/mail/manip.h \

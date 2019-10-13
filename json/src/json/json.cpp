@@ -59,21 +59,16 @@ zpt::join(zpt::json _to_join, std::string _separator) -> std::string {
             "JSON to join must be an array",
             412,
             0);
-    std::string _return;
-    if (_to_join->type() == zpt::JSArray) {
-        for (auto _a : _to_join->arr()) {
-            if (_return.length() != 0) {
-                _return += _separator;
-            }
-            _return += ((std::string)_a);
+    std::string _return{ "" };
+    for (auto [_idx, _key, _value] : _to_join) {
+        if (_return.length() != 0) {
+            _return += _separator;
         }
-    }
-    else if (_to_join->type() == zpt::JSObject) {
-        for (auto _a : _to_join->obj()) {
-            if (_return.length() != 0) {
-                _return += _separator;
-            }
-            _return += _a.first + _separator + ((std::string)_a.second);
+        if (_to_join->type() == zpt::JSArray) {
+            _return += static_cast<std::string>(_value);
+        }
+        else if (_to_join->type() == zpt::JSObject) {
+            _return += _key + _separator + static_cast<std::string>(_value);
         }
     }
     return _return;
@@ -201,8 +196,8 @@ zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
         }
         _ifs.close();
 
-        for (auto _new_field : _conf->obj()) {
-            _options << _new_field.first << (_options[_new_field.first] + _new_field.second);
+        for (auto [_idx, _key, _new_field] : _conf) {
+            _options << _key << (_options[_key] + _new_field);
         }
     }
 }
@@ -219,11 +214,11 @@ zpt::conf::dirs(zpt::json _options) -> void {
               if (_key == "$include") {
                   zpt::json _object =
                     (_object_path.rfind(".") != std::string::npos
-                       ? _options->get_path(_object_path.substr(0, _object_path.rfind(".")))
+                       ? _options->get_path(_object_path.substr(0, _object_path.rfind(".")))
                        : _options);
-                  zpt::json _to_include = _options->get_path(_object_path);
+                  zpt::json _to_include = _options->get_path(_object_path);
                   if (_to_include->is_array()) {
-                      for (auto _file : _to_include->arr()) {
+                      for (auto [_idx, _key, _file] : _to_include) {
                           zpt::conf::dirs((std::string)_file, _object);
                       }
                   }
@@ -244,7 +239,7 @@ zpt::conf::env(zpt::json _options) -> void {
     _traversable->inspect(
       { "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
       [&](std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-          std::string _value = std::string(_options->get_path(_object_path));
+          std::string _value = std::string(_options->get_path(_object_path));
           std::string _found = std::string(_value.data());
 
           for (size_t _idx = _found.find("$"); _idx != std::string::npos;
@@ -257,7 +252,7 @@ zpt::conf::env(zpt::json _options) -> void {
                     _value, std::string("${") + _var + std::string("}"), zpt::r_trim(_var_val));
               }
           }
-          _options->set_path(_object_path, zpt::json::string(_value));
+          _options->set_path(_object_path, zpt::json::string(_value));
       });
 }
 
@@ -335,7 +330,7 @@ zpt::uri::parse(std::string _uri) -> zpt::json {
              "path",
              (std::string)_uri_matches[5],
              "query",
-             (_query->obj()->size() != 0 ? _query : zpt::undefined),
+             (_query->size() != 0 ? _query : zpt::undefined),
              "fragment",
              zpt::url::r_decode((std::string)_uri_matches[7]) };
 }
@@ -400,13 +395,13 @@ zpt::uri::to_str(zpt::json _uri, zpt::json _opts) -> std::string {
                 : std::string("")))));
     std::string _query;
     if ((!_opts["query"]->ok() || bool(_opts["query"])) && _uri["query"]->is_object() &&
-        _uri["query"]->obj()->size() != 0) {
+        _uri["query"]->size() != 0) {
         _query += std::string("?");
-        for (auto _p : _uri["query"]->obj()) {
+        for (auto [_idx, _key, _p] : _uri["query"]) {
             if (_query.length() != 1) {
                 _query += std::string("&");
             }
-            _query += _p.first + std::string("=") + zpt::url::r_encode(_p.second);
+            _query += _key + std::string("=") + zpt::url::r_encode(_p);
         }
     }
     std::string _fragment;
@@ -421,7 +416,7 @@ auto
 zpt::test::location(zpt::json _location) -> bool {
     return (_location->is_object() && _location["longitude"]->is_number() &&
             _location["latitude"]->is_number()) ||
-           (_location->is_array() && _location->arr()->size() == 2 && _location[0]->is_number() &&
+           (_location->is_array() && _location->size() == 2 && _location[0]->is_number() &&
             _location[1]->is_number());
 }
 
@@ -449,7 +444,7 @@ zpt::http::cookies::deserialize(std::string _cookie_header) -> zpt::json {
     zpt::json _splitted = zpt::split(_cookie_header, ";");
     zpt::json _return = zpt::json::object();
     bool _first = true;
-    for (auto _part : _splitted->arr()) {
+    for (auto [_idx, _key, _part] : _splitted) {
         std::string _value = std::string(_part);
         zpt::trim(_value);
         if (_first) {
@@ -458,7 +453,7 @@ zpt::http::cookies::deserialize(std::string _cookie_header) -> zpt::json {
         }
         else {
             zpt::json _pair = zpt::split(_value, "=");
-            if (_pair->arr()->size() == 2) {
+            if (_pair->size() == 2) {
                 _return << _pair[0]->str() << _pair[1];
             }
         }
@@ -469,11 +464,11 @@ zpt::http::cookies::deserialize(std::string _cookie_header) -> zpt::json {
 auto
 zpt::http::cookies::serialize(zpt::json _info) -> std::string {
     std::string _return((std::string)_info["value"]);
-    for (auto _field : _info->obj()) {
-        if (_field.first == "value") {
+    for (auto [_idx, _key, _field] : _info) {
+        if (_key == "value") {
             continue;
         }
-        _return += std::string("; ") + _field.first + std::string("=") + std::string(_field.second);
+        _return += std::string("; ") + _key + std::string("=") + std::string(_field);
     }
     return _return;
 }

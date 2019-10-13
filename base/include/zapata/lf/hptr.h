@@ -51,8 +51,10 @@ class hptr_domain {
     friend auto operator<<(std::ostream& _out, zpt::lf::hptr_domain<T>& _in) -> std::ostream& {
         _out << "* zpt::lf::hptr_domain(" << std::hex << &_in << "):" << std::dec << std::endl;
         _out << "  #alive ptr -> " << std::dec << _in.__alive.load() << std::endl
-             << "  #retired ptr -> " << _in.__retired.load() << std::flush;
-        _out << std::dec << std::flush;
+             << "  #retired ptr -> " << _in.__retired.load() << std::endl
+             << std::flush;
+        _out << "  #config -> P = " << _in.P << " | K = " << _in.K << " | N = " << _in.N
+             << " | R = " << _in.R << std::dec << std::flush;
         return _out;
     }
 
@@ -96,7 +98,7 @@ zpt::lf::hptr_domain<T>::hptr_domain(long _max_threads, long _ptr_per_thread)
   , P{ _max_threads }
   , K{ FACTOR * CACHE_LINE_PADDING }
   , N{ P * K }
-  , R{ N } {
+  , R{ N / 2 } {
     assertz(_max_threads > 0,
             "Hazard pointer domain for the given template type has not been initialized",
             500,

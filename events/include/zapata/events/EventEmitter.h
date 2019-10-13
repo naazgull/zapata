@@ -73,7 +73,7 @@ typedef std::shared_ptr<zpt::EventGatekeeper> EventGatekeeperPtr;
 typedef std::shared_ptr<zpt::EventDirectory> EventDirectoryPtr;
 typedef std::shared_ptr<zpt::EventDirectoryGraph> EventDirectoryGraphPtr;
 typedef std::shared_ptr<zpt::Channel> socket;
-typedef std::shared_ptr<zpt::abstract_channel_factory> channel_factory;
+typedef std::shared_ptr<zpt::channel_factory> channel_factory;
 typedef std::shared_ptr<zpt::Ontology> OntologyPtr;
 
 typedef zpt::BridgePtr bridge;

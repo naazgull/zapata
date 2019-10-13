@@ -34,12 +34,12 @@ class JSONTokenizerLexer : public JSONLexer {
     JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~JSONTokenizerLexer();
 
-    void switchRoots(zpt::JSONPtr& _root);
+    void switchRoots(zpt::json& _root);
 
     void result(zpt::JSONType _in);
     void finish(zpt::JSONType _in);
 
-    void init(zpt::JSONType _in_type, const string _in_str);
+    void init(zpt::JSONType _in_type, const std::string _in_str);
     void init(zpt::JSONType _in_type);
     void init(bool _in);
     void init(long long _in);

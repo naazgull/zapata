@@ -42,18 +42,18 @@ class csv : public std::string {
       : std::string(_rhs){};
     inline csv(const char* _rhs)
       : std::string(_rhs){};
-    friend auto operator<<(ostream& _out, zpt::csv& _in) -> std::ostream& {
-        _out << string(_in.data());
+    friend auto operator<<(std::ostream& _out, zpt::csv& _in) -> std::ostream& {
+        _out << std::string(_in.data());
         return _out;
     };
-    friend auto operator>>(istream& _in, zpt::csv& _out) -> std::istream& {
+    friend auto operator>>(std::istream& _in, zpt::csv& _out) -> std::istream& {
         _out.clear();
         std::getline(_in, _out, '\n');
         zpt::trim(_out);
         return _in;
     };
-    inline operator zpt::JSONPtr() {
-        zpt::JSONPtr _result = zpt::json::array();
+    inline operator zpt::json() {
+        zpt::json _result = zpt::json::array();
         std::istringstream _iss;
         _iss.str(*this);
 

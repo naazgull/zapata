@@ -29,6 +29,7 @@ SOFTWARE.
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <memory>
 #include <zapata/base/config.h>
 
 #define __HOST__ std::string(zpt::log_hostname())
@@ -41,7 +42,7 @@ namespace zpt {
 extern short int log_lvl;
 extern std::ostream* log_fd;
 extern long log_pid;
-extern std::string* log_pname;
+extern std::unique_ptr<std::string> log_pname;
 extern char* log_hname;
 extern short log_format;
 

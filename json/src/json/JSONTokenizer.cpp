@@ -53,6 +53,8 @@
 // const. If --thread-safe is not provided, the state-tables are not defined
 // as const, since the lookup() function below will modify them
 
+using namespace std;
+
 namespace // anonymous
 {
 char const author[] = "Frank B. Brokken (f.b.brokken@rug.nl)";

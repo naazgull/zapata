@@ -24,5 +24,5 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/events/Pipeline.h>
+#include <zapata/events/pipeline.h>
 #include <zapata/events/config.h>

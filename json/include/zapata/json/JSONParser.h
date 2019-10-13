@@ -35,7 +35,7 @@ class JSONParser : public JSONTokenizer {
     JSONParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~JSONParser();
 
-    void switchRoots(JSONPtr& _root);
+    void switchRoots(zpt::json& _root);
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 
   private:

@@ -1,25 +1,5 @@
 /*
-The MIT License (MIT)
-
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Author: n@zgul <n@zgul.me>
 */
 #pragma once
 
@@ -48,7 +28,7 @@ namespace zpt {
 /**
  * \brief Type definition for representing a millisecond based timestamp.
  */
-typedef unsigned long long timestamp_t;
+using timestamp_t = unsigned long long;
 
 class JSONElementT;
 class JSONObj;
@@ -57,47 +37,111 @@ class JSONLambda;
 class lambda;
 class json;
 
-class pretty : public std::string {
+class pretty {
   public:
-    inline pretty(std::string _rhs)
-      : std::string(_rhs){};
-    inline pretty(const char* _rhs)
-      : std::string(_rhs){};
+    pretty(const pretty& _rhs);
+    pretty(pretty&& _rhs);
+    pretty(std::string _rhs);
+    pretty(const char* _rhs);
     template<typename T>
-    inline pretty(T _rhs)
-      : std::string() {
-        _rhs->prettify(*this);
-    };
-    friend auto operator<<(std::ostream& _out, zpt::pretty& _in) -> std::ostream& {
-        _out << std::string(_in.data());
+    pretty(T _rhs);
+    virtual ~pretty() = default;
+
+    operator std::string();
+
+    auto operator=(const pretty& _rhs) -> pretty&;
+    auto operator=(pretty&& _rhs) -> pretty&;
+
+    auto operator-> () -> std::string&;
+    auto operator*() -> std::string&;
+
+    friend auto operator<<(std::ostream& _out, zpt::pretty _in) -> std::ostream& {
+        _out << std::string(_in.__underlying.data());
         return _out;
-    };
+    }
+
+  private:
+    std::string __underlying{ "" };
 };
 
 /**
  * \brief Smart shared pointer to a zpt::JSONElementT object.
  */
-class JSONPtr : public std::shared_ptr<JSONElementT> {
+class json {
   public:
-    /**
-     * \brief Creates a new JSONPtr instance, pointing to a *null* object.
-     */
-    JSONPtr();
-    /**
-     * \brief Creates a new JSONPtr instance, pointing to the *target* object.
-     */
-    JSONPtr(JSONElementT* _target);
-    /**
-     * \brief Creates a new JSONPtr instance, pointing to the *target* object.
-     */
-    JSONPtr(std::initializer_list<JSONElementT> _list);
-    /**
-     * \brief Destroys the current JSONPtr instance. It will only free the pointed
-     * object if there
-     * are no more
-     * *shared_ptr* objects pointing to it.
-     */
-    virtual ~JSONPtr();
+    // class element {
+    //   public:
+    //     element(size_t _index, zpt::json& _value);
+    //     element(size_t _index, std::string _key, zpt::json& _value);
+    //     element(const element& _rhs);
+    //     element(element&& _rhs);
+    //     virtual ~element() = default;
+    //     auto index() -> size_t;
+    //     auto key() -> std::string&;
+    //     auto value() -> zpt::json;
+    //     auto operator=(const element& _rhs) -> element&;
+    //     auto operator=(element&& _rhs) -> element&;
+    //   private:
+    //     size_t __index{ 0 };
+    //     std::string __key{ "" };
+    //     zpt::json& __value;
+    // };
+    using element = std::tuple<size_t, std::string, zpt::json>;
+
+    class iterator {
+      public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = zpt::json::element;
+        using pointer = zpt::json::element;
+        using reference = zpt::json::element;
+        using iterator_category = std::bidirectional_iterator_tag;
+
+        explicit iterator(zpt::json& _target, size_t _pos = 0);
+        iterator(const iterator& _rhs);
+        virtual ~iterator() = default;
+
+        // BASIC ITERATOR METHODS //
+        auto operator=(const iterator& _rhs) -> iterator&;
+        auto operator++() -> iterator&;
+        auto operator*() const -> reference;
+        // END / BASIC ITERATOR METHODS //
+
+        // INPUT ITERATOR METHODS //
+        auto operator++(int) -> iterator;
+        auto operator-> () const -> pointer;
+        auto operator==(iterator _rhs) const -> bool;
+        auto operator!=(iterator _rhs) const -> bool;
+        // END / INPUT ITERATOR METHODS //
+
+        // OUTPUT ITERATOR METHODS //
+        // reference operator*() const; <- already defined
+        // iterator operator++(int); <- already defined
+        // END / OUTPUT ITERATOR METHODS //
+
+        // FORWARD ITERATOR METHODS //
+        // Enable support for both input and output iterator <- already enabled
+        // END / FORWARD ITERATOR METHODS //
+
+        // BIDIRECTIOANL ITERATOR METHODS //
+        auto operator--() -> iterator&;
+        auto operator--(int) -> iterator;
+        // END / BIDIRECTIOANL ITERATOR METHODS //
+
+      private:
+        zpt::json& __target;
+        size_t __pos{ 0 };
+    };
+
+    json();
+    // json(zpt::json _target);
+    json(zpt::JSONElementT* _target);
+    json(std::initializer_list<JSONElementT> _init);
+    json(std::string _rhs);
+    json(const char* _rhs);
+    json(zpt::pretty _rhs);
+    json(const zpt::json& _rhs);
+    json(zpt::json&& _rhs);
+    virtual ~json();
 
     /**
      * \brief Read-access method for retrieving the value pointed by *this*
@@ -105,8 +149,15 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      *
      * @return the value pointed by *this* instance
      */
+    auto size() -> size_t;
     auto value() -> JSONElementT&;
     auto parse(std::istream& _in) -> void;
+
+    auto begin() -> zpt::json::iterator;
+    auto end() -> zpt::json::iterator;
+
+    auto operator=(const zpt::json& _rhs) -> zpt::json&;
+    auto operator=(zpt::json&& _rhs) -> zpt::json&;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -114,20 +165,23 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
+    auto operator-> () -> std::shared_ptr<JSONElementT>&;
+    auto operator*() -> std::shared_ptr<JSONElementT>&;
+
     template<typename T>
     auto operator==(T _rhs) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -142,7 +196,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -157,7 +211,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -172,7 +226,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -187,7 +241,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -243,13 +297,13 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      *       "numbers" << _a <<
      *       "animal_numbers" << _b;
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
      */
     template<typename T>
-    auto operator<<(T _in) -> JSONPtr&;
+    auto operator<<(T _in) -> json&;
     /**
      * \brief Operator '>>' override for removing attributes or array elements
      * from *this* object
@@ -260,7 +314,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * Allowed types for *T* are: std::string, const char*, int, size_t,.
      */
     template<typename T>
-    auto operator>>(T _in) -> JSONPtr&;
+    auto operator>>(T _in) -> json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -279,7 +333,7 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * zpt::undefined otherwise
      */
     template<typename T>
-    auto operator[](T _idx) -> JSONPtr&;
+    auto operator[](T _idx) const -> json;
 
     /**
      * \brief Casting operator for the std::string class. **All** JSON types are
@@ -290,7 +344,6 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * object
      */
     operator std::string();
-
     /**
      * \brief Casting operator to a pretty printed std::string class. **All** JSON
      * types are
@@ -301,7 +354,6 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
      * typed object
      */
     operator zpt::pretty();
-
     /**
      * \brief Casting operator for the *bool* basic type. **All** JSON types as
      * castable to a *bool*
@@ -539,40 +591,83 @@ class JSONPtr : public std::shared_ptr<JSONElementT> {
     operator zpt::lambda();
 
     template<typename T>
-    auto operator+(T _in) -> JSONPtr&;
+    auto operator+(T _in) -> json;
     template<typename T>
-    auto operator-(T _in) -> JSONPtr&;
+    auto operator-(T _in) -> json;
     template<typename T>
-    auto operator/(T _in) -> JSONPtr&;
+    auto operator/(T _in) -> json;
     template<typename T>
-    auto operator|(T _in) -> JSONPtr&;
+    auto operator|(T _in) -> json;
 
     /**
      * \brief Friendly '>>' std::istream operator override that parses the textual
      * representation
      * available on an
-     * std::istream object into a of a zpt::JSONPtr object.
+     * std::istream object into a of a zpt::json object.
      */
-    friend auto operator>>(std::istream& _in, zpt::JSONPtr& _out) -> std::istream& {
+    friend auto operator>>(std::istream& _in, zpt::json& _out) -> std::istream& {
         _out.parse(_in);
         return _in;
-    };
+    }
 
     template<typename T>
-    static inline auto data(const T _delegate) -> zpt::JSONPtr {
-        return _delegate->get_json();
-    };
+    static auto data(const T _delegate) -> zpt::json;
+
+    static auto stringify(std::string& _str) -> void;
+
+    static auto object() -> zpt::json;
+    static auto array() -> zpt::json;
+    template<typename T>
+    static auto pretty(T _e) -> std::string;
+    template<typename T>
+    static auto string(T _e) -> zpt::json;
+    template<typename T>
+    static auto uinteger(T _e) -> zpt::json;
+    template<typename T>
+    static auto integer(T _e) -> zpt::json;
+    template<typename T>
+    static auto floating(T _e) -> zpt::json;
+    template<typename T>
+    static auto ulong(T _e) -> zpt::json;
+    template<typename T>
+    static auto boolean(T _e) -> zpt::json;
+    static auto date(std::string _e) -> zpt::json;
+    static auto date() -> zpt::json;
+    template<typename T>
+    static auto date(T _e) -> zpt::json;
+    template<typename T>
+    static auto lambda(T _e) -> zpt::json;
+    static auto lambda(std::string _name, unsigned short _n_args) -> zpt::json;
+
+  private:
+    std::shared_ptr<JSONElementT> __underlying{ nullptr };
 };
 
-typedef JSONPtr JSONElement;
+using JSONElement = zpt::json;
+
+/**
+ * \brief Convenience global variable that represents the *undefined* JSON type,
+ * to be used in
+ * comparisons and default
+ * return values.
+ *
+ * Example:
+ *
+ *     if (my_json_object["some_attribute"] == zpt::undefined) {
+ *         ...
+ *     }
+ */
+extern zpt::json undefined;
+extern zpt::json nilptr;
+extern zpt::json array;
 
 /**
  * \brief Class that represents the *object* JSON type. It inherits from the
  * std::map class and is
  * composed of
- * std::string and zpt::JSONPtr key-value pairs.
+ * std::string and zpt::json key-value pairs.
  */
-class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
+class JSONObjT {
   public:
     /**
      * \brief Creates a new JSONObjT instance.
@@ -582,7 +677,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * \brief Destroys the current JSONObjT instance, freeing all allocated
      * memory. It will free the
      * objects pointed
-     * by each zpt::JSONPtr smart pointer only if there aren't any more
+     * by each zpt::json smart pointer only if there aren't any more
      * std::shared_ptr pointing to
      * it.
      */
@@ -686,6 +781,9 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      */
     virtual auto pop(std::string _idx) -> zpt::JSONObjT&;
 
+    virtual auto key_for(size_t _idx) -> std::string;
+    virtual auto index_for(std::string _name) -> size_t;
+
     /**
      * \brief Read-access method for retrieving a child element represented by the
      * *path* object
@@ -696,17 +794,17 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
@@ -715,7 +813,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * @return            the pointer to the child object if it exists or
      * zpt::undefined otherwise
      */
-    auto get_path(std::string _path, std::string _separator = ".") -> zpt::JSONPtr;
+    auto get_path(std::string _path, std::string _separator = ".") -> zpt::json;
 
     /**
      * \brief Write-access method for adding a child element represented by the
@@ -728,24 +826,24 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param _path      the object path to search for
      * @param _value     the value to be assigned to the child element
      * @param _separator the object path separator
      */
-    auto set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".")
+    auto set_path(std::string _path, zpt::json _value, std::string _separator = ".")
       -> zpt::JSONObjT&;
 
     /**
@@ -758,30 +856,30 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
      * @param  _separator the object path separator
      */
-    auto del_path(std::string _path, std::string _separator = ".") -> void;
+    auto del_path(std::string _path, std::string _separator = ".") -> JSONObjT&;
 
     /**
      * @brief Creates a full copy of the JSON representation stored in *this*
      * *zpt::JSONObjT*
      * @return a pointer to the copy of the underlying JSON representation
      */
-    auto clone() -> zpt::JSONPtr;
+    auto clone() -> zpt::json;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -791,6 +889,9 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
+    auto operator-> () -> std::map<std::string, std::tuple<zpt::json, size_t>>&;
+    auto operator*() -> std::map<std::string, std::tuple<zpt::json, size_t>>&;
+
     auto operator==(zpt::JSONObjT& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -807,7 +908,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -817,7 +918,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator==(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -836,7 +937,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -846,7 +947,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator!=(T _in) -> bool {
         return true;
-    };
+    }
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -871,7 +972,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -881,7 +982,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator<(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -906,7 +1007,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -916,7 +1017,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator>(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -941,7 +1042,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -951,7 +1052,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator>=(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -976,7 +1077,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -986,7 +1087,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     template<typename T>
     auto operator<=(T _in) -> bool {
         return false;
-    };
+    }
 
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
@@ -1003,7 +1104,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](int _idx) -> zpt::JSONPtr&;
+    auto operator[](int _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1019,7 +1120,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](size_t _idx) -> zpt::JSONPtr&;
+    auto operator[](size_t _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1035,7 +1136,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](const char* _idx) -> zpt::JSONPtr&;
+    auto operator[](const char* _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* object
@@ -1051,7 +1152,7 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](std::string _idx) -> zpt::JSONPtr&;
+    auto operator[](std::string _idx) -> zpt::json&;
 
     /**
      * \brief Friendly '<<' std::ostream operator override that outputs the
@@ -1062,19 +1163,21 @@ class JSONObjT : public std::map<std::string, zpt::JSONPtr> {
     friend std::ostream& operator<<(std::ostream& _out, zpt::JSONObjT& _in) {
         _in.stringify(_out);
         return _out;
-    };
+    }
 
   private:
-    std::string __name;
+    std::string __name{ "" };
+    std::vector<std::string> __name_to_index;
+    std::map<std::string, std::tuple<zpt::json, size_t>> __underlying;
 };
 
 /**
  * \brief Class that represents the *array* JSON type. It inherits from the
  * std::vector class and is
  * composed of
- * zpt::JSONPtr elements.
+ * zpt::json elements.
  */
-class JSONArrT : public std::vector<zpt::JSONPtr> {
+class JSONArrT {
   public:
     /**
      * \brief Creates a new JSONArrT instance.
@@ -1084,7 +1187,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * \brief Destroys the current JSONArrT instance, freeing all allocated
      * memory. It will free the
      * objects pointed
-     * by each zpt::JSONPtr smart pointer only if there aren't any more
+     * by each zpt::json smart pointer only if there aren't any more
      * std::shared_ptr pointing to
      * it.
      */
@@ -1176,8 +1279,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     virtual auto pop(std::string _idx) -> zpt::JSONArrT&;
 
     virtual auto sort() -> zpt::JSONArrT&;
-    virtual auto sort(std::function<bool(zpt::JSONPtr, zpt::JSONPtr)> _comparator)
-      -> zpt::JSONArrT&;
+    virtual auto sort(std::function<bool(zpt::json, zpt::json)> _comparator) -> zpt::JSONArrT&;
 
     /**
      * \brief Read-access method for retrieving a child element represented by the
@@ -1189,17 +1291,17 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_array[1]["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_array->get_path("1.some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_array->get_path("1/some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
@@ -1208,7 +1310,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * @return            the pointer to the child object if it exists or
      * zpt::undefined otherwise
      */
-    auto get_path(std::string _path, std::string _separator = ".") -> zpt::JSONPtr;
+    auto get_path(std::string _path, std::string _separator = ".") -> zpt::json;
 
     /**
      * \brief Write-access method for adding a child element represented by the
@@ -1221,24 +1323,24 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param _path      the object path to search for
      * @param _value     the value to be assigned to the child element
      * @param _separator the object path separator
      */
-    auto set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".")
+    auto set_path(std::string _path, zpt::json _value, std::string _separator = ".")
       -> zpt::JSONArrT&;
 
     /**
@@ -1251,17 +1353,17 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * instance, the
      * following code
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object["some_array"][0]["first_field"]["name"];
      *
      * is analogue to
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array.0.first_field.name");
      *
      * or
      *
-     *     zpt::JSONPtr child =
+     *     zpt::json child =
      * my_json_object->get_path("some_array/0/first_field/name", "/");
      *
      * @param  _path      the object path to search for
@@ -1274,7 +1376,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * *zpt::JSONArrT*
      * @return a pointer to the copy of the underlying JSON representation
      */
-    auto clone() -> zpt::JSONPtr;
+    auto clone() -> zpt::json;
 
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -1284,6 +1386,9 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      *
      * @return **true** if the objects are equal, **false** otherwise
      */
+    auto operator-> () -> std::vector<zpt::json>&;
+    auto operator*() -> std::vector<zpt::json>&;
+
     auto operator==(zpt::JSONArrT& _in) -> bool;
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
@@ -1300,7 +1405,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1310,7 +1415,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator==(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1329,7 +1434,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1339,7 +1444,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator!=(T _in) -> bool {
         return true;
-    };
+    }
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1364,7 +1469,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1374,7 +1479,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator<(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1399,7 +1504,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1409,7 +1514,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator>(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1434,7 +1539,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1444,7 +1549,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator<=(T _in) -> bool {
         return false;
-    };
+    }
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
@@ -1469,7 +1574,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1479,7 +1584,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
     template<typename T>
     auto operator>=(T _in) -> bool {
         return false;
-    };
+    }
 
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
@@ -1496,7 +1601,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](int _idx) -> zpt::JSONPtr&;
+    auto operator[](int _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1512,7 +1617,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](size_t _idx) -> zpt::JSONPtr&;
+    auto operator[](size_t _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1528,7 +1633,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](const char* _idx) -> zpt::JSONPtr&;
+    auto operator[](const char* _idx) -> zpt::json&;
     /**
      * \brief Operator '[]' override for accessing attributes or array elements of
      * *this* array
@@ -1544,7 +1649,7 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * @return  the pointer to the child object if it exists or zpt::undefined
      * otherwise
      */
-    auto operator[](std::string _idx) -> zpt::JSONPtr&;
+    auto operator[](std::string _idx) -> zpt::json&;
 
     /**
      * \brief Friendly '<<' std::ostream operator override that outputs the
@@ -1552,16 +1657,19 @@ class JSONArrT : public std::vector<zpt::JSONPtr> {
      * of *this* array
      * instance into the *out* stream.
      */
-    friend std::ostream& operator<<(std::ostream& _out, zpt::JSONArrT& _in) {
+    friend auto operator<<(std::ostream& _out, zpt::JSONArrT& _in) -> std::ostream& {
         _in.stringify(_out);
         return _out;
-    };
+    }
+
+  private:
+    std::vector<zpt::json> __underlying;
 };
 
 /**
  * \brief Smart shared pointer to a zpt::JSONObjT object.
  */
-class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
+class JSONObj {
   public:
     /**
      * \brief Creates a new JSONObj instance, pointing to a *null* object.
@@ -1573,7 +1681,8 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      *
      * @param _rhs the smart pointer to copy the target from
      */
-    JSONObj(zpt::JSONObj& _rhs);
+    JSONObj(const zpt::JSONObj& _rhs);
+    JSONObj(zpt::JSONObj&& _rhs);
     /**
      * \brief Creates a new JSONObj instance, pointing to the *target* object.
      */
@@ -1587,30 +1696,19 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
     virtual ~JSONObj();
 
     /**
-     * \brief Retrieves an iterator pointing to the beginning of *this* object
-     * attribute list.
-     *
-     * @return the iterator pointing to the beginning of *this* object attribute
-     * list
-     */
-    JSONObjT::iterator begin();
-    /**
-     * \brief Retrieves an iterator pointing to the end of *this* object attribute
-     * list.
-     *
-     * @return the iterator pointing to the end of *this* object attribute list
-     */
-    JSONObjT::iterator end();
-
-    /**
      * \brief Cast operation for the std::string class. This is a convenience
      * wrapper operator for
      * zpt::JSONObjT::stringify method.
      *
      * @return the textual representation of *this* object instance
      */
-    operator std::string();
+    auto operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj&;
+    auto operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj&;
 
+    auto operator-> () -> std::shared_ptr<zpt::JSONObjT>&;
+    auto operator*() -> std::shared_ptr<zpt::JSONObjT>&;
+
+    operator std::string();
     /**
      * \brief Casting operator to a pretty printed std::string class. **All** JSON
      * types are
@@ -1621,14 +1719,13 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * typed object
      */
     operator zpt::pretty();
-
     /**
      * \brief Operator '==' override for comparing *this* instance with other JSON
      * typed argument.
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1636,14 +1733,12 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator==(T _rhs) {
-        return *(this->get()) == _rhs;
-    };
+    auto operator==(T _rhs) -> bool;
     /**
      * \brief Operator '!=' override for comparing *this* instance with other JSON
      * typed argument.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1651,16 +1746,14 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are different, **false** otherwise
      */
     template<typename T>
-    bool operator!=(T _rhs) {
-        return *(this->get()) != _rhs;
-    };
+    auto operator!=(T _rhs) -> bool;
     /**
      * \brief Operator '<' override for comparing *this* instance with other JSON
      * typed argument.
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1668,16 +1761,14 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<(T _rhs) {
-        return *(this->get()) < _rhs;
-    };
+    auto operator<(T _rhs) -> bool;
     /**
      * \brief Operator '>' override for comparing *this* instance with other JSON
      * typed argument.
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1685,16 +1776,14 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>(T _rhs) {
-        return *(this->get()) > _rhs;
-    };
+    auto operator>(T _rhs) -> bool;
     /**
      * \brief Operator '<=' override for comparing *this* instance with other JSON
      * typed argument.
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1702,16 +1791,14 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator<=(T _rhs) {
-        return *(this->get()) <= _rhs;
-    };
+    auto operator<=(T _rhs) -> bool;
     /**
      * \brief Operator '>=' override for comparing *this* instance with other JSON
      * typed argument.
      * Type conversion
      * between JSON type is attempted in order to determine the objects equality.
      *
-     * Allowed types for *T* are: zpt::JSONElementT, zpt::JSONPtr, zpt::JSONObj,
+     * Allowed types for *T* are: zpt::JSONElementT, zpt::json, zpt::JSONObj,
      * zpt::JSONArr,
      * std::string, const
      * char*, long long, double, bool, zpt::timestamp_t, int, size_t.
@@ -1719,46 +1806,38 @@ class JSONObj : public std::shared_ptr<zpt::JSONObjT> {
      * @return **true** if the objects are equal, **false** otherwise
      */
     template<typename T>
-    bool operator>=(T _rhs) {
-        return *(this->get()) >= _rhs;
-    };
-    JSONObj& operator<<(string _in);
-    JSONObj& operator<<(const char* _in);
-    JSONObj& operator<<(JSONElementT& _in);
-    JSONObj& operator<<(std::initializer_list<JSONElementT> _list);
+    auto operator>=(T _rhs) -> bool;
+    auto operator<<(std::string _in) -> JSONObj&;
+    auto operator<<(const char* _in) -> JSONObj&;
+    auto operator<<(zpt::JSONElementT& _in) -> JSONObj&;
+    auto operator<<(std::initializer_list<zpt::JSONElementT> _list) -> JSONObj&;
     template<typename T>
-    JSONObj& operator<<(T _in) {
-        (*this)->push(new JSONElementT(_in));
-        return *this;
-    };
+    auto operator<<(T _in) -> JSONObj&;
     template<typename T>
-    JSONObj& operator>>(T _in) {
-        (*this)->pop(_in);
-        return *this;
-    };
+    auto operator>>(T _in) -> JSONObj&;
     template<typename T>
-    JSONPtr& operator[](T _idx) {
-        return (*(this->get()))[_idx];
-    };
+    auto operator[](T _idx) -> json&;
 
-    friend ostream& operator<<(ostream& _out, JSONObj& _in) {
-        _in->stringify(_out);
+    friend auto operator<<(std::ostream& _out, JSONObj& _in) -> std::ostream& {
+        _in.__underlying->stringify(_out);
         return _out;
-    };
+    }
+
+  private:
+    std::shared_ptr<zpt::JSONObjT> __underlying{ nullptr };
 };
 
-class JSONArr : public std::shared_ptr<JSONArrT> {
+class JSONArr {
   public:
     JSONArr();
-    JSONArr(JSONArr& _rhs);
-    JSONArr(JSONArrT* _target);
+    JSONArr(const JSONArr& _rhs);
+    JSONArr(JSONArr&& _rhs);
+    JSONArr(zpt::JSONArrT* _target);
     virtual ~JSONArr();
 
-    JSONArrT::iterator begin();
-    JSONArrT::iterator end();
-
-    operator string();
-
+    // auto begin() -> JSONArrT::iterator;
+    // auto end() -> JSONArrT::iterator;
+    operator std::string();
     /**
      * \brief Casting operator to a pretty printed std::string class. **All** JSON
      * types are
@@ -1770,74 +1849,75 @@ class JSONArr : public std::shared_ptr<JSONArrT> {
      */
     operator zpt::pretty();
 
-    template<typename T>
-    bool operator==(T _rhs) {
-        return *(this->get()) == _rhs;
-    };
-    template<typename T>
-    bool operator!=(T _rhs) {
-        return *(this->get()) != _rhs;
-    };
-    template<typename T>
-    bool operator<(T _rhs) {
-        return *(this->get()) < _rhs;
-    };
-    template<typename T>
-    bool operator>(T _rhs) {
-        return *(this->get()) > _rhs;
-    };
-    template<typename T>
-    bool operator<=(T _rhs) {
-        return *(this->get()) <= _rhs;
-    };
-    template<typename T>
-    bool operator>=(T _rhs) {
-        return *(this->get()) >= _rhs;
-    };
-    JSONArr& operator<<(JSONElementT& _in);
-    JSONArr& operator<<(std::initializer_list<JSONElementT> _list);
-    template<typename T>
-    JSONArr& operator<<(T _in) {
-        (*this)->push(new JSONElementT(_in));
-        return *this;
-    };
-    template<typename T>
-    JSONArr& operator>>(T _in) {
-        (*this)->pop(_in);
-        return *this;
-    };
-    template<typename T>
-    JSONPtr& operator[](T _idx) {
-        return (*(this->get()))[_idx];
-    };
+    auto operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr&;
+    auto operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr&;
 
-    friend ostream& operator<<(ostream& _out, JSONArr& _in) {
-        _in->stringify(_out);
+    auto operator-> () -> std::shared_ptr<zpt::JSONArrT>&;
+    auto operator*() -> std::shared_ptr<zpt::JSONArrT>&;
+
+    template<typename T>
+    auto operator==(T _rhs) -> bool;
+    template<typename T>
+    auto operator!=(T _rhs) -> bool;
+    template<typename T>
+    auto operator<(T _rhs) -> bool;
+    template<typename T>
+    auto operator>(T _rhs) -> bool;
+    template<typename T>
+    auto operator<=(T _rhs) -> bool;
+    template<typename T>
+    auto operator>=(T _rhs) -> bool;
+    auto operator<<(JSONElementT& _in) -> JSONArr&;
+    auto operator<<(std::initializer_list<JSONElementT> _list) -> JSONArr&;
+    template<typename T>
+    auto operator<<(T _in) -> JSONArr&;
+    template<typename T>
+    auto operator>>(T _in) -> JSONArr&;
+    template<typename T>
+    auto operator[](T _idx) -> json&;
+
+    friend auto operator<<(std::ostream& _out, JSONArr& _in) -> std::ostream& {
+        _in.__underlying->stringify(_out);
         return _out;
-    };
+    }
+
+  private:
+    std::shared_ptr<zpt::JSONArrT> __underlying{ nullptr };
 };
-typedef std::shared_ptr<std::string> JSONStr;
+
+using JSONStr = std::shared_ptr<std::string>;
 
 class JSONContext {
   public:
     JSONContext(void* _target);
     virtual ~JSONContext();
 
-    virtual void* unpack();
+    virtual auto unpack() -> void*;
 
   private:
-    void* __target;
+    void* __target{ nullptr };
 };
 
-class context : public std::shared_ptr<zpt::JSONContext> {
+class context {
   public:
     context(void* _target);
+    context(const context& _rhs);
+    context(context&& _rhs);
     virtual ~context();
+
+    auto operator-> () -> std::shared_ptr<zpt::JSONContext>&;
+    auto operator*() -> std::shared_ptr<zpt::JSONContext>&;
+
+    auto operator=(const zpt::context& _rhs) -> zpt::context& ;
+    auto operator=(zpt::context&& _rhs) -> zpt::context& ;
+
+  private:
+    std::shared_ptr<zpt::JSONContext> __underlying{ nullptr };
 };
 
-typedef std::function<zpt::json(zpt::json, unsigned short, zpt::context)> symbol;
-typedef std::shared_ptr<std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>
-  symbol_table;
+using symbol = std::function<zpt::json(zpt::json, unsigned short, zpt::context)>;
+using symbol_table =
+  std::shared_ptr<std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
 extern zpt::symbol_table __lambdas;
 
 class lambda : public std::shared_ptr<zpt::JSONLambda> {
@@ -1850,19 +1930,19 @@ class lambda : public std::shared_ptr<zpt::JSONLambda> {
     lambda(std::string _name, unsigned short _n_args);
     virtual ~lambda();
 
-    virtual zpt::json operator()(zpt::json _args, zpt::context _ctx);
+    virtual auto operator()(zpt::json _args, zpt::context _ctx) -> zpt::json;
 
-    static void add(std::string _signature, zpt::symbol _lambda);
-    static void add(std::string _name, unsigned short _n_args, zpt::symbol _lambda);
+    static auto add(std::string _signature, zpt::symbol _lambda) -> void;
+    static auto add(std::string _name, unsigned short _n_args, zpt::symbol _lambda) -> void;
 
-    static zpt::json call(std::string _name, zpt::json _args, zpt::context _ctx);
+    static auto call(std::string _name, zpt::json _args, zpt::context _ctx) -> zpt::json;
 
-    static std::string stringify(std::string _name, unsigned short _n_args);
-    static std::tuple<std::string, unsigned short> parse(std::string _signature);
+    static auto stringify(std::string _name, unsigned short _n_args) -> std::string;
+    static auto parse(std::string _signature) -> std::tuple<std::string, unsigned short>;
 
   private:
-    static zpt::symbol find(std::string _signature);
-    static zpt::symbol find(std::string _name, unsigned short _1n_args);
+    static auto find(std::string _signature) -> zpt::symbol;
+    static auto find(std::string _name, unsigned short _1n_args) -> zpt::symbol;
 };
 
 class JSONLambda {
@@ -1872,18 +1952,18 @@ class JSONLambda {
     JSONLambda(std::string _name, unsigned short _n_args);
     virtual ~JSONLambda();
 
-    virtual zpt::json call(zpt::json _args, zpt::context _ctx);
+    virtual auto call(zpt::json _args, zpt::context _ctx) -> zpt::json;
 
-    virtual std::string name();
-    virtual unsigned short n_args();
-    virtual std::string signature();
+    virtual auto name() -> std::string;
+    virtual auto n_args() -> unsigned short;
+    virtual auto signature() -> std::string;
 
   private:
-    std::string __name;
-    unsigned short __n_args;
+    std::string __name{ "" };
+    unsigned short __n_args{ 0 };
 };
 
-typedef struct JSONStruct {
+using JSONUnion = struct JSONStruct {
     JSONStruct()
       : __type(JSNil){};
     ~JSONStruct() {
@@ -1908,7 +1988,7 @@ typedef struct JSONStruct {
                 break;
             }
         }
-    };
+    }
 
     JSONStruct(JSONStruct const&) = delete;
     JSONStruct& operator=(JSONStruct const&) = delete;
@@ -1932,14 +2012,14 @@ typedef struct JSONStruct {
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     };
 #endif
-} JSONUnion;
+};
 
 class JSONElementT {
   public:
     JSONElementT();
     JSONElementT(JSONElementT& _element);
     JSONElementT(std::initializer_list<JSONElementT> _init);
-    JSONElementT(JSONPtr _value);
+    JSONElementT(json _value);
     JSONElementT(JSONObj& _value);
     JSONElementT(JSONArr& _value);
     JSONElementT(std::string _value);
@@ -1956,30 +2036,29 @@ class JSONElementT {
     JSONElementT(zpt::lambda _value);
     virtual ~JSONElementT();
 
-    virtual JSONType type();
-    virtual string demangle();
-    virtual void type(JSONType _in);
-    virtual JSONUnion& value();
-    virtual bool ok();
-    virtual bool empty();
-    virtual bool nil();
+    virtual auto type() -> JSONType;
+    virtual auto demangle() -> std::string;
+    virtual auto type(JSONType _in) -> void;
+    virtual auto value() -> JSONUnion&;
+    virtual auto ok() -> bool;
+    virtual auto empty() -> bool;
+    virtual auto nil() -> bool;
 
-    virtual void assign(JSONElementT& _rhs);
+    virtual auto size() -> size_t;
+
+    virtual auto assign(JSONElementT& _rhs) -> void;
     template<typename T>
-    inline void assign(T _in) {
-        zpt::JSONElementT _rhs(_in);
-        this->assign(_rhs);
-    }
+    auto assign(T _in) -> void;
 
-    JSONElementT* parent();
-    void parent(JSONElementT* _parent);
+    auto parent() -> JSONElementT*;
+    auto parent(JSONElementT* _parent) -> void;
 
     /**
      * @brief Creates a full copy of the JSON representation pointed by this
-     * *zpt::JSONPtr*
+     * *zpt::json*
      * @return a pointer to the copy of the underlying JSON representation
      */
-    JSONPtr clone();
+    auto clone() -> zpt::json;
 
     virtual auto is_object() -> bool;
     virtual auto is_array() -> bool;
@@ -1991,420 +2070,449 @@ class JSONElementT {
     virtual auto is_date() -> bool;
     virtual auto is_lambda() -> bool;
     virtual auto is_nil() -> bool;
+    virtual auto is_iterable() -> bool;
 
-    virtual JSONObj& obj();
-    virtual JSONArr& arr();
-    virtual std::string str();
-    virtual long long intr();
-    virtual double dbl();
-    virtual bool bln();
-    virtual zpt::timestamp_t date();
-    virtual zpt::lambda& lbd();
-    virtual double number();
+    virtual auto obj() -> JSONObj&;
+    virtual auto arr() -> JSONArr&;
+    virtual auto str() -> std::string;
+    virtual auto intr() -> long long;
+    virtual auto dbl() -> double;
+    virtual auto bln() -> bool;
+    virtual auto date() -> zpt::timestamp_t;
+    virtual auto lbd() -> zpt::lambda&;
+    virtual auto number() -> double;
 
-    JSONElementT& operator<<(const char* _in);
-    JSONElementT& operator<<(string _in);
-    JSONElementT& operator<<(JSONElementT*);
-    JSONElementT& operator<<(std::initializer_list<JSONElementT> _list);
+    auto operator<<(const char* _in) -> JSONElementT&;
+    auto operator<<(std::string _in) -> JSONElementT&;
+    auto operator<<(JSONElementT*) -> JSONElementT&;
+    auto operator<<(std::initializer_list<JSONElementT> _list) -> JSONElementT&;
     template<typename T>
-    JSONElementT& operator<<(T _in) {
-        assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
-        JSONElementT _e(_in);
-        if (this->__target.__type == _e.type() && _e.type() != zpt::JSObject &&
-            _e.type() != zpt::JSArray) {
-            this->assign(_e);
-            return *this;
-        }
-        switch (this->__target.__type) {
-            case zpt::JSObject: {
-                this->__target.__object->push(new JSONElementT(_in));
-                break;
-            }
-            case zpt::JSArray: {
-                this->__target.__array->push(new JSONElementT(_in));
-                break;
-            }
-            default: {
-                assertz(this->__target.__type == zpt::JSObject ||
-                          this->__target.__type == zpt::JSArray,
-                        "the type must be a JSObject, JSArray or the same type of the "
-                        "target, in order "
-                        "to push "
-                        "JSONElementT*",
-                        0,
-                        0);
-                break;
-            }
-        }
-        return *this;
-    };
+    auto operator<<(T _in) -> JSONElementT&;
     template<typename T>
-    JSONElementT& operator>>(T _in) {
-        switch (this->__target.__type) {
-            case zpt::JSObject: {
-                this->__target.__object >> _in;
-                break;
-            }
-            case zpt::JSArray: {
-                this->__target.__array >> _in;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return *this;
-    };
+    auto operator>>(T _in) -> JSONElementT&;
     template<typename T>
-    JSONPtr& operator[](T _idx) {
-        if (this->__target.__type == zpt::JSObject) {
-            return this->__target.__object[_idx];
-        }
-        else if (this->__target.__type == zpt::JSArray) {
-            return this->__target.__array[_idx];
-        }
-        return zpt::undefined;
-    };
-    bool operator==(JSONElementT& _in);
-    bool operator==(zpt::json _rhs);
-    bool operator==(zpt::JSONPtr _rhs);
+    auto operator[](T _idx) -> json&;
+    auto operator==(JSONElementT& _in) -> bool;
+    auto operator==(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator==(T _in) {
-        JSONElementT _rhs(_in);
-        return (*this) == _rhs;
-    };
-    bool operator!=(JSONElementT& _in);
-    bool operator!=(zpt::json _rhs);
-    bool operator!=(zpt::JSONPtr _rhs);
+    auto operator==(T _in) -> bool;
+    auto operator!=(JSONElementT& _in) -> bool;
+    auto operator!=(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator!=(T _in) {
-        if (_in == nullptr) {
-            return this->__target.__type == zpt::JSNil;
-        }
-        JSONElementT _rhs(_in);
-        return (*this) == _rhs;
-    };
-    bool operator<(JSONElementT& _in);
-    bool operator<(zpt::json _rhs);
-    bool operator<(zpt::JSONPtr _rhs);
+    auto operator!=(T _in) -> bool;
+    auto operator<(JSONElementT& _in) -> bool;
+    auto operator<(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator<(T _in) {
-        JSONElementT _rhs(_in);
-        return (*this) < _rhs;
-    };
-    bool operator>(JSONElementT& _in);
-    bool operator>(zpt::json _rhs);
-    bool operator>(zpt::JSONPtr _rhs);
+    auto operator<(T _in) -> bool;
+    auto operator>(JSONElementT& _in) -> bool;
+    auto operator>(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator>(T _in) {
-        JSONElementT _rhs(_in);
-        return (*this) > _rhs;
-    };
-    bool operator<=(JSONElementT& _in);
-    bool operator<=(zpt::json _rhs);
-    bool operator<=(zpt::JSONPtr _rhs);
+    auto operator>(T _in) -> bool;
+    auto operator<=(JSONElementT& _in) -> bool;
+    auto operator<=(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator<=(T _in) {
-        JSONElementT _rhs(_in);
-        return (*this) <= _rhs;
-    };
-    bool operator>=(JSONElementT& _in);
-    bool operator>=(zpt::json _rhs);
-    bool operator>=(zpt::JSONPtr _rhs);
+    auto operator<=(T _in) -> bool;
+    auto operator>=(JSONElementT& _in) -> bool;
+    auto operator>=(zpt::json _rhs) -> bool;
     template<typename T>
-    bool operator>=(T _in) {
-        JSONElementT _rhs(_in);
-        return (*this) >= _rhs;
-    };
+    auto operator>=(T _in) -> bool;
 
-    JSONPtr operator+(zpt::json _rhs);
-    JSONPtr operator+(zpt::JSONPtr _rhs);
-    JSONPtr operator+(zpt::JSONElementT& _rhs);
-    JSONPtr operator-(zpt::json _rhs);
-    JSONPtr operator-(zpt::JSONPtr _rhs);
-    JSONPtr operator-(zpt::JSONElementT& _rhs);
-    JSONPtr operator/(zpt::json _rhs);
-    JSONPtr operator/(zpt::JSONPtr _rhs);
-    JSONPtr operator/(zpt::JSONElementT& _rhs);
-    JSONPtr operator|(zpt::json _rhs);
-    JSONPtr operator|(zpt::JSONPtr _rhs);
-    JSONPtr operator|(zpt::JSONElementT& _rhs);
+    auto operator+(zpt::json _rhs) -> zpt::json;
+    auto operator+(zpt::JSONElementT& _rhs) -> zpt::json;
+    auto operator-(zpt::json _rhs) -> zpt::json;
+    auto operator-(zpt::JSONElementT& _rhs) -> zpt::json;
+    auto operator/(zpt::json _rhs) -> zpt::json;
+    auto operator/(zpt::JSONElementT& _rhs) -> zpt::json;
+    auto operator|(zpt::json _rhs) -> zpt::json;
+    auto operator|(zpt::JSONElementT& _rhs) -> zpt::json;
 
-    friend ostream& operator<<(ostream& _out, JSONElementT _in) {
+    friend auto operator<<(std::ostream& _out, JSONElementT _in) -> std::ostream& {
         _in.stringify(_out);
         return _out;
-    };
+    }
 
-    zpt::JSONPtr get_path(std::string _path, std::string _separator = ".");
-    void set_path(std::string _path, zpt::JSONPtr _value, std::string _separator = ".");
-    void del_path(std::string _path, std::string _separator = ".");
+    auto get_path(std::string _path, std::string _separator = ".") -> zpt::json;
+    auto set_path(std::string _path, zpt::json _value, std::string _separator = ".") -> void;
+    auto del_path(std::string _path, std::string _separator = ".") -> void;
 
-    virtual zpt::JSONPtr flatten();
-    virtual void inspect(
-      zpt::JSONPtr _pattern,
+    virtual auto flatten() -> zpt::json;
+    virtual auto inspect(
+      zpt::json _pattern,
       std::function<void(std::string, std::string, zpt::JSONElementT&)> _callback,
       zpt::JSONElementT* _parent = nullptr,
       std::string _key = "",
-      std::string _parent_path = "");
+      std::string _parent_path = "") -> void;
 
-    virtual void stringify(string& _out);
-    virtual void stringify(ostream& _out);
-    virtual string stringify();
+    virtual auto stringify(std::string& _out) -> void;
+    virtual auto stringify(std::ostream& _out) -> void;
+    virtual auto stringify() -> std::string;
 
-    virtual void prettify(string& _out, uint _n_tabs = 0);
-    virtual void prettify(ostream& _out, uint _n_tabs = 0);
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> void;
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> void;
+
+    virtual auto element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json>;
 
   private:
     JSONUnion __target;
-    JSONElementT* __parent;
+    JSONElementT* __parent{ nullptr };
 
-    void init();
+    auto init() -> void;
 };
 
-zpt::timestamp_t
-timestamp(std::string _json_date = "");
-
-class json : public zpt::JSONPtr {
-  public:
-    inline json()
-      : zpt::JSONPtr(){};
-    inline json(zpt::JSONPtr _target)
-      : zpt::JSONPtr(_target){};
-    inline json(JSONElementT* _target)
-      : zpt::JSONPtr(_target){};
-    inline json(std::initializer_list<JSONElementT> _init)
-      : zpt::JSONPtr(_init){};
-    inline json(std::string _rhs) {
-        std::istringstream _iss;
-        _iss.str(_rhs);
-        _iss >> (*this);
-    };
-    inline json(const char* _rhs) {
-        std::istringstream _iss;
-        _iss.str(std::string(_rhs));
-        _iss >> (*this);
-    };
-    inline json(zpt::pretty _rhs) {
-        std::istringstream _iss;
-        _iss.str(_rhs);
-        _iss >> (*this);
-    };
-    template<typename T>
-    zpt::json operator[](T _idx);
-
-    static void stringify(std::string& _str);
-
-    inline static zpt::json object() {
-        zpt::JSONObj _empty;
-        return zpt::json(new zpt::JSONElementT(_empty));
-    };
-    inline static zpt::json array() {
-        zpt::JSONArr _empty;
-        return zpt::json(new zpt::JSONElementT(_empty));
-    };
-    template<typename T>
-    static std::string pretty(T _e);
-    template<typename T>
-    static zpt::json string(T _e);
-    template<typename T>
-    static zpt::json uinteger(T _e);
-    template<typename T>
-    static zpt::json integer(T _e);
-    template<typename T>
-    static zpt::json floating(T _e);
-    template<typename T>
-    static zpt::json ulong(T _e);
-    template<typename T>
-    static zpt::json boolean(T _e);
-    inline static zpt::json date(std::string _e) {
-        zpt::timestamp_t _v(zpt::timestamp(_e));
-        return zpt::json(new zpt::JSONElementT(_v));
-    };
-    inline static zpt::json date() {
-        zpt::timestamp_t _v((zpt::timestamp_t)std::chrono::duration_cast<std::chrono::milliseconds>(
-                              std::chrono::system_clock::now().time_since_epoch())
-                              .count());
-        return zpt::json(new zpt::JSONElementT(_v));
-    };
-    template<typename T>
-    inline static zpt::json date(T _e);
-    template<typename T>
-    static zpt::json lambda(T _e);
-    inline static zpt::json lambda(std::string _name, unsigned short _n_args) {
-        zpt::lambda _v(_name, _n_args);
-        return zpt::json(new zpt::JSONElementT(_v));
-    };
-};
+auto
+timestamp(std::string _json_date = "") -> zpt::timestamp_t;
 
 template<typename T>
-zpt::JSONElementT*
-mkelem(T& _e) {
-    return new zpt::JSONElementT(_e);
-}
+auto
+mkelem(T& _e) -> zpt::JSONElementT*;
 
 template<typename T>
-zpt::json
-mkptr(T _v) {
-    T _e(_v);
-    return zpt::json{ new zpt::JSONElementT(_e) };
-}
+auto
+mkptr(T _v) -> zpt::json;
 
-zpt::json
-get(std::string _path, zpt::json _source);
+auto
+get(std::string _path, zpt::json _source) -> zpt::json;
+
 template<typename T>
-zpt::json
-set(std::string _path, T _value, zpt::json _target = zpt::undefined);
+auto
+set(std::string _path, T _value, zpt::json _target = zpt::undefined) -> zpt::json;
 
-zpt::timestamp_t
-timestamp(zpt::json _json_date);
-std::string
-timestamp(zpt::timestamp_t _timestamp);
+auto
+timestamp(zpt::json _json_date) -> zpt::timestamp_t;
 
-/**
- * \brief Convenience global variable that represents the *undefined* JSON type,
- * to be used in
- * comparisons and default
- * return values.
- *
- * Example:
- *
- *     if (my_json_object["some_attribute"] == zpt::undefined) {
- *         ...
- *     }
- */
-static inline JSONPtr undefined;
-static inline JSONPtr nilptr = undefined;
-static inline JSONPtr array{ zpt::mkptr("1b394520-2fed-4118-b622-940f25b8b35e" };
-
+auto
+timestamp(zpt::timestamp_t _timestamp) -> std::string;
 } // namespace zpt
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 template<typename T>
-bool
-zpt::JSONPtr::operator==(T _rhs) {
-    return *(this->get()) == _rhs;
-};
-template<typename T>
-bool
-zpt::JSONPtr::operator!=(T _rhs) {
-    return *(this->get()) != _rhs;
-};
-template<typename T>
-bool
-zpt::JSONPtr::operator<(T _rhs) {
-    return *(this->get()) < _rhs;
-};
-template<typename T>
-bool
-zpt::JSONPtr::operator>(T _rhs) {
-    return *(this->get()) > _rhs;
-};
-template<typename T>
-bool
-zpt::JSONPtr::operator<=(T _rhs) {
-    return *(this->get()) <= _rhs;
-};
-template<typename T>
-bool
-zpt::JSONPtr::operator>=(T _rhs) {
-    return *(this->get()) >= _rhs;
-};
-template<typename T>
-zpt::JSONPtr&
-zpt::JSONPtr::operator<<(T _in) {
-    *(this->get()) << _in;
-    return *this;
-};
-template<typename T>
-zpt::JSONPtr&
-zpt::JSONPtr::operator>>(T _in) {
-    *(this->get()) >> _in;
-    return *this;
-};
-template<typename T>
-zpt::JSONPtr& zpt::JSONPtr::operator[](T _idx) {
-    return (*(this->get()))[_idx];
-};
-template<typename T>
-zpt::JSONPtr
-zpt::JSONPtr::operator+(T _rhs) {
-    return *(this->get()) + _rhs;
-};
-template<typename T>
-zpt::JSONPtr
-zpt::JSONPtr::operator-(T _rhs) {
-    return *(this->get()) - _rhs;
-};
-template<typename T>
-zpt::JSONPtr
-zpt::JSONPtr::operator/(T _rhs) {
-    return *(this->get()) / _rhs;
-};
-template<typename T>
-zpt::JSONPtr
-zpt::JSONPtr::operator|(T _rhs) {
-    return *(this->get()) | _rhs;
-};
-template<typename T>
-zpt::json zpt::json::operator[](T _idx) {
-    return zpt::json((*(this->get()))[_idx]);
-};
-template<typename T>
-std::string
-zpt::json::pretty(T _e) {
-    return zpt::pretty(_e);
+zpt::pretty::pretty(T _rhs) {
+    _rhs->prettify(this->__underlying);
 }
 template<typename T>
-zpt::json
-zpt::json::string(T _e) {
+auto
+zpt::json::operator==(T _rhs) -> bool {
+    return (*this) == _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator!=(T _rhs) -> bool {
+    return (*this) != _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator<(T _rhs) -> bool {
+    return (*this) < _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator>(T _rhs) -> bool {
+    return (*this) > _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator<=(T _rhs) -> bool {
+    return (*this) <= _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator>=(T _rhs) -> bool {
+    return (*this) >= _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator<<(T _in) -> zpt::json& {
+    (*this) << _in;
+    return *this;
+}
+template<typename T>
+auto
+zpt::json::operator>>(T _in) -> zpt::json& {
+    (*this) >> _in;
+    return *this;
+}
+template<typename T>
+auto
+zpt::json::operator+(T _rhs) -> zpt::json {
+    return (*this) + _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator-(T _rhs) -> zpt::json {
+    return (*this) - _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator/(T _rhs) -> zpt::json {
+    return (*this) / _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator|(T _rhs) -> zpt::json {
+    return (*this) | _rhs;
+}
+template<typename T>
+auto
+zpt::json::data(const T _delegate) -> zpt::json {
+    return _delegate->get_json();
+}
+template<typename T>
+auto zpt::json::operator[](T _idx) const -> zpt::json {
+    return zpt::json{ ((*this))[_idx] };
+}
+template<typename T>
+auto
+zpt::json::pretty(T _e) -> std::string {
+    return zpt::pretty{ _e };
+}
+template<typename T>
+auto
+zpt::json::string(T _e) -> zpt::json {
     std::string _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::integer(T _e) {
+auto
+zpt::json::integer(T _e) -> zpt::json {
     long long int _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::uinteger(T _e) {
+auto
+zpt::json::uinteger(T _e) -> zpt::json {
     unsigned int _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::floating(T _e) {
+auto
+zpt::json::floating(T _e) -> zpt::json {
     double _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::ulong(T _e) {
+auto
+zpt::json::ulong(T _e) -> zpt::json {
     size_t _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::boolean(T _e) {
+auto
+zpt::json::boolean(T _e) -> zpt::json {
     bool _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::date(T _e) {
+auto
+zpt::json::date(T _e) -> zpt::json {
     zpt::timestamp_t _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::json::lambda(T _e) {
+auto
+zpt::json::lambda(T _e) -> zpt::json {
     zpt::lambda _v(_e);
     return zpt::json(new zpt::JSONElementT(_v));
 }
 template<typename T>
-zpt::json
-zpt::set(std::string _path, T _value, zpt::json _target) {
+auto
+zpt::JSONObj::operator==(T _rhs) -> bool {
+    return (*this) == _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator!=(T _rhs) -> bool {
+    return (*this) != _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator<(T _rhs) -> bool {
+    return (*this) < _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator>(T _rhs) -> bool {
+    return (*this) > _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator<=(T _rhs) -> bool {
+    return (*this) <= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator>=(T _rhs) -> bool {
+    return (*this) >= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator<<(T _in) -> JSONObj& {
+    (*this)->push(new JSONElementT(_in));
+    return *this;
+}
+template<typename T>
+auto
+zpt::JSONObj::operator>>(T _in) -> JSONObj& {
+    (*this)->pop(_in);
+    return *this;
+}
+template<typename T>
+auto zpt::JSONObj::operator[](T _idx) -> json& {
+    return ((*this))[_idx];
+}
+template<typename T>
+auto
+zpt::JSONArr::operator==(T _rhs) -> bool {
+    return (*this) == _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator!=(T _rhs) -> bool {
+    return (*this) != _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator<(T _rhs) -> bool {
+    return (*this) < _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator>(T _rhs) -> bool {
+    return (*this) > _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator<=(T _rhs) -> bool {
+    return (*this) <= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator>=(T _rhs) -> bool {
+    return (*this) >= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator<<(T _in) -> JSONArr& {
+    (*this)->push(new JSONElementT(_in));
+    return *this;
+}
+template<typename T>
+auto
+zpt::JSONArr::operator>>(T _in) -> JSONArr& {
+    (*this)->pop(_in);
+    return *this;
+}
+template<typename T>
+auto zpt::JSONArr::operator[](T _idx) -> json& {
+    return ((*this))[_idx];
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
+    assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+    JSONElementT _e(_in);
+    if (this->__target.__type == _e.type() && _e.type() != zpt::JSObject &&
+        _e.type() != zpt::JSArray) {
+        this->assign(_e);
+        return *this;
+    }
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            this->__target.__object->push(new JSONElementT(_in));
+            break;
+        }
+        case zpt::JSArray: {
+            this->__target.__array->push(new JSONElementT(_in));
+            break;
+        }
+        default: {
+            assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
+                    "the type must be a JSObject, JSArray or the same type of the "
+                    "target, in order "
+                    "to push "
+                    "JSONElementT*",
+                    0,
+                    0);
+            break;
+        }
+    }
+    return *this;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator>>(T _in) -> JSONElementT& {
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            this->__target.__object >> _in;
+            break;
+        }
+        case zpt::JSArray: {
+            this->__target.__array >> _in;
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+    return *this;
+}
+template<typename T>
+auto zpt::JSONElementT::operator[](T _idx) -> json& {
+    if (this->__target.__type == zpt::JSObject) {
+        return this->__target.__object[_idx];
+    }
+    else if (this->__target.__type == zpt::JSArray) {
+        return this->__target.__array[_idx];
+    }
+    return zpt::undefined;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator==(T _in) -> bool {
+    JSONElementT _rhs{ _in };
+    return (*this) == _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator!=(T _in) -> bool {
+    if (_in == nullptr) {
+        return this->__target.__type == zpt::JSNil;
+    }
+    JSONElementT _rhs{ _in };
+    return (*this) == _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator<(T _in) -> bool {
+    JSONElementT _rhs{ _in };
+    return (*this) < _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator>(T _in) -> bool {
+    JSONElementT _rhs{ _in };
+    return (*this) > _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator<=(T _in) -> bool {
+    JSONElementT _rhs{ _in };
+    return (*this) <= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::operator>=(T _in) -> bool {
+    JSONElementT _rhs{ _in };
+    return (*this) >= _rhs;
+}
+template<typename T>
+auto
+zpt::JSONElementT::assign(T _in) -> void {
+    zpt::JSONElementT _rhs{ _in };
+    this->assign(_rhs);
+}
+template<typename T>
+auto
+zpt::set(std::string _path, T _value, zpt::json _target) -> zpt::json {
     zpt::json _return;
     if (_target->ok()) {
         _return = _target;
@@ -2414,6 +2522,19 @@ zpt::set(std::string _path, T _value, zpt::json _target) {
     }
     _return->set_path(_path, zpt::mkptr(_value));
     return _return;
+}
+
+template<typename T>
+auto
+zpt::mkelem(T& _e) -> zpt::JSONElementT* {
+    return new zpt::JSONElementT(_e);
+}
+
+template<typename T>
+auto
+zpt::mkptr(T _v) -> zpt::json {
+    T _e(_v);
+    return zpt::json{ new zpt::JSONElementT(_e) };
 }
 
 #endif

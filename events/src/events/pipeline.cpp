@@ -28,23 +28,22 @@ SOFTWARE.
 #include <iterator>
 #include <string>
 #include <sys/sem.h>
-#include <systemd/sd-daemon.h>
 #include <vector>
 #include <zapata/base.h>
-#include <zapata/events/Pipeline.h>
 #include <zapata/json.h>
+#include <zapata/events/pipeline.h>
 
-namespace zpt {
-pid_t root = 0;
-bool interrupted = false;
-std::atomic<bool> zpt::pipeline::__ready{ false };
-} // namespace zpt
+// namespace zpt {
+// pid_t root = 0;
+// bool interrupted = false;
+// std::atomic<bool> zpt::pipeline::__ready{ false };
+// } // namespace zpt
 
 auto
 zpt::options(int argc, char* argv[]) -> zpt::json& {
     zpt::log_fd = &std::cout;
     zpt::log_pid = ::getpid();
-    zpt::log_pname = new string(argv[0]);
+    zpt::log_pname = std::make_unique<std::string>(argv[0]);
 
     zpt::json _args = zpt::conf::getopt(argc, argv);
 
@@ -101,207 +100,140 @@ zpt::options(zpt::json _options) -> zpt::json& {
 // auto zpt::channel_ref::operator*() -> zpt::channel* { return
 // this->__poll->relay(this->data()); }
 
-zpt::abstract_channel_factory::abstract_channel_factory(std::string _protocol)
-  : __protocol(_protocol) {}
+// zpt::channel_factory::channel_factory(std::string _protocol)
+//   : __protocol(_protocol) {}
 
-zpt::abstract_channel_factory::~abstract_channel_factory() {}
+// zpt::channel_factory::~channel_factory() {}
 
-auto
-zpt::abstract_channel_factory::protocol() -> std::string {
-    return this->__protocol;
-}
+// auto
+// zpt::channel_factory::protocol() -> std::string {
+//     return this->__protocol;
+// }
 
-zpt::abstract_channel::abstract_channel(std::string _connection, zpt::json _options)
-  : __options(_options)
-  , __connection(_connection.data()) {
-    this->__id.assign(zpt::generate::r_uuid());
-}
+// zpt::channel::channel(std::string _connection, zpt::json _options)
+//   : __options(_options)
+//   , __connection(_connection.data()) {
+//     this->__id.assign(zpt::generate::r_uuid());
+// }
 
-zpt::abstract_channel::~abstract_channel() {}
+// zpt::channel::~channel() {}
 
-auto
-zpt::abstract_channel::id() -> std::string {
-    return this->__id;
-}
+// auto
+// zpt::channel::id() -> std::string {
+//     return this->__id;
+// }
 
-auto
-zpt::abstract_channel::options() -> zpt::json {
-    return this->__options;
-}
+// auto
+// zpt::channel::options() -> zpt::json {
+//     return this->__options;
+// }
 
-auto
-zpt::abstract_channel::connection() -> std::string {
-    return this->__connection;
-}
+// auto
+// zpt::channel::connection() -> std::string {
+//     return this->__connection;
+// }
 
-auto
-zpt::abstract_channel::connection(std::string _connection) -> void {
-    this->__connection.assign(_connection);
-}
+// auto
+// zpt::channel::connection(std::string _connection) -> void {
+//     this->__connection.assign(_connection);
+// }
 
-auto
-zpt::abstract_channel::uri(size_t _idx) -> zpt::json {
-    return this->__uri[_idx];
-}
+// auto
+// zpt::channel::uri(size_t _idx) -> zpt::json {
+//     return this->__uri[_idx];
+// }
 
-auto
-zpt::abstract_channel::uri(std::string _uris) -> void {
-    this->__uri = zpt::json::array();
+// auto
+// zpt::channel::uri(std::string _uris) -> void {
+//     this->__uri = zpt::json::array();
 
-    zpt::json _addresses = zpt::split(_uris, ",", true);
-    for (auto _address : _addresses->arr()) {
-        zpt::json _uri = zpt::uri::parse(std::string(_address));
-        if (!_uri["type"]->is_string()) {
-            _uri << "type"
-                 << ">";
-        }
-        if (!_uri["port"]->is_string()) {
-            _uri << "port"
-                 << "*";
-        }
-        this->__uri << _uri;
-    }
-}
+//     zpt::json _addresses = zpt::split(_uris, ",", true);
+//     for (auto _address : _addresses->arr()) {
+//         zpt::json _uri = zpt::uri::parse(std::string(_address));
+//         if (!_uri["type"]->is_string()) {
+//             _uri << "type"
+//                  << ">";
+//         }
+//         if (!_uri["port"]->is_string()) {
+//             _uri << "port"
+//                  << "*";
+//         }
+//         this->__uri << _uri;
+//     }
+// }
 
-auto
-zpt::abstract_channel::detach() -> void {
-    if (this->uri()["type"] == zpt::json::string("@")) {
-        this->in()->unbind(std::string(this->uri()["scheme"]) + std::string("://") +
-                           std::string(this->uri()["domain"]) + std::string(":") +
-                           std::string(this->uri()["port"]));
-    }
-    else {
-        this->in()->disconnect(std::string(this->uri()["scheme"]) + std::string("://") +
-                               std::string(this->uri()["domain"]) + std::string(":") +
-                               std::string(this->uri()["port"]));
-    }
-}
+// auto
+// zpt::channel::detach() -> void {
+//     if (this->uri()["type"] == zpt::json::string("@")) {
+//         this->in()->unbind(std::string(this->uri()["scheme"]) + std::string("://") +
+//                            std::string(this->uri()["domain"]) + std::string(":") +
+//                            std::string(this->uri()["port"]));
+//     }
+//     else {
+//         this->in()->disconnect(std::string(this->uri()["scheme"]) + std::string("://") +
+//                                std::string(this->uri()["domain"]) + std::string(":") +
+//                                std::string(this->uri()["port"]));
+//     }
+// }
 
-auto
-zpt::abstract_channel::close() -> void {
-    this->in()->close();
-    this->out()->close();
-}
+// auto
+// zpt::channel::close() -> void {
+//     this->in()->close();
+//     this->out()->close();
+// }
 
-auto
-zpt::abstract_channel::available() -> bool {
-    return true;
-}
+// auto
+// zpt::channel::available() -> bool {
+//     return true;
+// }
 
-auto
-zpt::abstract_channel::loop_iteration() -> void {}
+// auto
+// zpt::channel::loop_iteration() -> void {}
 
-zpt::drop::drop() {}
-
-zpt::drop::drop(zpt::json _initial, zpt::channel _channel)
-  : __current(_initial)
+zpt::drop::drop(zpt::json _content, zpt::abstract_channel& _channel)
+  : __content(_content)
   , __channel(_channel) {}
-
-zpt::drop::drop(const zpt::drop& _rhs) {
-    (*this) = _rhs;
-}
-
-zpt::drop::drop(zpt::drop&& _rhs) {
-    (*this) = _rhs;
-}
 
 zpt::drop::~drop() {}
 
-auto
-zpt::drop::channel() -> zpt::channel {
+zpt::drop::operator zpt::abstract_channel&() const {
     return this->__channel;
 }
 
-auto
-zpt::drop::current() -> zpt::json {
-    return this->__current;
+zpt::drop::operator zpt::json() const {
+    return this->__content;
 }
 
 auto
-zpt::drop::operator=(const zpt::drop& _rhs) -> zpt::drop& {
-    this->__current = _rhs.__current;
-    this->__channel = _rhs.__channel;
+zpt::drop::operator=(zpt::json _rhs) -> zpt::drop& {
+    this->__content = _rhs;
     return (*this);
 }
 
 auto
-zpt::drop::operator=(zpt::drop&& _rhs) -> zpt::drop& {
-    this->__current = std::move(_rhs.__current);
-    this->__channel = std::move(_rhs.__channel);
+zpt::drop::forward() -> zpt::drop& {
     return (*this);
 }
 
 auto
-zpt::drop::forward(zpt::json _message) -> void {}
+zpt::drop::finish() -> zpt::drop& {
+    return (*this);
+}
 
 auto
-zpt::drop::reply(zpt::json _reply) -> void {}
-
-auto
-zpt::drop::route(zpt::json _request) -> void {}
+zpt::drop::route(zpt::json _request) -> zpt::drop& {
+    return (*this);
+}
 
 zpt::pipeline::pipeline(std::string _name, zpt::json _options)
-  : __name(_name)
-  , __uuid(zpt::generate::r_uuid())
-  , __options(_options)
-  , __drop(0)
-  , __callbacks({ zpt::pipeline::process_initalizers,
-                  zpt::pipeline::process_receivers,
-                  zpt::pipeline::process_req_transformers,
-                  zpt::pipeline::process_repliers,
-                  zpt::pipeline::process_rep_transformers }) {}
-
-zpt::pipeline::pipeline(const zpt::pipeline& _rhs) {
-    (*this) = _rhs;
-}
-
-zpt::pipeline::pipeline(zpt::pipeline&& _rhs) {
-    (*this) = _rhs;
-}
+  : __name{ _name }
+  , __uuid{ zpt::generate::r_uuid() }
+  , __options{ _options }
+  , __drops{ _options["global"]["parallel"]["n_threads"],
+             _options["global"]["parallel"]["max_drops_per_thread"] }
+  , __services{ "", { zpt::undefined, {}, std::regex{ ".*" } } } {}
 
 zpt::pipeline::~pipeline() {}
-
-auto
-zpt::pipeline::init() -> void {
-    if (not zpt::pipeline::__ready.load()) {
-        try {
-            if (this->__options["modules"]->ok()) {
-                for (auto _i : this->__options["modules"]->arr()) {
-                    std::string _lib_file("lib");
-                    _lib_file.append((std::string)_i);
-                    _lib_file.append(".so");
-
-                    if (_lib_file.length() > 6) {
-                        zlog(std::string("loading module '") + _lib_file + std::string("'"),
-                             zpt::notice);
-                        void* hndl = dlopen(_lib_file.data(), RTLD_NOW);
-                        if (hndl == nullptr) {
-                            zlog(std::string(dlerror()), zpt::error);
-                        }
-                        else {
-                            void (*_populate)();
-                            _populate = (void (*)())dlsym(hndl, "_zpt_load_");
-                            _populate();
-                        }
-                    }
-                }
-            }
-            zpt::drop _initialize_drop;
-            this->__callbacks[this->__drop](_initialize_drop, *this);
-            this->__drop = 1;
-        }
-        catch (zpt::assertion& _e) {
-            zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
-            zlog(std::string("\n") + _e.backtrace(), zpt::trace);
-        }
-        catch (std::exception& _e) {
-            zlog(_e.what(), zpt::emergency);
-        }
-    }
-    else {
-        this->__drop = 1;
-    }
-}
 
 auto
 zpt::pipeline::name() -> std::string {
@@ -319,81 +251,27 @@ zpt::pipeline::options() -> zpt::json {
 }
 
 auto
-zpt::pipeline::add(zpt::channel_factory _factory) -> void {
+zpt::pipeline::add(std::unique_ptr<zpt::abstract_channel_factory> _factory) -> zpt::pipline& {
     this->__factories.insert(std::make_pair(_factory->protocol(), _factory));
+    return (*this);
 }
 
-auto
-zpt::pipeline::add(zpt::initializer _callback) -> void {
-    std::get<0>(this->__drops).push_back(_callback);
-}
+// auto
+// zpt::pipeline::feed(zpt::json _request, zpt::channel _channel) -> void {}
+
+// auto
+// zpt::pipeline::forward(zpt::json _msg) -> void {}
+
+// auto
+// zpt::pipeline::reply(zpt::json _reply) -> void {}
+
+// auto
+// zpt::pipeline::cancel() -> void {
+//     throw zpt::InterruptedException();
+// }
 
 auto
-zpt::pipeline::add(zpt::receiver _callback) -> void {
-    std::get<1>(this->__drops).push_back(_callback);
-}
-
-auto
-zpt::pipeline::add(zpt::request_transformer _callback) -> void {
-    std::get<2>(this->__drops).push_back(_callback);
-}
-
-auto
-zpt::pipeline::add(zpt::replier _callback) -> void {
-    std::get<3>(this->__drops).push_back(_callback);
-}
-
-auto
-zpt::pipeline::add(zpt::reply_transformer _callback) -> void {
-    std::get<4>(this->__drops).push_back(_callback);
-}
-
-auto
-zpt::pipeline::operator=(const zpt::pipeline& _rhs) -> zpt::pipeline& {
-    this->__name = _rhs.__name;
-    this->__uuid = _rhs.__uuid;
-    this->__options = _rhs.__options;
-    this->__ready.store(_rhs.__ready.load());
-    this->__drop = _rhs.__drop;
-    this->__drops = _rhs.__drops;
-
-    return *this;
-}
-
-auto
-zpt::pipeline::operator=(zpt::pipeline&& _rhs) -> zpt::pipeline& {
-    this->__name = _rhs.__name;
-    this->__uuid = _rhs.__uuid;
-    this->__options = _rhs.__options;
-    this->__ready.store(_rhs.__ready.load());
-    this->__drop = _rhs.__drop;
-    this->__drops = std::move(_rhs.__drops);
-
-    _rhs.__name = "";
-    _rhs.__uuid = "";
-    _rhs.__options = zpt::undefined;
-    _rhs.__ready = false;
-    _rhs.__drop = 0;
-
-    return *this;
-}
-
-auto
-zpt::pipeline::feed(zpt::json _request, zpt::channel _channel) -> void {}
-
-auto
-zpt::pipeline::forward(zpt::json _msg) -> void {}
-
-auto
-zpt::pipeline::reply(zpt::json _reply) -> void {}
-
-auto
-zpt::pipeline::cancel() -> void {
-    throw zpt::InterruptedException();
-}
-
-void
-zpt::pipeline::start() {
+zpt::pipeline::loop() -> void {
     // try {
     // 	if (bool(this->__options["discoverable"])) {
     // 		this->notify_peers();
@@ -435,44 +313,6 @@ zpt::pipeline::start() {
     // } catch (zpt::InterruptedException& e) {
     // 	return;
     // }
-}
-
-auto
-zpt::pipeline::instance() -> zpt::pipeline {
-    zpt::json _options = zpt::options();
-    zpt::pipeline _pipeline(_options["name"]->str(), _options);
-    return _pipeline;
-}
-
-auto
-zpt::pipeline::process_initalizers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool {
-    for (auto _callback : std::get<0>(_pipeline.__drops)) {
-        std::get<1>(_callback)(zpt::options(), _drop);
-    }
-    return true;
-}
-
-auto
-zpt::pipeline::process_receivers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool {
-    for (auto _callback : std::get<1>(_pipeline.__drops)) {
-        std::get<1>(_callback)(_drop.channel(), _drop);
-    }
-    return true;
-}
-
-auto
-zpt::pipeline::process_req_transformers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool {
-    return true;
-}
-
-auto
-zpt::pipeline::process_repliers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool {
-    return true;
-}
-
-auto
-zpt::pipeline::process_rep_transformers(zpt::drop& _drop, zpt::pipeline& _pipeline) -> bool {
-    return true;
 }
 
 // auto zpt::pipeline::publish(std::string _topic, zpt::json _payload) -> void {

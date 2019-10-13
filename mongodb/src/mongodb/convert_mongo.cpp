@@ -176,7 +176,7 @@ zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out) {
 void
 zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out) {
     for (auto _i : *_in) {
-        JSONPtr _value = _i;
+        zpt::json _value = _i;
 
         switch (_value->type()) {
             case zpt::JSObject: {
@@ -280,7 +280,7 @@ void
 zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, std::string _prefix) {
     size_t _idx = 0;
     for (auto _i : *_in) {
-        JSONPtr _value = _i;
+        zpt::json _value = _i;
 
         switch (_value->type()) {
             case zpt::JSObject: {

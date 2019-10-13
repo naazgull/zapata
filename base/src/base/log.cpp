@@ -33,7 +33,7 @@ namespace zpt {
 short int log_lvl = 8;
 std::ostream* log_fd = &std::cout;
 long log_pid = 0;
-std::string* log_pname = nullptr;
+std::unique_ptr<std::string> log_pname = nullptr;
 char* log_hname = nullptr;
 short log_format = 0;
 
