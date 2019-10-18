@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include <zapata/json/JSONLexer.h>
-#include <zapata/json/JSONObj.h>
+#include <zapata/json/JSONClass.h>
 
 namespace zpt {
 
@@ -50,8 +50,8 @@ class JSONTokenizerLexer : public JSONLexer {
 
     void add();
 
-    zpt::JSONElementT* __root;
+    zpt::json __root;
     zpt::JSONType __root_type;
-    zpt::JSONElementT* __parent;
+    zpt::json __parent;
 };
 } // namespace zpt

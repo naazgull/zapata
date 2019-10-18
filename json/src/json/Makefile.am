@@ -5,7 +5,11 @@ libzapata_json_la_LDFLAGS = -version-info 1:0:0
 libzapata_json_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_json_la_SOURCES = \
+./JSONArr.cpp \
 ./JSONObj.cpp \
+./JSONLambda.cpp \
+./JSONElement.cpp \
+./JSONPtr.cpp \
 ./JSONLexer.cpp \
 ./JSONParser.cpp \
 ./JSONTokenizer.cpp \

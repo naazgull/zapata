@@ -33,7 +33,7 @@ zpt::JSONTokenizerLexer::~JSONTokenizerLexer() {}
 
 void
 zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
-    this->__root = this->__parent = (*_root).get();
+    this->__root = this->__parent = _root;
 }
 
 void
@@ -51,7 +51,7 @@ zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
 void
 zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
     try {
-        zpt::JSONElementT* _cur = this->__parent;
+        zpt::json _cur = this->__parent;
         this->__parent = _cur->parent();
         _cur->parent(nullptr);
     }
@@ -65,7 +65,7 @@ zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
 void
 zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str) {
     try {
-        (*this->__parent) << _in_str;
+        this->__parent << _in_str;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
@@ -83,32 +83,30 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
     switch (_in_type) {
         case zpt::JSObject: {
             JSONObj _obj;
-            JSONElementT* _ptr = new JSONElementT(_obj);
+            zpt::json _ptr{ _obj };
             _ptr->parent(this->__parent);
             try {
-                (*this->__parent) << _ptr;
+                this->__parent << _ptr;
                 this->__parent = _ptr;
             }
             catch (zpt::assertion& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                           << std::flush;
-                delete _ptr;
                 this->__parent->type(_in_type);
             }
             break;
         }
         case zpt::JSArray: {
             JSONArr _arr;
-            JSONElementT* _ptr = new JSONElementT(_arr);
+            zpt::json _ptr{ _arr };
             _ptr->parent(this->__parent);
             try {
-                (*this->__parent) << _ptr;
+                this->__parent << _ptr;
                 this->__parent = _ptr;
             }
             catch (zpt::assertion& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                           << std::flush;
-                delete _ptr;
                 this->__parent->type(_in_type);
             }
             break;
@@ -120,90 +118,84 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
 
 void
 zpt::JSONTokenizerLexer::init(bool _in) {
-    JSONElementT* _ptr = new JSONElementT(_in);
+    zpt::json _ptr{ _in };
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }
 
 void
 zpt::JSONTokenizerLexer::init(long long _in) {
-    JSONElementT* _ptr = new JSONElementT(_in);
+    zpt::json _ptr{ _in };
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }
 
 void
 zpt::JSONTokenizerLexer::init(double _in) {
-    JSONElementT* _ptr = new JSONElementT(_in);
+    zpt::json _ptr{ _in };
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }
 
 void
 zpt::JSONTokenizerLexer::init(std::string _in) {
-    JSONElementT* _ptr = new JSONElementT(_in);
+    zpt::json _ptr{ _in };
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }
 
 void
 zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
-    JSONElementT* _ptr = new JSONElementT(_in);
+    zpt::json _ptr{ _in };
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }
 
 void
 zpt::JSONTokenizerLexer::init() {
-    JSONElementT* _ptr = new JSONElementT();
+    zpt::json _ptr;
     _ptr->parent(this->__parent);
     try {
-        (*this->__parent) << _ptr;
+        this->__parent << _ptr;
     }
     catch (zpt::assertion& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
-        delete _ptr;
         throw _e;
     }
 }

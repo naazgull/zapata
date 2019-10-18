@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <string>
 #include <unistd.h>
-#include <zapata/json/JSONObj.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONParser.h>
 
 namespace zpt {

@@ -33,6 +33,10 @@ SOFTWARE.
 
 int
 main(int argc, char* argv[]) {
+    zpt::json _j{ "a", 1, "b", 2 };
+    std::cout << static_cast<std::string>(_j["a"]) << std::endl << std::flush;
+    std::cout << static_cast<std::string>(_j) << std::endl << std::flush;
+    return 0;
     if (argc > 1) {
         if (argc > 2 && std::string(argv[1]) == "--parse-only") {
             zpt::json _ptr;
@@ -68,7 +72,7 @@ main(int argc, char* argv[]) {
             }
             try {
                 _in >> _ptr;
-                zpt::conf::setup(_ptr);
+                // zpt::conf::setup(_ptr);
             }
             catch (zpt::assertion& _e) {
                 std::cout << _e.what() << std::endl << std::flush;

@@ -10,16 +10,16 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-/* #undef HAVE_LIBCRYPTO */
+#define HAVE_LIBCRYPTO 1
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `magic' library (-lmagic). */
-/* #undef HAVE_LIBMAGIC */
+#define HAVE_LIBMAGIC 1
 
 /* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-/* #undef HAVE_LIBOSSP_UUID__ */
+#define HAVE_LIBOSSP_UUID__ 1
 
 /* Define to 1 if you have the `pq' library (-lpq). */
 /* #undef HAVE_LIBPQ */
@@ -28,13 +28,13 @@
 /* #undef HAVE_LIBPQXX */
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
-/* #undef HAVE_LIBSSL */
+#define HAVE_LIBSSL 1
 
 /* Define to 1 if you have the `z' library (-lz). */
-/* #undef HAVE_LIBZ */
+#define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
 /* #undef HAVE_LIBZAPATA_EVENTS */
@@ -43,7 +43,7 @@
 /* #undef HAVE_LIBZAPATA_HTTP */
 
 /* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-/* #undef HAVE_LIBZAPATA_JSON */
+#define HAVE_LIBZAPATA_JSON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
 /* #undef HAVE_LIBZAPATA_ZMQ */

@@ -25,7 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include <mutex>
-#include <zapata/json/JSONObj.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONTokenizer.h>
 
 namespace zpt {

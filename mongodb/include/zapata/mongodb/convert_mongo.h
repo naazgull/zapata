@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/json/JSONObj.h>
+#include <zapata/json/JSONClass.h>
 #undef INVALID_SOCKET
 #include <mongo/bson/bsonelement.h>
 #include <mongo/bson/bsonobjbuilder.h>

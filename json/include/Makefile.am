@@ -8,7 +8,7 @@ nobase_include_HEADERS = \
 ./zapata/json/JSONLexer.h \
 ./zapata/json/JSONLexerbase.h \
 ./zapata/json/JSONLexerimpl.h \
-./zapata/json/JSONObj.h \
+./zapata/json/JSONClass.h \
 ./zapata/json/JSONParser.h \
 ./zapata/json/JSONTokenizer.h \
 ./zapata/json/JSONTokenizerbase.h \

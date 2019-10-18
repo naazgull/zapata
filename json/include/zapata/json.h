@@ -36,7 +36,7 @@ SOFTWARE.
 #include <zapata/exceptions/NoAttributeNameException.h>
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-#include <zapata/json/JSONObj.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONParser.h>
 #include <zapata/json/config.h>
 #include <zapata/json/json.h>
