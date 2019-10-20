@@ -92,7 +92,7 @@ generate(zpt::json _to_add, zpt::json _global_conf) -> void {
         std::string _requires;
 
         if (_conf["boot"][0]["depends"]->is_array()) {
-            for (auto _dep : _conf["boot"][0]["depends"]->arr()) {
+            for (auto [_idx, _key, _dep] : _conf["boot"][0]["depends"]) {
                 _after += std::string("After=") + std::string(_dep) + std::string(".service\n");
                 _requires +=
                   std::string("Requires=") + std::string(_dep) + std::string(".service\n");

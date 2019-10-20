@@ -30,7 +30,7 @@ SOFTWARE.
 
 auto
 zpt::to_string(zpt::json _in) -> std::string {
-    return std::string(_in);
+    return static_cast<std::string>(_in);
 }
 
 auto
@@ -410,6 +410,75 @@ zpt::uri::to_str(zpt::json _uri, zpt::json _opts) -> std::string {
     }
     return std::string(_uri["scheme"]) + std::string("://") + _authority +
            std::string(_uri["path"]) + _query + _fragment;
+}
+
+auto
+zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json {
+    zpt::json _return = zpt::json::object();
+    zpt::json _values = zpt::json::array();
+    for (int _i = 1; _i != _argc; _i++) {
+        std::string _arg(_argv[_i]);
+        if (_arg.find("--") == 0 || _arg.find("-") == 0) {
+            std::string _value;
+            if (_arg.find("=") != std::string::npos) {
+                zpt::json _split = zpt::split(_arg, "=");
+                _arg.assign(static_cast<std::string>(_split[0]));
+                _value.assign(static_cast<std::string>(_split[1]));
+            }
+            _values = _return[_arg];
+            if (_values == zpt::undefined) {
+                _return << _arg << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
+            }
+            else if (_values->type() == zpt::JSArray) {
+                _values << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
+            }
+            else {
+                zpt::json _old = _values;
+                _values = zpt::json::array();
+                _values << _old << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
+                _return << _arg << _values;
+            }
+        }
+        else {
+            _values = _return["--"];
+            if (_values == zpt::undefined) {
+                _values = zpt::json::array();
+                _return << "--" << _values;
+            }
+            _values << _arg;
+        }
+    }
+
+    for (auto [_, _key, _option] : _return) {
+        if (_key == "--") {
+            continue;
+        }
+        assertz(_config[_key]->type() == zpt::JSArray,
+                std::string{ "'" } + _key + std::string{ "' is not a valid option" },
+                500,
+                0);
+        for (auto [_, __, _cfg_value] : _config[_key]) {
+            if (_cfg_value == "single") {
+                assertz(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
+                        std::string{ "'" } + _key +
+                          std::string{ "' option can't have multiple values" },
+                        500,
+                        0);
+            }
+        }
+    }
+
+    for (auto [_, _key, _option] : _config) {
+        for (auto [_, __, _cfg_value] : _option) {
+            if (_cfg_value == "mandatory") {
+                assertz(_return[_key] != zpt::undefined,
+                        std::string{ "'" } + _key + std::string{ "' option is mandatory" },
+                        500,
+                        0);
+            }
+        }
+    }
+    return _return;
 }
 
 auto

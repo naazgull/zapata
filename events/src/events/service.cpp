@@ -6,21 +6,21 @@
 
 zpt::service_graph::service_graph(std::string _resolver, zpt::service_graph::node _service)
   : __resolver(_resolver)
-  , __service(_service) {}
+  , __root(_service) {}
 
 zpt::service_graph::~service_graph() {}
 
 auto
 zpt::service_graph::merge(zpt::service_graph::node _other) -> void {
-    auto [_self_json, _self_callbacks, _self_regex] = (*this);
+    auto [_self_json, _self_callbacks, _self_regex] = this->__root;
     auto [_other_json, _other_callbacks, _other_regex] = _other;
 
-    for (short _idx = 0; _idx != _other_callbacks.size(); _idx++) {
-        auto _self_callback = _self_callback[_idx];
-        auto _other_callback = _other_callbacks[_idx];
+    for (size_t _idx = 0; _idx != _other_callbacks.size(); _idx++) {
+        auto [_self_regex, _self_callback] = _self_callbacks[_idx];
+        auto [_other_regex, _other_callback] = _other_callbacks[_idx];
 
         if (_self_callback == nullptr && _self_callback != nullptr) {
-            _self_callbacks[_idx] = _other_callback;
+            std::get<1>(_self_callbacks[_idx]) = _other_callback;
             _self_json["peers"][0]["performatives"] << zpt::ev::to_str(_idx) << true;
         }
         else if (_self_callback != nullptr && _other_callback != nullptr) {
@@ -35,7 +35,7 @@ zpt::service_graph::merge(zpt::service_graph::node _other) -> void {
 auto
 zpt::service_graph::insert(std::string _topic, zpt::service_graph::node _service) -> void {
     zpt::json _topics = zpt::ev::uri::get_simplified_topics(_topic);
-    for (auto _topic : _topics->arr()) {
+    for (auto [_idx, _key, _topic] : _topics) {
         this->insert(zpt::path::split(std::string(_topic)), _service);
     }
 }

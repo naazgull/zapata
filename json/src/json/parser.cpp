@@ -27,63 +27,76 @@ SOFTWARE.
 #include <signal.h>
 #include <string>
 #include <unistd.h>
+#include <chrono>
 
 #include <semaphore.h>
 #include <zapata/json.h>
 
 int
 main(int argc, char* argv[]) {
-    zpt::json _j{ "a", 1, "b", 2 };
-    std::cout << static_cast<std::string>(_j["a"]) << std::endl << std::flush;
-    std::cout << static_cast<std::string>(_j) << std::endl << std::flush;
-    return 0;
-    if (argc > 1) {
-        if (argc > 2 && std::string(argv[1]) == "--parse-only") {
-            zpt::json _ptr;
-            std::ifstream _in;
-            _in.open(argv[2]);
-            if (!_in.is_open()) {
-                zlog(std::string("unable to open provided file: ") + std::string(argv[2]),
-                     zpt::error);
-                exit(-10);
-            }
-            try {
-                _in >> _ptr;
-            }
-            catch (zpt::assertion& _e) {
-                std::cout << _e.what() << std::endl << std::flush;
-                return -1;
-            }
-            catch (zpt::SyntaxErrorException& _e) {
-                std::cout << argv[2] << ": " << _e.what() << std::endl << std::flush;
-                return -1;
-            }
-            return 0;
-        }
+    try {
+        if (argc > 1) {
+            zpt::json _parameters = zpt::parameters::parse(
+              argc, argv, { "--print", { zpt::array, "optional", "single" } });
 
-        for (int _i = 1; _i != argc; _i++) {
-            zpt::json _ptr;
-            std::ifstream _in;
-            _in.open(argv[_i]);
-            if (!_in.is_open()) {
-                zlog(std::string("unable to open provided file: ") + std::string(argv[_i]),
-                     zpt::error);
-                exit(-10);
+            zpt::json _init;
+            std::istringstream _iss;
+            _iss.str("{}");
+            _iss >> _init;
+
+            auto _t = std::chrono::high_resolution_clock::now();
+            auto _parsing_duration =
+              std::chrono::duration_cast<std::chrono::milliseconds>(_t - _t).count();
+            auto _stringify_duration =
+              std::chrono::duration_cast<std::chrono::milliseconds>(_t - _t).count();
+
+            for (auto [_, __, _file] : _parameters["--"]) {
+                zpt::json _ptr;
+                std::ifstream _in;
+                _in.open(static_cast<std::string>(_file));
+                assertz(_in.is_open(),
+                        std::string{ "unable to open provided file: " } +
+                          static_cast<std::string>(_file),
+                        500,
+                        0);
+                try {
+                    auto _t1 = std::chrono::high_resolution_clock::now();
+                    _in >> _ptr;
+                    auto _t2 = std::chrono::high_resolution_clock::now();
+                    _parsing_duration +=
+                      std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+                }
+                catch (zpt::SyntaxErrorException& _e) {
+                    std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl
+                              << std::flush;
+                    return -1;
+                }
+                {
+                    std::ostringstream _oss;
+                    auto _t1 = std::chrono::high_resolution_clock::now();
+                    _oss << _ptr << std::flush;
+                    auto _t2 = std::chrono::high_resolution_clock::now();
+                    _stringify_duration +=
+                      std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+                }
+                if (_parameters["--print"] != zpt::undefined) {
+                    std::cout << (_parameters["--print"] == "pretty"
+                                    ? static_cast<std::string>(zpt::pretty{ _ptr })
+                                    : static_cast<std::string>(_ptr))
+                              << std::endl
+                              << std::endl
+                              << std::flush;
+                }
             }
-            try {
-                _in >> _ptr;
-                // zpt::conf::setup(_ptr);
-            }
-            catch (zpt::assertion& _e) {
-                std::cout << _e.what() << std::endl << std::flush;
-                return -1;
-            }
-            catch (zpt::SyntaxErrorException& _e) {
-                std::cout << argv[_i] << ": " << _e.what() << std::endl << std::flush;
-                return -1;
-            }
-            std::cout << zpt::pretty(_ptr) << std::endl << std::flush;
+            std::cout << "parsing total time: " << _parsing_duration << "ms" << std::endl
+                      << std::flush;
+            std::cout << "stringify total time: " << _stringify_duration << "ms" << std::endl
+                      << std::flush;
         }
+    }
+    catch (zpt::assertion& _e) {
+        std::cout << _e.what() << std::endl << std::flush;
+        return -1;
     }
     return 0;
 }

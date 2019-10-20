@@ -7,7 +7,7 @@
 namespace zpt {
 zpt::json undefined;
 zpt::json nilptr = undefined;
-zpt::json array = zpt::mkptr("1b394520-2fed-4118-b622-940f25b8b35e");
+zpt::json array = "1b394520-2fed-4118-b622-940f25b8b35e";
 symbol_table __lambdas = zpt::symbol_table(
   new std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
 }
@@ -57,33 +57,6 @@ zpt::json::json()
 zpt::json::json(std::nullptr_t)
   : __underlying{ nullptr } {}
 
-zpt::json::json(const zpt::JSONElementT& _target)
-  : __underlying{ std::make_shared<zpt::JSONElementT>(_target) } {}
-
-zpt::json::json(std::unique_ptr<zpt::JSONElementT> _target)
-  : __underlying{ _target.release() } {}
-
-zpt::json::json(std::initializer_list<zpt::JSONElementT> _init)
-  : __underlying{ std::make_shared<zpt::JSONElementT>(_init) } {}
-
-zpt::json::json(std::string _rhs) {
-    std::istringstream _iss;
-    _iss.str(_rhs);
-    _iss >> (*this);
-}
-
-zpt::json::json(const char* _rhs) {
-    std::istringstream _iss;
-    _iss.str(std::string(_rhs));
-    _iss >> (*this);
-}
-
-zpt::json::json(zpt::pretty _rhs) {
-    std::istringstream _iss;
-    _iss.str(_rhs);
-    _iss >> (*this);
-}
-
 zpt::json::json(const zpt::json& _rhs) {
     (*this) = _rhs;
 }
@@ -91,6 +64,12 @@ zpt::json::json(const zpt::json& _rhs) {
 zpt::json::json(zpt::json&& _rhs) {
     (*this) = _rhs;
 }
+
+zpt::json::json(std::unique_ptr<zpt::JSONElementT> _target)
+  : __underlying{ _target.release() } {}
+
+zpt::json::json(std::initializer_list<zpt::JSONElementT> _init)
+  : __underlying{ std::make_shared<zpt::JSONElementT>(_init) } {}
 
 zpt::json::~json() {}
 
@@ -123,493 +102,95 @@ auto zpt::json::operator*() -> std::shared_ptr<zpt::JSONElementT>& {
 }
 
 zpt::json::operator std::string() {
-    if (this->__underlying.get() == nullptr) {
-        return "";
-    }
-    std::string _out;
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            this->__underlying.get()->obj()->stringify(_out);
-            break;
-        }
-        case zpt::JSArray: {
-            this->__underlying.get()->arr()->stringify(_out);
-            break;
-        }
-        case zpt::JSString: {
-            _out.assign(this->__underlying.get()->str().data());
-            break;
-        }
-        case zpt::JSInteger: {
-            zpt::tostr(_out, this->__underlying.get()->intr());
-            break;
-        }
-        case zpt::JSDouble: {
-            zpt::tostr(_out, this->__underlying.get()->dbl());
-            break;
-        }
-        case zpt::JSBoolean: {
-            zpt::tostr(_out, this->__underlying.get()->bln());
-            break;
-        }
-        case zpt::JSNil: {
-            _out.assign("");
-            break;
-        }
-        case zpt::JSDate: {
-            _out.insert(_out.length(), zpt::timestamp(this->__underlying.get()->date()));
-            break;
-        }
-        case zpt::JSLambda: {
-            _out.assign(this->__underlying.get()->lbd()->signature());
-            break;
-        }
-    }
-    return _out;
-}
-
-zpt::json::operator zpt::pretty() {
-    if (this->__underlying.get() == nullptr) {
-        return zpt::pretty("");
-    }
-    std::string _out;
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            this->__underlying.get()->obj()->prettify(_out);
-            break;
-        }
-        case zpt::JSArray: {
-            this->__underlying.get()->arr()->prettify(_out);
-            break;
-        }
-        case zpt::JSString: {
-            _out.assign(this->__underlying.get()->str().data());
-            break;
-        }
-        case zpt::JSInteger: {
-            zpt::tostr(_out, this->__underlying.get()->intr());
-            break;
-        }
-        case zpt::JSDouble: {
-            zpt::tostr(_out, this->__underlying.get()->dbl());
-            break;
-        }
-        case zpt::JSBoolean: {
-            zpt::tostr(_out, this->__underlying.get()->bln());
-            break;
-        }
-        case zpt::JSNil: {
-            _out.assign("");
-            break;
-        }
-        case zpt::JSDate: {
-            _out.insert(_out.length(), zpt::timestamp(this->__underlying.get()->date()));
-            break;
-        }
-        case zpt::JSLambda: {
-            _out.assign(this->__underlying.get()->lbd()->signature());
-            break;
-        }
-    }
-    return zpt::pretty(_out);
+    return this->__underlying.get()->operator std::string();
 }
 
 zpt::json::operator bool() {
-    if (this->__underlying.get() == nullptr) {
-        return false;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return true;
-        }
-        case zpt::JSArray: {
-            return true;
-        }
-        case zpt::JSString: {
-            return this->__underlying.get()->str().length() != 0;
-        }
-        case zpt::JSInteger: {
-            return (bool)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (bool)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return false;
-        }
-        case zpt::JSDate: {
-            return (bool)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return true;
-        }
-    }
-    return false;
+    return this->__underlying.get()->operator bool();
 }
 
 zpt::json::operator int() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            int _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (int)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (int)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (int)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (int)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
+    return this->__underlying.get()->operator int();
 }
 
 zpt::json::operator long() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            long _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (long)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (long)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (long)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (long)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
+    return this->__underlying.get()->operator long();
 }
 
 zpt::json::operator long long() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            long long _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (long long)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (long long)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (long long)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (long long)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
+    return this->__underlying.get()->operator long long();
+}
+
+zpt::json::operator size_t() {
+    return this->__underlying.get()->operator size_t();
+}
+
+zpt::json::operator double() {
+    return this->__underlying.get()->operator double();
 }
 
 #ifdef __LP64__
 zpt::json::operator unsigned int() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            unsigned int _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (unsigned int)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (unsigned int)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (unsigned int)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (unsigned int)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
+    return this->__underlying.get()->operator unsigned int();
 }
+
 #endif
-
-zpt::json::operator size_t() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            size_t _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (size_t)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (size_t)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (size_t)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (size_t)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
-}
-
-zpt::json::operator double() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            return (double)(***this->__underlying.get()->obj()).size();
-        }
-        case zpt::JSArray: {
-            return (double)(***this->__underlying.get()->arr()).size();
-        }
-        case zpt::JSString: {
-            double _n = 0;
-            std::string _s(this->__underlying.get()->str().data());
-            zpt::fromstr(_s, &_n);
-            return _n;
-        }
-        case zpt::JSInteger: {
-            return (double)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (double)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (double)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return (double)this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
-}
-
 zpt::json::operator zpt::timestamp_t() {
-    if (this->__underlying.get() == nullptr) {
-        return 0;
-    }
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            struct timeval _tp;
-            gettimeofday(&_tp, nullptr);
-            return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
-        }
-        case zpt::JSArray: {
-            struct timeval _tp;
-            gettimeofday(&_tp, nullptr);
-            return _tp.tv_sec * 1000 + _tp.tv_usec / 1000;
-        }
-        case zpt::JSString: {
-            return this->__underlying.get()->date();
-        }
-        case zpt::JSInteger: {
-            return (zpt::timestamp_t)this->__underlying.get()->intr();
-        }
-        case zpt::JSDouble: {
-            return (zpt::timestamp_t)this->__underlying.get()->dbl();
-        }
-        case zpt::JSBoolean: {
-            return (zpt::timestamp_t)this->__underlying.get()->bln();
-        }
-        case zpt::JSNil: {
-            return 0;
-        }
-        case zpt::JSDate: {
-            return this->__underlying.get()->date();
-        }
-        case zpt::JSLambda: {
-            return 0;
-        }
-    }
-    return 0;
+    return this->__underlying.get()->operator zpt::timestamp_t();
 }
 
-zpt::json::operator JSONObj() {
-    assertz(this->__underlying.get() != nullptr &&
-              this->__underlying.get()->type() == zpt::JSObject,
-            std::string("this element is not of type JSObject: ") + ((std::string) * this),
-            0,
-            0);
-    return this->__underlying.get()->obj();
+zpt::json::operator zpt::pretty() {
+    return this->__underlying.get()->operator zpt::pretty();
 }
 
-zpt::json::operator JSONArr() {
-    assertz(this->__underlying.get() != nullptr && this->__underlying.get()->type() == zpt::JSArray,
-            std::string("this element is not of type JSArray: ") + ((std::string) * this),
-            0,
-            0);
-    return this->__underlying.get()->arr();
+zpt::json::operator zpt::JSONObj() {
+    return this->__underlying.get()->operator zpt::JSONObj();
 }
 
-zpt::json::operator JSONObj&() {
-    assertz(this->__underlying.get() != nullptr &&
-              this->__underlying.get()->type() == zpt::JSObject,
-            std::string("this element is not of type JSObject: ") + ((std::string) * this),
-            0,
-            0);
-    return this->__underlying.get()->obj();
+zpt::json::operator zpt::JSONArr() {
+    return this->__underlying.get()->operator zpt::JSONArr();
 }
 
-zpt::json::operator JSONArr&() {
-    assertz(this->__underlying.get() != nullptr && this->__underlying.get()->type() == zpt::JSArray,
-            std::string("this element is not of type JSArray: ") + ((std::string) * this),
-            0,
-            0);
-    return this->__underlying.get()->arr();
+zpt::json::operator zpt::JSONObj&() {
+    return this->__underlying.get()->operator zpt::JSONObj&();
+}
+
+zpt::json::operator zpt::JSONArr&() {
+    return this->__underlying.get()->operator zpt::JSONArr&();
 }
 
 zpt::json::operator zpt::lambda() {
-    assertz(this->__underlying.get() != nullptr &&
-              this->__underlying.get()->type() == zpt::JSLambda,
-            std::string("this element is not of type JSLambda: ") + ((std::string) * this),
-            0,
-            0);
-    return this->__underlying.get()->lbd();
+    return this->__underlying.get()->operator zpt::lambda();
 }
 
 auto
-zpt::json::parse(std::istream& _in) -> void {
-    zpt::JSONParser _p;
-    _p.switchRoots(*this);
-    _p.switchStreams(_in);
-    _p.parse();
+zpt::json::parse(std::istream& _in) -> zpt::json& {
+    static thread_local zpt::JSONParser _thread_local_parser;
+    _thread_local_parser.switchRoots(*this);
+    _thread_local_parser.switchStreams(_in);
+    _thread_local_parser.parse();
+    return (*this);
 }
 
-void
-zpt::json::stringify(std::string& _str) {
+auto
+zpt::json::stringify(std::ostream& _out) -> zpt::json& {
+    this->__underlying->stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::json::stringify(std::string& _str) -> void {
     zpt::utf8::encode(_str, true);
 }
 
 auto
 zpt::json::begin() -> zpt::json::iterator {
-    return zpt::json::iterator{ *this };
+    return zpt::json::iterator{ *this, zpt::json::pos(*this, 0) };
 }
 
 auto
 zpt::json::end() -> zpt::json::iterator {
-    size_t _size{ 0 };
-    switch (this->__underlying.get()->type()) {
-        case zpt::JSObject: {
-            _size = (***this->__underlying.get()->obj()).size();
-            break;
-        }
-        case zpt::JSArray: {
-            _size = (***this->__underlying.get()->arr()).size();
-            break;
-        }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda: {
-            break;
-        }
-    }
-    return zpt::json::iterator{ *this, _size };
+    return zpt::json::iterator{ *this, zpt::json::pos(*this, std::numeric_limits<size_t>::max()) };
 }
 
 auto
@@ -644,9 +225,120 @@ zpt::json::lambda(std::string _name, unsigned short _n_args) -> zpt::json {
     return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
 }
 
-zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
+auto
+zpt::json::type_of(std::string _value) -> zpt::JSONType {
+    return zpt::JSString;
+}
+
+auto
+zpt::json::type_of(bool _value) -> zpt::JSONType {
+    return zpt::JSBoolean;
+}
+
+auto
+zpt::json::type_of(int _value) -> zpt::JSONType {
+    return zpt::JSInteger;
+}
+
+auto
+zpt::json::type_of(long _value) -> zpt::JSONType {
+    return zpt::JSInteger;
+}
+
+auto
+zpt::json::type_of(long long _value) -> zpt::JSONType {
+    return zpt::JSInteger;
+}
+
+auto
+zpt::json::type_of(size_t _value) -> zpt::JSONType {
+    return zpt::JSInteger;
+}
+
+auto
+zpt::json::type_of(double _value) -> zpt::JSONType {
+    return zpt::JSDouble;
+}
+
+#ifdef __LP64__
+auto
+zpt::json::type_of(unsigned int _value) -> zpt::JSONType {
+    return zpt::JSInteger;
+}
+#endif
+
+auto
+zpt::json::type_of(zpt::JSONElementT& _value) -> zpt::JSONType {
+    return _value.type();
+}
+
+auto
+zpt::json::type_of(zpt::timestamp_t _value) -> zpt::JSONType {
+    return zpt::JSDate;
+}
+
+auto
+zpt::json::type_of(zpt::pretty _value) -> zpt::JSONType {
+    return zpt::JSString;
+}
+
+auto
+zpt::json::type_of(zpt::JSONObj _value) -> zpt::JSONType {
+    return zpt::JSObject;
+}
+
+auto
+zpt::json::type_of(zpt::JSONArr _value) -> zpt::JSONType {
+    return zpt::JSArray;
+}
+
+auto
+zpt::json::type_of(zpt::JSONObj& _value) -> zpt::JSONType {
+    return zpt::JSObject;
+}
+
+auto
+zpt::json::type_of(zpt::JSONArr& _value) -> zpt::JSONType {
+    return zpt::JSArray;
+}
+
+auto
+zpt::json::type_of(zpt::lambda _value) -> zpt::JSONType {
+    return zpt::JSLambda;
+}
+
+auto
+zpt::json::type_of(zpt::json& _value) -> zpt::JSONType {
+    return _value->type();
+}
+
+auto
+zpt::json::pos(zpt::json& _target, size_t _pos) -> std::unique_ptr<zpt::json::iterator::position> {
+    switch (_target->type()) {
+        case zpt::JSObject: {
+            return std::move(std::make_unique<zpt::JSONObjT::position>(_target, _pos));
+        }
+        case zpt::JSArray: {
+            return std::move(std::make_unique<zpt::JSONArrT::position>(_target, _pos));
+        }
+        case zpt::JSString:
+        case zpt::JSInteger:
+        case zpt::JSDouble:
+        case zpt::JSBoolean:
+        case zpt::JSNil:
+        case zpt::JSDate:
+        case zpt::JSLambda: {
+            break;
+        }
+    }
+    return std::move(
+      std::make_unique<zpt::json::iterator::position>(_target, std::numeric_limits<size_t>::max()));
+}
+
+zpt::json::iterator::iterator(zpt::json& _target,
+                              std::unique_ptr<zpt::json::iterator::position> _pos)
   : __target{ _target }
-  , __pos{ _pos } {}
+  , __pos{ _pos.release() } {}
 
 zpt::json::iterator::iterator(const iterator& _rhs)
   : __target{ _rhs.__target }
@@ -661,51 +353,12 @@ zpt::json::iterator::operator=(const iterator& _rhs) -> iterator& {
 
 auto
 zpt::json::iterator::operator++() -> iterator& {
-    switch (this->__target->type()) {
-        case zpt::JSObject: {
-            if (this->__pos != (***this->__target->obj()).size()) {
-                ++this->__pos;
-            }
-            break;
-        }
-        case zpt::JSArray: {
-            if (this->__pos != (***this->__target->arr()).size()) {
-                ++this->__pos;
-            }
-            break;
-        }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda: {
-            break;
-        }
-    }
+    this->__pos->increment();
     return (*this);
 }
 
 auto zpt::json::iterator::operator*() const -> reference {
-    switch (this->__target->type()) {
-        case zpt::JSObject: {
-            return this->__target->element(this->__pos);
-        }
-        case zpt::JSArray: {
-            return this->__target->element(this->__pos);
-        }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda: {
-            break;
-        }
-    }
-    return std::make_tuple(0, "", this->__target);
+    return this->__pos->element();
 }
 
 auto
@@ -716,29 +369,12 @@ zpt::json::iterator::operator++(int) -> iterator {
 }
 
 auto zpt::json::iterator::operator-> () const -> pointer {
-    switch (this->__target->type()) {
-        case zpt::JSObject: {
-            return this->__target->element(this->__pos);
-        }
-        case zpt::JSArray: {
-            return this->__target->element(this->__pos);
-        }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda: {
-            break;
-        }
-    }
-    return std::make_tuple(0, "", this->__target);
+    return this->__pos->element();
 }
 
 auto
 zpt::json::iterator::operator==(iterator _rhs) const -> bool {
-    return this->__target == _rhs.__target && this->__pos == _rhs.__pos;
+    return this->__target == _rhs.__target && (*this->__pos.get()) == (*_rhs.__pos.get());
 }
 
 auto
@@ -748,24 +384,7 @@ zpt::json::iterator::operator!=(iterator _rhs) const -> bool {
 
 auto
 zpt::json::iterator::operator--() -> iterator& {
-    switch (this->__target->type()) {
-        case zpt::JSObject:
-        case zpt::JSArray: {
-            if (this->__pos != 0) {
-                --this->__pos;
-            }
-            break;
-        }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda: {
-            break;
-        }
-    }
+    this->__pos->decrement();
     return (*this);
 }
 
@@ -774,6 +393,31 @@ zpt::json::iterator::operator--(int) -> iterator {
     zpt::json::iterator _to_return = (*this);
     --(*this);
     return _to_return;
+}
+
+zpt::json::iterator::position::position(zpt::json& _target, size_t _pos)
+  : __target{ _target }
+  , __position{ _pos } {}
+
+auto
+zpt::json::iterator::position::increment() -> void {}
+
+auto
+zpt::json::iterator::position::decrement() -> void {}
+
+auto
+zpt::json::iterator::position::element() -> zpt::json::iterator::reference {
+    return std::make_tuple(0, "", this->__target);
+}
+
+auto
+zpt::json::iterator::position::operator==(const zpt::json::iterator::position& _rhs) -> bool {
+    return this->__position == _rhs.__position;
+}
+
+auto
+zpt::json::iterator::position::operator!=(const zpt::json::iterator::position& _rhs) -> bool {
+    return this->__position != _rhs.__position;
 }
 
 zpt::json

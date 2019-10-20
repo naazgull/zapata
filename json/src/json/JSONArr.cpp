@@ -3,6 +3,29 @@
 #include <regex>
 #include <zapata/json/JSONClass.h>
 
+zpt::JSONArrT::position::position(zpt::json& _target, size_t _pos)
+  : zpt::json::iterator::position{ _target, _pos } {
+    if (_pos == std::numeric_limits<size_t>::max()) {
+        this->__position = (***this->__target->arr()).size();
+        return;
+    }
+}
+
+auto
+zpt::JSONArrT::position::increment() -> void {
+    ++this->__position;
+}
+
+auto
+zpt::JSONArrT::position::decrement() -> void {
+    --this->__position;
+}
+
+auto
+zpt::JSONArrT::position::element() -> zpt::json::iterator::reference {
+    return std::make_tuple(this->__position, "", (***this->__target->arr())[this->__position]);
+}
+
 /*JSON ARRAY*/
 zpt::JSONArrT::JSONArrT() {}
 
@@ -16,7 +39,7 @@ zpt::JSONArrT::push(zpt::JSONElementT& _value) -> JSONArrT& {
 
 auto
 zpt::JSONArrT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONArrT& {
-    this->__underlying.push_back(zpt::json{ _value.release() });
+    this->__underlying.push_back(zpt::json{ std::move(_value) });
     return (*this);
 }
 

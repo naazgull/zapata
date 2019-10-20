@@ -28,7 +28,6 @@ SOFTWARE.
 #include <zapata/json/JSONClass.h>
 
 namespace zpt {
-
 class JSONTokenizerLexer : public JSONLexer {
   public:
     JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
@@ -50,8 +49,8 @@ class JSONTokenizerLexer : public JSONLexer {
 
     void add();
 
-    zpt::json __root;
+    zpt::JSONElementT* __root{ nullptr };
     zpt::JSONType __root_type;
-    zpt::json __parent;
+    zpt::JSONElementT* __parent{ nullptr };
 };
 } // namespace zpt

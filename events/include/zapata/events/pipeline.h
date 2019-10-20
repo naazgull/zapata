@@ -150,6 +150,8 @@ class service_graph {
         auto find(zpt::json _topic) -> zpt::service_graph::node&;
         auto insert(zpt::json _topic) -> zpt::service_graph::node&;
 
+        friend class service_graph;
+
       private:
         std::regex __resolver;
         std::vector<std::tuple<std::regex, zpt::callback>> __callbacks;
@@ -161,7 +163,7 @@ class service_graph {
         auto insert(zpt::json::iterator _topic) -> zpt::service_graph::node&;
     };
 
-    service_graph();
+    service_graph(std::string _resolver, zpt::service_graph::node _service);
     virtual ~service_graph();
 
     virtual auto insert(std::string _topic, zpt::service_graph::node _node) -> zpt::service_graph&;

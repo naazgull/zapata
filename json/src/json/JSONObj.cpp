@@ -3,6 +3,39 @@
 #include <regex>
 #include <zapata/json/JSONClass.h>
 
+zpt::JSONObjT::position::position(zpt::json& _target, size_t _pos)
+  : zpt::json::iterator::position{ _target, _pos } {
+    if (_pos == std::numeric_limits<size_t>::max()) {
+        this->__position = (***this->__target->obj()).size();
+        this->__underlying = (***this->__target->obj()).end();
+        return;
+    }
+    this->__underlying = (***this->__target->obj()).find(_target->obj()->key_for(_pos));
+}
+
+auto
+zpt::JSONObjT::position::increment() -> void {
+    if (this->__underlying == (***this->__target->obj()).end()) {
+        return;
+    }
+    ++this->__position;
+    ++this->__underlying;
+}
+
+auto
+zpt::JSONObjT::position::decrement() -> void {
+    if (this->__underlying == (***this->__target->obj()).begin()) {
+        return;
+    }
+    --this->__position;
+    --this->__underlying;
+}
+
+auto
+zpt::JSONObjT::position::element() -> zpt::json::iterator::reference {
+    return std::make_tuple(this->__position, this->__underlying->first, this->__underlying->second);
+}
+
 zpt::JSONObjT::JSONObjT() {}
 
 zpt::JSONObjT::~JSONObjT() {}
@@ -10,27 +43,27 @@ zpt::JSONObjT::~JSONObjT() {}
 auto
 zpt::JSONObjT::push(std::string _name) -> JSONObjT& {
     if (this->__name.length() == 0) {
-        this->__name_to_index.push_back(_name);
         this->__name.assign(_name.data());
     }
     else {
-        (**this).insert(std::make_pair(
-          this->__name,
-          std::make_tuple(
-            zpt::json{ std::make_unique<zpt::JSONElementT>(std::string(_name.data())) },
-            this->__name_to_index.size() - 1)));
+        auto [_it, _inserted] =
+          this->__underlying.insert(std::make_pair(this->__name, zpt::json{ _name }));
+        if (!_inserted) {
+            _it->second = _name;
+        }
         this->__name.clear();
     }
     return (*this);
 }
 
 auto
-zpt::JSONObjT::push(JSONElementT& _value) -> JSONObjT& {
+zpt::JSONObjT::push(zpt::JSONElementT& _value) -> JSONObjT& {
     assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
-    (**this).insert(
-      std::make_pair(this->__name,
-                     std::make_tuple(zpt::json{ std::make_unique<zpt::JSONElementT>(_value) },
-                                     this->__name_to_index.size() - 1)));
+    zpt::json _ref{ _value };
+    auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
+    if (!_inserted) {
+        _it->second = _ref;
+    }
     this->__name.clear();
     return (*this);
 }
@@ -38,9 +71,11 @@ zpt::JSONObjT::push(JSONElementT& _value) -> JSONObjT& {
 auto
 zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
     assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
-    (**this).insert(std::make_pair(
-      this->__name,
-      std::make_tuple(zpt::json{ std::move(_value) }, this->__name_to_index.size() - 1)));
+    zpt::json _ref { std::move(_value) };
+    auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
+    if (!_inserted) {
+        _it->second = _ref;
+    }
     this->__name.clear();
     return (*this);
 }
@@ -48,22 +83,28 @@ zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
 auto
 zpt::JSONObjT::push(zpt::json& _value) -> JSONObjT& {
     assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
-    (**this).insert(std::make_pair(std::string(this->__name.data()),
-                                   std::make_tuple(_value, this->__name_to_index.size() - 1)));
+    auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _value));
+    if (!_inserted) {
+        _it->second = _value;
+    }
     this->__name.clear();
     return (*this);
 }
 
 auto
 zpt::JSONObjT::pop(int _idx) -> JSONObjT& {
-    assertz(this->__name_to_index.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
-    return this->pop(this->__name_to_index[_idx]);
+    return this->pop(static_cast<size_t>(_idx));
 }
 
 auto
 zpt::JSONObjT::pop(size_t _idx) -> JSONObjT& {
-    assertz(this->__name_to_index.size() < _idx, "no such index", 500, 0);
-    return this->pop(this->__name_to_index[_idx]);
+    assertz(this->__underlying.size() < _idx, "no such index", 500, 0);
+    try {
+        this->pop(this->key_for(_idx));
+    }
+    catch (zpt::assertion& e) {
+    }
+    return (*this);
 }
 
 auto
@@ -73,30 +114,26 @@ zpt::JSONObjT::pop(const char* _name) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::pop(std::string _name) -> JSONObjT& {
-    auto _found = (**this).find(_name);
-    if (_found != (**this).end()) {
-        (**this).erase(_found);
+    auto _found = this->__underlying.find(_name);
+    if (_found != this->__underlying.end()) {
+        this->__underlying.erase(_found);
     }
-    this->__name_to_index.erase(
-      std::remove(this->__name_to_index.begin(), this->__name_to_index.end(), _name),
-      this->__name_to_index.end());
     return (*this);
 }
 
 auto
 zpt::JSONObjT::key_for(size_t _idx) -> std::string {
-    assertz(this->__name_to_index.size() < _idx, "no such index", 500, 0);
-    return this->__name_to_index[_idx];
-}
-
-auto
-zpt::JSONObjT::index_for(std::string _name) -> size_t {
-    auto _found = (**this).find(_name);
-    if (_found != (**this).end()) {
-        return std::get<1>(_found->second);
+    assertz(this->__underlying.size() > _idx, "no such index", 500, 0);
+    std::string _name{ "" };
+    size_t _pos{ 0 };
+    for (auto _element : this->__underlying) {
+        if (_pos == _idx) {
+            _name.assign(_element.first);
+            break;
+        }
+        ++_pos;
     }
-    assertz(_found != (**this).end(), "no such key", 500, 0);
-    return 0;
+    return _name;
 }
 
 auto
@@ -111,8 +148,8 @@ zpt::JSONObjT::get_path(std::string _path, std::string _separator) -> zpt::json 
     zpt::json _current = (*this)[_part];
     if (!_current->ok()) {
         if (_part == "*" && _remainder.length() != 0) {
-            for (auto _a : (**this)) {
-                _current = std::get<0>(_a.second)->get_path(_remainder, _separator);
+            for (auto _a : this->__underlying) {
+                _current = _a.second->get_path(_remainder, _separator);
                 if (_current->ok()) {
                     return _current;
                 }
@@ -191,16 +228,16 @@ auto
 zpt::JSONObjT::clone() -> zpt::json {
     zpt::JSONObj _return;
     for (auto _f : this->__underlying) {
-        _return << _f.first << std::get<0>(_f.second)->clone();
+        _return << _f.first << _f.second->clone();
     }
     return zpt::mkptr(_return);
 }
 
-auto zpt::JSONObjT::operator-> () -> std::map<std::string, std::tuple<zpt::json, size_t>>& {
+auto zpt::JSONObjT::operator-> () -> std::map<std::string, zpt::json>& {
     return this->__underlying;
 }
 
-auto zpt::JSONObjT::operator*() -> std::map<std::string, std::tuple<zpt::json, size_t>>& {
+auto zpt::JSONObjT::operator*() -> std::map<std::string, zpt::json>& {
     return this->__underlying;
 }
 
@@ -211,7 +248,7 @@ zpt::JSONObjT::operator==(zpt::JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return false;
         }
-        if (std::get<0>(_found->second) == std::get<0>(_f.second)) {
+        if (_found->second == _f.second) {
             continue;
         }
         return false;
@@ -231,7 +268,7 @@ zpt::JSONObjT::operator!=(JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return true;
         }
-        if (std::get<0>(_found->second) != std::get<0>(_f.second)) {
+        if (_found->second != _f.second) {
             return true;
         }
     }
@@ -250,7 +287,7 @@ zpt::JSONObjT::operator<(zpt::JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return false;
         }
-        if (std::get<0>(_found->second) < std::get<0>(_f.second)) {
+        if (_found->second < _f.second) {
             continue;
         }
         return false;
@@ -270,7 +307,7 @@ zpt::JSONObjT::operator>(zpt::JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return false;
         }
-        if (std::get<0>(_found->second) > std::get<0>(_f.second)) {
+        if (_found->second > _f.second) {
             continue;
         }
         return false;
@@ -290,7 +327,7 @@ zpt::JSONObjT::operator<=(zpt::JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return false;
         }
-        if (std::get<0>(_found->second) <= std::get<0>(_f.second)) {
+        if (_found->second <= _f.second) {
             continue;
         }
         return false;
@@ -310,7 +347,7 @@ zpt::JSONObjT::operator>=(zpt::JSONObjT& _rhs) -> bool {
         if (_found == _rhs.__underlying.end()) {
             return false;
         }
-        if (std::get<0>(_found->second) >= std::get<0>(_f.second)) {
+        if (_found->second >= _f.second) {
             continue;
         }
         return false;
@@ -324,13 +361,13 @@ zpt::JSONObjT::operator>=(zpt::JSONObj& _rhs) -> bool {
 }
 
 auto zpt::JSONObjT::operator[](int _idx) -> zpt::json& {
-    assertz(this->__name_to_index.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
-    return this->operator[](this->__name_to_index[_idx]);
+    assertz(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
+    return this->operator[](this->key_for(_idx));
 }
 
 auto zpt::JSONObjT::operator[](size_t _idx) -> zpt::json& {
-    assertz(this->__name_to_index.size() < _idx, "no such index", 500, 0);
-    return this->operator[](this->__name_to_index[_idx]);
+    assertz(this->__underlying.size() < _idx, "no such index", 500, 0);
+    return this->operator[](this->key_for(_idx));
 }
 
 auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
@@ -340,7 +377,7 @@ auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
 auto zpt::JSONObjT::operator[](std::string _idx) -> zpt::json& {
     auto _found = this->__underlying.find(_idx);
     if (_found != this->__underlying.end()) {
-        return std::get<0>(_found->second);
+        return _found->second;
     }
     return zpt::undefined;
 }
@@ -349,16 +386,15 @@ auto
 zpt::JSONObjT::stringify(std::string& _out) -> JSONObjT& {
     _out.insert(_out.length(), "{");
     bool _first = true;
-    for (size_t _idx = 0; _idx != this->__name_to_index.size(); ++_idx) {
-        std::string _name{ this->__name_to_index[_idx] };
+    for (auto _element : this->__underlying) {
         if (!_first) {
             _out.insert(_out.length(), ",");
         }
         _first = false;
         _out.insert(_out.length(), "\"");
-        _out.insert(_out.length(), _name);
+        _out.insert(_out.length(), _element.first);
         _out.insert(_out.length(), "\":");
-        (*this)[_name]->stringify(_out);
+        _element.second->stringify(_out);
     }
     _out.insert(_out.length(), "}");
     return (*this);
@@ -368,14 +404,13 @@ auto
 zpt::JSONObjT::stringify(std::ostream& _out) -> JSONObjT& {
     _out << "{" << std::flush;
     bool _first = true;
-    for (size_t _idx = 0; _idx != this->__name_to_index.size(); ++_idx) {
-        std::string _name{ this->__name_to_index[_idx] };
+    for (auto _element : this->__underlying) {
         if (!_first) {
             _out << ",";
         }
         _first = false;
-        _out << "\"" << _name << "\":" << std::flush;
-        (*this)[_name]->stringify(_out);
+        _out << "\"" << _element.first << "\":" << std::flush;
+        _element.second->stringify(_out);
     }
     _out << "}" << std::flush;
     return (*this);
@@ -385,8 +420,7 @@ auto
 zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> JSONObjT& {
     _out.insert(_out.length(), "{");
     bool _first = true;
-    for (size_t _idx = 0; _idx != this->__name_to_index.size(); ++_idx) {
-        std::string _name{ this->__name_to_index[_idx] };
+    for (auto _element : this->__underlying) {
         if (!_first) {
             _out.insert(_out.length(), ",");
         }
@@ -394,9 +428,9 @@ zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> JSONObjT& {
         _first = false;
         _out.insert(_out.length(), std::string(_n_tabs + 1, '\t'));
         _out.insert(_out.length(), "\"");
-        _out.insert(_out.length(), _name);
+        _out.insert(_out.length(), _element.first);
         _out.insert(_out.length(), "\" : ");
-        (*this)[_name]->prettify(_out, _n_tabs + 1);
+        _element.second->prettify(_out, _n_tabs + 1);
     }
     if (!_first) {
         _out.insert(_out.length(), "\n");
@@ -410,15 +444,14 @@ auto
 zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) -> JSONObjT& {
     _out << "{" << std::flush;
     bool _first = true;
-    for (size_t _idx = 0; _idx != this->__name_to_index.size(); ++_idx) {
-        std::string _name{ this->__name_to_index[_idx] };
+    for (auto _element : this->__underlying) {
         if (!_first) {
             _out << ",";
         }
         _out << "\n ";
         _first = false;
-        _out << std::string(_n_tabs + 1, '\t') << "\"" << _name << "\" : " << std::flush;
-        (*this)[_name]->prettify(_out, _n_tabs + 1);
+        _out << std::string(_n_tabs + 1, '\t') << "\"" << _element.first << "\" : " << std::flush;
+        _element.second->prettify(_out, _n_tabs + 1);
     }
     if (!_first) {
         _out << "\n" << std::string(_n_tabs, '\t') << std::flush;

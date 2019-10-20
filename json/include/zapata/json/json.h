@@ -151,6 +151,11 @@ auto
 env(zpt::json _options) -> void;
 } // namespace conf
 
+namespace parameters {
+auto
+parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json;
+} // namespace parameters
+
 namespace test {
 auto
 location(zpt::json _location) -> bool;
