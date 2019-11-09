@@ -10,12 +10,19 @@ libzapata_events_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 libzapata_events_la_SOURCES = \
 ./URILexer.cpp\
 ./URITokenizer.cpp\
-./URITokenizerLexer.cpp\
-./uri.cpp
+./URITokenizerLexer.cpp
 #./service.cpp #\
 # ./pipeline.cpp
 
 # bin_PROGRAMS = zpt zsysd z0mqc
+bin_PROGRAMS = zuri
+
+zuri_LDADD = -lpthread -lmagic -lzapata-base -lzapata-json -lzapata-events
+zuri_LDFLAGS =  -L../events/.libs
+zuri_CPPFLAGS = -O3 -std=c++17 -I../../include
+
+zuri_SOURCES = \
+./uri.cpp
 
 # zpt_LDADD = -lpthread -lmagic -lzapata-base -lzapata-json -lzapata-events
 # zpt_LDFLAGS =  -L../events/.libs

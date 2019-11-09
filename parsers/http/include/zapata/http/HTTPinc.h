@@ -24,19 +24,12 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <zapata/http/config.h>
 
-namespace zpt {
+#include <zapata/http/HTTPObj.h>
+#include <zapata/http/HTTPTokenizerLexer.h>
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
-
-    const char* what();
-};
-} // namespace zpt
+#define HTTPScanner                                                                                \
+  public:                                                                                          \
+    HTTPTokenizerLexer
+namespace zpt {}

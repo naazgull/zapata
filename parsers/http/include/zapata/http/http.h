@@ -24,19 +24,41 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
+#include <zapata/http/config.h>
+
 #include <string>
+#include <zapata/http/HTTPObj.h>
+#include <zapata/http/HTTPParser.h>
 
 namespace zpt {
+namespace http {
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
+auto
+from_file(std::ifstream& _in, zpt::HTTPReq& _out) -> zpt::HTTPReq&;
+auto
+from_file(std::ifstream& _in, zpt::HTTPRep& _out) -> zpt::HTTPRep&;
+auto
+from_stream(std::istream& _in, zpt::HTTPReq& _out) -> zpt::HTTPReq&;
+auto
+from_stream(std::istream& _in, zpt::HTTPRep& _out) -> zpt::HTTPRep&;
+auto
+from_str(std::string& _in, zpt::HTTPReq& _out) -> zpt::HTTPReq&;
+auto
+from_str(std::string& _in, zpt::HTTPRep& _out) -> zpt::HTTPRep&;
 
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
+auto
+to_str(std::string& _out, HTTPReq& _in) -> void;
+auto
+to_str(std::string& _out, HTTPRep& _in) -> void;
+auto
+to_str(std::ostream& _out, HTTPReq& _in) -> void;
+auto
+to_str(std::ostream& _out, HTTPRep& _in) -> void;
 
-    const char* what();
-};
+auto
+to_str(zpt::performative _performative) -> std::string;
+auto
+from_str(std::string _performative) -> zpt::performative;
+
+}
 } // namespace zpt

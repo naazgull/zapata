@@ -24,19 +24,16 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <zapata/uri/URITokenizer.h>
 
 namespace zpt {
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
+class URIParser : public URITokenizer {
   public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
+    URIParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    virtual ~URIParser();
 
-    const char* what();
+    void switchRoots(zpt::json& _root);
+    void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
 } // namespace zpt

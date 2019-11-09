@@ -24,19 +24,18 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <mutex>
+#include <zapata/json/JSONClass.h>
+#include <zapata/json/JSONTokenizer.h>
 
 namespace zpt {
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
+class JSONParser : public JSONTokenizer {
   public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
+    JSONParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    virtual ~JSONParser();
 
-    const char* what();
+    void switchRoots(zpt::json& _root);
+    void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
 } // namespace zpt

@@ -1,7 +1,6 @@
-/*
 The MIT License (MIT)
 
-Copyright (c) 2017 n@zgul <n@zgul.me>
+Copyright (c) 2015 n@zgul
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,23 +19,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*/
 
-#pragma once
-
-#include <exception>
-#include <string>
-
-namespace zpt {
-
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
-
-    const char* what();
-};
-} // namespace zpt

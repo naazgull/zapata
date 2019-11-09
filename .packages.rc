@@ -2,21 +2,21 @@ export bulk_wd=$HOME/Develop/zapata
 
 export projects=(
        base
-       json
+       parsers/json
+       parsers/http
        events
-       http
-       smtp
-       oauth2
-       zmq
-       mqtt
-       upnp
+       protocols/smtp
+       protocols/oauth2
+       protocols/zmq
+       protocols/mqtt
+       protocols/upnp
        gen
-       mongodb
-       redis
-       mysql
-       postgresql
-       couchdb
-       lisp
-       python
+       storage/mongodb
+       storage/redis
+       storage/mysql
+       storage/postgresql
+       storage/couchdb
+       bridges/lisp
+       bridges/python
        rest
 )

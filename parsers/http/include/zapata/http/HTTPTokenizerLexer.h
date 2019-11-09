@@ -24,19 +24,35 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <zapata/http/config.h>
+
+#include <zapata/http/HTTPLexer.h>
+#include <zapata/http/HTTPObj.h>
 
 namespace zpt {
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
+class HTTPTokenizerLexer : public HTTPLexer {
   public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
+    HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    virtual ~HTTPTokenizerLexer();
 
-    const char* what();
+    void switchRoots(HTTPReq& _root);
+    void switchRoots(HTTPRep& _root);
+    void justLeave();
+
+    void init(zpt::HTTPType _in_type);
+    void body();
+    void url();
+    void status();
+
+    void add();
+    void name();
+    void value();
+
+    std::string __header_name;
+    std::string __param_name;
+    HTTPReqT* __root_req;
+    HTTPRepT* __root_rep;
+    HTTPType __root_type;
 };
 } // namespace zpt

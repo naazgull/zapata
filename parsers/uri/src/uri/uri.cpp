@@ -22,21 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-
-#include <exception>
+#include <fstream>
+#include <iostream>
+#include <signal.h>
 #include <string>
+#include <unistd.h>
+#include <chrono>
 
-namespace zpt {
+#include <zapata/uri.h>
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
-
-    const char* what();
-};
-} // namespace zpt
+int
+main(int argc, char* argv[]) {
+    try {
+    }
+    catch (zpt::SyntaxErrorException& _e) {
+        std::cout << _e.what() << std::endl << std::flush;
+        return -1;
+    }
+    catch (zpt::assertion& _e) {
+        std::cout << _e.what() << std::endl << std::flush;
+        return -1;
+    }
+    return 0;
+}

@@ -24,19 +24,9 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <zapata/json/JSONTokenizerLexer.h>
 
-namespace zpt {
-
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
-
-    const char* what();
-};
-} // namespace zpt
+#define JSONScanner                                                                                   \
+  public:                                                                                          \
+    JSONTokenizerLexer
+namespace zpt {}

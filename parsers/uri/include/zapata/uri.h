@@ -24,19 +24,16 @@ SOFTWARE.
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <zapata/exceptions/NoHeaderNameException.h>
 
-namespace zpt {
-
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
-  public:
-    NoHeaderNameException(std::string _what);
-    virtual ~NoHeaderNameException() throw();
-
-    const char* what();
-};
-} // namespace zpt
+#include <zapata/uri/config.h>
+#include <zapata/uri/URITokenizerimpl.h>
+#include <zapata/uri/URITokenizerLexer.h>
+#include <zapata/uri/URITokenizer.h>
+#include <zapata/uri/unconfig.h>
+#include <zapata/uri/URIParser.h>
+#include <zapata/uri/URIinc.h>
+#include <zapata/uri/URITokenizerbase.h>
+#include <zapata/uri/URILexerbase.h>
+#include <zapata/uri/URILexer.h>
+#include <zapata/uri/URILexerimpl.h>
