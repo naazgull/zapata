@@ -71,6 +71,10 @@ zpt::JSONElementT::JSONElementT(zpt::lambda _rhs) {
     (*this) = _rhs;
 }
 
+zpt::JSONElementT::JSONElementT(zpt::regex _rhs) {
+    (*this) = _rhs;
+}
+
 zpt::JSONElementT::~JSONElementT() {}
 
 auto
@@ -107,6 +111,9 @@ zpt::JSONElementT::demangle() -> std::string {
         }
         case zpt::JSLambda: {
             return "lambda";
+        }
+        case zpt::JSRegex: {
+            return "regex";
         }
     }
     return "null";
@@ -145,6 +152,10 @@ zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
             }
             break;
         }
+        case zpt::JSRegex: {
+            this->__target.__regex.~JSONRegex();
+            break;
+        }
         default: {
             break;
         }
@@ -164,6 +175,10 @@ zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
         }
         case zpt::JSLambda: {
             new (&this->__target.__lambda) lambda();
+            break;
+        }
+        case zpt::JSRegex: {
+            new (&this->__target.__regex) JSONRegex();
             break;
         }
         default: {
@@ -224,6 +239,9 @@ zpt::JSONElementT::empty() -> bool {
         case zpt::JSLambda: {
             return false;
         }
+        case zpt::JSRegex: {
+            return false;
+        }
     }
     return true;
 }
@@ -252,7 +270,8 @@ zpt::JSONElementT::size() -> size_t {
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSDate:
-        case zpt::JSLambda: {
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
             break;
         }
     }
@@ -401,6 +420,15 @@ zpt::JSONElementT::lbd() -> zpt::lambda& {
 }
 
 auto
+zpt::JSONElementT::rgx() -> zpt::regex& {
+    assertz(this->__target.__type == zpt::JSRegex,
+            std::string("this element is not of type JSRegex: ") + this->stringify(),
+            500,
+            1100);
+    return this->__target.__regex;
+}
+
+auto
 zpt::JSONElementT::number() -> double {
     assertz(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger ||
               this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean,
@@ -463,6 +491,10 @@ zpt::JSONElementT::clone() -> zpt::json {
         case zpt::JSLambda: {
             return zpt::json::lambda(this->lbd()->name(), this->lbd()->n_args());
         }
+        case zpt::JSRegex: {
+            zpt::regex _v = this->rgx();
+            return zpt::mkptr(_v);
+        }
     }
     return zpt::undefined;
 }
@@ -507,6 +539,10 @@ zpt::JSONElementT::operator=(const JSONElementT& _rhs) -> JSONElementT& {
         }
         case zpt::JSLambda: {
             this->__target.__lambda = _rhs.__target.__lambda;
+            break;
+        }
+        case zpt::JSRegex: {
+            this->__target.__regex = _rhs.__target.__regex;
             break;
         }
     }
@@ -554,6 +590,10 @@ zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
         }
         case zpt::JSLambda: {
             this->__target.__lambda = std::move(_rhs.__target.__lambda);
+            break;
+        }
+        case zpt::JSRegex: {
+            this->__target.__regex = std::move(_rhs.__target.__regex);
             break;
         }
     }
@@ -700,6 +740,13 @@ zpt::JSONElementT::operator=(zpt::lambda _rhs) -> JSONElementT& {
     return (*this);
 }
 
+auto
+zpt::JSONElementT::operator=(zpt::regex _rhs) -> JSONElementT& {
+    this->type(zpt::JSRegex);
+    this->__target.__regex = _rhs;
+    return (*this);
+}
+
 zpt::JSONElementT::operator std::string() {
     std::string _out;
     switch (this->type()) {
@@ -737,6 +784,10 @@ zpt::JSONElementT::operator std::string() {
         }
         case zpt::JSLambda: {
             _out.assign(this->lbd()->signature());
+            break;
+        }
+        case zpt::JSRegex: {
+            _out.assign("zpt::regex(...)");
             break;
         }
     }
@@ -782,6 +833,10 @@ zpt::JSONElementT::operator zpt::pretty() {
             _out.assign(this->lbd()->signature());
             break;
         }
+        case zpt::JSRegex: {
+            _out.assign("zpt::regex(...)");
+            break;
+        }
     }
     return zpt::pretty(_out);
 }
@@ -813,6 +868,9 @@ zpt::JSONElementT::operator bool() {
             return (bool)this->date();
         }
         case zpt::JSLambda: {
+            return true;
+        }
+        case zpt::JSRegex: {
             return true;
         }
     }
@@ -851,6 +909,9 @@ zpt::JSONElementT::operator int() {
         case zpt::JSLambda: {
             return 0;
         }
+        case zpt::JSRegex: {
+            return 0;
+        }
     }
     return 0;
 }
@@ -887,6 +948,9 @@ zpt::JSONElementT::operator long() {
         case zpt::JSLambda: {
             return 0;
         }
+        case zpt::JSRegex: {
+            return 0;
+        }
     }
     return 0;
 }
@@ -921,6 +985,9 @@ zpt::JSONElementT::operator long long() {
             return (long long)this->date();
         }
         case zpt::JSLambda: {
+            return 0;
+        }
+        case zpt::JSRegex: {
             return 0;
         }
     }
@@ -960,6 +1027,9 @@ zpt::JSONElementT::operator unsigned int() {
         case zpt::JSLambda: {
             return 0;
         }
+        case zpt::JSRegex: {
+            return 0;
+        }
     }
     return 0;
 }
@@ -995,6 +1065,9 @@ zpt::JSONElementT::operator size_t() {
             return (size_t)this->date();
         }
         case zpt::JSLambda: {
+            return 0;
+        }
+        case zpt::JSRegex: {
             return 0;
         }
     }
@@ -1033,6 +1106,9 @@ zpt::JSONElementT::operator double() {
         case zpt::JSLambda: {
             return 0;
         }
+        case zpt::JSRegex: {
+            return 0;
+        }
     }
     return 0;
 }
@@ -1068,6 +1144,9 @@ zpt::JSONElementT::operator zpt::timestamp_t() {
             return this->date();
         }
         case zpt::JSLambda: {
+            return 0;
+        }
+        case zpt::JSRegex: {
             return 0;
         }
     }
@@ -1112,6 +1191,22 @@ zpt::JSONElementT::operator zpt::lambda() {
             0,
             0);
     return this->lbd();
+}
+
+zpt::JSONElementT::operator zpt::regex() {
+    assertz(this->type() == zpt::JSRegex,
+            std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this),
+            0,
+            0);
+    return this->rgx();
+}
+
+zpt::JSONElementT::operator zpt::regex&() {
+    assertz(this->type() == zpt::JSRegex,
+            std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this),
+            0,
+            0);
+    return this->rgx();
 }
 
 auto
@@ -1185,6 +1280,29 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
 }
 
 auto
+zpt::JSONElementT::operator<<(zpt::regex _in) -> zpt::JSONElementT& {
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            zpt::JSONElementT _element{ _in };
+            this->__target.__object->push(_element);
+            break;
+        }
+        case zpt::JSArray: {
+            zpt::JSONElementT _element{ _in };
+            this->__target.__array->push(_element);
+            break;
+        }
+        default: {
+            assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
+                    "the type must be a JSObject or JSArray in order to push a value",
+                    500,
+                    0);
+        }
+    }
+    return (*this);
+}
+
+auto
 zpt::JSONElementT::operator==(zpt::JSONElementT& _in) -> bool {
     assertz(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
@@ -1246,6 +1364,12 @@ zpt::JSONElementT::operator==(zpt::JSONElementT& _in) -> bool {
             }
             return this->__target.__lambda->signature() == _in.lbd()->signature();
         }
+        case zpt::JSRegex: {
+            if (this->__target.__type != _in.type()) {
+                return false;
+            }
+            return this->__target.__regex == _in.__target.__regex;
+        }
     }
     return false;
 }
@@ -1288,6 +1412,12 @@ zpt::JSONElementT::operator!=(JSONElementT& _in) -> bool {
         }
         case zpt::JSLambda: {
             return this->__target.__lambda->signature() != _in.lbd()->signature();
+        }
+        case zpt::JSRegex: {
+            if (this->__target.__type != _in.type()) {
+                return false;
+            }
+            return this->__target.__regex != _in.__target.__regex;
         }
     }
     return false;
@@ -1357,6 +1487,9 @@ zpt::JSONElementT::operator<(zpt::JSONElementT& _in) -> bool {
         case zpt::JSLambda: {
             return this->__target.__lambda->n_args() < _in.lbd()->n_args();
         }
+        case zpt::JSRegex: {
+            return false;
+        }
     }
     return false;
 }
@@ -1424,6 +1557,9 @@ zpt::JSONElementT::operator>(zpt::JSONElementT& _in) -> bool {
         }
         case zpt::JSLambda: {
             return this->__target.__lambda->n_args() > _in.lbd()->n_args();
+        }
+        case zpt::JSRegex: {
+            return false;
         }
     }
     return false;
@@ -1493,6 +1629,9 @@ zpt::JSONElementT::operator<=(zpt::JSONElementT& _in) -> bool {
         case zpt::JSLambda: {
             return this->__target.__lambda->n_args() <= _in.lbd()->n_args();
         }
+        case zpt::JSRegex: {
+            return false;
+        }
     }
     return false;
 }
@@ -1560,6 +1699,9 @@ zpt::JSONElementT::operator>=(zpt::JSONElementT& _in) -> bool {
         }
         case zpt::JSLambda: {
             return this->__target.__lambda->n_args() >= _in.lbd()->n_args();
+        }
+        case zpt::JSRegex: {
+            return false;
         }
     }
     return false;
@@ -1691,6 +1833,9 @@ zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) -> zpt::json {
         case zpt::JSLambda: {
             return zpt::undefined;
         }
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
     }
     return zpt::undefined;
 }
@@ -1820,6 +1965,9 @@ zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) -> zpt::json {
         case zpt::JSLambda: {
             return zpt::undefined;
         }
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
     }
     return zpt::undefined;
 }
@@ -1944,6 +2092,9 @@ zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) -> zpt::json {
         case zpt::JSLambda: {
             return zpt::undefined;
         }
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
     }
     return zpt::undefined;
 }
@@ -1988,7 +2139,8 @@ zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) -> zpt::json {
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSDate:
-        case zpt::JSLambda: {
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
             return zpt::undefined;
         }
     }
@@ -2011,7 +2163,8 @@ zpt::JSONElementT::get_path(std::string _path, std::string _separator) -> zpt::j
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSLambda:
-        case zpt::JSDate: {
+        case zpt::JSDate:
+        case zpt::JSRegex: {
             return zpt::undefined;
         }
     }
@@ -2037,7 +2190,8 @@ zpt::JSONElementT::set_path(std::string _path, zpt::json _value, std::string _se
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSLambda:
-        case zpt::JSDate: {
+        case zpt::JSDate:
+        case zpt::JSRegex: {
             break;
         }
     }
@@ -2062,7 +2216,8 @@ zpt::JSONElementT::del_path(std::string _path, std::string _separator) -> JSONEl
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSLambda:
-        case zpt::JSDate: {
+        case zpt::JSDate:
+        case zpt::JSRegex: {
             break;
         }
     }
@@ -2226,6 +2381,10 @@ zpt::JSONElementT::stringify(std::ostream& _out) -> JSONElementT& {
             _out << this->__target.__lambda->signature() << std::flush;
             break;
         }
+        case zpt::JSRegex: {
+            _out << static_cast<std::string>(this->__target.__regex) << std::flush;
+            break;
+        }
     }
     return (*this);
 }
@@ -2273,6 +2432,10 @@ zpt::JSONElementT::stringify(std::string& _out) -> JSONElementT& {
         }
         case zpt::JSLambda: {
             _out.insert(_out.length(), this->__target.__lambda->signature());
+            break;
+        }
+        case zpt::JSRegex: {
+            _out.insert(_out.length(), static_cast<std::string>(this->__target.__regex));
             break;
         }
     }
@@ -2327,6 +2490,10 @@ zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) -> JSONElementT& {
             _out << this->__target.__lambda->signature() << std::flush;
             break;
         }
+        case zpt::JSRegex: {
+            _out << static_cast<std::string>(this->__target.__regex) << std::flush;
+            break;
+        }
     }
     if (_n_tabs == 0) {
         _out << std::endl << std::flush;
@@ -2379,6 +2546,10 @@ zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> JSONElementT& {
             _out.insert(_out.length(), this->__target.__lambda->signature());
             break;
         }
+        case zpt::JSRegex: {
+            _out.insert(_out.length(), static_cast<std::string>(this->__target.__regex));
+            break;
+        }
     }
     if (_n_tabs == 0) {
         _out.insert(_out.length(), "\n");
@@ -2408,6 +2579,7 @@ zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, zpt::
         case zpt::JSNil:
         case zpt::JSDate:
         case zpt::JSLambda:
+        case zpt::JSRegex:
             break;
     }
     return std::make_tuple(0, "", zpt::json{ *this });

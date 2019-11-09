@@ -12,7 +12,7 @@
 //%debug
 %no-lines
 
-%token STRING BOOLEAN INTEGER DOUBLE NIL LAMBDA
+%token STRING BOOLEAN INTEGER DOUBLE NIL LAMBDA REGEX
 %left LCB RCB
 %left LB RB
 %left COMMA
@@ -113,14 +113,14 @@ value :
 |
 	STRING
 	{
-		string _out(d_scanner.matched());
+		std::string _out(d_scanner.matched());
 		d_scanner.init(_out);
 	}
 |
 	BOOLEAN
 	{
 		bool _out;
-		string _in(d_scanner.matched());
+		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
@@ -128,7 +128,7 @@ value :
 	INTEGER
 	{
 		long long _out;
-		string _in(d_scanner.matched());
+		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
@@ -136,15 +136,22 @@ value :
 	DOUBLE
 	{
 		double _out;
-		string _in(d_scanner.matched());
+		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
 	}
 |
 	LAMBDA
 	{
-		string _in(d_scanner.matched());
+		std::string _in(d_scanner.matched());
 		zpt::lambda _out(_in);
+		d_scanner.init(_out);
+	}
+|
+	REGEX
+	{
+		std::string _in(d_scanner.matched());
+		zpt::regex _out(_in);
 		d_scanner.init(_out);
 	}
 |

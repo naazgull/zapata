@@ -589,7 +589,8 @@ enum JSONType {
     JSBoolean,
     JSNil,
     JSDate,
-    JSLambda
+    JSLambda,
+    JSRegex
 };
 
 // enum performative {

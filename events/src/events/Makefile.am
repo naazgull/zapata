@@ -8,7 +8,11 @@ libzapata_events_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 ./Polling.cpp \
 ./Connector.cpp
 libzapata_events_la_SOURCES = \
-./service.cpp
+./URILexer.cpp\
+./URITokenizer.cpp\
+./URITokenizerLexer.cpp\
+./uri.cpp
+#./service.cpp #\
 # ./pipeline.cpp
 
 # bin_PROGRAMS = zpt zsysd z0mqc

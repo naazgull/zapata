@@ -45,6 +45,7 @@ class JSONTokenizerLexer : public JSONLexer {
     void init(double _in);
     void init(std::string _in);
     void init(zpt::lambda _in);
+    void init(zpt::regex _in);
     void init();
 
     void add();

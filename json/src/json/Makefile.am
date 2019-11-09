@@ -8,6 +8,7 @@ libzapata_json_la_SOURCES = \
 ./JSONArr.cpp \
 ./JSONObj.cpp \
 ./JSONLambda.cpp \
+./JSONRegex.cpp \
 ./JSONElement.cpp \
 ./JSONPtr.cpp \
 ./JSONLexer.cpp \

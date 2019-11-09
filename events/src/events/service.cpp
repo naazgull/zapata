@@ -1,48 +1,51 @@
-/*
-  Copyright (c) 2017 n@zgul <n@zgul.me>
-*/
-
 #include <zapata/events/pipeline.h>
 
-zpt::service_graph::service_graph(std::string _resolver, zpt::service_graph::node _service)
-  : __resolver(_resolver)
-  , __root(_service) {}
+zpt::service_graph::service_graph()
+  : __root("(.*)") {}
 
 zpt::service_graph::~service_graph() {}
 
+zpt::service_graph::node::node(zpt::json _splited, std::regex& _original_topic) {
+    for ([ _, __, _alias ] : _splited) {
+        this->insert(_alias);
+    }
+}
+
+zpt::service_graph::node::node(std::string _topic)
+  : node{ zpt::regex::split(_topic), std::regex{ _topic } } {}
+
+zpt::service_graph::node::~node() {}
+
 auto
-zpt::service_graph::merge(zpt::service_graph::node _other) -> void {
-    auto [_self_json, _self_callbacks, _self_regex] = this->__root;
-    auto [_other_json, _other_callbacks, _other_regex] = _other;
+zpt::service_graph::node::find(zpt::json _topic) -> zpt::service_graph::node& {}
 
-    for (size_t _idx = 0; _idx != _other_callbacks.size(); _idx++) {
-        auto [_self_regex, _self_callback] = _self_callbacks[_idx];
-        auto [_other_regex, _other_callback] = _other_callbacks[_idx];
-
-        if (_self_callback == nullptr && _self_callback != nullptr) {
-            std::get<1>(_self_callbacks[_idx]) = _other_callback;
-            _self_json["peers"][0]["performatives"] << zpt::ev::to_str(_idx) << true;
-        }
-        else if (_self_callback != nullptr && _other_callback != nullptr) {
-            _self_callbacks[_idx] = ([=](zpt::drop& _drop) mutable -> void {
-                _lh_callback(_drop);
-                _rh_callback(_drop);
-            });
-        }
+auto
+zpt::service_graph::node::insert(zpt::json _topic) -> zpt::service_graph::node& {
+    for ([ _, __, _part ] : _topic) {
     }
 }
 
 auto
-zpt::service_graph::insert(std::string _topic, zpt::service_graph::node _service) -> void {
-    zpt::json _topics = zpt::ev::uri::get_simplified_topics(_topic);
-    for (auto [_idx, _key, _topic] : _topics) {
+zpt::service_graph::insert(std::string _topic, const zpt::service_graph::node& _service)
+  -> zpt::service_graph& {
+    zpt::json _topics = zpt::uri::get_simplified_topics(_topic);
+    for (auto [_, __, _topic] : _topics) {
         this->insert(zpt::path::split(std::string(_topic)), _service);
     }
+    return (*this);
 }
 
 auto
-zpt::service_graph::insert(zpt::json _topic, zpt::service_graph::node _service) -> void {
-    if (_topic->arr()->size() == 0) {
+zpt::service_graph::merge(const zpt::service_graph::node& _other) -> void {
+    auto [_self_resolver, _self_callbacks, _self_children] = this->__root;
+    auto [_other_resolver, _other_callbacks, _other_children] = _other;
+    _self_callbacks.insert(_self_callbacks.end(), _other_callbacks.begin(), _other_callbacks.end());
+    _self_children.insert(_self_children.end(), _other_children.begin(), _other_children.end());
+}
+
+auto
+zpt::service_graph::insert(zpt::json _topic, const zpt::service_graph::node& _service) -> void {
+    if (_topic->size() == 0) {
         if (std::get<1>(this->__service).size() != 0) {
             if (std::get<1>(_service).size() != 0) {
                 this->merge(_service);

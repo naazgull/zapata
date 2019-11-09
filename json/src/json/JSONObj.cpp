@@ -71,7 +71,7 @@ zpt::JSONObjT::push(zpt::JSONElementT& _value) -> JSONObjT& {
 auto
 zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
     assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
-    zpt::json _ref { std::move(_value) };
+    zpt::json _ref{ std::move(_value) };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
     if (!_inserted) {
         _it->second = _ref;

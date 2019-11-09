@@ -94,6 +94,10 @@ main(int argc, char* argv[]) {
                       << std::flush;
         }
     }
+    catch (zpt::SyntaxErrorException& _e) {
+        std::cout << _e.what() << std::endl << std::flush;
+        return -1;
+    }
     catch (zpt::assertion& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;

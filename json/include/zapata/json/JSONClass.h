@@ -16,15 +16,17 @@
 #include <zapata/text/manip.h>
 
 namespace zpt {
-
 using timestamp_t = unsigned long long;
 
 class JSONElementT;
 class JSONObj;
 class JSONArr;
 class JSONLambda;
+class JSONRegex;
 class lambda;
 class json;
+
+using regex = JSONRegex;
 }
 
 namespace zpt {
@@ -184,6 +186,9 @@ class json {
     operator zpt::JSONObj&();
     operator zpt::JSONArr&();
     operator zpt::lambda();
+    operator zpt::regex();
+    operator zpt::regex&();
+    operator std::regex&();
 
     template<typename T>
     auto operator+(T _in) -> json;
@@ -230,6 +235,8 @@ class json {
     template<typename T>
     static auto lambda(T _e) -> zpt::json;
     static auto lambda(std::string _name, unsigned short _n_args) -> zpt::json;
+    template<typename T>
+    static auto regex(T _e) -> zpt::json;
 
     static auto type_of(std::string _value) -> zpt::JSONType;
     static auto type_of(bool _value) -> zpt::JSONType;
@@ -249,6 +256,7 @@ class json {
     static auto type_of(zpt::JSONObj& _value) -> zpt::JSONType;
     static auto type_of(zpt::JSONArr& _value) -> zpt::JSONType;
     static auto type_of(zpt::lambda _value) -> zpt::JSONType;
+    static auto type_of(zpt::regex& _value) -> zpt::JSONType;
     static auto type_of(zpt::json& _value) -> zpt::JSONType;
 
     static auto pos(zpt::json& _target, size_t _pos)
@@ -544,6 +552,48 @@ using JSONStr = std::shared_ptr<std::string>;
 }
 
 namespace zpt {
+class JSONRegex {
+public:
+    JSONRegex();
+    JSONRegex(const zpt::JSONRegex& _rhs);
+    JSONRegex(zpt::JSONRegex&& _rhs);
+    JSONRegex(std::string _target);
+    virtual ~JSONRegex();
+
+    auto operator=(const zpt::JSONRegex& _rhs) -> zpt::JSONRegex&;
+    auto operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex&;
+
+    auto operator-> () -> std::shared_ptr<std::regex>&;
+    auto operator*() -> std::shared_ptr<std::regex>&;
+
+    operator std::string();
+    operator zpt::pretty();
+    operator std::regex&();
+    auto operator==(zpt::regex _rhs) -> bool;
+    auto operator==(zpt::json _rhs) -> bool;
+    auto operator!=(zpt::regex _rhs) -> bool;
+    auto operator!=(zpt::json _rhs) -> bool;
+    // auto operator<(zpt::regex _rhs) -> bool;
+    // auto operator<(zpt::json _rhs) -> bool;
+    // auto operator>(zpt::regex _rhs) -> bool;
+    // auto operator>(zpt::json _rhs) -> bool;
+    // auto operator<=(zpt::regex _rhs) -> bool;
+    // auto operator<=(zpt::json _rhs) -> bool;
+    // auto operator>=(zpt::regex _rhs) -> bool;
+    // auto operator>=(zpt::json _rhs) -> bool;
+
+    friend auto operator<<(std::ostream& _out, JSONRegex& _in) -> std::ostream& {
+        _out << std::string(_in) << std::flush;
+        return _out;
+    }
+
+  private:
+    std::string __underlying_original{ "" };
+    std::shared_ptr<std::regex> __underlying{ nullptr };
+};
+}
+
+namespace zpt {
 class JSONContext {
   public:
     JSONContext(void* _target);
@@ -653,6 +703,10 @@ using JSONUnion = struct JSONStruct {
                 __lambda.~lambda();
                 break;
             }
+            case zpt::JSRegex: {
+                __regex.~JSONRegex();
+                break;
+            }
             default: {
                 break;
             }
@@ -676,6 +730,7 @@ using JSONUnion = struct JSONStruct {
         void* __nil;
         zpt::timestamp_t __date;
         zpt::lambda __lambda;
+        JSONRegex __regex;
     };
 };
 }
@@ -702,6 +757,7 @@ class JSONElementT {
     JSONElementT(unsigned int _value);
 #endif
     JSONElementT(zpt::lambda _value);
+    JSONElementT(zpt::regex _value);
     virtual ~JSONElementT();
 
     virtual auto type() -> JSONType;
@@ -739,6 +795,7 @@ class JSONElementT {
     virtual auto bln() -> bool;
     virtual auto date() -> zpt::timestamp_t;
     virtual auto lbd() -> zpt::lambda&;
+    virtual auto rgx() -> zpt::regex&;
     virtual auto number() -> double;
 
     auto operator=(const JSONElementT& _rhs) -> JSONElementT&;
@@ -760,6 +817,7 @@ class JSONElementT {
     auto operator=(zpt::JSONObj& _rhs) -> JSONElementT&;
     auto operator=(zpt::JSONArr& _rhs) -> JSONElementT&;
     auto operator=(zpt::lambda _rhs) -> JSONElementT&;
+    auto operator=(zpt::regex _rhs) -> JSONElementT&;
 
     operator std::string();
     operator bool();
@@ -778,11 +836,14 @@ class JSONElementT {
     operator zpt::JSONObj&();
     operator zpt::JSONArr&();
     operator zpt::lambda();
+    operator zpt::regex();
+    operator zpt::regex&();
 
     auto operator<<(const char* _in) -> JSONElementT&;
     auto operator<<(std::string _in) -> JSONElementT&;
     auto operator<<(JSONElementT _in) -> JSONElementT&;
     auto operator<<(zpt::json _in) -> JSONElementT&;
+    auto operator<<(zpt::regex _in) -> JSONElementT&;
     template<typename T>
     auto operator<<(T _in) -> JSONElementT&;
     template<typename T>
@@ -1021,6 +1082,12 @@ template<typename T>
 auto
 zpt::json::lambda(T _e) -> zpt::json {
     zpt::lambda _v(_e);
+    return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
+}
+template<typename T>
+auto
+zpt::json::regex(T _e) -> zpt::json {
+    zpt::regex _v(_e);
     return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
 }
 

@@ -7,14 +7,14 @@
         DOUBLE = 260,
         NIL = 261,
         LAMBDA = 262,
-        LCB = 263,
-        RCB = 264,
-        LB = 265,
-        RB = 266,
-        COMMA = 267,
-        COLON = 268,
+        REGEX = 263,
+        LCB = 264,
+        RCB = 265,
+        LB = 266,
+        RB = 267,
+        COMMA = 268,
+        COLON = 269,
     };
-        
 */
 
 %baseclass-header = "JSONLexerbase.h"
@@ -28,7 +28,7 @@
 //%debug
 %no-lines
 
-%x string string_single escaped unicode number
+%x string string_single escaped unicode number regexp
 
 %%
 
@@ -38,25 +38,28 @@
 "null" return 261;
 "undefined" return 261;
 lambda\(([^\)]+)\) return 262;
-\{ return 263;
-\} return 264;
-\[ return 265;
-\] return 266;
-\, return 267;
-\: return 268;
+\{ return 264;
+\} return 265;
+\[ return 266;
+\] return 267;
+\, return 268;
+\: return 269;
 [\-0-9] {
 	more();
-	begin(StartCondition__::number);
+	begin(StartCondition_::number);
 }
 \" {
-	begin(StartCondition__::string);
+	begin(StartCondition_::string);
 }
 \' {
-	begin(StartCondition__::string_single);
+	begin(StartCondition_::string_single);
+}
+\/ {
+	begin(StartCondition_::regexp);
 }
 <number>{
 	[0-9\.e\+]* {
-		begin(StartCondition__::INITIAL);
+		begin(StartCondition_::INITIAL);
 		if (matched().find(".") != std::string::npos || matched().find("e+") != std::string::npos) {
 			return 260;
 		}
@@ -67,11 +70,10 @@ lambda\(([^\)]+)\) return 262;
 }
 <string>{
 	\" {
-
 		std::string _out(matched());
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
-		begin(StartCondition__::INITIAL);
+		begin(StartCondition_::INITIAL);
 		return 257;
 	}
 	\\   {
@@ -79,7 +81,8 @@ lambda\(([^\)]+)\) return 262;
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
 		more();
-		begin(StartCondition__::escaped);
+        d_intermediate_state = StartCondition_::string;
+		begin(StartCondition_::escaped);
 	}
 	[^\\"] {
 		more();
@@ -91,7 +94,7 @@ lambda\(([^\)]+)\) return 262;
 		std::string _out(matched());
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
-		begin(StartCondition__::INITIAL);
+		begin(StartCondition_::INITIAL);
 		return 257;
 	}
 	\\   {
@@ -99,9 +102,30 @@ lambda\(([^\)]+)\) return 262;
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
 		more();
-		begin(StartCondition__::escaped);
+        d_intermediate_state = StartCondition_::string_single;
+		begin(StartCondition_::escaped);
 	}
 	[^\\'] {
+		more();
+	}
+}
+<regexp>{
+	\/ {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		setMatched(_out);
+		begin(StartCondition_::INITIAL);
+		return 263;
+	}
+	\\   {
+		std::string _out(matched());
+		_out.erase(_out.length() - 1, 1);
+		setMatched(_out);
+		more();
+        d_intermediate_state = StartCondition_::regexp;
+		begin(StartCondition_::escaped);
+	}
+	[^\\/] {
 		more();
 	}
 }
@@ -112,7 +136,7 @@ lambda\(([^\)]+)\) return 262;
 		_out.insert(_out.length(), "\n");
 		setMatched(_out);
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 	t {
 		std::string _out(matched());
@@ -120,7 +144,7 @@ lambda\(([^\)]+)\) return 262;
 		_out.insert(_out.length(), "\t");
 		setMatched(_out);
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 	r {
 		std::string _out(matched());
@@ -128,7 +152,7 @@ lambda\(([^\)]+)\) return 262;
 		_out.insert(_out.length(), "\r");
 		setMatched(_out);
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 	f {
 		std::string _out(matched());
@@ -136,14 +160,14 @@ lambda\(([^\)]+)\) return 262;
 		_out.insert(_out.length(), "\f");
 		setMatched(_out);
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 	u {
 		std::string _out(matched());
 		_out.erase(_out.length() - 1, 1);
 		setMatched(_out);
 		more();
-		begin(StartCondition__::unicode);
+		begin(StartCondition_::unicode);
 	}
 	\\ {
 		std::string _out(matched());
@@ -151,11 +175,11 @@ lambda\(([^\)]+)\) return 262;
 		_out.insert(_out.length(), "\\");
 		setMatched(_out);
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 	[^\\ntrfu] {
 		more();
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 }
 <unicode> {
@@ -197,6 +221,6 @@ lambda\(([^\)]+)\) return 262;
 		setMatched(_out);
 		more();
 
-		begin(StartCondition__::string);
+		begin(d_intermediate_state);
 	}
 }

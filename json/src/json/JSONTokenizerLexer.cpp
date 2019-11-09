@@ -176,6 +176,18 @@ zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
 }
 
 void
+zpt::JSONTokenizerLexer::init(zpt::regex _in) {
+    try {
+        (*this->__parent) << _in;
+    }
+    catch (zpt::assertion& _e) {
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
+        throw _e;
+    }
+}
+
+void
 zpt::JSONTokenizerLexer::init() {
     zpt::json _ref;
     try {

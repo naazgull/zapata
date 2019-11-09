@@ -163,6 +163,18 @@ zpt::json::operator zpt::lambda() {
     return this->__underlying.get()->operator zpt::lambda();
 }
 
+zpt::json::operator zpt::regex() {
+    return this->__underlying.get()->operator zpt::regex();
+}
+
+zpt::json::operator zpt::regex&() {
+    return this->__underlying.get()->operator zpt::regex&();
+}
+
+zpt::json::operator std::regex&() {
+    return this->__underlying.get()->rgx().operator std::regex&();
+}
+
 auto
 zpt::json::parse(std::istream& _in) -> zpt::json& {
     static thread_local zpt::JSONParser _thread_local_parser;
@@ -308,6 +320,11 @@ zpt::json::type_of(zpt::lambda _value) -> zpt::JSONType {
 }
 
 auto
+zpt::json::type_of(zpt::regex& _value) -> zpt::JSONType {
+    return zpt::JSRegex;
+}
+
+auto
 zpt::json::type_of(zpt::json& _value) -> zpt::JSONType {
     return _value->type();
 }
@@ -327,7 +344,8 @@ zpt::json::pos(zpt::json& _target, size_t _pos) -> std::unique_ptr<zpt::json::it
         case zpt::JSBoolean:
         case zpt::JSNil:
         case zpt::JSDate:
-        case zpt::JSLambda: {
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
             break;
         }
     }
