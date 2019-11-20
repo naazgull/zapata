@@ -38,7 +38,7 @@ main(int argc, char* argv[]) {
     try {
         zpt::options(argc, argv);
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         zlog(_e.what() + std::string(" | ") + _e.description(), zpt::emergency);
         zlog(std::string("\n") + _e.backtrace(), zpt::trace);
         exit(-10);

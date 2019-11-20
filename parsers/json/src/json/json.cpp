@@ -1,27 +1,3 @@
-/*
-The MIT License (MIT)
-
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include <regex>
 #include <zapata/exceptions/SyntaxErrorException.h>
 #include <zapata/file/manip.h>
@@ -55,7 +31,7 @@ zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::js
 
 auto
 zpt::join(zpt::json _to_join, std::string _separator) -> std::string {
-    assertz(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
+    expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
             "JSON to join must be an array",
             412,
             0);
@@ -188,7 +164,7 @@ zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
         }
         catch (zpt::SyntaxErrorException& _e) {
             _conf = zpt::undefined;
-            assertz(_conf->ok(),
+            expect(_conf->ok(),
                     std::string("syntax error parsing file: ") + _file + std::string(": ") +
                       _e.what(),
                     500,
@@ -453,13 +429,13 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
         if (_key == "--") {
             continue;
         }
-        assertz(_config[_key]->type() == zpt::JSArray,
+        expect(_config[_key]->type() == zpt::JSArray,
                 std::string{ "'" } + _key + std::string{ "' is not a valid option" },
                 500,
                 0);
         for (auto [_, __, _cfg_value] : _config[_key]) {
             if (_cfg_value == "single") {
-                assertz(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
+                expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
                         std::string{ "'" } + _key +
                           std::string{ "' option can't have multiple values" },
                         500,
@@ -471,7 +447,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
     for (auto [_, _key, _option] : _config) {
         for (auto [_, __, _cfg_value] : _option) {
             if (_cfg_value == "mandatory") {
-                assertz(_return[_key] != zpt::undefined,
+                expect(_return[_key] != zpt::undefined,
                         std::string{ "'" } + _key + std::string{ "' option is mandatory" },
                         500,
                         0);
@@ -543,6 +519,6 @@ zpt::http::cookies::serialize(zpt::json _info) -> std::string {
 }
 
 extern "C" auto
-zpt_json() -> int {
+zpt_lex_json() -> int {
     return 1;
 }

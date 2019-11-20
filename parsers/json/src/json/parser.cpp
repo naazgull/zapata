@@ -54,7 +54,7 @@ main(int argc, char* argv[]) {
                 zpt::json _ptr;
                 std::ifstream _in;
                 _in.open(static_cast<std::string>(_file));
-                assertz(_in.is_open(),
+                expect(_in.is_open(),
                         std::string{ "unable to open provided file: " } +
                           static_cast<std::string>(_file),
                         500,
@@ -98,7 +98,7 @@ main(int argc, char* argv[]) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }

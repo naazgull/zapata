@@ -48,4 +48,3 @@
       "head" "roles-collection-head"
       )
     (json  "http" t "mqtt" t "0mq" t "amqp" t))
-

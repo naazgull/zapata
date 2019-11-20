@@ -29,7 +29,7 @@
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 #undef HAVE_LIBZAPATA_BASE
 
-/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
+/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json). */
 #undef HAVE_LIBZAPATA_JSON
 
 /* Define to 1 if you have the <memory.h> header file. */

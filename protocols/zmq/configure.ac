@@ -19,7 +19,7 @@ AC_HAVE_LIBRARY(crypto)
 AC_HAVE_LIBRARY(zmq)
 AC_HAVE_LIBRARY(ossp-uuid++)
 AC_CHECK_LIB(zapata-base, zpt_base)
-AC_CHECK_LIB(zapata-json, zpt_json)
+AC_CHECK_LIB(zapata-lex-json, zpt_lex_json)
 AC_CHECK_LIB(zapata-events, zpt_events)
 
 AC_CANONICAL_SYSTEM
@@ -33,13 +33,13 @@ AM_INIT_AUTOMAKE([subdir-objects tar-pax])
 
 dnl this allows us specify individual liking flags for each target
 AC_PROG_CXX
-AM_PROG_CC_C_O 
+AM_PROG_CC_C_O
 
 dnl Initialize Libtool
 LT_INIT
 
 dnl Check if Libtool is present
-dnl Libtool is used for building share libraries 
+dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile

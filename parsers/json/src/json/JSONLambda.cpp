@@ -117,7 +117,7 @@ zpt::lambda::parse(std::string _signature) -> std::tuple<std::string, unsigned s
     size_t _rpar = _signature.find(")");
     size_t _comma = _signature.find(",");
 
-    assertz(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
+    expect(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
             "lambda signature format not recognized",
             412,
             0);
@@ -141,9 +141,9 @@ auto
 zpt::lambda::add(std::string _signature, zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_signature);
-        assertz(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined", 412, 0);
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
     }
     std::tuple<std::string, unsigned short> _parsed = zpt::lambda::parse(_signature);
     zpt::__lambdas->insert(std::make_pair(
@@ -154,9 +154,9 @@ auto
 zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_name, _n_args);
-        assertz(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined", 412, 0);
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
     }
     std::string _signature(zpt::lambda::stringify(_name, _n_args));
     zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
@@ -164,7 +164,7 @@ zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _lambda)
 
 auto
 zpt::lambda::call(std::string _name, zpt::json _args, zpt::context _ctx) -> zpt::json {
-    assertz(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
+    expect(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
     zpt::symbol _f = zpt::lambda::find(_name, (***_args->arr()).size());
     return _f(_args, (***_args->arr()).size(), _ctx);
 }
@@ -172,7 +172,7 @@ zpt::lambda::call(std::string _name, zpt::json _args, zpt::context _ctx) -> zpt:
 auto
 zpt::lambda::find(std::string _signature) -> zpt::symbol {
     auto _found = zpt::__lambdas->find(_signature);
-    assertz(_found != zpt::__lambdas->end(),
+    expect(_found != zpt::__lambdas->end(),
             std::string("symbol for ") + _signature + std::string(" was not found"),
             404,
             0);

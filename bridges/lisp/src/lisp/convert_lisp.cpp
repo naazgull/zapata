@@ -176,7 +176,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                 if (_parent->ok()) {
                     _parent << zpt::undefined;
                 }
-                // assertz(false, "symbol is pair", 500, 0);
+                // expect(false, "symbol is pair", 500, 0);
             }
             break;
         }

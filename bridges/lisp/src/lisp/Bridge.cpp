@@ -158,10 +158,10 @@ zpt::lisp::Bridge::deflbd(zpt::json _conf,
 
 auto
 zpt::lisp::Bridge::defop(zpt::json _conf) -> void {
-    assertz(_conf["name"]->ok(), "the configuration attribute 'name' is required", 0, 0);
-    assertz(_conf["label"]->ok(), "the configuration attribute 'label' is required", 0, 0);
-    assertz(_conf["type"]->ok(), "the configuration attribute 'type' is required", 0, 0);
-    assertz(_conf["access"]->ok(), "the configuration attribute 'access' is required", 0, 0);
+    expect(_conf["name"]->ok(), "the configuration attribute 'name' is required", 0, 0);
+    expect(_conf["label"]->ok(), "the configuration attribute 'label' is required", 0, 0);
+    expect(_conf["type"]->ok(), "the configuration attribute 'type' is required", 0, 0);
+    expect(_conf["access"]->ok(), "the configuration attribute 'access' is required", 0, 0);
 
     std::string _expression(
       std::string("(setf (gethash '") + _conf["name"]->str() +
@@ -242,7 +242,7 @@ zpt::lisp::Bridge::check(const std::string _op1, const std::string _op2) -> bool
 
 auto
 zpt::lisp::Bridge::instance() -> zpt::bridge {
-    assertz(zpt::lisp::__instance != nullptr,
+    expect(zpt::lisp::__instance != nullptr,
             "you must invoke 'zpt::bridge::boot< zpt::lisp::bridge >' before "
             "requesting the instance",
             500,
@@ -257,7 +257,7 @@ zpt::lisp::Bridge::is_booted() -> bool {
 
 auto
 zpt::lisp::Bridge::boot(zpt::json _options) -> void {
-    assertz(zpt::lisp::__instance == nullptr,
+    expect(zpt::lisp::__instance == nullptr,
             "bridge instance isn't null, 'zpt::bridge::boot< zpt::lisp::bridge "
             ">' already invoked",
             500,
@@ -292,7 +292,7 @@ zpt::lisp::Bridge::boot(zpt::json _options) -> void {
                   ":assertz-uuid "
                   ":assertz-utf8 "
                   ":assertz-ascii "
-                  ":assertz-hash "
+                  ":expect-hash "
                   ":assertz-token "
                   ":assertz-uri "
                   ":assertz-email "
@@ -363,7 +363,7 @@ zpt::lisp::cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object _arg
     std::string _coerced_fn_name = (std::string)_ptr;
     unsigned int _coerced_n_args = ecl_to_unsigned_integer(_n_args);
     unsigned int _coerced_args_dim = ecl_array_dimension(_args, 0);
-    assertz(_coerced_n_args >= _coerced_args_dim,
+    expect(_coerced_n_args >= _coerced_args_dim,
             std::string("invalid number of arguments, ") + std::to_string(_coerced_n_args) +
               std::string(" arguments defined and ") + std::to_string(_coerced_args_dim) +
               std::string(" arguments passed"),
@@ -1013,7 +1013,7 @@ zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
                         return zpt::lisp::object(ecl_make_bool(true));
                     });
     _bridge->deflbd({ "name",
-                      "zpt:assertz-hash",
+                      "zpt:expect-hash",
                       "type",
                       "internal",
                       "access",
@@ -1034,7 +1034,7 @@ zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
                           std::string(_bridge->from<zpt::lisp::object>(_args[1]));
                         int _code = int(_bridge->from<zpt::lisp::object>(_args[2]));
 
-                        assertz_hash(_object, _field, _code);
+                        expect_hash(_object, _field, _code);
 
                         return zpt::lisp::object(ecl_make_bool(true));
                     });

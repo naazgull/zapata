@@ -1,9 +1,9 @@
 
 nobase_include_HEADERS = \
-./zapata/base/assertz.h \
+./zapata/base/expect.h \
 ./zapata/base/config.h \
 ./zapata/base/unconfig.h \
-./zapata/exceptions/AssertionException.h \
+./zapata/exceptions/ExpectationException.h \
 ./zapata/exceptions/CastException.h \
 ./zapata/exceptions/ClosedException.h \
 ./zapata/exceptions/InterruptedException.h \

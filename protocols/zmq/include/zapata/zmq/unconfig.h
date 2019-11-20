@@ -36,7 +36,7 @@
 /* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
 #undef HAVE_LIBZAPATA_EVENTS
 
-/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
+/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json). */
 #undef HAVE_LIBZAPATA_JSON
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */

@@ -79,7 +79,7 @@ main(int _argc, char* _argv[]) -> int {
                           ++_pushed;
                       }
                   }
-                  catch (zpt::AssertionException& _e) {
+                  catch (zpt::ExpectationException& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
@@ -102,7 +102,7 @@ main(int _argc, char* _argv[]) -> int {
                           }
                       }
                   }
-                  catch (zpt::AssertionException& _e) {
+                  catch (zpt::ExpectationException& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }

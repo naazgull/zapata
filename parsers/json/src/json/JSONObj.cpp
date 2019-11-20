@@ -58,7 +58,7 @@ zpt::JSONObjT::push(std::string _name) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::push(zpt::JSONElementT& _value) -> JSONObjT& {
-    assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
+    expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
     zpt::json _ref{ _value };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
     if (!_inserted) {
@@ -70,7 +70,7 @@ zpt::JSONObjT::push(zpt::JSONElementT& _value) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
-    assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
+    expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
     zpt::json _ref{ std::move(_value) };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
     if (!_inserted) {
@@ -82,7 +82,7 @@ zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::push(zpt::json& _value) -> JSONObjT& {
-    assertz(this->__name.length() != 0, "you must pass a field name first", 500, 0);
+    expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _value));
     if (!_inserted) {
         _it->second = _value;
@@ -98,11 +98,11 @@ zpt::JSONObjT::pop(int _idx) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::pop(size_t _idx) -> JSONObjT& {
-    assertz(this->__underlying.size() < _idx, "no such index", 500, 0);
+    expect(this->__underlying.size() < _idx, "no such index", 500, 0);
     try {
         this->pop(this->key_for(_idx));
     }
-    catch (zpt::assertion& e) {
+    catch (zpt::missed_expectation& e) {
     }
     return (*this);
 }
@@ -123,7 +123,7 @@ zpt::JSONObjT::pop(std::string _name) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::key_for(size_t _idx) -> std::string {
-    assertz(this->__underlying.size() > _idx, "no such index", 500, 0);
+    expect(this->__underlying.size() > _idx, "no such index", 500, 0);
     std::string _name{ "" };
     size_t _pos{ 0 };
     for (auto _element : this->__underlying) {
@@ -361,12 +361,12 @@ zpt::JSONObjT::operator>=(zpt::JSONObj& _rhs) -> bool {
 }
 
 auto zpt::JSONObjT::operator[](int _idx) -> zpt::json& {
-    assertz(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
+    expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
     return this->operator[](this->key_for(_idx));
 }
 
 auto zpt::JSONObjT::operator[](size_t _idx) -> zpt::json& {
-    assertz(this->__underlying.size() < _idx, "no such index", 500, 0);
+    expect(this->__underlying.size() < _idx, "no such index", 500, 0);
     return this->operator[](this->key_for(_idx));
 }
 

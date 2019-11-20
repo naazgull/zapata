@@ -1309,8 +1309,8 @@ zpt::Generator::build_container() -> void {
             _make += std::string("lib_LTLIBRARIES = lib") + std::string(_spec["lib"]) +
                      std::string(".la\n\n");
             _make += std::string("lib") + _lib_escaped +
-                     std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json "
-                                 "-lzapata-http "
+                     std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-json "
+                                 "-lzapata-lex-http "
                                  "-lzapata-events -lzapata-zmq -lzapata-rest ") +
                      _dyn_link + std::string("\n");
             _make += std::string("lib") + _lib_escaped +
@@ -1551,8 +1551,8 @@ zpt::Generator::build_container() -> void {
         _make += std::string("lib_LTLIBRARIES = lib") + std::string(this->__options["name"]) +
                  std::string("-mutations.la\n\n");
         _make += std::string("lib") + _lib_escaped +
-                 std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-json "
-                             "-lzapata-http -lzapata-events "
+                 std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-json "
+                             "-lzapata-lex-http -lzapata-events "
                              "-lzapata-zmq -lzapata-rest ") +
                  _mutation_dyn_link + std::string("\n");
         _make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") +
@@ -2403,7 +2403,7 @@ zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _field) ->
         _return += std::string("}\n");
         _return += std::string("}\n");
         _return +=
-          std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + "
+          std::string("} catch (zpt::missed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
                       "_e.description(), zpt::error); }\n");
         _return += std::string("}\n");
     }
@@ -2484,7 +2484,7 @@ zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _field) ->
         _return += std::string("}\n");
         _return += std::string("}\n");
         _return +=
-          std::string("} catch (zpt::assertion& _e) { zlog(_e.what() + std::string(\": \") + "
+          std::string("} catch (zpt::missed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
                       "_e.description(), zpt::error); }\n");
         _return += std::string("}\n");
     }

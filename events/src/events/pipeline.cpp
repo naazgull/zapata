@@ -47,7 +47,7 @@ zpt::options(int argc, char* argv[]) -> zpt::json& {
 
     zpt::json _args = zpt::conf::getopt(argc, argv);
 
-    assertz(_args["c"]->ok(),
+    expect(_args["c"]->ok(),
             "unable to start client: a valid configuration file must be provided",
             zpt::emergency,
             500);
@@ -59,7 +59,7 @@ zpt::options(int argc, char* argv[]) -> zpt::json& {
     zpt::json _ptr;
     std::ifstream _in;
     _in.open(_conf_file.data());
-    assertz(_in.is_open(),
+    expect(_in.is_open(),
             "unable to start: a valid configuration file must be provided",
             zpt::emergency,
             500);
@@ -514,7 +514,7 @@ zpt::pipeline::loop() -> void {
 // }
 
 // std::string zpt::rest::scopes::serialize(zpt::json _info) {
-// 	assertz(_info->type() == zpt::JSObject && _info->obj()->size() != 0,
+// 	expect(_info->type() == zpt::JSObject && _info->obj()->size() != 0,
 // 		"scope serialization failed: required at least one scope",
 // 		412,
 // 		0);
@@ -579,7 +579,7 @@ zpt::pipeline::loop() -> void {
 // }
 
 // auto zpt::rest::authorization::serialize(zpt::json _info) -> std::string {
-// 	assertz(_info["owner"]->type() == zpt::JSString &&
+// 	expect(_info["owner"]->type() == zpt::JSString &&
 // _info["application"]->type() == zpt::JSString
 // &&
 // 		    _info["grant_type"]->type() == zpt::JSString,

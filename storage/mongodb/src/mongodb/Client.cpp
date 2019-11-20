@@ -86,7 +86,7 @@ zpt::mongodb::Client::insert(std::string _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -133,7 +133,7 @@ zpt::mongodb::Client::upsert(std::string _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -206,7 +206,7 @@ zpt::mongodb::Client::save(std::string _collection,
                            std::string _href,
                            zpt::json _document,
                            zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -233,7 +233,7 @@ zpt::mongodb::Client::set(std::string _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -260,7 +260,7 @@ zpt::mongodb::Client::set(std::string _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -297,7 +297,7 @@ zpt::mongodb::Client::unset(std::string _collection,
                             std::string _href,
                             zpt::json _document,
                             zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
@@ -324,7 +324,7 @@ zpt::mongodb::Client::unset(std::string _collection,
                             zpt::json _pattern,
                             zpt::json _document,
                             zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);

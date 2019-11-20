@@ -100,11 +100,11 @@ zpt::ZMQChannel::recv() -> zpt::json {
 
 auto
 zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
-    assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
+    expect(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
             "'performative' and 'resource' attributes are required",
             412,
             0);
-    assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
+    expect(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
             "'headers' must be of type JSON object",
             412,
             0);
@@ -120,7 +120,7 @@ zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
 
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
     if (_performative == zpt::ev::Reply) {
-        assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
+        expect(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
         _envelope["headers"] << "X-Status" << _envelope["status"];
     }
     if (!_envelope["payload"]->ok()) {
@@ -143,8 +143,8 @@ zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
     memcpy(_frame2.data(), _buffer.data(), _buffer.length());
 
     std::lock_guard<std::mutex> _lock(this->out_mtx());
-    assertz(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-    assertz(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(_frame2), std::string("unable to send message"), 500, 0);
     ztrace(std::string("> ") + _directive);
     zverbose(zpt::ev::pretty(_envelope));
 
@@ -176,7 +176,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -193,7 +193,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -278,7 +278,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -295,7 +295,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -384,7 +384,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -395,7 +395,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
                                      std::string(this->uri(1)["authority"]));
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + _connection, 500, 0);
+            expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
 
@@ -420,7 +420,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -431,7 +431,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
                                         std::string(this->uri(0)["authority"]));
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + _connection, 500, 0);
+            expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
 
@@ -534,7 +534,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -553,7 +553,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + _connection, 500, 0);
+            expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
 
@@ -579,7 +579,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -598,7 +598,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + _connection, 500, 0);
+            expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
 
@@ -698,7 +698,7 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -715,7 +715,7 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -804,7 +804,7 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -821,7 +821,7 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -922,7 +922,7 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -939,7 +939,7 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -1028,7 +1028,7 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -1045,7 +1045,7 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -1140,7 +1140,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -1159,7 +1159,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -1185,7 +1185,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -1204,7 +1204,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -1301,7 +1301,7 @@ zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -1318,7 +1318,7 @@ zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 
@@ -1396,11 +1396,11 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
         this->__sock_id.erase(_found);
     }
 
-    assertz(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
+    expect(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
             "'performative' and 'resource' attributes are required",
             412,
             0);
-    assertz(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
+    expect(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
             "'headers' must be of type JSON object",
             412,
             0);
@@ -1412,7 +1412,7 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
 
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
     if (_performative == zpt::ev::Reply) {
-        assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
+        expect(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
         _envelope["headers"] << "X-Status" << _envelope["status"];
     }
     if (!_envelope["payload"]->ok()) {
@@ -1438,12 +1438,12 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
     memcpy(_frame4.data(), _buffer.data(), _buffer.length());
 
     std::lock_guard<std::mutex> _lock(this->out_mtx());
-    assertz(
+    expect(
       this->out()->send(*_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
     delete _frame1;
-    assertz(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-    assertz(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
-    assertz(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(_frame4), std::string("unable to send message"), 500, 0);
     ztrace(std::string("> ") + _directive);
     zverbose(zpt::ev::pretty(_envelope));
 
@@ -1573,7 +1573,7 @@ zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options)
             }
             _available++;
         } while (_available < 60999);
-        assertz(
+        expect(
           _available < 60999, std::string("could not attach socket to ") + _connection, 500, 0);
     }
     else {
@@ -1590,7 +1590,7 @@ zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options)
             }
         }
         catch (zmq::error_t& _e) {
-            assertz(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
+            expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
 

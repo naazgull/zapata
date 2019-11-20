@@ -106,13 +106,13 @@ auto
 zpt::HTTP::send(zpt::json _envelope) -> zpt::json {
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
-    assertz((_performative == zpt::ev::Reply && this->__state == HTTP_REQ) ||
+    expect((_performative == zpt::ev::Reply && this->__state == HTTP_REQ) ||
               (_performative != zpt::ev::Reply && this->__state != HTTP_REQ),
             "HTTP socket state doesn't allow you to send a reply without having "
             "received a request",
             400,
             1201);
-    assertz(_envelope["resource"]->ok(), "'resource' attribute is required", 412, 0);
+    expect(_envelope["resource"]->ok(), "'resource' attribute is required", 412, 0);
 
     zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
     _envelope << "resource" << _uri["path"] << "protocol" << this->protocol() << "params"
@@ -120,7 +120,7 @@ zpt::HTTP::send(zpt::json _envelope) -> zpt::json {
                   _uri["query"]);
 
     if (_performative == zpt::ev::Reply) {
-        assertz(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
+        expect(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
         _envelope["headers"] << "X-Status" << _envelope["status"];
     }
     if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
@@ -147,7 +147,7 @@ zpt::HTTP::send(zpt::json _envelope) -> zpt::json {
                 this->__resource = std::string(_envelope["resource"]);
             }
             (*this->__underlying) << _message << std::flush;
-            assertz(!this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
+            expect(!this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
         }
 
         ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") +
@@ -171,7 +171,7 @@ zpt::HTTP::recv() -> zpt::json {
             if (this->__state != HTTP_REQ) {
                 zpt::http::req _request;
                 (*this->__underlying) >> _request;
-                assertz(
+                expect(
                   !this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
                 this->__state = HTTP_REQ;
                 try {
@@ -199,7 +199,7 @@ zpt::HTTP::recv() -> zpt::json {
             else {
                 zpt::http::rep _reply;
                 (*this->__underlying) >> _reply;
-                assertz(
+                expect(
                   !this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
                 this->__state = HTTP_REP;
                 if (_reply->header("X-Cid") == "") {

@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 
 #include <zapata/text/convert.h>
 #include <zapata/text/html.h>

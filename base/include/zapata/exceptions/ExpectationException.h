@@ -29,7 +29,7 @@ SOFTWARE.
 
 namespace zpt {
 
-class AssertionException : public std::exception {
+class ExpectationException : public std::exception {
   private:
     std::string __what;
     int __http_code;
@@ -40,13 +40,13 @@ class AssertionException : public std::exception {
     std::string __backtrace;
 
   public:
-    AssertionException(std::string _what,
+    ExpectationException(std::string _what,
                        int _http_code,
                        int _code,
                        std::string _desc,
                        int _line = 0,
                        std::string _file = "");
-    AssertionException(std::string _in,
+    ExpectationException(std::string _in,
                        int _http_code,
                        int _code,
                        std::string _desc,
@@ -54,7 +54,7 @@ class AssertionException : public std::exception {
                        std::string _file,
                        char** _backtrace,
                        size_t _backtrace_size);
-    virtual ~AssertionException() throw();
+    virtual ~ExpectationException() throw();
 
     virtual const char* what();
     virtual const char* description();
@@ -63,5 +63,5 @@ class AssertionException : public std::exception {
     virtual int status();
 };
 
-using assertion = AssertionException;
+using missed_expectation = ExpectationException;
 } // namespace zpt

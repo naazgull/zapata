@@ -28,7 +28,7 @@ SOFTWARE.
 #include <ctime>
 #include <execinfo.h>
 #include <memory>
-#include <zapata/exceptions/AssertionException.h>
+#include <zapata/exceptions/ExpectationException.h>
 
 /**
  * Compact form for throwing exceptions when validating logical requirements and
@@ -38,13 +38,13 @@ SOFTWARE.
  * @param y the error message
  * @param z the HTTP status code to be replied to the invoking HTTP client
  */
-//#define assertz(x,y,z,c) if (! (x)) { throw zpt::assertion(y, z, c, #x,
+//#define expect(x,y,z,c) if (! (x)) { throw zpt::missed_expectation(y, z, c, #x,
 //__LINE__, __FILE__); }
-#define assertz(x, y, z, c)                                                                        \
+#define expect(x, y, z, c)                                                                        \
     if (!(x)) {                                                                                    \
         void* __backtrace_array__[10];                                                             \
         size_t __backtrace__size__ = backtrace(__backtrace_array__, 10);                           \
-        throw zpt::AssertionException(y,                                                           \
+        throw zpt::ExpectationException(y,                                                           \
                                       z,                                                           \
                                       c,                                                           \
                                       #x,                                                          \
@@ -54,178 +54,178 @@ SOFTWARE.
                                       __backtrace__size__);                                        \
     }
 
-#define assertz_mandatory(x, y, z)                                                                 \
+#define expect_mandatory(x, y, z)                                                                 \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(x->ok(), std::string(x), z, 1000)                                                  \
+        expect(x->ok(), std::string(x), z, 1000)                                                  \
     }                                                                                              \
     else {                                                                                         \
-        assertz(x[y]->ok(), std::string(y), z, 1000)                                               \
+        expect(x[y]->ok(), std::string(y), z, 1000)                                               \
     }
-#define assertz_string(x, y, z)                                                                    \
+#define expect_string(x, y, z)                                                                    \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001)                   \
+        expect(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001)                   \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)             \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)             \
     }
-#define assertz_integer(x, y, z)                                                                   \
+#define expect_integer(x, y, z)                                                                   \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002)                  \
+        expect(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002)                  \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)            \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)            \
     }
-#define assertz_double(x, y, z)                                                                    \
+#define expect_double(x, y, z)                                                                    \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003)                        \
+        expect(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003)                        \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)             \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)             \
     }
-#define assertz_timestamp(x, y, z)                                                                 \
+#define expect_timestamp(x, y, z)                                                                 \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSDate ||                                            \
+        expect(!x->ok() || x->type() == zpt::JSDate ||                                            \
                   (x->type() == zpt::JSString && zpt::test::timestamp(x)),                         \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1004)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSDate ||                                      \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSDate ||                                      \
                   (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])),                   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1004)                                                                              \
     }
-#define assertz_boolean(x, y, z)                                                                   \
+#define expect_boolean(x, y, z)                                                                   \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005)                  \
+        expect(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005)                  \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)            \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)            \
     }
-#define assertz_complex(x, y, z)                                                                   \
+#define expect_complex(x, y, z)                                                                   \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray,               \
+        expect(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray,               \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1006)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray,      \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray,      \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1006)                                                                              \
     }
-#define assertz_object(x, y, z)                                                                    \
+#define expect_object(x, y, z)                                                                    \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007)                   \
+        expect(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007)                   \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)             \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)             \
     }
-#define assertz_array(x, y, z)                                                                     \
+#define expect_array(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008)                    \
+        expect(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008)                    \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)              \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)              \
     }
-#define assertz_int(x, y, z)                                                                       \
+#define expect_int(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009)                  \
+        expect(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009)                  \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)            \
+        expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)            \
     }
 
-#define assertz_uuid(x, y, z)                                                                      \
+#define expect_uuid(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),             \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1010)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())),    \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1010)                                                                              \
     }
-#define assertz_utf8(x, y, z)                                                                      \
+#define expect_utf8(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),             \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1011)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())),    \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1011)                                                                              \
     }
-#define assertz_ascii(x, y, z)                                                                     \
+#define expect_ascii(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),            \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),            \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1012)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())),   \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())),   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1012)                                                                              \
     }
-#define assertz_hash(x, y, z)                                                                      \
+#define expect_hash(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),            \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),            \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1013)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),   \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1013)                                                                              \
     }
-#define assertz_token(x, y, z)                                                                     \
+#define expect_token(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),            \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),            \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1014)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),   \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1014)                                                                              \
     }
-#define assertz_uri(x, y, z)                                                                       \
+#define expect_uri(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),              \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),              \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1015)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())),     \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())),     \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1015)                                                                              \
     }
-#define assertz_email(x, y, z)                                                                     \
+#define expect_email(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),            \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),            \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1016)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())),   \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())),   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1016);                                                                             \
@@ -235,36 +235,36 @@ SOFTWARE.
             x << y << _email;                                                                      \
         }                                                                                          \
     }
-#define assertz_location(x, y, z)                                                                  \
+#define expect_location(x, y, z)                                                                  \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) &&          \
+        expect(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) &&          \
                              zpt::test::location(x)),                                              \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1017)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && \
+        expect(!x[y]->ok() || ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) && \
                                 zpt::test::location(x[y])),                                        \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1017)                                                                              \
     }
-#define assertz_phone(x, y, z)                                                                     \
+#define expect_phone(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),            \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),            \
                 std::string(x),                                                                    \
                 z,                                                                                 \
                 1018)                                                                              \
     }                                                                                              \
     else {                                                                                         \
-        assertz(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())),   \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())),   \
                 std::string(y),                                                                    \
                 z,                                                                                 \
                 1018)                                                                              \
     }
 
-#define assertz_intersects(x, y, z)                                                                \
+#define expect_intersects(x, y, z)                                                                \
     {                                                                                              \
         std::vector<zpt::json> __result__;                                                         \
         std::set_intersection(                                                                     \
@@ -274,12 +274,12 @@ SOFTWARE.
           std::end(y->arr()),                                                                      \
           std::back_inserter(__result__),                                                          \
           [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });                    \
-        assertz(__result__.size() != 0, std::string(y), z, 1018);                                  \
+        expect(__result__.size() != 0, std::string(y), z, 1018);                                  \
     }
-#define assertz_unauthorized(x) assertz(x, std::string(#x), 401, 1019)
-#define assertz_valid_values(x, y, z) assertz(x, std::string(y), z, 1020)
+#define expect_unauthorized(x) expect(x, std::string(#x), 401, 1019)
+#define expect_valid_values(x, y, z) expect(x, std::string(y), z, 1020)
 
-#define assertz_reply(x, y, z, c, e, r)                                                            \
+#define expect_reply(x, y, z, c, e, r)                                                            \
     if (!(x)) {                                                                                    \
         e->reply(                                                                                  \
           r,                                                                                       \
@@ -295,38 +295,38 @@ SOFTWARE.
                std::string(__FILE__) + std::string(", line ") + std::to_string(__LINE__)) } });    \
     }
 
-#define assertz_mandatory_reply(x, y, z, e, r)                                                     \
+#define expect_mandatory_reply(x, y, z, e, r)                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(x->ok(), std::string(x), z, 1000, e, r)                                      \
+        expect_reply(x->ok(), std::string(x), z, 1000, e, r)                                      \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(x[y]->ok(), std::string(y), z, 1000, e, r)                                   \
+        expect_reply(x[y]->ok(), std::string(y), z, 1000, e, r)                                   \
     }
-#define assertz_string_reply(x, y, z, e, r)                                                        \
+#define expect_string_reply(x, y, z, e, r)                                                        \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001, e, r)       \
+        expect_reply(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001, e, r)       \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001, e, r) \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001, e, r) \
     }
-#define assertz_integer_reply(x, y, z, e, r)                                                       \
+#define expect_integer_reply(x, y, z, e, r)                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002, e, r)      \
+        expect_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002, e, r)      \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(                                                                             \
+        expect_reply(                                                                             \
           !x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002, e, r)            \
     }
-#define assertz_double_reply(x, y, z, e, r)                                                        \
+#define expect_double_reply(x, y, z, e, r)                                                        \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003, e, r)            \
+        expect_reply(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003, e, r)            \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003, e, r) \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003, e, r) \
     }
-#define assertz_timestamp_reply(x, y, z, e, r)                                                     \
+#define expect_timestamp_reply(x, y, z, e, r)                                                     \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSDate ||                                      \
+        expect_reply(!x->ok() || x->type() == zpt::JSDate ||                                      \
                         (x->type() == zpt::JSString && zpt::test::timestamp(x)),                   \
                       std::string(x),                                                              \
                       z,                                                                           \
@@ -335,7 +335,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSDate ||                                \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSDate ||                                \
                         (x[y]->type() == zpt::JSString && zpt::test::timestamp(x[y])),             \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -343,17 +343,17 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_boolean_reply(x, y, z, e, r)                                                       \
+#define expect_boolean_reply(x, y, z, e, r)                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005, e, r)      \
+        expect_reply(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005, e, r)      \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(                                                                             \
+        expect_reply(                                                                             \
           !x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005, e, r)            \
     }
-#define assertz_complex_reply(x, y, z, e, r)                                                       \
+#define expect_complex_reply(x, y, z, e, r)                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray,         \
+        expect_reply(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray,         \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1006,                                                                        \
@@ -361,7 +361,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject ||                              \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject ||                              \
                         x[y]->type() == zpt::JSArray,                                              \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -369,32 +369,32 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_object_reply(x, y, z, e, r)                                                        \
+#define expect_object_reply(x, y, z, e, r)                                                        \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007, e, r)       \
+        expect_reply(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007, e, r)       \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007, e, r) \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007, e, r) \
     }
-#define assertz_array_reply(x, y, z, e, r)                                                         \
+#define expect_array_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008, e, r)        \
+        expect_reply(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008, e, r)        \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008, e, r)  \
+        expect_reply(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008, e, r)  \
     }
-#define assertz_int_reply(x, y, z, e, r)                                                           \
+#define expect_int_reply(x, y, z, e, r)                                                           \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009, e, r)      \
+        expect_reply(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009, e, r)      \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(                                                                             \
+        expect_reply(                                                                             \
           !x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009, e, r)            \
     }
 
-#define assertz_uuid_reply(x, y, z, e, r)                                                          \
+#define expect_uuid_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),       \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1010,                                                                        \
@@ -402,7 +402,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())),           \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -410,9 +410,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_utf8_reply(x, y, z, e, r)                                                          \
+#define expect_utf8_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),       \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1011,                                                                        \
@@ -420,7 +420,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())),           \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -428,9 +428,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_ascii_reply(x, y, z, e, r)                                                         \
+#define expect_ascii_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),      \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),      \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1012,                                                                        \
@@ -438,7 +438,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())),          \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -446,9 +446,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_hash_reply(x, y, z, e, r)                                                          \
+#define expect_hash_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),      \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),      \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1013,                                                                        \
@@ -456,7 +456,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),          \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -464,9 +464,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_token_reply(x, y, z, e, r)                                                         \
+#define expect_token_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),      \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),      \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1014,                                                                        \
@@ -474,7 +474,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),          \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -482,9 +482,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_uri_reply(x, y, z, e, r)                                                           \
+#define expect_uri_reply(x, y, z, e, r)                                                           \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),        \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),        \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1015,                                                                        \
@@ -492,7 +492,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())),            \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -500,9 +500,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_email_reply(x, y, z, e, r)                                                         \
+#define expect_email_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),      \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),      \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1016,                                                                        \
@@ -510,7 +510,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())),          \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -523,9 +523,9 @@ SOFTWARE.
             x << y << _email;                                                                      \
         }                                                                                          \
     }
-#define assertz_location_reply(x, y, z, e, r)                                                      \
+#define expect_location_reply(x, y, z, e, r)                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) &&    \
+        expect_reply(!x->ok() || ((x->type() == zpt::JSObject || x->type() == zpt::JSArray) &&    \
                                    zpt::test::location(x)),                                        \
                       std::string(x),                                                              \
                       z,                                                                           \
@@ -534,7 +534,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         ((x[y]->type() == zpt::JSObject || x[y]->type() == zpt::JSArray) &&        \
                          zpt::test::location(x[y])),                                               \
                       std::string(y),                                                              \
@@ -543,9 +543,9 @@ SOFTWARE.
                       e,                                                                           \
                       r)                                                                           \
     }
-#define assertz_phone_reply(x, y, z, e, r)                                                         \
+#define expect_phone_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
-        assertz_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),      \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),      \
                       std::string(x),                                                              \
                       z,                                                                           \
                       1018,                                                                        \
@@ -553,7 +553,7 @@ SOFTWARE.
                       r)                                                                           \
     }                                                                                              \
     else {                                                                                         \
-        assertz_reply(!x[y]->ok() ||                                                               \
+        expect_reply(!x[y]->ok() ||                                                               \
                         (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())),          \
                       std::string(y),                                                              \
                       z,                                                                           \
@@ -562,7 +562,7 @@ SOFTWARE.
                       r)                                                                           \
     }
 
-#define assertz_intersects_reply(x, y, z, e, r)                                                    \
+#define expect_intersects_reply(x, y, z, e, r)                                                    \
     {                                                                                              \
         std::vector<zpt::json> __result__;                                                         \
         std::set_intersection(                                                                     \
@@ -572,10 +572,10 @@ SOFTWARE.
           std::end(y->arr()),                                                                      \
           std::back_inserter(__result__),                                                          \
           [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });                    \
-        assertz_reply(__result__.size() != 0, std::string(y), z, 1018, e, r);                      \
+        expect_reply(__result__.size() != 0, std::string(y), z, 1018, e, r);                      \
     }
-#define assertz_unauthorized_reply(x, e, r) assertz_reply(x, std::string(#x), 401, 1019, e, r)
-#define assertz_valid_values_reply(x, y, z, e, r) assertz_reply(x, std::string(y), z, 1020, e, r)
+#define expect_unauthorized_reply(x, e, r) expect_reply(x, std::string(#x), 401, 1019, e, r)
+#define expect_valid_values_reply(x, y, z, e, r) expect_reply(x, std::string(y), z, 1020, e, r)
 
 typedef struct epoll_event epoll_event_t;
 
@@ -592,21 +592,6 @@ enum JSONType {
     JSLambda,
     JSRegex
 };
-
-// enum performative {
-// 	Get = 0,
-// 	Put = 1,
-// 	Post = 2,
-// 	Delete = 3,
-// 	Head = 4,
-// 	Options = 5,
-// 	Patch = 6,
-// 	Reply = 7,
-// 	Search = 8,
-// 	Notify = 9,
-// 	Trace = 10,
-// 	Connect = 11
-// };
 
 typedef unsigned short performative;
 auto

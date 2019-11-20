@@ -1,26 +1,3 @@
-/*
-The MIT License (MIT)
-
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publi, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 #pragma once
 
 #include <arpa/inet.h>
@@ -40,7 +17,7 @@ SOFTWARE.
 #include <strings.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
@@ -104,7 +81,7 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
         }
     }
 
-    void set_socket(int _sock) {
+    auto set_socket(int _sock) -> void {
         this->__sock = _sock;
         if (_sock != 0) {
             int iOption = 1;
@@ -123,9 +100,9 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
         }
     }
 
-    int get_socket() { return this->__sock; }
+    auto get_socket() -> int { return this->__sock; }
 
-    void set_context(SSL_CTX* _ctx) {
+    auto set_context(SSL_CTX* _ctx) -> void {
         this->__ssl = true;
         this->__context = _ctx;
         this->__sslstream = SSL_new(_ctx);
@@ -134,31 +111,29 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
         SSL_connect(this->__sslstream);
     }
 
-    struct sockaddr_in& server() {
-        return this->__server;
-    }
+    auto server() -> struct sockaddr_in& { return this->__server; }
 
-    bool& ssl() { return this->__ssl; }
+    auto ssl() -> bool& { return this->__ssl; }
 
-    std::string& host() { return this->__host; }
+    auto host() -> std::string& { return this->__host; }
 
-    short& port() { return this->__port; }
+    auto port() -> short& { return this->__port; }
 
-    short& protocol() { return this->__protocol; }
+    auto protocol() -> short& { return this->__protocol; }
 
-    unsigned long long timeout() { return this->__timeout; }
+    auto timeout() -> unsigned long long& { return this->__timeout; }
 
-    unsigned int& error_code() { return this->__error_code; }
+    auto error_code() -> unsigned int& { return this->__error_code; }
 
-    std::string& error_string() { return this->__error_string; }
+    auto error_string() -> std::string& { return this->__error_string; }
 
-    virtual bool __good() {
+    virtual auto __good() -> bool {
         return this->__sock != 0 && (!this->__ssl || (this->__ssl && this->__sslstream != nullptr &&
                                                       this->__context != nullptr));
     }
 
   protected:
-    __int_type output_buffer() {
+    auto output_buffer() -> __int_type {
         if (!__good()) {
             return __traits_type::eof();
         }
@@ -235,7 +210,7 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
         return __traits_type::eof();
     }
 
-    virtual __int_type overflow(__int_type c) {
+    virtual auto overflow(__int_type c) -> __int_type {
         if (c != __traits_type::eof()) {
             *__buf_type::pptr() = c;
             __buf_type::pbump(1);
@@ -247,14 +222,14 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
         return c;
     }
 
-    virtual int sync() {
+    virtual auto sync() -> int {
         if (output_buffer() == __traits_type::eof()) {
             return __traits_type::eof();
         }
         return 0;
     }
 
-    virtual __int_type underflow() {
+    virtual auto underflow() -> __int_type {
         if (__buf_type::gptr() < __buf_type::egptr()) {
             return *__buf_type::gptr();
         }
@@ -336,15 +311,15 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     }
 };
 
-typedef basic_socketbuf<char> socketbuf;
-typedef basic_socketbuf<wchar_t> wsocketbuf;
+using socketbuf = basic_socketbuf<char>;
+using wsocketbuf = basic_socketbuf<wchar_t>;
 
 template<typename Char>
 class basic_socketstream : public std::basic_iostream<Char> {
   public:
-    typedef Char __char_type;
-    typedef std::basic_iostream<__char_type> __stream_type;
-    typedef basic_socketbuf<__char_type> __buf_type;
+    using __char_type = Char;
+    using __stream_type = std::basic_iostream<__char_type>;
+    using __buf_type = basic_socketbuf<__char_type>;
 
   protected:
     __buf_type __buf;
@@ -362,34 +337,37 @@ class basic_socketstream : public std::basic_iostream<Char> {
         __buf.protocol() = _protocol;
         __buf.ssl() = _ssl;
     }
-    virtual ~basic_socketstream() {
-        __stream_type::flush();
-        __stream_type::clear();
-        __buf.set_socket(0);
-    }
 
-    bool& ssl() { return __buf.ssl(); }
+    basic_socketstream(const basic_socketstream&) = delete;
+    basic_socketstream(basic_socketstream&&) = delete;
 
-    std::string& host() { return __buf.host(); }
+    virtual ~basic_socketstream() { this->close(); }
 
-    short& port() { return __buf.port(); }
+    auto operator=(const basic_socketstream&) -> basic_socketstream& = delete;
+    auto operator=(basic_socketstream &&) -> basic_socketstream& = delete;
 
-    short& protocol() { return __buf.protocol(); }
+    auto ssl() -> bool& { return __buf.ssl(); }
 
-    void assign(int _sockfd) {
+    auto host() -> std::string& { return __buf.host(); }
+
+    auto port() -> short& { return __buf.port(); }
+
+    auto protocol() -> short& { return __buf.protocol(); }
+
+    auto assign(int _sockfd) -> void {
         __buf.set_socket(_sockfd);
         __buf.ssl() = false;
     }
 
-    void assign(int _sockfd, SSL_CTX* _ctx) {
+    auto assign(int _sockfd, SSL_CTX* _ctx) -> void {
         __buf.set_socket(_sockfd);
         __buf.set_context(_ctx);
         __buf.ssl() = true;
     }
 
-    void unassign() { __buf.set_socket(0); }
+    auto unassign() -> void { __buf.set_socket(0); }
 
-    void close() {
+    auto close() -> void {
         __stream_type::flush();
         __stream_type::clear();
         if (__buf.get_socket() != 0) {
@@ -399,27 +377,27 @@ class basic_socketstream : public std::basic_iostream<Char> {
         __buf.set_socket(0);
     }
 
-    bool is_open() { return (!__is_error && __buf.get_socket() != 0 && __buf.__good()); }
+    auto is_open() -> bool { return (!__is_error && __buf.get_socket() != 0 && __buf.__good()); }
 
-    bool ready() {
+    auto ready() -> bool {
         fd_set sockset;
         FD_ZERO(&sockset);
         FD_SET(__buf.get_socket(), &sockset);
         return select(__buf.get_socket() + 1, &sockset, nullptr, nullptr, nullptr) == 1;
     }
 
-    __buf_type& buffer() { return this->__buf; }
+    auto buffer() -> __buf_type& { return (*this->__buf.get()); }
 
-    bool is_error() { return this->__buf.error_code() != 0; }
+    auto is_error() -> bool { return this->__buf.error_code() != 0; }
 
-    unsigned int error_code() { return this->__buf.error_code(); }
+    auto error_code() -> unsigned int& { return this->__buf.error_code(); }
 
-    std::string error_string() { return this->__buf.error_string(); }
+    auto error_string() -> std::string& { return this->__buf.error_string(); }
 
-    bool open(const std::string& _host,
+    auto open(const std::string& _host,
               uint16_t _port,
               bool _ssl = false,
-              short _protocol = IPPROTO_IP) {
+              short _protocol = IPPROTO_IP) -> bool {
         this->close();
         __buf.host() = _host;
         __buf.port() = _port;
@@ -525,32 +503,101 @@ class basic_socketstream : public std::basic_iostream<Char> {
     }
 };
 
-typedef basic_socketstream<char> socketstream;
-typedef basic_socketstream<wchar_t> wsocketstream;
+// using socketstream = basic_socketstream<char>;
+// using wsocketstream = basic_socketstream<wchar_t>;
 
-// typedef std::shared_ptr< zpt::socketstream > socketstream_ptr;
-// typedef std::shared_ptr< zpt::wsocketstream > wsocketstream_ptr;
-
-class socketstream_ptr : public std::shared_ptr<zpt::socketstream> {
+class socketstream {
   public:
-    socketstream_ptr()
-      : std::shared_ptr<zpt::socketstream>(new zpt::socketstream()) {}
-    socketstream_ptr(zpt::socketstream* _new)
-      : std::shared_ptr<zpt::socketstream>(_new) {}
-    socketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP)
-      : std::shared_ptr<zpt::socketstream>(new zpt::socketstream(_fd, _ssl, _protocol)) {}
-    virtual ~socketstream_ptr() {}
+    typedef std::ostream& (*ostream_manipulator)(std::ostream&);
+
+    socketstream()
+      : __underlying{ std::make_shared<zpt::basic_socketstream<char>>() } {}
+    socketstream(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP)
+      : __underlying{ std::make_shared<zpt::basic_socketstream<char>>(_fd, _ssl, _protocol) } {}
+    socketstream(const socketstream& _rhs) { (*this) = _rhs; }
+    socketstream(socketstream&& _rhs) { (*this) = _rhs; }
+    virtual ~socketstream() = default;
+
+    auto operator=(const socketstream& _rhs) -> socketstream& {
+        this->__underlying = _rhs.__underlying;
+        return (*this);
+    }
+    auto operator=(socketstream&& _rhs) -> socketstream& {
+        this->__underlying = std::move(_rhs.__underlying);
+        return (*this);
+    }
+
+    template<typename T>
+    auto operator>>(T& _out) -> socketstream& {
+        (*this->__underlying.get()) >> _out;
+        return (*this);
+    }
+    template<typename T>
+    auto operator<<(T _in) -> socketstream& {
+        (*this->__underlying.get()) << _in;
+        return (*this);
+    }
+    auto operator<<(ostream_manipulator _in) -> socketstream& {
+        (*this->__underlying.get()) << _in;
+        return (*this);
+    }
+
+    auto operator-> () -> std::shared_ptr<zpt::basic_socketstream<char>>& {
+        return this->__underlying;
+    }
+    auto operator*() -> std::shared_ptr<zpt::basic_socketstream<char>>& {
+        return this->__underlying;
+    }
+
+  private:
+    std::shared_ptr<zpt::basic_socketstream<char>> __underlying;
 };
 
-class wsocketstream_ptr : public std::shared_ptr<zpt::wsocketstream> {
+class wsocketstream {
   public:
-    wsocketstream_ptr()
-      : std::shared_ptr<zpt::wsocketstream>(new zpt::wsocketstream()) {}
-    wsocketstream_ptr(zpt::wsocketstream* _new)
-      : std::shared_ptr<zpt::wsocketstream>(_new) {}
-    wsocketstream_ptr(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP)
-      : std::shared_ptr<zpt::wsocketstream>(new zpt::wsocketstream(_fd, _ssl, _protocol)) {}
-    virtual ~wsocketstream_ptr() {}
+    typedef std::wostream& (*ostream_manipulator)(std::wostream&);
+
+    wsocketstream()
+      : __underlying{ std::make_shared<zpt::basic_socketstream<wchar_t>>() } {}
+    wsocketstream(int _fd, bool _ssl = false, short _protocol = IPPROTO_IP)
+      : __underlying{ std::make_shared<zpt::basic_socketstream<wchar_t>>(_fd, _ssl, _protocol) } {}
+    wsocketstream(const wsocketstream& _rhs) { (*this) = _rhs; }
+    wsocketstream(wsocketstream&& _rhs) { (*this) = _rhs; }
+    virtual ~wsocketstream() = default;
+
+    auto operator=(const wsocketstream& _rhs) -> wsocketstream& {
+        this->__underlying = _rhs.__underlying;
+        return (*this);
+    }
+    auto operator=(wsocketstream&& _rhs) -> wsocketstream& {
+        this->__underlying = std::move(_rhs.__underlying);
+        return (*this);
+    }
+
+    template<typename T>
+    auto operator>>(T& _out) -> wsocketstream& {
+        (*this->__underlying.get()) >> _out;
+        return (*this);
+    }
+    template<typename T>
+    auto operator<<(T _in) -> wsocketstream& {
+        (*this->__underlying.get()) << _in;
+        return (*this);
+    }
+    auto operator<<(ostream_manipulator _in) -> wsocketstream& {
+        (*this->__underlying.get()) << _in;
+        return (*this);
+    }
+
+    auto operator-> () -> std::shared_ptr<zpt::basic_socketstream<wchar_t>>& {
+        return this->__underlying;
+    }
+    auto operator*() -> std::shared_ptr<zpt::basic_socketstream<wchar_t>>& {
+        return this->__underlying;
+    }
+
+  private:
+    std::shared_ptr<zpt::basic_socketstream<wchar_t>> __underlying;
 };
 
 template<typename Char>
@@ -560,31 +607,30 @@ class basic_serversocketstream {
 
   public:
     basic_serversocketstream()
-      : __sockfd(0){};
+      : __sockfd{ 0 } {};
 
-    basic_serversocketstream(int s)
-      : __sockfd(s) {}
+    basic_serversocketstream(uint16_t _port)
+      : __sockfd{ 0 } {
+        this->bind(_port);
+    }
     virtual ~basic_serversocketstream() { this->close(); }
 
-    void close() {
+    auto close() -> void {
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = 0;
     }
 
-    bool is_open() {
-        return __sockfd != 0;
-        ;
-    }
+    auto is_open() -> bool { return __sockfd != 0; }
 
-    bool ready() {
+    auto ready() -> bool {
         fd_set sockset;
         FD_ZERO(&sockset);
         FD_SET(__sockfd, &sockset);
         return select(__sockfd + 1, &sockset, nullptr, nullptr, nullptr) == 1;
     }
 
-    bool bind(uint16_t _port) {
+    auto bind(uint16_t _port) -> bool {
         this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
         if (this->__sockfd < 0) {
             return false;
@@ -614,71 +660,24 @@ class basic_serversocketstream {
         return true;
     }
 
-    bool accept(socketstream* _out) {
-        if (this->__sockfd != -1) {
-            struct sockaddr_in* _cli_addr = new struct sockaddr_in();
-            socklen_t _clilen = sizeof(struct sockaddr_in);
-            int _newsockfd = ::accept(this->__sockfd, (struct sockaddr*)_cli_addr, &_clilen);
+    auto accept() -> zpt::socketstream {
+        expect(this->__sockfd != -1, "server socket file descriptor is invalid", 500, 0);
+        struct sockaddr_in* _cli_addr = new struct sockaddr_in();
+        socklen_t _clilen = sizeof(struct sockaddr_in);
+        int _newsockfd = ::accept(this->__sockfd, (struct sockaddr*)_cli_addr, &_clilen);
 
-            if (_newsockfd < 0) {
-                return false;
-            }
+        expect(_newsockfd > 0, "accepted file descriptor is invalid", 500, 0);
 
-            struct linger _so_linger;
-            _so_linger.l_onoff = 1;
-            _so_linger.l_linger = 30;
-            ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
-            _out->assign(_newsockfd);
-            return true;
-        }
-        return false;
-    }
-
-    bool accept(int* _out) {
-        if (this->__sockfd != -1) {
-            struct sockaddr_in* _cli_addr = new struct sockaddr_in();
-            socklen_t _clilen = sizeof(struct sockaddr_in);
-            int _newsockfd = ::accept(this->__sockfd, (struct sockaddr*)_cli_addr, &_clilen);
-
-            if (_newsockfd < 0) {
-                return false;
-            }
-
-            struct linger _so_linger;
-            _so_linger.l_onoff = 1;
-            _so_linger.l_linger = 30;
-            ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
-            *_out = _newsockfd;
-            return true;
-        }
-        return false;
+        struct linger _so_linger;
+        _so_linger.l_onoff = 1;
+        _so_linger.l_linger = 30;
+        ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+        return zpt::socketstream{ _newsockfd };
     }
 };
 
-typedef basic_serversocketstream<char> serversocketstream;
-typedef basic_serversocketstream<wchar_t> wserversocketstream;
-
-class serversocketstream_ptr : public std::shared_ptr<zpt::serversocketstream> {
-  public:
-    serversocketstream_ptr()
-      : std::shared_ptr<zpt::serversocketstream>(new zpt::serversocketstream()) {}
-    serversocketstream_ptr(zpt::serversocketstream* _new)
-      : std::shared_ptr<zpt::serversocketstream>(_new) {}
-    serversocketstream_ptr(int _fd)
-      : std::shared_ptr<zpt::serversocketstream>(new zpt::serversocketstream(_fd)) {}
-    virtual ~serversocketstream_ptr() {}
-};
-
-class wserversocketstream_ptr : public std::shared_ptr<zpt::wserversocketstream> {
-  public:
-    wserversocketstream_ptr()
-      : std::shared_ptr<zpt::wserversocketstream>(new zpt::wserversocketstream()) {}
-    wserversocketstream_ptr(zpt::wserversocketstream* _new)
-      : std::shared_ptr<zpt::wserversocketstream>(_new) {}
-    wserversocketstream_ptr(int _fd)
-      : std::shared_ptr<zpt::wserversocketstream>(new zpt::wserversocketstream(_fd)) {}
-    virtual ~wserversocketstream_ptr() {}
-};
+using serversocketstream = basic_serversocketstream<char>;
+using wserversocketstream = basic_serversocketstream<wchar_t>;
 
 #define CRLF "\r\n"
 } // namespace zpt

@@ -17,7 +17,7 @@ AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
 AC_CHECK_LIB(zapata-base, zpt_base)
-AC_CHECK_LIB(zapata-json, zpt_json)
+AC_CHECK_LIB(zapata-lex-json, zpt_lex_json)
 
 AC_CANONICAL_SYSTEM
 

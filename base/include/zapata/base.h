@@ -17,7 +17,7 @@
 #include <thread>
 #include <utility>
 
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 #include <zapata/base/config.h>
 
 #include <zapata/text/convert.h>

@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <zapata/exceptions/AssertionException.h>
+#include <zapata/exceptions/ExpectationException.h>
 
 #include <sstream>
 #include <zapata/text/convert.h>
 
-zpt::AssertionException::AssertionException(std::string _in,
+zpt::ExpectationException::ExpectationException(std::string _in,
                                             int _http_code,
                                             int _code,
                                             std::string _desc,
@@ -51,7 +51,7 @@ zpt::AssertionException::AssertionException(std::string _in,
     }
 }
 
-zpt::AssertionException::AssertionException(std::string _in,
+zpt::ExpectationException::ExpectationException(std::string _in,
                                             int _http_code,
                                             int _code,
                                             std::string _desc,
@@ -83,29 +83,29 @@ zpt::AssertionException::AssertionException(std::string _in,
     free(_backtrace);
 }
 
-zpt::AssertionException::~AssertionException() throw() {}
+zpt::ExpectationException::~ExpectationException() throw() {}
 
 const char*
-zpt::AssertionException::what() {
+zpt::ExpectationException::what() {
     return this->__what.data();
 }
 
 const char*
-zpt::AssertionException::description() {
+zpt::ExpectationException::description() {
     return this->__description.data();
 }
 
 const char*
-zpt::AssertionException::backtrace() {
+zpt::ExpectationException::backtrace() {
     return this->__backtrace.data();
 }
 
 int
-zpt::AssertionException::code() {
+zpt::ExpectationException::code() {
     return this->__code;
 }
 
 int
-zpt::AssertionException::status() {
+zpt::ExpectationException::status() {
     return this->__http_code;
 }

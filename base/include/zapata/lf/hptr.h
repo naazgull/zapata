@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <iomanip>
 
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 
 namespace zpt {
 namespace lf {
@@ -99,7 +99,7 @@ zpt::lf::hptr_domain<T>::hptr_domain(long _max_threads, long _ptr_per_thread)
   , K{ FACTOR * CACHE_LINE_PADDING }
   , N{ P * K }
   , R{ N / 2 } {
-    assertz(_max_threads > 0,
+    expect(_max_threads > 0,
             "Hazard pointer domain for the given template type has not been initialized",
             500,
             0);
@@ -133,7 +133,7 @@ zpt::lf::hptr_domain<T>::acquire(T* _ptr) -> zpt::lf::hptr_domain<T>& {
         }
     }
 
-    assertz(false,
+    expect(false,
             "No more hazard-pointer slots available for this thread. "
             "Please, run the `clean()` "
             "before continuing",
@@ -199,7 +199,7 @@ zpt::lf::hptr_domain<T>::clean() -> zpt::lf::hptr_domain<T>& {
 // template<typename T>
 // auto
 // zpt::lf::hptr_domain<T>::init(long _max_threads, long _ptr_per_thread) -> void {
-//     assertz(_max_threads < 1,
+//     expect(_max_threads < 1,
 //             "Hazard pointer domain for the given template type has already been initialized",
 //             500,
 //             0);
@@ -215,7 +215,7 @@ zpt::lf::hptr_domain<T>::clean() -> zpt::lf::hptr_domain<T>& {
 // zpt::lf::hptr_domain<T>::get_instance() -> zpt::lf::hptr_domain<T>& {
 //     static zpt::lf::hptr_domain<T> _instance;
 //     std::cout << ">>>>>>> " << std::hex << &_instance << std::dec << std::endl << std::flush;
-//     assertz(_max_threads > 0,
+//     expect(_max_threads > 0,
 //             "Hazard pointer domain for the given template type has not been initialized",
 //             500,
 //             0);

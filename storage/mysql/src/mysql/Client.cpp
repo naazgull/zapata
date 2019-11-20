@@ -79,7 +79,7 @@ zpt::mysql::Client::connect() -> void {
 auto
 zpt::mysql::Client::reconnect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
-    assertz(this->__conn.get() != nullptr,
+    expect(this->__conn.get() != nullptr,
             std::string("connection to MySQL at ") + this->name() +
               std::string(" has not been established."),
             500,
@@ -98,13 +98,13 @@ zpt::mysql::Client::insert(std::string _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -150,7 +150,7 @@ zpt::mysql::Client::insert(std::string _collection,
         }
     }
     catch (std::exception& _e) {
-        assertz(false, _e.what(), 412, 0);
+        expect(false, _e.what(), 412, 0);
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -163,13 +163,13 @@ zpt::mysql::Client::upsert(std::string _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -261,7 +261,7 @@ zpt::mysql::Client::upsert(std::string _collection,
             }
         }
         catch (std::exception& _e) {
-            assertz(false, _e.what(), 412, 0);
+            expect(false, _e.what(), 412, 0);
         }
 
         if (!bool(_opts["mutated-event"]))
@@ -275,13 +275,13 @@ zpt::mysql::Client::save(std::string _collection,
                          std::string _href,
                          zpt::json _document,
                          zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -328,13 +328,13 @@ zpt::mysql::Client::set(std::string _collection,
                         std::string _href,
                         zpt::json _document,
                         zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -381,13 +381,13 @@ zpt::mysql::Client::set(std::string _collection,
                         zpt::json _pattern,
                         zpt::json _document,
                         zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -438,13 +438,13 @@ zpt::mysql::Client::unset(std::string _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -489,13 +489,13 @@ zpt::mysql::Client::unset(std::string _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
-    assertz(_document->ok() && _document->type() == zpt::JSObject,
+    expect(_document->ok() && _document->type() == zpt::JSObject,
             "'_document' must be of type JSObject",
             412,
             0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -543,7 +543,7 @@ auto
 zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -581,7 +581,7 @@ auto
 zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,
@@ -629,7 +629,7 @@ zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::js
     zpt::json _elements = zpt::json::array();
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        assertz(this->__conn.get() != nullptr,
+        expect(this->__conn.get() != nullptr,
                 std::string("connection to MySQL at ") + this->name() +
                   std::string(" has not been established."),
                 500,

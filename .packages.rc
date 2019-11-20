@@ -4,6 +4,7 @@ export projects=(
        base
        parsers/json
        parsers/http
+       parsers/uri
        events
        protocols/smtp
        protocols/oauth2

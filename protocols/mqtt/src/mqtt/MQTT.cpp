@@ -500,7 +500,7 @@ zpt::MQTT::send(zpt::performative _performative, std::string _resource, zpt::jso
 
 auto
 zpt::MQTT::send(zpt::json _envelope) -> zpt::json {
-    assertz(_envelope["payload"]->ok() && _envelope["resource"]->ok(),
+    expect(_envelope["payload"]->ok() && _envelope["resource"]->ok(),
             "'performative' and 'resource' attributes are required",
             412,
             0);

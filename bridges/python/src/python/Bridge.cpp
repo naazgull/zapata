@@ -97,7 +97,7 @@ zpt::python::Bridge::deflbd(
 
 auto
 zpt::python::Bridge::instance() -> zpt::bridge {
-    assertz(zpt::python::__instance != nullptr,
+    expect(zpt::python::__instance != nullptr,
             "you must invoke 'zpt::bridge::boot< zpt::python::bridge >' before "
             "requesting the instance",
             500,
@@ -125,7 +125,7 @@ zpt::python::Bridge::add_syspath(std::string _name) -> void {
 
 auto
 zpt::python::Bridge::boot(zpt::json _options) -> void {
-    assertz(zpt::python::__instance == nullptr,
+    expect(zpt::python::__instance == nullptr,
             "bridge instance isn't null, 'zpt::bridge::boot< zpt::python::bridge "
             ">' already invoked",
             500,
@@ -149,7 +149,7 @@ zpt::python::Bridge::boot(zpt::json _options) -> void {
     }
     _initt[zpt::python::__modules->size()].name = nullptr;
     _initt[zpt::python::__modules->size()].initfunc = nullptr;
-    assertz(PyImport_ExtendInittab(_initt) != -1, std::string("could not import modules"), 500, 0);
+    expect(PyImport_ExtendInittab(_initt) != -1, std::string("could not import modules"), 500, 0);
 
     Py_Initialize();
     if (!PyEval_ThreadsInitialized()) {
@@ -253,7 +253,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
                         zpt::python::to_python(_envelope),
                         nullptr);
                   }
-                  catch (zpt::assertion& _e) {
+                  catch (zpt::missed_expectation& _e) {
                       throw;
                   }
                   catch (...) {
@@ -327,7 +327,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
                       PyErr_Clear();
                       PyObject_CallObject(_func, _args);
                   }
-                  catch (zpt::assertion& _e) {
+                  catch (zpt::missed_expectation& _e) {
                       throw;
                   }
                   catch (...) {
@@ -471,7 +471,7 @@ zpt::python::module::validate_authorization(PyObject* _self, PyObject* _args) ->
         zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
         return **_bridge->to<zpt::python::object>(_identity);
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         Py_RETURN_NONE;
     }
 }
@@ -543,7 +543,7 @@ zpt::python::module::assertion(PyObject* _self, PyObject* _args) -> PyObject* {
     bool _guard = bool(_params[0]);
     std::string _message = std::string(_params[1]);
     int _status = int(_params[2]);
-    assertz(_guard, _message, _status, 0);
+    expect(_guard, _message, _status, 0);
     Py_RETURN_TRUE;
 }
 

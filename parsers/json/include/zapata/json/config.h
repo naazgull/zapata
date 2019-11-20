@@ -55,19 +55,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-json"
+#define PACKAGE "zapata-lex-json"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-json"
+#define PACKAGE_NAME "zapata-lex-json"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-json 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-lex-json 1.0.0-1artful1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-json"
+#define PACKAGE_TARNAME "zapata-lex-json"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

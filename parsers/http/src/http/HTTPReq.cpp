@@ -1,27 +1,3 @@
-/*
-The MIT License (MIT)
-
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #include <zapata/http/HTTPObj.h>
 
 #include <iostream>
@@ -34,43 +10,43 @@ zpt::HTTPReqT::HTTPReqT()
 
 zpt::HTTPReqT::~HTTPReqT() {}
 
-zpt::performative
-zpt::HTTPReqT::method() {
+auto
+zpt::HTTPReqT::method() -> zpt::performative {
     return this->__method;
 }
 
-void
-zpt::HTTPReqT::method(zpt::performative _method) {
+auto
+zpt::HTTPReqT::method(zpt::performative _method) -> void {
     this->__method = _method;
 }
 
-std::string&
-zpt::HTTPReqT::url() {
+auto
+zpt::HTTPReqT::url() -> std::string& {
     return this->__url;
 }
 
-void
-zpt::HTTPReqT::url(std::string _url) {
+auto
+zpt::HTTPReqT::url(std::string _url) -> void {
     this->__url.assign(_url.data());
 }
 
-std::string&
-zpt::HTTPReqT::query() {
+auto
+zpt::HTTPReqT::query() -> std::string& {
     return this->__query;
 }
 
-void
-zpt::HTTPReqT::query(std::string _query) {
+auto
+zpt::HTTPReqT::query(std::string _query) -> void {
     this->__query.assign(_query.data());
 }
 
-zpt::ParameterMap&
-zpt::HTTPReqT::params() {
+auto
+zpt::HTTPReqT::params() -> zpt::http::parameter_map& {
     return this->__params;
 }
 
-std::string
-zpt::HTTPReqT::param(const char* _idx) {
+auto
+zpt::HTTPReqT::param(const char* _idx) -> std::string {
     auto _found = this->__params.find(_idx);
     if (_found != this->__params.end()) {
         return _found->second;
@@ -78,30 +54,30 @@ zpt::HTTPReqT::param(const char* _idx) {
     return "";
 }
 
-void
-zpt::HTTPReqT::param(const char* _name, const char* _value) {
+auto
+zpt::HTTPReqT::param(const char* _name, const char* _value) -> void {
     this->__params.insert(std::make_pair(_name, _value));
 }
 
-void
-zpt::HTTPReqT::param(const char* _name, std::string _value) {
+auto
+zpt::HTTPReqT::param(const char* _name, std::string _value) -> void {
     this->__params.insert(std::make_pair(_name, _value));
 }
 
-void
-zpt::HTTPReqT::param(std::string _name, std::string _value) {
+auto
+zpt::HTTPReqT::param(std::string _name, std::string _value) -> void {
     this->__params.insert(std::make_pair(_name, _value));
 }
 
-void
-zpt::HTTPReqT::stringify(std::ostream& _out) {
+auto
+zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
     std::string _ret;
     this->stringify(_ret);
     _out << _ret << std::flush;
 }
 
-void
-zpt::HTTPReqT::stringify(std::string& _out) {
+auto
+zpt::HTTPReqT::stringify(std::string& _out) -> void {
     _out.insert(_out.length(), zpt::http::method_names[this->__method]);
     _out.insert(_out.length(), " ");
     _out.insert(_out.length(), this->__url);
@@ -136,19 +112,24 @@ zpt::HTTPReqT::stringify(std::string& _out) {
 }
 
 zpt::HTTPReq::HTTPReq()
-  : shared_ptr<HTTPReqT>(new HTTPReqT()) {}
-
-zpt::HTTPReq::HTTPReq(HTTPReqT* _target)
-  : shared_ptr<HTTPReqT>(_target) {}
+  : __underlying{ std::make_shared<HTTPReqT>() } {}
 
 zpt::HTTPReq::~HTTPReq() {}
+
+auto zpt::HTTPReq::operator*() -> std::shared_ptr<zpt::HTTPReqT>& {
+    return this->__underlying;
+}
+
+auto zpt::HTTPReq::operator-> () -> std::shared_ptr<zpt::HTTPReqT>& {
+    return this->__underlying;
+}
 
 zpt::HTTPReq::operator std::string() {
     return (*this)->to_string();
 }
 
-void
-zpt::HTTPReq::parse(std::istream& _in) {
+auto
+zpt::HTTPReq::parse(std::istream& _in) -> void {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);

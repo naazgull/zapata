@@ -15,10 +15,10 @@ AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
 AC_HAVE_LIBRARY(ossp-uuid++)
 AC_HAVE_LIBRARY(zapata-base)
-AC_HAVE_LIBRARY(zapata-json)
+AC_HAVE_LIBRARY(zapata-lex-json)
 AC_HAVE_LIBRARY(zapata-events)
 AC_HAVE_LIBRARY(zapata-zmq)
-AC_HAVE_LIBRARY(zapata-http)
+AC_HAVE_LIBRARY(zapata-lex-http)
 AC_HAVE_LIBRARY(zapata-rest)
 AC_HAVE_LIBRARY(zapata-postgresql)
 AC_HAVE_LIBRARY(zapata-mysql)
@@ -34,13 +34,13 @@ AM_INIT_AUTOMAKE([subdir-objects tar-pax])
 
 dnl this allows us specify individual liking flags for each target
 AC_PROG_CXX
-AM_PROG_CC_C_O 
+AM_PROG_CC_C_O
 
 dnl Initialize Libtool
 LT_INIT
 
 dnl Check if Libtool is present
-dnl Libtool is used for building share libraries 
+dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES(Makefile

@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include <fstream>
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 
 namespace zpt {
 

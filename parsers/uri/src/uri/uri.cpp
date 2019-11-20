@@ -34,12 +34,24 @@ SOFTWARE.
 int
 main(int argc, char* argv[]) {
     try {
+        std::cout << zpt::pretty(zpt::uri::parse("/home/pf/{tmp:/(.*)/}/a.txt")) << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::parse("{/http|ftp/}:/api/2.0/users/me?a=2&b=3&c=") << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=1")
+                  << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=")
+                  << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::parse("ftp://pf:pf@na.zgul.me/files/movies") << std::endl
+                  << std::flush;
     }
     catch (zpt::SyntaxErrorException& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }

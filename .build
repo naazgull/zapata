@@ -9,15 +9,8 @@ do
     echo && pwd
 
     case "$1" in
-	j4)
-	    make -j4 && sudo make install
-	    if [[ $? != 0 ]]
-	    then
-		exit -1
-	    fi
-	    ;;
 	all)
-	    make && sudo make install
+	    make -j4 && sudo make install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1

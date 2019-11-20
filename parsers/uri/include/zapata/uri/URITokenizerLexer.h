@@ -1,7 +1,7 @@
 #pragma once
 
 #include <zapata/json.h>
-#include <zapata/events/URILexer.h>
+#include <zapata/uri/URILexer.h>
 
 namespace zpt {
 
@@ -13,14 +13,10 @@ class URITokenizerLexer : public URILexer {
     auto switchRoots(zpt::json& _root) -> void;
     auto justLeave() -> void;
 
-    auto init() -> void;
-    auto body() -> void;
-    auto url() -> void;
-    auto status() -> void;
+    auto operator-> () -> zpt::json&;
+    auto operator*() -> zpt::json&;
 
-    auto add() -> void;
-    auto name() -> void;
-    auto value() -> void;
-
+  private:
+    zpt::json __root;
 };
 } // namespace zpt

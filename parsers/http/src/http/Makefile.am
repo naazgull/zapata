@@ -1,11 +1,10 @@
+lib_LTLIBRARIES = libzapata-lex-http.la
 
-lib_LTLIBRARIES = libzapata-http.la
+libzapata_lex_http_la_LIBADD = -lpthread -lzapata-base
+libzapata_lex_http_la_LDFLAGS = -version-info 1:0:0
+libzapata_lex_http_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
-libzapata_http_la_LIBADD = -lpthread -lzapata-base -lzapata-events
-libzapata_http_la_LDFLAGS = -version-info 1:0:0
-libzapata_http_la_CPPFLAGS = -O3 -std=c++17 -I../../include
-
-libzapata_http_la_SOURCES = \
+libzapata_lex_http_la_SOURCES = \
 ./http.cpp \
 ./HTTPElement.cpp \
 ./HTTPLexer.cpp \
@@ -14,3 +13,12 @@ libzapata_http_la_SOURCES = \
 ./HTTPReq.cpp \
 ./HTTPTokenizer.cpp \
 ./HTTPTokenizerLexer.cpp
+
+bin_PROGRAMS = zhttps
+
+zhttps_LDADD = -lpthread -lzapata-base -lzapata-net-socket -lzapata-lex-http
+zhttps_LDFLAGS=
+zhttps_CPPFLAGS = -std=c++17 -Wall -I../../include
+
+zhttps_SOURCES = \
+./server.cpp

@@ -30,11 +30,13 @@
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 #define HAVE_LIBZAPATA_BASE 1
 
-/* Define to 1 if you have the `zapata-http' library (-lzapata-http). */
-/* #undef HAVE_LIBZAPATA_HTTP */
+/* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
+ */
+/* #undef HAVE_LIBZAPATA_LEX_HTTP */
 
-/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
+ */
+#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */
 /* #undef HAVE_LIBZAPATA_ZMQ */

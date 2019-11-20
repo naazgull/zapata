@@ -9,7 +9,7 @@
 #include <string>
 #include <sys/time.h>
 #include <vector>
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 #include <zapata/json/config.h>
 #include <zapata/log/log.h>
 #include <zapata/text/convert.h>
@@ -553,7 +553,7 @@ using JSONStr = std::shared_ptr<std::string>;
 
 namespace zpt {
 class JSONRegex {
-public:
+  public:
     JSONRegex();
     JSONRegex(const zpt::JSONRegex& _rhs);
     JSONRegex(zpt::JSONRegex&& _rhs);
@@ -1255,7 +1255,7 @@ auto zpt::JSONArr::operator[](T _idx) -> json& {
 template<typename T>
 auto
 zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
-    assertz(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value", 0, 0);
     if (this->__target.__type != zpt::JSObject && this->__target.__type != zpt::JSArray) {
         return *this;
     }
@@ -1270,7 +1270,7 @@ zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
             break;
         }
         default: {
-            assertz(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
+            expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
                     "the type must be a JSObject, JSArray or the same type of the "
                     "target, in order "
                     "to push "

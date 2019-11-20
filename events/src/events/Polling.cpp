@@ -103,7 +103,7 @@ zpt::ChannelPoll::add(std::string _type, std::string _connection, bool _new_conn
     }
 
     std::vector<zpt::socket> _underlying = this->bind(_type, _connection);
-    assertz(_underlying.size() != 0,
+    expect(_underlying.size() != 0,
             std::string("could not connection to ") + _type + std::string("@") + _connection,
             500,
             0);
@@ -253,7 +253,7 @@ zpt::ChannelPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
             try {
                 this->__emitter->reply(_envelope, _envelope);
             }
-            catch (zpt::assertion& _e) {
+            catch (zpt::missed_expectation& _e) {
                 zlog(std::string("uncaught assertion while processing response, unable "
                                  "to proceed: ") +
                        _e.what() + std::string(": ") + _e.description() +
@@ -306,7 +306,7 @@ zpt::ChannelPoll::reply(zpt::json _envelope, zpt::socket_ref _socket) -> void {
                   }
               });
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             if (*_socket != nullptr) {
                 _socket->send(
                   zpt::ev::assertion_error(
@@ -395,7 +395,7 @@ zpt::ChannelPoll::loop() -> void {
                     try {
                         _envelope = _socket->recv();
                     }
-                    catch (zpt::assertion& _e) {
+                    catch (zpt::missed_expectation& _e) {
                         // zdbg(std::string("could not consume data from socket: ") +
                         // _socket->protocol() + std::string(" ") + _socket->connection());
                         this->clean_up(_socket);
@@ -440,7 +440,7 @@ zpt::ChannelPoll::loop() -> void {
                     zpt::socket_ref _socket = this->get(_uuid);
                     this->__to_add.insert(std::make_pair(_socket, "zpt::ChannelPoll::loop"));
                 }
-                catch (zpt::assertion& _e) {
+                catch (zpt::missed_expectation& _e) {
                 }
                 this->notify(_uuid);
             }
@@ -472,7 +472,7 @@ zpt::ChannelPoll::loop() -> void {
             this->__to_add.clear();
         }
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         zlog(_e.what() + std::string(": ") + _e.description(), zpt::emergency);
         zlog(std::string("\n") + _e.backtrace(), zpt::trace);
         exit(-1);
@@ -583,7 +583,7 @@ zpt::http2internal(zpt::http::rep _reply) -> zpt::json {
 auto
 zpt::internal2http_rep(zpt::json _out) -> zpt::http::rep {
     zpt::http::rep _return;
-    _return->status((zpt::HTTPStatus)((int)_out["status"]));
+    _return->status((zpt::http::status)((int)_out["status"]));
 
     if (_out["headers"]->is_object()) {
         ;
@@ -596,8 +596,9 @@ zpt::internal2http_rep(zpt::json _out) -> zpt::http::rep {
     }
     _return->header("X-Resource", _out["resource"]);
 
-    if (_return->status() != zpt::HTTP204 && _return->status() != zpt::HTTP304 &&
-        _return->status() >= zpt::HTTP200) {
+    if (_return->status() != zpt::http::status::HTTP204 &&
+        _return->status() != zpt::http::status::HTTP304 &&
+        _return->status() >= zpt::http::status::HTTP200) {
         if (((!_out["payload"]->is_object() && !_out["payload"]->is_array()) ||
              (_out["payload"]->is_object() && _out["payload"]->obj()->size() != 0) ||
              (_out["payload"]->is_array() && _out["payload"]->arr()->size() != 0))) {

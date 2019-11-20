@@ -78,7 +78,7 @@ main(int argc, char* argv[]) {
                   << std::flush;
         return 0;
     }
-    catch (zpt::assertion& _e) {
+    catch (zpt::missed_expectation& _e) {
         zlog(_e.what() + string("\n") + _e.description(), zpt::error);
     }
 

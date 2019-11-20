@@ -5,43 +5,78 @@
 %class-header URITokenizer.h
 %implementation-header URITokenizerimpl.h
 %class-name URITokenizer
+%scanner-class-name URIScanner
 %parsefun-source URITokenizer.cpp
 
 %scanner URILexer.h
 
-%debug
+//%debug
 %no-lines
 
-%left SCHEME DOUBLE_DOT SLASH PATH_PART
-%left QMARK EQ E STRING
+%left DOUBLE_DOT SLASH AT QMARK EQ E STRING
 
 %%
 
 exp :
-	scheme
-    {
-        std::cout << d_scanner.matched() << std::endl << std::flush;
-    }
-    path
-    {
-        std::cout << d_scanner.matched() << std::endl << std::flush;
-    }
-    params
-    {
-        std::cout << d_scanner.matched() << std::endl << std::flush;
-    }
+    scheme server path params
+|
+	scheme path params
 ;
 
 scheme :
 
 |
-    SCHEME DOUBLE_DOT SLASH
+    STRING
+    {
+        (*d_scanner) << "scheme" << d_scanner.matched();
+    }
+    DOUBLE_DOT
+;
+
+server :
+    SLASH SLASH user STRING
+    {
+        (*d_scanner) << "domain" << d_scanner.matched();
+    }
+|
+    SLASH SLASH STRING
+    {
+        (*d_scanner) << "domain" << d_scanner.matched();
+    }
+;
+
+user :
+    STRING
+    {
+        (*d_scanner) << "user" << zpt::json{ "name", d_scanner.matched() };
+    }
+    AT
+|
+    STRING
+    {
+        (*d_scanner) << "user" <<
+              zpt::json{ "name", d_scanner.matched() };
+    }
+    DOUBLE_DOT STRING
+    {
+        (*d_scanner)["user"] << "password" << d_scanner.matched();
+    }
+    AT
 ;
 
 path :
 
 |
-    SLASH PATH_PART path
+    SLASH
+|
+    SLASH STRING
+    {
+        if ((*d_scanner)["path"] == zpt::undefined) {
+            (*d_scanner) << "path" << zpt::json::array();
+        }
+        (*d_scanner)["path"] << d_scanner.matched();
+    }
+    path
 ;
 
 params :
@@ -51,9 +86,30 @@ params :
 ;
 
 paramslist :
-	STRING EQ paramvalue
+	STRING
+    {
+        if ((*d_scanner)["params"] == zpt::undefined) {
+            (*d_scanner) << "params" << zpt::json::object();
+        }
+        (*d_scanner) << "__aux" << d_scanner.matched();
+    }
+    EQ paramvalue
 |
-	paramslist E STRING EQ paramvalue
+	paramslist E STRING
+    {
+        (*d_scanner) << "__aux" << d_scanner.matched();
+    }
+    EQ paramvalue
 ;
 
-paramvalue: | STRING;
+paramvalue :
+
+    {
+        (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << zpt::undefined;
+    }
+|
+    STRING
+    {
+        (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << d_scanner.matched();
+    }
+;

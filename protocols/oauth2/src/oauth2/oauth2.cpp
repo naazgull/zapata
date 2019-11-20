@@ -69,7 +69,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _owner = this->retrieve_owner(_envelope);
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             std::string _l_state(std::string("response_type=code") + std::string("&scope=") +
                                  (_scope->ok() ? _scope->str() : "defaults") +
                                  std::string("&client_id=") + _client_id->str() +
@@ -94,7 +94,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(_envelope);
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             return { "status",
                      (_performative == zpt::ev::Post ? 303 : 307),
                      "headers",
@@ -143,7 +143,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
             _owner = this->retrieve_owner(
               std::string(_ownername), std::string(_password), std::string(_client_id));
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             if (_redirect_uri->is_string()) {
                 std::string _l_state(std::string("response_type=code") + std::string("&scope=") +
                                      (_scope->ok() ? _scope->str() : "defaults") +
@@ -173,7 +173,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(_envelope);
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             if (_redirect_uri->is_string()) {
                 return { "status",
                          (_performative == zpt::ev::Post ? 303 : 307),
@@ -235,7 +235,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(std::string(_client_id), std::string(_client_secret));
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             if (_redirect_uri->is_string()) {
                 return { "status",
                          (_performative == zpt::ev::Post ? 303 : 307),
@@ -277,7 +277,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
             return { "status", 200, "payload", _token };
         }
     }
-    assertz(false, "\"response_type\" not valid", 400, 0);
+    expect(false, "\"response_type\" not valid", 400, 0);
 }
 
 auto
@@ -286,9 +286,9 @@ zpt::authenticator::OAuth2::authorize(std::string _topic,
                                       zpt::json _roles_needed) -> zpt::json {
     std::string _access_token = zpt::authenticator::extract(_envelope);
     zpt::json _identity = this->get_token(_access_token);
-    assertz(_identity["client_id"]->is_string(), "associated token isn't a valid token", 401, 0);
-    assertz(_identity["permissions"]->is_string(), "associated token isn't a valid token", 401, 0);
-    assertz(this->validate_roles_permissions(_envelope, _topic, _identity["permissions"]),
+    expect(_identity["client_id"]->is_string(), "associated token isn't a valid token", 401, 0);
+    expect(_identity["permissions"]->is_string(), "associated token isn't a valid token", 401, 0);
+    expect(this->validate_roles_permissions(_envelope, _topic, _identity["permissions"]),
             "token didn't provide the necessary permissions",
             403,
             1);
@@ -326,7 +326,7 @@ zpt::authenticator::OAuth2::authorize(std::string _topic,
             }
         }
     }
-    assertz(_role_found, "token didn't provide the necessary roles", 401, 0);
+    expect(_role_found, "token didn't provide the necessary roles", 401, 0);
     return _identity;
 }
 
@@ -377,13 +377,13 @@ zpt::authenticator::OAuth2::refresh(zpt::performative _performative,
 auto
 zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::json _opts) -> zpt::json {
     zpt::json _token = this->get_token(_access_token);
-    assertz(_token->ok(), "token is invalid", 403, 0);
+    expect(_token->ok(), "token is invalid", 403, 0);
     zpt::timestamp_t _now = zpt::timestamp();
     zpt::timestamp_t _expires = _token["expires"]->date();
     if (_expires < _now) {
         this->remove_token(_token);
     }
-    assertz(_expires > _now, "token has expired", 403, 0);
+    expect(_expires > _now, "token has expired", 403, 0);
     return _token;
 }
 

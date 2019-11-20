@@ -1,17 +1,3 @@
-/*
-    enum Tokens__
-    {
-      SCHEME = 257,
-      DOUBLE_DOT = 258,
-      SLASH = 259,
-      PATH_PART = 260,
-      QMARK = 261,
-      STRING = 262,
-      EQ = 263,
-      E = 264
-    };
-*/
-
 %baseclass-header = "URILexerbase.h"
 %class-header = "URILexer.h"
 %implementation-header = "URILexerimpl.h"
@@ -23,61 +9,101 @@
 //%debug
 %no-lines
 
-%x scheme path params placeholder
+%x scheme server_path server path params placeholder
 %%
 
-([^:/]+) {
+([^{/]+) {
 	begin(StartCondition_::scheme);
-	return 257;
+	return zpt::uri::lex::STRING;
 }
 "/" {
     begin(StartCondition_::path);
-    return 259;
+    return zpt::uri::lex::SLASH;
 }
 
-<scheme>{
+<scheme> {
     ":" {
-        std::string _out(matched());
-        _out.erase(_out.length() - 1, 1);
-        setMatched(_out);
-        return 258;
+        return zpt::uri::lex::DOUBLE_DOT;
+    }
+    "/" {
+        begin(StartCondition_::server_path);
+        return zpt::uri::lex::SLASH;
+    }
+}
+
+<server_path> {
+    [^/] {
+        d_path_helper.assign(matched());
+        begin(StartCondition_::path);
+    }
+    "/" {
+        begin(StartCondition_::server);
+        return zpt::uri::lex::SLASH;
+    }
+}
+
+<server> {
+    ([^:@/]+) {
+        d_server_part.assign(matched());
+        return zpt::uri::lex::STRING;
     }
     "/" {
         begin(StartCondition_::path);
-        return 259;
+        return zpt::uri::lex::SLASH;
+    }
+    ":" {
+        setMatched(d_server_part);
+        return zpt::uri::lex::DOUBLE_DOT;
+    }
+    "@" {
+        setMatched(d_server_part);
+        return zpt::uri::lex::AT;
     }
 }
 
-<path>{
+<path> {
     "/" {
-        return 259;
+        d_path_helper.assign("");
+        return zpt::uri::lex::SLASH;
     }
     "{" {
+        d_path_helper.assign("{");
         begin(StartCondition_::placeholder);
     }
     "?" {
         begin(StartCondition_::params);
-        return 261;
+        return zpt::uri::lex::QMARK;
     }
     ([^{/?]+) {
-        return 260;
+        std::string _matched{matched()};
+        _matched.insert(0, d_path_helper);
+        d_path_helper.assign("");
+        setMatched(_matched);
+        return zpt::uri::lex::STRING;
     }
 }
 
 <params> {
 	"=" {
-		return 263;
+		return zpt::uri::lex::EQ;
 	}
 	"&"   {
-		return 264;
+		return zpt::uri::lex::E;
 	}
 	([^=&]+) {
-		return 262;
+		return zpt::uri::lex::STRING;
     }
 }
 
 <placeholder> {
+    ([^}]+) {
+        d_path_helper += matched();
+    }
     "}" {
+        d_path_helper += matched();
+        setMatched(d_path_helper);
+        d_path_helper.assign("");
         begin(StartCondition_::path);
+        return zpt::uri::lex::STRING;
     }
 }

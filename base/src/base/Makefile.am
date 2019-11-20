@@ -5,9 +5,9 @@ libzapata_base_la_LDFLAGS = -version-info 1:0:0
 libzapata_base_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_base_la_SOURCES = \
-./assert.cpp \
+./expect.cpp \
 ./ascii.cpp \
-./AssertionException.cpp \
+./ExpectationException.cpp \
 ./base64.cpp \
 ./CastException.cpp \
 ./ClosedException.cpp \

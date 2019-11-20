@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <sys/time.h>
 #include <time.h>
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 
 auto

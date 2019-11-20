@@ -27,8 +27,9 @@
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 #define HAVE_LIBZAPATA_BASE 1
 
-/* Define to 1 if you have the `zapata-json' library (-lzapata-json). */
-#define HAVE_LIBZAPATA_JSON 1
+/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
+ */
+#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -58,19 +59,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-http"
+#define PACKAGE "zapata-lex-http"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-http"
+#define PACKAGE_NAME "zapata-lex-http"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-http 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-lex-http 1.0.0-1artful1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-http"
+#define PACKAGE_TARNAME "zapata-lex-http"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

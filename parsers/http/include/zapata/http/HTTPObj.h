@@ -1,27 +1,3 @@
-/*
-The MIT License (MIT)
-
-Copyright (c) 2017 n@zgul <n@zgul.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #pragma once
 
 #define DEBUG_JSON
@@ -30,7 +6,7 @@ SOFTWARE.
 #include <memory>
 #include <ostream>
 #include <vector>
-#include <zapata/base/assertz.h>
+#include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
 
@@ -39,10 +15,10 @@ SOFTWARE.
 #endif
 
 namespace zpt {
+namespace http {
+enum message_type { request, reply };
 
-enum HTTPType { HTTPRequest, HTTPReply };
-
-enum HTTPStatus {
+enum status {
     HTTP100 = 100,
     HTTP101 = 101,
     HTTP102 = 102,
@@ -108,8 +84,9 @@ enum HTTPStatus {
     HTTP511 = 511
 };
 
-typedef std::map<std::string, std::string> HeaderMap;
-typedef std::map<std::string, std::string> ParameterMap;
+using header_map = std::map<std::string, std::string>;
+using parameter_map = std::map<std::string, std::string>;
+} // namespace http
 
 class HTTPObj {
   public:
@@ -118,7 +95,7 @@ class HTTPObj {
 
     std::string& body();
     void body(std::string);
-    HeaderMap& headers();
+    zpt::http::header_map& headers();
     std::string header(const char* _name);
     void header(const char* _name, const char* _value);
     void header(const char* _name, std::string _value);
@@ -132,7 +109,7 @@ class HTTPObj {
 
   protected:
     std::string __body;
-    HeaderMap __headers;
+    zpt::http::header_map __headers;
 };
 
 using HTTPPtr = std::shared_ptr<HTTPObj>;
@@ -148,7 +125,7 @@ class HTTPReqT : public HTTPObj {
     void url(std::string);
     std::string& query();
     void query(std::string);
-    ParameterMap& params();
+    zpt::http::parameter_map& params();
     std::string param(const char* _name);
     void param(const char* _name, const char* _value);
     void param(const char* _name, std::string _value);
@@ -161,7 +138,7 @@ class HTTPReqT : public HTTPObj {
     std::string __url;
     std::string __query;
     zpt::performative __method;
-    ParameterMap __params;
+    zpt::http::parameter_map __params;
 };
 
 class HTTPRepT : public HTTPObj {
@@ -169,53 +146,63 @@ class HTTPRepT : public HTTPObj {
     HTTPRepT();
     virtual ~HTTPRepT();
 
-    HTTPStatus status();
-    void status(HTTPStatus);
+    zpt::http::status status();
+    void status(zpt::http::status);
 
     virtual void stringify(std::string& _out);
     virtual void stringify(std::ostream& _out);
 
   private:
-    HTTPStatus __status;
+    zpt::http::status __status;
 };
 
-class HTTPReq : public std::shared_ptr<HTTPReqT> {
+class HTTPReq {
   public:
     HTTPReq();
-    HTTPReq(HTTPReqT* _target);
     virtual ~HTTPReq();
+
+    auto operator*() -> std::shared_ptr<zpt::HTTPReqT>&;
+    auto operator-> () -> std::shared_ptr<zpt::HTTPReqT>&;
+    operator std::string();
 
     virtual void parse(std::istream& _in);
 
-    operator std::string();
     friend std::ostream& operator<<(std::ostream& _out, HTTPReq& _in) {
         _in->stringify(_out);
         return _out;
-    };
+    }
     friend std::istream& operator>>(std::istream& _in, HTTPReq& _out) {
         _out.parse(_in);
         return _in;
-    };
+    }
+
+  private:
+    std::shared_ptr<zpt::HTTPReqT> __underlying;
 };
 
-class HTTPRep : public std::shared_ptr<HTTPRepT> {
+class HTTPRep {
   public:
     HTTPRep();
-    HTTPRep(HTTPRepT* _target);
     virtual ~HTTPRep();
+
+    auto operator*() -> std::shared_ptr<zpt::HTTPRepT>&;
+    auto operator-> () -> std::shared_ptr<zpt::HTTPRepT>&;
+    operator std::string();
 
     virtual void parse(std::istream& _in);
 
-    operator std::string();
     friend std::ostream& operator<<(std::ostream& _out, HTTPRep& _in) {
         _in->stringify(_out);
         return _out;
-    };
+    }
 
     friend std::istream& operator>>(std::istream& _in, HTTPRep& _out) {
         _out.parse(_in);
         return _in;
-    };
+    }
+
+  private:
+    std::shared_ptr<zpt::HTTPRepT> __underlying;
 };
 
 namespace http {
@@ -223,21 +210,21 @@ extern std::string nil_header;
 extern const char* method_names[];
 extern const char* status_names[];
 
-static inline const unsigned short Get = 1;
-static inline const unsigned short Put = 2;
-static inline const unsigned short Post = 3;
-static inline const unsigned short Delete = 4;
-static inline const unsigned short Head = 5;
-static inline const unsigned short Options = 6;
-static inline const unsigned short Patch = 7;
-static inline const unsigned short Reply = 8;
-static inline const unsigned short Msearch = 9;
-static inline const unsigned short Notify = 10;
-static inline const unsigned short Trace = 11;
-static inline const unsigned short Connect = 12;
+static inline const unsigned short Get = 0;
+static inline const unsigned short Put = 1;
+static inline const unsigned short Post = 2;
+static inline const unsigned short Delete = 3;
+static inline const unsigned short Head = 4;
+static inline const unsigned short Options = 5;
+static inline const unsigned short Patch = 6;
+static inline const unsigned short Reply = 7;
+static inline const unsigned short Msearch = 8;
+static inline const unsigned short Notify = 9;
+static inline const unsigned short Trace = 10;
+static inline const unsigned short Connect = 11;
 
-typedef zpt::HTTPReq req;
-typedef zpt::HTTPRep rep;
+using req = zpt::HTTPReq;
+using rep = zpt::HTTPRep;
 } // namespace http
 
 void

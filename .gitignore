@@ -4,6 +4,7 @@
 *.so
 *.so.*
 *.deb
+*.tar.gz
 autom4te.cache
 Makefile.in
 Makefile
@@ -59,3 +60,5 @@ docker/create_packages
 events/src/events/zsysd
 events/src/events/zpt
 parsers/uri/src/uri/zuri
+parsers/http/src/http/zhttps
+net/socket/src/socket/zsock*

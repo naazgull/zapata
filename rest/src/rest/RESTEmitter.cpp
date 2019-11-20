@@ -325,7 +325,7 @@ zpt::RESTEmitter::route(zpt::performative _method,
                         zpt::json _envelope,
                         zpt::json _opts,
                         zpt::ev::handler _callback) -> void {
-    assertz(_url.length() != 0, "resource URI must be valid", 400, 0);
+    expect(_url.length() != 0, "resource URI must be valid", 400, 0);
     zpt::json _uri = zpt::uri::parse(_url);
 
     if (bool(_opts["mqtt"])) {
@@ -441,7 +441,7 @@ zpt::RESTEmitter::resolve(zpt::performative _method,
             }
             return;
         }
-        catch (zpt::assertion& _e) {
+        catch (zpt::missed_expectation& _e) {
             zpt::json _out = zpt::ev::assertion_error(
               std::string(_envelope["resource"]),
               _e,
@@ -517,7 +517,7 @@ zpt::RESTEmitter::resolve(zpt::performative _method,
 
 auto
 zpt::RESTEmitter::instance() -> zpt::ev::emitter {
-    assertz(zpt::rest::__emitter != nullptr, "REST emitter has not been initialized", 500, 1106);
+    expect(zpt::rest::__emitter != nullptr, "REST emitter has not been initialized", 500, 1106);
     return zpt::rest::__emitter->self();
 }
 

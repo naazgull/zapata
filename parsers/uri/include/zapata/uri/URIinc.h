@@ -1,8 +1,7 @@
 #pragma once
 
-#include <zapata/events/URITokenizerLexer.h>
+#include <zapata/uri/URITokenizerLexer.h>
 
-#define URIScanner                                                                                    \
+#define URIScanner                                                                                 \
   public:                                                                                          \
     URITokenizerLexer
-namespace zpt {}

@@ -173,7 +173,7 @@ zpt::EventEmitterFactory::connector(std::map<std::string, zpt::connector> _conne
 auto
 zpt::EventEmitterFactory::connector(std::string _name) -> zpt::connector {
     auto _found = this->__connector.find(_name);
-    assertz(_found != this->__connector.end(),
+    expect(_found != this->__connector.end(),
             std::string("theres isn't any connector by the name '") + _name + std::string("'"),
             500,
             0);
@@ -201,7 +201,7 @@ zpt::EventEmitterFactory::channel(std::map<std::string, zpt::channel_factory> _c
 auto
 zpt::EventEmitterFactory::channel(std::string _name) -> zpt::channel_factory {
     auto _found = this->__channel.find(_name);
-    assertz(_found != this->__channel.end(),
+    expect(_found != this->__channel.end(),
             std::string("theres isn't any channel factory by the name '") + _name +
               std::string("'"),
             500,

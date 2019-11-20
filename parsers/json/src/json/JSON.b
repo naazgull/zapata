@@ -5,6 +5,7 @@
 %class-header JSONTokenizer.h
 %implementation-header JSONTokenizerimpl.h
 %class-name JSONTokenizer
+%scanner-class-name JSONScanner
 %parsefun-source JSONTokenizer.cpp
 
 %scanner JSONLexer.h
