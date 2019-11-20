@@ -503,9 +503,6 @@ class basic_socketstream : public std::basic_iostream<Char> {
     }
 };
 
-// using socketstream = basic_socketstream<char>;
-// using wsocketstream = basic_socketstream<wchar_t>;
-
 class socketstream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
@@ -676,8 +673,58 @@ class basic_serversocketstream {
     }
 };
 
-using serversocketstream = basic_serversocketstream<char>;
-using wserversocketstream = basic_serversocketstream<wchar_t>;
+class serversocketstream {
+  public:
+    serversocketstream()
+      : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>() } {}
+    serversocketstream(uint16_t _port)
+      : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_port) } {}
+    serversocketstream(const serversocketstream& _rhs) { (*this) = _rhs; }
+    serversocketstream(serversocketstream&& _rhs) { (*this) = _rhs; }
+    virtual ~serversocketstream() = default;
+
+    auto operator=(const serversocketstream& _rhs) -> serversocketstream& {
+        this->__underlying = _rhs.__underlying;
+        return (*this);
+    }
+    auto operator=(serversocketstream&& _rhs) -> serversocketstream& {
+        this->__underlying = std::move(_rhs.__underlying);
+        return (*this);
+    }
+
+    auto operator-> () -> std::shared_ptr<zpt::basic_serversocketstream<char>>& {
+        return this->__underlying;
+    }
+    auto operator*() -> std::shared_ptr<zpt::basic_serversocketstream<char>>& {
+        return this->__underlying;
+    }
+
+  private:
+    std::shared_ptr<zpt::basic_serversocketstream<char>> __underlying;
+};
+
+class wserversocketstream {
+  public:
+    wserversocketstream()
+      : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
+    wserversocketstream(uint16_t _port)
+      : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
+    wserversocketstream(const wserversocketstream& _rhs) { (*this) = _rhs; }
+    wserversocketstream(wserversocketstream&& _rhs) { (*this) = _rhs; }
+    virtual ~wserversocketstream() = default;
+
+    auto operator=(const wserversocketstream& _rhs) -> wserversocketstream& {
+        this->__underlying = _rhs.__underlying;
+        return (*this);
+    }
+    auto operator=(wserversocketstream&& _rhs) -> wserversocketstream& {
+        this->__underlying = std::move(_rhs.__underlying);
+        return (*this);
+    }
+
+  private:
+    std::shared_ptr<zpt::basic_serversocketstream<wchar_t>> __underlying;
+};
 
 #define CRLF "\r\n"
 } // namespace zpt

@@ -10,7 +10,7 @@ main(int argc, char* argv[]) -> int {
 
         zpt::serversocketstream _ssock{ _port };
         do {
-            auto _csock = _ssock.accept();
+            auto _csock = _ssock->accept();
             do {
                 char _content{ '\0' };
                 _csock >> std::noskipws >> _content;

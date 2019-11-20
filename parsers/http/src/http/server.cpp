@@ -12,7 +12,8 @@ main(int argc, char* argv[]) -> int {
 
         zpt::serversocketstream _ssock{ _port };
         do {
-            auto _csock = _ssock.accept();
+            auto _csock = _ssock->accept();
+            auto _t1 = std::chrono::high_resolution_clock::now();
             zpt::http::req _request;
             _csock >> std::noskipws >> _request;
             std::cout << _request << std::flush;
@@ -36,7 +37,14 @@ main(int argc, char* argv[]) -> int {
                 _reply->body(_body);
             }
             _csock << _reply << std::flush;
+            auto _t2 = std::chrono::high_resolution_clock::now();
+            auto _duration =
+              std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+            _reply->body("");
             std::cout << _reply << std::flush;
+            std::cout << "# processing time: " << _duration << "ms" << std::endl
+                      << std::flush;
+
         } while (true);
     }
     return 0;
