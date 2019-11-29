@@ -39,6 +39,3 @@
 #include <zapata/file/manip.h>
 #include <zapata/mail/manip.h>
 #include <zapata/net/manip.h>
-
-#include <zapata/lf/hptr.h>
-#include <zapata/lf/queue.h>

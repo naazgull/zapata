@@ -20,6 +20,4 @@ nobase_include_HEADERS = \
 ./zapata/text/html.h \
 ./zapata/text/manip.h \
 ./zapata/net/manip.h \
-./zapata/lf/hptr.h \
-./zapata/lf/queue.h \
 ./zapata/base.h

@@ -12,9 +12,14 @@
 %x scheme server_path server path params placeholder
 %%
 
-([^{/]+) {
+([^{:/]+) {
 	begin(StartCondition_::scheme);
 	return zpt::uri::lex::STRING;
+}
+"{" {
+    d_path_helper.assign("{");
+    d_intermediate_state = StartCondition_::scheme;
+    begin(StartCondition_::placeholder);
 }
 "/" {
     begin(StartCondition_::path);
@@ -43,11 +48,12 @@
 }
 
 <server> {
-    ([^:@/]+) {
+    ([^:@/{]+) {
         d_server_part.assign(matched());
         return zpt::uri::lex::STRING;
     }
     "/" {
+        setMatched(d_server_part);
         begin(StartCondition_::path);
         return zpt::uri::lex::SLASH;
     }
@@ -59,6 +65,11 @@
         setMatched(d_server_part);
         return zpt::uri::lex::AT;
     }
+    "{" {
+        d_path_helper.assign("{");
+        d_intermediate_state = StartCondition_::server;
+        begin(StartCondition_::placeholder);
+    }
 }
 
 <path> {
@@ -68,6 +79,7 @@
     }
     "{" {
         d_path_helper.assign("{");
+		d_intermediate_state = StartCondition_::path;
         begin(StartCondition_::placeholder);
     }
     "?" {
@@ -90,7 +102,12 @@
 	"&"   {
 		return zpt::uri::lex::E;
 	}
-	([^=&]+) {
+    "{" {
+        d_path_helper.assign("{");
+        d_intermediate_state = StartCondition_::params;
+        begin(StartCondition_::placeholder);
+    }
+	([^=&{]+) {
 		return zpt::uri::lex::STRING;
     }
 }
@@ -103,7 +120,7 @@
         d_path_helper += matched();
         setMatched(d_path_helper);
         d_path_helper.assign("");
-        begin(StartCondition_::path);
+        begin(d_intermediate_state);
         return zpt::uri::lex::STRING;
     }
 }

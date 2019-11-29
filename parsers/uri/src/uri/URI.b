@@ -28,7 +28,12 @@ scheme :
 |
     STRING
     {
-        (*d_scanner) << "scheme" << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "scheme" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     DOUBLE_DOT
 ;
@@ -36,30 +41,54 @@ scheme :
 server :
     SLASH SLASH user STRING
     {
-        (*d_scanner) << "domain" << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "domain" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
 |
     SLASH SLASH STRING
     {
-        (*d_scanner) << "domain" << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "domain" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
 ;
 
 user :
     STRING
     {
-        (*d_scanner) << "user" << zpt::json{ "name", d_scanner.matched() };
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "user" << zpt::json{ "name", d_scanner.matched() };
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     AT
 |
     STRING
     {
-        (*d_scanner) << "user" <<
-              zpt::json{ "name", d_scanner.matched() };
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "user" << zpt::json{ "name", d_scanner.matched() };
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     DOUBLE_DOT STRING
     {
-        (*d_scanner)["user"] << "password" << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner)["user"] << "password" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     AT
 ;
@@ -71,10 +100,15 @@ path :
 |
     SLASH STRING
     {
-        if ((*d_scanner)["path"] == zpt::undefined) {
-            (*d_scanner) << "path" << zpt::json::array();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            if ((*d_scanner)["path"] == zpt::undefined) {
+                (*d_scanner) << "path" << zpt::json::array();
+            }
+            (*d_scanner)["path"] << d_scanner.matched();
         }
-        (*d_scanner)["path"] << d_scanner.matched();
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     path
 ;
@@ -88,16 +122,26 @@ params :
 paramslist :
 	STRING
     {
-        if ((*d_scanner)["params"] == zpt::undefined) {
-            (*d_scanner) << "params" << zpt::json::object();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            if ((*d_scanner)["params"] == zpt::undefined) {
+                (*d_scanner) << "params" << zpt::json::object();
+            }
+            (*d_scanner) << "__aux" << d_scanner.matched();
         }
-        (*d_scanner) << "__aux" << d_scanner.matched();
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     EQ paramvalue
 |
 	paramslist E STRING
     {
-        (*d_scanner) << "__aux" << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "__aux" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
     EQ paramvalue
 ;
@@ -105,11 +149,21 @@ paramslist :
 paramvalue :
 
     {
-        (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << zpt::undefined;
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << zpt::undefined;
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
 |
     STRING
     {
-        (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << d_scanner.matched();
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
     }
 ;

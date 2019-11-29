@@ -9,4 +9,14 @@ libzapata_lex_uri_la_SOURCES = \
 ./URILexer.cpp \
 ./URIParser.cpp \
 ./URITokenizer.cpp \
-./URITokenizerLexer.cpp
+./URITokenizerLexer.cpp \
+./uri.cpp
+
+bin_PROGRAMS = zuri
+
+zuri_LDADD = -lpthread -lzapata-lex-json -lzapata-lex-uri
+zuri_LDFLAGS =
+zuri_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
+
+zuri_SOURCES = \
+./main.cpp

@@ -3,39 +3,6 @@
 #include <regex>
 #include <zapata/json/JSONClass.h>
 
-zpt::JSONObjT::position::position(zpt::json& _target, size_t _pos)
-  : zpt::json::iterator::position{ _target, _pos } {
-    if (_pos == std::numeric_limits<size_t>::max()) {
-        this->__position = (***this->__target->obj()).size();
-        this->__underlying = (***this->__target->obj()).end();
-        return;
-    }
-    this->__underlying = (***this->__target->obj()).find(_target->obj()->key_for(_pos));
-}
-
-auto
-zpt::JSONObjT::position::increment() -> void {
-    if (this->__underlying == (***this->__target->obj()).end()) {
-        return;
-    }
-    ++this->__position;
-    ++this->__underlying;
-}
-
-auto
-zpt::JSONObjT::position::decrement() -> void {
-    if (this->__underlying == (***this->__target->obj()).begin()) {
-        return;
-    }
-    --this->__position;
-    --this->__underlying;
-}
-
-auto
-zpt::JSONObjT::position::element() -> zpt::json::iterator::reference {
-    return std::make_tuple(this->__position, this->__underlying->first, this->__underlying->second);
-}
-
 zpt::JSONObjT::JSONObjT() {}
 
 zpt::JSONObjT::~JSONObjT() {}

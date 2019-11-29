@@ -37,3 +37,4 @@ SOFTWARE.
 #include <zapata/uri/URILexerbase.h>
 #include <zapata/uri/URILexer.h>
 #include <zapata/uri/URILexerimpl.h>
+#include <zapata/uri/uri.h>

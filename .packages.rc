@@ -2,10 +2,13 @@ export bulk_wd=$HOME/Develop/zapata
 
 export projects=(
        base
+       algorithms/lockfree
+       algorithms/graph
        parsers/json
        parsers/http
        parsers/uri
        events
+       protocols/http
        protocols/smtp
        protocols/oauth2
        protocols/zmq

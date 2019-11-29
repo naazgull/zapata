@@ -36,11 +36,4 @@ class URIParser : public URITokenizer {
     void switchRoots(zpt::json& _root);
     void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
 };
-
-namespace uri {
-auto
-parse(std::string _in) -> zpt::json;
-auto
-parse(std::istream& _in) -> zpt::json;
-}
 } // namespace zpt

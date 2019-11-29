@@ -11,4 +11,5 @@ nobase_include_HEADERS = \
 ./zapata/uri/URILexerbase.h \
 ./zapata/uri/URILexer.h \
 ./zapata/uri/URILexerimpl.h \
+./zapata/uri/uri.h \
 ./zapata/uri.h

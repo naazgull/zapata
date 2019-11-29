@@ -27,10 +27,9 @@ libzapata_base_la_SOURCES = \
 ./url.cpp \
 ./usage.cpp \
 ./net.cpp \
-./utf8.cpp \
-./hptr.cpp
+./utf8.cpp
 
-bin_PROGRAMS = zoc zlf
+bin_PROGRAMS = zoc
 
 zoc_LDADD = -lpthread -lzapata-base
 zoc_LDFLAGS=
@@ -38,10 +37,3 @@ zoc_CPPFLAGS = -std=c++17 -Wall -I../../include
 
 zoc_SOURCES = \
 zoc.cpp
-
-zlf_LDADD = -lpthread -lzapata-base
-zlf_LDFLAGS=
-zlf_CPPFLAGS = -std=c++17 -Wall -I../../include
-
-zlf_SOURCES = \
-zlf.cpp

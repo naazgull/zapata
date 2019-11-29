@@ -31,7 +31,6 @@ SOFTWARE.
 #include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <zapata/lf/queue.h>
 #include <zapata/log/log.h>
 #include <zapata/text/manip.h>
 

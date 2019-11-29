@@ -71,6 +71,10 @@ zpt::json::json(std::unique_ptr<zpt::JSONElementT> _target)
 zpt::json::json(std::initializer_list<zpt::JSONElementT> _init)
   : __underlying{ std::make_shared<zpt::JSONElementT>(_init) } {}
 
+zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) {
+    (*this) = _rhs;
+}
+
 zpt::json::~json() {}
 
 auto
@@ -93,12 +97,38 @@ zpt::json::operator=(zpt::json&& _rhs) -> zpt::json& {
     return (*this);
 }
 
+auto
+zpt::json::operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json& {
+    this->__underlying = std::get<2>(_rhs).__underlying;
+    return (*this);
+}
+
 auto zpt::json::operator-> () -> std::shared_ptr<zpt::JSONElementT>& {
     return this->__underlying;
 }
 
 auto zpt::json::operator*() -> std::shared_ptr<zpt::JSONElementT>& {
     return this->__underlying;
+}
+
+auto
+zpt::json::operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool {
+    return (*this) == std::get<2>(_rhs);
+}
+
+auto
+zpt::json::operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool {
+    return (*this) != std::get<2>(_rhs);
+}
+
+auto
+zpt::json::operator==(std::nullptr_t _rhs) -> bool {
+    return this->__underlying->type() == zpt::JSNil;
+}
+
+auto
+zpt::json::operator!=(std::nullptr_t _rhs) -> bool {
+    return this->__underlying->type() != zpt::JSNil;
 }
 
 zpt::json::operator std::string() {
@@ -197,12 +227,12 @@ zpt::json::stringify(std::string& _str) -> void {
 
 auto
 zpt::json::begin() -> zpt::json::iterator {
-    return zpt::json::iterator{ *this, zpt::json::pos(*this, 0) };
+    return zpt::json::iterator{ *this, 0 };
 }
 
 auto
 zpt::json::end() -> zpt::json::iterator {
-    return zpt::json::iterator{ *this, zpt::json::pos(*this, std::numeric_limits<size_t>::max()) };
+    return zpt::json::iterator{ *this, std::numeric_limits<size_t>::max() };
 }
 
 auto
@@ -329,54 +359,68 @@ zpt::json::type_of(zpt::json& _value) -> zpt::JSONType {
     return _value->type();
 }
 
-auto
-zpt::json::pos(zpt::json& _target, size_t _pos) -> std::unique_ptr<zpt::json::iterator::position> {
+zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
+  : __target{ _target }
+  , __index{ _pos } {
     switch (_target->type()) {
         case zpt::JSObject: {
-            return std::move(std::make_unique<zpt::JSONObjT::position>(_target, _pos));
+            if (_pos == std::numeric_limits<size_t>::max()) {
+                this->__index = (***this->__target->obj()).size();
+                this->__iterator = (***this->__target->obj()).end();
+            }
+            else {
+                this->__iterator = (***this->__target->obj()).find(_target->obj()->key_for(_pos));
+            }
+            break;
         }
         case zpt::JSArray: {
-            return std::move(std::make_unique<zpt::JSONArrT::position>(_target, _pos));
+            if (_pos == std::numeric_limits<size_t>::max()) {
+                this->__index = (***this->__target->arr()).size();
+            }
+            break;
         }
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda:
-        case zpt::JSRegex: {
+        default: {
             break;
         }
     }
-    return std::move(
-      std::make_unique<zpt::json::iterator::position>(_target, std::numeric_limits<size_t>::max()));
 }
-
-zpt::json::iterator::iterator(zpt::json& _target,
-                              std::unique_ptr<zpt::json::iterator::position> _pos)
-  : __target{ _target }
-  , __pos{ _pos.release() } {}
 
 zpt::json::iterator::iterator(const iterator& _rhs)
   : __target{ _rhs.__target }
-  , __pos{ _rhs.__pos } {}
+  , __index{ _rhs.__index }
+  , __iterator{ _rhs.__iterator } {}
 
 auto
 zpt::json::iterator::operator=(const iterator& _rhs) -> iterator& {
     this->__target = _rhs.__target;
-    this->__pos = _rhs.__pos;
+    this->__index = _rhs.__index;
+    this->__iterator = _rhs.__iterator;
     return (*this);
 }
 
 auto
 zpt::json::iterator::operator++() -> iterator& {
-    this->__pos->increment();
+    ++this->__index;
+    if (this->__target->type() == zpt::JSObject) {
+        ++this->__iterator;
+    }
     return (*this);
 }
 
 auto zpt::json::iterator::operator*() const -> reference {
-    return this->__pos->element();
+    switch (this->__target->type()) {
+        case zpt::JSObject: {
+            return std::make_tuple(
+              this->__index, this->__iterator->first, this->__iterator->second);
+        }
+        case zpt::JSArray: {
+            return std::make_tuple(this->__index, "", (***this->__target->arr())[this->__index]);
+        }
+        default: {
+            break;
+        }
+    }
+    return std::make_tuple(this->__index, "", this->__target);
 }
 
 auto
@@ -387,12 +431,25 @@ zpt::json::iterator::operator++(int) -> iterator {
 }
 
 auto zpt::json::iterator::operator-> () const -> pointer {
-    return this->__pos->element();
+    switch (this->__target->type()) {
+        case zpt::JSObject: {
+            return std::make_tuple(
+              this->__index, this->__iterator->first, this->__iterator->second);
+        }
+        case zpt::JSArray: {
+            return std::make_tuple(this->__index, "", (***this->__target->arr())[this->__index]);
+        }
+        default: {
+            break;
+        }
+    }
+    return std::make_tuple(this->__index, "", this->__target);
 }
 
 auto
 zpt::json::iterator::operator==(iterator _rhs) const -> bool {
-    return this->__target == _rhs.__target && (*this->__pos.get()) == (*_rhs.__pos.get());
+    return this->__index == _rhs.__index && this->__iterator == _rhs.__iterator &&
+           this->__target == _rhs.__target;
 }
 
 auto
@@ -402,7 +459,10 @@ zpt::json::iterator::operator!=(iterator _rhs) const -> bool {
 
 auto
 zpt::json::iterator::operator--() -> iterator& {
-    this->__pos->decrement();
+    --this->__index;
+    if (this->__target->type() == zpt::JSObject) {
+        --this->__iterator;
+    }
     return (*this);
 }
 
@@ -411,31 +471,6 @@ zpt::json::iterator::operator--(int) -> iterator {
     zpt::json::iterator _to_return = (*this);
     --(*this);
     return _to_return;
-}
-
-zpt::json::iterator::position::position(zpt::json& _target, size_t _pos)
-  : __target{ _target }
-  , __position{ _pos } {}
-
-auto
-zpt::json::iterator::position::increment() -> void {}
-
-auto
-zpt::json::iterator::position::decrement() -> void {}
-
-auto
-zpt::json::iterator::position::element() -> zpt::json::iterator::reference {
-    return std::make_tuple(0, "", this->__target);
-}
-
-auto
-zpt::json::iterator::position::operator==(const zpt::json::iterator::position& _rhs) -> bool {
-    return this->__position == _rhs.__position;
-}
-
-auto
-zpt::json::iterator::position::operator!=(const zpt::json::iterator::position& _rhs) -> bool {
-    return this->__position != _rhs.__position;
 }
 
 zpt::json

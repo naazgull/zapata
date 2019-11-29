@@ -51,11 +51,11 @@
 #define HAVE_LIBZAPATA_EVENTS 1
 
 /* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
- */
-/* #undef HAVE_LIBZAPATA_LEX_HTTP */
+   */
+#define HAVE_LIBZAPATA_LEX_HTTP 1
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
- */
+   */
 #define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */

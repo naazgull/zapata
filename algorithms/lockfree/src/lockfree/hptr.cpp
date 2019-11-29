@@ -1,4 +1,4 @@
-#include <zapata/lf/hptr.h>
+#include <zapata/lockfree/hptr.h>
 
 namespace zpt {
 namespace lf {}

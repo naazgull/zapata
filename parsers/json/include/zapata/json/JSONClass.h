@@ -71,24 +71,7 @@ class json {
         using reference = zpt::json::element;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        class position {
-          public:
-            position(zpt::json& _target, size_t _pos);
-            virtual ~position() = default;
-
-            virtual auto increment() -> void;
-            virtual auto decrement() -> void;
-            virtual auto element() -> zpt::json::iterator::reference;
-
-            virtual auto operator==(const zpt::json::iterator::position& _rhs) -> bool;
-            virtual auto operator!=(const zpt::json::iterator::position& _rhs) -> bool;
-
-          protected:
-            zpt::json& __target;
-            size_t __position;
-        };
-
-        explicit iterator(zpt::json& _target, std::unique_ptr<zpt::json::iterator::position> _pos);
+        explicit iterator(zpt::json& _target, size_t _pos);
         iterator(const iterator& _rhs);
         virtual ~iterator() = default;
 
@@ -119,15 +102,22 @@ class json {
         auto operator--(int) -> iterator;
         // END / BIDIRECTIOANL ITERATOR METHODS //
 
+        friend auto operator<<(std::ostream& _out, zpt::json::iterator& _in) -> std::ostream& {
+            _out << _in.__index << std::flush;
+            return _out;
+        }
+
       private:
         zpt::json& __target;
-        std::shared_ptr<zpt::json::iterator::position> __pos;
+        size_t __index;
+        std::map<std::string, zpt::json>::iterator __iterator;
     };
 
     json();
     json(std::nullptr_t);
     json(std::unique_ptr<zpt::JSONElementT> _target);
     json(std::initializer_list<zpt::JSONElementT> _init);
+    json(std::tuple<size_t, std::string, zpt::json> _rhs);
     json(const zpt::json& _rhs);
     json(zpt::json&& _rhs);
     template<typename T>
@@ -144,12 +134,17 @@ class json {
 
     auto operator=(const zpt::json& _rhs) -> zpt::json&;
     auto operator=(zpt::json&& _rhs) -> zpt::json&;
+    auto operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json&;
     template<typename T>
     auto operator=(T _rhs) -> zpt::json&;
 
     auto operator-> () -> std::shared_ptr<zpt::JSONElementT>&;
     auto operator*() -> std::shared_ptr<zpt::JSONElementT>&;
 
+    auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
+    auto operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
+    auto operator==(std::nullptr_t _rhs) -> bool;
+    auto operator!=(std::nullptr_t _rhs) -> bool;
     template<typename T>
     auto operator==(T _rhs) -> bool;
     template<typename T>
@@ -259,9 +254,6 @@ class json {
     static auto type_of(zpt::regex& _value) -> zpt::JSONType;
     static auto type_of(zpt::json& _value) -> zpt::JSONType;
 
-    static auto pos(zpt::json& _target, size_t _pos)
-      -> std::unique_ptr<zpt::json::iterator::position>;
-
   private:
     std::shared_ptr<zpt::JSONElementT> __underlying{ nullptr };
 };
@@ -276,19 +268,6 @@ extern zpt::json array;
 namespace zpt {
 class JSONObjT {
   public:
-    class position : public zpt::json::iterator::position {
-      public:
-        position(zpt::json& _target, size_t _pos);
-        virtual ~position() = default;
-
-        virtual auto increment() -> void override;
-        virtual auto decrement() -> void override;
-        virtual auto element() -> zpt::json::iterator::reference override;
-
-      private:
-        std::map<std::string, zpt::json>::iterator __underlying;
-    };
-
     JSONObjT();
     virtual ~JSONObjT();
 
@@ -364,19 +343,6 @@ class JSONObjT {
 namespace zpt {
 class JSONArrT {
   public:
-    class position : public zpt::json::iterator::position {
-      public:
-        position(zpt::json& _target, size_t _pos);
-        virtual ~position() = default;
-
-        virtual auto increment() -> void override;
-        virtual auto decrement() -> void override;
-        virtual auto element() -> zpt::json::iterator::reference override;
-
-      private:
-        std::vector<zpt::json>::iterator __underlying;
-    };
-
     JSONArrT();
     virtual ~JSONArrT();
 
@@ -571,16 +537,9 @@ class JSONRegex {
     operator std::regex&();
     auto operator==(zpt::regex _rhs) -> bool;
     auto operator==(zpt::json _rhs) -> bool;
+    auto operator==(std::string _rhs) -> bool;
     auto operator!=(zpt::regex _rhs) -> bool;
     auto operator!=(zpt::json _rhs) -> bool;
-    // auto operator<(zpt::regex _rhs) -> bool;
-    // auto operator<(zpt::json _rhs) -> bool;
-    // auto operator>(zpt::regex _rhs) -> bool;
-    // auto operator>(zpt::json _rhs) -> bool;
-    // auto operator<=(zpt::regex _rhs) -> bool;
-    // auto operator<=(zpt::json _rhs) -> bool;
-    // auto operator>=(zpt::regex _rhs) -> bool;
-    // auto operator>=(zpt::json _rhs) -> bool;
 
     friend auto operator<<(std::ostream& _out, JSONRegex& _in) -> std::ostream& {
         _out << std::string(_in) << std::flush;
@@ -1271,12 +1230,12 @@ zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
         }
         default: {
             expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
-                    "the type must be a JSObject, JSArray or the same type of the "
-                    "target, in order "
-                    "to push "
-                    "JSONElementT*",
-                    0,
-                    0);
+                   "the type must be a JSObject, JSArray or the same type of the "
+                   "target, in order "
+                   "to push "
+                   "JSONElementT*",
+                   0,
+                   0);
             break;
         }
     }
