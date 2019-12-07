@@ -3,7 +3,7 @@
 $[resource.path.h]
 
   extern "C" void
-  _zpt_load_() {
+  _zpt_plugin_load_() {
     zpt::ev::emitter _emitter = zpt::emitter<zpt::rest::emitter>();
     _emitter->connector($[datum.connectors.initialize]);
 

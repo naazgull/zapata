@@ -7,7 +7,6 @@ export projects=(
        parsers/json
        parsers/http
        parsers/uri
-       events
        protocols/http
        protocols/smtp
        protocols/oauth2
@@ -22,5 +21,6 @@ export projects=(
        storage/couchdb
        bridges/lisp
        bridges/python
-       rest
+       engines/events
+       engines/rest
 )

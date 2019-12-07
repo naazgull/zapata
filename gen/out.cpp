@@ -770,7 +770,7 @@ zpt::apps::MyUsers::remove(std::string _topic,
 #include <zapata/rest.h>
 
 extern "C" void
-_zpt_load_() {
+_zpt_plugin_load_() {
     _emitter->connector({
       { "dbms.mongodb.zpt.apps",
         zpt::connector(new zpt::mongodb::Client(_emitter->options(), "mongodb.zpt.apps")) },

@@ -246,7 +246,7 @@ zpt::HTTPFactory::clean(zpt::socket _socket) -> bool {
 }
 
 extern "C" void
-_zpt_load_() {
+_zpt_plugin_load_() {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::HTTPFactory());
     _emitter->channel({ { "http", _factory }, { "https", _factory } });

@@ -289,7 +289,7 @@ zpt::UPnP::is_reusable() -> bool {
 }
 
 extern "C" auto
-_zpt_load_() -> void {
+_zpt_plugin_load_() -> void {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     _emitter->channel({
       { "upnp", zpt::channel_factory(new zpt::ZMQFactory()) },

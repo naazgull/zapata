@@ -54,7 +54,7 @@ zpt::UPnPFactory::clean(zpt::socket _socket) -> bool {
 }
 
 extern "C" void
-_zpt_load_() {
+_zpt_plugin_load_() {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::UPnPFactory());
     _emitter->channel({ { "upnp", _factory }, { "upnps", _factory } });
