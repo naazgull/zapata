@@ -16,7 +16,7 @@ libzapata_lex_http_la_SOURCES = \
 
 bin_PROGRAMS = zhttps
 
-zhttps_LDADD = -lpthread -lzapata-base -lzapata-net-socket -lzapata-lex-http
+zhttps_LDADD = -lpthread -lzapata-base -lzapata-net-socket -lzapata-lex-json -lzapata-lex-http
 zhttps_LDFLAGS=
 zhttps_CPPFLAGS = -std=c++17 -Wall -I../../include
 

@@ -14,7 +14,7 @@ libzapata_lex_uri_la_SOURCES = \
 
 bin_PROGRAMS = zuri
 
-zuri_LDADD = -lpthread -lzapata-lex-json -lzapata-lex-uri
+zuri_LDADD = -lpthread -lzapata-base -lzapata-lex-json -lzapata-lex-uri
 zuri_LDFLAGS =
 zuri_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 

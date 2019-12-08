@@ -1,7 +1,7 @@
-/* include/zapata/redis/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/redis/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/events/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/events/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/redis/unconfig.h>
+#include <zapata/events/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -15,14 +15,8 @@
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
-/* Define to 1 if you have the `hiredis' library (-lhiredis). */
-/* #undef HAVE_LIBHIREDIS */
-
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
-
-/* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-#define HAVE_LIBOSSP_UUID__ 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
@@ -32,13 +26,6 @@
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 /* #undef HAVE_LIBZAPATA_BASE */
-
-/* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
-
-/* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
-   */
-/* #undef HAVE_LIBZAPATA_LEX_HTTP */
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
    */
@@ -72,19 +59,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-redis"
+#define PACKAGE "zapata-events"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-redis"
+#define PACKAGE_NAME "zapata-events"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-redis 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-events 1.0.0-1artful1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-redis"
+#define PACKAGE_TARNAME "zapata-events"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

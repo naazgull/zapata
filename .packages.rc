@@ -1,12 +1,14 @@
 export bulk_wd=$HOME/Develop/zapata
 
 export projects=(
-       base
-       algorithms/lockfree
-       algorithms/graph
+       kernel/base
+       net/socket
        parsers/json
        parsers/http
        parsers/uri
+       kernel/lockfree
+       kernel/graph
+       kernel/events
        protocols/http
        protocols/smtp
        protocols/oauth2
@@ -21,6 +23,5 @@ export projects=(
        storage/couchdb
        bridges/lisp
        bridges/python
-       engines/events
        engines/rest
 )

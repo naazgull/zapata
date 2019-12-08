@@ -1,7 +1,7 @@
-/* include/zapata/redis/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/redis/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/graph/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/graph/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/redis/unconfig.h>
+#include <zapata/graph/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -15,14 +15,11 @@
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
 
-/* Define to 1 if you have the `hiredis' library (-lhiredis). */
-/* #undef HAVE_LIBHIREDIS */
-
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
 
-/* Define to 1 if you have the `ossp-uuid++' library (-lossp-uuid++). */
-#define HAVE_LIBOSSP_UUID__ 1
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#define HAVE_LIBPTHREAD 1
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
@@ -32,17 +29,6 @@
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 /* #undef HAVE_LIBZAPATA_BASE */
-
-/* Define to 1 if you have the `zapata-events' library (-lzapata-events). */
-/* #undef HAVE_LIBZAPATA_EVENTS */
-
-/* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
-   */
-/* #undef HAVE_LIBZAPATA_LEX_HTTP */
-
-/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
-   */
-/* #undef HAVE_LIBZAPATA_LEX_JSON */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -72,28 +58,28 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-redis"
+#define PACKAGE "zapata-utils-graph"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
+#define PACKAGE_BUGREPORT "n@zgul.me"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-redis"
+#define PACKAGE_NAME "zapata-utils-graph"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-redis 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-utils-graph 0.0.1-1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-redis"
+#define PACKAGE_TARNAME "zapata-utils-graph"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.0-1artful1"
+#define PACKAGE_VERSION "0.0.1-1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0.0-1artful1"
+#define VERSION "0.0.1-1"
