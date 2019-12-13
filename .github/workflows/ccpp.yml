@@ -9,6 +9,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: autoreconf
+      run: autoreconf -vfi
     - name: configure
       run: ./configure
     - name: make
