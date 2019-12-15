@@ -69,7 +69,7 @@ zpt::JSONObjT::pop(size_t _idx) -> JSONObjT& {
     try {
         this->pop(this->key_for(_idx));
     }
-    catch (zpt::missed_expectation& e) {
+    catch (zpt::failed_expectation& e) {
     }
     return (*this);
 }

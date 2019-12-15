@@ -253,7 +253,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
                         zpt::python::to_python(_envelope),
                         nullptr);
                   }
-                  catch (zpt::missed_expectation& _e) {
+                  catch (zpt::failed_expectation& _e) {
                       throw;
                   }
                   catch (...) {
@@ -327,7 +327,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
                       PyErr_Clear();
                       PyObject_CallObject(_func, _args);
                   }
-                  catch (zpt::missed_expectation& _e) {
+                  catch (zpt::failed_expectation& _e) {
                       throw;
                   }
                   catch (...) {
@@ -471,7 +471,7 @@ zpt::python::module::validate_authorization(PyObject* _self, PyObject* _args) ->
         zpt::json _identity = _bridge->events()->authorize(std::string(_topic), _envelope, _roles);
         return **_bridge->to<zpt::python::object>(_identity);
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         Py_RETURN_NONE;
     }
 }

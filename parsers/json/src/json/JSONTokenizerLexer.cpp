@@ -20,7 +20,7 @@ zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     try {
         this->__root_type = _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -34,7 +34,7 @@ zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
         this->__parent = _cur->parent();
         _cur->parent(nullptr);
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -46,7 +46,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str)
     try {
         (*this->__parent) << _in_str;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -67,7 +67,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 (*this->__parent) << _ref;
                 this->__parent = (*_ref).get();
             }
-            catch (zpt::missed_expectation& _e) {
+            catch (zpt::failed_expectation& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                           << std::flush;
                 this->__parent->type(_in_type);
@@ -81,7 +81,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 (*this->__parent) << _ref;
                 this->__parent = (*_ref).get();
             }
-            catch (zpt::missed_expectation& _e) {
+            catch (zpt::failed_expectation& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                           << std::flush;
                 // delete _ptr;
@@ -99,7 +99,7 @@ zpt::JSONTokenizerLexer::init(bool _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -111,7 +111,7 @@ zpt::JSONTokenizerLexer::init(long long _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -123,7 +123,7 @@ zpt::JSONTokenizerLexer::init(double _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -135,7 +135,7 @@ zpt::JSONTokenizerLexer::init(std::string _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -147,7 +147,7 @@ zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -159,7 +159,7 @@ zpt::JSONTokenizerLexer::init(zpt::regex _in) {
     try {
         (*this->__parent) << _in;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;
@@ -172,7 +172,7 @@ zpt::JSONTokenizerLexer::init() {
     try {
         (*this->__parent) << _ref;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
                   << std::flush;
         throw _e;

@@ -370,7 +370,7 @@ zpt::rest::internal_server_error(std::string _resource, std::exception& _e, zpt:
 }
 
 auto
-zpt::rest::assertion_error(std::string _resource, zpt::missed_expectation& _e, zpt::json _headers)
+zpt::rest::assertion_error(std::string _resource, zpt::failed_expectation& _e, zpt::json _headers)
   -> zpt::json {
     return { "channel",
              zpt::generate::r_uuid(),

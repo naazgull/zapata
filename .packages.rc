@@ -1,14 +1,14 @@
 export bulk_wd=$HOME/Develop/zapata
 
 export projects=(
-       kernel/base
+       common/base
        net/socket
        parsers/json
        parsers/http
        parsers/uri
-       kernel/lockfree
-       kernel/graph
-       kernel/events
+       common/lockfree
+       common/graph
+       common/events
        protocols/http
        protocols/smtp
        protocols/oauth2

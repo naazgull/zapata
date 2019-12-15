@@ -98,7 +98,7 @@ main(int argc, char* argv[]) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }

@@ -20,7 +20,7 @@ AC_HAVE_LIBRARY(hicouchdb)
 AC_HAVE_LIBRARY(ossp-uuid++)
 AC_CHECK_LIB(zapata-base, zpt_base)
 AC_CHECK_LIB(zapata-lex-json, zpt_lex_json)
-AC_CHECK_LIB(zapata-events, zpt_events)
+AC_CHECK_LIB(zapata-kernel-events, zpt_events)
 AC_CHECK_LIB(zapata-lex-http, zpt_lex_http)
 
 AC_CANONICAL_SYSTEM

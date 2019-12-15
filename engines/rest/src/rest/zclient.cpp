@@ -105,7 +105,7 @@ main(int argc, char* argv[]) {
         else if (std::string(_opts["N"][0]) == "pull") {
         }
     }
-    catch (zpt::missed_expectation& _e) {
+    catch (zpt::failed_expectation& _e) {
         zlog(_e.what() + string("\n") + _e.description(), zpt::error);
         throw;
     }

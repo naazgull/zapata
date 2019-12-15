@@ -441,7 +441,7 @@ zpt::RESTEmitter::resolve(zpt::performative _method,
             }
             return;
         }
-        catch (zpt::missed_expectation& _e) {
+        catch (zpt::failed_expectation& _e) {
             zpt::json _out = zpt::ev::assertion_error(
               std::string(_envelope["resource"]),
               _e,

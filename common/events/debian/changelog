@@ -1,0 +1,785 @@
+zapata-kernel-events (1.0.0-1artful1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 28 Feb 2018 21:03:21 +0000
+
+zapata-kernel-events (0.9.7-1artful58) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 18 Feb 2018 15:36:36 +0000
+
+zapata-kernel-events (0.9.7-1artful57) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 18 Feb 2018 15:36:22 +0000
+
+zapata-kernel-events (0.9.7-1artful56) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 18 Feb 2018 15:36:11 +0000
+
+zapata-kernel-events (0.9.7-1artful55) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 16:00:03 +0000
+
+zapata-kernel-events (0.9.7-1artful54) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 15:58:30 +0000
+
+zapata-kernel-events (0.9.7-1artful53) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:55:18 +0000
+
+zapata-kernel-events (0.9.7-1artful52) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:27 +0000
+
+zapata-kernel-events (0.9.7-1artful51) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 03 Jan 2018 11:21:18 +0000
+
+zapata-kernel-events (0.9.7-1artful50) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 18 Oct 2017 00:40:47 +0100
+
+zapata-kernel-events (0.9.7-1artful49) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 10 Oct 2017 22:12:30 +0100
+
+zapata-kernel-events (0.9.7-1artful48) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 09 Oct 2017 00:35:57 +0100
+
+zapata-kernel-events (0.9.7-1artful47) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 04 Oct 2017 02:34:14 +0100
+
+zapata-kernel-events (0.9.7-1artful46) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 17:15:25 +0100
+
+zapata-kernel-events (0.9.7-1artful45) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 02 Oct 2017 03:57:13 +0100
+
+zapata-kernel-events (0.9.7-1artful44) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 01 Oct 2017 22:43:55 +0100
+
+zapata-kernel-events (0.9.7-1artful43) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 22:04:09 +0100
+
+zapata-kernel-events (0.9.7-1artful42) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 21:27:37 +0100
+
+zapata-kernel-events (0.9.7-1artful41) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 16:40:33 +0100
+
+zapata-kernel-events (0.9.7-1artful40) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 11:24:09 +0100
+
+zapata-kernel-events (0.9.7-1artful39) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 29 Sep 2017 10:37:12 +0100
+
+zapata-kernel-events (0.9.7-1artful38) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 13:02:55 +0100
+
+zapata-kernel-events (0.9.7-1artful37) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 27 Sep 2017 10:18:08 +0100
+
+zapata-kernel-events (0.9.7-1artful36) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 26 Sep 2017 22:16:44 +0100
+
+zapata-kernel-events (0.9.7-1artful35) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 18:46:14 +0100
+
+zapata-kernel-events (0.9.7-1artful34) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 15:40:19 +0100
+
+zapata-kernel-events (0.9.7-1artful33) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 21 Sep 2017 13:11:21 +0100
+
+zapata-kernel-events (0.9.7-1artful32) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 20 Sep 2017 16:47:00 +0100
+
+zapata-kernel-events (0.9.7-1artful31) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 19 Sep 2017 14:04:58 +0100
+
+zapata-kernel-events (0.9.7-1artful30) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 17:28:48 +0100
+
+zapata-kernel-events (0.9.7-1artful29) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 11 Sep 2017 11:40:22 +0100
+
+zapata-kernel-events (0.9.7-1artful28) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 05 Sep 2017 00:10:31 +0100
+
+zapata-kernel-events (0.9.7-1artful27) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 26 Jul 2017 15:45:45 +0100
+
+zapata-kernel-events (0.9.7-1artful26) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 11:28:02 +0100
+
+zapata-kernel-events (0.9.7-1artful25) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 11:26:58 +0100
+
+zapata-kernel-events (0.9.7-1artful24) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 25 Jul 2017 10:33:50 +0100
+
+zapata-kernel-events (0.9.7-1artful23) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 24 Jul 2017 17:13:48 +0100
+
+zapata-kernel-events (0.9.7-1artful22) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Jul 2017 14:56:09 +0100
+
+zapata-kernel-events (0.9.7-1artful21) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Jul 2017 13:19:08 +0100
+
+zapata-kernel-events (0.9.7-1artful20) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 30 Jun 2017 04:10:25 +0100
+
+zapata-kernel-events (0.9.7-1artful19) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 22 Jun 2017 15:43:26 +0100
+
+zapata-kernel-events (0.9.7-1artful18) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 22:02:47 +0100
+
+zapata-kernel-events (0.9.7-1artful17) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 15:35:44 +0100
+
+zapata-kernel-events (0.9.7-1artful16) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 05 Jun 2017 12:00:56 +0100
+
+zapata-kernel-events (0.9.7-1artful15) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 13:34:21 +0100
+
+zapata-kernel-events (0.9.7-1artful14) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 12:27:34 +0100
+
+zapata-kernel-events (0.9.7-1artful13) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 10:26:17 +0100
+
+zapata-kernel-events (0.9.7-1artful11) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 24 May 2017 14:15:45 +0100
+
+zapata-kernel-events (0.9.7-1artful10) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 18 May 2017 15:22:40 +0100
+
+zapata-kernel-events (0.9.7-1artful9) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 17 May 2017 15:44:36 +0100
+
+zapata-kernel-events (0.9.7-1artful8) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 17 May 2017 15:34:07 +0100
+
+zapata-kernel-events (0.9.7-1artful7) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 16 May 2017 14:59:00 +0100
+
+zapata-kernel-events (0.9.7-1artful6) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 12 May 2017 16:05:49 +0100
+
+zapata-kernel-events (0.9.7-1artful5) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 11 May 2017 11:01:50 +0100
+
+zapata-kernel-events (0.9.7-1artful4) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 10 May 2017 10:23:50 +0100
+
+zapata-kernel-events (0.9.7-1artful3) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 02 May 2017 13:21:27 +0100
+
+zapata-kernel-events (0.9.7-1artful2) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 27 Apr 2017 23:06:57 +0100
+
+zapata-kernel-events (0.9.7-1artful1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 27 Apr 2017 18:50:48 +0100
+
+zapata-kernel-events (0.9.6-1artful47) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 27 Apr 2017 14:10:39 +0100
+
+zapata-kernel-events (0.9.6-1artful46) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 24 Apr 2017 02:09:07 +0100
+
+zapata-kernel-events (0.9.6-1artful45) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 19 Apr 2017 19:19:36 +0100
+
+zapata-kernel-events (0.9.6-1artful44) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 17 Apr 2017 22:46:32 +0100
+
+zapata-kernel-events (0.9.6-1artful43) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 17 Apr 2017 10:57:45 +0100
+
+zapata-kernel-events (0.9.6-1artful42) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 14 Apr 2017 11:16:07 +0100
+
+zapata-kernel-events (0.9.6-1artful41) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 06 Apr 2017 00:15:45 +0100
+
+zapata-kernel-events (0.9.6-1artful40) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Apr 2017 17:53:22 +0100
+
+zapata-kernel-events (0.9.6-1artful39) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Apr 2017 17:40:09 +0100
+
+zapata-kernel-events (0.9.6-1artful38) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Apr 2017 16:34:15 +0100
+
+zapata-kernel-events (0.9.6-1artful37) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 05 Apr 2017 15:40:22 +0100
+
+zapata-kernel-events (0.9.6-1artful36) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 04 Apr 2017 18:46:38 +0100
+
+zapata-kernel-events (0.9.6-1artful35) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 04 Apr 2017 11:10:12 +0100
+
+zapata-kernel-events (0.9.6-1artful34) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 03 Apr 2017 14:40:03 +0100
+
+zapata-kernel-events (0.9.6-1artful33) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 02 Apr 2017 11:11:18 +0100
+
+zapata-kernel-events (0.9.6-1artful32) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 31 Mar 2017 10:11:44 +0100
+
+zapata-kernel-events (0.9.6-1artful31) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 29 Mar 2017 16:51:02 +0100
+
+zapata-kernel-events (0.9.6-1artful30) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 28 Mar 2017 12:10:57 +0100
+
+zapata-kernel-events (0.9.6-1artful29) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 27 Mar 2017 13:35:27 +0100
+
+zapata-kernel-events (0.9.6-1artful28) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Mar 2017 23:52:38 +0000
+
+zapata-kernel-events (0.9.6-1artful27) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Mar 2017 11:15:24 +0000
+
+zapata-kernel-events (0.9.6-1artful26) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Mar 2017 23:17:52 +0000
+
+zapata-kernel-events (0.9.6-1artful25) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Mar 2017 19:39:57 +0000
+
+zapata-kernel-events (0.9.6-1artful24) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Mar 2017 18:44:28 +0000
+
+zapata-kernel-events (0.9.6-1artful23) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Mar 2017 11:12:47 +0000
+
+zapata-kernel-events (0.9.6-1artful22) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sat, 18 Mar 2017 19:13:22 +0000
+
+zapata-kernel-events (0.9.6-1artful21) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 17 Mar 2017 15:34:30 +0000
+
+zapata-kernel-events (0.9.6-1artful20) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 16 Mar 2017 15:21:49 +0000
+
+zapata-kernel-events (0.9.6-1artful19) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 16 Mar 2017 13:55:10 +0000
+
+zapata-kernel-events (0.9.6-1artful18) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 15 Mar 2017 21:58:15 +0000
+
+zapata-kernel-events (0.9.6-1artful17) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 14 Mar 2017 11:57:57 +0000
+
+zapata-kernel-events (0.9.6-1artful16) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 12 Mar 2017 16:14:42 +0000
+
+zapata-kernel-events (0.9.6-1artful15) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 10 Mar 2017 17:29:17 +0000
+
+zapata-kernel-events (0.9.6-1artful14) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 08 Mar 2017 22:00:45 +0000
+
+zapata-kernel-events (0.9.6-1artful13) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 06 Mar 2017 12:51:28 +0000
+
+zapata-kernel-events (0.9.6-1artful12) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 03 Mar 2017 14:48:44 +0000
+
+zapata-kernel-events (0.9.6-1artful11) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 02 Mar 2017 18:09:41 +0000
+
+zapata-kernel-events (0.9.6-1artful10) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 02 Mar 2017 10:01:54 +0000
+
+zapata-kernel-events (0.9.6-1artful9) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 01 Mar 2017 17:26:07 +0000
+
+zapata-kernel-events (0.9.6-1artful8) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 01 Mar 2017 14:01:34 +0000
+
+zapata-kernel-events (0.9.6-1artful7) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 01 Mar 2017 04:48:33 +0000
+
+zapata-kernel-events (0.9.6-1artful6) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 28 Feb 2017 11:08:47 +0000
+
+zapata-kernel-events (0.9.6-1artful5) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 27 Feb 2017 11:50:55 +0000
+
+zapata-kernel-events (0.9.6-1artful4) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 27 Feb 2017 01:06:03 +0000
+
+zapata-kernel-events (0.9.6-1artful3) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 24 Feb 2017 16:02:27 +0000
+
+zapata-kernel-events (0.9.6-1artful2) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 24 Feb 2017 12:37:22 +0000
+
+zapata-kernel-events (0.9.6-1artful1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 24 Feb 2017 00:12:15 +0000
+
+zapata-kernel-events (0.9.5-1artful19) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 22:57:43 +0000
+
+zapata-kernel-events (0.9.5-1artful18) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 19:35:00 +0000
+
+zapata-kernel-events (0.9.5-1artful17) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 17:15:55 +0000
+
+zapata-kernel-events (0.9.5-1artful16) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 15:49:31 +0000
+
+zapata-kernel-events (0.9.5-1artful15) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Feb 2017 19:25:03 +0000
+
+zapata-kernel-events (0.9.5-1artful14) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 22 Feb 2017 12:25:48 +0000
+
+zapata-kernel-events (0.9.5-1artful13) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 21 Feb 2017 23:45:19 +0000
+
+zapata-kernel-events (0.9.5-1artful12) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 21 Feb 2017 16:08:18 +0000
+
+zapata-kernel-events (0.9.5-1artful11) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 20 Feb 2017 14:22:38 +0000
+
+zapata-kernel-events (0.9.5-1artful10) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 20 Feb 2017 11:18:31 +0000
+
+zapata-kernel-events (0.9.5-1artful9) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Fri, 10 Feb 2017 12:17:28 +0000
+
+zapata-kernel-events (0.9.5-1artful8) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 09 Feb 2017 17:12:04 +0000
+
+zapata-kernel-events (0.9.5-1artful7) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Thu, 09 Feb 2017 13:03:36 +0000
+
+zapata-kernel-events (0.9.5-1artful6) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Wed, 08 Feb 2017 11:26:06 +0000
+
+zapata-kernel-events (0.9.5-1artful5) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 14:41:43 +0000
+
+zapata-kernel-events (0.9.5-1artful4) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 09:48:11 +0000
+
+zapata-kernel-events (0.9.5-1artful3) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 09:44:21 +0000
+
+zapata-kernel-events (0.9.5-1artful2) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 02:57:18 +0000
+
+zapata-kernel-events (0.9.5-1artful1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 00:20:52 +0000
+
+zapata-kernel-events (0.9.4-1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 00:08:55 +0000
+
+zapata-kernel-events (0.9.3-1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 00:08:23 +0000
+
+zapata-kernel-events (0.9.2-1) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 00:04:28 +0000
+
+zapata-kernel-events (0.9.1-4) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Mon, 17 Oct 2016 18:46:14 +0100
+
+zapata-kernel-events (0.9.1-3) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sun, 12 Jun 2016 16:04:24 +0100
+
+zapata-kernel-events (0.9.1-2) artful; urgency=medium
+
+  * Version bump
+
+ -- n@zgul <n@zgul.me>  Sat, 21 May 2016 00:41:02 +0100
+
+zapata-kernel-events (0.9.1-1) artful; urgency=medium
+
+  * Clean up and refactoring
+
+ -- n@zgul <n@zgul.me>  Tue, 08 Mar 2016 13:06:51 +0000
