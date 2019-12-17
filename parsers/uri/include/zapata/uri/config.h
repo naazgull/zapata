@@ -25,11 +25,11 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
    */
-/* #undef HAVE_LIBZAPATA_LEX_JSON */
+#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

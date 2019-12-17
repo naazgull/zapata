@@ -53,10 +53,13 @@ class queue {
         using reference = T;
 
         explicit iterator(zpt::lf::queue<T>::node* _current);
+        iterator(const iterator& _rhs);
+        iterator(iterator&& _rhs);
         virtual ~iterator() = default;
 
         // BASIC ITERATOR METHODS //
         auto operator=(const iterator& _rhs) -> iterator&;
+        auto operator=(iterator&& _rhs) -> iterator&;
         auto operator++() -> iterator&;
         auto operator*() const -> reference;
         // END / BASIC ITERATOR METHODS //
@@ -64,8 +67,8 @@ class queue {
         // INPUT ITERATOR METHODS //
         auto operator++(int) -> iterator;
         auto operator-> () const -> pointer;
-        auto operator==(iterator _rhs) const -> bool;
-        auto operator!=(iterator _rhs) const -> bool;
+        auto operator==(iterator const& _rhs) const -> bool;
+        auto operator!=(iterator const& _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
 
         // OUTPUT ITERATOR METHODS //
@@ -315,8 +318,26 @@ zpt::lf::queue<T>::iterator::iterator(zpt::lf::queue<T>::node* _current)
   , __current(_current) {}
 
 template<typename T>
+zpt::lf::queue<T>::iterator::iterator(const iterator& _rhs)
+  : __initial(_rhs.__initial)
+  , __current(_rhs.__current) {}
+
+template<typename T>
+zpt::lf::queue<T>::iterator::iterator(iterator&& _rhs)
+  : __initial(_rhs.__initial)
+  , __current(_rhs.__current) {}
+
+template<typename T>
 typename zpt::lf::queue<T>::iterator&
 zpt::lf::queue<T>::iterator::operator=(const iterator& _rhs) {
+    this->__initial = _rhs.__initial;
+    this->__current = _rhs.__current;
+    return (*this);
+}
+
+template<typename T>
+typename zpt::lf::queue<T>::iterator&
+zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
     this->__initial = _rhs.__initial;
     this->__current = _rhs.__current;
     return (*this);
@@ -351,13 +372,13 @@ auto zpt::lf::queue<T>::iterator::operator-> () const -> zpt::lf::queue<T>::iter
 
 template<typename T>
 auto
-zpt::lf::queue<T>::iterator::operator==(iterator _rhs) const -> bool {
+zpt::lf::queue<T>::iterator::operator==(iterator const& _rhs) const -> bool {
     return this->__current == _rhs.__current;
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::iterator::operator!=(iterator _rhs) const -> bool {
+zpt::lf::queue<T>::iterator::operator!=(iterator const& _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 

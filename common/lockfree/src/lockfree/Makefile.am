@@ -1,15 +1,16 @@
-lib_LTLIBRARIES = libzapata-kernel-lockfree.la
+lib_LTLIBRARIES = libzapata-common-lockfree.la
 
-libzapata_kernel_lockfree_la_LIBADD = -lpthread -lzapata-base
-libzapata_kernel_lockfree_la_LDFLAGS = -version-info 1:0:0
-libzapata_kernel_lockfree_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
+libzapata_common_lockfree_la_LIBADD = -lpthread -lzapata-base
+libzapata_common_lockfree_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_common_lockfree_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
-libzapata_kernel_lockfree_la_SOURCES = \
-./hptr.cpp
+libzapata_common_lockfree_la_SOURCES = \
+./hptr.cpp\
+./spin_lock.cpp
 
 bin_PROGRAMS = zlf
 
-zlf_LDADD = -lpthread -lzapata-base -lzapata-kernel-lockfree
+zlf_LDADD = -lpthread -lzapata-base libzapata-common-lockfree.la
 zlf_LDFLAGS =
 zlf_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 

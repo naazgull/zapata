@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-base.la
 
 libzapata_base_la_LIBADD = -lpthread -lmagic -lossp-uuid++ -lcrypto++
-libzapata_base_la_LDFLAGS = -version-info 1:0:0
+libzapata_base_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_base_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_base_la_SOURCES = \
@@ -31,7 +31,7 @@ libzapata_base_la_SOURCES = \
 
 bin_PROGRAMS = zoc
 
-zoc_LDADD = -lpthread -lzapata-base
+zoc_LDADD = -lpthread libzapata-base.la
 zoc_LDFLAGS=
 zoc_CPPFLAGS = -std=c++17 -Wall -I../../include
 

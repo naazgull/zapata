@@ -25,11 +25,11 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
    */
-/* #undef HAVE_LIBZAPATA_LEX_JSON */
+#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -59,19 +59,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-kernel-events"
+#define PACKAGE "zapata-common-events"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-kernel-events"
+#define PACKAGE_NAME "zapata-common-events"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-kernel-events 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-common-events 1.0.0-1artful1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-kernel-events"
+#define PACKAGE_TARNAME "zapata-common-events"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

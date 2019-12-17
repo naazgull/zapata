@@ -9,19 +9,20 @@ export projects=(
        common/lockfree
        common/graph
        common/events
-       protocols/http
-       protocols/smtp
-       protocols/oauth2
-       protocols/zmq
-       protocols/mqtt
-       protocols/upnp
-       gen
-       storage/mongodb
-       storage/redis
-       storage/mysql
-       storage/postgresql
-       storage/couchdb
-       bridges/lisp
-       bridges/python
-       engines/rest
 )
+
+       # protocols/http
+       # protocols/smtp
+       # protocols/oauth2
+       # protocols/zmq
+       # protocols/mqtt
+       # protocols/upnp
+       # gen
+       # storage/mongodb
+       # storage/redis
+       # storage/mysql
+       # storage/postgresql
+       # storage/couchdb
+       # bridges/lisp
+       # bridges/python
+       # engines/rest

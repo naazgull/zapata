@@ -30,9 +30,9 @@
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 /* #undef HAVE_LIBZAPATA_BASE */
 
-/* Define to 1 if you have the `zapata-kernel-events' library
-   (-lzapata-kernel-events). */
-/* #undef HAVE_LIBZAPATA_KERNEL_EVENTS */
+/* Define to 1 if you have the `zapata-common-events' library
+   (-lzapata-common-events). */
+/* #undef HAVE_LIBZAPATA_COMMON_EVENTS */
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
    */

@@ -36,7 +36,7 @@ a) Add GPG key and repository to your 'sources.list.d'
 b) Update your repository cache and install base packages:
 
 	$ sudo apt-get update
-	$ sudo apt-get install zapata-base zapata-lex-json zapata-kernel-events zapata-lex-http zapata-zmq zapata-mqtt zapata-lisp zapata-python zapata-rest zapata-oauth2 zapata-gen zapata-smtp
+	$ sudo apt-get install zapata-base zapata-lex-json zapata-common-events zapata-lex-http zapata-zmq zapata-mqtt zapata-lisp zapata-python zapata-rest zapata-oauth2 zapata-gen zapata-smtp
 
 ### 2) PostgreSQL support ###
 

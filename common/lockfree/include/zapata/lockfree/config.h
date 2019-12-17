@@ -28,7 +28,7 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -58,19 +58,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-kernel-lockfree"
+#define PACKAGE "zapata-common-lockfree"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "n@zgul.me"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-kernel-lockfree"
+#define PACKAGE_NAME "zapata-common-lockfree"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-kernel-lockfree 0.0.1-1"
+#define PACKAGE_STRING "zapata-common-lockfree 0.0.1-1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-kernel-lockfree"
+#define PACKAGE_TARNAME "zapata-common-lockfree"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

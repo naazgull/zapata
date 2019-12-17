@@ -16,6 +16,13 @@ do
 		exit -1
 	    fi
 	    ;;
+	single)
+	    make && sudo make install
+	    if [[ $? != 0 ]]
+	    then
+		exit -1
+	    fi
+	    ;;
 	clean)
 	    make clean
 	    if [[ $? != 0 ]]

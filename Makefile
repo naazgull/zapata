@@ -1,8 +1,8 @@
 all:
 	./.build all
 
-j4:
-	./.build j4
+single:
+	./.build single
 
 clean:
 	./.build clean
@@ -31,4 +31,3 @@ bump:
 deb:
 	sudo rm -rfv upstream/*
 	./.build package
-

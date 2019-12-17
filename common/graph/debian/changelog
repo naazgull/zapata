@@ -1,4 +1,4 @@
-zapata-kernel-graph (0.0.1-1) trusty; urgency=medium
+zapata-common-graph (0.0.1-1) trusty; urgency=medium
 
   * Initial release.
 

@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-gen.la
 
 libzapata_gen_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-json
-libzapata_gen_la_LDFLAGS = -version-info 1:0:0
+libzapata_gen_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_gen_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_gen_la_SOURCES = \

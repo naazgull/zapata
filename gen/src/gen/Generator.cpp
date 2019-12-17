@@ -1311,7 +1311,7 @@ zpt::Generator::build_container() -> void {
             _make += std::string("lib") + _lib_escaped +
                      std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-json "
                                  "-lzapata-lex-http "
-                                 "-lzapata-kernel-events -lzapata-zmq -lzapata-rest ") +
+                                 "-lzapata-common-events -lzapata-zmq -lzapata-rest ") +
                      _dyn_link + std::string("\n");
             _make += std::string("lib") + _lib_escaped +
                      std::string("_la_LDFLAGS = -version-info ") +
@@ -1552,7 +1552,7 @@ zpt::Generator::build_container() -> void {
                  std::string("-mutations.la\n\n");
         _make += std::string("lib") + _lib_escaped +
                  std::string("_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-json "
-                             "-lzapata-lex-http -lzapata-kernel-events "
+                             "-lzapata-lex-http -lzapata-common-events "
                              "-lzapata-zmq -lzapata-rest ") +
                  _mutation_dyn_link + std::string("\n");
         _make += std::string("lib") + _lib_escaped + std::string("_la_LDFLAGS = -version-info ") +

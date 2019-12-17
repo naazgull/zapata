@@ -1,15 +1,15 @@
-lib_LTLIBRARIES = libzapata-kernel-matrix.la
+lib_LTLIBRARIES = libzapata-common-matrix.la
 
-libzapata_kernel_matrix_la_LIBADD = -lpthread -lzapata-base
-libzapata_kernel_matrix_la_LDFLAGS = -version-info 1:0:0
-libzapata_kernel_matrix_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
+libzapata_common_matrix_la_LIBADD = -lpthread -lzapata-base
+libzapata_common_matrix_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_common_matrix_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
-libzapata_kernel_matrix_la_SOURCES = \
+libzapata_common_matrix_la_SOURCES = \
 ./XXX.cpp
 
 bin_PROGRAMS = zmatrix
 
-zmatrix_LDADD = -lpthread -lzapata-kernel-matrix
+zmatrix_LDADD = -lpthread libzapata-common-matrix.la
 zmatrix_LDFLAGS =
 zmatrix_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 

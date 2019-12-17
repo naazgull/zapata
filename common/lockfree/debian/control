@@ -1,12 +1,12 @@
-Source: zapata-kernel-lockfree
+Source: zapata-common-lockfree
 Maintainer: naazgull <n@zgul>
 Section: Development
 Priority: optional
 Standards-Version: 3.9.5
 Build-Depends: debhelper (>= 9)
 
-Package: zapata-kernel-lockfree
+Package: zapata-common-lockfree
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, zapata-base (>=0.9)
-Description: zapata-kernel-lockfree
- Provides zapata-kernel-lockfree
+Description: zapata-common-lockfree
+ Provides zapata-common-lockfree

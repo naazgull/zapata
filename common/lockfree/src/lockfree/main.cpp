@@ -28,11 +28,11 @@
 
 constexpr int N_ELEMENTS = 10000;
 constexpr int MAX_THREADS = 1000;
+constexpr int MAX_THREADS_LIST = 20;
 constexpr int PER_THREAD = 8;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
-// #define FIRST_PUSH_THEN_POP
 #define SPIN_WAIT_MILLIS -2
 
 std::atomic<int> _pushed{ 0 };
@@ -40,10 +40,10 @@ std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
 zpt::lf::queue<std::shared_ptr<std::string>> _queue{ MAX_THREADS, PER_THREAD, SPIN_WAIT_MILLIS };
-zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS, PER_THREAD };
+zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS_LIST, PER_THREAD };
 #else
 zpt::lf::queue<int> _queue{ MAX_THREADS, PER_THREAD, SPIN_WAIT_MILLIS };
-zpt::lf::list<int> _list{ MAX_THREADS, PER_THREAD };
+zpt::lf::list<int> _list{ MAX_THREADS_LIST, PER_THREAD };
 #endif
 
 auto
@@ -55,25 +55,17 @@ pause(int _signal) -> void {
 }
 
 auto
-main(int _argc, char* _argv[]) -> int {
+test_queue(int _argc, char* _argv[]) -> int {
     std::vector<std::thread> _threads;
 
 #ifdef INTERCEPT_SIGINT
     std::signal(SIGINT, pause);
 #endif
 
-#ifdef FIRST_PUSH_THEN_POP
-    for (int _i = 0; _i != MAX_THREADS / 2; ++_i) {
-#else
     for (int _i = 0; _i != MAX_THREADS; ++_i) {
-#endif
         _threads.emplace_back(
           [&](int _n_thread) {
-#ifdef FIRST_PUSH_THEN_POP
-              if (_n_thread < MAX_THREADS / 2) {
-#else
               if (_n_thread % 2 == 0) {
-#endif
                   try {
                       for (int _k = 0; _k != N_ELEMENTS; ++_k) {
 #ifdef QUEUE_USE_STRING
@@ -83,16 +75,13 @@ main(int _argc, char* _argv[]) -> int {
                           int _value = _n_thread * N_ELEMENTS + _k + 1;
 #endif
                           _queue.push(_value);
-                          _list.push(_value);
                           ++_pushed;
-                          std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 1 });
                       }
                   }
                   catch (zpt::ExpectationException& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
-#ifndef FIRST_PUSH_THEN_POP
               else {
                   try {
                       for (int _k = 0; _k != N_ELEMENTS;) {
@@ -102,9 +91,6 @@ main(int _argc, char* _argv[]) -> int {
 #else
                               int _value = _queue.pop();
 #endif
-                              if (_poped % 2 == 0) {
-                                  _list.erase(_value);
-                              }
                               ++_k;
                               ++_poped;
                           }
@@ -117,49 +103,12 @@ main(int _argc, char* _argv[]) -> int {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
-#endif
           },
           _i);
     }
-
-#ifdef FIRST_PUSH_THEN_POP
-    std::cout << "wainting for pushes to finish... " << std::flush;
-    // std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 5000 });
-    std::this_thread::yield();
-    std::cout << "done!" << std::endl << std::flush;
-    for (int _i = MAX_THREADS / 2; _i != MAX_THREADS; ++_i) {
-        _threads.emplace_back(
-          [](int _n_thread) {
-              for (int _k = 0; _k != N_ELEMENTS;) {
-                  try {
-#ifdef QUEUE_USE_STRING
-                      std::string* _value = _queue.pop();
-                      _pops.push_back(*_value);
-                      delete _value;
-#else
-                      int _value = _queue.pop();
-#endif
-                      ++_k;
-                      ++_poped;
-                  }
-                  catch (zpt::NoMoreElementsException& e) {
-                      // std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 10 });
-                      std::this_thread::yield();
-                  }
-              }
-          },
-          _i);
-    }
-#endif
 
     for (int _i = 0; _i != MAX_THREADS; ++_i)
         _threads[_i].join();
-
-    auto _it = _list.find(100);
-    if (_it != _list.end()) {
-        std::cout << "* found: " << (*_it) << std::endl << std::flush;
-    }
-    std::cout << _list << std::endl << std::flush;
 
     std::cout << _queue << std::endl << std::endl << std::flush;
     std::cout << "* " << MAX_THREADS << " working threads:" << std::endl << std::flush;
@@ -167,4 +116,89 @@ main(int _argc, char* _argv[]) -> int {
     std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
     return 0;
+}
+
+auto
+test_list(int _argc, char* _argv[]) -> int {
+    std::vector<std::thread> _threads;
+
+#ifdef INTERCEPT_SIGINT
+    std::signal(SIGINT, pause);
+#endif
+
+    for (int _i = 0; _i != MAX_THREADS; ++_i) {
+        _threads.emplace_back(
+          [&](int _n_thread) {
+              if (_n_thread % 2 == 0) {
+                  try {
+                      for (int _k = 0; _k != N_ELEMENTS; ++_k) {
+#ifdef QUEUE_USE_STRING
+                          std::shared_ptr<std::string> _value{ new std::string(
+                            std::to_string(_n_thread * N_ELEMENTS + _k)) };
+#else
+                          int _value = _n_thread * N_ELEMENTS + _k;
+#endif
+                          _list.push(_value);
+                          ++_pushed;
+                      }
+                  }
+                  catch (zpt::failed_expectation& _e) {
+                      std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
+                  }
+              }
+              else {
+                  try {
+                      for (int _k = 0; _k != N_ELEMENTS;) {
+                          try {
+#ifdef QUEUE_USE_STRING
+                              auto _it =
+                                _list.erase([&](std::shared_ptr<std::string> const& _item) -> bool {
+                                    return std::to_string((_n_thread - 1) * N_ELEMENTS + _k) ==
+                                           *_item;
+#else
+                              auto _it = _list.erase([&](int const& _item) -> bool {
+                                  return _item == (_n_thread - 1) * N_ELEMENTS + _k;
+#endif
+                                });
+                              if (_it != _list.end()) {
+                                  ++_poped;
+                              }
+                              ++_k;
+                          }
+                          catch (zpt::NoMoreElementsException& e) {
+                              std::this_thread::yield();
+                          }
+                      }
+                  }
+                  catch (zpt::failed_expectation& _e) {
+                      std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
+                  }
+              }
+          },
+          _i);
+    }
+
+    for (int _i = 0; _i != MAX_THREADS; ++_i)
+        _threads[_i].join();
+
+#ifdef QUEUE_USE_STRING
+    auto _it = _list.find([&](std::shared_ptr<std::string> const& _item) -> bool {
+        return *_item == "5";
+#else
+    auto _it = _list.find([&](int const& _item) -> bool {
+        return _item == 5;
+#endif
+    });
+    if (_it != _list.end()) {
+        std::cout << "* found: " << (*_it) << std::endl << std::flush;
+    }
+    std::cout << _list << std::endl << std::flush;
+
+    return 0;
+}
+
+auto
+main(int _argc, char* _argv[]) -> int {
+    // return test_queue(_argc, _argv);
+    return test_list(_argc, _argv);
 }
