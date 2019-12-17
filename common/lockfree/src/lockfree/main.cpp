@@ -28,7 +28,6 @@
 
 constexpr int N_ELEMENTS = 10000;
 constexpr int MAX_THREADS = 1000;
-constexpr int MAX_THREADS_LIST = 20;
 constexpr int PER_THREAD = 8;
 
 // #define QUEUE_USE_STRING
@@ -40,10 +39,10 @@ std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
 zpt::lf::queue<std::shared_ptr<std::string>> _queue{ MAX_THREADS, PER_THREAD, SPIN_WAIT_MILLIS };
-zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS_LIST, PER_THREAD };
+zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS, PER_THREAD };
 #else
 zpt::lf::queue<int> _queue{ MAX_THREADS, PER_THREAD, SPIN_WAIT_MILLIS };
-zpt::lf::list<int> _list{ MAX_THREADS_LIST, PER_THREAD };
+zpt::lf::list<int> _list{ MAX_THREADS, PER_THREAD };
 #endif
 
 auto
@@ -151,18 +150,15 @@ test_list(int _argc, char* _argv[]) -> int {
                       for (int _k = 0; _k != N_ELEMENTS;) {
                           try {
 #ifdef QUEUE_USE_STRING
-                              auto _it =
-                                _list.erase([&](std::shared_ptr<std::string> const& _item) -> bool {
-                                    return std::to_string((_n_thread - 1) * N_ELEMENTS + _k) ==
-                                           *_item;
+                              _list.erase([&](std::shared_ptr<std::string> const& _item) -> bool {
+                                  return std::to_string((_n_thread - 1) * N_ELEMENTS + _k) ==
+                                         *_item;
 #else
-                              auto _it = _list.erase([&](int const& _item) -> bool {
+                              _list.erase([&](int const& _item) -> bool {
                                   return _item == (_n_thread - 1) * N_ELEMENTS + _k;
 #endif
-                                });
-                              if (_it != _list.end()) {
-                                  ++_poped;
-                              }
+                              });
+                              ++_poped;
                               ++_k;
                           }
                           catch (zpt::NoMoreElementsException& e) {
@@ -199,6 +195,6 @@ test_list(int _argc, char* _argv[]) -> int {
 
 auto
 main(int _argc, char* _argv[]) -> int {
-    // return test_queue(_argc, _argv);
-    return test_list(_argc, _argv);
+    return test_queue(_argc, _argv);
+    // return test_list(_argc, _argv);
 }

@@ -95,11 +95,11 @@ class queue {
     auto operator=(const zpt::lf::queue<T>& _rhs) -> zpt::lf::queue<T>&;
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>&;
 
-    auto front() const -> T;
-    auto back() const -> T;
+    auto front() -> T;
+    auto back() -> T;
 
-    auto head() const -> zpt::lf::queue<T>::node*;
-    auto tail() const -> zpt::lf::queue<T>::node*;
+    auto head() -> zpt::lf::queue<T>::node*;
+    auto tail() -> zpt::lf::queue<T>::node*;
 
     auto push(T value) -> zpt::lf::queue<T>&;
     auto pop() -> T;
@@ -172,20 +172,21 @@ zpt::lf::queue<T>::~queue() {}
 
 template<typename T>
 auto
-zpt::lf::queue<T>::front() const -> T {
+zpt::lf::queue<T>::front() -> T {
     return this->head()->__value;
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::back() const -> T {
+zpt::lf::queue<T>::back() -> T {
     return this->tail()->__value;
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::head() const -> zpt::lf::queue<T>::node* {
+zpt::lf::queue<T>::head() -> zpt::lf::queue<T>::node* {
     zpt::lf::queue<T>::node* _front = this->__head.load();
+    typename zpt::lf::hptr_domain<node>::guard _front_sentry{ _front, this->__hptr };
     if (_front != nullptr && !_front->__is_null.load()) {
         return _front;
     }
@@ -194,8 +195,9 @@ zpt::lf::queue<T>::head() const -> zpt::lf::queue<T>::node* {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::tail() const -> zpt::lf::queue<T>::node* {
+zpt::lf::queue<T>::tail() -> zpt::lf::queue<T>::node* {
     zpt::lf::queue<T>::node* _back = this->__tail.load();
+    typename zpt::lf::hptr_domain<node>::guard _back_sentry{ _back, this->__hptr };
     if (_back != nullptr && !_back->__is_null.load()) {
         return _back;
     }
