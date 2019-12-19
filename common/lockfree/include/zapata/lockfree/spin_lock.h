@@ -43,9 +43,6 @@ class spin_lock {
     auto release_shared() -> zpt::lf::spin_lock&;
     auto release_exclusive() -> zpt::lf::spin_lock&;
 
-    auto exclusivity() -> zpt::lf::spin_lock&;
-    auto shareability() -> zpt::lf::spin_lock&;
-
   private:
     std::atomic<long> __shared_access{ 0 };
     std::atomic<bool> __exclusive_access{ false };

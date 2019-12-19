@@ -49,6 +49,8 @@ class list {
     using size_type = size_t;
     class iterator {
       public:
+        friend class zpt::lf::list<T>;
+
         using difference_type = std::ptrdiff_t;
         using value_type = T;
         using pointer = T;
@@ -93,6 +95,7 @@ class list {
         zpt::lf::list<T>& __target;
         std::unique_ptr<zpt::lf::spin_lock::guard> __shared_sentry;
     };
+    friend class zpt::lf::list<T>::iterator;
 
     list(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis = 0);
     list(zpt::lf::list<T> const& _rhs) = delete;
@@ -116,14 +119,18 @@ class list {
 
     template<typename F>
     auto find(F _find_if) -> zpt::lf::list<T>::iterator;
+    auto at(size_t _idx) -> T;
+
     auto begin() -> zpt::lf::list<T>::iterator;
     auto end() -> zpt::lf::list<T>::iterator;
 
     auto clear() -> zpt::lf::list<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
-    std::string to_string() const __attribute__((noinline));
+    auto to_string() const -> std::string; //__attribute__((noinline));
+
     operator std::string();
+    auto operator[](size_t _idx) -> T;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::list<T>& _in) -> std::ostream& {
         _out << "* zpt::lf::list(" << std::hex << &_in << "):" << std::dec << std::endl
@@ -336,6 +343,23 @@ zpt::lf::list<T>::find(F _find_if) -> zpt::lf::list<T>::iterator {
 
 template<typename T>
 auto
+zpt::lf::list<T>::at(size_t _idx) -> T {
+    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, true };
+    size_t _k{ 0 };
+    zpt::lf::list<T>::node* _node = this->__head.load();
+    while (_node != nullptr && _k != _idx) {
+        zpt::lf::list<T>::node* _next = _node->__next.load();
+        typename zpt::lf::hptr_domain<node>::guard _next_sentry{ _next, this->__hptr };
+        _node = _next;
+        ++_k;
+    }
+    expect(_k == _idx, "couldn't find the provided index", 500, 0);
+    typename zpt::lf::hptr_domain<node>::guard _node_sentry{ _node, this->__hptr };
+    return _node->__value;
+}
+
+template<typename T>
+auto
 zpt::lf::list<T>::begin() -> zpt::lf::list<T>::iterator {
     return zpt::lf::list<T>::iterator{ this->__head.load(), *this };
 }
@@ -377,6 +401,11 @@ zpt::lf::list<T>::operator std::string() {
     std::ostringstream _oss;
     _oss << (*this) << std::flush;
     return _oss.str();
+}
+
+template<typename T>
+auto zpt::lf::list<T>::operator[](size_t _idx) -> T {
+    return this->at(_idx);
 }
 
 template<typename T>
