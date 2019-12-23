@@ -31,7 +31,7 @@ zjson_LDFLAGS=
 zjson_CPPFLAGS = -std=c++17 -Wall -I../../include
 
 zjson_SOURCES = \
-parser.cpp
+main.cpp
 
 zinit_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
 zinit_LDFLAGS=

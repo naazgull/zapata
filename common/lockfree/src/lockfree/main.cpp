@@ -61,6 +61,9 @@ pause(int _signal) -> void {
 
 auto
 test_queue(int _argc, char* _argv[]) -> int {
+    _pushed = 0;
+    _poped = 0;
+    auto _t1 = std::chrono::high_resolution_clock::now();
     std::vector<std::thread> _threads;
 
 #ifdef INTERCEPT_SIGINT
@@ -91,11 +94,7 @@ test_queue(int _argc, char* _argv[]) -> int {
                   try {
                       for (int _k = 0; _k != N_ELEMENTS_QUEUE;) {
                           try {
-#ifdef QUEUE_USE_STRING
-                              std::shared_ptr<std::string> _value = _queue.pop();
-#else
-                              int _value = _queue.pop();
-#endif
+                              _queue.pop();
                               ++_k;
                               ++_poped;
                           }
@@ -114,17 +113,23 @@ test_queue(int _argc, char* _argv[]) -> int {
 
     for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i)
         _threads[_i].join();
+    auto _t2 = std::chrono::high_resolution_clock::now();
+    auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
 
     std::cout << _queue << std::endl << std::endl << std::flush;
     std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
     std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
     std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
+    std::cout << std::endl << "total time: " << _duration << "s" << std::endl << std::flush;
     return 0;
 }
 
 auto
 test_list(int _argc, char* _argv[]) -> int {
+    _pushed = 0;
+    _poped = 0;
+    auto _t1 = std::chrono::high_resolution_clock::now();
     std::vector<std::thread> _threads;
 
 #ifdef INTERCEPT_SIGINT
@@ -138,8 +143,8 @@ test_list(int _argc, char* _argv[]) -> int {
                   try {
                       for (int _k = 0; _k != N_ELEMENTS_LIST; ++_k) {
 #ifdef QUEUE_USE_STRING
-                          std::shared_ptr<std::string> _value{ new std::string(
-                            std::to_string(_n_thread * N_ELEMENTS_LIST + _k)) };
+                          std::shared_ptr<std::string> _value = std::make_shared<std::string>(
+                            std::to_string(_n_thread * N_ELEMENTS_LIST + _k));
 #else
                           int _value = _n_thread * N_ELEMENTS_LIST + _k;
 #endif
@@ -156,15 +161,18 @@ test_list(int _argc, char* _argv[]) -> int {
                       for (int _k = 0; _k != N_ELEMENTS_LIST;) {
                           try {
 #ifdef QUEUE_USE_STRING
-                              _list.erase([&](std::shared_ptr<std::string> const& _item) -> bool {
-                                  return std::to_string((_n_thread - 1) * N_ELEMENTS_LIST + _k) ==
-                                         *_item;
+                              auto _it =
+                                _list.erase([&](std::shared_ptr<std::string> const& _item) -> bool {
+                                    return std::to_string((_n_thread - 1) * N_ELEMENTS_LIST + _k) ==
+                                           *_item;
 #else
-                              _list.erase([&](int const& _item) -> bool {
+                              auto _it = _list.erase([&](int const& _item) -> bool {
                                   return _item == (_n_thread - 1) * N_ELEMENTS_LIST + _k;
 #endif
-                              });
-                              ++_poped;
+                                });
+                              if (_it != _list.end()) {
+                                  ++_poped;
+                              }
                               ++_k;
                           }
                           catch (zpt::NoMoreElementsException& e) {
@@ -183,12 +191,15 @@ test_list(int _argc, char* _argv[]) -> int {
     for (int _i = 0; _i != MAX_THREADS_LIST; ++_i)
         _threads[_i].join();
 
+    auto _t2 = std::chrono::high_resolution_clock::now();
+    auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
+
     std::cout << _list << std::endl << std::endl << std::flush;
 #ifdef QUEUE_USE_STRING
-    auto _it = _list.find([&](std::shared_ptr<std::string> const& _item) -> bool {
+    auto _it = _list.find_if([&](std::shared_ptr<std::string> const& _item) -> bool {
         return *_item == "5";
 #else
-    auto _it = _list.find([&](int const& _item) -> bool {
+    auto _it = _list.find_if([&](int const& _item) -> bool {
         return _item == 5;
 #endif
     });
@@ -196,13 +207,28 @@ test_list(int _argc, char* _argv[]) -> int {
         std::cout << "* found: " << (*_it) << std::endl << std::flush;
     }
 
-    std::cout << "* at index 100 is " << _list[100] << std::endl << std::flush;
+    std::cout << "* at index 0 is " << _list[0] << std::endl << std::endl << std::flush;
 
+    std::cout << "* " << MAX_THREADS_LIST << " working threads:" << std::endl << std::flush;
+    std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "  #removed -> " << _poped.load() << std::endl << std::flush;
+
+    std::cout << std::endl << "total time: " << _duration << "s" << std::endl << std::flush;
     return 0;
 }
 
 auto
 main(int _argc, char* _argv[]) -> int {
-    // return test_queue(_argc, _argv);
-    return test_list(_argc, _argv);
+    try {
+        test_queue(_argc, _argv);
+        test_list(_argc, _argv);
+        return 0;
+    }
+    catch (zpt::failed_expectation& _e) {
+        std::cout << _e.what() << std::endl
+                  << _e.description() << std::endl
+                  << _e.backtrace() << std::endl
+                  << std::flush;
+    }
+    return 1;
 }

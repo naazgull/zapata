@@ -77,6 +77,7 @@ zpt::ExpectationException::ExpectationException(std::string _in,
     }
 
     for (size_t _i = 0; _i != _backtrace_size; _i++) {
+        this->__backtrace.insert(this->__backtrace.length(), "\t");
         this->__backtrace.insert(this->__backtrace.length(), std::string(_backtrace[_i]));
         this->__backtrace.insert(this->__backtrace.length(), "\n");
     }

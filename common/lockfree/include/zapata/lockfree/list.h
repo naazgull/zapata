@@ -59,7 +59,7 @@ class list {
         explicit iterator(zpt::lf::list<T>::node* _current, zpt::lf::list<T>& _target);
         iterator(iterator const& _rhs);
         iterator(iterator&& _rhs);
-        virtual ~iterator() = default;
+        virtual ~iterator();
 
         // BASIC ITERATOR METHODS //
         auto operator=(iterator const& _rhs) -> iterator&;
@@ -118,7 +118,7 @@ class list {
     auto erase(zpt::lf::list<T>::iterator& _to_remove) -> zpt::lf::list<T>::iterator;
 
     template<typename F>
-    auto find(F _find_if) -> zpt::lf::list<T>::iterator;
+    auto find_if(F _callback) -> zpt::lf::list<T>::iterator;
     auto at(size_t _idx) -> T;
 
     auto begin() -> zpt::lf::list<T>::iterator;
@@ -127,7 +127,7 @@ class list {
     auto clear() -> zpt::lf::list<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
-    auto to_string() const -> std::string; //__attribute__((noinline));
+    auto to_string() const -> std::string;
 
     operator std::string();
     auto operator[](size_t _idx) -> T;
@@ -331,10 +331,10 @@ zpt::lf::list<T>::erase(zpt::lf::list<T>::iterator& _to_remove) -> zpt::lf::list
 template<typename T>
 template<typename F>
 auto
-zpt::lf::list<T>::find(F _find_if) -> zpt::lf::list<T>::iterator {
+zpt::lf::list<T>::find_if(F _callback) -> zpt::lf::list<T>::iterator {
     zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, true };
     for (auto _it = this->begin(); _it != this->end(); ++_it) {
-        if (_find_if(_it.node()->__value)) {
+        if (!_it.node()->__is_null.load() && _callback(_it.node()->__value)) {
             return zpt::lf::list<T>::iterator{ _it.node(), *this };
         }
     }
@@ -417,7 +417,9 @@ zpt::lf::list<T>::iterator::iterator(zpt::lf::list<T>::node* _current, zpt::lf::
   : __initial{ _current }
   , __current{ _current }
   , __target{ _target }
-  , __shared_sentry{ std::make_unique<zpt::lf::spin_lock::guard>(_target.__access_lock, true) } {}
+  , __shared_sentry{ std::make_unique<zpt::lf::spin_lock::guard>(_target.__access_lock, true) } {
+    this->__target.__hptr.acquire(this->__current);
+}
 
 template<typename T>
 zpt::lf::list<T>::iterator::iterator(iterator const& _rhs)
@@ -425,14 +427,23 @@ zpt::lf::list<T>::iterator::iterator(iterator const& _rhs)
   , __current{ _rhs.__current }
   , __target{ _rhs.__target }
   , __shared_sentry{ std::make_unique<zpt::lf::spin_lock::guard>(_rhs.__target.__access_lock,
-                                                                 true) } {}
+                                                                 true) } {
+    this->__target.__hptr.acquire(this->__current);
+}
 
 template<typename T>
 zpt::lf::list<T>::iterator::iterator(iterator&& _rhs)
   : __initial{ _rhs.__initial }
   , __current{ _rhs.__current }
   , __target{ _rhs.__target }
-  , __shared_sentry{ std::move(_rhs.__shared_sentry) } {}
+  , __shared_sentry{ std::move(_rhs.__shared_sentry) } {
+    this->__target.__hptr.acquire(this->__current);
+}
+
+template<typename T>
+zpt::lf::list<T>::iterator::~iterator() {
+    this->__target.__hptr.release(this->__current);
+}
 
 template<typename T>
 auto
@@ -442,6 +453,7 @@ zpt::lf::list<T>::iterator::operator=(iterator const& _rhs) -> zpt::lf::list<T>:
     this->__target = _rhs.__target;
     this->__shared_sentry =
       std::make_unique<zpt::lf::spin_lock::guard>(_rhs.__target.__access_lock, true);
+    this->__target.__hptr.acquire(this->__current);
     return (*this);
 }
 
@@ -454,6 +466,7 @@ zpt::lf::list<T>::iterator::operator=(iterator&& _rhs) -> zpt::lf::list<T>::iter
     this->__shared_sentry = std::move(_rhs.__shared_entry);
     _rhs.__initial = nullptr;
     _rhs.__current = nullptr;
+    this->__target.__hptr.acquire(this->__current);
     return (*this);
 }
 
@@ -461,7 +474,9 @@ template<typename T>
 auto
 zpt::lf::list<T>::iterator::operator++() -> zpt::lf::list<T>::iterator& {
     if (this->__current != nullptr) {
+        this->__target.__hptr.release(this->__current);
         this->__current = this->__current->__next.load();
+        this->__target.__hptr.acquire(this->__current);
     }
     return (*this);
 }
