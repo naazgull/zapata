@@ -211,14 +211,14 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     typename zpt::lf::hptr_domain<node>::guard _new_sentry{ _new, this->__hptr };
 
     do {
-        zpt::lf::queue<T>::node* _tail = this->__tail.load();
+        zpt::lf::queue<T>::node* _tail = this->__tail.load(std::memory_order_acquire);
         zpt::lf::queue<T>::node* _null{ nullptr };
         typename zpt::lf::hptr_domain<node>::guard _tail_sentry{ _tail, this->__hptr };
 
         if (_tail->__next.compare_exchange_strong(_null, _new)) {
             _tail->__value = _value;
             _tail->__is_null.store(false);
-            this->__tail.store(_new);
+            this->__tail.store(_new, std::memory_order_release);
             return (*this);
         }
         if (this->__spin_sleep < 0) {
@@ -237,7 +237,7 @@ template<typename T>
 auto
 zpt::lf::queue<T>::pop() -> T {
     do {
-        zpt::lf::queue<T>::node* _head = this->__head.load();
+        zpt::lf::queue<T>::node* _head = this->__head.load(std::memory_order_acquire);
         typename zpt::lf::hptr_domain<node>::guard _head_sentry{ _head, this->__hptr };
 
         if (_head->__is_null.load()) {
@@ -247,7 +247,7 @@ zpt::lf::queue<T>::pop() -> T {
             zpt::lf::queue<T>::node* _next = _head->__next.load();
             typename zpt::lf::hptr_domain<node>::guard _next_sentry{ _next, this->__hptr };
 
-            if (this->__head.compare_exchange_strong(_head, _next)) {
+            if (this->__head.compare_exchange_strong(_head, _next, std::memory_order_release)) {
                 _head->__is_null.store(true);
                 T _value = _head->__value;
                 _head_sentry.retire();

@@ -1,4 +1,4 @@
-zapata-python (1.0.0-1artful1) artful; urgency=medium
+zapata-python (1.0.0-1) artful; urgency=medium
 
   * Version bump
 
@@ -238,55 +238,55 @@ zapata-python (0.9.7-1artful20) artful; urgency=medium
 
  -- n@zgul <n@zgul.me>  Fri, 30 Jun 2017 04:10:27 +0100
 
-zapata-python (0.9.7-1artful19) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 22 Jun 2017 15:43:28 +0100
 
-zapata-python (0.9.7-1artful18) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 22:02:49 +0100
 
-zapata-python (0.9.7-1artful17) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 07 Jun 2017 15:35:46 +0100
 
-zapata-python (0.9.7-1artful16) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 05 Jun 2017 12:01:03 +0100
 
-zapata-python (0.9.7-1artful15) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 13:34:23 +0100
 
-zapata-python (0.9.7-1artful14) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 12:27:36 +0100
 
-zapata-python (0.9.7-1artful13) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 01 Jun 2017 10:26:19 +0100
 
-zapata-python (0.9.7-1artful11) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 24 May 2017 14:15:46 +0100
 
-zapata-python (0.9.7-1artful10) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
@@ -340,7 +340,7 @@ zapata-python (0.9.7-1artful2) artful; urgency=medium
 
  -- n@zgul <n@zgul.me>  Thu, 27 Apr 2017 23:06:58 +0100
 
-zapata-python (0.9.7-1artful1) artful; urgency=medium
+zapata-python (0.9.7-1) artful; urgency=medium
 
   * Version bump
 
@@ -514,61 +514,61 @@ zapata-python (0.9.6-1artful20) artful; urgency=medium
 
  -- n@zgul <n@zgul.me>  Thu, 16 Mar 2017 15:21:50 +0000
 
-zapata-python (0.9.6-1artful19) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 16 Mar 2017 13:55:12 +0000
 
-zapata-python (0.9.6-1artful18) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 15 Mar 2017 21:58:17 +0000
 
-zapata-python (0.9.6-1artful17) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 14 Mar 2017 11:57:58 +0000
 
-zapata-python (0.9.6-1artful16) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Sun, 12 Mar 2017 16:14:44 +0000
 
-zapata-python (0.9.6-1artful15) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 10 Mar 2017 17:29:19 +0000
 
-zapata-python (0.9.6-1artful14) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 08 Mar 2017 22:00:47 +0000
 
-zapata-python (0.9.6-1artful13) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 06 Mar 2017 12:51:30 +0000
 
-zapata-python (0.9.6-1artful12) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 03 Mar 2017 14:48:45 +0000
 
-zapata-python (0.9.6-1artful11) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 02 Mar 2017 18:09:43 +0000
 
-zapata-python (0.9.6-1artful10) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
@@ -622,67 +622,67 @@ zapata-python (0.9.6-1artful2) artful; urgency=medium
 
  -- n@zgul <n@zgul.me>  Fri, 24 Feb 2017 12:37:24 +0000
 
-zapata-python (0.9.6-1artful1) artful; urgency=medium
+zapata-python (0.9.6-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Fri, 24 Feb 2017 00:12:16 +0000
 
-zapata-python (0.9.5-1artful19) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 22:57:48 +0000
 
-zapata-python (0.9.5-1artful18) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 19:35:01 +0000
 
-zapata-python (0.9.5-1artful17) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 17:15:57 +0000
 
-zapata-python (0.9.5-1artful16) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Thu, 23 Feb 2017 15:49:33 +0000
 
-zapata-python (0.9.5-1artful15) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 22 Feb 2017 19:25:04 +0000
 
-zapata-python (0.9.5-1artful14) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Wed, 22 Feb 2017 12:25:49 +0000
 
-zapata-python (0.9.5-1artful13) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 21 Feb 2017 23:45:23 +0000
 
-zapata-python (0.9.5-1artful12) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Tue, 21 Feb 2017 16:08:23 +0000
 
-zapata-python (0.9.5-1artful11) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
  -- n@zgul <n@zgul.me>  Mon, 20 Feb 2017 14:22:40 +0000
 
-zapata-python (0.9.5-1artful10) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 
@@ -736,7 +736,7 @@ zapata-python (0.9.5-1artful2) artful; urgency=medium
 
  -- n@zgul <n@zgul.me>  Tue, 07 Feb 2017 02:57:36 +0000
 
-zapata-python (0.9.5-1artful1) artful; urgency=medium
+zapata-python (0.9.5-1) artful; urgency=medium
 
   * Version bump
 

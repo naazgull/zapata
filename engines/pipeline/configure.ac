@@ -1,6 +1,6 @@
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-common-matrix, 0.0.1-1, n@zgul.me)
+AC_INIT(zapata-pipeline, 0.0.1-1, n@zgul.me)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -21,8 +21,8 @@ AC_HAVE_LIBRARY(zapata-base)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/matrix/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/matrix/config.h])
+AH_TOP([#include <zapata/pipeline/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/pipeline/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])
@@ -41,5 +41,5 @@ AC_PROG_LIBTOOL
 AC_CONFIG_FILES(Makefile
 		debian/Makefile
 		include/Makefile
-		src/matrix/Makefile)
+		src/pipeline/Makefile)
 AC_OUTPUT

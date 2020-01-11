@@ -1,0 +1,8 @@
+#include <zapata/pipeline.h>
+
+auto
+main(int argc, char* argv[]) -> int {
+    zpt::pipeline::engine<zpt::json>
+    return 0;
+}
+

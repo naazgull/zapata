@@ -1,4 +1,4 @@
-#include <zapata/matrix.h>
+#include <zapata/pipeline.h>
 
 auto
 main(int argc, char* argv[]) -> int {

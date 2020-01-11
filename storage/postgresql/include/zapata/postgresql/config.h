@@ -88,7 +88,7 @@
 #define PACKAGE_NAME "zapata-postgresql"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-postgresql 1.0.0-1artful1"
+#define PACKAGE_STRING "zapata-postgresql 1.0.0-1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-postgresql"
@@ -97,10 +97,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.0-1artful1"
+#define PACKAGE_VERSION "1.0.0-1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0.0-1artful1"
+#define VERSION "1.0.0-1"

@@ -217,7 +217,7 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
     typename zpt::lf::hptr_domain<node>::guard _new_sentry{ _new, this->__hptr };
 
     do {
-        zpt::lf::list<T>::node* _tail = this->__tail.load();
+        zpt::lf::list<T>::node* _tail = this->__tail.load(std::memory_order_acquire);
         zpt::lf::list<T>::node* _null{ nullptr };
         typename zpt::lf::hptr_domain<node>::guard _tail_sentry{ _tail, this->__hptr };
 
@@ -225,7 +225,7 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
             _new->__prev.store(_tail);
             _tail->__value = _value;
             _tail->__is_null.store(false);
-            this->__tail.store(_new);
+            this->__tail.store(_new, std::memory_order_release);
             return (*this);
         }
         if (this->__spin_sleep < 0) {
@@ -245,7 +245,7 @@ auto
 zpt::lf::list<T>::pop() -> T {
     zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, true };
     do {
-        zpt::lf::list<T>::node* _head = this->__head.load();
+        zpt::lf::list<T>::node* _head = this->__head.load(std::memory_order_acquire);
         typename zpt::lf::hptr_domain<node>::guard _head_sentry{ _head, this->__hptr };
 
         if (_head->__is_null.load()) {
@@ -256,7 +256,7 @@ zpt::lf::list<T>::pop() -> T {
             zpt::lf::list<T>::node* _null{ nullptr };
             typename zpt::lf::hptr_domain<node>::guard _next_sentry{ _next, this->__hptr };
 
-            if (this->__head.compare_exchange_strong(_head, _next)) {
+            if (this->__head.compare_exchange_strong(_head, _next, std::memory_order_release)) {
                 _next->__prev.store(_null);
                 T _value = _head->__value;
                 _head->__is_null.store(true);
