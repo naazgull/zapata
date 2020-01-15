@@ -9,39 +9,36 @@
 #include "URILexer.h"
 
 // $insert namespace-open
-namespace zpt
-{
+namespace zpt {
 
 #undef URITokenizer
-    // CAVEAT: between the baseclass-include directive and the 
-    // #undef directive in the previous line references to URITokenizer 
-    // are read as URITokenizerBase.
-    // If you need to include additional headers in this file 
-    // you should do so after these comment-lines.
+// CAVEAT: between the baseclass-include directive and the
+// #undef directive in the previous line references to URITokenizer
+// are read as URITokenizerBase.
+// If you need to include additional headers in this file
+// you should do so after these comment-lines.
 
-
-class URITokenizer: public URITokenizerBase
-{
+class URITokenizer : public URITokenizerBase {
     // $insert scannerobject
     URIScanner d_scanner;
-        
-    public:
-        URITokenizer() = default;
-        int parse();
 
-    private:
-        void error();                   // called on (syntax) errors
-        int lex();                      // returns the next token from the
-                                        // lexical scanner. 
-        void print();                   // use, e.g., d_token, d_loc
-        void exceptionHandler(std::exception const &exc);
+  public:
+    URITokenizer() = default;
+    int parse();
+
+  private:
+    void error(); // called on (syntax) errors
+    int lex();    // returns the next token from the
+                  // lexical scanner.
+    void print(); // use, e.g., d_token, d_loc
+    void exceptionHandler(std::exception const& exc);
 
     // support functions for parse():
-        void executeAction_(int ruleNr);
-        void errorRecovery_();
-        void nextCycle_();
-        void nextToken_();
-        void print_();
+    void executeAction_(int ruleNr);
+    void errorRecovery_();
+    void nextCycle_();
+    void nextToken_();
+    void print_();
 };
 
 // $insert namespace-close

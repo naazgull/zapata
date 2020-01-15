@@ -135,12 +135,11 @@ zpt::lf::hptr_domain<T>::acquire(T* _ptr) -> zpt::lf::hptr_domain<T>& {
         }
     }
 
-    expect(false,
-           "No more hazard-pointer slots available for this thread. "
-           "Please, run the `clean()` "
-           "before continuing",
-           500,
-           0);
+    expect(
+      false,
+      "No more hazard-pointer slots available for this thread, release some before continuing.",
+      500,
+      0);
     return (*this);
 }
 

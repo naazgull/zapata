@@ -2402,9 +2402,9 @@ zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _field) ->
         _return += std::string("}\n");
         _return += std::string("}\n");
         _return += std::string("}\n");
-        _return +=
-          std::string("} catch (zpt::failed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
-                      "_e.description(), zpt::error); }\n");
+        _return += std::string(
+          "} catch (zpt::failed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
+          "_e.description(), zpt::error); }\n");
         _return += std::string("}\n");
     }
     return _return;
@@ -2483,9 +2483,9 @@ zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _field) ->
 
         _return += std::string("}\n");
         _return += std::string("}\n");
-        _return +=
-          std::string("} catch (zpt::failed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
-                      "_e.description(), zpt::error); }\n");
+        _return += std::string(
+          "} catch (zpt::failed_expectation& _e) { zlog(_e.what() + std::string(\": \") + "
+          "_e.description(), zpt::error); }\n");
         _return += std::string("}\n");
     }
     return _return;

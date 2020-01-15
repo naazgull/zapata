@@ -32,9 +32,9 @@ zpt::split(std::string _to_split, std::string _separator, bool _trim) -> zpt::js
 auto
 zpt::join(zpt::json _to_join, std::string _separator) -> std::string {
     expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
-            "JSON to join must be an array",
-            412,
-            0);
+           "JSON to join must be an array",
+           412,
+           0);
     std::string _return{ "" };
     for (auto [_idx, _key, _value] : _to_join) {
         if (_return.length() != 0) {
@@ -146,6 +146,28 @@ zpt::conf::setup(zpt::json _options) -> void {
 }
 
 auto
+zpt::conf::file(std::string _file, zpt::json _options) -> void {
+    zpt::json _conf;
+    std::ifstream _ifs;
+    _ifs.open(_file.data());
+    try {
+        _ifs >> _conf;
+    }
+    catch (zpt::SyntaxErrorException& _e) {
+        _conf = zpt::undefined;
+        expect(_conf->ok(),
+               std::string("syntax error parsing file: ") + _file + std::string(": ") + _e.what(),
+               500,
+               0);
+    }
+    _ifs.close();
+
+    for (auto [_idx, _key, _new_field] : _conf) {
+        _options << _key << (_options[_key] + _new_field);
+    }
+}
+
+auto
 zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
     std::vector<std::string> _non_positional;
     if (zpt::is_dir(_dir)) {
@@ -156,24 +178,15 @@ zpt::conf::dirs(std::string _dir, zpt::json _options) -> void {
     }
     std::sort(_non_positional.begin(), _non_positional.end());
     for (auto _file : _non_positional) {
-        zpt::json _conf;
-        std::ifstream _ifs;
-        _ifs.open(_file.data());
-        try {
-            _ifs >> _conf;
+        expect(zpt::file_exists(_file),
+               std::string("'") + _file + std::string("' can't be found."),
+               500,
+               0);
+        if (zpt::is_dir(_file)) {
+            zpt::conf::dirs(_file, _options);
         }
-        catch (zpt::SyntaxErrorException& _e) {
-            _conf = zpt::undefined;
-            expect(_conf->ok(),
-                    std::string("syntax error parsing file: ") + _file + std::string(": ") +
-                      _e.what(),
-                    500,
-                    0);
-        }
-        _ifs.close();
-
-        for (auto [_idx, _key, _new_field] : _conf) {
-            _options << _key << (_options[_key] + _new_field);
+        else {
+            zpt::conf::file(static_cast<std::string>(_file), _options);
         }
     }
 }
@@ -264,36 +277,45 @@ auto
 zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _values = zpt::json::array();
+
+    std::string _key{ "" };
+    std::string _value{ "" };
     for (int _i = 1; _i != _argc; _i++) {
         std::string _arg(_argv[_i]);
-        if (_arg.find("--") == 0 || _arg.find("-") == 0) {
-            std::string _value;
-            if (_arg.find("=") != std::string::npos) {
-                zpt::json _split = zpt::split(_arg, "=");
-                _arg.assign(static_cast<std::string>(_split[0]));
-                _value.assign(static_cast<std::string>(_split[1]));
-            }
-            _values = _return[_arg];
+
+        if (_arg == "--") {
+            _key.assign("");
+            _value.assign("");
+        }
+        else if (_arg.find("--") == 0 || _arg.find("-") == 0) {
+            _key.assign(_arg);
+            _value.assign("");
+        }
+        else if (_key.length() != 0) {
+            _value.assign(_arg);
+
+            _values = _return[_key];
             if (_values == zpt::undefined) {
-                _return << _arg << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
+                _return << _key << _value;
             }
             else if (_values->type() == zpt::JSArray) {
-                _values << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
+                _values << _value;
             }
             else {
                 zpt::json _old = _values;
                 _values = zpt::json::array();
-                _values << _old << (_value.length() != 0 ? zpt::json{ _value } : zpt::json{ true });
-                _return << _arg << _values;
+                _values << _old << _value;
+                _return << _key << _values;
             }
         }
         else {
+            _value.assign(_arg);
             _values = _return["--"];
             if (_values == zpt::undefined) {
                 _values = zpt::json::array();
                 _return << "--" << _values;
             }
-            _values << _arg;
+            _values << _value;
         }
     }
 
@@ -302,16 +324,21 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             continue;
         }
         expect(_config[_key]->type() == zpt::JSArray,
-                std::string{ "'" } + _key + std::string{ "' is not a valid option" },
-                500,
-                0);
+               std::string{ "'" } + _key + std::string{ "' is not a valid option" },
+               500,
+               0);
         for (auto [_, __, _cfg_value] : _config[_key]) {
             if (_cfg_value == "single") {
                 expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
-                        std::string{ "'" } + _key +
-                          std::string{ "' option can't have multiple values" },
-                        500,
-                        0);
+                       std::string{ "'" } + _key +
+                         std::string{ "' option can't have multiple values" },
+                       500,
+                       0);
+            }
+            else if (_cfg_value == "multiple") {
+                if (_option->type() != zpt::JSArray) {
+                    _return << _key << zpt::json{ zpt::array, _option };
+                }
             }
         }
     }
@@ -320,9 +347,9 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
         for (auto [_, __, _cfg_value] : _option) {
             if (_cfg_value == "mandatory") {
                 expect(_return[_key] != zpt::undefined,
-                        std::string{ "'" } + _key + std::string{ "' option is mandatory" },
-                        500,
-                        0);
+                       std::string{ "'" } + _key + std::string{ "' option is mandatory" },
+                       500,
+                       0);
             }
         }
     }

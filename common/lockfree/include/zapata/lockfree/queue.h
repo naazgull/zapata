@@ -88,11 +88,11 @@ class queue {
     };
 
     queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis = 0);
-    queue(const zpt::lf::queue<T>& _rhs);
+    queue(zpt::lf::queue<T> const& _rhs);
     queue(zpt::lf::queue<T>&& _rhs);
     virtual ~queue();
 
-    auto operator=(const zpt::lf::queue<T>& _rhs) -> zpt::lf::queue<T>&;
+    auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>&;
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>&;
 
     auto front() -> T;

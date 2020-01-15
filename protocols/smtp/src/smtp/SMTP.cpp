@@ -160,60 +160,60 @@ zpt::SMTP::open() -> mailsmtp* {
     try {
         if (this->__type[1] == zpt::json::string("ssl")) {
             expect(mailsmtp_ssl_connect(_smtp, this->__host.data(), this->__port) ==
-                      MAILSMTP_NO_ERROR,
-                    std::string("could not connect to ") + this->__connection,
-                    503,
-                    1501);
+                     MAILSMTP_NO_ERROR,
+                   std::string("could not connect to ") + this->__connection,
+                   503,
+                   1501);
         }
         else if (this->__type[1] == zpt::json::string("tls")) {
             expect(mailsmtp_socket_connect(_smtp, this->__host.data(), this->__port) ==
-                      MAILSMTP_NO_ERROR,
-                    std::string("could not connect to ") + this->__connection,
-                    503,
-                    1501);
+                     MAILSMTP_NO_ERROR,
+                   std::string("could not connect to ") + this->__connection,
+                   503,
+                   1501);
         }
         else {
             expect(mailsmtp_socket_connect(_smtp, this->__host.data(), this->__port) ==
-                      MAILSMTP_NO_ERROR,
-                    std::string("could not connect to ") + this->__connection,
-                    503,
-                    1501);
+                     MAILSMTP_NO_ERROR,
+                   std::string("could not connect to ") + this->__connection,
+                   503,
+                   1501);
         }
 
         if (this->__type[0] == zpt::json::string("smtp")) {
             expect(mailsmtp_helo(_smtp) == MAILSMTP_NO_ERROR,
-                    std::string("could not introduce my self to ") + this->__connection +
-                      std::string(" using SMTP"),
-                    400,
-                    1502);
+                   std::string("could not introduce my self to ") + this->__connection +
+                     std::string(" using SMTP"),
+                   400,
+                   1502);
         }
         else if (this->__type[0] == zpt::json::string("esmtp")) {
             expect(mailesmtp_ehlo(_smtp) == MAILSMTP_NO_ERROR,
-                    std::string("could not introduce my self to ") + this->__connection +
-                      std::string(" using ESMTP"),
-                    400,
-                    1502);
+                   std::string("could not introduce my self to ") + this->__connection +
+                     std::string(" using ESMTP"),
+                   400,
+                   1502);
         }
 
         if (this->__type[0] == zpt::json::string("esmtp") &&
             this->__type[1] == zpt::json::string("tls")) {
             expect(mailsmtp_socket_starttls(_smtp) == MAILSMTP_NO_ERROR,
-                    std::string("could not STARTTLS with ") + this->__connection,
-                    403,
-                    1503);
+                   std::string("could not STARTTLS with ") + this->__connection,
+                   403,
+                   1503);
             expect(mailesmtp_ehlo(_smtp) == MAILSMTP_NO_ERROR,
-                    std::string("could not introduce my self to ") + this->__connection +
-                      std::string(" using ESMTP"),
-                    400,
-                    1502);
+                   std::string("could not introduce my self to ") + this->__connection +
+                     std::string(" using ESMTP"),
+                   400,
+                   1502);
         }
 
         if (this->__user.length() != 0 && this->__type[0] == zpt::json::string("esmtp")) {
             expect(mailsmtp_auth(_smtp, this->__user.data(), this->__passwd.data()) ==
-                      MAILSMTP_NO_ERROR,
-                    std::string("could not authenticate propertly with ") + this->__connection,
-                    401,
-                    1504);
+                     MAILSMTP_NO_ERROR,
+                   std::string("could not authenticate propertly with ") + this->__connection,
+                   401,
+                   1504);
         }
     }
     catch (zpt::failed_expectation& _e) {
@@ -237,19 +237,19 @@ zpt::SMTP::send(zpt::json _e_mail) -> void {
     try {
         if (this->__type[0] == zpt::json::string("esmtp")) {
             expect(mailesmtp_mail(_smtp,
-                                   std::string(_e_mail["From"]["address"]).data(),
-                                   1,
-                                   "etPanSMTPZapataWrapper") == MAILSMTP_NO_ERROR,
-                    std::string("could not send email through ") + this->__connection,
-                    502,
-                    1505);
+                                  std::string(_e_mail["From"]["address"]).data(),
+                                  1,
+                                  "etPanSMTPZapataWrapper") == MAILSMTP_NO_ERROR,
+                   std::string("could not send email through ") + this->__connection,
+                   502,
+                   1505);
         }
         else {
             expect(mailsmtp_mail(_smtp, std::string(_e_mail["From"]["address"]).data()) ==
-                      MAILSMTP_NO_ERROR,
-                    std::string("could not send email through ") + this->__connection,
-                    502,
-                    1505);
+                     MAILSMTP_NO_ERROR,
+                   std::string("could not send email through ") + this->__connection,
+                   502,
+                   1505);
         }
 
         expect(_e_mail["To"]->is_array(), "'To' attribute must be a JSON array", 412, 1506)
@@ -259,31 +259,30 @@ zpt::SMTP::send(zpt::json _e_mail) -> void {
         for (auto _r : _e_mail["To"]->arr()) {
             if (this->__type[0] == zpt::json::string("esmtp")) {
                 expect(mailesmtp_rcpt(_smtp,
-                                       std::string(_r["address"]).data(),
-                                       MAILSMTP_DSN_NOTIFY_FAILURE | MAILSMTP_DSN_NOTIFY_DELAY,
-                                       nullptr) == MAILSMTP_NO_ERROR,
-                        std::string("could not add recipient ") + std::string(_r["address"]),
-                        400,
-                        1507);
+                                      std::string(_r["address"]).data(),
+                                      MAILSMTP_DSN_NOTIFY_FAILURE | MAILSMTP_DSN_NOTIFY_DELAY,
+                                      nullptr) == MAILSMTP_NO_ERROR,
+                       std::string("could not add recipient ") + std::string(_r["address"]),
+                       400,
+                       1507);
             }
             else {
-                expect(mailsmtp_rcpt(_smtp, std::string(_r["address"]).data()) ==
-                          MAILSMTP_NO_ERROR,
-                        std::string("could not add recipient ") + std::string(_r["address"]),
-                        400,
-                        1507);
+                expect(mailsmtp_rcpt(_smtp, std::string(_r["address"]).data()) == MAILSMTP_NO_ERROR,
+                       std::string("could not add recipient ") + std::string(_r["address"]),
+                       400,
+                       1507);
             }
         }
 
         expect(mailsmtp_data(_smtp) == MAILSMTP_NO_ERROR,
-                std::string("could not send DATA command to ") + this->__connection,
-                502,
-                1508);
+               std::string("could not send DATA command to ") + this->__connection,
+               502,
+               1508);
         expect(mailsmtp_data_message(_smtp, _mimed_mail.data(), _mimed_mail.length()) ==
-                  MAILSMTP_NO_ERROR,
-                std::string("could not send email through ") + this->__connection,
-                502,
-                1509);
+                 MAILSMTP_NO_ERROR,
+               std::string("could not send email through ") + this->__connection,
+               502,
+               1509);
 
         this->close(_smtp);
     }

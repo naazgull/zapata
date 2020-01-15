@@ -106,6 +106,8 @@ getopt(int _argc, char* _argv[]) -> zpt::json;
 auto
 setup(zpt::json _options) -> void;
 auto
+file(std::string _file, zpt::json _options) -> void;
+auto
 dirs(std::string _dir, zpt::json _options) -> void;
 auto
 dirs(zpt::json _options) -> void;

@@ -7,63 +7,56 @@
 #include "URILexerbase.h"
 
 // $insert namespace-open
-namespace zpt
-{
+namespace zpt {
 
 // $insert classHead
-class URILexer: public URILexerBase
-{
-    public:
-        explicit URILexer(std::istream &in = std::cin,
-                                std::ostream &out = std::cout);
+class URILexer : public URILexerBase {
+  public:
+    explicit URILexer(std::istream& in = std::cin, std::ostream& out = std::cout);
 
-        URILexer(std::string const &infile, std::string const &outfile);
-        
-        // $insert lexFunctionDecl
-        int lex();
+    URILexer(std::string const& infile, std::string const& outfile);
 
-    private:
-        int lex_();
-        int executeAction_(size_t ruleNr);
+    // $insert lexFunctionDecl
+    int lex();
 
-        void print();
-        void preCode();     // re-implement this function for code that must 
-                            // be exec'ed before the patternmatching starts
+  private:
+    int lex_();
+    int executeAction_(size_t ruleNr);
 
-        void postCode(PostEnum_ type);    
-                            // re-implement this function for code that must 
-                            // be exec'ed after the rules's actions.
+    void print();
+    void preCode(); // re-implement this function for code that must
+                    // be exec'ed before the patternmatching starts
+
+    void postCode(PostEnum_ type);
+    // re-implement this function for code that must
+    // be exec'ed after the rules's actions.
 };
 
 // $insert scannerConstructors
-inline URILexer::URILexer(std::istream &in, std::ostream &out)
-:
-    URILexerBase(in, out)
-{}
+inline URILexer::URILexer(std::istream& in, std::ostream& out)
+  : URILexerBase(in, out) {}
 
-inline URILexer::URILexer(std::string const &infile, std::string const &outfile)
-:
-    URILexerBase(infile, outfile)
-{}
+inline URILexer::URILexer(std::string const& infile, std::string const& outfile)
+  : URILexerBase(infile, outfile) {}
 
 // $insert inlineLexFunction
-inline int URILexer::lex()
-{
+inline int
+URILexer::lex() {
     return lex_();
 }
 
-inline void URILexer::preCode() 
-{
+inline void
+URILexer::preCode() {
     // optionally replace by your own code
 }
 
-inline void URILexer::postCode([[maybe_unused]] PostEnum_ type) 
-{
+inline void
+URILexer::postCode([[maybe_unused]] PostEnum_ type) {
     // optionally replace by your own code
 }
 
-inline void URILexer::print() 
-{
+inline void
+URILexer::print() {
     print_();
 }
 
@@ -71,4 +64,3 @@ inline void URILexer::print()
 }
 
 #endif // URILexer_H_INCLUDED_
-

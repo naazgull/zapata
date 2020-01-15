@@ -367,9 +367,9 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                 }
                 default: {
                     expect(_var_type < 17,
-                            "deserialization error: query variable type is higher than 16",
-                            0,
-                            500);
+                           "deserialization error: query variable type is higher than 16",
+                           0,
+                           500);
                 }
             }
             _event->__variables.push_back(_q_var);

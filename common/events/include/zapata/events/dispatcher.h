@@ -37,17 +37,21 @@ template<typename C, typename E, typename V>
 class dispatcher : public factory {
   public:
     dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _pop_wait_milli = 0);
-    virtual ~dispatcher() = default;
+    virtual ~dispatcher();
 
-    auto trigger(E _type, V _content) -> dispatcher&;
-    auto trap() -> dispatcher&;
+    auto add_consumer() -> C&;
+    auto trigger(E _type, V _content) -> C&;
+    auto trap() -> C&;
     template<typename F>
-    auto listen(E _type, F _callback) -> dispatcher&;
+    auto listen(E _type, F _callback) -> C&;
+    auto shutdown() -> C&;
     auto loop() -> void;
 
   public:
     zpt::lf::queue<std::tuple<E, V>> __queue;
     long __pop_wait{ 0 };
+    std::vector<std::thread> __consumers;
+    std::atomic<bool> __shutdown{ false };
 };
 
 } // namespace events
@@ -59,39 +63,63 @@ zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
                                              long _pop_wait_milli)
   : __queue{ _max_threads, _max_per_thread }
   , __pop_wait{ _pop_wait_milli } {
-    expect(_max_threads > 0, "`_max_threads` expected to be higher than 0", 500, 0);
+    expect(_max_threads > 1, "`_max_threads` expected to be higher than 1", 500, 0);
     expect(_max_per_thread > 0, "`_max_per_thread` expected to be higher than 0", 500, 0);
 }
 
 template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::trigger(E _event, V _content)
-  -> zpt::events::dispatcher<C, E, V>& {
-    this->__queue.push(std::make_pair(_event, _content));
-    return (*this);
+zpt::events::dispatcher<C, E, V>::~dispatcher() {
+    this->__shutdown.store(true);
+    for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
+        this->__consumers[_idx].join();
+    }
 }
 
 template<typename C, typename E, typename V>
 auto
-zpt::events::dispatcher<C, E, V>::trap() -> zpt::events::dispatcher<C, E, V>& {
+zpt::events::dispatcher<C, E, V>::add_consumer() -> C& {
+    this->__consumers.emplace_back([=]() { this->loop(); });
+    return (*static_cast<C*>(this));
+}
+
+template<typename C, typename E, typename V>
+auto
+zpt::events::dispatcher<C, E, V>::trigger(E _event, V _content) -> C& {
+    this->__queue.push(std::make_pair(_event, _content));
+    return (*static_cast<C*>(this));
+}
+
+template<typename C, typename E, typename V>
+auto
+zpt::events::dispatcher<C, E, V>::trap() -> C& {
     auto [_event, _content] = this->__queue.pop();
     static_cast<C*>(this)->trapped(_event, _content);
-    return (*this);
+    return (*static_cast<C*>(this));
 }
 
 template<typename C, typename E, typename V>
 template<typename F>
 auto
-zpt::events::dispatcher<C, E, V>::listen(E _event, F _listener)
-  -> zpt::events::dispatcher<C, E, V>& {
+zpt::events::dispatcher<C, E, V>::listen(E _event, F _listener) -> C& {
     static_cast<C*>(this)->listen_to(_event, _listener);
-    return (*this);
+    return (*static_cast<C*>(this));
+}
+
+template<typename C, typename E, typename V>
+auto
+zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
+    this->__shutdown.store(true);
+    return (*static_cast<C*>(this));
 }
 
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
     do {
+        if (this->__shutdown.load()) {
+            return;
+        }
+
         try {
             this->trap();
         }

@@ -82,7 +82,8 @@ internal_server_error(std::string _resource,
                       std::exception& _e,
                       zpt::json _headers = zpt::undefined) -> zpt::json;
 auto
-assertion_error(std::string _resource, zpt::failed_expectation& _e, zpt::json _headers = zpt::undefined)
-  -> zpt::json;
+assertion_error(std::string _resource,
+                zpt::failed_expectation& _e,
+                zpt::json _headers = zpt::undefined) -> zpt::json;
 } // namespace rest
 } // namespace zpt

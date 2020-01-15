@@ -209,3 +209,12 @@ zpt::is_dir(std::string _path) {
     }
     return false;
 }
+
+bool
+zpt::file_exists(std::string _path) {
+    struct stat _s;
+    if (stat(_path.data(), &_s) == 0) {
+        return true;
+    }
+    return false;
+}

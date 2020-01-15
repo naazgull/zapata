@@ -369,7 +369,14 @@ zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
                 this->__iterator = (***this->__target->obj()).end();
             }
             else {
-                this->__iterator = (***this->__target->obj()).find(_target->obj()->key_for(_pos));
+                try {
+                    this->__iterator =
+                      (***this->__target->obj()).find(_target->obj()->key_for(_pos));
+                }
+                catch (zpt::failed_expectation& _e) {
+                    this->__index = (***this->__target->obj()).size();
+                    this->__iterator = (***this->__target->obj()).end();
+                }
             }
             break;
         }
@@ -380,6 +387,7 @@ zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
             break;
         }
         default: {
+            this->__index = std::numeric_limits<size_t>::max();
             break;
         }
     }

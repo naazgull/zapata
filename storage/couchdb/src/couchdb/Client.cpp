@@ -124,10 +124,10 @@ zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
                                                 : (_is_ssl ? 443 : 80),
                                               _is_ssl);
                     expect(!this->__sockets[_k]->is_error(),
-                            std::string("couchdb: error with socket: ") +
-                              this->__sockets[_k]->error_string(),
-                            503,
-                            this->__sockets[_k]->error_code());
+                           std::string("couchdb: error with socket: ") +
+                             this->__sockets[_k]->error_string(),
+                           503,
+                           this->__sockets[_k]->error_code());
                 }
                 try {
                     (*this->__sockets[_k]) << _req << std::flush;
@@ -153,9 +153,9 @@ zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
                        : (_is_ssl ? 443 : 80),
                      _is_ssl);
         expect(!_socket.is_error(),
-                std::string("couchdb: error with socket: ") + _socket.error_string(),
-                503,
-                _socket.error_code());
+               std::string("couchdb: error with socket: ") + _socket.error_string(),
+               503,
+               _socket.error_code());
         _socket << _req << std::flush;
         try {
             _socket >> _rep;
@@ -224,9 +224,9 @@ zpt::couchdb::Client::create_database(std::string _collection) -> void {
     zpt::http::rep _rep = this->send(_req);
     zpt::json _response(_rep->body());
     expect(_rep->status() == zpt::http::status::HTTP201 && bool(_response["ok"]) == true,
-            std::string("could not create database:\n") + std::string(_rep),
-            500,
-            2001);
+           std::string("could not create database:\n") + std::string(_rep),
+           500,
+           2001);
 }
 
 auto
@@ -257,9 +257,9 @@ zpt::couchdb::Client::insert(std::string _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -293,10 +293,10 @@ zpt::couchdb::Client::insert(std::string _collection,
         _rep = this->send(_req);
     }
     expect(_rep->status() == zpt::http::status::HTTP201,
-            std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
-              std::string(_rep),
-            int(_rep->status()),
-            1201);
+           std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
+             std::string(_rep),
+           int(_rep->status()),
+           1201);
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
@@ -309,9 +309,9 @@ zpt::couchdb::Client::upsert(std::string _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -398,10 +398,10 @@ zpt::couchdb::Client::upsert(std::string _collection,
             _rep = this->send(_req);
         }
         expect(_rep->status() == zpt::http::status::HTTP201,
-                std::string("couldn't upsert document ") + std::string(_document["href"]) +
-                  std::string(": ") + _rep->body(),
-                _rep->status(),
-                2002);
+               std::string("couldn't upsert document ") + std::string(_document["href"]) +
+                 std::string(": ") + _rep->body(),
+               _rep->status(),
+               2002);
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
@@ -414,9 +414,9 @@ zpt::couchdb::Client::save(std::string _collection,
                            zpt::json _document,
                            zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            std::string("'_document' must be of type JSObject"),
-            412,
-            0);
+           std::string("'_document' must be of type JSObject"),
+           412,
+           0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -452,9 +452,9 @@ zpt::couchdb::Client::set(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            std::string("'_document' must be of type JSObject"),
-            412,
-            0);
+           std::string("'_document' must be of type JSObject"),
+           412,
+           0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -490,9 +490,9 @@ zpt::couchdb::Client::set(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-            "'_pattern' must be of type JSObject",
-            412,
-            0);
+           "'_pattern' must be of type JSObject",
+           412,
+           0);
     size_t _size = 0;
 
     std::string _db_name =
@@ -536,9 +536,9 @@ zpt::couchdb::Client::unset(std::string _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -574,9 +574,9 @@ zpt::couchdb::Client::unset(std::string _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-            "'_pattern' must be of type JSObject",
-            412,
-            0);
+           "'_pattern' must be of type JSObject",
+           412,
+           0);
     size_t _size = 0;
 
     std::string _db_name =
@@ -641,9 +641,9 @@ zpt::couchdb::Client::remove(std::string _collection, std::string _href, zpt::js
 auto
 zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-            "'_pattern' must be of type JSObject",
-            412,
-            0);
+           "'_pattern' must be of type JSObject",
+           412,
+           0);
     size_t _size = 0;
 
     std::string _db_name =
@@ -696,11 +696,11 @@ zpt::couchdb::Client::get(std::string _collection, std::string _href, zpt::json 
     _req->url(_url);
     zpt::http::rep _rep = this->send(_req);
     expect(_rep->status() == zpt::http::status::HTTP200 ||
-              _rep->status() == zpt::http::status::HTTP404,
-            std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
-              std::string(_rep),
-            int(_rep->status()),
-            1201);
+             _rep->status() == zpt::http::status::HTTP404,
+           std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
+             std::string(_rep),
+           int(_rep->status()),
+           1201);
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::get(_collection, _href, _opts);
@@ -743,11 +743,11 @@ zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt::jso
 
     zpt::http::rep _rep = this->send(_req);
     expect(_rep->status() == zpt::http::status::HTTP200 ||
-              _rep->status() == zpt::http::status::HTTP404,
-            std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
-              std::string(_rep),
-            int(_rep->status()),
-            1201);
+             _rep->status() == zpt::http::status::HTTP404,
+           std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
+             std::string(_rep),
+           int(_rep->status()),
+           1201);
 
     zpt::json _result(_rep->body());
     zpt::json _return = zpt::json::array();
@@ -790,10 +790,10 @@ zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json
 
     zpt::http::rep _rep = this->send(_req);
     expect(_rep->status() == zpt::http::status::HTTP200,
-            std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
-              std::string(_rep),
-            int(_rep->status()),
-            1201);
+           std::string("couchdb: error in request:\n") + std::string(_req) + std::string("\n") +
+             std::string(_rep),
+           int(_rep->status()),
+           1201);
 
     zpt::json _result(_rep->body());
     zpt::json _return = zpt::json::array();

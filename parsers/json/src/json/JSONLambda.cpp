@@ -118,9 +118,9 @@ zpt::lambda::parse(std::string _signature) -> std::tuple<std::string, unsigned s
     size_t _comma = _signature.find(",");
 
     expect(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
-            "lambda signature format not recognized",
-            412,
-            0);
+           "lambda signature format not recognized",
+           412,
+           0);
 
     std::string _name(_signature.substr(_lpar + 1, _comma - _lpar - 1));
     std::string _args(_signature.substr(_comma + 1, _rpar - _comma - 1));
@@ -173,9 +173,9 @@ auto
 zpt::lambda::find(std::string _signature) -> zpt::symbol {
     auto _found = zpt::__lambdas->find(_signature);
     expect(_found != zpt::__lambdas->end(),
-            std::string("symbol for ") + _signature + std::string(" was not found"),
-            404,
-            0);
+           std::string("symbol for ") + _signature + std::string(" was not found"),
+           404,
+           0);
     return std::get<2>(_found->second);
 }
 

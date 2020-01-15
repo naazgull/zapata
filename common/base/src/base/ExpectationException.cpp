@@ -28,11 +28,11 @@ SOFTWARE.
 #include <zapata/text/convert.h>
 
 zpt::ExpectationException::ExpectationException(std::string _in,
-                                            int _http_code,
-                                            int _code,
-                                            std::string _desc,
-                                            int _line,
-                                            std::string _file)
+                                                int _http_code,
+                                                int _code,
+                                                std::string _desc,
+                                                int _line,
+                                                std::string _file)
   : std::exception()
   , __what(_in)
   , __http_code(_http_code)
@@ -52,13 +52,13 @@ zpt::ExpectationException::ExpectationException(std::string _in,
 }
 
 zpt::ExpectationException::ExpectationException(std::string _in,
-                                            int _http_code,
-                                            int _code,
-                                            std::string _desc,
-                                            int _line,
-                                            std::string _file,
-                                            char** _backtrace,
-                                            size_t _backtrace_size)
+                                                int _http_code,
+                                                int _code,
+                                                std::string _desc,
+                                                int _line,
+                                                std::string _file,
+                                                char** _backtrace,
+                                                size_t _backtrace_size)
   : std::exception()
   , __what(_in)
   , __http_code(_http_code)

@@ -31,7 +31,7 @@
 /* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
-   */
+ */
 /* #undef HAVE_LIBZAPATA_LEX_JSON */
 
 /* Define to 1 if you have the `zmq' library (-lzmq). */

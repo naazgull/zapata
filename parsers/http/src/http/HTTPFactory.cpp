@@ -107,11 +107,11 @@ zpt::HTTP::send(zpt::json _envelope) -> zpt::json {
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
     expect((_performative == zpt::ev::Reply && this->__state == HTTP_REQ) ||
-              (_performative != zpt::ev::Reply && this->__state != HTTP_REQ),
-            "HTTP socket state doesn't allow you to send a reply without having "
-            "received a request",
-            400,
-            1201);
+             (_performative != zpt::ev::Reply && this->__state != HTTP_REQ),
+           "HTTP socket state doesn't allow you to send a reply without having "
+           "received a request",
+           400,
+           1201);
     expect(_envelope["resource"]->ok(), "'resource' attribute is required", 412, 0);
 
     zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
@@ -171,8 +171,7 @@ zpt::HTTP::recv() -> zpt::json {
             if (this->__state != HTTP_REQ) {
                 zpt::http::req _request;
                 (*this->__underlying) >> _request;
-                expect(
-                  !this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
+                expect(!this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
                 this->__state = HTTP_REQ;
                 try {
                     _in = zpt::http2internal(_request);
@@ -199,8 +198,7 @@ zpt::HTTP::recv() -> zpt::json {
             else {
                 zpt::http::rep _reply;
                 (*this->__underlying) >> _reply;
-                expect(
-                  !this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
+                expect(!this->__underlying->is_error(), this->__underlying->error_string(), 503, 0);
                 this->__state = HTTP_REP;
                 if (_reply->header("X-Cid") == "") {
                     _reply->header("X-Cid", this->__cid);

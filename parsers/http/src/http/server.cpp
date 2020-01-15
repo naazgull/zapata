@@ -42,8 +42,7 @@ main(int argc, char* argv[]) -> int {
               std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
             _reply->body("");
             std::cout << _reply << std::flush;
-            std::cout << "# processing time: " << _duration << "ms" << std::endl
-                      << std::flush;
+            std::cout << "# processing time: " << _duration << "ms" << std::endl << std::flush;
 
         } while (true);
     }

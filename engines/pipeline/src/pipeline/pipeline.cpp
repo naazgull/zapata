@@ -21,3 +21,16 @@
 */
 
 #include <zapata/pipeline/pipeline.h>
+
+auto
+zpt::pipeline::to_pattern(std::string _path) -> zpt::json {
+    zpt::regex _regex{ zpt::r_replace(zpt::r_replace(_path, "{", ""), "}", "") };
+    zpt::json _splitted = zpt::uri::to_regex(zpt::uri::parse(_path, zpt::JSArray));
+    return { "splitted", _splitted, "regex", _regex };
+}
+
+auto
+zpt::pipeline::to_path(std::string _path) -> zpt::json {
+    zpt::json _uri = zpt::uri::parse(_path, zpt::JSArray);
+    return { "splitted", _uri, "raw", _path };
+}

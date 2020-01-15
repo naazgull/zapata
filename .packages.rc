@@ -9,6 +9,8 @@ export projects=(
        common/lockfree
        common/graph
        common/events
+       engines/startup
+       engines/pipeline
 )
 
        # protocols/http

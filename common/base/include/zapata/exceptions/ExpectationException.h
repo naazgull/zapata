@@ -41,19 +41,19 @@ class ExpectationException : public std::exception {
 
   public:
     ExpectationException(std::string _what,
-                       int _http_code,
-                       int _code,
-                       std::string _desc,
-                       int _line = 0,
-                       std::string _file = "");
+                         int _http_code,
+                         int _code,
+                         std::string _desc,
+                         int _line = 0,
+                         std::string _file = "");
     ExpectationException(std::string _in,
-                       int _http_code,
-                       int _code,
-                       std::string _desc,
-                       int _line,
-                       std::string _file,
-                       char** _backtrace,
-                       size_t _backtrace_size);
+                         int _http_code,
+                         int _code,
+                         std::string _desc,
+                         int _line,
+                         std::string _file,
+                         char** _backtrace,
+                         size_t _backtrace_size);
     virtual ~ExpectationException() throw();
 
     virtual const char* what();

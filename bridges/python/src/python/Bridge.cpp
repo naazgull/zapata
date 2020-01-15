@@ -98,10 +98,10 @@ zpt::python::Bridge::deflbd(
 auto
 zpt::python::Bridge::instance() -> zpt::bridge {
     expect(zpt::python::__instance != nullptr,
-            "you must invoke 'zpt::bridge::boot< zpt::python::bridge >' before "
-            "requesting the instance",
-            500,
-            0);
+           "you must invoke 'zpt::bridge::boot< zpt::python::bridge >' before "
+           "requesting the instance",
+           500,
+           0);
     return zpt::python::__instance->self();
 }
 
@@ -126,10 +126,10 @@ zpt::python::Bridge::add_syspath(std::string _name) -> void {
 auto
 zpt::python::Bridge::boot(zpt::json _options) -> void {
     expect(zpt::python::__instance == nullptr,
-            "bridge instance isn't null, 'zpt::bridge::boot< zpt::python::bridge "
-            ">' already invoked",
-            500,
-            0);
+           "bridge instance isn't null, 'zpt::bridge::boot< zpt::python::bridge "
+           ">' already invoked",
+           500,
+           0);
     zpt::python::bridge* _bridge = new zpt::python::bridge(_options);
     zpt::python::__instance = _bridge;
 

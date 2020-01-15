@@ -80,10 +80,10 @@ auto
 zpt::mysql::Client::reconnect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     expect(this->__conn.get() != nullptr,
-            std::string("connection to MySQL at ") + this->name() +
-              std::string(" has not been established."),
-            500,
-            0);
+           std::string("connection to MySQL at ") + this->name() +
+             std::string(" has not been established."),
+           500,
+           0);
     this->__conn->close();
     this->__conn.release();
     this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(
@@ -99,16 +99,16 @@ zpt::mysql::Client::insert(std::string _collection,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -164,16 +164,16 @@ zpt::mysql::Client::upsert(std::string _collection,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -276,16 +276,16 @@ zpt::mysql::Client::save(std::string _collection,
                          zpt::json _document,
                          zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -329,16 +329,16 @@ zpt::mysql::Client::set(std::string _collection,
                         zpt::json _document,
                         zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -382,16 +382,16 @@ zpt::mysql::Client::set(std::string _collection,
                         zpt::json _document,
                         zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -439,16 +439,16 @@ zpt::mysql::Client::unset(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -490,16 +490,16 @@ zpt::mysql::Client::unset(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -544,10 +544,10 @@ zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -582,10 +582,10 @@ zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::jso
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }
@@ -630,10 +630,10 @@ zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::js
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
-                std::string("connection to MySQL at ") + this->name() +
-                  std::string(" has not been established."),
-                500,
-                0);
+               std::string("connection to MySQL at ") + this->name() +
+                 std::string(" has not been established."),
+               500,
+               0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _stmt->execute(string("USE ") + this->connection()["db"]->str());
     }

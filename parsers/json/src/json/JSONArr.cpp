@@ -42,11 +42,11 @@ zpt::JSONArrT::pop(std::string _idx) -> JSONArrT& {
     zpt::fromstr(_idx, &_i);
     if (_i > 0) {
         expect((size_t)_i < this->__underlying.size(),
-                "the index of the element you want to "
-                "remove must be lower than the array "
-                "size",
-                500,
-                0);
+               "the index of the element you want to "
+               "remove must be lower than the array "
+               "size",
+               500,
+               0);
         this->__underlying.erase(this->__underlying.begin() + _i);
     }
     return (*this);
@@ -56,10 +56,10 @@ auto
 zpt::JSONArrT::pop(size_t _idx) -> JSONArrT& {
     expect(_idx >= 0, "the index of the element you want to remove must be higher then 0", 500, 0);
     expect(_idx < this->__underlying.size(),
-            "the index of the element you want to remove "
-            "must be lower than the array size",
-            500,
-            0);
+           "the index of the element you want to remove "
+           "must be lower than the array size",
+           500,
+           0);
     this->__underlying.erase(this->__underlying.begin() + _idx);
     return (*this);
 }

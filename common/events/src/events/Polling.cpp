@@ -104,9 +104,9 @@ zpt::ChannelPoll::add(std::string _type, std::string _connection, bool _new_conn
 
     std::vector<zpt::socket> _underlying = this->bind(_type, _connection);
     expect(_underlying.size() != 0,
-            std::string("could not connection to ") + _type + std::string("@") + _connection,
-            500,
-            0);
+           std::string("could not connection to ") + _type + std::string("@") + _connection,
+           500,
+           0);
 
     for (auto _u : _underlying) {
         if (_new_connection) {

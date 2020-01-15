@@ -289,9 +289,9 @@ zpt::authenticator::OAuth2::authorize(std::string _topic,
     expect(_identity["client_id"]->is_string(), "associated token isn't a valid token", 401, 0);
     expect(_identity["permissions"]->is_string(), "associated token isn't a valid token", 401, 0);
     expect(this->validate_roles_permissions(_envelope, _topic, _identity["permissions"]),
-            "token didn't provide the necessary permissions",
-            403,
-            1);
+           "token didn't provide the necessary permissions",
+           403,
+           1);
 
     bool _role_found = !_roles_needed->is_array();
     if (_roles_needed->is_array()) {

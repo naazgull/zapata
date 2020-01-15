@@ -289,9 +289,9 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
           }*/
         else if (Py_TYPE(_exp) == &PyFilter_Type) {
             expect(Py_TYPE(_exp) != &PyFilter_Type,
-                    std::string("unmanaged python type PyFilter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyFilter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyMap_Type) {
             expect(
@@ -303,15 +303,15 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyByteArrayIter_Type) {
             expect(Py_TYPE(_exp) != &PyByteArrayIter_Type,
-                    std::string("unmanaged python type PyByteArrayIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyByteArrayIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyBytesIter_Type) {
             expect(Py_TYPE(_exp) != &PyBytesIter_Type,
-                    std::string("unmanaged python type PyBytesIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyBytesIter"),
+                   500,
+                   0);
         }
         else if (PyCell_Check(_exp)) {
             expect(
@@ -319,99 +319,99 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (PyMethod_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyMethod_Type,
-                    std::string("unmanaged python type PyMethod"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyMethod"),
+                   500,
+                   0);
         }
         else if (PyInstanceMethod_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyInstanceMethod_Type,
-                    std::string("unmanaged python type PyInstanceMethod"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyInstanceMethod"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyClassMethodDescr_Type) {
             expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-                    std::string("unmanaged python type PyClassMethodDescr"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyClassMethodDescr"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyGetSetDescr_Type) {
             expect(Py_TYPE(_exp) != &PyGetSetDescr_Type,
-                    std::string("unmanaged python type PyGetSetDescr"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyGetSetDescr"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
             expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
-                    std::string("unmanaged python type PyMemberDescr"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyMemberDescr"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyMethodDescr_Type) {
             expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-                    std::string("unmanaged python type PyClassMethodDescr"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyClassMethodDescr"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
             expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
-                    std::string("unmanaged python type PyMemberDescr"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyMemberDescr"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyDictProxy_Type) {
             expect(Py_TYPE(_exp) != &PyDictProxy_Type,
-                    std::string("unmanaged python type PyDictProxy"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictProxy"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyMethodWrapper_Type) {
             expect(Py_TYPE(_exp) != &_PyMethodWrapper_Type,
-                    std::string("unmanaged python type _PyMethodWrapper"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyMethodWrapper"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyProperty_Type) {
             expect(Py_TYPE(_exp) != &PyProperty_Type,
-                    std::string("unmanaged python type PyProperty"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyProperty"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyDictIterKey_Type) {
             expect(Py_TYPE(_exp) != &PyDictIterKey_Type,
-                    std::string("unmanaged python type PyDictIterKey"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictIterKey"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyDictIterValue_Type) {
             expect(Py_TYPE(_exp) != &PyDictIterValue_Type,
-                    std::string("unmanaged python type PyDictIterValue"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictIterValue"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyDictIterItem_Type) {
             expect(Py_TYPE(_exp) != &PyDictIterItem_Type,
-                    std::string("unmanaged python type PyDictIterItem"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictIterItem"),
+                   500,
+                   0);
         }
         else if (PyDictKeys_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyDictKeys_Type,
-                    std::string("unmanaged python type PyDictKeys"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictKeys"),
+                   500,
+                   0);
         }
         else if (PyDictItems_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyDictItems_Type,
-                    std::string("unmanaged python type PyDictItems"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictItems"),
+                   500,
+                   0);
         }
         else if (PyDictValues_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyDictValues_Type,
-                    std::string("unmanaged python type PyDictValues"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyDictValues"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyEnum_Type) {
             expect(
@@ -419,15 +419,15 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyReversed_Type) {
             expect(Py_TYPE(_exp) != &PyReversed_Type,
-                    std::string("unmanaged python type PyReversed"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyReversed"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyStdPrinter_Type) {
             expect(Py_TYPE(_exp) != &PyStdPrinter_Type,
-                    std::string("unmanaged python type PyStdPrinter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyStdPrinter"),
+                   500,
+                   0);
         }
         else if (PyCode_Check(_exp)) {
             expect(
@@ -447,15 +447,15 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyClassMethod_Type) {
             expect(Py_TYPE(_exp) != &PyClassMethod_Type,
-                    std::string("unmanaged python type PyClassMethod"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyClassMethod"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyStaticMethod_Type) {
             expect(Py_TYPE(_exp) != &PyStaticMethod_Type,
-                    std::string("unmanaged python type PyStaticMethod"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyStaticMethod"),
+                   500,
+                   0);
         }
         else if (PyGen_Check(_exp)) {
             expect(
@@ -467,99 +467,99 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &_PyCoroWrapper_Type) {
             expect(Py_TYPE(_exp) != &_PyCoroWrapper_Type,
-                    std::string("unmanaged python type _PyCoroWrapper"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyCoroWrapper"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyAIterWrapper_Type) {
             expect(Py_TYPE(_exp) != &_PyAIterWrapper_Type,
-                    std::string("unmanaged python type _PyAIterWrapper"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyAIterWrapper"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyAsyncGen_Type) {
             expect(Py_TYPE(_exp) != &PyAsyncGen_Type,
-                    std::string("unmanaged python type PyAsyncGen"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyAsyncGen"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyAsyncGenASend_Type) {
             expect(Py_TYPE(_exp) != &_PyAsyncGenASend_Type,
-                    std::string("unmanaged python type _PyAsyncGenASend"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyAsyncGenASend"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyAsyncGenWrappedValue_Type) {
             expect(Py_TYPE(_exp) != &_PyAsyncGenWrappedValue_Type,
-                    std::string("unmanaged python type _PyAsyncGenWrappedValue"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyAsyncGenWrappedValue"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyAsyncGenAThrow_Type) {
             expect(Py_TYPE(_exp) != &_PyAsyncGenAThrow_Type,
-                    std::string("unmanaged python type _PyAsyncGenAThrow"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyAsyncGenAThrow"),
+                   500,
+                   0);
         }
         else if (PySeqIter_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PySeqIter_Type,
-                    std::string("unmanaged python type PySeqIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PySeqIter"),
+                   500,
+                   0);
         }
         else if (PyCallIter_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyCallIter_Type,
-                    std::string("unmanaged python type PyCallIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyCallIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyListIter_Type) {
             expect(Py_TYPE(_exp) != &PyListIter_Type,
-                    std::string("unmanaged python type PyListIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyListIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyListRevIter_Type) {
             expect(Py_TYPE(_exp) != &PyListRevIter_Type,
-                    std::string("unmanaged python type PyListRevIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyListRevIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyManagedBuffer_Type) {
             expect(Py_TYPE(_exp) != &_PyManagedBuffer_Type,
-                    std::string("unmanaged python type _PyManagedBuffer"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyManagedBuffer"),
+                   500,
+                   0);
         }
         else if (PyMemoryView_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyMemoryView_Type,
-                    std::string("unmanaged python type PyMemoryView"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyMemoryView"),
+                   500,
+                   0);
         }
         else if (PyCFunction_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyCFunction_Type,
-                    std::string("unmanaged python type PyCFunction"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyCFunction"),
+                   500,
+                   0);
         }
         else if (PyModule_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyModule_Type,
-                    std::string("unmanaged python type PyModule"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyModule"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyModuleDef_Type) {
             expect(Py_TYPE(_exp) != &PyModuleDef_Type,
-                    std::string("unmanaged python type PyModuleDef"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyModuleDef"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &_PyNamespace_Type) {
             expect(Py_TYPE(_exp) != &_PyNamespace_Type,
-                    std::string("unmanaged python type _PyNamespace"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyNamespace"),
+                   500,
+                   0);
         }
         else if (PyType_Check(_exp)) {
             zpt::json _value = zpt::json::string(((PyTypeObject*)_exp)->tp_name);
@@ -572,9 +572,9 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
             expect(Py_TYPE(_exp) != &PyBaseObject_Type,
-                    std::string("unmanaged python type PyBaseObject"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyBaseObject"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PySuper_Type) {
             expect(
@@ -586,39 +586,39 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &_PyNotImplemented_Type) {
             expect(Py_TYPE(_exp) != &_PyNotImplemented_Type,
-                    std::string("unmanaged python type _PyNotImplemented"),
-                    500,
-                    0);
+                   std::string("unmanaged python type _PyNotImplemented"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyODictIter_Type) {
             expect(Py_TYPE(_exp) != &PyODictIter_Type,
-                    std::string("unmanaged python type PyODictIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyODictIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyODictKeys_Type) {
             expect(Py_TYPE(_exp) != &PyODictKeys_Type,
-                    std::string("unmanaged python type PyODictKeys"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyODictKeys"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyODictItems_Type) {
             expect(Py_TYPE(_exp) != &PyODictItems_Type,
-                    std::string("unmanaged python type PyODictItems"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyODictItems"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyODictValues_Type) {
             expect(Py_TYPE(_exp) != &PyODictValues_Type,
-                    std::string("unmanaged python type PyODictValues"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyODictValues"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyCapsule_Type) {
             expect(Py_TYPE(_exp) != &PyCapsule_Type,
-                    std::string("unmanaged python type PyCapsule"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyCapsule"),
+                   500,
+                   0);
         }
         else if (PyRange_Check(_exp)) {
             expect(
@@ -626,15 +626,15 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyRangeIter_Type) {
             expect(Py_TYPE(_exp) != &PyRangeIter_Type,
-                    std::string("unmanaged python type PyRangeIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyRangeIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyLongRangeIter_Type) {
             expect(Py_TYPE(_exp) != &PyLongRangeIter_Type,
-                    std::string("unmanaged python type PyLongRangeIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyLongRangeIter"),
+                   500,
+                   0);
         }
         else if (PySet_Check(_exp)) {
             expect(
@@ -642,15 +642,15 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (PyFrozenSet_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyFrozenSet_Type,
-                    std::string("unmanaged python type PyFrozenSet"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyFrozenSet"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PySetIter_Type) {
             expect(Py_TYPE(_exp) != &PySetIter_Type,
-                    std::string("unmanaged python type PySetIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PySetIter"),
+                   500,
+                   0);
         }
         else if (PySlice_Check(_exp)) {
             expect(
@@ -658,27 +658,27 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (Py_TYPE(_exp) == &PyEllipsis_Type) {
             expect(Py_TYPE(_exp) != &PyEllipsis_Type,
-                    std::string("unmanaged python type PyEllipsis"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyEllipsis"),
+                   500,
+                   0);
         }
         else if (PyTraceBack_Check(_exp)) {
             expect(Py_TYPE(_exp) != &PyTraceBack_Type,
-                    std::string("unmanaged python type PyTraceBack"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyTraceBack"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyTupleIter_Type) {
             expect(Py_TYPE(_exp) != &PyTupleIter_Type,
-                    std::string("unmanaged python type PyTupleIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyTupleIter"),
+                   500,
+                   0);
         }
         else if (Py_TYPE(_exp) == &PyUnicodeIter_Type) {
             expect(Py_TYPE(_exp) != &PyUnicodeIter_Type,
-                    std::string("unmanaged python type PyUnicodeIter"),
-                    500,
-                    0);
+                   std::string("unmanaged python type PyUnicodeIter"),
+                   500,
+                   0);
         }
         /*else if (PyTZInfo_CheckExact(_exp)) {
           expect(!PyTZInfo_Check(_exp), std::string("unmanaged python type

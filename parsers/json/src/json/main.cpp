@@ -55,10 +55,10 @@ main(int argc, char* argv[]) {
                 std::ifstream _in;
                 _in.open(static_cast<std::string>(_file));
                 expect(_in.is_open(),
-                        std::string{ "unable to open provided file: " } +
-                          static_cast<std::string>(_file),
-                        500,
-                        0);
+                       std::string{ "unable to open provided file: " } +
+                         static_cast<std::string>(_file),
+                       500,
+                       0);
                 try {
                     auto _t1 = std::chrono::high_resolution_clock::now();
                     _in >> _ptr;

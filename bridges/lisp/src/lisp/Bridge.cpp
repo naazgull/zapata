@@ -243,10 +243,10 @@ zpt::lisp::Bridge::check(const std::string _op1, const std::string _op2) -> bool
 auto
 zpt::lisp::Bridge::instance() -> zpt::bridge {
     expect(zpt::lisp::__instance != nullptr,
-            "you must invoke 'zpt::bridge::boot< zpt::lisp::bridge >' before "
-            "requesting the instance",
-            500,
-            0);
+           "you must invoke 'zpt::bridge::boot< zpt::lisp::bridge >' before "
+           "requesting the instance",
+           500,
+           0);
     return zpt::lisp::__instance->self();
 }
 
@@ -258,10 +258,10 @@ zpt::lisp::Bridge::is_booted() -> bool {
 auto
 zpt::lisp::Bridge::boot(zpt::json _options) -> void {
     expect(zpt::lisp::__instance == nullptr,
-            "bridge instance isn't null, 'zpt::bridge::boot< zpt::lisp::bridge "
-            ">' already invoked",
-            500,
-            0);
+           "bridge instance isn't null, 'zpt::bridge::boot< zpt::lisp::bridge "
+           ">' already invoked",
+           500,
+           0);
     zpt::lisp::bridge* _bridge = new zpt::lisp::bridge(_options);
     zpt::lisp::__instance = _bridge;
     zpt::lisp::__instance->options() << "is_lisp_booted"
@@ -364,11 +364,11 @@ zpt::lisp::cpp_lambda_call(cl_object _fn_name, cl_object _n_args, cl_object _arg
     unsigned int _coerced_n_args = ecl_to_unsigned_integer(_n_args);
     unsigned int _coerced_args_dim = ecl_array_dimension(_args, 0);
     expect(_coerced_n_args >= _coerced_args_dim,
-            std::string("invalid number of arguments, ") + std::to_string(_coerced_n_args) +
-              std::string(" arguments defined and ") + std::to_string(_coerced_args_dim) +
-              std::string(" arguments passed"),
-            0,
-            0);
+           std::string("invalid number of arguments, ") + std::to_string(_coerced_n_args) +
+             std::string(" arguments defined and ") + std::to_string(_coerced_args_dim) +
+             std::string(" arguments passed"),
+           0,
+           0);
 
     zpt::lisp::object _arr[_coerced_n_args];
     for (unsigned int _i = 0; _i != _coerced_n_args; _i++) {

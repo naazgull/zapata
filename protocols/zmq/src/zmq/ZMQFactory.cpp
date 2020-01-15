@@ -101,13 +101,13 @@ zpt::ZMQChannel::recv() -> zpt::json {
 auto
 zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
     expect(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
-            "'performative' and 'resource' attributes are required",
-            412,
-            0);
+           "'performative' and 'resource' attributes are required",
+           412,
+           0);
     expect(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
-            "'headers' must be of type JSON object",
-            412,
-            0);
+           "'headers' must be of type JSON object",
+           412,
+           0);
 
     if (!zpt::test::uuid(std::string(_envelope["channel"]))) {
         _envelope << "channel" << zpt::generate::r_uuid();
@@ -1397,13 +1397,13 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
     }
 
     expect(_envelope["performative"]->ok() && _envelope["resource"]->ok(),
-            "'performative' and 'resource' attributes are required",
-            412,
-            0);
+           "'performative' and 'resource' attributes are required",
+           412,
+           0);
     expect(!_envelope["headers"]->ok() || _envelope["headers"]->type() == zpt::JSObject,
-            "'headers' must be of type JSON object",
-            412,
-            0);
+           "'headers' must be of type JSON object",
+           412,
+           0);
 
     zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
     _envelope << "resource" << _uri["path"] << "protocol" << this->protocol() << "params"
@@ -1438,8 +1438,7 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
     memcpy(_frame4.data(), _buffer.data(), _buffer.length());
 
     std::lock_guard<std::mutex> _lock(this->out_mtx());
-    expect(
-      this->out()->send(*_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
+    expect(this->out()->send(*_frame1, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
     delete _frame1;
     expect(this->out()->send(_frame2, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);
     expect(this->out()->send(_frame3, ZMQ_SNDMORE), std::string("unable to send message"), 500, 0);

@@ -87,9 +87,9 @@ zpt::mongodb::Client::insert(std::string _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
 
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (this->connection()["user"]->ok()) {
@@ -134,9 +134,9 @@ zpt::mongodb::Client::upsert(std::string _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -207,9 +207,9 @@ zpt::mongodb::Client::save(std::string _collection,
                            zpt::json _document,
                            zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -234,9 +234,9 @@ zpt::mongodb::Client::set(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -261,9 +261,9 @@ zpt::mongodb::Client::set(std::string _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) {
         _pattern = zpt::json::object();
@@ -298,9 +298,9 @@ zpt::mongodb::Client::unset(std::string _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -325,9 +325,9 @@ zpt::mongodb::Client::unset(std::string _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-            "'_document' must be of type JSObject",
-            412,
-            0);
+           "'_document' must be of type JSObject",
+           412,
+           0);
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) {
         _pattern = zpt::json::object();

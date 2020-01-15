@@ -31,11 +31,11 @@
 /* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
-   */
+ */
 /* #undef HAVE_LIBZAPATA_LEX_HTTP */
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
-   */
+ */
 /* #undef HAVE_LIBZAPATA_LEX_JSON */
 
 /* Define to 1 if you have the `zapata-zmq' library (-lzapata-zmq). */

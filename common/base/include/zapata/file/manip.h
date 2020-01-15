@@ -475,6 +475,8 @@ bool
 path_exists(std::string _in);
 bool
 is_dir(std::string _path);
+bool
+file_exists(std::string _path);
 
 int
 globRegexp(std::string& dir,
