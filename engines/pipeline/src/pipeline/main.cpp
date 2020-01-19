@@ -24,7 +24,7 @@
 
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::pipeline::engine<zpt::json> _engine{ 3, 2 };
+    zpt::pipeline::engine<zpt::json> _engine{ 3, 3 };
 
     _engine.add_listener(0, "http:/{(.*)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         _in.set_path(zpt::r_replace(static_cast<std::string>(_in.path()["raw"]), "http:", ""));
@@ -52,9 +52,7 @@ main(int argc, char* argv[]) -> int {
     do {
         _engine.trigger("http:/users/1000", { "k", _c, "l", _c, "m", _c });
         ++_c;
-        std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 1 });
+        std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1 });
     } while (true);
-
-    // std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 3600000 });
     return 0;
 }

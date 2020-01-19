@@ -40,11 +40,22 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
         auto _it = this->__callbacks.find(_event);
         if (_it != this->__callbacks.end()) {
             auto [_, _callback] = *_it;
-            _callback(_content);
+            try {
+                _callback(_content);
+            }
+            catch(zpt::events::unregister& _e) {
+                this->mute(_event, _callback);
+            }
         }
     }
     auto listen_to(int _event, std::function<void(zpt::json)> _callback) -> void {
         this->__callbacks.insert(std::make_pair(_event, _callback));
+    }
+    auto mute_from(int _event, std::function<void(zpt::json)> _callback) -> void {
+        auto _found = this->__callbacks.find(_event);
+        if (_found != this->__callbacks.end()) {
+            this->__callbacks.erase(_found);
+        }
     }
 
   private:
@@ -93,7 +104,7 @@ main(int _argc, char* _argv[]) -> int {
                 _ee.trigger(_which,
                             _which ? zpt::json{ zpt::array, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, _t }
                                    : zpt::json{ "a", 1, "b", "xxx", "c", _t });
-                std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ SLEEP_FOR });
+                std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ SLEEP_FOR });
             } while (true);
         } };
         std::thread _producer2{ [&]() -> void {
@@ -107,7 +118,7 @@ main(int _argc, char* _argv[]) -> int {
                 _ee.trigger(_which,
                             _which ? zpt::json{ zpt::array, "X", "Y", "Z", _t }
                                    : zpt::json{ "k", "@@@", "l", _t });
-                std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ SLEEP_FOR });
+                std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ SLEEP_FOR });
             } while (true);
         } };
         std::thread _consumer1{ [&]() -> void { _ee.loop(); } };

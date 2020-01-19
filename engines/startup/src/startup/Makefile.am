@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libzapata-startup.la libzapata-plugin-example.la
 
-libzapata_startup_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-uri -lzapata-lex-json -lzapata-common-events
+libzapata_startup_la_LIBADD = -lpthread -lzapata-base -lzapata-lex-uri -lzapata-lex-json -lzapata-common-lockfree -lzapata-common-events
 libzapata_startup_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_startup_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
@@ -17,7 +17,7 @@ libzapata_plugin_example_la_SOURCES = \
 
 bin_PROGRAMS = zpt
 
-zpt_LDADD = -lpthread -lzapata-base -lzapata-lex-uri -lzapata-lex-json -lzapata-common-events libzapata-startup.la
+zpt_LDADD = -lpthread -lzapata-base -lzapata-lex-uri -lzapata-lex-json -lzapata-common-lockfree -lzapata-common-events libzapata-startup.la
 zpt_LDFLAGS =
 zpt_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 

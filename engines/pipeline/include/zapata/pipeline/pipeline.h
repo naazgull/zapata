@@ -80,10 +80,13 @@ class stage
     auto trapped(zpt::json _path, zpt::pipeline::event<T> _content) -> void;
     auto listen_to(zpt::json _path, std::function<void(zpt::pipeline::event<T>&)> _callback)
       -> void;
+    auto mute_from(zpt::json _path, std::function<void(zpt::pipeline::event<T>&)> _callback)
+      -> void;
 
   private:
     zpt::tree::node<zpt::json, zpt::regex, std::function<void(zpt::pipeline::event<T>&)>>
       __callbacks;
+    zpt::lf::spin_lock __callback_lock;
 };
 
 template<typename T>
@@ -102,6 +105,10 @@ class engine {
     auto add_listener(size_t _stage,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<T>&)> _callback)
+      -> zpt::pipeline::engine<T>&;
+    auto remove_listener(size_t _stage,
+                         std::string _pattern,
+                         std::function<void(zpt::pipeline::event<T>&)> _callback)
       -> zpt::pipeline::engine<T>&;
     auto next_stage(zpt::pipeline::event<T> _content) -> zpt::pipeline::engine<T>&;
     auto trigger(std::string _uri,
@@ -226,6 +233,7 @@ zpt::pipeline::stage<T>::stage(int _max_threads, int _max_per_thread, long _pop_
 template<typename T>
 auto
 zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event) -> void {
+    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, true };
     this->__callbacks.eval(
       _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->str(), _event);
 }
@@ -235,6 +243,7 @@ auto
 zpt::pipeline::stage<T>::listen_to(zpt::json _path,
                                    std::function<void(zpt::pipeline::event<T>&)> _callback)
   -> void {
+    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, false };
     this->__callbacks.merge(
       _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->rgx(), _callback);
 }

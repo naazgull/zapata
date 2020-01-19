@@ -22,10 +22,16 @@
 
 #pragma once
 
-#include <zapata/lockfree/queue.h>
+#include <zapata/lockfree.h>
 
 namespace zpt {
 namespace events {
+
+class unregister : public std::exception {
+public:
+    unregister() = default;
+    virtual ~unregister() = default;
+};
 
 class factory {
   public:
@@ -36,7 +42,7 @@ class factory {
 template<typename C, typename E, typename V>
 class dispatcher : public factory {
   public:
-    dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _pop_wait_milli = 0);
+    dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _pop_wait_micro = 0);
     virtual ~dispatcher();
 
     auto add_consumer() -> C&;
@@ -44,6 +50,8 @@ class dispatcher : public factory {
     auto trap() -> C&;
     template<typename F>
     auto listen(E _type, F _callback) -> C&;
+    template<typename F>
+    auto mute(E _type, F _callback) -> C&;
     auto shutdown() -> C&;
     auto loop() -> void;
 
@@ -60,9 +68,9 @@ class dispatcher : public factory {
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
                                              int _max_per_thread,
-                                             long _pop_wait_milli)
+                                             long _pop_wait_micro)
   : __queue{ _max_threads, _max_per_thread }
-  , __pop_wait{ _pop_wait_milli } {
+  , __pop_wait{ _pop_wait_micro } {
     expect(_max_threads > 1, "`_max_threads` expected to be higher than 1", 500, 0);
     expect(_max_per_thread > 0, "`_max_per_thread` expected to be higher than 0", 500, 0);
 }
@@ -106,6 +114,14 @@ zpt::events::dispatcher<C, E, V>::listen(E _event, F _listener) -> C& {
 }
 
 template<typename C, typename E, typename V>
+template<typename F>
+auto
+zpt::events::dispatcher<C, E, V>::mute(E _event, F _listener) -> C& {
+    static_cast<C*>(this)->mute_from(_event, _listener);
+    return (*static_cast<C*>(this));
+}
+
+template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
     this->__shutdown.store(true);
@@ -129,7 +145,7 @@ zpt::events::dispatcher<C, E, V>::loop() -> void {
             }
             else {
                 std::this_thread::sleep_for(
-                  std::chrono::duration<int, std::milli>{ this->__pop_wait });
+                  std::chrono::duration<int, std::micro>{ this->__pop_wait });
             }
         }
     } while (true);

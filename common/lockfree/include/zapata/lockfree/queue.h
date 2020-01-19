@@ -87,7 +87,7 @@ class queue {
         zpt::lf::queue<T>::node* __current{ nullptr };
     };
 
-    queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis = 0);
+    queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_micros = -1);
     queue(zpt::lf::queue<T> const& _rhs);
     queue(zpt::lf::queue<T>&& _rhs);
     virtual ~queue();
@@ -159,9 +159,9 @@ class queue {
 };
 
 template<typename T>
-zpt::lf::queue<T>::queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis)
+zpt::lf::queue<T>::queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_micros)
   : __hptr{ _max_threads, _ptr_per_thread }
-  , __spin_sleep{ _spin_sleep_millis } {
+  , __spin_sleep{ _spin_sleep_micros } {
     auto _initial = new zpt::lf::queue<T>::node();
     this->__head.store(_initial);
     this->__tail.store(_initial);
@@ -226,7 +226,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
         }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
-              std::chrono::duration<int, std::milli>{ this->__spin_sleep });
+              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
         }
     } while (true);
 
@@ -259,7 +259,7 @@ zpt::lf::queue<T>::pop() -> T {
         }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
-              std::chrono::duration<int, std::milli>{ this->__spin_sleep });
+              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
         }
     } while (true);
     throw NoMoreElementsException("no element to pop");

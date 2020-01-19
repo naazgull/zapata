@@ -10,43 +10,53 @@
 
 auto
 zpt::lf::spin_lock::acquire_shared() -> zpt::lf::spin_lock& {
-    auto [_, _inserted] = zpt::lf::spin_lock::__acquired_spins.insert(std::make_pair(this, true));
-    expect(_inserted, "spin lock already acquired by thread", 500, 0);
-    this->spin_shared_lock();
+    auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
+    if (_count == 0) {
+        this->spin_shared_lock();
+    }
+    expect(_count >= 0, "can't re-acquire in shared mode while holding in exclusive mode", 500, 0);
+    ++_count;
     return (*this);
 }
 
 auto
 zpt::lf::spin_lock::acquire_exclusive() -> zpt::lf::spin_lock& {
-    auto [_, _inserted] = zpt::lf::spin_lock::__acquired_spins.insert(std::make_pair(this, false));
-    expect(_inserted, "spin lock already acquired by thread", 500, 0);
-    this->spin_exclusive_lock();
+    auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
+    if (_count == 0) {
+        this->spin_exclusive_lock();
+    }
+    expect(_count <= 0, "can't re-acquire in exclusive mode while holding in shared mode", 500, 0);
+    --_count;
     return (*this);
 }
 
 auto
 zpt::lf::spin_lock::release_shared() -> zpt::lf::spin_lock& {
     auto _found = zpt::lf::spin_lock::__acquired_spins.find(this);
-    expect(_found != zpt::lf::spin_lock::__acquired_spins.end(),
+    expect(_found != zpt::lf::spin_lock::__acquired_spins.end() && _found->second > 0,
            "spin lock not acquired by thread",
            500,
            0);
-    expect(_found->second, "shared lock not acquired by thread", 500, 0);
-    zpt::lf::spin_lock::__acquired_spins.erase(_found);
-    this->__shared_access.fetch_sub(1, std::memory_order_release);
+    --_found->second;
+    if (_found->second == 0) {
+        zpt::lf::spin_lock::__acquired_spins.erase(_found);
+        this->__shared_access.fetch_sub(1, std::memory_order_release);
+    }
     return (*this);
 }
 
 auto
 zpt::lf::spin_lock::release_exclusive() -> zpt::lf::spin_lock& {
     auto _found = zpt::lf::spin_lock::__acquired_spins.find(this);
-    expect(_found != zpt::lf::spin_lock::__acquired_spins.end(),
+    expect(_found != zpt::lf::spin_lock::__acquired_spins.end() && _found->second < 0,
            "spin lock not acquired by thread",
            500,
            0);
-    expect(!_found->second, "exclusive lock not acquired by thread", 500, 0);
-    zpt::lf::spin_lock::__acquired_spins.erase(_found);
-    this->__exclusive_access.store(false, std::memory_order_release);
+    ++_found->second;
+    if (_found->second == 0) {
+        zpt::lf::spin_lock::__acquired_spins.erase(_found);
+        this->__exclusive_access.store(false, std::memory_order_release);
+    }
     return (*this);
 }
 
@@ -93,6 +103,7 @@ zpt::lf::spin_lock::guard::guard(zpt::lf::spin_lock& _target, bool _can_be_share
     }
     catch (zpt::failed_expectation& _e) {
         this->__released = true;
+        throw;
     }
 }
 

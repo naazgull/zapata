@@ -24,11 +24,11 @@
 #include <zapata/startup.h>
 
 extern "C" auto
-_zpt_load_() -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine, zpt::BOOT_ENGINE>();
-
-    _boot.listen({ "lib", "zapata-plugin-example", "stage", zpt::startup::stages::CONFIGURATION },
-                 [](bool _result) -> void {
-                     std::cout << "example plugin configured!" << std::endl << std::flush;
+_zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE);
+    _boot.listen({ "plugin", _plugin->name(), "stage", zpt::startup::stages::CONFIGURATION },
+                 [=](bool _result) mutable -> void {
+                     std::cout << _plugin->name() << " configured!" << std::endl << std::flush;
+                     throw zpt::events::unregister();
                  });
 }

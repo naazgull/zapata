@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <zapata/lockfree/spin_lock.h>
+
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -65,7 +67,7 @@ zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... 
     }
     bool _return{ false };
     if (this->__value == (*_sequence) && this->__path == _value_to_match) {
-        for (auto _call : this->__callbacks) {
+        for (auto& _call : this->__callbacks) {
             _call(_callback_args...);
         }
         _return = true;
@@ -73,7 +75,7 @@ zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... 
 
     auto _next = _sequence;
     ++_next;
-    for (auto _child : this->__children) {
+    for (auto& _child : this->__children) {
         _return = _child.eval(_next, _end, _value_to_match, _callback_args...) || _return;
     }
     return _return;
@@ -120,7 +122,7 @@ zpt::tree::node<T, P, C>::to_string(uint _n_tabs) -> std::string {
     _to_return.insert(_to_return.length(), "_ ");
     _to_return.insert(_to_return.length(), this->__value);
     _to_return.insert(_to_return.length(), "\n");
-    for (auto _child : this->__children) {
+    for (auto& _child : this->__children) {
         std::string _child_str = _child.to_string(_n_tabs + 1);
         _to_return.insert(_to_return.length(), _child_str);
     }

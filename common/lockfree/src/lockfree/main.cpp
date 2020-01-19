@@ -36,7 +36,7 @@ constexpr int PER_THREAD = 8;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
-#define SPIN_WAIT_MILLIS -2
+#define SPIN_WAIT_MICROS -1
 
 std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
@@ -44,10 +44,10 @@ std::atomic<int> _poped{ 0 };
 #ifdef QUEUE_USE_STRING
 zpt::lf::queue<std::shared_ptr<std::string>> _queue{ MAX_THREADS_QUEUE,
                                                      PER_THREAD,
-                                                     SPIN_WAIT_MILLIS };
+                                                     SPIN_WAIT_MICROS };
 zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS_LIST, PER_THREAD };
 #else
-zpt::lf::queue<int> _queue{ MAX_THREADS_QUEUE, PER_THREAD, SPIN_WAIT_MILLIS };
+zpt::lf::queue<int> _queue{ MAX_THREADS_QUEUE, PER_THREAD, SPIN_WAIT_MICROS };
 zpt::lf::list<int> _list{ MAX_THREADS_LIST, PER_THREAD };
 #endif
 

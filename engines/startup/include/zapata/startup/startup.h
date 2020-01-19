@@ -25,21 +25,79 @@
 #include <zapata/events.h>
 #include <zapata/startup/configuration.h>
 
+#include <typeinfo>
+
 namespace zpt {
 
-constexpr int BOOT_ENGINE{ 0 };
+inline size_t BOOT_ENGINE{ 0 };
+inline size_t GLOBAL_CONFIG{ 0 };
 
 class globals {
   public:
-    template<typename T, int N, typename... Args>
-    static auto get(Args... _args) -> T&;
+    template<typename T, typename... Args>
+    static auto alloc(size_t& _variable, Args... _args) -> T&;
+    template<typename T>
+    static auto get(size_t _variable) -> T&;
+    template<typename T, typename... Args>
+    static auto dealloc(size_t _variable) -> void;
 
   private:
-    static inline std::map<int, void*> __variables{};
+    static inline std::map<size_t, std::vector<void*>> __variables{};
+    static inline zpt::lf::spin_lock __variables_lock;
+};
+
+class plugin {
+  private:
+    class plugin_t {
+      public:
+        plugin_t() = default;
+        plugin_t(zpt::json _config);
+        virtual ~plugin_t() = default;
+
+        auto initialize(zpt::json _config) -> zpt::plugin::plugin_t&;
+        auto name() -> std::string&;
+        auto source() -> std::string&;
+        auto requirements() -> zpt::json&;
+        auto is_running() -> bool;
+
+        auto set_loader(std::function<bool(zpt::plugin& _plugin)> _loader)
+          -> zpt::plugin::plugin_t&;
+        auto load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t&;
+
+      private:
+        std::string __name{ "" };
+        std::string __source{ "" };
+        zpt::json __requirements{ zpt::json::object() };
+        std::function<bool(zpt::plugin& _plugin)> __loader;
+        bool __running{ false };
+    };
+
+  public:
+    using reference = plugin_t*;
+
+    plugin() = default;
+    plugin(zpt::json _config);
+    plugin(zpt::plugin const& _rhs);
+    plugin(zpt::plugin&& _rhs);
+    virtual ~plugin() = default;
+
+    auto operator=(zpt::plugin const& _rhs) -> zpt::plugin&;
+    auto operator=(zpt::plugin&& _rhs) -> zpt::plugin&;
+    auto operator-> () -> reference;
+
+    friend std::ostream& operator<<(std::ostream& _out, zpt::plugin& _in) {
+        _out << zpt::pretty{ zpt::json{
+                  "name", _in->name(), "source", _in->source(), "requires", _in->requirements() } }
+             << std::flush;
+        return _out;
+    }
+
+  private:
+    std::shared_ptr<zpt::plugin::plugin_t> __underlying;
 };
 
 namespace startup {
-enum stages { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, UNLOAD = 3 };
+enum stages { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, RUN = 3, UNLOAD = 4 };
 
 class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool> {
   public:
@@ -52,34 +110,67 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     auto trapped(zpt::json _event, bool _content) -> void;
     auto listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void;
 
-    auto start() -> zpt::startup::engine&;
-    auto load(std::string const& _lib) -> zpt::startup::engine&;
-    auto unload(std::string const& _lib) -> zpt::startup::engine&;
+    auto to_string() -> std::string;
 
-    auto config() -> zpt::json&;
+    auto load(zpt::json _plugin_config) -> zpt::plugin&;
+    auto start() -> zpt::startup::engine&;
+
+    friend std::ostream& operator<<(std::ostream& _out, zpt::startup::engine& _in) {
+        _out << _in.to_string() << std::flush;
+        return _out;
+    }
 
   private:
     zpt::json __configuration;
-    std::map<std::string, std::function<void(zpt::json)>> __callbacks;
+    std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
+    std::map<std::string, zpt::plugin> __plugins;
+    zpt::lf::spin_lock __plugin_list_lock;
 
-    auto hash(zpt::json& _event) -> std::string;
     auto load() -> zpt::startup::engine&;
-    auto load_script(std::string const& _lib) -> zpt::startup::engine&;
-    auto load_lib(std::string const& _lib, void* _hndl) -> zpt::startup::engine&;
+    auto hash(zpt::json& _event) -> std::string;
+    auto check_requirements(zpt::plugin& _plugin, std::function<void(bool)> _callback = nullptr)
+      -> bool;
+    auto load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&;
+    auto add_plugin(zpt::plugin& _plugin, zpt::json& _config) -> zpt::startup::engine&;
 };
+
+namespace dynlib {
+auto
+load_plugin(zpt::plugin& _plugin) -> bool;
+} // namespace synlib
+
 } // namespace startup
 } // namespace zpt
 
-template<typename T, int N, typename... Args>
+template<typename T, typename... Args>
 auto
-zpt::globals::get(Args... _args) -> T& {
-    auto _found = zpt::globals::__variables.find(N);
-    if (_found != zpt::globals::__variables.end()) {
-        return *static_cast<T*>(_found->second);
-    }
+zpt::globals::alloc(size_t& _variable, Args... _args) -> T& {
+    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, false };
+    auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
 
     T* _new = new T(_args...);
-    zpt::globals::__variables.insert(std::make_pair(N, static_cast<void*>(_new)));
+    _allocated.push_back(static_cast<void*>(_new));
+    _variable = _allocated.size() - 1;
     return *_new;
-    ;
+}
+
+template<typename T>
+auto
+zpt::globals::get(size_t _variable) -> T& {
+    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, true };
+    auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
+    expect(_found != zpt::globals::__variables.end() && _found->second.size() > _variable,
+           "no such global variable",
+           500,
+           0);
+
+    return *static_cast<T*>(_found->second[_variable]);
+}
+
+template<typename T, typename... Args>
+auto
+zpt::globals::dealloc(size_t _variable) -> void {
+    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, false };
+    auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
+    _allocated.erase(_allocated.begin() + _variable);
 }

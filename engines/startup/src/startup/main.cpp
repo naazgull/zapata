@@ -10,10 +10,11 @@ main(int _argc, char* _argv[]) -> int {
                                                          "--conf-dir",
                                                          { zpt::array, "optional", "multiple" } });
 
-        auto& _boot = zpt::globals::get<zpt::startup::engine, zpt::BOOT_ENGINE>();
+        auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE);
         _boot
           .initialize(_parameters) //
           .start();
+        zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE);
     }
     catch (zpt::failed_expectation& _e) {
         std::cout << _e.what() << std::endl << std::flush;

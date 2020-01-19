@@ -47,7 +47,7 @@ class spin_lock {
     std::atomic<long> __shared_access{ 0 };
     std::atomic<bool> __exclusive_access{ false };
 
-    static inline thread_local std::map<zpt::lf::spin_lock*, bool> __acquired_spins;
+    static inline thread_local std::map<zpt::lf::spin_lock*, long> __acquired_spins;
 
     auto spin_shared_lock() -> void;
     auto spin_exclusive_lock() -> void;

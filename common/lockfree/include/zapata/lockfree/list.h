@@ -97,7 +97,7 @@ class list {
     };
     friend class zpt::lf::list<T>::iterator;
 
-    list(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis = 0);
+    list(long _max_threads, long _ptr_per_thread, long _spin_sleep_micros = -1);
     list(zpt::lf::list<T> const& _rhs) = delete;
     list(zpt::lf::list<T>&& _rhs) = delete;
     virtual ~list();
@@ -164,9 +164,9 @@ class list {
 };
 
 template<typename T>
-zpt::lf::list<T>::list(long _max_threads, long _ptr_per_thread, long _spin_sleep_millis)
+zpt::lf::list<T>::list(long _max_threads, long _ptr_per_thread, long _spin_sleep_micros)
   : __hptr{ _max_threads, _ptr_per_thread }
-  , __spin_sleep{ _spin_sleep_millis } {
+  , __spin_sleep{ _spin_sleep_micros } {
     auto _initial = new zpt::lf::list<T>::node();
     this->__head.store(_initial);
     this->__tail.store(_initial);
@@ -233,7 +233,7 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
         }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
-              std::chrono::duration<int, std::milli>{ this->__spin_sleep });
+              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
         }
     } while (true);
 
@@ -269,7 +269,7 @@ zpt::lf::list<T>::pop() -> T {
         }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
-              std::chrono::duration<int, std::milli>{ this->__spin_sleep });
+              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
         }
     } while (true);
     throw zpt::NoMoreElementsException("no element to pop");
