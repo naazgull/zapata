@@ -129,13 +129,13 @@ zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
 
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if ((*this->__target.__object).get() != nullptr) {
+            if (this->__target.__object.operator->() != nullptr) {
                 this->__target.__object.~JSONObj();
             }
             break;
         }
         case zpt::JSArray: {
-            if ((*this->__target.__array).get() != nullptr) {
+            if (this->__target.__array.operator->() != nullptr) {
                 this->__target.__array.~JSONArr();
             }
             break;
@@ -204,14 +204,14 @@ auto
 zpt::JSONElementT::empty() -> bool {
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if ((*this->__target.__object).get() != nullptr) {
-                return (***this->__target.__object).size() == 0;
+            if (this->__target.__object.operator->() != nullptr) {
+                return (*this->__target.__object)->size() == 0;
             }
             return true;
         }
         case zpt::JSArray: {
-            if ((*this->__target.__array).get() != nullptr) {
-                return (***this->__target.__array).size() == 0;
+            if (this->__target.__array.operator->() != nullptr) {
+                return (**this->__target.__array).size() == 0;
             }
             return true;
         }
@@ -255,13 +255,13 @@ auto
 zpt::JSONElementT::size() -> size_t {
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if ((*this->__target.__object).get() != nullptr) {
-                return (***this->__target.__object).size();
+            if (this->__target.__object.operator->() != nullptr) {
+                return (**this->__target.__object).size();
             }
         }
         case zpt::JSArray: {
-            if ((*this->__target.__array).get() != nullptr) {
-                return (***this->__target.__array).size();
+            if (this->__target.__array.operator->() != nullptr) {
+                return (**this->__target.__array).size();
             }
         }
         case zpt::JSString:
@@ -708,7 +708,7 @@ zpt::JSONElementT::operator=(unsigned int _rhs) -> JSONElementT& {
 
 auto
 zpt::JSONElementT::operator=(zpt::json _rhs) -> JSONElementT& {
-    (*this) = (**_rhs);
+    (*this) = (*_rhs);
     return (*this);
 }
 
@@ -880,10 +880,10 @@ zpt::JSONElementT::operator bool() {
 zpt::JSONElementT::operator int() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (***this->obj()).size();
+            return (**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (***this->arr()).size();
+            return (**this->arr()).size();
         }
         case zpt::JSString: {
             int _n = 0;
@@ -919,10 +919,10 @@ zpt::JSONElementT::operator int() {
 zpt::JSONElementT::operator long() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (***this->obj()).size();
+            return (**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (***this->arr()).size();
+            return (**this->arr()).size();
         }
         case zpt::JSString: {
             long _n = 0;
@@ -958,10 +958,10 @@ zpt::JSONElementT::operator long() {
 zpt::JSONElementT::operator long long() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (***this->obj()).size();
+            return (**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (***this->arr()).size();
+            return (**this->arr()).size();
         }
         case zpt::JSString: {
             long long _n = 0;
@@ -998,10 +998,10 @@ zpt::JSONElementT::operator long long() {
 zpt::JSONElementT::operator unsigned int() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (***this->obj()).size();
+            return (**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (***this->arr()).size();
+            return (**this->arr()).size();
         }
         case zpt::JSString: {
             unsigned int _n = 0;
@@ -1038,10 +1038,10 @@ zpt::JSONElementT::operator unsigned int() {
 zpt::JSONElementT::operator size_t() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (***this->obj()).size();
+            return (**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (***this->arr()).size();
+            return (**this->arr()).size();
         }
         case zpt::JSString: {
             size_t _n = 0;
@@ -1077,10 +1077,10 @@ zpt::JSONElementT::operator size_t() {
 zpt::JSONElementT::operator double() {
     switch (this->type()) {
         case zpt::JSObject: {
-            return (double)(***this->obj()).size();
+            return (double)(**this->obj()).size();
         }
         case zpt::JSArray: {
-            return (double)(***this->arr()).size();
+            return (double)(**this->arr()).size();
         }
         case zpt::JSString: {
             double _n = 0;
@@ -1381,7 +1381,7 @@ zpt::JSONElementT::operator==(zpt::JSONElementT& _in) -> bool {
 
 auto
 zpt::JSONElementT::operator==(zpt::json _rhs) -> bool {
-    return *this == **_rhs;
+    return *this == *_rhs;
 }
 
 auto
@@ -1430,7 +1430,7 @@ zpt::JSONElementT::operator!=(JSONElementT& _in) -> bool {
 
 auto
 zpt::JSONElementT::operator!=(zpt::json _rhs) -> bool {
-    return *this != (**_rhs);
+    return *this != (*_rhs);
 }
 
 auto
@@ -1719,7 +1719,7 @@ zpt::JSONElementT::operator>=(zpt::json _rhs) -> bool {
 
 auto
 zpt::JSONElementT::operator+(zpt::json _rhs) -> zpt::json {
-    return (*this) + (**_rhs);
+    return (*this) + (*_rhs);
 }
 
 auto
@@ -1847,7 +1847,7 @@ zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) -> zpt::json {
 
 auto
 zpt::JSONElementT::operator-(zpt::json _rhs) -> zpt::json {
-    return (*this) - (**_rhs);
+    return (*this) - (*_rhs);
 }
 
 auto
@@ -1877,7 +1877,7 @@ zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) -> zpt::json {
         }
         case zpt::JSArray: {
             if (_rhs.__target.__type == zpt::JSArray) {
-                expect((***this->arr()).size() == (***_rhs.arr()).size(),
+                expect((**this->arr()).size() == (**_rhs.arr()).size(),
                        "both arrays must have the same size",
                        500,
                        0);
@@ -1979,7 +1979,7 @@ zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) -> zpt::json {
 
 auto
 zpt::JSONElementT::operator/(zpt::json _rhs) -> zpt::json {
-    return (*this) / (**_rhs);
+    return (*this) / (*_rhs);
 }
 
 auto
@@ -2004,7 +2004,7 @@ zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) -> zpt::json {
         }
         case zpt::JSArray: {
             if (_rhs.__target.__type == zpt::JSArray) {
-                expect((***this->arr()).size() == (***_rhs.arr()).size(),
+                expect((**this->arr()).size() == (**_rhs.arr()).size(),
                        "both arrays must have the same size",
                        500,
                        0);
@@ -2106,7 +2106,7 @@ zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) -> zpt::json {
 
 auto
 zpt::JSONElementT::operator|(zpt::json _rhs) -> zpt::json {
-    return (*this) | (**_rhs);
+    return (*this) | (*_rhs);
 }
 
 auto

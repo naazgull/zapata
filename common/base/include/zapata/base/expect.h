@@ -590,11 +590,7 @@ enum JSONType {
     JSRegex
 };
 
-typedef unsigned short performative;
-auto
-to_str(zpt::performative _performative) -> std::string;
-auto
-from_str(std::string _performative) -> zpt::performative;
+using performative = unsigned short;
 
 extern std::string* tz;
 std::string

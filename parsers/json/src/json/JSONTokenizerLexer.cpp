@@ -11,7 +11,7 @@ zpt::JSONTokenizerLexer::~JSONTokenizerLexer() {}
 
 void
 zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
-    this->__root = this->__parent = (*_root).get();
+    this->__root = this->__parent = &(*_root);
     this->begin(zpt::JSONLexerBase::StartCondition_::INITIAL);
 }
 
@@ -65,7 +65,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
             _ref->parent(this->__parent);
             try {
                 (*this->__parent) << _ref;
-                this->__parent = (*_ref).get();
+                this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
@@ -79,7 +79,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
             _ref->parent(this->__parent);
             try {
                 (*this->__parent) << _ref;
-                this->__parent = (*_ref).get();
+                this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation& _e) {
                 std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl

@@ -12,18 +12,19 @@ class HTTPTokenizerLexer : public HTTPLexer {
     HTTPTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~HTTPTokenizerLexer();
 
-    void switchRoots(HTTPReq& _root);
-    void switchRoots(HTTPRep& _root);
-    void justLeave();
+    auto switchRoots(HTTPReq& _root) -> void;
+    auto switchRoots(HTTPRep& _root) -> void;
+    auto justLeave() -> void;
 
-    void init(zpt::http::message_type _in_type);
-    void body();
-    void url();
-    void status();
+    auto init(zpt::http::message_type _in_type) -> void;
+    auto version() -> void;
+    auto body() -> void;
+    auto url() -> void;
+    auto status() -> void;
 
-    void add();
-    void name();
-    void value();
+    auto add() -> void;
+    auto name() -> void;
+    auto value() -> void;
 
     std::string __header_name;
     std::string __param_name;

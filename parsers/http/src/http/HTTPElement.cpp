@@ -3,8 +3,8 @@
 #include <iostream>
 #include <zapata/exceptions/CastException.h>
 
-void
-zpt::init(HTTPReq& _req) {
+auto
+zpt::init(zpt::HTTPReq& _req) -> void {
     time_t _rawtime = time(nullptr);
     struct tm _ptm;
     char _buffer_date[80];
@@ -32,8 +32,8 @@ zpt::init(HTTPReq& _req) {
     _req->header("Date", std::string(_buffer_date));
 }
 
-void
-zpt::init(HTTPRep& _rep) {
+auto
+zpt::init(zpt::HTTPRep& _rep) -> void {
     time_t _rawtime = time(nullptr);
     struct tm _ptm;
     char _buffer_date[80];
@@ -56,23 +56,24 @@ zpt::HTTPObj::HTTPObj() {}
 
 zpt::HTTPObj::~HTTPObj() {}
 
-std::string&
-zpt::HTTPObj::body() {
+auto
+zpt::HTTPObj::body() -> std::string& {
     return this->__body;
 }
 
-void
-zpt::HTTPObj::body(std::string _body) {
+auto
+zpt::HTTPObj::body(std::string _body) -> void {
+    this->header("Content-Length", std::to_string(_body.length()));
     this->__body.assign(_body.data());
 }
 
-zpt::http::header_map&
-zpt::HTTPObj::headers() {
+auto
+zpt::HTTPObj::headers() -> zpt::http::header_map& {
     return this->__headers;
 }
 
-std::string
-zpt::HTTPObj::header(const char* _idx) {
+auto
+zpt::HTTPObj::header(const char* _idx) -> std::string {
     std::string _name(_idx);
     zpt::prettify_header_name(_name);
     auto _found = this->__headers.find(_name);
@@ -82,45 +83,43 @@ zpt::HTTPObj::header(const char* _idx) {
     return "";
 }
 
-void
-zpt::HTTPObj::header(const char* _name, const char* _value) {
+auto
+zpt::HTTPObj::header(const char* _name, const char* _value) -> void {
     std::string _n(_name);
     zpt::prettify_header_name(_n);
-    auto _found = this->__headers.find(_n);
-    if (_found != this->__headers.end()) {
-        this->__headers.erase(_found);
-    }
-    this->__headers.insert(std::make_pair(_n, _value));
+    this->__headers[_n] = _value;
 }
 
-void
-zpt::HTTPObj::header(const char* _name, std::string _value) {
+auto
+zpt::HTTPObj::header(const char* _name, std::string _value) -> void {
     std::string _n(_name);
     zpt::prettify_header_name(_n);
-    auto _found = this->__headers.find(_n);
-    if (_found != this->__headers.end()) {
-        this->__headers.erase(_found);
-    }
-    this->__headers.insert(std::make_pair(_n, _value));
+    this->__headers[_n] = _value;
 }
 
-void
-zpt::HTTPObj::header(std::string _name, std::string _value) {
+auto
+zpt::HTTPObj::header(std::string _name, std::string _value) -> void {
     std::string _n(_name);
     zpt::prettify_header_name(_n);
-    auto _found = this->__headers.find(_n);
-    if (_found != this->__headers.end()) {
-        this->__headers.erase(_found);
-    }
-    this->__headers.insert(std::make_pair(_n, _value));
+    this->__headers[_n] = _value;
+}
+
+auto
+zpt::HTTPObj::version() -> std::string& {
+    return this->__version;
+}
+
+auto
+zpt::HTTPObj::version(std::string _version) -> void {
+    this->__version.assign(_version);
 }
 
 zpt::HTTPObj::operator std::string() {
     return this->to_string();
 }
 
-std::string
-zpt::HTTPObj::to_string() {
+auto
+zpt::HTTPObj::to_string() -> std::string {
     std::string _return;
     this->stringify(_return);
     return _return;
@@ -234,9 +233,9 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "100 Continue ",
-    "101 Switching Protocols ",
-    "102 Processing ",
+    "Continue ",
+    "Switching Protocols ",
+    "Processing ",
     nullptr,
     nullptr,
     nullptr,
@@ -334,15 +333,15 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "200 OK ",
-    "201 Created ",
-    "202 Accepted ",
-    "203 Non-Authoritative Information ",
-    "204 No Content ",
-    "205 Reset Content ",
-    "206 Partial Content ",
-    "207 Multi-Status ",
-    "208 Already Reported ",
+    "OK ",
+    "Created ",
+    "Accepted ",
+    "Non-Authoritative Information ",
+    "No Content ",
+    "Reset Content ",
+    "Partial Content ",
+    "Multi-Status ",
+    "Already Reported ",
     nullptr,
     nullptr,
     nullptr,
@@ -360,7 +359,7 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "226 IM Used ",
+    "IM Used ",
     nullptr,
     nullptr,
     nullptr,
@@ -434,15 +433,15 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "300 Multiple Choices ",
-    "301 Moved Permanently ",
-    "302 Found ",
-    "303 See Other ",
-    "304 Not Modified ",
-    "305 Use Proxy ",
-    "306 (Unused) ",
-    "307 Temporary Redirect ",
-    "308 Permanent Redirect ",
+    "Multiple Choices ",
+    "Moved Permanently ",
+    "Found ",
+    "See Other ",
+    "Not Modified ",
+    "Use Proxy ",
+    "(Unused) ",
+    "Temporary Redirect ",
+    "Permanent Redirect ",
     nullptr,
     nullptr,
     nullptr,
@@ -534,38 +533,38 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "400 Bad Request ",
-    "401 Unauthorized ",
-    "402 Payment Required ",
-    "403 Forbidden ",
-    "404 Not Found ",
-    "405 Method Not Allowed ",
-    "406 Not Acceptable ",
-    "407 Proxy Authentication Required ",
-    "408 Request Timeout ",
-    "409 Conflict ",
-    "410 Gone ",
-    "411 Length Required ",
-    "412 Precondition Failed ",
-    "413 Payload Too Large ",
-    "414 URI Too Long ",
-    "415 Unsupported Media Type ",
-    "416 Requested Range Not Satisfiable ",
-    "417 Expectation Failed ",
+    "Bad Request ",
+    "Unauthorized ",
+    "Payment Required ",
+    "Forbidden ",
+    "Not Found ",
+    "Method Not Allowed ",
+    "Not Acceptable ",
+    "Proxy Authentication Required ",
+    "Request Timeout ",
+    "Conflict ",
+    "Gone ",
+    "Length Required ",
+    "Precondition Failed ",
+    "Payload Too Large ",
+    "URI Too Long ",
+    "Unsupported Media Type ",
+    "Requested Range Not Satisfiable ",
+    "Expectation Failed ",
     nullptr,
     nullptr,
     nullptr,
     nullptr,
-    "422 Unprocessable Entity ",
-    "423 Locked ",
-    "424 Failed Dependency ",
-    "425 Unassigned ",
-    "426 Upgrade Required ",
-    "427 Unassigned ",
-    "428 Precondition Required ",
-    "429 Too Many Requests ",
-    "430 Unassigned ",
-    "431 Request Header Fields Too Large ",
+    "Unprocessable Entity ",
+    "Locked ",
+    "Failed Dependency ",
+    "Unassigned ",
+    "Upgrade Required ",
+    "Unassigned ",
+    "Precondition Required ",
+    "Too Many Requests ",
+    "Unassigned ",
+    "Request Header Fields Too Large ",
     nullptr,
     nullptr,
     nullptr,
@@ -585,7 +584,7 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "451 Unavailable For Legal Reasons",
+    "Unavailable For Legal Reasons",
     nullptr,
     nullptr,
     nullptr,
@@ -634,18 +633,18 @@ const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
-    "500 Internal Server Error ",
-    "501 Not Implemented ",
-    "502 Bad Gateway ",
-    "503 Service Unavailable ",
-    "504 Gateway Timeout ",
-    "505 HTTP Version Not Supported ",
-    "506 Variant Also Negotiates (Experimental) ",
-    "507 Insufficient Storage ",
-    "508 Loop Detected ",
-    "509 Unassigned ",
-    "510 Not Extended ",
-    "511 Network Authentication Required ",
+    "Internal Server Error ",
+    "Not Implemented ",
+    "Bad Gateway ",
+    "Service Unavailable ",
+    "Gateway Timeout ",
+    "HTTP Version Not Supported ",
+    "Variant Also Negotiates (Experimental) ",
+    "Insufficient Storage ",
+    "Loop Detected ",
+    "Unassigned ",
+    "Not Extended ",
+    "Network Authentication Required ",
 };
 } // namespace http
 } // namespace zpt

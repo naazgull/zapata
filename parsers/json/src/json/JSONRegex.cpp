@@ -35,12 +35,12 @@ zpt::JSONRegex::operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex& {
     return (*this);
 }
 
-auto zpt::JSONRegex::operator-> () -> std::shared_ptr<std::regex>& {
-    return this->__underlying;
+auto zpt::JSONRegex::operator-> () -> std::regex* {
+    return this->__underlying.get();
 }
 
-auto zpt::JSONRegex::operator*() -> std::shared_ptr<std::regex>& {
-    return this->__underlying;
+auto zpt::JSONRegex::operator*() -> std::regex& {
+    return *this->__underlying.get();
 }
 
 zpt::JSONRegex::operator std::string() {

@@ -1,0 +1,12 @@
+Source: zapata-transport
+Maintainer: naazgull <n@zgul>
+Section: Development
+Priority: optional
+Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 9)
+
+Package: zapata-transport
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, zapata-base (>=0.9)
+Description: zapata-transport
+ Provides zapata-transport

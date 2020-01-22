@@ -93,23 +93,26 @@ class HTTPObj {
     HTTPObj();
     virtual ~HTTPObj();
 
-    std::string& body();
-    void body(std::string);
-    zpt::http::header_map& headers();
-    std::string header(const char* _name);
-    void header(const char* _name, const char* _value);
-    void header(const char* _name, std::string _value);
-    void header(std::string _name, std::string _value);
+    auto body() -> std::string&;
+    auto body(std::string) -> void;
+    auto headers() -> zpt::http::header_map&;
+    auto header(const char* _name) -> std::string;
+    auto header(const char* _name, const char* _value) -> void;
+    auto header(const char* _name, std::string _value) -> void;
+    auto header(std::string _name, std::string _value) -> void;
+    auto version() -> std::string&;
+    auto version(std::string _version) -> void;
 
     operator std::string();
 
-    virtual std::string to_string();
-    virtual void stringify(std::string& _out) = 0;
-    virtual void stringify(std::ostream& _out) = 0;
+    virtual auto to_string() -> std::string;
+    virtual auto stringify(std::string& _out) -> void = 0;
+    virtual auto stringify(std::ostream& _out) -> void = 0;
 
   protected:
-    std::string __body;
+    std::string __body{ "" };
     zpt::http::header_map __headers;
+    std::string __version{ "1.1" };
 };
 
 using HTTPPtr = std::shared_ptr<HTTPObj>;
@@ -119,20 +122,20 @@ class HTTPReqT : public HTTPObj {
     HTTPReqT();
     virtual ~HTTPReqT();
 
-    zpt::performative method();
-    void method(zpt::performative);
-    std::string& url();
-    void url(std::string);
-    std::string& query();
-    void query(std::string);
-    zpt::http::parameter_map& params();
-    std::string param(const char* _name);
-    void param(const char* _name, const char* _value);
-    void param(const char* _name, std::string _value);
-    void param(std::string _name, std::string _value);
+    auto method() -> zpt::performative;
+    auto method(zpt::performative) -> void;
+    auto url() -> std::string&;
+    auto url(std::string) -> void;
+    auto query() -> std::string&;
+    auto query(std::string) -> void;
+    auto params() -> zpt::http::parameter_map&;
+    auto param(const char* _name) -> std::string;
+    auto param(const char* _name, const char* _value) -> void;
+    auto param(const char* _name, std::string _value) -> void;
+    auto param(std::string _name, std::string _value) -> void;
 
-    virtual void stringify(std::string& _out);
-    virtual void stringify(std::ostream& _out);
+    virtual auto stringify(std::string& _out) -> void;
+    virtual auto stringify(std::ostream& _out) -> void;
 
   private:
     std::string __url;
@@ -146,11 +149,11 @@ class HTTPRepT : public HTTPObj {
     HTTPRepT();
     virtual ~HTTPRepT();
 
-    zpt::http::status status();
-    void status(zpt::http::status);
+    auto status() -> zpt::http::status;
+    auto status(zpt::http::status) -> void;
 
-    virtual void stringify(std::string& _out);
-    virtual void stringify(std::ostream& _out);
+    virtual auto stringify(std::string& _out) -> void;
+    virtual auto stringify(std::ostream& _out) -> void;
 
   private:
     zpt::http::status __status;
@@ -161,17 +164,17 @@ class HTTPReq {
     HTTPReq();
     virtual ~HTTPReq();
 
-    auto operator*() -> std::shared_ptr<zpt::HTTPReqT>&;
-    auto operator-> () -> std::shared_ptr<zpt::HTTPReqT>&;
+    auto operator*() -> zpt::HTTPReqT&;
+    auto operator-> () -> zpt::HTTPReqT*;
     operator std::string();
 
-    virtual void parse(std::istream& _in);
+    virtual auto parse(std::istream& _in) -> void;
 
-    friend std::ostream& operator<<(std::ostream& _out, HTTPReq& _in) {
+    friend auto operator<<(std::ostream& _out, HTTPReq& _in) -> std::ostream& {
         _in->stringify(_out);
         return _out;
     }
-    friend std::istream& operator>>(std::istream& _in, HTTPReq& _out) {
+    friend auto operator>>(std::istream& _in, HTTPReq& _out) -> std::istream& {
         _out.parse(_in);
         return _in;
     }
@@ -185,18 +188,18 @@ class HTTPRep {
     HTTPRep();
     virtual ~HTTPRep();
 
-    auto operator*() -> std::shared_ptr<zpt::HTTPRepT>&;
-    auto operator-> () -> std::shared_ptr<zpt::HTTPRepT>&;
+    auto operator*() -> zpt::HTTPRepT&;
+    auto operator-> () -> zpt::HTTPRepT*;
     operator std::string();
 
     virtual void parse(std::istream& _in);
 
-    friend std::ostream& operator<<(std::ostream& _out, HTTPRep& _in) {
+    friend auto operator<<(std::ostream& _out, HTTPRep& _in) -> std::ostream& {
         _in->stringify(_out);
         return _out;
     }
 
-    friend std::istream& operator>>(std::istream& _in, HTTPRep& _out) {
+    friend auto operator>>(std::istream& _in, HTTPRep& _out) -> std::istream& {
         _out.parse(_in);
         return _in;
     }

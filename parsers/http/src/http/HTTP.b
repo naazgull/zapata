@@ -33,7 +33,11 @@ exp :
 	{
 		d_scanner.url();
 	}
-	params SPACE HTTP_VERSION headers rest
+	params SPACE HTTP_VERSION
+    {
+		d_scanner.version();
+    }
+    headers rest
 	{
 		if (d_scanner.d_content_length != 0) {
 			d_scanner.body();
@@ -50,14 +54,13 @@ exp :
 	{
 		d_scanner.d_content_length = 0;
 		d_scanner.init(zpt::http::message_type::reply);
+		d_scanner.version();
 	}
 	SPACE STATUS
 	{
 		d_scanner.status();
 	}
-	SPACE STRING
-	{
-	}
+	status_description
 	headers rest
 	{
 		if (d_scanner.d_content_length != 0) {
@@ -101,6 +104,8 @@ paramslist :
 ;
 
 paramvalue: | STRING;
+
+status_description : | SPACE STRING;
 
 headers :
 	CR_LF headerslist CR_LF

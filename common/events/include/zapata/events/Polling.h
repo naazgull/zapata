@@ -33,7 +33,7 @@ SOFTWARE.
 #include <zapata/events.h>
 #include <zapata/http/HTTPObj.h>
 #include <zapata/json.h>
-#include <zapata/zmq/SocketStreams.h>
+#include <zapata/zmq/socket_stream.h>
 #include <zmq.h>
 #include <zmq.hpp>
 

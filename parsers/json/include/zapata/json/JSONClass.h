@@ -45,7 +45,7 @@ class pretty {
     auto operator=(const pretty& _rhs) -> pretty&;
     auto operator=(pretty&& _rhs) -> pretty&;
 
-    auto operator-> () -> std::string&;
+    auto operator-> () -> std::string*;
     auto operator*() -> std::string&;
 
     friend auto operator<<(std::ostream& _out, zpt::pretty _in) -> std::ostream& {
@@ -138,8 +138,8 @@ class json {
     template<typename T>
     auto operator=(T _rhs) -> zpt::json&;
 
-    auto operator-> () -> std::shared_ptr<zpt::JSONElementT>&;
-    auto operator*() -> std::shared_ptr<zpt::JSONElementT>&;
+    auto operator-> () -> zpt::JSONElementT*;
+    auto operator*() -> zpt::JSONElementT&;
 
     auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
     auto operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
@@ -296,7 +296,7 @@ class JSONObjT {
 
     auto clone() -> zpt::json;
 
-    auto operator-> () -> std::map<std::string, zpt::json>&;
+    auto operator-> () -> std::map<std::string, zpt::json>*;
     auto operator*() -> std::map<std::string, zpt::json>&;
 
     auto operator==(zpt::JSONObjT& _in) -> bool;
@@ -371,7 +371,7 @@ class JSONArrT {
 
     auto clone() -> zpt::json;
 
-    auto operator-> () -> std::vector<zpt::json>&;
+    auto operator-> () -> std::vector<zpt::json>*;
     auto operator*() -> std::vector<zpt::json>&;
 
     auto operator==(zpt::JSONArrT& _in) -> bool;
@@ -426,8 +426,8 @@ class JSONObj {
     auto operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj&;
     auto operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj&;
 
-    auto operator-> () -> std::shared_ptr<zpt::JSONObjT>&;
-    auto operator*() -> std::shared_ptr<zpt::JSONObjT>&;
+    auto operator-> () -> zpt::JSONObjT*;
+    auto operator*() -> zpt::JSONObjT&;
 
     operator std::string();
     operator zpt::pretty();
@@ -479,8 +479,8 @@ class JSONArr {
     auto operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr&;
     auto operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr&;
 
-    auto operator-> () -> std::shared_ptr<zpt::JSONArrT>&;
-    auto operator*() -> std::shared_ptr<zpt::JSONArrT>&;
+    auto operator-> () -> zpt::JSONArrT*;
+    auto operator*() -> zpt::JSONArrT&;
 
     template<typename T>
     auto operator==(T _rhs) -> bool;
@@ -529,8 +529,8 @@ class JSONRegex {
     auto operator=(const zpt::JSONRegex& _rhs) -> zpt::JSONRegex&;
     auto operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex&;
 
-    auto operator-> () -> std::shared_ptr<std::regex>&;
-    auto operator*() -> std::shared_ptr<std::regex>&;
+    auto operator-> () -> std::regex*;
+    auto operator*() -> std::regex&;
 
     operator std::string();
     operator zpt::pretty();
@@ -573,8 +573,8 @@ class context {
     context(context&& _rhs);
     virtual ~context();
 
-    auto operator-> () -> std::shared_ptr<zpt::JSONContext>&;
-    auto operator*() -> std::shared_ptr<zpt::JSONContext>&;
+    auto operator-> () -> zpt::JSONContext*;
+    auto operator*() -> zpt::JSONContext&;
 
     auto operator=(const zpt::context& _rhs) -> zpt::context&;
     auto operator=(zpt::context&& _rhs) -> zpt::context&;

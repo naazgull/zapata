@@ -175,8 +175,8 @@ zpt::JSONArrT::clone() -> zpt::json {
     return zpt::mkptr(_return);
 }
 
-auto zpt::JSONArrT::operator-> () -> std::vector<zpt::json>& {
-    return this->__underlying;
+auto zpt::JSONArrT::operator-> () -> std::vector<zpt::json>* {
+    return &this->__underlying;
 }
 
 auto zpt::JSONArrT::operator*() -> std::vector<zpt::json>& {
@@ -404,12 +404,12 @@ zpt::JSONArr::operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr& {
     return (*this);
 }
 
-auto zpt::JSONArr::operator-> () -> std::shared_ptr<zpt::JSONArrT>& {
-    return this->__underlying;
+auto zpt::JSONArr::operator-> () -> zpt::JSONArrT* {
+    return this->__underlying.get();
 }
 
-auto zpt::JSONArr::operator*() -> std::shared_ptr<zpt::JSONArrT>& {
-    return this->__underlying;
+auto zpt::JSONArr::operator*() -> zpt::JSONArrT& {
+    return *this->__underlying.get();
 }
 
 zpt::JSONArr::operator std::string() {

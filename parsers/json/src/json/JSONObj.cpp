@@ -200,8 +200,8 @@ zpt::JSONObjT::clone() -> zpt::json {
     return zpt::mkptr(_return);
 }
 
-auto zpt::JSONObjT::operator-> () -> std::map<std::string, zpt::json>& {
-    return this->__underlying;
+auto zpt::JSONObjT::operator-> () -> std::map<std::string, zpt::json>* {
+    return &this->__underlying;
 }
 
 auto zpt::JSONObjT::operator*() -> std::map<std::string, zpt::json>& {
@@ -456,12 +456,12 @@ zpt::JSONObj::operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj& {
     return (*this);
 }
 
-auto zpt::JSONObj::operator-> () -> std::shared_ptr<zpt::JSONObjT>& {
-    return this->__underlying;
+auto zpt::JSONObj::operator-> () -> zpt::JSONObjT* {
+    return this->__underlying.get();
 }
 
-auto zpt::JSONObj::operator*() -> std::shared_ptr<zpt::JSONObjT>& {
-    return this->__underlying;
+auto zpt::JSONObj::operator*() -> zpt::JSONObjT& {
+    return *this->__underlying.get();
 }
 
 zpt::JSONObj::operator std::string() {

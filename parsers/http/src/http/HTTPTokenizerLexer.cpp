@@ -7,25 +7,25 @@ zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream& _in, std::ostream& _ou
 
 zpt::HTTPTokenizerLexer::~HTTPTokenizerLexer() {}
 
-void
-zpt::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) {
-    this->__root_req = (*_root).get();
+auto
+zpt::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) -> void {
+    this->__root_req = &(*_root);
     this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
 }
 
-void
-zpt::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) {
-    this->__root_rep = (*_root).get();
+auto
+zpt::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) -> void {
+    this->__root_rep = &(*_root);
     this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
 }
 
-void
-zpt::HTTPTokenizerLexer::justLeave() {
+auto
+zpt::HTTPTokenizerLexer::justLeave() -> void {
     this->leave(-1);
 }
 
-void
-zpt::HTTPTokenizerLexer::init(zpt::http::message_type _in_type) {
+auto
+zpt::HTTPTokenizerLexer::init(zpt::http::message_type _in_type) -> void {
     this->d_chunked_body = false;
     this->d_chunked.clear();
     this->__root_type = _in_type;
@@ -42,8 +42,24 @@ zpt::HTTPTokenizerLexer::init(zpt::http::message_type _in_type) {
     }
 }
 
-void
-zpt::HTTPTokenizerLexer::body() {
+auto
+zpt::HTTPTokenizerLexer::version() -> void {
+    std::string _s(this->matched());
+    zpt::replace(_s, "HTTP/", "");
+    switch (this->__root_type) {
+        case zpt::http::message_type::request: {
+            this->__root_req->version(_s);
+            break;
+        }
+        case zpt::http::message_type::reply: {
+            this->__root_rep->version(_s);
+            break;
+        }
+    }
+}
+
+auto
+zpt::HTTPTokenizerLexer::body() -> void {
     switch (this->__root_type) {
         case zpt::http::message_type::request: {
             this->__root_req->body(this->matched());
@@ -54,10 +70,11 @@ zpt::HTTPTokenizerLexer::body() {
             break;
         }
     }
+    this->setMatched("");
 }
 
-void
-zpt::HTTPTokenizerLexer::url() {
+auto
+zpt::HTTPTokenizerLexer::url() -> void {
     switch (this->__root_type) {
         case zpt::http::message_type::request: {
             this->__root_req->url(this->matched());
@@ -69,8 +86,8 @@ zpt::HTTPTokenizerLexer::url() {
     }
 }
 
-void
-zpt::HTTPTokenizerLexer::status() {
+auto
+zpt::HTTPTokenizerLexer::status() -> void {
     switch (this->__root_type) {
         case zpt::http::message_type::request: {
             break;
@@ -85,8 +102,8 @@ zpt::HTTPTokenizerLexer::status() {
     }
 }
 
-void
-zpt::HTTPTokenizerLexer::add() {
+auto
+zpt::HTTPTokenizerLexer::add() -> void {
     std::string _s(this->matched());
     zpt::trim(_s);
     if (this->__header_name.length() == 0) {
@@ -106,15 +123,15 @@ zpt::HTTPTokenizerLexer::add() {
     this->__header_name.clear();
 }
 
-void
-zpt::HTTPTokenizerLexer::name() {
+auto
+zpt::HTTPTokenizerLexer::name() -> void {
     std::string _s(this->matched());
     zpt::trim(_s);
     this->__param_name.assign(_s);
 }
 
-void
-zpt::HTTPTokenizerLexer::value() {
+auto
+zpt::HTTPTokenizerLexer::value() -> void {
     std::string _s(this->matched());
     zpt::trim(_s);
     switch (this->__root_type) {

@@ -98,7 +98,8 @@ zpt::HTTPReqT::stringify(std::string& _out) -> void {
             _out.insert(_out.length(), _v);
         }
     }
-    _out.insert(_out.length(), " HTTP/1.1");
+    _out.insert(_out.length(), " HTTP/");
+    _out.insert(_out.length(), this->version());
     _out.insert(_out.length(), CRLF);
 
     for (auto h : this->__headers) {
@@ -116,12 +117,12 @@ zpt::HTTPReq::HTTPReq()
 
 zpt::HTTPReq::~HTTPReq() {}
 
-auto zpt::HTTPReq::operator*() -> std::shared_ptr<zpt::HTTPReqT>& {
-    return this->__underlying;
+auto zpt::HTTPReq::operator*() -> zpt::HTTPReqT& {
+    return *this->__underlying.get();
 }
 
-auto zpt::HTTPReq::operator-> () -> std::shared_ptr<zpt::HTTPReqT>& {
-    return this->__underlying;
+auto zpt::HTTPReq::operator-> () -> zpt::HTTPReqT* {
+    return this->__underlying.get();
 }
 
 zpt::HTTPReq::operator std::string() {

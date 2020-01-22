@@ -38,8 +38,8 @@ zpt::pretty::operator=(pretty&& _rhs) -> pretty& {
     return (*this);
 }
 
-auto zpt::pretty::operator-> () -> std::string& {
-    return this->__underlying;
+auto zpt::pretty::operator-> () -> std::string* {
+    return &this->__underlying;
 }
 
 auto zpt::pretty::operator*() -> std::string& {
@@ -103,12 +103,12 @@ zpt::json::operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::js
     return (*this);
 }
 
-auto zpt::json::operator-> () -> std::shared_ptr<zpt::JSONElementT>& {
-    return this->__underlying;
+auto zpt::json::operator-> () -> zpt::JSONElementT* {
+    return this->__underlying.get();
 }
 
-auto zpt::json::operator*() -> std::shared_ptr<zpt::JSONElementT>& {
-    return this->__underlying;
+auto zpt::json::operator*() -> zpt::JSONElementT& {
+    return *this->__underlying.get();
 }
 
 auto
@@ -365,24 +365,24 @@ zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
     switch (_target->type()) {
         case zpt::JSObject: {
             if (_pos == std::numeric_limits<size_t>::max()) {
-                this->__index = (***this->__target->obj()).size();
-                this->__iterator = (***this->__target->obj()).end();
+                this->__index = (**this->__target->obj()).size();
+                this->__iterator = (**this->__target->obj()).end();
             }
             else {
                 try {
                     this->__iterator =
-                      (***this->__target->obj()).find(_target->obj()->key_for(_pos));
+                      (**this->__target->obj()).find(_target->obj()->key_for(_pos));
                 }
                 catch (zpt::failed_expectation& _e) {
-                    this->__index = (***this->__target->obj()).size();
-                    this->__iterator = (***this->__target->obj()).end();
+                    this->__index = (**this->__target->obj()).size();
+                    this->__iterator = (**this->__target->obj()).end();
                 }
             }
             break;
         }
         case zpt::JSArray: {
             if (_pos == std::numeric_limits<size_t>::max()) {
-                this->__index = (***this->__target->arr()).size();
+                this->__index = (**this->__target->arr()).size();
             }
             break;
         }
@@ -422,7 +422,7 @@ auto zpt::json::iterator::operator*() const -> reference {
               this->__index, this->__iterator->first, this->__iterator->second);
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (***this->__target->arr())[this->__index]);
+            return std::make_tuple(this->__index, "", (**this->__target->arr())[this->__index]);
         }
         default: {
             break;
@@ -445,7 +445,7 @@ auto zpt::json::iterator::operator-> () const -> pointer {
               this->__index, this->__iterator->first, this->__iterator->second);
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (***this->__target->arr())[this->__index]);
+            return std::make_tuple(this->__index, "", (**this->__target->arr())[this->__index]);
         }
         default: {
             break;

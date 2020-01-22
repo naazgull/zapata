@@ -61,5 +61,5 @@ events/src/events/zsysd
 events/src/events/zpt
 parsers/uri/src/uri/zuri
 parsers/http/src/http/zhttps
-net/socket/src/socket/zsock*
+io/socket/src/socket/zsock*
 algorithms/lockfree/src/lockfree/zlf

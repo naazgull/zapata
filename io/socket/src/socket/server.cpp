@@ -11,6 +11,7 @@ main(int argc, char* argv[]) -> int {
         zpt::serversocketstream _ssock{ _port };
         do {
             auto _csock = _ssock->accept();
+            std::cout << ">>> connection accepted" << std::endl << std::flush;
             do {
                 char _content{ '\0' };
                 _csock >> std::noskipws >> _content;
