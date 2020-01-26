@@ -1,4 +1,4 @@
-#include <zapata/websocket.h>
+#include <zapata/rest.h>
 
 auto
 main(int argc, char* argv[]) -> int {

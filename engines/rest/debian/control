@@ -1,5 +1,5 @@
 Source: zapata-rest
-Maintainer: n@zgul <n@zgul.me>
+Maintainer: naazgull <n@zgul>
 Section: Development
 Priority: optional
 Standards-Version: 3.9.5
@@ -7,15 +7,6 @@ Build-Depends: debhelper (>= 9)
 
 Package: zapata-rest
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, openssl, zapata-base (>=0.9), zapata-lex-json (>=0.9), zapata-lex-http (>=0.9), zapata-common-events (>=0.9), zapata-mqtt (>=0.9), zapata-zmq (>=0.9), zapata-lisp (>=0.9), zapata-python (>=0.9), zapata-upnp (>=0.9)
-Description: RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support
- Provides a set of C++ tool libraries for the development of
- RESTful API's. This package provides an HTTP server, event
- listening registering support and multi-threading support.
-
-Package: zapata-rest-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: zapata-rest (= ${binary:Version})
-Description: Debug symbols for RESTful API's C++ toolkit named after Emiliano Zapata - RESTful server and event support
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, zapata-base (>=0.9)
+Description: zapata-rest
+ Provides zapata-rest

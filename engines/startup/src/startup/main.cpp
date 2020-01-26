@@ -21,6 +21,7 @@
 */
 
 #include <zapata/startup.h>
+#include <zapata/transport.h>
 
 auto
 main(int _argc, char* _argv[]) -> int {
@@ -32,6 +33,7 @@ main(int _argc, char* _argv[]) -> int {
                                                          "--conf-dir",
                                                          { zpt::array, "optional", "multiple" } });
 
+        zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER);
         auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE);
         _boot
           .initialize(_parameters) //

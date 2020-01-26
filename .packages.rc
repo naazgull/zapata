@@ -11,18 +11,12 @@ export projects=(
        common/graph
        common/events
        network/transport
-       network/websocket
        engines/startup
        engines/pipeline
+       network/websocket
+       network/http
 )
 
-       # protocols/http
-       # protocols/smtp
-       # protocols/oauth2
-       # protocols/zmq
-       # protocols/mqtt
-       # protocols/upnp
-       # gen
        # storage/mongodb
        # storage/redis
        # storage/mysql

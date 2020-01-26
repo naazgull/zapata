@@ -10,35 +10,35 @@ do
 
     case "$1" in
 	all)
-	    make -j4 && sudo make install
+	    make -s -j4 && sudo make -s install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	single)
-	    make && sudo make install
+	    make -s && sudo make  -s install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	clean)
-	    make clean
+	    make -s clean
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	install)
-	    sudo make install
+	    sudo make -s install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make uninstall
+	    sudo make -s uninstall
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
@@ -46,7 +46,7 @@ do
 	    ;;
 	distcheck)
 	    rm -rfv *.tar.gz
-	    sudo make distcheck && sudo make install
+	    sudo make -s distcheck && sudo make -s install
 	    if [[ $? != 0 ]]
 	    then
 		exit -1
@@ -54,7 +54,7 @@ do
 	    ;;
 	distclean)
 	    rm -rfv *.tar.gz
-	    sudo make distclean
+	    sudo make -s distclean
 	    if [[ $? != 0 ]]
 	    then
 		exit -1

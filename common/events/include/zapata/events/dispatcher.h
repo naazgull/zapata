@@ -93,7 +93,7 @@ zpt::events::dispatcher<C, E, V>::add_consumer() -> C& {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::trigger(E _event, V _content) -> C& {
-    this->__queue.push(std::make_pair(_event, _content));
+    this->__queue.push(std::make_tuple(_event, _content));
     return (*static_cast<C*>(this));
 }
 

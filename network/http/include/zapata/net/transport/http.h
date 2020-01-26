@@ -25,6 +25,7 @@
 #include <utility>
 #include <zapata/streams.h>
 #include <zapata/transport.h>
+#include <zapata/http.h>
 
 #ifndef CRLF
 #define CRLF "\r\n"
@@ -32,19 +33,16 @@
 
 namespace zpt {
 namespace net {
-namespace ws {
-auto
-handshake(zpt::stream& _stream) -> void;
-auto
-read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-auto
-write(zpt::stream& _stream, std::string _in) -> void;
-} // namespace ws
 namespace transport {
-class websocket : public zpt::transport::transport_t {
+class http : public zpt::transport::transport_t {
   public:
-    websocket() = default;
-    virtual ~websocket() = default;
+    http() = default;
+    virtual ~http() = default;
+
+    auto set_headers(zpt::message& _message, zpt::http::req& _request)
+      -> zpt::net::transport::http&;
+    auto set_body(zpt::message& _message, zpt::http::req& _request) -> zpt::net::transport::http&;
+    auto set_params(zpt::message& _message, zpt::http::req& _request) -> zpt::net::transport::http&;
 
     auto receive(zpt::message& _message) -> void override;
     auto send(zpt::message& _message) -> void override;

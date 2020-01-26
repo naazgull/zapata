@@ -23,8 +23,8 @@ AC_CHECK_LIB(zapata-lex-http, zpt_lex_http)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/protocols/http/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/protocols/http/config.h])
+AH_TOP([#include <zapata/net/transport/http/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/net/transport/http/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])

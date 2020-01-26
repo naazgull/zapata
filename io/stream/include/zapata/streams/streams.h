@@ -31,6 +31,7 @@ class stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 
+    stream() = default;
     stream(zpt::stream const& _rhs);
     stream(zpt::stream&& _rhs);
     virtual ~stream() = default;

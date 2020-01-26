@@ -20,35 +20,29 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
-#include <string>
-#include <utility>
-#include <zapata/streams.h>
-#include <zapata/transport.h>
+#include <iostream>
+#include <zapata/startup.h>
+#include <zapata/net/socket.h>
+#include <zapata/websocket.h>
 
-#ifndef CRLF
-#define CRLF "\r\n"
-#endif
+extern "C" auto
+_zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG);
+    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE);
+    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER);
 
-namespace zpt {
-namespace net {
-namespace ws {
-auto
-handshake(zpt::stream& _stream) -> void;
-auto
-read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-auto
-write(zpt::stream& _stream, std::string _in) -> void;
-} // namespace ws
-namespace transport {
-class websocket : public zpt::transport::transport_t {
-  public:
-    websocket() = default;
-    virtual ~websocket() = default;
+    _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
+    if (_config["ws"]["port"]->ok()) {
+        _boot.add_thread([]() -> void {
+            auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG);
+            auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER);
 
-    auto receive(zpt::message& _message) -> void override;
-    auto send(zpt::message& _message) -> void override;
-};
-} // namespace transport
-} // namespace net
-} // namespace zpt
+            zpt::serversocketstream _server_sock{ static_cast<uint16_t>(
+              static_cast<unsigned int>(_config["ws"]["port"])) };
+            do {
+                zpt::stream _client = _server_sock->accept();
+                _layer.push_stream("ws", _client);
+            } while (true);
+        });
+    }
+}

@@ -21,6 +21,7 @@
 */
 
 #include <zapata/transport/transport.h>
+#include <zapata/exceptions/NoMoreElementsException.h>
 
 zpt::transport::transport(zpt::transport const& _rhs)
   : __underlying{ _rhs.__underlying } {}
@@ -51,65 +52,130 @@ auto zpt::transport::operator*() -> zpt::transport::transport_t& {
 zpt::transport::transport(std::unique_ptr<zpt::transport::transport_t> _underlying)
   : __underlying{ _underlying.release() } {}
 
-zpt::message::message(zpt::stream _stream)
-  : __stream{ _stream } {}
+zpt::transport::layer::layer()
+  : __streams{ 2, 8, 1 } {}
 
-zpt::message::message(zpt::message const& _rhs)
-  : __stream{ _rhs.__stream }
-  , __received{ _rhs.__received }
-  , __send{ _rhs.__send } {
-}
-
-zpt::message::message(zpt::message&& _rhs)
-  : __stream{ std::move(_rhs.__stream) }
-  , __received{ std::move(_rhs.__received) }
-  , __send{ std::move(_rhs.__send) } {
+auto
+zpt::transport::layer::add(std::string _scheme, zpt::transport _transport)
+  -> zpt::transport::layer& {
+    this->__underlying.insert(std::make_pair(_scheme, _transport));
+    for (auto _on_load : this->__on_load) {
+        _on_load(_transport);
+    }
+    return (*this);
 }
 
 auto
+zpt::transport::layer::get(std::string _scheme) -> zpt::transport& {
+    auto _found = this->__underlying.find(_scheme);
+    if (_found == this->__underlying.end()) {
+        throw zpt::NoMoreElementsException("there is no such transport");
+    }
+    return _found->second;
+}
+
+auto
+zpt::transport::layer::push_stream(std::string _scheme, zpt::stream _stream)
+  -> zpt::transport::layer& {
+    this->__streams.push(std::make_tuple(_scheme, _stream));
+    return (*this);
+}
+
+auto
+zpt::transport::layer::pop_stream() -> std::tuple<std::string, zpt::stream> {
+    return this->__streams.pop();
+}
+
+auto
+zpt::transport::layer::begin() -> std::map<std::string, zpt::transport>::iterator {
+    return this->__underlying.begin();
+}
+
+auto
+zpt::transport::layer::end() -> std::map<std::string, zpt::transport>::iterator {
+    return this->__underlying.end();
+}
+
+auto
+zpt::transport::layer::on_load(std::function<void(zpt::transport&)> _listener)
+  -> zpt::transport::layer& {
+    this->__on_load.push_back(_listener);
+    return (*this);
+}
+
+zpt::message::message(zpt::stream _stream)
+  : __underlying{ std::make_shared<zpt::message::message_t>(_stream) } {}
+
+zpt::message::message(zpt::message const& _rhs)
+  : __underlying{ _rhs.__underlying } {}
+
+zpt::message::message(zpt::message&& _rhs)
+  : __underlying{ std::move(_rhs.__underlying) } {}
+
+auto
 zpt::message::operator=(zpt::message const& _rhs) -> zpt::message& {
-    this->__stream = _rhs.__stream;
-    this->__received = _rhs.__received;
-    this->__send = _rhs.__send;
+    this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
 auto
 zpt::message::operator=(zpt::message&& _rhs) -> zpt::message& {
-    this->__stream = std::move(_rhs.__stream);
-    this->__received = std::move(_rhs.__received);
-    this->__send = std::move(_rhs.__send);
+    this->__underlying = std::move(_rhs.__underlying);
     return (*this);
 }
 
+auto zpt::message::operator-> () -> zpt::message::message_t* {
+    return this->__underlying.get();
+}
+
+auto zpt::message::operator*() -> zpt::message::message_t& {
+    return *this->__underlying.get();
+}
+
+zpt::message::message_t::message_t(zpt::stream _stream)
+  : __stream{ _stream } {}
+
 auto
-zpt::message::operator<<(zpt::json _rhs) -> zpt::message& {
-    if (this->__which_in == zpt::received) {
-        this->__received = this->__received + _rhs;
-    }
-    else {
-        this->__send = this->__send + _rhs;
-    }
-    return (*this);
+zpt::message::message_t::stream() -> zpt::stream& {
+    return this->__stream;
 }
 
 auto
-zpt::message::operator<<(zpt::action _rhs) -> zpt::message& {
-    this->__which_in = _rhs;
-    return (*this);
+zpt::message::message_t::uri() -> std::string& {
+    return this->__uri;
 }
 
 auto
-zpt::message::get_received() -> zpt::json& {
+zpt::message::message_t::version() -> std::string& {
+    return this->__version;
+}
+
+auto
+zpt::message::message_t::scheme() -> std::string& {
+    return this->__scheme;
+}
+
+auto
+zpt::message::message_t::method() -> zpt::performative& {
+    return this->__method;
+}
+
+auto
+zpt::message::message_t::headers() -> zpt::json& {
+    return this->__headers;
+}
+
+auto
+zpt::message::message_t::received() -> zpt::json& {
     return this->__received;
 }
 
 auto
-zpt::message::get_to_send() -> zpt::json& {
+zpt::message::message_t::to_send() -> zpt::json& {
     return this->__send;
 }
 
 auto
-zpt::message::stream() -> zpt::stream& {
-    return this->__stream;
+zpt::message::message_t::status() -> zpt::status& {
+    return this->__status;
 }

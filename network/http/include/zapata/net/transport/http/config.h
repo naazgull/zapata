@@ -1,7 +1,7 @@
-/* include/zapata/protocols/http/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/protocols/http/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/net/transport/http/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/net/transport/http/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/protocols/http/unconfig.h>
+#include <zapata/net/transport/http/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -25,15 +25,15 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-/* #undef HAVE_LIBZAPATA_BASE */
+#define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-lex-http' library (-lzapata-lex-http).
- */
-/* #undef HAVE_LIBZAPATA_LEX_HTTP */
+   */
+#define HAVE_LIBZAPATA_LEX_HTTP 1
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
- */
-/* #undef HAVE_LIBZAPATA_LEX_JSON */
+   */
+#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

@@ -29,8 +29,9 @@
 
 namespace zpt {
 
-inline size_t BOOT_ENGINE{ 0 };
-inline size_t GLOBAL_CONFIG{ 0 };
+size_t BOOT_ENGINE{ 0 };
+size_t GLOBAL_CONFIG{ 0 };
+size_t TRANSPORT_LAYER{ 0 };
 
 class globals {
   public:
@@ -112,6 +113,10 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
 
     auto to_string() -> std::string;
 
+    template<typename... Args>
+    auto add_thread(std::function<void(Args...)> _callback, Args... _args) -> zpt::startup::engine&;
+    auto add_thread(std::function<void()> _callback) -> zpt::startup::engine&;
+
     auto load(zpt::json _plugin_config) -> zpt::plugin&;
     auto start() -> zpt::startup::engine&;
 
@@ -125,6 +130,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
     std::map<std::string, zpt::plugin> __plugins;
     zpt::lf::spin_lock __plugin_list_lock;
+    std::vector<std::thread> __workers;
 
     auto load() -> zpt::startup::engine&;
     auto hash(zpt::json& _event) -> std::string;
@@ -173,4 +179,12 @@ zpt::globals::dealloc(size_t _variable) -> void {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, false };
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
     _allocated.erase(_allocated.begin() + _variable);
+}
+
+template<typename... Args>
+auto
+zpt::startup::engine::add_thread(std::function<void(Args...)> _callback, Args... _args)
+  -> zpt::startup::engine& {
+    this->__workers.emplace_back(_callback, _args...);
+    return (*this);
 }

@@ -24,13 +24,11 @@
 
 zpt::stream::stream(zpt::stream const& _rhs)
   : __underlying{ _rhs.__underlying }
-  , __fd{ _rhs.__fd } {
-}
+  , __fd{ _rhs.__fd } {}
 
 zpt::stream::stream(zpt::stream&& _rhs)
   : __underlying{ std::move(_rhs.__underlying) }
-  , __fd{ _rhs.__fd } {
-}
+  , __fd{ _rhs.__fd } {}
 
 auto
 zpt::stream::operator=(zpt::stream const& _rhs) -> zpt::stream& {

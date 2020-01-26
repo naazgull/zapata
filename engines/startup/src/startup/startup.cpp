@@ -161,6 +161,13 @@ zpt::startup::engine::to_string() -> std::string {
 }
 
 auto
+zpt::startup::engine::add_thread(std::function<void()> _callback)
+  -> zpt::startup::engine& {
+    this->__workers.emplace_back(_callback);
+    return (*this);
+}
+
+auto
 zpt::startup::engine::load(zpt::json _plugin_config) -> zpt::plugin& {
     expect(_plugin_config["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
 
@@ -202,6 +209,9 @@ zpt::startup::engine::start() -> zpt::startup::engine& {
     this
       ->add_consumer() //
       .load();
+    for (size_t _idx = 0; _idx != this->__workers.size(); ++_idx) {
+        this->__workers[_idx].join();
+    }
     return (*this);
 }
 

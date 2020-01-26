@@ -591,6 +591,7 @@ enum JSONType {
 };
 
 using performative = unsigned short;
+using status = unsigned short;
 
 extern std::string* tz;
 std::string

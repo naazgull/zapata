@@ -1,8 +1,8 @@
 #!/bin/bash
 
 mkdir -p upstream
-rm -rfv upstream/*
-rm -rfv *.deb
+rm -rf upstream/*
+rm -rf *.deb
 for f in *.tar.gz
 do
     fullname=${f%.tar.gz}
@@ -31,4 +31,3 @@ do
     popd
 done
 rm -rfv upstream/
-

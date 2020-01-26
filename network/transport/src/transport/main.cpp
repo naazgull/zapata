@@ -6,7 +6,7 @@ class some_protocol : public zpt::transport::transport_t {
   public:
     auto receive(zpt::message& _message) -> void override {
         zpt::http::req _request;
-        _message.stream() >> std::noskipws >> _request;
+        _message->stream() >> std::noskipws >> _request;
         if (_request->body().length() != 0 &&
             _request->header("Content-Type") == "application/json") {
             std::istringstream _iss;
@@ -14,8 +14,7 @@ class some_protocol : public zpt::transport::transport_t {
             zpt::json _content;
             try {
                 _iss >> _content;
-                _message << zpt::received
-                         << zpt::json{ "version", _request->version(), "body", _content };
+                _message->received() << "version" << _request->version() << "body" << _content;
             }
             catch (...) {
             }
@@ -25,16 +24,16 @@ class some_protocol : public zpt::transport::transport_t {
     auto send(zpt::message& _message) -> void override {
         zpt::http::rep _response;
         zpt::init(_response);
-        if (_message.get_received()->size() != 0) {
+        if (_message->received()->size() != 0) {
             _response->status(zpt::http::HTTP200);
-            _response->version(_message.get_received()["version"]);
-            _response->body(_message.get_received()["body"]);
+            _response->version(_message->received()["version"]);
+            _response->body(_message->received()["body"]);
             _response->header("Content-Type", "application/json");
         }
         else {
             _response->status(zpt::http::HTTP415);
         }
-        _message.stream() << _response << std::flush;
+        _message->stream() << _response << std::flush;
     }
 };
 

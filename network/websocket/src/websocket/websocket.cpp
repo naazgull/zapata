@@ -117,3 +117,24 @@ zpt::net::ws::write(zpt::stream& _stream, std::string _in) -> void {
 
     _stream << _in << std::flush;
 }
+
+auto
+zpt::net::transport::websocket::receive(zpt::message& _message) -> void {
+    auto [_body, _] = zpt::net::ws::read(_message->stream());
+    if (_body.length() != 0) {
+        std::istringstream _iss;
+        _iss.str(_body);
+        zpt::json _content;
+        try {
+            _iss >> _content;
+            _message->received() = _content;
+        }
+        catch (...) {
+        }
+    }
+}
+
+auto
+zpt::net::transport::websocket::send(zpt::message& _message) -> void {
+    zpt::net::ws::write(_message->stream(), _message->to_send());
+}
