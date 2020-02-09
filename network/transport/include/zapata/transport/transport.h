@@ -27,7 +27,66 @@
 #include <zapata/lockfree.h>
 
 namespace zpt {
-class message;
+class message {
+  private:
+    class message_t {
+      public:
+        message_t(zpt::stream* _stream);
+        message_t(zpt::message::message_t const& _rhs) = delete;
+        message_t(zpt::message::message_t&& _rhs) = delete;
+        virtual ~message_t() = default;
+
+        auto operator=(zpt::message::message_t const& _rhs) -> zpt::message::message_t& = delete;
+        auto operator=(zpt::message::message_t&& _rhs) -> zpt::message::message_t& = delete;
+
+        auto stream() -> zpt::stream&;
+        auto uri() -> std::string&;
+        auto version() -> std::string&;
+        auto scheme() -> std::string&;
+        auto method() -> zpt::performative&;
+        auto headers() -> zpt::json&;
+        auto received() -> zpt::json&;
+        auto to_send() -> zpt::json&;
+        auto status() -> zpt::status&;
+        auto keep_alive() -> bool&;
+
+      private:
+        zpt::stream* __stream;
+        std::string __uri;
+        std::string __version;
+        std::string __scheme;
+        zpt::performative __method{ 0 };
+        zpt::json __headers{ zpt::json::object() };
+        zpt::json __received{ zpt::undefined };
+        zpt::json __send{ zpt::undefined };
+        zpt::status __status{ 404 };
+        bool __keep_alive{ false };
+    };
+
+  public:
+    message() = default;
+    message(zpt::stream* _stream);
+    message(zpt::message const& _rhs);
+    message(zpt::message&& _rhs);
+    virtual ~message() = default;
+
+    auto operator=(zpt::message const& _rhs) -> zpt::message&;
+    auto operator=(zpt::message&& _rhs) -> zpt::message&;
+
+    auto operator-> () -> zpt::message::message_t*;
+    auto operator*() -> zpt::message::message_t&;
+
+    friend auto operator<<(std::ostream& _out, zpt::message& _in) -> std::ostream& {
+        _out << _in->method() << " " << _in->scheme() << " " << _in->uri() << std::endl
+             << zpt::pretty(_in->headers()) << std::endl
+             << zpt::pretty(_in->received()) << std::flush;
+        return _out;
+    }
+
+  private:
+    std::shared_ptr<zpt::message::message_t> __underlying;
+};
+
 class transport {
   public:
     class transport_t {
@@ -51,80 +110,23 @@ class transport {
 
     class layer {
       public:
-        layer();
+        layer() = default;
         virtual ~layer() = default;
 
         auto add(std::string _scheme, zpt::transport _transport) -> zpt::transport::layer&;
         auto get(std::string _scheme) -> zpt::transport&;
 
-        auto push_stream(std::string _scheme, zpt::stream _stream) -> zpt::transport::layer&;
-        auto pop_stream() -> std::tuple<std::string, zpt::stream>;
-
         auto begin() -> std::map<std::string, zpt::transport>::iterator;
         auto end() -> std::map<std::string, zpt::transport>::iterator;
 
-        auto on_load(std::function<void(zpt::transport&)> _listener) -> zpt::transport::layer&;
-
       private:
         std::map<std::string, zpt::transport> __underlying;
-        std::vector<std::function<void(zpt::transport&)>> __on_load;
-        zpt::lf::queue<std::tuple<std::string, zpt::stream>> __streams;
     };
 
   private:
     transport(std::unique_ptr<zpt::transport::transport_t> _underlying);
 
     std::shared_ptr<zpt::transport::transport_t> __underlying;
-};
-
-class message {
-  private:
-    class message_t {
-      public:
-        message_t(zpt::stream _stream);
-        message_t(zpt::message::message_t const& _rhs) = delete;
-        message_t(zpt::message::message_t&& _rhs) = delete;
-        virtual ~message_t() = default;
-
-        auto operator=(zpt::message::message_t const& _rhs) -> zpt::message::message_t& = delete;
-        auto operator=(zpt::message::message_t&& _rhs) -> zpt::message::message_t& = delete;
-
-        auto stream() -> zpt::stream&;
-        auto uri() -> std::string&;
-        auto version() -> std::string&;
-        auto scheme() -> std::string&;
-        auto method() -> zpt::performative&;
-        auto headers() -> zpt::json&;
-        auto received() -> zpt::json&;
-        auto to_send() -> zpt::json&;
-        auto status() -> zpt::status&;
-
-      private:
-        zpt::stream __stream;
-        std::string __uri;
-        std::string __version;
-        std::string __scheme;
-        zpt::performative __method{ 0 };
-        zpt::json __headers;
-        zpt::json __received{ zpt::json::object() };
-        zpt::json __send{ zpt::json::object() };
-        zpt::status __status{ 204 };
-    };
-
-  public:
-    message(zpt::stream _stream);
-    message(zpt::message const& _rhs);
-    message(zpt::message&& _rhs);
-    virtual ~message() = default;
-
-    auto operator=(zpt::message const& _rhs) -> zpt::message&;
-    auto operator=(zpt::message&& _rhs) -> zpt::message&;
-
-    auto operator-> () -> zpt::message::message_t*;
-    auto operator*() -> zpt::message::message_t&;
-
-  private:
-    std::shared_ptr<zpt::message::message_t> __underlying;
 };
 } // namespace zpt
 

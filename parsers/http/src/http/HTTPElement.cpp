@@ -45,7 +45,7 @@ zpt::init(zpt::HTTPRep& _rep) -> void {
     strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
     _rep->status(zpt::http::HTTP404);
-    _rep->header("User-Agent", "zapata rest-ful server");
+    _rep->header("Server", "zapata");
     _rep->header("Cache-Control", "max-age=3600");
     _rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
     _rep->header("Date", std::string(_buffer_date));
@@ -63,7 +63,7 @@ zpt::HTTPObj::body() -> std::string& {
 
 auto
 zpt::HTTPObj::body(std::string _body) -> void {
-    this->header("Content-Length", std::to_string(_body.length()));
+    this->__headers["Content-Length"] = std::to_string(_body.length());
     this->__body.assign(_body.data());
 }
 
@@ -76,11 +76,7 @@ auto
 zpt::HTTPObj::header(const char* _idx) -> std::string {
     std::string _name(_idx);
     zpt::prettify_header_name(_name);
-    auto _found = this->__headers.find(_name);
-    if (_found != this->__headers.end()) {
-        return _found->second;
-    }
-    return "";
+    return this->__headers[_name];
 }
 
 auto

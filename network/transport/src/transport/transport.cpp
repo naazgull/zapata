@@ -52,16 +52,10 @@ auto zpt::transport::operator*() -> zpt::transport::transport_t& {
 zpt::transport::transport(std::unique_ptr<zpt::transport::transport_t> _underlying)
   : __underlying{ _underlying.release() } {}
 
-zpt::transport::layer::layer()
-  : __streams{ 2, 8, 1 } {}
-
 auto
 zpt::transport::layer::add(std::string _scheme, zpt::transport _transport)
   -> zpt::transport::layer& {
     this->__underlying.insert(std::make_pair(_scheme, _transport));
-    for (auto _on_load : this->__on_load) {
-        _on_load(_transport);
-    }
     return (*this);
 }
 
@@ -75,18 +69,6 @@ zpt::transport::layer::get(std::string _scheme) -> zpt::transport& {
 }
 
 auto
-zpt::transport::layer::push_stream(std::string _scheme, zpt::stream _stream)
-  -> zpt::transport::layer& {
-    this->__streams.push(std::make_tuple(_scheme, _stream));
-    return (*this);
-}
-
-auto
-zpt::transport::layer::pop_stream() -> std::tuple<std::string, zpt::stream> {
-    return this->__streams.pop();
-}
-
-auto
 zpt::transport::layer::begin() -> std::map<std::string, zpt::transport>::iterator {
     return this->__underlying.begin();
 }
@@ -96,14 +78,7 @@ zpt::transport::layer::end() -> std::map<std::string, zpt::transport>::iterator 
     return this->__underlying.end();
 }
 
-auto
-zpt::transport::layer::on_load(std::function<void(zpt::transport&)> _listener)
-  -> zpt::transport::layer& {
-    this->__on_load.push_back(_listener);
-    return (*this);
-}
-
-zpt::message::message(zpt::stream _stream)
+zpt::message::message(zpt::stream* _stream)
   : __underlying{ std::make_shared<zpt::message::message_t>(_stream) } {}
 
 zpt::message::message(zpt::message const& _rhs)
@@ -132,12 +107,13 @@ auto zpt::message::operator*() -> zpt::message::message_t& {
     return *this->__underlying.get();
 }
 
-zpt::message::message_t::message_t(zpt::stream _stream)
-  : __stream{ _stream } {}
+zpt::message::message_t::message_t(zpt::stream* _stream)
+  : __stream{ _stream }
+  , __scheme{ static_cast<std::string>(*_stream) } {}
 
 auto
 zpt::message::message_t::stream() -> zpt::stream& {
-    return this->__stream;
+    return *this->__stream;
 }
 
 auto
@@ -178,4 +154,9 @@ zpt::message::message_t::to_send() -> zpt::json& {
 auto
 zpt::message::message_t::status() -> zpt::status& {
     return this->__status;
+}
+
+auto
+zpt::message::message_t::keep_alive() -> bool& {
+    return this->__keep_alive;
 }

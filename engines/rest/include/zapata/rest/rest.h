@@ -20,31 +20,48 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#pragma once
+
 #include <zapata/startup.h>
+#include <zapata/pipeline.h>
 #include <zapata/transport.h>
 
-auto
-main(int _argc, char* _argv[]) -> int {
-    try {
-        zpt::json _parameters = zpt::parameters::parse(_argc,
-                                                       _argv,
-                                                       { "--conf-file",
-                                                         { zpt::array, "optional", "multiple" },
-                                                         "--conf-dir",
-                                                         { zpt::array, "optional", "multiple" } });
+namespace zpt {
 
-        zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(), 10, 10000);
-        zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-        auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
-        _boot
-          .initialize(_parameters) //
-          .start();
-        zpt::globals::dealloc<zpt::stream::polling>(zpt::STREAM_POLLING());
-        zpt::globals::dealloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-        zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    }
-    catch (zpt::failed_expectation& _e) {
-        std::cout << _e.what() << std::endl << std::flush;
-    }
-    return 0;
-}
+auto
+REST_ENGINE() -> size_t&;
+
+namespace rest {
+
+static inline const unsigned short Get = 0;
+static inline const unsigned short Put = 1;
+static inline const unsigned short Post = 2;
+static inline const unsigned short Delete = 3;
+static inline const unsigned short Head = 4;
+static inline const unsigned short Options = 5;
+static inline const unsigned short Patch = 6;
+static inline const unsigned short Reply = 7;
+static inline const unsigned short Msearch = 8;
+static inline const unsigned short Notify = 9;
+static inline const unsigned short Trace = 10;
+static inline const unsigned short Connect = 11;
+
+class engine : public zpt::pipeline::engine<zpt::message> {
+  public:
+    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _pop_wait_milli = 500);
+    virtual ~engine() = default;
+
+    auto add_listener(size_t _stage,
+                      std::string _pattern,
+                      std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
+      -> zpt::pipeline::engine<zpt::message>&;
+};
+
+auto
+to_str(zpt::performative _performative) -> std::string;
+
+auto
+from_str(std::string _performative) -> zpt::performative;
+
+} // namespace rest
+} // nanespace zpt

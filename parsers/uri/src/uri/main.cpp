@@ -34,6 +34,7 @@ SOFTWARE.
 int
 main(int argc, char* argv[]) {
     try {
+        std::cout << zpt::pretty(zpt::uri::parse("{(.*)}:/{(.*)}")) << std::endl << std::flush;
         std::cout << zpt::pretty(zpt::uri::parse("/home/pf/{tmp:/(.*)/}/a.txt")) << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse("{/http|ftp/}://api/2.0/users/me?a=2&b=3&c=") << std::endl

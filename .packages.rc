@@ -2,26 +2,18 @@ export bulk_wd=$HOME/Develop/zapata
 
 export projects=(
        common/base
+       common/lockfree
        io/stream
        io/socket
        parsers/json
        parsers/http
        parsers/uri
-       common/lockfree
        common/graph
        common/events
        network/transport
        engines/startup
-       engines/pipeline
        network/websocket
        network/http
+       engines/pipeline
+       engines/rest
 )
-
-       # storage/mongodb
-       # storage/redis
-       # storage/mysql
-       # storage/postgresql
-       # storage/couchdb
-       # bridges/lisp
-       # bridges/python
-       # engines/rest

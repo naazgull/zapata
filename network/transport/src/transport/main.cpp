@@ -6,7 +6,7 @@ class some_protocol : public zpt::transport::transport_t {
   public:
     auto receive(zpt::message& _message) -> void override {
         zpt::http::req _request;
-        _message->stream() >> std::noskipws >> _request;
+        (*_message->stream()) >> std::noskipws >> _request;
         if (_request->body().length() != 0 &&
             _request->header("Content-Type") == "application/json") {
             std::istringstream _iss;
@@ -33,7 +33,7 @@ class some_protocol : public zpt::transport::transport_t {
         else {
             _response->status(zpt::http::HTTP415);
         }
-        _message->stream() << _response << std::flush;
+        (*_message->stream()) << _response << std::flush;
     }
 };
 
@@ -50,8 +50,8 @@ main(int argc, char* argv[]) -> int {
             zpt::serversocketstream _ssock{ _port };
             do {
                 auto _stream = _ssock->accept();
-                zpt::message _received{ _stream };
                 auto _t1 = std::chrono::high_resolution_clock::now();
+                zpt::message _received{ _stream.get() };
                 _transport->receive(_received);
                 auto _t2 = std::chrono::high_resolution_clock::now();
                 auto _duration1 =

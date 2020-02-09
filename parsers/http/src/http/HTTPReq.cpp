@@ -71,45 +71,36 @@ zpt::HTTPReqT::param(std::string _name, std::string _value) -> void {
 
 auto
 zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
-    std::string _ret;
-    this->stringify(_ret);
-    _out << _ret << std::flush;
-}
-
-auto
-zpt::HTTPReqT::stringify(std::string& _out) -> void {
-    _out.insert(_out.length(), zpt::http::method_names[this->__method]);
-    _out.insert(_out.length(), " ");
-    _out.insert(_out.length(), this->__url);
+    _out << zpt::http::method_names[this->__method] << " " << this->__url;
     if (this->__params.size() != 0) {
-        _out.insert(_out.length(), "?");
+        _out << "?";
         bool _first = true;
         for (auto i : this->__params) {
             if (!_first) {
-                _out.insert(_out.length(), "&");
+                _out << "&";
             }
             _first = false;
             std::string _n(i.first);
             zpt::url::encode(_n);
             std::string _v(i.second);
             zpt::url::encode(_v);
-            _out.insert(_out.length(), _n);
-            _out.insert(_out.length(), "=");
-            _out.insert(_out.length(), _v);
+            _out << _n << "=" << _v;
         }
     }
-    _out.insert(_out.length(), " HTTP/");
-    _out.insert(_out.length(), this->version());
-    _out.insert(_out.length(), CRLF);
+    _out << " HTTP/" << this->version() << CRLF;
 
     for (auto h : this->__headers) {
-        _out.insert(_out.length(), h.first);
-        _out.insert(_out.length(), ": ");
-        _out.insert(_out.length(), h.second);
-        _out.insert(_out.length(), CRLF);
+        _out << h.first << ": " << h.second << CRLF;
     }
-    _out.insert(_out.length(), CRLF);
-    _out.insert(_out.length(), this->__body);
+    _out << CRLF << this->__body;
+}
+
+auto
+zpt::HTTPReqT::stringify(std::string& _out) -> void {
+    std::ostringstream _oss;
+    this->stringify(_oss);
+    _oss << std::flush;
+    _out.assign(_oss.str());
 }
 
 zpt::HTTPReq::HTTPReq()

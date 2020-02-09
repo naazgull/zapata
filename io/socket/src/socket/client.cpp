@@ -8,9 +8,8 @@ main(int argc, char* argv[]) -> int {
         uint16_t _port{ 0 };
         _iss >> _port;
 
-        zpt::stream _csock =
-          zpt::stream::alloc<zpt::socketstream>("localhost", _port);
-        _csock << std::string{ argv[2] } << std::endl << std::flush;
+        auto _csock = zpt::stream::alloc<zpt::socketstream>("localhost", _port);
+        (*_csock) << std::string{ argv[2] } << std::endl << std::flush;
     }
     return 0;
 }

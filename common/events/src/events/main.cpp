@@ -43,7 +43,7 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
             try {
                 _callback(_content);
             }
-            catch(zpt::events::unregister& _e) {
+            catch (zpt::events::unregister& _e) {
                 this->mute(_event, _callback);
             }
         }
@@ -76,9 +76,6 @@ main(int _argc, char* _argv[]) -> int {
                           << _counter << std::endl
                           << std::flush;
             }
-            // std::cout << std::this_thread::get_id() << " (" << _counter << ") : " << _content
-            //           << std::endl
-            //           << std::flush;
         });
         _ee.listen(1, [](zpt::json _content) -> void {
             static thread_local long _counter{ 0 };
@@ -88,9 +85,6 @@ main(int _argc, char* _argv[]) -> int {
                           << _counter << std::endl
                           << std::flush;
             }
-            // std::cout << std::this_thread::get_id() << " (" << _counter << ") : " << _content
-            //           << std::endl
-            //           << std::flush;
         });
 
         std::thread _producer1{ [&]() -> void {

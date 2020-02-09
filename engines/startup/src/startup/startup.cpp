@@ -23,6 +23,27 @@
 #include <dlfcn.h>
 #include <zapata/startup/startup.h>
 
+auto
+zpt::BOOT_ENGINE() -> size_t& {
+    static size_t _global{ 0 };
+    return _global;
+}
+auto
+zpt::GLOBAL_CONFIG() -> size_t& {
+    static size_t _global{ 0 };
+    return _global;
+}
+auto
+zpt::STREAM_POLLING() -> size_t& {
+    static size_t _global{ 0 };
+    return _global;
+}
+auto
+zpt::TRANSPORT_LAYER() -> size_t& {
+    static size_t _global{ 0 };
+    return _global;
+}
+
 zpt::plugin::plugin(zpt::json _config)
   : __underlying{ std::make_shared<zpt::plugin::plugin_t>(_config) } {}
 
@@ -106,7 +127,7 @@ zpt::plugin::plugin_t::load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t
 }
 
 zpt::startup::engine::engine()
-  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 1 } {
+  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 50000 } {
     this
       ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } }) //
       ->set_loader(zpt::startup::dynlib::load_plugin);
@@ -119,8 +140,8 @@ zpt::startup::engine::engine(zpt::json _args)
 
 auto
 zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
-    this->__configuration =
-      zpt::globals::alloc<zpt::json>(zpt::GLOBAL_CONFIG, zpt::startup::configuration::load(_args));
+    this->__configuration = zpt::globals::alloc<zpt::json>(
+      zpt::GLOBAL_CONFIG(), zpt::startup::configuration::load(_args));
     return (*this);
 }
 
@@ -161,8 +182,7 @@ zpt::startup::engine::to_string() -> std::string {
 }
 
 auto
-zpt::startup::engine::add_thread(std::function<void()> _callback)
-  -> zpt::startup::engine& {
+zpt::startup::engine::add_thread(std::function<void()> _callback) -> zpt::startup::engine& {
     this->__workers.emplace_back(_callback);
     return (*this);
 }
@@ -284,11 +304,15 @@ zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
 
 auto
 zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
-    zpt::startup::engine& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE);
+    zpt::startup::engine& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     std::string& _lib = _plugin->name();
     std::string& _lib_file = _plugin->source();
 
     void* _hndl = dlopen(_lib_file.data(), RTLD_NOW);
+    if (_hndl == nullptr) {
+        std::cout << dlerror() << std::endl << std::flush;
+        return false;
+    }
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::SEARCH }, true);
     void (*_populate)(zpt::plugin&);
     _populate = (void (*)(zpt::plugin&))dlsym(_hndl, "_zpt_load_");

@@ -36,15 +36,20 @@ zpt::net::transport::http::set_headers(zpt::message& _message, zpt::http::req& _
 auto
 zpt::net::transport::http::set_body(zpt::message& _message, zpt::http::req& _request)
   -> zpt::net::transport::http& {
-    if (_message->headers()["Content-Type"] == "application/json") {
-        std::istringstream _iss;
-        _iss.str(_request->body());
-        zpt::json _body;
-        _iss >> _body;
-        _message->received() << "body" << _body;
-    }
-    else {
-        _message->received() << "body" << _request->body();
+    if (_request->body().length() != 0) {
+        if (!_message->received()->ok()) {
+            _message->received() = zpt::json::object();
+        }
+        if (_message->headers()["Content-Type"] == "application/json") {
+            std::istringstream _iss;
+            _iss.str(_request->body());
+            zpt::json _body;
+            _iss >> _body;
+            _message->received() << "body" << _body;
+        }
+        else {
+            _message->received() << "body" << _request->body();
+        }
     }
     return (*this);
 }
@@ -57,6 +62,9 @@ zpt::net::transport::http::set_params(zpt::message& _message, zpt::http::req& _r
         _params << _key << _value;
     }
     if (_params->size() != 0) {
+        if (!_message->received()->ok()) {
+            _message->received() = zpt::json::object();
+        }
         _message->received() << "params" << _params;
     }
     return (*this);
@@ -80,6 +88,7 @@ zpt::net::transport::http::receive(zpt::message& _message) -> void {
     _message
       ->uri() //
       .assign(_request->url());
+    _message->keep_alive() = (_request->header("Connection") == "keep-alive");
 }
 
 auto
@@ -87,9 +96,10 @@ zpt::net::transport::http::send(zpt::message& _message) -> void {
     zpt::http::rep _response;
     zpt::init(_response);
 
-    _response->status(static_cast<zpt::http::status>(_message->status()));
+    zpt::http::status _status = static_cast<zpt::http::status>(_message->status());
+    _response->status(_status);
     _response->version(_message->version());
-    if (_message->to_send()->size() != 0) {
+    if (_message->to_send()->ok()) {
         _response->body(_message->to_send());
         _response->header("Content-Type", "application/json");
     }

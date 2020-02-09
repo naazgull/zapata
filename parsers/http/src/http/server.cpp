@@ -16,7 +16,7 @@ main(int argc, char* argv[]) -> int {
                 auto _csock = _ssock->accept();
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 zpt::http::req _request;
-                _csock >> std::noskipws >> _request;
+                (*_csock) >> std::noskipws >> _request;
                 std::cout << _request << std::flush;
 
                 zpt::http::rep _reply;
@@ -37,7 +37,7 @@ main(int argc, char* argv[]) -> int {
                     _reply->header("Content-Length", std::to_string(_body.length()));
                     _reply->body(_body);
                 }
-                _csock << _reply << std::flush;
+                (*_csock) << _reply << std::flush;
                 auto _t2 = std::chrono::high_resolution_clock::now();
                 auto _duration =
                   std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();

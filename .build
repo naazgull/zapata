@@ -2,85 +2,112 @@
 
 source .packages.rc
 
+if [[ "$1" == "one" ]]
+then
+	make -s -j4 -C ${2} && sudo make -s -C ${2} install
+	if [[ $? != 0 ]]
+	then
+		exit -1
+	fi
+    exit 0
+fi
+
 distro=$(lsb_release -c -s)
+goahead="false"
 for package in ${projects[@]}
 do
-    pushd $package
-    echo && pwd
-
     case "$1" in
 	all)
-	    make -s -j4 && sudo make -s install
+	    make -s -j4 -C ${package} && sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
+    from)
+        if [[ "$2" == "${package}" ]]
+        then
+            goahead="yes"
+        fi
+        if [[ "${goahead}" == "yes" ]]
+        then
+	        make -s -j4 -C ${package} && sudo make -s -C ${package} install
+	        if [[ $? != 0 ]]
+	        then
+		        exit -1
+	        fi
+        fi
+        ;;
 	single)
-	    make -s && sudo make  -s install
+	    make -s -C ${package} && sudo make  -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	clean)
-	    make -s clean
+	    make -s -C ${package} clean
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	install)
-	    sudo make -s install
+	    sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make -s uninstall
+	    sudo make -s -C ${package} uninstall
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	distcheck)
-	    rm -rfv *.tar.gz
-	    sudo make -s distcheck && sudo make -s install
+	    rm -rfv ${package}/*.tar.gz
+	    sudo make -s -C ${package} distcheck && sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	distclean)
-	    rm -rfv *.tar.gz
-	    sudo make -s distclean
+	    rm -rfv ${package}/*.tar.gz
+	    sudo make -s -C ${package} distclean
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	config)
+        pushd ${package} > /dev/null
 	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
 	    ;;
 	debug)
+        pushd ${package} > /dev/null
 	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
 	    ;;
 	package)
+        pushd ${package} > /dev/null
 	    ./make_deb
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
 	    ;;
     esac
-    popd
 done

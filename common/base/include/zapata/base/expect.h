@@ -574,8 +574,6 @@ SOFTWARE.
 #define expect_unauthorized_reply(x, e, r) expect_reply(x, std::string(#x), 401, 1019, e, r)
 #define expect_valid_values_reply(x, y, z, e, r) expect_reply(x, std::string(y), z, 1020, e, r)
 
-typedef struct epoll_event epoll_event_t;
-
 namespace zpt {
 enum JSONType {
     JSObject,

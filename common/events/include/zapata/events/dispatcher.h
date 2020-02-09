@@ -28,7 +28,7 @@ namespace zpt {
 namespace events {
 
 class unregister : public std::exception {
-public:
+  public:
     unregister() = default;
     virtual ~unregister() = default;
 };
@@ -69,7 +69,7 @@ template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
                                              int _max_per_thread,
                                              long _pop_wait_micro)
-  : __queue{ _max_threads, _max_per_thread }
+  : __queue{ _max_threads, _max_per_thread, 5 }
   , __pop_wait{ _pop_wait_micro } {
     expect(_max_threads > 1, "`_max_threads` expected to be higher than 1", 500, 0);
     expect(_max_per_thread > 0, "`_max_per_thread` expected to be higher than 0", 500, 0);

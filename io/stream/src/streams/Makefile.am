@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libzapata-io-streams.la
 
-libzapata_io_streams_la_LIBADD = -lpthread -lzapata-base
+libzapata_io_streams_la_LIBADD = -lpthread -lsystemd -lzapata-base -lzapata-common-lockfree
 libzapata_io_streams_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_io_streams_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
@@ -9,7 +9,7 @@ libzapata_io_streams_la_SOURCES = \
 
 bin_PROGRAMS = zstreams
 
-zstreams_LDADD = -lpthread libzapata-io-streams.la
+zstreams_LDADD = -lpthread -lsystemd -lzapata-common-lockfree libzapata-io-streams.la
 zstreams_LDFLAGS =
 zstreams_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 

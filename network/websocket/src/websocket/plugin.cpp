@@ -27,21 +27,22 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG);
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE);
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER);
+    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
+    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
+    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
 
     _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
     if (_config["ws"]["port"]->ok()) {
         _boot.add_thread([]() -> void {
-            auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG);
-            auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER);
+            auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
+            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
 
             zpt::serversocketstream _server_sock{ static_cast<uint16_t>(
               static_cast<unsigned int>(_config["ws"]["port"])) };
             do {
-                zpt::stream _client = _server_sock->accept();
-                _layer.push_stream("ws", _client);
+                auto _client = _server_sock->accept();
+                (*_client.get()) = "ws";
+                _polling.listen_on(_client);
             } while (true);
         });
     }

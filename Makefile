@@ -31,3 +31,9 @@ bump:
 deb:
 	sudo rm -rfv upstream/*
 	./.build package
+
+from:
+	./.build from ${module}
+
+one:
+	./.build one ${module}

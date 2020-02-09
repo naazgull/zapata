@@ -131,10 +131,13 @@ zpt::net::transport::websocket::receive(zpt::message& _message) -> void {
         }
         catch (...) {
         }
+        _message->keep_alive() = true;
     }
 }
 
 auto
 zpt::net::transport::websocket::send(zpt::message& _message) -> void {
-    zpt::net::ws::write(_message->stream(), _message->to_send());
+    if (_message->to_send()->ok()) {
+        zpt::net::ws::write(_message->stream(), _message->to_send());
+    }
 }

@@ -29,9 +29,14 @@
 
 namespace zpt {
 
-size_t BOOT_ENGINE{ 0 };
-size_t GLOBAL_CONFIG{ 0 };
-size_t TRANSPORT_LAYER{ 0 };
+auto
+BOOT_ENGINE() -> size_t&;
+auto
+GLOBAL_CONFIG() -> size_t&;
+auto
+STREAM_POLLING() -> size_t&;
+auto
+TRANSPORT_LAYER() -> size_t&;
 
 class globals {
   public:

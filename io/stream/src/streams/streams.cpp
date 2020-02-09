@@ -21,33 +21,18 @@
 */
 
 #include <zapata/streams/streams.h>
-
-zpt::stream::stream(zpt::stream const& _rhs)
-  : __underlying{ _rhs.__underlying }
-  , __fd{ _rhs.__fd } {}
-
-zpt::stream::stream(zpt::stream&& _rhs)
-  : __underlying{ std::move(_rhs.__underlying) }
-  , __fd{ _rhs.__fd } {}
-
-auto
-zpt::stream::operator=(zpt::stream const& _rhs) -> zpt::stream& {
-    this->__underlying = _rhs.__underlying;
-    this->__fd = _rhs.__fd;
-    return (*this);
-}
-
-auto
-zpt::stream::operator=(zpt::stream&& _rhs) -> zpt::stream& {
-    this->__underlying = std::move(_rhs.__underlying);
-    this->__fd = _rhs.__fd;
-    _rhs.__fd = -1;
-    return (*this);
-}
+#include <systemd/sd-daemon.h>
+#include <errno.h>
 
 auto
 zpt::stream::operator=(int _rhs) -> zpt::stream& {
     this->__fd = _rhs;
+    return (*this);
+}
+
+auto
+zpt::stream::operator=(const std::string& _rhs) -> zpt::stream& {
+    this->__transport = _rhs;
     return (*this);
 }
 
@@ -69,6 +54,88 @@ zpt::stream::operator int() {
     return this->__fd;
 }
 
+zpt::stream::operator std::string&() {
+    return this->__transport;
+}
+
 zpt::stream::stream(std::unique_ptr<std::iostream> _underlying)
   : __underlying{ _underlying.release() }
   , __fd{ -1 } {}
+
+zpt::stream::polling::polling(long _max_stream_readers, long _poll_wait_timeout)
+  : __epoll_fd{ epoll_create(1) }
+  , __poll_wait_timeout{ _poll_wait_timeout }
+  , __alive_streams{ _max_stream_readers, 8, _poll_wait_timeout } {}
+
+zpt::stream::polling::~polling() {
+    ::close(this->__epoll_fd);
+}
+
+auto
+zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling& {
+    zpt::stream* _new_stream = _stream.release();
+
+    zpt::epoll_event_t _new_event;
+    _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+    _new_event.data.ptr = static_cast<void*>(_new_stream);
+
+    epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, static_cast<int>(*_new_stream), &_new_event);
+    return (*this);
+}
+
+auto
+zpt::stream::polling::mute(zpt::stream& _stream) -> zpt::stream::polling& {
+    epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, static_cast<int>(_stream), nullptr);
+    return (*this);
+}
+
+auto
+zpt::stream::polling::pool() -> void {
+    uint64_t _sd_watchdog_usec = 100000;
+    bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
+    uint64_t _poll_timeout =
+      std::min(uint64_t(this->__poll_wait_timeout / 1000), _sd_watchdog_usec / 1000 / 2);
+
+    do {
+        int _n_alive = epoll_wait(this->__epoll_fd, this->__epoll_events, MAX_EVENT_PER_POLL, -1);
+        if (_n_alive < 0) {
+            continue;
+        }
+
+        if (_sd_watchdog_enabled) {
+            sd_notify(0, "WATCHDOG=1");
+        }
+
+        for (int _k = 0; _k != _n_alive; ++_k) {
+            zpt::stream* _stream = static_cast<zpt::stream*>(this->__epoll_events[_k].data.ptr);
+
+            if (((this->__epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
+                ((this->__epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
+                ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
+                ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
+                std::unique_ptr<zpt::stream> _to_dispose{ _stream };
+                this->mute(*_stream);
+            }
+            else if ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN) {
+                this->mute(*_stream);
+                this->__alive_streams.push(_stream);
+            }
+            else {
+                expect(((this->__epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
+                          ((this->__epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
+                          ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
+                          ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
+                          ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN),
+                        "unrecognized polling event",
+                        500,
+                        0);
+            }
+        }
+
+    } while (true);
+}
+
+auto
+zpt::stream::polling::pop() -> zpt::stream* {
+    return this->__alive_streams.pop();
+}

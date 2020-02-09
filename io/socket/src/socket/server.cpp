@@ -14,9 +14,9 @@ main(int argc, char* argv[]) -> int {
             std::cout << ">>> connection accepted" << std::endl << std::flush;
             do {
                 char _content{ '\0' };
-                _csock >> std::noskipws >> _content;
+                (*_csock) >> std::noskipws >> _content;
                 std::cout << _content << std::flush;
-            } while (_csock->good());
+            } while ((*_csock)->good());
         } while (true);
     }
     return 0;

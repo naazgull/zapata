@@ -600,7 +600,7 @@ class basic_serversocketstream {
         return true;
     }
 
-    auto accept() -> zpt::stream {
+    auto accept() -> std::unique_ptr<zpt::stream> {
         expect(this->__sockfd != -1, "server socket file descriptor is invalid", 500, 0);
         struct sockaddr_in* _cli_addr = new struct sockaddr_in();
         socklen_t _clilen = sizeof(struct sockaddr_in);
