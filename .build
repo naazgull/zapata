@@ -68,7 +68,7 @@ do
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package} distcheck && sudo make -s -C ${package} install
+	    sudo make -s -C ${package} -j4 distcheck && sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1

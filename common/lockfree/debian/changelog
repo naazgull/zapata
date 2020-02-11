@@ -1,4 +1,4 @@
-zapata-common-lockfree (0.0.1-1) trusty; urgency=medium
+zapata-common-lockfree (1.0.0-1) trusty; urgency=medium
 
   * Initial release.
 

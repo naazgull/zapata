@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 // $insert class_ih
-#include "URILexerimpl.h"
+#include <zapata/uri/URILexerimpl.h>
 
 // $insert namespace-open
 namespace zpt {
