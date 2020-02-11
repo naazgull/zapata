@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: update
-      run: sudo apt update && sudo apt dist-upgrade
+      run: sudo apt update
     - name: dependencies
       run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev
     - name: configure
