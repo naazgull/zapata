@@ -1,0 +1,21 @@
+name: C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: update
+      run: sudo apt update
+    - name: dependencies
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev
+    - name: configure
+      run: make config
+    - name: make
+      run: make
+    - name: make distcheck
+      run: make distcheck
