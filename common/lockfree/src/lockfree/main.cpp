@@ -36,7 +36,7 @@ constexpr int PER_THREAD = 8;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
-#define SPIN_WAIT_MICROS -1
+#define SPIN_WAIT_MICROS 5
 
 std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };

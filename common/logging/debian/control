@@ -1,0 +1,12 @@
+Source: zapata-common-logging
+Maintainer: naazgull <n@zgul>
+Section: Development
+Priority: optional
+Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 9)
+
+Package: zapata-common-logging
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmagic1, zapata-base (>=0.9)
+Description: zapata-common-logging
+ Provides zapata-common-logging

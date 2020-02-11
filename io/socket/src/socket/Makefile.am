@@ -5,7 +5,7 @@ libzapata_net_socket_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_net_socket_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_net_socket_la_SOURCES = \
-./SocketStreams.cpp
+./socket_stream.cpp
 
 bin_PROGRAMS = zsocks zsockc
 

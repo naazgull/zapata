@@ -108,6 +108,7 @@ class queue {
     auto end() const -> zpt::lf::queue<T>::iterator;
 
     auto clear() -> zpt::lf::queue<T>&;
+    auto release_thread_nodes() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
     std::string to_string() const __attribute__((noinline));
@@ -288,6 +289,13 @@ zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
     catch (zpt::NoMoreElementsException& e) {
     }
     this->__hptr.clear();
+    return (*this);
+}
+
+template<typename T>
+auto
+zpt::lf::queue<T>::release_thread_nodes() -> zpt::lf::queue<T>& {
+    this->__hptr.release_thread_idx();
     return (*this);
 }
 

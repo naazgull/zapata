@@ -31,7 +31,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     size_t _stages = std::max(static_cast<size_t>(_config["rest"]["stages"]["amount"]), 1UL);
     int _threads_per_stage =
-      std::max(static_cast<size_t>(_config["rest"]["stages"]["threads_per"]), 1UL);
+      std::max(static_cast<size_t>(_config["rest"]["stages"]["threads_per"]), 2UL);
     zpt::globals::alloc<zpt::rest::engine>(
       zpt::REST_ENGINE(),
       _stages,

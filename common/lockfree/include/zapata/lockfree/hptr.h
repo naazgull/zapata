@@ -37,6 +37,7 @@ class hptr_domain {
     auto clear() -> hptr_domain<T>&;
 
     auto get_thread_dangling_count() -> size_t;
+    auto release_thread_idx() -> zpt::lf::hptr_domain<T>&;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::hptr_domain<T>& _in) -> std::ostream& {
         _out << "* zpt::lf::hptr_domain(" << std::hex << &_in << "):" << std::dec << std::endl;
@@ -85,7 +86,7 @@ class hptr_domain {
 
   private:
     std::atomic<T*>* __hp{ nullptr };
-    std::atomic<int> __next_thr_idx{ 0 };
+    std::atomic<bool>* __next_thr_idx{ nullptr };
     std::atomic<long> __acquired{ 0 };
     std::atomic<long> __released{ 0 };
     std::atomic<long> __alive{ 0 };
@@ -97,6 +98,7 @@ class hptr_domain {
     long R{ 0 };
 
     auto get_retired() -> hptr_pending_list&;
+    auto get_next_available_idx() -> int;
     auto get_this_thread_idx() -> int;
 };
 
@@ -113,6 +115,7 @@ zpt::lf::hptr_domain<T>::hptr_domain(long _max_threads, long _ptr_per_thread)
            500,
            0);
     this->__hp = new std::atomic<T*>[N] { 0 };
+    this->__next_thr_idx = new std::atomic<bool>[P] { 0 };
 }
 
 template<typename T>
@@ -146,8 +149,11 @@ zpt::lf::hptr_domain<T>::acquire(T* _ptr) -> zpt::lf::hptr_domain<T>& {
 template<typename T>
 auto
 zpt::lf::hptr_domain<T>::release(T* _ptr) -> zpt::lf::hptr_domain<T>& {
-    int _idx{ zpt::lf::hptr_domain<T>::get_this_thread_idx() };
+    if (_ptr == nullptr) {
+        return (*this);
+    }
 
+    int _idx{ zpt::lf::hptr_domain<T>::get_this_thread_idx() };
     for (size_t _k = _idx * K; _k != static_cast<size_t>((_idx + 1) * K); ++_k) {
         T* _exchange = _ptr;
         if (this->__hp[_k].compare_exchange_strong(_exchange, nullptr)) {
@@ -201,10 +207,15 @@ template<typename T>
 auto
 zpt::lf::hptr_domain<T>::clear() -> zpt::lf::hptr_domain<T>& {
     std::map<T*, bool> _to_process;
-    std::for_each(this->__hp, this->__hp + N, [&](const std::atomic<T*>& _item) -> void {
+    std::for_each(this->__hp, this->__hp + N, [&](std::atomic<T*>& _item) -> void {
         T* _ptr = _item.load();
-        if (_ptr != nullptr)
+        if (_ptr != nullptr) {
+            if (_item.compare_exchange_strong(_ptr, nullptr)) {
+                ++this->__released;
+                --this->__alive;
+            }
             _to_process.insert(std::make_pair(_ptr, true));
+        }
     });
     std::for_each(
       _to_process.begin(), _to_process.end(), [&](const std::pair<T*, bool>& _item) -> void {
@@ -219,6 +230,30 @@ auto
 zpt::lf::hptr_domain<T>::get_thread_dangling_count() -> size_t {
     auto& _retired = zpt::lf::hptr_domain<T>::get_retired();
     return _retired->size();
+}
+
+template<typename T>
+auto
+zpt::lf::hptr_domain<T>::release_thread_idx() -> zpt::lf::hptr_domain<T>& {
+    int _idx = this->get_this_thread_idx();
+
+    std::map<T*, bool> _to_process;
+    for (size_t _k = _idx * K; _k != static_cast<size_t>((_idx + 1) * K); ++_k) {
+        T* _exchange = this->__hp[_k].load();
+        if (_exchange != nullptr && this->__hp[_k].compare_exchange_strong(_exchange, nullptr)) {
+            ++this->__released;
+            --this->__alive;
+        }
+        _to_process.insert(std::make_pair(_exchange, true));
+    }
+    std::for_each(
+      _to_process.begin(), _to_process.end(), [&](const std::pair<T*, bool>& _item) -> void {
+          ++this->__retired;
+          delete _item.first;
+      });
+    this->__next_thr_idx[_idx] = false;
+
+    return (*this);
 }
 
 template<typename T>
@@ -247,8 +282,21 @@ zpt::lf::hptr_domain<T>::get_retired() -> zpt::lf::hptr_domain<T>::hptr_pending_
 
 template<typename T>
 auto
+zpt::lf::hptr_domain<T>::get_next_available_idx() -> int {
+    int _idx{ 0 };
+    for (; _idx != this->P; ++_idx) {
+        bool _acquired{ false };
+        if (this->__next_thr_idx[_idx].compare_exchange_strong(_acquired, true)) {
+            break;
+        }
+    }
+    return _idx;
+}
+
+template<typename T>
+auto
 zpt::lf::hptr_domain<T>::get_this_thread_idx() -> int {
-    thread_local static int _idx = this->__next_thr_idx.fetch_add(1);
+    thread_local static int _idx = this->get_next_available_idx();
     return _idx;
 }
 

@@ -37,6 +37,7 @@ class stream {
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 
     stream() = default;
+    stream(std::iostream& _rhs);
     stream(zpt::stream const& _rhs) = delete;
     stream(zpt::stream&& _rhs) = delete;
     virtual ~stream() = default;
@@ -56,6 +57,9 @@ class stream {
 
     operator int();
     operator std::string&();
+
+    template<typename T, typename... Args>
+    auto swap(Args... _args) -> zpt::stream&;
 
     template<typename T, typename... Args>
     static auto alloc(Args... _args) -> std::unique_ptr<zpt::stream>;
@@ -82,7 +86,7 @@ class stream {
   private:
     stream(std::unique_ptr<std::iostream> _underlying);
 
-    std::unique_ptr<std::iostream> __underlying;
+    std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
     zpt::lf::spin_lock __input_lock;
@@ -111,6 +115,13 @@ auto
 zpt::stream::operator<<(T _in) -> zpt::stream& {
     zpt::lf::spin_lock::guard _sentry{ this->__output_lock, false };
     (*this->__underlying.get()) << _in;
+    return (*this);
+}
+
+template<typename T, typename... Args>
+auto
+zpt::stream::swap(Args... _args) -> zpt::stream& {
+    this->__underlying.swap(std::make_unique<T>(_args...));
     return (*this);
 }
 

@@ -24,6 +24,11 @@
 #include <systemd/sd-daemon.h>
 #include <errno.h>
 
+zpt::stream::stream(std::iostream& _rhs)
+  : __underlying{ std::make_unique<std::stringstream>() } {
+    this->__underlying->rdbuf(_rhs.rdbuf());
+}
+
 auto
 zpt::stream::operator=(int _rhs) -> zpt::stream& {
     this->__fd = _rhs;
@@ -122,13 +127,13 @@ zpt::stream::polling::pool() -> void {
             }
             else {
                 expect(((this->__epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
-                          ((this->__epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
-                          ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
-                          ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
-                          ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN),
-                        "unrecognized polling event",
-                        500,
-                        0);
+                         ((this->__epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
+                         ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
+                         ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP) ||
+                         ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN),
+                       "unrecognized polling event",
+                       500,
+                       0);
             }
         }
 
