@@ -23,7 +23,7 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/net/socket.h>
-#include <zapata/websocket.h>
+#include <zapata/net/websocket.h>
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {

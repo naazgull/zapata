@@ -6,18 +6,18 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v1
-    - name: update
+    - name: Update OS
       run: sudo apt update
-    - name: dependencies
+    - name: Install dependencies
       run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev g++-8
-    - name: setup
+    - name: Setup compiler
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
-    - name: configure
+    - name: Configure modules
       run: make config
-    - name: make
+    - name: Build modules
       run: make
-    - name: make distcheck
+    - name: Check distribution packages
       run: make distcheck
