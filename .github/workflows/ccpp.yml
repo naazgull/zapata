@@ -9,6 +9,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: dependencies
+      run: apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev
     - name: configure
       run: make config
     - name: make
