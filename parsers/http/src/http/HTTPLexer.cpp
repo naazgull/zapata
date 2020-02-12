@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 // $insert class_ih
-#include "HTTPLexerimpl.h"
+#include <zapata/http/HTTPLexerimpl.h>
 
 // $insert namespace-open
 namespace zpt {
