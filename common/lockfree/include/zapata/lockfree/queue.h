@@ -11,7 +11,7 @@
 #include <type_traits>
 
 #include <zapata/lockfree/hptr.h>
-#include <zapata/exceptions/NoMoreElementsException.h>
+#include <zapata/base.h>
 
 namespace zpt {
 namespace lf {
@@ -51,6 +51,7 @@ class queue {
         using value_type = T;
         using pointer = T;
         using reference = T;
+        using iterator_category = std::forward_iterator_tag;
 
         explicit iterator(zpt::lf::queue<T>::node* _current);
         iterator(const iterator& _rhs);
@@ -88,12 +89,12 @@ class queue {
     };
 
     queue(long _max_threads, long _ptr_per_thread, long _spin_sleep_micros = -1);
-    queue(zpt::lf::queue<T> const& _rhs);
-    queue(zpt::lf::queue<T>&& _rhs);
+    queue(zpt::lf::queue<T> const& _rhs) = delete;
+    queue(zpt::lf::queue<T>&& _rhs) = delete;
     virtual ~queue();
 
-    auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>&;
-    auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>&;
+    auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
+    auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
     auto front() -> T;
     auto back() -> T;

@@ -65,13 +65,13 @@ main(int argc, char* argv[]) {
             double _intpart;
             double _fracpart = modf((double)_json["timestamp"], &_intpart);
             zpt::timestamp_t _ts = (_intpart * 1000) + (_fracpart * 1000);
-            std::string _time = zpt::timestamp(_ts);
             std::string _cmd((std::string)_json["exec"]);
             _cmd.assign(_cmd.substr(_cmd.rfind("/") + 1));
-            std::cout << zpt::log_lvl_names[(int)_json["level"]] << "\033[1;37m" << _time
-                      << "\033[0m | " << (std::string)_json["short_message"] << " | " << _cmd << ":"
-                      << (std::string)_json["pid"] << " " << (std::string)_json["file"] << ":"
-                      << (std::string)_json["line"] << std::endl
+            std::cout << zpt::tostr(_ts, "%b %d %H:%M:%S") << " "
+                      << static_cast<std::string>(_json["host"]) << " " << _cmd << "["
+                      << static_cast<std::string>(_json["pid"])
+                      << "]: " << zpt::log_lvl_names[int(_json["level"])] << " "
+                      << static_cast<std::string>(_json["shor_message"]) << std::endl
                       << std::flush;
         }
         catch (...) {

@@ -37,7 +37,7 @@ class stream {
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 
     stream() = default;
-    stream(std::iostream& _rhs);
+    stream(std::ios& _rhs);
     stream(zpt::stream const& _rhs) = delete;
     stream(zpt::stream&& _rhs) = delete;
     virtual ~stream() = default;
@@ -58,6 +58,9 @@ class stream {
     operator int();
     operator std::string&();
 
+    auto swap(std::ios& _rhs) -> zpt::stream&;
+    auto swap(zpt::stream& _rhs) -> zpt::stream&;
+    auto swap(std::unique_ptr<zpt::stream>& _rhs) -> zpt::stream&;
     template<typename T, typename... Args>
     auto swap(Args... _args) -> zpt::stream&;
 

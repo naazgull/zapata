@@ -24,7 +24,7 @@
 #include <systemd/sd-daemon.h>
 #include <errno.h>
 
-zpt::stream::stream(std::iostream& _rhs)
+zpt::stream::stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() } {
     this->__underlying->rdbuf(_rhs.rdbuf());
 }
@@ -61,6 +61,24 @@ zpt::stream::operator int() {
 
 zpt::stream::operator std::string&() {
     return this->__transport;
+}
+
+auto
+zpt::stream::swap(std::ios& _rhs) -> zpt::stream& {
+    this->__underlying->rdbuf(_rhs.rdbuf());
+    return (*this);
+}
+
+auto
+zpt::stream::swap(zpt::stream& _rhs) -> zpt::stream& {
+    this->__underlying = std::move(_rhs.__underlying);
+    return (*this);
+}
+
+auto
+zpt::stream::swap(std::unique_ptr<zpt::stream>& _rhs) -> zpt::stream& {
+    this->__underlying = std::move(_rhs->__underlying);
+    return (*this);
 }
 
 zpt::stream::stream(std::unique_ptr<std::iostream> _underlying)

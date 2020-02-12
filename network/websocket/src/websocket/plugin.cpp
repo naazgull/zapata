@@ -36,6 +36,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         _boot.add_thread([]() -> void {
             auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+            zlog("Starting Wewbsocket transport on port " << _config["http"]["port"], zpt::info);
 
             zpt::serversocketstream _server_sock{ static_cast<uint16_t>(
               static_cast<unsigned int>(_config["ws"]["port"])) };

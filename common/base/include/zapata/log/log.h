@@ -31,9 +31,15 @@ SOFTWARE.
 #include <unistd.h>
 #include <memory>
 #include <zapata/base/config.h>
+#include <thread>
 
 #define __HOST__ std::string(zpt::log_hostname())
-#define zlog(x, y) (y <= zpt::log_lvl ? zpt::log(x, y, __HOST__, __LINE__, __FILE__) : 0)
+#define zlog(x, y)                                                                                 \
+    if (y <= zpt::log_lvl) {                                                                       \
+        std::ostringstream __OSS__;                                                                \
+        __OSS__ << x << std::flush;                                                                \
+        zpt::log(__OSS__.str(), y, __HOST__, __LINE__, __FILE__);                                  \
+    }
 #define zdbg(x) zlog(x, zpt::debug)
 #define ztrace(x) zlog(x, zpt::trace)
 #define zverbose(x) zlog(x, zpt::verbose)
@@ -75,4 +81,23 @@ log(T _text, zpt::LogLevel _level, std::string _host, int _line, std::string _fi
 }
 char*
 log_hostname();
+
+namespace this_thread {
+template<typename T>
+auto
+adaptive_sleep_for(T _iteration_counter, T _upper_limit = -1) -> T;
+
+} // namespace this_thread
 } // namespace zpt
+
+template<typename T>
+auto
+zpt::this_thread::adaptive_sleep_for(T _iteration_counter, T _upper_limit) -> T {
+    static constexpr T _max{ std::numeric_limits<T>::max() - 1 };
+    if (_iteration_counter != _max) {
+        ++_iteration_counter;
+    }
+    std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{
+      _upper_limit > 0 ? std::min(_iteration_counter, _upper_limit) : _iteration_counter });
+    return _iteration_counter;
+}

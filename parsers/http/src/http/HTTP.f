@@ -34,8 +34,8 @@ string	d_chunked;
 %x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
 %%
 
-//[\f\t\n\r ]+                  // skip white space
 //<<EOF>>
+[\n\r\f\t ]
 "GET" {
 	begin(StartCondition_::request);
 	return 257;

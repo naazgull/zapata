@@ -568,7 +568,7 @@ zpt::basic_socketbuf<Char>::underflow_ssl() -> __int_type {
 template<typename Char>
 zpt::basic_socketstream<Char>::basic_socketstream()
   : __stream_type(&__buf)
-  , __is_error(false){}
+  , __is_error(false) {}
 
 template<typename Char>
 zpt::basic_socketstream<Char>::basic_socketstream(int s, bool _ssl, short _protocol)

@@ -29,15 +29,12 @@ extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    size_t _stages = std::max(static_cast<size_t>(_config["rest"]["stages"]["amount"]), 1UL);
+    size_t _stages = std::max(static_cast<size_t>(_config["pipeline"]["n_stages"]), 1UL);
     int _threads_per_stage =
-      std::max(static_cast<size_t>(_config["rest"]["stages"]["threads_per"]), 2UL);
+      std::max(static_cast<size_t>(_config["pipeline"]["threads_per_stage"]), 2UL);
+    long _max_pop_wait = _config["pipeline"]["max_pop_spin_sleep"];
     zpt::globals::alloc<zpt::rest::engine>(
-      zpt::REST_ENGINE(),
-      _stages,
-      _threads_per_stage,
-      std::max(static_cast<long>(_config["pipeline"]["queue"]["polling_timeout"]), 10000L));
-    std::cout << "loading REST engine" << std::endl << std::flush;
+      zpt::REST_ENGINE(), _stages, _threads_per_stage, _max_pop_wait);
 
     _boot.add_thread([]() -> void {
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
@@ -46,21 +43,24 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         } while (true);
     });
 
-    _boot.add_thread([]() -> void {
-        std::cout << "starting REST engine" << std::endl << std::flush;
+    _boot.add_thread([_max_pop_wait]() -> void {
+        zlog("Starting REST engine", zpt::info);
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
         auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
         _rest.start_threads();
 
+        long _waiting_iterations{ 0 };
         do {
             try {
                 auto _stream = _polling.pop();
                 std::string _scheme{ static_cast<std::string>(*_stream) };
                 zpt::message _message{ _stream };
                 _rest.trigger(_scheme + std::string(":"), _message);
+                _waiting_iterations = 0;
             }
             catch (zpt::NoMoreElementsException& _e) {
-                std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 100 });
+                _waiting_iterations =
+                  zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_pop_wait);
             }
         } while (true);
     });

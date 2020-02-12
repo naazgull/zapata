@@ -28,8 +28,10 @@ zpt::REST_ENGINE() -> size_t& {
     return _global;
 }
 
-zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _pop_wait_milli)
-  : zpt::pipeline::engine<zpt::message>{ _pipeline_size + 2, _threads_per_stage, _pop_wait_milli } {
+zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _max_pop_wait_micro)
+  : zpt::pipeline::engine<zpt::message>{ _pipeline_size + 2,
+                                         _threads_per_stage,
+                                         _max_pop_wait_micro } {
 
     zpt::pipeline::engine<zpt::message>::add_listener(
       0, "{(.*)}", [](zpt::pipeline::event<zpt::message> _in) -> void {

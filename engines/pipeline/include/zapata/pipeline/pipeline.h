@@ -69,7 +69,7 @@ template<typename T>
 class stage
   : public zpt::events::dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>> {
   public:
-    stage(int _max_threads = 1, int _max_per_thread = 1, long _pop_wait_milli = 0);
+    stage(int _max_threads = 1, int _max_per_thread = 1, long _max_pop_wait_micro = 0);
     stage(zpt::pipeline::stage<T> const&) = delete;
     stage(zpt::pipeline::stage<T>&&) = delete;
     virtual ~stage() = default;
@@ -92,7 +92,7 @@ class stage
 template<typename T>
 class engine {
   public:
-    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _pop_wait_milli = 500);
+    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _max_pop_wait_micro = 500);
     engine(zpt::pipeline::engine<T> const&) = delete;
     engine(zpt::pipeline::engine<T>&&) = delete;
     virtual ~engine() = default;
@@ -219,11 +219,11 @@ zpt::pipeline::event<T>::trigger(zpt::json _path,
 }
 
 template<typename T>
-zpt::pipeline::stage<T>::stage(int _max_threads, int _max_per_thread, long _pop_wait_milli)
+zpt::pipeline::stage<T>::stage(int _max_threads, int _max_per_thread, long _max_pop_wait_micro)
   : zpt::events::dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>>{
       _max_threads,
       _max_per_thread,
-      _pop_wait_milli
+      _max_pop_wait_micro
   } {}
 
 template<typename T>
@@ -235,7 +235,8 @@ zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event
         try {
             _event.next_stage();
         }
-        catch(zpt::failed_expectation& _e) {}
+        catch (zpt::failed_expectation& _e) {
+        }
     }
 }
 
@@ -252,14 +253,14 @@ zpt::pipeline::stage<T>::listen_to(zpt::json _path,
 template<typename T>
 zpt::pipeline::engine<T>::engine(size_t _pipeline_size,
                                  int _threads_per_stage,
-                                 long _pop_wait_milli)
+                                 long _max_pop_wait_micro)
   : __pipeline_size{ _pipeline_size }
   , __threads_per_stage{ _threads_per_stage } {
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__stages.push_back(std::make_shared<zpt::pipeline::stage<T>>(
           _threads_per_stage + 1,
           std::max(32, 128 - ((_threads_per_stage - 1) * 8)),
-          _pop_wait_milli));
+          _max_pop_wait_micro));
     }
 }
 

@@ -33,6 +33,9 @@ main(int _argc, char* _argv[]) -> int {
                                                          "--conf-dir",
                                                          { zpt::array, "optional", "multiple" } });
 
+        zpt::log_pname = std::make_unique<std::string>(_argv[0]);
+        zpt::log_pid = ::getpid();
+
         zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(), 10, 10000);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());

@@ -27,7 +27,6 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    std::cout << "loading HTTP transport" << std::endl << std::flush;
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
@@ -37,8 +36,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         _boot.add_thread([]() -> void {
             auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-            std::cout << "starting HTTP transport on port " << _config["http"]["port"] << std::endl
-                      << std::flush;
+            zlog("Starting HTTP transport on port " << _config["http"]["port"], zpt::info);
 
             zpt::serversocketstream _server_sock{ static_cast<uint16_t>(
               static_cast<unsigned int>(_config["http"]["port"])) };

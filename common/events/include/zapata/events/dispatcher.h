@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <zapata/base.h>
 #include <zapata/lockfree.h>
 
 namespace zpt {
@@ -42,7 +43,7 @@ class factory {
 template<typename C, typename E, typename V>
 class dispatcher : public factory {
   public:
-    dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _pop_wait_micro = 0);
+    dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _max_pop_wait_micro = 0);
     virtual ~dispatcher();
 
     auto add_consumer() -> C&;
@@ -57,7 +58,7 @@ class dispatcher : public factory {
 
   public:
     zpt::lf::queue<std::tuple<E, V>> __queue;
-    long __pop_wait{ 0 };
+    long __max_pop_wait{ 0 };
     std::vector<std::thread> __consumers;
     std::atomic<bool> __shutdown{ false };
 };
@@ -68,9 +69,9 @@ class dispatcher : public factory {
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
                                              int _max_per_thread,
-                                             long _pop_wait_micro)
+                                             long _max_pop_wait_micro)
   : __queue{ _max_threads, _max_per_thread, 5 }
-  , __pop_wait{ _pop_wait_micro } {
+  , __max_pop_wait{ _max_pop_wait_micro } {
     expect(_max_threads > 1, "`_max_threads` expected to be higher than 1", 500, 0);
     expect(_max_per_thread > 0, "`_max_per_thread` expected to be higher than 0", 500, 0);
 }
@@ -131,6 +132,7 @@ zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
+    long _waiting_iterations{ 0 };
     do {
         if (this->__shutdown.load()) {
             return;
@@ -138,15 +140,11 @@ zpt::events::dispatcher<C, E, V>::loop() -> void {
 
         try {
             this->trap();
+            _waiting_iterations = 0;
         }
         catch (zpt::NoMoreElementsException& e) {
-            if (this->__pop_wait == 0) {
-                std::this_thread::yield();
-            }
-            else {
-                std::this_thread::sleep_for(
-                  std::chrono::duration<int, std::micro>{ this->__pop_wait });
-            }
+            _waiting_iterations =
+              zpt::this_thread::adaptive_sleep_for(_waiting_iterations, this->__max_pop_wait);
         }
     } while (true);
 }

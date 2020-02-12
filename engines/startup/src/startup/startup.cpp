@@ -142,6 +142,13 @@ auto
 zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
     this->__configuration = zpt::globals::alloc<zpt::json>(
       zpt::GLOBAL_CONFIG(), zpt::startup::configuration::load(_args));
+    zpt::log_lvl = this->__configuration["log"]["level"]->ok()
+                     ? static_cast<int>(this->__configuration["log"]["level"])
+                     : 8;
+    zpt::log_format = this->__configuration["log"]["format"]->ok()
+                        ? static_cast<int>(this->__configuration["log"]["format"])
+                        : 0;
+
     return (*this);
 }
 
@@ -243,6 +250,8 @@ zpt::startup::engine::load() -> zpt::startup::engine& {
     do {
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 5 });
     } while (this->__configuration["load"]->size() != this->__plugins.size() - 2);
+    zlog("All plugins loaded, shuting down startup engine", zpt::info);
+    this->shutdown();
     return (*this);
 }
 

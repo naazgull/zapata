@@ -48,7 +48,7 @@ static inline const unsigned short Connect = 11;
 
 class engine : public zpt::pipeline::engine<zpt::message> {
   public:
-    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _pop_wait_milli = 500);
+    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _max_pop_wait_micro = 500);
     virtual ~engine() = default;
 
     auto add_listener(size_t _stage,
