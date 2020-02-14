@@ -20,6 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#pragma once
+
 #include <zapata/base.h>
 #include <zapata/json.h>
 #include <zapata/uri.h>
@@ -229,7 +231,7 @@ zpt::pipeline::stage<T>::stage(int _max_threads, int _max_per_thread, long _max_
 template<typename T>
 auto
 zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event) -> void {
-    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, true };
+    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::shared };
     if (!this->__callbacks.eval(
           _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->str(), _event)) {
         try {
@@ -245,7 +247,7 @@ auto
 zpt::pipeline::stage<T>::listen_to(zpt::json _path,
                                    std::function<void(zpt::pipeline::event<T>&)> _callback)
   -> void {
-    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, false };
+    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::exclusive };
     this->__callbacks.merge(
       _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->rgx(), _callback);
 }

@@ -34,7 +34,12 @@ template<typename T, typename P, typename C>
 class node {
   public:
     node() = default;
+    node(node const& _rhs);
+    node(node&& _rhs) = delete;
     virtual ~node() = default;
+
+    auto operator=(node const& _rhs) -> node&;
+    auto operator=(node&& _rhs) -> node& = delete;
 
     template<typename I, typename M, typename... Types>
     auto eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool;
@@ -56,6 +61,23 @@ class node {
 };
 } // namespace tree
 } // namespace zpt
+
+template<typename T, typename P, typename C>
+zpt::tree::node<T, P, C>::node(zpt::tree::node<T, P, C> const& _rhs)
+  : __children{ _rhs.__children }
+  , __value{ _rhs.__value }
+  , __path{ _rhs.__path }
+  , __callbacks{ _rhs.__callbacks } {}
+
+template<typename T, typename P, typename C>
+auto
+zpt::tree::node<T, P, C>::operator=(node const& _rhs) -> zpt::tree::node<T, P, C>& {
+    this->__children = _rhs.__children;
+    this->__value = _rhs.__value;
+    this->__path = _rhs.__path;
+    this->__callbacks = _rhs.__callbacks;
+    return (*this);
+}
 
 template<typename T, typename P, typename C>
 template<typename I, typename M, typename... Types>

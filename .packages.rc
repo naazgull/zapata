@@ -3,6 +3,7 @@ export bulk_wd=$HOME/Develop/zapata
 export projects=(
        common/base
        common/lockfree
+       common/globals
        io/stream
        io/socket
        parsers/json

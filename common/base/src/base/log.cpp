@@ -37,9 +37,8 @@ std::unique_ptr<std::string> log_pname = nullptr;
 char* log_hname = nullptr;
 short log_format = 0;
 
-const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR",
-                                "WARNING", "NOTICE", "INFO", "DEBUG",
-                                "TRACE", "VERBOSE" };
+const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING",
+                                "NOTICE",    "INFO",  "DEBUG",    "TRACE", "VERBOSE" };
 } // namespace zpt
 
 auto
@@ -53,7 +52,7 @@ zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, 
         return -1;
     }
     if (!zpt::log_format) {
-        (*zpt::log_fd) << _text << std::endl << std::flush;
+        (*zpt::log_fd) << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
         return 0;
     }
 
@@ -63,8 +62,8 @@ zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, 
     std::string _log;
     if (zpt::log_format == 1) {
         (*zpt::log_fd) << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-                       << *zpt::log_pname << "[" << zpt::log_pid << "]: "
-                       << zpt::log_lvl_names[_level] << " " << _text << std::endl
+                       << *zpt::log_pname << "[" << zpt::log_pid
+                       << "]: " << zpt::log_lvl_names[_level] << " " << _text << std::endl
                        << std::flush;
     }
     else {

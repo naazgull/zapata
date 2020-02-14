@@ -75,7 +75,8 @@ zpt::net::transport::http::receive(zpt::message& _message) -> void {
     zpt::http::req _request;
     _message->stream() >> _request;
     zlog("Received HTTP message " << zpt::http::method_names[_request->method()] << " "
-                                  << _request->url(),
+                                  << _request->url() << " with " << _request->body().length()
+                                  << " bytes content",
          zpt::trace);
 
     this
@@ -107,7 +108,7 @@ zpt::net::transport::http::send(zpt::message& _message) -> void {
         _response->header("Content-Type", "application/json");
     }
     zlog("Sending HTTP message " << _status << " with length "
-                                 << _response->header("Content-Length"),
+                                 << _response->header("Content-Length") << " bytes content",
          zpt::trace);
     _message->stream() << _response << std::flush;
 }

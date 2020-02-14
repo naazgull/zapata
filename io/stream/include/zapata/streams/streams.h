@@ -108,7 +108,7 @@ stream_cast(zpt::stream& _rhs) -> T& {
 template<typename T>
 auto
 zpt::stream::operator>>(T& _out) -> zpt::stream& {
-    zpt::lf::spin_lock::guard _sentry{ this->__input_lock, false };
+    zpt::lf::spin_lock::guard _sentry{ this->__input_lock, zpt::lf::spin_lock::exclusive };
     (*this->__underlying.get()) >> _out;
     return (*this);
 }
@@ -116,7 +116,7 @@ zpt::stream::operator>>(T& _out) -> zpt::stream& {
 template<typename T>
 auto
 zpt::stream::operator<<(T _in) -> zpt::stream& {
-    zpt::lf::spin_lock::guard _sentry{ this->__output_lock, false };
+    zpt::lf::spin_lock::guard _sentry{ this->__output_lock, zpt::lf::spin_lock::exclusive };
     (*this->__underlying.get()) << _in;
     return (*this);
 }

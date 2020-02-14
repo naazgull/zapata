@@ -11,6 +11,8 @@ namespace lf {
 class spin_lock {
   public:
     friend class T;
+    static constexpr bool shared{ true };
+    static constexpr bool exclusive{ false };
 
     class guard {
       public:
