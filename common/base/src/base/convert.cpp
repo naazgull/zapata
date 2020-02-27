@@ -197,7 +197,7 @@ zpt::fromstr(std::string s, int* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 
@@ -212,7 +212,7 @@ zpt::fromstr(std::string s, unsigned int* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 #endif
@@ -227,7 +227,7 @@ zpt::fromstr(std::string s, size_t* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 
@@ -241,7 +241,7 @@ zpt::fromstr(std::string s, long* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 
@@ -255,7 +255,7 @@ zpt::fromstr(std::string s, long long* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 
@@ -269,7 +269,7 @@ zpt::fromstr(std::string s, float* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 
@@ -283,7 +283,7 @@ zpt::fromstr(std::string s, double* i) -> void {
         }
         *i = r;
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 }
 

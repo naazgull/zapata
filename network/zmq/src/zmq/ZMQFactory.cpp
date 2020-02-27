@@ -71,7 +71,7 @@ zpt::ZMQChannel::recv() -> zpt::json {
             zverbose(zpt::ev::pretty(_envelope));
             return _envelope;
         }
-        catch (zpt::SyntaxErrorException& _e) {
+        catch (zpt::SyntaxErrorException const& _e) {
             return {
                 "protocol", this->protocol(),
                 "error",    true,
@@ -80,7 +80,7 @@ zpt::ZMQChannel::recv() -> zpt::json {
             };
         }
     }
-    catch (zmq::error_t& _e) {
+    catch (zmq::error_t const& _e) {
         throw;
     }
     return { "protocol",
@@ -172,7 +172,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -192,7 +192,7 @@ zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -274,7 +274,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -294,7 +294,7 @@ zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -380,7 +380,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
                                          std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -394,7 +394,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
             this->__socket_pub->bind(std::string(this->uri(1)["scheme"]) + std::string("://") +
                                      std::string(this->uri(1)["authority"]));
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
@@ -416,7 +416,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
                                          std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -430,7 +430,7 @@ zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
             this->__socket_sub->connect(std::string(this->uri(0)["scheme"]) + std::string("://") +
                                         std::string(this->uri(0)["authority"]));
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
@@ -530,7 +530,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
                                          std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -552,7 +552,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
                                             std::string(this->uri(0)["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
@@ -575,7 +575,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
                                          std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -597,7 +597,7 @@ zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
                                             std::string(this->uri(1)["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + _connection, 500, 0);
         }
     }
@@ -694,7 +694,7 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -714,7 +714,7 @@ zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -800,7 +800,7 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -820,7 +820,7 @@ zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -918,7 +918,7 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -938,7 +938,7 @@ zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1024,7 +1024,7 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -1044,7 +1044,7 @@ zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1136,7 +1136,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
                                             std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -1158,7 +1158,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
                                                std::string(this->uri(0)["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1181,7 +1181,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
                                             std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -1203,7 +1203,7 @@ zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _option
                                                std::string(this->uri(1)["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1297,7 +1297,7 @@ zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -1317,7 +1317,7 @@ zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1511,7 +1511,7 @@ zpt::ZMQRouter::recv() -> zpt::json {
 
             return _envelope;
         }
-        catch (zpt::SyntaxErrorException& _e) {
+        catch (zpt::SyntaxErrorException const& _e) {
             delete _frame1;
             return {
                 "protocol", this->protocol(),
@@ -1521,7 +1521,7 @@ zpt::ZMQRouter::recv() -> zpt::json {
             };
         }
     }
-    catch (zmq::error_t& _e) {
+    catch (zmq::error_t const& _e) {
         delete _frame1;
         zlog(_e.what(), zpt::error);
         throw;
@@ -1568,7 +1568,7 @@ zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options)
                                      std::string(":") + std::to_string(_available));
                 break;
             }
-            catch (zmq::error_t& _e) {
+            catch (zmq::error_t const& _e) {
             }
             _available++;
         } while (_available < 60999);
@@ -1588,7 +1588,7 @@ zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options)
                                         std::string(this->uri()["authority"]));
             }
         }
-        catch (zmq::error_t& _e) {
+        catch (zmq::error_t const& _e) {
             expect(false, std::string("could not attach socket to ") + this->connection(), 500, 0);
         }
     }
@@ -1703,7 +1703,7 @@ zpt::ZMQDealer::recv() -> zpt::json {
 
             return _envelope;
         }
-        catch (zpt::SyntaxErrorException& _e) {
+        catch (zpt::SyntaxErrorException const& _e) {
             return {
                 "protocol", this->protocol(),
                 "error",    true,
@@ -1712,7 +1712,7 @@ zpt::ZMQDealer::recv() -> zpt::json {
             };
         }
     }
-    catch (zmq::error_t& _e) {
+    catch (zmq::error_t const& _e) {
         zlog(_e.what(), zpt::error);
         throw;
     }

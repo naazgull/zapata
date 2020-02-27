@@ -23,6 +23,7 @@
 #pragma once
 
 #include <zapata/lockfree/spin_lock.h>
+#include <zapata/log/log.h>
 
 #include <memory>
 #include <vector>
@@ -87,8 +88,13 @@ zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... 
     if (_sequence == _end) {
         return false;
     }
+
     bool _return{ false };
-    if (this->__value == (*_sequence) && this->__path == _value_to_match) {
+    if (this->__value != (*_sequence)) {
+        return false;
+    }
+
+    if (this->__path == _value_to_match) {
         for (auto& _call : this->__callbacks) {
             _call(_callback_args...);
         }

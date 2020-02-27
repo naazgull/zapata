@@ -20,11 +20,29 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <vector>
+#include <string>
+
+namespace zpt {
+    auto copy(std::vector<std::string> const& _from, std::vector<std::string>& _to) -> void {
+        _to.clear();
+        for (auto _e : _from) {
+            _to.push_back(_e);
+        }
+    }
+    auto copy(std::string const& _from, std::string& _to) -> void {
+        _to.clear();
+        for (auto _e : _from) {
+            _to.push_back(_e);
+        }
+    }
+}
+
 #include <zapata/globals.h>
+zpt::globals::cached<std::vector<std::string>> _global;
 
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::globals::cached<std::vector<std::string>> _global;
     _global->push_back("a");
     _global->push_back("b");
     _global->push_back("c");
@@ -35,8 +53,10 @@ main(int argc, char* argv[]) -> int {
             std::cout << _e << std::endl << std::flush;
         }
     } };
+    _thread1.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
-    _global.invalidate(*_global);
+    _global.invalidate();
+
     std::thread _thread2{ [&]() -> void {
         _global->push_back("d");
         std::cout << "Thread2:" << std::endl << std::flush;
@@ -44,26 +64,28 @@ main(int argc, char* argv[]) -> int {
             std::cout << _e << std::endl << std::flush;
         }
     } };
-    std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
+    _thread2.detach();
+
     std::thread _thread3{ [&]() -> void {
         _global->push_back("e");
+        _global.invalidate();
+        _global->push_back("f");
         std::cout << "Thread3:" << std::endl << std::flush;
         for (auto _e : *_global) {
             std::cout << _e << std::endl << std::flush;
         }
-        _global.invalidate(*_global);
     } };
+    _thread3.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
+
     std::thread _thread4{ [&]() -> void {
+        _global->push_back("g");
         std::cout << "Thread4:" << std::endl << std::flush;
         for (auto _e : *_global) {
             std::cout << _e << std::endl << std::flush;
         }
     } };
 
-    _thread1.join();
-    _thread2.join();
-    _thread3.join();
     _thread4.join();
     return 0;
 }

@@ -494,7 +494,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                                 _queryr.append(key, BSON(comp << _mongo_json.arr()));
                             }
                         }
-                        catch (std::exception& _e) {
+                        catch (std::exception const& _e) {
                         }
                     }
                     else if (options == "d") {

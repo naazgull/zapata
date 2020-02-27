@@ -153,7 +153,7 @@ zpt::conf::file(std::string _file, zpt::json _options) -> void {
     try {
         _ifs >> _conf;
     }
-    catch (zpt::SyntaxErrorException& _e) {
+    catch (zpt::SyntaxErrorException const& _e) {
         _conf = zpt::undefined;
         expect(_conf->ok(),
                std::string("syntax error parsing file: ") + _file + std::string(": ") + _e.what(),

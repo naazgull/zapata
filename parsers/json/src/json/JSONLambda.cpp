@@ -143,7 +143,7 @@ zpt::lambda::add(std::string _signature, zpt::symbol _lambda) -> void {
         zpt::lambda::find(_signature);
         expect(true, "lambda already defined", 412, 0);
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
     }
     std::tuple<std::string, unsigned short> _parsed = zpt::lambda::parse(_signature);
     zpt::__lambdas->insert(std::make_pair(
@@ -156,7 +156,7 @@ zpt::lambda::add(std::string _name, unsigned short _n_args, zpt::symbol _lambda)
         zpt::lambda::find(_name, _n_args);
         expect(true, "lambda already defined", 412, 0);
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
     }
     std::string _signature(zpt::lambda::stringify(_name, _n_args));
     zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));

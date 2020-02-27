@@ -1135,7 +1135,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                            _v + std::string(")");
                             }
                         }
-                        catch (std::exception& _e) {
+                        catch (std::exception const& _e) {
                         }
                     }
                     else if (_options == "d") {

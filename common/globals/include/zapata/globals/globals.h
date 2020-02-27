@@ -27,6 +27,10 @@
 #include <typeinfo>
 
 namespace zpt {
+template<typename T>
+auto
+copy(T const& _from, T& _to) -> void;
+
 class globals {
   public:
     template<typename T, typename... Args>
@@ -39,14 +43,12 @@ class globals {
     template<typename T>
     class cached {
       public:
-        static_assert(std::is_copy_constructible<T>::value,
-                      "Type `T` in `zpt::globals::cache<T>` must copy constuctible.");
-
         template<typename... Args>
         cached(Args... _args);
         virtual ~cached();
 
-        auto invalidate(const T& _new_value) -> cached<T>&;
+        auto invalidate() -> cached<T>&;
+        auto invalidate(T const& _new_value) -> cached<T>&;
 
         auto operator-> () -> T*;
         auto operator*() -> T&;
@@ -123,10 +125,16 @@ zpt::globals::cached<T>::~cached() {}
 
 template<typename T>
 auto
-zpt::globals::cached<T>::invalidate(const T& _new_value) -> zpt::globals::cached<T>& {
+zpt::globals::cached<T>::invalidate() -> zpt::globals::cached<T>& {
+    return this->invalidate(this->instance());
+}
+
+template<typename T>
+auto
+zpt::globals::cached<T>::invalidate(T const& _new_value) -> zpt::globals::cached<T>& {
     {
         zpt::lf::spin_lock::guard _sentry{ this->__cache_guard, zpt::lf::spin_lock::exclusive };
-        this->__underlying = _new_value;
+        zpt::copy(_new_value, this->__underlying);
     }
     {
         zpt::lf::spin_lock::guard _sentry{ this->__cache_validation_guard,
@@ -151,11 +159,11 @@ auto zpt::globals::cached<T>::operator*() -> T& {
 template<typename T>
 auto
 zpt::globals::cached<T>::instance() -> T& {
-    static thread_local T _local_copy;
     static thread_local zpt::globals::cached<T>::thread_exit_guard _invalidate_cache{ *this };
+    static thread_local T _local_copy;
     if (_invalidate_cache.__cache_invalid.exchange(false)) {
         zpt::lf::spin_lock::guard _sentry{ this->__cache_guard, zpt::lf::spin_lock::shared };
-        _local_copy = this->__underlying;
+        zpt::copy(this->__underlying, _local_copy);
     }
     return _local_copy;
 }

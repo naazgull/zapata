@@ -36,6 +36,6 @@ class InterruptedException : public std::exception {
     InterruptedException(std::string _what);
     virtual ~InterruptedException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
 };
 } // namespace zpt

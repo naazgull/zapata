@@ -695,11 +695,11 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             }
         }
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         zlog(_e.description(), zpt::error);
         zlog(std::string("\n") + _e.backtrace(), zpt::trace);
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         zlog(_e.what(), zpt::error);
     }
 }

@@ -72,7 +72,7 @@ main(int argc, char* argv[]) -> int {
                   << "ms." << std::endl
                   << std::flush;
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << "error: " << _e.what() << std::endl << std::flush;
     }
     return 0;

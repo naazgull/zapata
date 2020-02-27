@@ -43,7 +43,7 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
             try {
                 _callback(_content);
             }
-            catch (zpt::events::unregister& _e) {
+            catch (zpt::events::unregister const& _e) {
                 this->mute(_event, _callback);
             }
         }
@@ -56,6 +56,12 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
         if (_found != this->__callbacks.end()) {
             this->__callbacks.erase(_found);
         }
+    }
+    auto error_callback(int _event,
+                        zpt::json _content,
+                        const char* _what,
+                        const char* _description = nullptr) -> bool {
+        return true;
     }
 
   private:
@@ -123,7 +129,7 @@ main(int _argc, char* _argv[]) -> int {
         _consumer1.join();
         _consumer2.join();
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << " | " << _e.description() << std::endl << std::flush;
         exit(-10);
     }

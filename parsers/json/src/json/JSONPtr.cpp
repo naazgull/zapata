@@ -373,7 +373,7 @@ zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
                     this->__iterator =
                       (**this->__target->obj()).find(_target->obj()->key_for(_pos));
                 }
-                catch (zpt::failed_expectation& _e) {
+                catch (zpt::failed_expectation const& _e) {
                     this->__index = (**this->__target->obj()).size();
                     this->__iterator = (**this->__target->obj()).end();
                 }

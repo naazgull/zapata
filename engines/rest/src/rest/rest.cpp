@@ -33,24 +33,20 @@ zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _m
                                          _threads_per_stage,
                                          _max_pop_wait_micro } {
 
+    this->set_error_callback(zpt::rest::engine::on_error);
+
     zpt::pipeline::engine<zpt::message>::add_listener(
-      0, "{(.*)}", [](zpt::pipeline::event<zpt::message> _in) -> void {
-          try {
-              auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-              auto& _message = _in.content();
-              auto& _transport = _layer.get(_message->scheme());
-              _transport->receive(_message);
-              _in.set_path(std::string("/") + zpt::rest::to_str(_message->method()) +
-                           _message->uri());
-              _in.next_stage();
-          }
-          catch (zpt::failed_expectation& _e) {
-              std::cout << _e.what() << std::endl << std::flush;
-          }
+      0, "{(.*)}", [](zpt::pipeline::event<zpt::message>& _in) -> void {
+          auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+          auto& _message = _in.content();
+          auto& _transport = _layer.get(_message->scheme());
+          _transport->receive(_message);
+          _in.set_path(std::string("/") + zpt::rest::to_str(_message->method()) + _message->uri());
+          _in.next_stage();
       });
 
     zpt::pipeline::engine<zpt::message>::add_listener(
-      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::message> _in) -> void {
+      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::message>& _in) -> void {
           auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _message = _in.content();
@@ -73,6 +69,21 @@ zpt::rest::engine::add_listener(size_t _stage,
   -> zpt::pipeline::engine<zpt::message>& {
     zpt::pipeline::engine<zpt::message>::add_listener(_stage + 1, _pattern, _callback);
     return (*this);
+}
+
+auto
+zpt::rest::engine::on_error(zpt::json& _path,
+                            zpt::pipeline::event<zpt::message>& _event,
+                            const char* _what,
+                            const char* _description) -> bool {
+    auto& _message = _event.content();
+    _message->status() = 500;
+    _message->to_send() = { "message", _what };
+    if (_description != nullptr) {
+        _message->to_send() << "description" << _description;
+    }
+    _event.next_stage();
+    return true;
 }
 
 auto

@@ -44,8 +44,8 @@ zpt::TRANSPORT_LAYER() -> size_t& {
     return _global;
 }
 
-zpt::plugin::plugin(zpt::json _config)
-  : __underlying{ std::make_shared<zpt::plugin::plugin_t>(_config) } {}
+zpt::plugin::plugin(zpt::json _options, zpt::json _config)
+  : __underlying{ std::make_shared<zpt::plugin::plugin_t>(_options, _config) } {}
 
 zpt::plugin::plugin(zpt::plugin const& _rhs) {
     this->__underlying = _rhs.__underlying;
@@ -71,21 +71,22 @@ auto zpt::plugin::operator-> () -> reference {
     return this->__underlying.get();
 }
 
-zpt::plugin::plugin_t::plugin_t(zpt::json _config) {
-    this->initialize(_config);
+zpt::plugin::plugin_t::plugin_t(zpt::json _options, zpt::json _config)
+  : __config{ _config } {
+    this->initialize(_options);
 }
 
 auto
-zpt::plugin::plugin_t::initialize(zpt::json _config) -> zpt::plugin::plugin_t& {
-    expect(_config["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
-    expect(_config["source"]->ok(),
+zpt::plugin::plugin_t::initialize(zpt::json _options) -> zpt::plugin::plugin_t& {
+    expect(_options["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
+    expect(_options["source"]->ok(),
            std::string("missing source definition in plugin configuration of ") +
-             static_cast<std::string>(_config["name"]),
+             static_cast<std::string>(_options["name"]),
            500,
            0);
-    this->__name.assign(static_cast<std::string>(_config["name"]));
-    this->__source.assign(static_cast<std::string>(_config["source"]));
-    for (auto [_, __, _req] : _config["requires"]) {
+    this->__name.assign(static_cast<std::string>(_options["name"]));
+    this->__source.assign(static_cast<std::string>(_options["source"]));
+    for (auto [_, __, _req] : _options["requires"]) {
         this->__requirements << static_cast<std::string>(_req) << false;
     }
     return (*this);
@@ -104,6 +105,11 @@ zpt::plugin::plugin_t::source() -> std::string& {
 auto
 zpt::plugin::plugin_t::requirements() -> zpt::json& {
     return this->__requirements;
+}
+
+auto
+zpt::plugin::plugin_t::config() -> zpt::json& {
+    return this->__config;
 }
 
 auto
@@ -129,7 +135,8 @@ zpt::plugin::plugin_t::load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t
 zpt::startup::engine::engine()
   : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 50000 } {
     this
-      ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } }) //
+      ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } },
+             zpt::undefined) //
       ->set_loader(zpt::startup::dynlib::load_plugin);
 }
 
@@ -161,7 +168,7 @@ zpt::startup::engine::trapped(zpt::json _event, bool _content) -> void {
             try {
                 _callback(_content);
             }
-            catch (zpt::events::unregister& _e) {
+            catch (zpt::events::unregister const& _e) {
             }
         }
     }
@@ -171,6 +178,14 @@ auto
 zpt::startup::engine::listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void {
     std::string _key = this->hash(_event);
     this->__callbacks[_key].push_back(_callback);
+}
+
+auto
+zpt::startup::engine::error_callback(zpt::json& _event,
+                                     bool& _content,
+                                     const char* _what,
+                                     const char* _description) -> bool {
+    return false;
 }
 
 auto
@@ -195,11 +210,12 @@ zpt::startup::engine::add_thread(std::function<void()> _callback) -> zpt::startu
 }
 
 auto
-zpt::startup::engine::load(zpt::json _plugin_config) -> zpt::plugin& {
-    expect(_plugin_config["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
+zpt::startup::engine::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
+    expect(
+      _plugin_options["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
 
-    auto [_it, _inserted] =
-      this->__plugins.emplace(_plugin_config["name"], zpt::plugin{ _plugin_config });
+    auto [_it, _inserted] = this->__plugins.emplace(_plugin_options["name"],
+                                                    zpt::plugin{ _plugin_options, _plugin_config });
     zpt::plugin& _plugin = _it->second;
 
     if (!_inserted) {
@@ -217,7 +233,7 @@ zpt::startup::engine::load(zpt::json _plugin_config) -> zpt::plugin& {
         }
         this
           ->load_plugin(_plugin) //
-          .add_plugin(_plugin, _plugin_config);
+          .add_plugin(_plugin, _plugin_options);
         throw zpt::events::unregister();
     };
 
@@ -245,7 +261,7 @@ zpt::startup::engine::start() -> zpt::startup::engine& {
 auto
 zpt::startup::engine::load() -> zpt::startup::engine& {
     for (auto [_, __, _lib] : this->__configuration["load"]) {
-        this->load(_lib);
+        this->load(_lib, this->__configuration[_lib["name"]->str()]);
     }
     do {
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 5 });
@@ -319,7 +335,7 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
 
     void* _hndl = dlopen(_lib_file.data(), RTLD_NOW);
     if (_hndl == nullptr) {
-        std::cout << dlerror() << std::endl << std::flush;
+        zlog(dlerror(), zpt::emergency);
         return false;
     }
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::SEARCH }, true);
@@ -336,7 +352,7 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     try {
         _populate(_plugin);
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         _config = false;
     }
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::CONFIGURATION }, _config);

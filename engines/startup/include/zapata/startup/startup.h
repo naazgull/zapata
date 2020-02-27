@@ -46,13 +46,14 @@ class plugin {
     class plugin_t {
       public:
         plugin_t() = default;
-        plugin_t(zpt::json _config);
+        plugin_t(zpt::json _options, zpt::json _config);
         virtual ~plugin_t() = default;
 
         auto initialize(zpt::json _config) -> zpt::plugin::plugin_t&;
         auto name() -> std::string&;
         auto source() -> std::string&;
         auto requirements() -> zpt::json&;
+        auto config() -> zpt::json&;
         auto is_running() -> bool;
 
         auto set_loader(std::function<bool(zpt::plugin& _plugin)> _loader)
@@ -65,13 +66,14 @@ class plugin {
         zpt::json __requirements{ zpt::json::object() };
         std::function<bool(zpt::plugin& _plugin)> __loader;
         bool __running{ false };
+        zpt::json __config;
     };
 
   public:
     using reference = plugin_t*;
 
     plugin() = default;
-    plugin(zpt::json _config);
+    plugin(zpt::json _options, zpt::json _config);
     plugin(zpt::plugin const& _rhs);
     plugin(zpt::plugin&& _rhs);
     virtual ~plugin() = default;
@@ -104,6 +106,10 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
 
     auto trapped(zpt::json _event, bool _content) -> void;
     auto listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void;
+    auto error_callback(zpt::json& _event,
+                        bool& _content,
+                        const char* _what,
+                        const char* _description = nullptr) -> bool;
 
     auto to_string() -> std::string;
 
@@ -111,7 +117,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     auto add_thread(std::function<void(Args...)> _callback, Args... _args) -> zpt::startup::engine&;
     auto add_thread(std::function<void()> _callback) -> zpt::startup::engine&;
 
-    auto load(zpt::json _plugin_config) -> zpt::plugin&;
+    auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto start() -> zpt::startup::engine&;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::engine& _in) {

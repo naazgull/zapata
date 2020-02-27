@@ -29,7 +29,7 @@ zpt::ClosedException::ClosedException(std::string _in)
 
 zpt::ClosedException::~ClosedException() throw() {}
 
-const char*
-zpt::ClosedException::what() {
+auto
+zpt::ClosedException::what() const noexcept -> const char* {
     return this->__what.data();
 }

@@ -540,6 +540,7 @@ class JSONRegex {
     auto operator==(std::string _rhs) -> bool;
     auto operator!=(zpt::regex _rhs) -> bool;
     auto operator!=(zpt::json _rhs) -> bool;
+    auto operator!=(std::string _rhs) -> bool;
 
     friend auto operator<<(std::ostream& _out, JSONRegex& _in) -> std::ostream& {
         _out << std::string(_in) << std::flush;

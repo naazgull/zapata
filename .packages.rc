@@ -17,4 +17,5 @@ export projects=(
        network/http
        engines/pipeline
        engines/rest
+       storage/connector
 )

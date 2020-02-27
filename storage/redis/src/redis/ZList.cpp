@@ -34,7 +34,7 @@ zpt::redis::ZList::ZList(zpt::json _options, std::string _conf_path)
         this->connection(_options->get_path(_conf_path) +
                          zpt::json{ "host", _address, "port", _port });
     }
-    catch (std::exception& _e) {
+    catch (std::exceptionconst& _e) {
         expect(false, std::string("could not connect to Redis server: ") + _e.what(), 500, 0);
     }
 }
@@ -284,7 +284,7 @@ zpt::redis::ZList::rangebypos(std::string _key, long int _min, long int _max) ->
                 try {
                     _payload = zpt::json(_data);
                 }
-                catch (zpt::SyntaxErrorException& _e) {
+                catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) {
@@ -423,7 +423,7 @@ zpt::redis::ZList::range(std::string _key,
                 try {
                     _payload = zpt::json(_data);
                 }
-                catch (zpt::SyntaxErrorException& _e) {
+                catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) {
@@ -514,7 +514,7 @@ zpt::redis::ZList::getall(std::string _key) -> zpt::json {
                 try {
                     _payload = zpt::json(_data);
                 }
-                catch (zpt::SyntaxErrorException& _e) {
+                catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) {
@@ -617,7 +617,7 @@ zpt::redis::ZList::find(std::string _key, std::string _regexp) -> zpt::json {
                     try {
                         _payload = zpt::json(_data);
                     }
-                    catch (zpt::SyntaxErrorException& _e) {
+                    catch (zpt::SyntaxErrorException const& _e) {
                         _payload = zpt::json::string(_data);
                     }
                     if (_return[_key]->ok()) {

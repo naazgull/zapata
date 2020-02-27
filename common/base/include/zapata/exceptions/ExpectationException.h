@@ -30,15 +30,6 @@ SOFTWARE.
 namespace zpt {
 
 class ExpectationException : public std::exception {
-  private:
-    std::string __what;
-    int __http_code;
-    int __code;
-    std::string __description;
-    int __line;
-    std::string __file;
-    std::string __backtrace;
-
   public:
     ExpectationException(std::string _what,
                          int _http_code,
@@ -56,11 +47,20 @@ class ExpectationException : public std::exception {
                          size_t _backtrace_size);
     virtual ~ExpectationException() throw();
 
-    virtual const char* what();
-    virtual const char* description();
-    virtual const char* backtrace();
-    virtual int code();
-    virtual int status();
+    virtual auto what() const noexcept -> const char* override;
+    virtual auto description() const -> const char*;
+    virtual auto backtrace() const -> const char*;
+    virtual auto code() const -> int;
+    virtual auto status() const -> int;
+
+  private:
+    std::string __what;
+    int __http_code;
+    int __code;
+    std::string __description;
+    int __line;
+    std::string __file;
+    std::string __backtrace;
 };
 
 using failed_expectation = ExpectationException;

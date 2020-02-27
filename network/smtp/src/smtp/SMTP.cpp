@@ -216,7 +216,7 @@ zpt::SMTP::open() -> mailsmtp* {
                    1504);
         }
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         this->close(_smtp);
         throw;
     }
@@ -286,7 +286,7 @@ zpt::SMTP::send(zpt::json _e_mail) -> void {
 
         this->close(_smtp);
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         this->close(_smtp);
         throw;
     }

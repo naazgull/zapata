@@ -102,7 +102,19 @@ template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::trap() -> C& {
     auto [_event, _content] = this->__queue.pop();
-    static_cast<C*>(this)->trapped(_event, _content);
+    try {
+        static_cast<C*>(this)->trapped(_event, _content);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        if (!static_cast<C*>(this)->error_callback(_event, _content, _e.what(), _e.description())) {
+            throw;
+        }
+    }
+    catch (std::exception const& _e) {
+        if (!static_cast<C*>(this)->error_callback(_event, _content, _e.what())) {
+            throw;
+        }
+    }
     return (*static_cast<C*>(this));
 }
 
@@ -142,7 +154,7 @@ zpt::events::dispatcher<C, E, V>::loop() -> void {
             this->trap();
             _waiting_iterations = 0;
         }
-        catch (zpt::NoMoreElementsException& e) {
+        catch (zpt::NoMoreElementsException const& e) {
             _waiting_iterations =
               zpt::this_thread::adaptive_sleep_for(_waiting_iterations, this->__max_pop_wait);
         }

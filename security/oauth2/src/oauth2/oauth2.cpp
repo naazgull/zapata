@@ -69,7 +69,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _owner = this->retrieve_owner(_envelope);
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             std::string _l_state(std::string("response_type=code") + std::string("&scope=") +
                                  (_scope->ok() ? _scope->str() : "defaults") +
                                  std::string("&client_id=") + _client_id->str() +
@@ -94,7 +94,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(_envelope);
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             return { "status",
                      (_performative == zpt::ev::Post ? 303 : 307),
                      "headers",
@@ -143,7 +143,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
             _owner = this->retrieve_owner(
               std::string(_ownername), std::string(_password), std::string(_client_id));
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             if (_redirect_uri->is_string()) {
                 std::string _l_state(std::string("response_type=code") + std::string("&scope=") +
                                      (_scope->ok() ? _scope->str() : "defaults") +
@@ -173,7 +173,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(_envelope);
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             if (_redirect_uri->is_string()) {
                 return { "status",
                          (_performative == zpt::ev::Post ? 303 : 307),
@@ -235,7 +235,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
         try {
             _client = this->retrieve_client(std::string(_client_id), std::string(_client_secret));
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             if (_redirect_uri->is_string()) {
                 return { "status",
                          (_performative == zpt::ev::Post ? 303 : 307),

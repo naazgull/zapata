@@ -27,8 +27,8 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
+    auto& _config = _plugin->config();
     size_t _stages = std::max(static_cast<size_t>(_config["pipeline"]["n_stages"]), 1UL);
     int _threads_per_stage =
       std::max(static_cast<size_t>(_config["pipeline"]["threads_per_stage"]), 2UL);
@@ -58,7 +58,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                 _rest.trigger(_scheme + std::string(":"), _message);
                 _waiting_iterations = 0;
             }
-            catch (zpt::NoMoreElementsException& _e) {
+            catch (zpt::NoMoreElementsException const& _e) {
                 _waiting_iterations =
                   zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_pop_wait);
             }

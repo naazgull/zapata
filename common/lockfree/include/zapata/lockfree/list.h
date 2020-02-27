@@ -146,7 +146,7 @@ class list {
                 _count++;
             }
         }
-        catch (zpt::NoMoreElementsException& e) {
+        catch (zpt::NoMoreElementsException const& e) {
             _count = 0;
         }
         _out << "]" << std::flush;
@@ -379,7 +379,7 @@ zpt::lf::list<T>::clear() -> zpt::lf::list<T>& {
             this->pop();
         }
     }
-    catch (zpt::NoMoreElementsException& e) {
+    catch (zpt::NoMoreElementsException const& e) {
     }
     this->__hptr.clear();
     return (*this);

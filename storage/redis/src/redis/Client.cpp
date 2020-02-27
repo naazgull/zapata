@@ -42,7 +42,7 @@ zpt::redis::Client::Client(zpt::json _options, std::string _conf_path)
         this->connection(_options->get_path(_conf_path) +
                          zpt::json{ "host", _address, "port", _port });
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         expect(false, std::string("could not connect to Redis server: ") + _e.what(), 500, 0);
     }
 }
@@ -614,7 +614,7 @@ zpt::redis::Client::get(std::string _collection, std::string _href, zpt::json _o
                 freeReplyObject(_reply);
                 return _return;
             }
-            catch (zpt::SyntaxErrorException& _e) {
+            catch (zpt::SyntaxErrorException const& _e) {
                 freeReplyObject(_reply);
                 expect(_reply != nullptr,
                        std::string("something went wrong with the Redis server, got non "

@@ -37,6 +37,6 @@ class NoAttributeNameException : public std::exception {
     NoAttributeNameException(std::string _what);
     virtual ~NoAttributeNameException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
 };
 } // namespace zpt

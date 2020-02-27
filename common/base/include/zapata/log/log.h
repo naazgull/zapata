@@ -32,6 +32,7 @@ SOFTWARE.
 #include <memory>
 #include <zapata/base/config.h>
 #include <thread>
+#include <sstream>
 
 #define __HOST__ std::string(zpt::log_hostname())
 #define zlog(x, y)                                                                                 \

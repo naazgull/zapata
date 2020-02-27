@@ -48,11 +48,11 @@ main(int argc, char* argv[]) {
         std::cout << zpt::uri::parse("ftp://pf:pf@na.zgul.me/files/movies") << std::endl
                   << std::flush;
     }
-    catch (zpt::SyntaxErrorException& _e) {
+    catch (zpt::SyntaxErrorException const& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }

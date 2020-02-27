@@ -28,7 +28,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     _boot.listen({ "plugin", _plugin->name(), "stage", zpt::startup::stages::CONFIGURATION },
                  [=](bool _result) mutable -> void {
-                     std::cout << _plugin->name() << " configured!" << std::endl << std::flush;
+                     std::cout << _plugin->name() << " configured with " << std::endl
+                               << zpt::pretty{ _plugin->config() } << std::flush;
                      throw zpt::events::unregister();
                  });
 }

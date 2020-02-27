@@ -29,7 +29,7 @@ zpt::SyntaxErrorException::SyntaxErrorException(std::string _in)
 
 zpt::SyntaxErrorException::~SyntaxErrorException() throw() {}
 
-const char*
-zpt::SyntaxErrorException::what() {
+auto
+zpt::SyntaxErrorException::what() const noexcept -> const char* {
     return this->__what.data();
 }

@@ -47,7 +47,7 @@ main(int argc, char* argv[]) -> int {
 
             } while (true);
         }
-        catch (std::exception& _e) {
+        catch (std::exception const& _e) {
             std::cout << _e.what() << std::endl << std::flush;
         }
     }

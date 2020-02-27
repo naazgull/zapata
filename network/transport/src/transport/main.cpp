@@ -67,10 +67,10 @@ main(int argc, char* argv[]) -> int {
                           << std::flush;
             } while (true);
         }
-        catch (zpt::failed_expectation& _e) {
+        catch (zpt::failed_expectation const& _e) {
             std::cout << _e.what() << std::endl << _e.description() << std::endl << std::flush;
         }
-        catch (zpt::SyntaxErrorException& _e) {
+        catch (zpt::SyntaxErrorException const& _e) {
             std::cout << _e.what() << std::endl << std::flush;
         }
     }

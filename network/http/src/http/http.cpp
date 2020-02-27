@@ -92,6 +92,7 @@ zpt::net::transport::http::receive(zpt::message& _message) -> void {
     _message
       ->uri() //
       .assign(_request->url());
+    _message->method() = _request->method();
     _message->keep_alive() = (_request->header("Connection") == "keep-alive");
 }
 

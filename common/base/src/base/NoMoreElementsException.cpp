@@ -16,7 +16,7 @@ zpt::NoMoreElementsException::NoMoreElementsException(std::string _in)
 
 zpt::NoMoreElementsException::~NoMoreElementsException() throw() {}
 
-const char*
-zpt::NoMoreElementsException::what() {
+auto
+zpt::NoMoreElementsException::what() const noexcept -> const char* {
     return this->__what.data();
 }

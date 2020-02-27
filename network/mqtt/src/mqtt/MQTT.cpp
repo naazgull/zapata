@@ -387,7 +387,7 @@ zpt::MQTT::on_message(struct mosquitto* _mosq, void* _ptr, const struct mosquitt
         _data->__topic = zpt::json::string(_message->topic);
         _self->trigger("message", _data);
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         zlog(std::string("zpt::MQTT::on_message error: ") + _e.what(), zpt::error);
     }
 }

@@ -46,7 +46,7 @@ main(int _argc, char* _argv[]) -> int {
         zpt::globals::dealloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl << std::flush;
     }
     return 0;

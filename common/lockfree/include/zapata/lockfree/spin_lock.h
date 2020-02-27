@@ -40,6 +40,8 @@ class spin_lock {
     spin_lock() = default;
     virtual ~spin_lock() = default;
 
+    auto count_shared() -> long;
+    auto count_exclusive() -> long;
     auto acquire_shared() -> zpt::lf::spin_lock&;
     auto acquire_exclusive() -> zpt::lf::spin_lock&;
     auto release_shared() -> zpt::lf::spin_lock&;

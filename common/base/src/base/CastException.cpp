@@ -29,7 +29,7 @@ zpt::CastException::CastException(std::string _in)
 
 zpt::CastException::~CastException() throw() {}
 
-const char*
-zpt::CastException::what() {
+auto
+zpt::CastException::what() const noexcept -> const char* {
     return this->__what.data();
 }

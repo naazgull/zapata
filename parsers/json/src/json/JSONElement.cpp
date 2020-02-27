@@ -1387,45 +1387,7 @@ zpt::JSONElementT::operator==(zpt::json _rhs) -> bool {
 auto
 zpt::JSONElementT::operator!=(JSONElementT& _in) -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-    if (this->__target.__type != _in.type()) {
-        return true;
-    }
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            return this->__target.__object != _in.obj();
-        }
-        case zpt::JSArray: {
-            return this->__target.__array != _in.arr();
-        }
-        case zpt::JSString: {
-            return *(this->__target.__string.get()) != _in.str();
-        }
-        case zpt::JSInteger: {
-            return this->__target.__integer != _in.intr();
-        }
-        case zpt::JSDouble: {
-            return this->__target.__double != _in.dbl();
-        }
-        case zpt::JSBoolean: {
-            return this->__target.__boolean != _in.bln();
-        }
-        case zpt::JSNil: {
-            return _in.__target.__type != zpt::JSNil;
-        }
-        case zpt::JSDate: {
-            return this->__target.__date != _in.date();
-        }
-        case zpt::JSLambda: {
-            return this->__target.__lambda->signature() != _in.lbd()->signature();
-        }
-        case zpt::JSRegex: {
-            if (this->__target.__type != _in.type()) {
-                return false;
-            }
-            return this->__target.__regex != _in.__target.__regex;
-        }
-    }
-    return false;
+    return !(*this == _in);
 }
 
 auto

@@ -86,7 +86,7 @@ test_queue(int _argc, char* _argv[]) -> int {
                           ++_pushed;
                       }
                   }
-                  catch (zpt::ExpectationException& _e) {
+                  catch (zpt::failed_expectation const& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
@@ -98,12 +98,12 @@ test_queue(int _argc, char* _argv[]) -> int {
                               ++_k;
                               ++_poped;
                           }
-                          catch (zpt::NoMoreElementsException& e) {
+                          catch (zpt::NoMoreElementsException const& e) {
                               std::this_thread::yield();
                           }
                       }
                   }
-                  catch (zpt::ExpectationException& _e) {
+                  catch (zpt::failed_expectation const& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
@@ -152,7 +152,7 @@ test_list(int _argc, char* _argv[]) -> int {
                           ++_pushed;
                       }
                   }
-                  catch (zpt::failed_expectation& _e) {
+                  catch (zpt::failed_expectation const& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
@@ -175,12 +175,12 @@ test_list(int _argc, char* _argv[]) -> int {
                               }
                               ++_k;
                           }
-                          catch (zpt::NoMoreElementsException& e) {
+                          catch (zpt::NoMoreElementsException const& e) {
                               std::this_thread::yield();
                           }
                       }
                   }
-                  catch (zpt::failed_expectation& _e) {
+                  catch (zpt::failed_expectation const& _e) {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
@@ -224,7 +224,7 @@ main(int _argc, char* _argv[]) -> int {
         test_list(_argc, _argv);
         return 0;
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl
                   << _e.description() << std::endl
                   << _e.backtrace() << std::endl

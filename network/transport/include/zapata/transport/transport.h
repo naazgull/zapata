@@ -53,6 +53,7 @@ class message {
       private:
         zpt::stream* __stream;
         std::string __uri;
+        zpt::json __path;
         std::string __version;
         std::string __scheme;
         zpt::performative __method{ 0 };

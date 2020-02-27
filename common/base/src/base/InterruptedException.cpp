@@ -29,7 +29,7 @@ zpt::InterruptedException::InterruptedException(std::string _in)
 
 zpt::InterruptedException::~InterruptedException() throw() {}
 
-const char*
-zpt::InterruptedException::what() {
+auto
+zpt::InterruptedException::what() const noexcept -> const char* {
     return this->__what.data();
 }

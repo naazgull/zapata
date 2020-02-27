@@ -55,6 +55,11 @@ class engine : public zpt::pipeline::engine<zpt::message> {
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
       -> zpt::pipeline::engine<zpt::message>&;
+
+    static auto on_error(zpt::json& _path,
+                         zpt::pipeline::event<zpt::message>& _event,
+                         const char* _what,
+                         const char* _description) -> bool;
 };
 
 auto

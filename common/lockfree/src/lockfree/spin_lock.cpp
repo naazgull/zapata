@@ -9,6 +9,16 @@
 #include <zapata/lockfree/spin_lock.h>
 
 auto
+zpt::lf::spin_lock::count_shared() -> long {
+    return this->__shared_access.load();
+}
+
+auto
+zpt::lf::spin_lock::count_exclusive() -> long {
+    return this->__exclusive_access.load();
+}
+
+auto
 zpt::lf::spin_lock::acquire_shared() -> zpt::lf::spin_lock& {
     auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
     if (_count == 0) {
@@ -101,7 +111,7 @@ zpt::lf::spin_lock::guard::guard(zpt::lf::spin_lock& _target, bool _can_be_share
             this->__target.acquire_exclusive();
         }
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         this->__released = true;
         throw;
     }

@@ -29,7 +29,7 @@ zpt::NoAttributeNameException::NoAttributeNameException(std::string _in)
 
 zpt::NoAttributeNameException::~NoAttributeNameException() throw() {}
 
-const char*
-zpt::NoAttributeNameException::what() {
+auto
+zpt::NoAttributeNameException::what() const noexcept -> const char* {
     return this->__what.data();
 }

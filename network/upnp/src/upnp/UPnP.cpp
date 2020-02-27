@@ -255,9 +255,9 @@ zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
                   : std::string("")));
         zverbose(zpt::ev::pretty(_envelope));
     }
-    catch (std::ios_base::failure& _e) {
+    catch (std::ios_base::failure const& _e) {
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
     return zpt::undefined;
 }

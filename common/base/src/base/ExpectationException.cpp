@@ -86,27 +86,27 @@ zpt::ExpectationException::ExpectationException(std::string _in,
 
 zpt::ExpectationException::~ExpectationException() throw() {}
 
-const char*
-zpt::ExpectationException::what() {
+auto
+zpt::ExpectationException::what() const noexcept -> const char* {
     return this->__what.data();
 }
 
-const char*
-zpt::ExpectationException::description() {
+auto
+zpt::ExpectationException::description() const -> const char* {
     return this->__description.data();
 }
 
-const char*
-zpt::ExpectationException::backtrace() {
+auto
+zpt::ExpectationException::backtrace() const -> const char* {
     return this->__backtrace.data();
 }
 
-int
-zpt::ExpectationException::code() {
+auto
+zpt::ExpectationException::code() const -> int {
     return this->__code;
 }
 
-int
-zpt::ExpectationException::status() {
+auto
+zpt::ExpectationException::status() const -> int {
     return this->__http_code;
 }

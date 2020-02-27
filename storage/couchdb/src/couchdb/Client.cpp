@@ -43,7 +43,7 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path)
         }
         this->connection(_options->get_path(_conf_path) + zpt::json{ "uri", _uri });
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         expect(false, std::string("could not connect to CouchDB server: ") + _e.what(), 500, 0);
     }
 
@@ -134,11 +134,11 @@ zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
                     try {
                         (*this->__sockets[_k]) >> _rep;
                     }
-                    catch (zpt::SyntaxErrorException& _e) {
+                    catch (zpt::SyntaxErrorException const& _e) {
                     }
                     break;
                 }
-                catch (std::exception& _e) {
+                catch (std::exception const& _e) {
                     this->__sockets[_k]->close();
                 }
                 _n_tries++;
@@ -160,7 +160,7 @@ zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
         try {
             _socket >> _rep;
         }
-        catch (zpt::SyntaxErrorException& _e) {
+        catch (zpt::SyntaxErrorException const& _e) {
         }
         _socket.close();
     }

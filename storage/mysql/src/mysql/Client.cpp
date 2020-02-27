@@ -149,7 +149,7 @@ zpt::mysql::Client::insert(std::string _collection,
             _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         expect(false, _e.what(), 412, 0);
     }
 
@@ -215,7 +215,7 @@ zpt::mysql::Client::upsert(std::string _collection,
                     _stmt->execute(_expression);
                 }
             }
-            catch (std::exception& _e) {
+            catch (std::exception const& _e) {
             }
 
             if (!bool(_opts["mutated-event"]))
@@ -260,7 +260,7 @@ zpt::mysql::Client::upsert(std::string _collection,
                 _stmt->execute(_expression);
             }
         }
-        catch (std::exception& _e) {
+        catch (std::exception const& _e) {
             expect(false, _e.what(), 412, 0);
         }
 
@@ -315,7 +315,7 @@ zpt::mysql::Client::save(std::string _collection,
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -368,7 +368,7 @@ zpt::mysql::Client::set(std::string _collection,
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -425,7 +425,7 @@ zpt::mysql::Client::set(std::string _collection,
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -476,7 +476,7 @@ zpt::mysql::Client::unset(std::string _collection,
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -531,7 +531,7 @@ zpt::mysql::Client::unset(std::string _collection,
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -569,7 +569,7 @@ zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json
             _size = _stmt->execute(_expression);
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
     }
 
     if (!bool(_opts["mutated-event"]))
@@ -604,7 +604,7 @@ zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::jso
                 _stmt->execute(_expression);
             }
         }
-        catch (std::exception& _e) {
+        catch (std::exception const& _e) {
         }
 
         if (!bool(_opts["mutated-event"]))

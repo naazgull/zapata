@@ -145,7 +145,7 @@ class queue {
             auto _head = _in.head();
             _out << *_head << std::flush;
         }
-        catch (zpt::NoMoreElementsException& e) {
+        catch (zpt::NoMoreElementsException const& e) {
             _out << "0x0" << std::flush;
         }
         _out << std::endl << "  #tail -> " << std::flush;
@@ -153,7 +153,7 @@ class queue {
             auto _tail = _in.tail();
             _out << *_tail << std::flush;
         }
-        catch (zpt::NoMoreElementsException& e) {
+        catch (zpt::NoMoreElementsException const& e) {
             _out << "0x0" << std::flush;
         }
         size_t _count = 0;
@@ -166,7 +166,7 @@ class queue {
                 _count++;
             }
         }
-        catch (zpt::NoMoreElementsException& e) {
+        catch (zpt::NoMoreElementsException const& e) {
             _count = 0;
         }
         _out << (_count != 0 ? "  " : "") << "]" << std::flush;
@@ -309,7 +309,7 @@ zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
             this->pop();
         }
     }
-    catch (zpt::NoMoreElementsException& e) {
+    catch (zpt::NoMoreElementsException const& e) {
     }
     this->__hptr.clear();
     return (*this);

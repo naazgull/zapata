@@ -187,7 +187,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                                           << zpt::json{ comp, { _options, _json_expression } };
                             }
                         }
-                        catch (std::exception& _e) {
+                        catch (std::exception const& _e) {
                             if (_VALID_OPS.find(other_comp + std::string("^")) !=
                                 std::string::npos) {
                                 _selector << std::string(_key)
@@ -234,7 +234,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                             zpt::json _json = zpt::json(_expression);
                             _selector << std::string(_key) << zpt::json{ comp, _json };
                         }
-                        catch (std::exception& _e) {
+                        catch (std::exception const& _e) {
                         }
                     }
                     else if (_options == "d") {

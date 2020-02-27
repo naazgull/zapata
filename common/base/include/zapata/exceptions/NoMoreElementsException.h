@@ -23,6 +23,6 @@ class NoMoreElementsException : public std::exception {
     NoMoreElementsException(std::string _what);
     virtual ~NoMoreElementsException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
 };
 } // namespace zpt

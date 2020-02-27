@@ -66,7 +66,7 @@ main(int argc, char* argv[]) {
                     _parsing_duration +=
                       std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
                 }
-                catch (zpt::SyntaxErrorException& _e) {
+                catch (zpt::SyntaxErrorException const& _e) {
                     std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl
                               << std::flush;
                     return -1;
@@ -94,11 +94,11 @@ main(int argc, char* argv[]) {
                       << std::flush;
         }
     }
-    catch (zpt::SyntaxErrorException& _e) {
+    catch (zpt::SyntaxErrorException const& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }
-    catch (zpt::failed_expectation& _e) {
+    catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl << std::flush;
         return -1;
     }

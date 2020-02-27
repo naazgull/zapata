@@ -36,6 +36,6 @@ class SyntaxErrorException : public std::exception {
     SyntaxErrorException(std::string _what);
     virtual ~SyntaxErrorException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
 };
 } // namespace zpt

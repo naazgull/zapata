@@ -237,7 +237,7 @@ zpt::r_replace(std::string str, std::string find, std::string replace) {
             start += replace.length();
         }
     }
-    catch (std::exception& _e) {
+    catch (std::exception const& _e) {
         std::cout << (_e.what()) << std::endl << std::flush;
     }
     return _return;
@@ -391,12 +391,12 @@ zpt::crypto::gcm::aes::encrypt(std::string& _out,
                                new CryptoPP::AuthenticatedEncryptionFilter(
                                  _enc, new CryptoPP::StringSink(_out), false, _tag_size));
     }
-    catch (CryptoPP::InvalidArgument& _exc) {
+    catch (CryptoPP::InvalidArgument const& _exc) {
 
         zlog(std::string("zpt::cypto::aes::encrypt : Caught InvalidArgument: ") + _exc.what(),
              zpt::error);
     }
-    catch (CryptoPP::Exception& _exc) {
+    catch (CryptoPP::Exception const& _exc) {
 
         zlog(std::string("zpt::cypto::aes::encrypt : Caught Exception: ") + _exc.what(),
              zpt::error);
@@ -429,17 +429,17 @@ zpt::crypto::gcm::aes::decrypt(std::string& _out,
             zlog("zpt::cypto::aes::decrypt : Error to recover the encrypted text", zpt::error);
         }
     }
-    catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& _e) {
+    catch (CryptoPP::HashVerificationFilter::HashVerificationFailed const& _e) {
 
         zlog(std::string("zpt::cypto::aes::decrypt : HashVerificationFailed:") + _e.what(),
              zpt::error);
     }
-    catch (CryptoPP::InvalidArgument& _e) {
+    catch (CryptoPP::InvalidArgument const& _e) {
 
         zlog(std::string("zpt::cypto::aes::decrypt : Caught InvalidArgument:") + _e.what(),
              zpt::error);
     }
-    catch (CryptoPP::Exception& _e) {
+    catch (CryptoPP::Exception const& _e) {
 
         zlog(std::string("zpt::cypto::aes::decrypt : Caught Exception:") + _e.what(), zpt::error);
     }

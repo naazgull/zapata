@@ -29,13 +29,13 @@ SOFTWARE.
 
 namespace zpt {
 class CastException : public std::exception {
-  private:
-    std::string __what;
-
   public:
     CastException(std::string _what);
     virtual ~CastException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
+
+  private:
+    std::string __what;
 };
 } // namespace zpt

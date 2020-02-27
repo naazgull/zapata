@@ -36,6 +36,6 @@ class ClosedException : public std::exception {
     ClosedException(std::string _what);
     virtual ~ClosedException() throw();
 
-    const char* what();
+    auto what() const noexcept -> const char* override;
 };
 } // namespace zpt
