@@ -1808,6 +1808,72 @@ zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) -> zpt::json {
 }
 
 auto
+zpt::JSONElementT::operator+=(zpt::json _rhs) -> zpt::json {
+    return this->operator+=(*_rhs);
+}
+
+auto
+zpt::JSONElementT::operator+=(zpt::JSONElementT& _rhs) -> zpt::json {
+    if (this->__target.__type == zpt::JSNil) {
+        (*this) = _rhs.clone();
+        return zpt::json{ *this };
+    }
+    if (_rhs.__target.__type == zpt::JSNil || this->__target.__type != _rhs.__target.__type) {
+        return zpt::json{ *this };
+    }
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            for (auto [_, _key, _e] : zpt::json{ _rhs }) {
+                if ((*this)[_key]->ok()) {
+                    (*this)[_key] += _e;
+                }
+                else {
+                    (*this) << _key << _e;
+                }
+            }
+            return zpt::json{ *this };
+        }
+        case zpt::JSArray: {
+            for (auto [_, __, _e] : zpt::json{ _rhs }) {
+                (*this) << _e;
+            }
+            return zpt::json{ *this };
+        }
+        case zpt::JSString: {
+            (*(this->__target.__string.get()))
+              .insert((*(this->__target.__string.get())).length(), _rhs.str());
+            return zpt::json{ *this };
+        }
+        case zpt::JSInteger: {
+            this->__target.__integer += _rhs.intr();
+            return zpt::json{ *this };
+        }
+        case zpt::JSDouble: {
+            this->__target.__double += _rhs.dbl();
+            return zpt::json{ *this };
+        }
+        case zpt::JSBoolean: {
+            this->__target.__boolean += _rhs.bln();
+            return zpt::json{ *this };
+        }
+        case zpt::JSNil: {
+            return zpt::json{ *this };
+        }
+        case zpt::JSDate: {
+            this->__target.__date += _rhs.number();
+            return zpt::json{ *this };
+        }
+        case zpt::JSLambda: {
+            return zpt::undefined;
+        }
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
+    }
+    return zpt::undefined;
+}
+
+auto
 zpt::JSONElementT::operator-(zpt::json _rhs) -> zpt::json {
     return (*this) - (*_rhs);
 }
@@ -1928,6 +1994,66 @@ zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) -> zpt::json {
                 int _lhs = this->__target.__date - _rhs.number();
                 return zpt::mkptr((zpt::timestamp_t)_lhs);
             }
+        }
+        case zpt::JSLambda: {
+            return zpt::undefined;
+        }
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
+    }
+    return zpt::undefined;
+}
+
+auto
+zpt::JSONElementT::operator-=(zpt::json _rhs) -> zpt::json {
+    return this->operator-=(*_rhs);
+}
+
+auto
+zpt::JSONElementT::operator-=(zpt::JSONElementT& _rhs) -> zpt::json {
+    if (this->__target.__type == zpt::JSNil) {
+        (*this) = _rhs.clone();
+        return zpt::json{ *this };
+    }
+    if (_rhs.__target.__type == zpt::JSNil || this->__target.__type != _rhs.__target.__type) {
+        return zpt::json{ *this };
+    }
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            for (auto [_, _key, __] : zpt::json{ _rhs }) {
+                (*this) >> _key;
+            }
+            return zpt::json{ *this };
+        }
+        case zpt::JSArray: {
+            for (auto [_idx, _, __] : zpt::json{ _rhs }) {
+                (*this) >> _idx;
+            }
+            return zpt::json{ *this };
+        }
+        case zpt::JSString: {
+            zpt::replace(*(this->__target.__string.get()), _rhs.str(), "");
+            return zpt::json{ *this };
+        }
+        case zpt::JSInteger: {
+            this->__target.__integer -= _rhs.intr();
+            return zpt::json{ *this };
+        }
+        case zpt::JSDouble: {
+            this->__target.__double = _rhs.dbl();
+            return zpt::json{ *this };
+        }
+        case zpt::JSBoolean: {
+            this->__target.__boolean -= _rhs.bln();
+            return zpt::json{ *this };
+        }
+        case zpt::JSNil: {
+            return zpt::json{ *this };
+        }
+        case zpt::JSDate: {
+            this->__target.__date -= _rhs.number();
+            return zpt::json{ *this };
         }
         case zpt::JSLambda: {
             return zpt::undefined;

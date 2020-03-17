@@ -26,26 +26,28 @@
 #include <zapata/connector.h>
 
 namespace zpt {
+auto
+DB_DRIVER() -> size_t&;
 namespace storage {
 namespace layer {
 class connection;
 class session;
 class database;
 class collection;
-class filter;
+class action;
 class result;
 
 class connection : public zpt::storage::connection::type {
   public:
-    friend class zpt::storage::layer::session;
-
     connection(zpt::json _config);
-    virtual auto open(zpt::json _options) -> zpt::storage::connection::type& override;
-    virtual auto close() -> zpt::storage::connection::type& override;
+    virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
+    virtual auto close() -> zpt::storage::connection::type* override;
     virtual auto session() -> zpt::storage::session override;
-
     virtual auto add(std::string _name, zpt::storage::connection _connector)
-      -> zpt::storage::layer::connection& final;
+      -> zpt::storage::connection::type* override;
+
+    virtual auto config() -> zpt::json& final;
+    virtual auto connectors() -> std::map<std::string, zpt::storage::connection>& final;
 
   private:
     zpt::json __config;
@@ -53,14 +55,14 @@ class connection : public zpt::storage::connection::type {
 };
 class session : public zpt::storage::session::type {
   public:
-    friend class zpt::storage::layer::connection;
-    friend class zpt::storage::layer::database;
-
     session(zpt::storage::layer::connection& _connection);
     virtual auto is_open() -> bool override;
-    virtual auto commit() -> zpt::storage::session::type& override;
-    virtual auto rollback() -> zpt::storage::session::type& override;
+    virtual auto commit() -> zpt::storage::session::type* override;
+    virtual auto rollback() -> zpt::storage::session::type* override;
     virtual auto database(std::string _db) -> zpt::storage::database override;
+
+    virtual auto connection() -> zpt::storage::layer::connection& final;
+    virtual auto sessions() -> std::map<std::string, zpt::storage::session>& final;
 
   private:
     zpt::storage::layer::connection& __connection;
@@ -68,11 +70,11 @@ class session : public zpt::storage::session::type {
 };
 class database : public zpt::storage::database::type {
   public:
-    friend class zpt::storage::layer::session;
-    friend class zpt::storage::layer::collection;
-
     database(zpt::storage::layer::session& _session, std::string _db);
     virtual auto collection(std::string _name) -> zpt::storage::collection override;
+
+    virtual auto session() -> zpt::storage::layer::session& final;
+    virtual auto databases() -> std::map<std::string, zpt::storage::database>& final;
 
   private:
     zpt::storage::layer::session& __session;
@@ -80,56 +82,150 @@ class database : public zpt::storage::database::type {
 };
 class collection : public zpt::storage::collection::type {
   public:
-    friend class zpt::storage::layer::database;
-    friend class zpt::storage::layer::filter;
-
     collection(zpt::storage::layer::database& _database, std::string _collection);
-    virtual auto add(zpt::json _document) -> zpt::storage::filter override;
-    virtual auto modify(zpt::json _search) -> zpt::storage::filter override;
-    virtual auto remove(zpt::json _search) -> zpt::storage::filter override;
-    virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::filter override;
-    virtual auto find(zpt::json _search) -> zpt::storage::filter override;
+    virtual auto add(zpt::json _document) -> zpt::storage::action override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action override;
+    virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::action override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
+
+    virtual auto database() -> zpt::storage::layer::database& final;
+    virtual auto collections() -> std::map<std::string, zpt::storage::collection>& final;
 
   private:
     zpt::storage::layer::database& __database;
     std::map<std::string, zpt::storage::collection> __collections;
 };
-class filter : public zpt::storage::filter::type {
+class action : public zpt::storage::action::type {
   public:
-    friend class zpt::storage::layer::collection;
-    friend class zpt::storage::layer::result;
+    action(zpt::storage::layer::collection& _collection);
 
-    filter(zpt::storage::layer::collection* _collection);
-    virtual auto add(zpt::json _document) -> zpt::storage::filter::type& override;
-    virtual auto modify(zpt::json _search) -> zpt::storage::filter::type& override;
-    virtual auto remove(zpt::json _search) -> zpt::storage::filter::type& override;
-    virtual auto replace(std::string _id, zpt::json _document)
-      -> zpt::storage::filter::type& override;
-    virtual auto find(zpt::json _search) -> zpt::storage::filter::type& override;
-    virtual auto set(std::string _attribute, zpt::json _value)
-      -> zpt::storage::filter::type& override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::filter::type& override;
-    virtual auto patch(zpt::json _document) -> zpt::storage::filter::type& override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::filter::type& override;
-    virtual auto fields(zpt::json _fields) -> zpt::storage::filter::type& override;
-    virtual auto limit(size_t _number) -> zpt::storage::filter::type& override;
-    virtual auto bind(std::string _attribute, zpt::json _Value)
-      -> zpt::storage::filter::type& override;
-    virtual auto execute() -> zpt::storage::result override;
+    virtual auto collection() -> zpt::storage::layer::collection& final;
+    virtual auto actions() -> std::map<std::string, zpt::storage::action>& final;
+    virtual auto config() -> zpt::json& final;
 
-  private:
+  protected:
     zpt::storage::layer::collection& __collection;
-    std::map<std::string, zpt::storage::session> __filters;
+    std::map<std::string, zpt::storage::action> __actions;
+    zpt::json __config;
 };
-class result {
+class action_add : public zpt::storage::layer::action {
   public:
-    friend class zpt::storage::layer::filter;
+    action_add(zpt::storage::layer::collection& _collection, zpt::json _document);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+};
+class action_modify : public zpt::storage::layer::action {
+  public:
+    action_modify(zpt::storage::layer::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+};
+class action_remove : public zpt::storage::layer::action {
+  public:
+    action_remove(zpt::storage::layer::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+};
+class action_replace : public zpt::storage::layer::action {
+  public:
+    action_replace(zpt::storage::layer::collection& _collection,
+                   std::string _id,
+                   zpt::json _document);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+};
+class action_find : public zpt::storage::layer::action {
+  public:
+    action_find(zpt::storage::layer::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+};
+class result : public zpt::storage::result::type {
+  public:
+    result(zpt::storage::layer::action& _action);
+    virtual auto fetch(size_t _amount = 0) -> zpt::json override;
+    virtual auto generated_id() -> zpt::json override;
+    virtual auto count() -> size_t override;
+    virtual auto status() -> zpt::status override;
+    virtual auto message() -> std::string override;
 
-    virtual auto fetch(size_t _amount = 1) -> zpt::json override;
-    virtual auto all() -> zpt::json override;
+    virtual auto action() -> zpt::storage::layer::action& final;
+    virtual auto results() -> std::map<std::string, zpt::storage::result>& final;
 
   private:
+    zpt::storage::layer::action& __action;
     std::map<std::string, zpt::storage::result> __results;
 };
 } // namespace layer

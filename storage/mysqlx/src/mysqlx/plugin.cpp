@@ -20,8 +20,16 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <iostream>
+#include <zapata/startup.h>
+#include <zapata/connector.h>
+#include <zapata/mysqlx.h>
 
-#include <zapata/connector/connector.h>
-#include <zapata/connector/layer.h>
-#include <zapata/connector/config.h>
+extern "C" auto
+_zpt_load_(zpt::plugin& _plugin) -> void {
+    zlog("Loading MySQL driver", zpt::info);
+    auto& _driver = zpt::globals::get<zpt::storage::connection>(zpt::DB_DRIVER());
+    auto _options = _plugin->config()["storage"]["mysqlx"];
+    auto _connection = zpt::storage::connection::alloc<zpt::storage::mysqlx::connection>(_options);
+    _driver->add("mysqlx", _connection);
+}

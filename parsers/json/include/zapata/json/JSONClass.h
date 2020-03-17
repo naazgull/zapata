@@ -188,7 +188,11 @@ class json {
     template<typename T>
     auto operator+(T _in) -> json;
     template<typename T>
+    auto operator+=(T _in) -> json;
+    template<typename T>
     auto operator-(T _in) -> json;
+    template<typename T>
+    auto operator-=(T _in) -> json;
     template<typename T>
     auto operator/(T _in) -> json;
     template<typename T>
@@ -837,8 +841,12 @@ class JSONElementT {
 
     auto operator+(zpt::json _rhs) -> zpt::json;
     auto operator+(zpt::JSONElementT& _rhs) -> zpt::json;
+    auto operator+=(zpt::json _rhs) -> zpt::json;
+    auto operator+=(zpt::JSONElementT& _rhs) -> zpt::json;
     auto operator-(zpt::json _rhs) -> zpt::json;
     auto operator-(zpt::JSONElementT& _rhs) -> zpt::json;
+    auto operator-=(zpt::json _rhs) -> zpt::json;
+    auto operator-=(zpt::JSONElementT& _rhs) -> zpt::json;
     auto operator/(zpt::json _rhs) -> zpt::json;
     auto operator/(zpt::JSONElementT& _rhs) -> zpt::json;
     auto operator|(zpt::json _rhs) -> zpt::json;
@@ -969,8 +977,18 @@ zpt::json::operator+(T _rhs) -> zpt::json {
 }
 template<typename T>
 auto
+zpt::json::operator+=(T _rhs) -> zpt::json {
+    return this->__underlying->operator+=(_rhs);
+}
+template<typename T>
+auto
 zpt::json::operator-(T _rhs) -> zpt::json {
     return (*this->__underlying.get()) - _rhs;
+}
+template<typename T>
+auto
+zpt::json::operator-=(T _rhs) -> zpt::json {
+    return this->__underlying->operator-=(_rhs);
 }
 template<typename T>
 auto

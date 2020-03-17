@@ -78,9 +78,9 @@ zpt::rest::engine::on_error(zpt::json& _path,
                             const char* _description) -> bool {
     auto& _message = _event.content();
     _message->status() = 500;
-    _message->to_send() = { "message", _what };
+    _message->to_send() = { "message", std::string{ _what } };
     if (_description != nullptr) {
-        _message->to_send() << "description" << _description;
+        _message->to_send() << "description" << std::string{ _description };
     }
     _event.next_stage();
     return true;

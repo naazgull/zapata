@@ -24,18 +24,20 @@
 #include <string>
 
 namespace zpt {
-    auto copy(std::vector<std::string> const& _from, std::vector<std::string>& _to) -> void {
-        _to.clear();
-        for (auto _e : _from) {
-            _to.push_back(_e);
-        }
+auto
+copy(std::vector<std::string> const& _from, std::vector<std::string>& _to) -> void {
+    _to.clear();
+    for (auto _e : _from) {
+        _to.push_back(_e);
     }
-    auto copy(std::string const& _from, std::string& _to) -> void {
-        _to.clear();
-        for (auto _e : _from) {
-            _to.push_back(_e);
-        }
+}
+auto
+copy(std::string const& _from, std::string& _to) -> void {
+    _to.clear();
+    for (auto _e : _from) {
+        _to.push_back(_e);
     }
+}
 }
 
 #include <zapata/globals.h>

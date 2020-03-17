@@ -23,213 +23,235 @@
 #pragma once
 
 #include <zapata/json.h>
+#include <zapata/connector.h>
+#include <mysqlx/xdevapi.h>
 
 namespace zpt {
 namespace storage {
+namespace mysqlx {
 class connection;
 class session;
 class database;
 class collection;
-class filter;
+class action;
 class result;
 
-class connection {
+auto
+to_search_str(zpt::json _search) -> std::string;
+auto
+to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
+auto
+from_db_doc(::mysqlx::DbDoc _document) -> zpt::json;
+
+class connection : public zpt::storage::connection::type {
   public:
-    class type {
-      public:
-        virtual auto open(zpt::json _options) -> zpt::storage::connection::type* = 0;
-        virtual auto close() -> zpt::storage::connection::type* = 0;
-        virtual auto session() -> zpt::storage::session& = 0;
-    };
+    connection(zpt::json _options);
+    virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
+    virtual auto close() -> zpt::storage::connection::type* override;
+    virtual auto session() -> zpt::storage::session override;
+    virtual auto add(std::string _name, zpt::storage::connection _connector)
+      -> zpt::storage::connection::type* override;
 
-    connection() = default;
-    template<typename T, typename... Args>
-    connection(Args... _args);
-    connection(zpt::storage::connection const& _rhs);
-    connection(zpt::storage::connection&& _rhs);
-    virtual ~connection() = default;
-
-    auto operator=(zpt::storage::connection const& _rhs) -> zpt::storage::connection&;
-    auto operator=(zpt::storage::connection&& _rhs) -> zpt::storage::connection&;
-
-    auto operator-> () -> zpt::storage::connection::type*;
-    auto operator*() -> zpt::storage::connection::type&;
+    virtual auto operator-> () -> ::mysqlx::Client*;
 
   private:
-    std::shared_ptr<zpt::storage::connection::type> __underlying{ nullptr };
+    zpt::json __options;
+    ::mysqlx::Client __underlying;
 };
-class session {
+class session : public zpt::storage::session::type {
   public:
-    class type {
-      public:
-        virtual auto is_open() -> bool = 0;
-        virtual auto commit() -> zpt::storage::session::type* = 0;
-        virtual auto rollback() -> zpt::storage::session::type* = 0;
-        virtual auto database(std::string _db) -> zpt::storage::database& = 0;
-        virtual auto connection() -> zpt::storage::connection& = 0;
-    };
+    session(zpt::storage::mysqlx::connection& _connection);
+    session(const zpt::storage::mysqlx::session& _rhs) = delete;
+    session(zpt::storage::mysqlx::session&& _rhs) = delete;
+    virtual auto is_open() -> bool override;
+    virtual auto commit() -> zpt::storage::session::type* override;
+    virtual auto rollback() -> zpt::storage::session::type* override;
+    virtual auto database(std::string _db) -> zpt::storage::database override;
 
-    session() = default;
-    template<typename T, typename... Args>
-    session(Args... _args);
-    session(zpt::storage::session const& _rhs);
-    session(zpt::storage::session&& _rhs);
-    virtual ~session() = default;
-
-    auto operator=(zpt::storage::session const& _rhs) -> zpt::storage::session&;
-    auto operator=(zpt::storage::session&& _rhs) -> zpt::storage::session&;
-
-    auto operator-> () -> zpt::storage::session::type*;
-    auto operator*() -> zpt::storage::session::type&;
+    virtual auto operator-> () -> ::mysqlx::Session*;
 
   private:
-    std::shared_ptr<zpt::storage::session::type> __underlying{ nullptr };
+    ::mysqlx::Session __underlying;
 };
-class database {
+class database : public zpt::storage::database::type {
   public:
-    class type {
-      public:
-        virtual auto collection(std::string _name) -> zpt::storage::collection& = 0;
-        virtual auto connection() -> zpt::storage::connection& = 0;
-        virtual auto session() -> zpt::storage::session& = 0;
-    };
+    database(zpt::storage::mysqlx::session& _session, std::string _db);
+    database(const zpt::storage::mysqlx::database& _rhs) = delete;
+    database(zpt::storage::mysqlx::database&& _rhs) = delete;
+    virtual auto collection(std::string _name) -> zpt::storage::collection override;
 
-    database() = default;
-    template<typename T, typename... Args>
-    database(Args... _args);
-    database(zpt::storage::database const& _rhs);
-    database(zpt::storage::database&& _rhs);
-    virtual ~database() = default;
-
-    auto operator=(zpt::storage::database const& _rhs) -> zpt::storage::database&;
-    auto operator=(zpt::storage::database&& _rhs) -> zpt::storage::database&;
-
-    auto operator-> () -> zpt::storage::database::type*;
-    auto operator*() -> zpt::storage::database::type&;
+    virtual auto operator-> () -> ::mysqlx::Schema*;
 
   private:
-    std::shared_ptr<zpt::storage::database::type> __underlying{ nullptr };
+    ::mysqlx::Schema __underlying;
 };
-class collection {
+class collection : public zpt::storage::collection::type {
   public:
-    class type {
-      public:
-        virtual auto add(zpt::json _document) -> zpt::storage::filter& = 0;
-        virtual auto modify(zpt::json _search) -> zpt::storage::filter& = 0;
-        virtual auto remove(zpt::json _search) -> zpt::storage::filter& = 0;
-        virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::filter& = 0;
-        virtual auto find(zpt::json _search) -> zpt::storage::filter& = 0;
-        virtual auto count() -> size_t = 0;
-        virtual auto connection() -> zpt::storage::connection& = 0;
-        virtual auto session() -> zpt::storage::session& = 0;
-        virtual auto database() -> zpt::storage::database& = 0;
-    };
+    collection(zpt::storage::mysqlx::database& _database, std::string _collection);
+    virtual auto add(zpt::json _document) -> zpt::storage::action override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action override;
+    virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::action override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action override;
+    virtual auto count() -> size_t override;
 
-    collection() = default;
-    template<typename T, typename... Args>
-    collection(Args... _args);
-    collection(zpt::storage::collection const& _rhs);
-    collection(zpt::storage::collection&& _rhs);
-    virtual ~collection() = default;
-
-    auto operator=(zpt::storage::collection const& _rhs) -> zpt::storage::collection&;
-    auto operator=(zpt::storage::collection&& _rhs) -> zpt::storage::collection&;
-
-    auto operator-> () -> zpt::storage::collection::type*;
-    auto operator*() -> zpt::storage::collection::type&;
+    virtual auto operator-> () -> ::mysqlx::Collection*;
 
   private:
-    std::shared_ptr<zpt::storage::collection::type> __underlying{ nullptr };
+    ::mysqlx::Collection __underlying;
 };
-class filter {
+class action : public zpt::storage::action::type {
   public:
-    class type {
-      public:
-        virtual auto add(zpt::json _document) -> zpt::storage::filter::type* = 0;
-        virtual auto modify(zpt::json _search) -> zpt::storage::filter::type* = 0;
-        virtual auto remove(zpt::json _search) -> zpt::storage::filter::type* = 0;
-        virtual auto replace(std::string _id, zpt::json _document)
-          -> zpt::storage::filter::type* = 0;
-        virtual auto find(zpt::json _search) -> zpt::storage::filter::type* = 0;
-        virtual auto set(std::string _attribute, zpt::json _value)
-          -> zpt::storage::filter::type* = 0;
-        virtual auto unset(std::string _attribute) -> zpt::storage::filter::type* = 0;
-        virtual auto patch(zpt::json _document) -> zpt::storage::filter::type* = 0;
-        virtual auto sort(std::string _attribute) -> zpt::storage::filter::type* = 0;
-        virtual auto fields(zpt::json _fields) -> zpt::storage::filter::type* = 0;
-        virtual auto limit(size_t _number) -> zpt::storage::filter::type* = 0;
-        virtual auto bind(std::string _attribute, zpt::json _Value)
-          -> zpt::storage::filter::type* = 0;
-        virtual auto execute() -> zpt::storage::result& = 0;
-        virtual auto connection() -> zpt::storage::connection& = 0;
-        virtual auto session() -> zpt::storage::session& = 0;
-        virtual auto database() -> zpt::storage::database& = 0;
-        virtual auto collection() -> zpt::storage::collection& = 0;
-    };
+    action(zpt::storage::mysqlx::collection& _collection);
+};
+class action_add : public zpt::storage::mysqlx::action {
+  public:
+    action_add(zpt::storage::mysqlx::collection& _collection, zpt::json _document);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
 
-    filter() = default;
-    template<typename T, typename... Args>
-    filter(Args... _args);
-    filter(zpt::storage::filter const& _rhs);
-    filter(zpt::storage::filter&& _rhs);
-    virtual ~filter() = default;
-
-    auto operator=(zpt::storage::filter const& _rhs) -> zpt::storage::filter&;
-    auto operator=(zpt::storage::filter&& _rhs) -> zpt::storage::filter&;
-
-    auto operator-> () -> zpt::storage::filter::type*;
-    auto operator*() -> zpt::storage::filter::type&;
+    virtual auto operator-> () -> ::mysqlx::CollectionAdd*;
 
   private:
-    std::shared_ptr<zpt::storage::filter::type> __underlying{ nullptr };
+    ::mysqlx::CollectionAdd __underlying;
 };
-class result {
+class action_modify : public zpt::storage::mysqlx::action {
   public:
-    class type {
-      public:
-        virtual auto fetch(size_t _amount = 1) -> zpt::json = 0;
-        virtual auto all() -> zpt::json = 0;
-    };
+    action_modify(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
 
-    result() = default;
-    template<typename T, typename... Args>
-    result(Args... _args);
-    result(zpt::storage::result const& _rhs);
-    result(zpt::storage::result&& _rhs);
-    virtual ~result() = default;
-
-    auto operator=(zpt::storage::result const& _rhs) -> zpt::storage::result&;
-    auto operator=(zpt::storage::result&& _rhs) -> zpt::storage::result&;
-
-    auto operator-> () -> zpt::storage::result::type*;
-    auto operator*() -> zpt::storage::result::type&;
+    virtual auto operator-> () -> ::mysqlx::CollectionModify*;
 
   private:
-    std::shared_ptr<zpt::storage::result::type> __underlying{ nullptr };
+    ::mysqlx::CollectionModify __underlying;
 };
+class action_remove : public zpt::storage::mysqlx::action {
+  public:
+    action_remove(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+
+    virtual auto operator-> () -> ::mysqlx::CollectionRemove*;
+
+  private:
+    ::mysqlx::CollectionRemove __underlying;
+};
+class action_replace : public zpt::storage::mysqlx::action {
+  public:
+    action_replace(zpt::storage::mysqlx::collection& _collection,
+                   std::string _id,
+                   zpt::json _document);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+    virtual auto replace_one() -> ::mysqlx::Result;
+
+    virtual auto operator-> () -> ::mysqlx::Collection*;
+
+  private:
+    std::string __id;
+    zpt::json __document;
+    ::mysqlx::Collection* __underlying{ nullptr };
+};
+class action_find : public zpt::storage::mysqlx::action {
+  public:
+    action_find(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto replace(std::string _id, zpt::json _document)
+      -> zpt::storage::action::type* override;
+    virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
+    virtual auto set(std::string _attribute, zpt::json _value)
+      -> zpt::storage::action::type* override;
+    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
+    virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
+    virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
+    virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
+    virtual auto execute() -> zpt::storage::result override;
+
+    virtual auto operator-> () -> ::mysqlx::CollectionFind*;
+
+  private:
+    ::mysqlx::CollectionFind __underlying;
+};
+class result : public zpt::storage::result::type {
+  public:
+    result(zpt::storage::mysqlx::action_add& _action);
+    result(zpt::storage::mysqlx::action_modify& _action);
+    result(zpt::storage::mysqlx::action_remove& _action);
+    result(zpt::storage::mysqlx::action_replace& _action);
+    result(zpt::storage::mysqlx::action_find& _action);
+    virtual auto fetch(size_t _amount = 0) -> zpt::json override;
+    virtual auto generated_id() -> zpt::json override;
+    virtual auto count() -> size_t override;
+    virtual auto status() -> zpt::status override;
+    virtual auto message() -> std::string override;
+
+  private:
+    bool __is_doc_result{ false };
+    ::mysqlx::Result __result;
+    ::mysqlx::DocResult __doc_result;
+};
+} // namespace mysqlx
 } // namespace storage
 } // namespace zpt
-
-template<typename T, typename... Args>
-zpt::storage::connection::connection(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}
-
-template<typename T, typename... Args>
-zpt::storage::session::session(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}
-
-template<typename T, typename... Args>
-zpt::storage::database::database(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}
-
-template<typename T, typename... Args>
-zpt::storage::collection::collection(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}
-
-template<typename T, typename... Args>
-zpt::storage::filter::filter(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}
-
-template<typename T, typename... Args>
-zpt::storage::result::result(Args... _args)
-  : __underlying{ std::make_shared<T>(_args...) } {}

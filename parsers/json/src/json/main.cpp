@@ -46,9 +46,9 @@ main(int argc, char* argv[]) {
 
             auto _t = std::chrono::high_resolution_clock::now();
             auto _parsing_duration =
-              std::chrono::duration_cast<std::chrono::milliseconds>(_t - _t).count();
+              std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
             auto _stringify_duration =
-              std::chrono::duration_cast<std::chrono::milliseconds>(_t - _t).count();
+              std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
 
             for (auto [_, __, _file] : _parameters["--"]) {
                 zpt::json _ptr;
@@ -64,7 +64,7 @@ main(int argc, char* argv[]) {
                     _in >> _ptr;
                     auto _t2 = std::chrono::high_resolution_clock::now();
                     _parsing_duration +=
-                      std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+                      std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
                 }
                 catch (zpt::SyntaxErrorException const& _e) {
                     std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl
@@ -77,20 +77,18 @@ main(int argc, char* argv[]) {
                     _oss << _ptr << std::flush;
                     auto _t2 = std::chrono::high_resolution_clock::now();
                     _stringify_duration +=
-                      std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+                      std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
                 }
                 if (_parameters["--print"] != zpt::undefined) {
                     std::cout << (_parameters["--print"] == "pretty"
                                     ? static_cast<std::string>(zpt::pretty{ _ptr })
                                     : static_cast<std::string>(_ptr))
-                              << std::endl
-                              << std::endl
                               << std::flush;
                 }
             }
-            std::cout << "parsing total time: " << _parsing_duration << "ms" << std::endl
+            std::cout << "parsing total time: " << _parsing_duration << "µs" << std::endl
                       << std::flush;
-            std::cout << "stringify total time: " << _stringify_duration << "ms" << std::endl
+            std::cout << "stringify total time: " << _stringify_duration << "µs" << std::endl
                       << std::flush;
         }
     }

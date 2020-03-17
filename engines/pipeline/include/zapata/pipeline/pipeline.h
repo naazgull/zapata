@@ -287,6 +287,7 @@ zpt::pipeline::stage<T>::set_error_callback(
                      const char* _what,
                      const char* _description)> _error_callback) -> zpt::pipeline::stage<T>& {
     this->__error_callback = _error_callback;
+    return (*this);
 }
 
 template<typename T>

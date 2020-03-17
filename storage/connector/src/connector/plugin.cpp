@@ -20,8 +20,14 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <iostream>
+#include <zapata/startup.h>
+#include <zapata/connector.h>
 
-#include <zapata/connector/connector.h>
-#include <zapata/connector/layer.h>
-#include <zapata/connector/config.h>
+extern "C" auto
+_zpt_load_(zpt::plugin& _plugin) -> void {
+    zlog("Loading storage infra-structure", zpt::info);
+    zpt::globals::alloc<zpt::storage::connection>(
+      zpt::DB_DRIVER(),
+      zpt::storage::connection::alloc<zpt::storage::layer::connection>(_plugin->config()));
+}

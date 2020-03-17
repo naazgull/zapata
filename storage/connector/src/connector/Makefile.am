@@ -6,13 +6,5 @@ libzapata_storage_connector_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_storage_connector_la_SOURCES = \
 ./connector.cpp \
-./layer.cpp
-
-bin_PROGRAMS = zconnector
-
-zconnector_LDADD = -lpthread libzapata-storage-connector.la
-zconnector_LDFLAGS =
-zconnector_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
-
-zconnector_SOURCES = \
-./main.cpp
+./layer.cpp \
+./plugin.cpp

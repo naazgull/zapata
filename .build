@@ -84,7 +84,7 @@ do
 	    ;;
 	config)
         pushd ${package} > /dev/null
-	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall"
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1

@@ -148,34 +148,34 @@ auto zpt::storage::collection::operator*() -> zpt::storage::collection::type& {
     return *this->__underlying.get();
 }
 
-zpt::storage::filter::filter(zpt::storage::filter const& _rhs)
+zpt::storage::action::action(zpt::storage::action const& _rhs)
   : __underlying{ _rhs.__underlying.get() } {}
 
-zpt::storage::filter::filter(zpt::storage::filter&& _rhs)
+zpt::storage::action::action(zpt::storage::action&& _rhs)
   : __underlying{ _rhs.__underlying.get() } {
     _rhs.__underlying.reset();
 }
 
-zpt::storage::filter::filter(zpt::storage::filter::type* _underlying)
+zpt::storage::action::action(zpt::storage::action::type* _underlying)
   : __underlying{ _underlying } {}
 
 auto
-zpt::storage::filter::operator=(zpt::storage::filter const& _rhs) -> zpt::storage::filter& {
+zpt::storage::action::operator=(zpt::storage::action const& _rhs) -> zpt::storage::action& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
 auto
-zpt::storage::filter::operator=(zpt::storage::filter&& _rhs) -> zpt::storage::filter& {
+zpt::storage::action::operator=(zpt::storage::action&& _rhs) -> zpt::storage::action& {
     this->__underlying.swap(_rhs.__underlying);
     return (*this);
 }
 
-auto zpt::storage::filter::operator-> () -> zpt::storage::filter::type* {
+auto zpt::storage::action::operator-> () -> zpt::storage::action::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::filter::operator*() -> zpt::storage::filter::type& {
+auto zpt::storage::action::operator*() -> zpt::storage::action::type& {
     return *this->__underlying.get();
 }
 

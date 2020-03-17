@@ -18,4 +18,5 @@ export projects=(
        engines/pipeline
        engines/rest
        storage/connector
+       storage/mysqlx
 )

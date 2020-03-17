@@ -63,3 +63,4 @@ parsers/uri/src/uri/zuri
 parsers/http/src/http/zhttps
 io/socket/src/socket/zsock*
 algorithms/lockfree/src/lockfree/zlf
+storage/mysqlx/src/mysqlx/zmysqlx
