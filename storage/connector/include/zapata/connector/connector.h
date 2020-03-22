@@ -37,8 +37,6 @@ class connection {
   public:
     class type {
       public:
-        virtual auto add(std::string _name, zpt::storage::connection _connector)
-            -> zpt::storage::connection::type* = 0;
         virtual auto open(zpt::json _options) -> zpt::storage::connection::type* = 0;
         virtual auto close() -> zpt::storage::connection::type* = 0;
         virtual auto session() -> zpt::storage::session = 0;
@@ -220,19 +218,23 @@ class result {
 
     result(zpt::storage::result::type* _underlying);
 };
+auto
+get_filter(zpt::json _params, zpt::json _filter, zpt::json _binded) -> void;
 } // namespace storage
 } // namespace zpt
 
 template<typename T, typename... Args>
 auto
 zpt::storage::connection::alloc(Args&... _args) -> zpt::storage::connection {
-    return zpt::storage::connection{ new T{ _args... } };
+    static thread_local zpt::storage::connection _to_return{ new T{ _args... } };
+    return _to_return;
 }
 
 template<typename T, typename... Args>
 auto
 zpt::storage::session::alloc(Args&... _args) -> zpt::storage::session {
-    return zpt::storage::session{ new T{ _args... } };
+    static thread_local zpt::storage::session _to_return{ new T{ _args... } };
+    return _to_return;
 }
 
 template<typename T, typename... Args>

@@ -23,11 +23,11 @@
 #include <zapata/connector/connector.h>
 
 zpt::storage::connection::connection(zpt::storage::connection const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::connection::connection(zpt::storage::connection&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::connection::connection(zpt::storage::connection::type* _underlying)
@@ -55,11 +55,11 @@ auto zpt::storage::connection::operator*() -> zpt::storage::connection::type& {
 }
 
 zpt::storage::session::session(zpt::storage::session const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::session::session(zpt::storage::session&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::session::session(zpt::storage::session::type* _underlying)
@@ -86,11 +86,11 @@ auto zpt::storage::session::operator*() -> zpt::storage::session::type& {
 }
 
 zpt::storage::database::database(zpt::storage::database const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::database::database(zpt::storage::database&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::database::database(zpt::storage::database::type* _underlying)
@@ -117,11 +117,11 @@ auto zpt::storage::database::operator*() -> zpt::storage::database::type& {
 }
 
 zpt::storage::collection::collection(zpt::storage::collection const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::collection::collection(zpt::storage::collection&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::collection::collection(zpt::storage::collection::type* _underlying)
@@ -149,11 +149,11 @@ auto zpt::storage::collection::operator*() -> zpt::storage::collection::type& {
 }
 
 zpt::storage::action::action(zpt::storage::action const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::action::action(zpt::storage::action&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::action::action(zpt::storage::action::type* _underlying)
@@ -180,11 +180,11 @@ auto zpt::storage::action::operator*() -> zpt::storage::action::type& {
 }
 
 zpt::storage::result::result(zpt::storage::result const& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {}
+  : __underlying{ _rhs.__underlying } {}
 
 zpt::storage::result::result(zpt::storage::result&& _rhs)
-  : __underlying{ _rhs.__underlying.get() } {
-    _rhs.__underlying.reset();
+  : __underlying{ nullptr } {
+    this->__underlying.swap(_rhs.__underlying);
 }
 
 zpt::storage::result::result(zpt::storage::result::type* _underlying)
@@ -208,4 +208,12 @@ auto zpt::storage::result::operator-> () -> zpt::storage::result::type* {
 
 auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
     return *this->__underlying.get();
+}
+
+auto
+zpt::storage::get_filter(zpt::json _params, zpt::json _filter, zpt::json _binded) -> void {
+    for (auto [_, _key, _value] : _params) {
+        _filter << _key << zpt::regex{ _key };
+        _binded << _key << _value;
+    }
 }

@@ -109,7 +109,7 @@ auto zpt::message::operator*() -> zpt::message::message_t& {
 
 zpt::message::message_t::message_t(zpt::stream* _stream)
   : __stream{ _stream }
-  , __scheme{ static_cast<std::string>(*_stream) } {}
+  , __scheme{ _stream->transport() } {}
 
 auto
 zpt::message::message_t::stream() -> zpt::stream& {

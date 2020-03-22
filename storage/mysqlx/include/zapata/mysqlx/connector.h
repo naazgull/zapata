@@ -41,7 +41,7 @@ to_search_str(zpt::json _search) -> std::string;
 auto
 to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
 auto
-from_db_doc(::mysqlx::DbDoc _document) -> zpt::json;
+from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -49,20 +49,17 @@ class connection : public zpt::storage::connection::type {
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
     virtual auto close() -> zpt::storage::connection::type* override;
     virtual auto session() -> zpt::storage::session override;
-    virtual auto add(std::string _name, zpt::storage::connection _connector)
-      -> zpt::storage::connection::type* override;
-
-    virtual auto operator-> () -> ::mysqlx::Client*;
+    virtual auto options() -> zpt::json&;
 
   private:
     zpt::json __options;
-    ::mysqlx::Client __underlying;
 };
 class session : public zpt::storage::session::type {
   public:
     session(zpt::storage::mysqlx::connection& _connection);
     session(const zpt::storage::mysqlx::session& _rhs) = delete;
     session(zpt::storage::mysqlx::session&& _rhs) = delete;
+    virtual ~session();
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;

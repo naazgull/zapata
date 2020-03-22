@@ -91,3 +91,8 @@ auto
 zpt::JSONRegex::JSONRegex::operator!=(std::string _rhs) -> bool {
     return !((*this) == _rhs);
 }
+
+auto
+zpt::JSONRegex::JSONRegex::to_string() -> std::string& {
+    return this->__underlying_original;
+}

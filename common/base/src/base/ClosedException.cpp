@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/exceptions/ClosedException.h>
 
-zpt::ClosedException::ClosedException(std::string _in)
-  : __what(_in) {}
+zpt::ClosedException::ClosedException(std::string const& _what)
+  : __what(_what) {}
 
 zpt::ClosedException::~ClosedException() throw() {}
 

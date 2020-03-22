@@ -53,7 +53,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         do {
             try {
                 auto _stream = _polling.pop();
-                std::string _scheme{ static_cast<std::string>(*_stream) };
+                std::string _scheme{ _stream->transport() };
                 zpt::message _message{ _stream };
                 _rest.trigger(_scheme + std::string(":"), _message);
                 _waiting_iterations = 0;

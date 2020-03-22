@@ -24,15 +24,24 @@
 
 auto
 zpt::storage::mysqlx::to_search_str(zpt::json _search) -> std::string {
-    std::ostringstream _oss;
-    bool _first{ true };
-    for (auto [_, _key, _value] : _search) {
-        if (!_first) {
-            _oss << " AND " << std::flush;
+    if (_search->is_object()) {
+        std::ostringstream _oss;
+        bool _first{ true };
+        for (auto [_, _key, _value] : _search) {
+            if (!_first) {
+                _oss << " and " << std::flush;
+            }
+            _first = false;
+            if (_value->type() == zpt::JSRegex) {
+                _oss << _key << " = :" << _value->rgx().to_string() << std::flush;
+            }
+            else {
+                _oss << _key << " = " << _value << std::flush;
+            }
         }
-        _oss << _key << " = " << _value << std::flush;
+        return _oss.str();
     }
-    return _oss.str();
+    return static_cast<std::string>(_search);
 }
 
 auto
@@ -41,7 +50,7 @@ zpt::storage::mysqlx::to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc {
 }
 
 auto
-zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc _document) -> zpt::json {
+zpt::storage::mysqlx::from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json {
     if (!_document.isNull()) {
         std::stringstream _ss;
         _document.print(_ss);
@@ -53,43 +62,17 @@ zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc _document) -> zpt::json {
 }
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
-  : __options{ _options }
-  , __underlying{ ::mysqlx::SessionOption::USER,
-                  _options["user"]->str(),
-                  ::mysqlx::SessionOption::PWD,
-                  _options["password"]->str(),
-                  ::mysqlx::SessionOption::HOST,
-                  _options["host"]->str(),
-                  ::mysqlx::SessionOption::PORT,
-                  _options["port"]->ok() ? _options["port"]->intr() : 33060,
-                  ::mysqlx::SessionOption::SSL_MODE,
-                  ::mysqlx::SSLMode::REQUIRED,
-                  ::mysqlx::ClientOption::POOLING,
-                  true,
-                  ::mysqlx::ClientOption::POOL_MAX_SIZE,
-                  std::max(static_cast<unsigned int>(_options["poll_max_size"]), 25U),
-                  ::mysqlx::ClientOption::POOL_MAX_IDLE_TIME,
-                  500 } {}
-
-auto
-zpt::storage::mysqlx::connection::add(std::string _name, zpt::storage::connection _connector)
-  -> zpt::storage::connection::type* {
-    return this;
-}
+  : __options{ _options } {}
 
 auto
 zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
+    this->__options = _options;
     return this;
 }
 
 auto
 zpt::storage::mysqlx::connection::close() -> zpt::storage::connection::type* {
-    this->__underlying.close();
     return this;
-}
-
-auto zpt::storage::mysqlx::connection::operator-> () -> ::mysqlx::Client* {
-    return &this->__underlying;
 }
 
 auto
@@ -97,8 +80,27 @@ zpt::storage::mysqlx::connection::session() -> zpt::storage::session {
     return zpt::storage::session::alloc<zpt::storage::mysqlx::session>(*this);
 }
 
+auto
+zpt::storage::mysqlx::connection::options() -> zpt::json& {
+    return this->__options;
+}
+
 zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection)
-  : __underlying{ _connection->getSession() } {}
+  : __underlying{ ::mysqlx::SessionOption::USER,
+                  _connection.options()["user"]->str(),
+                  ::mysqlx::SessionOption::PWD,
+                  _connection.options()["password"]->str(),
+                  ::mysqlx::SessionOption::HOST,
+                  _connection.options()["host"]->str(),
+                  ::mysqlx::SessionOption::PORT,
+                  _connection.options()["port"]->ok() ? _connection.options()["port"]->intr()
+                                                      : 33060,
+                  ::mysqlx::SessionOption::SSL_MODE,
+                  ::mysqlx::SSLMode::REQUIRED } {}
+
+zpt::storage::mysqlx::session::~session() {
+    this->__underlying.close();
+}
 
 auto
 zpt::storage::mysqlx::session::is_open() -> bool {
@@ -671,17 +673,23 @@ auto
 zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
     if (this->__is_doc_result) {
         zpt::json _to_return{ zpt::json::array() };
-        if (_amount != 0) {
-            for (size_t _idx = 0; _idx != _amount; ++_idx) {
-                _to_return << zpt::storage::mysqlx::from_db_doc(this->__doc_result.fetchOne());
-            }
+        if (_amount == 0) {
+            _amount = std::numeric_limits<size_t>::max();
         }
-        else {
-            ::mysqlx::DbDoc _doc;
-            while ((_doc = this->__doc_result.fetchOne())) {
-                _to_return << zpt::storage::mysqlx::from_db_doc(_doc);
+        for (size_t _idx = 0; _idx != _amount; ++_idx) {
+            ::mysqlx::DbDoc _doc = this->__doc_result.fetchOne();
+            if (_doc.isNull()) {
+                if (_idx == 0) {
+                    return zpt::undefined;
+                }
+                break;
             }
+            _to_return << zpt::storage::mysqlx::from_db_doc(_doc);
         }
+        if (_amount == 1 && _to_return->size() != 0) {
+            return _to_return[0];
+        }
+        return _to_return;
     }
     return zpt::undefined;
 }

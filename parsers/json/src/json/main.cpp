@@ -36,13 +36,11 @@ int
 main(int argc, char* argv[]) {
     try {
         if (argc > 1) {
-            zpt::json _parameters = zpt::parameters::parse(
+            auto _parameters = zpt::parameters::parse(
               argc, argv, { "--print", { zpt::array, "optional", "single" } });
 
-            zpt::json _init;
-            std::istringstream _iss;
-            _iss.str("{}");
-            _iss >> _init;
+            auto _init = "null"_JSON;
+            std::cout << _init << std::endl << std::flush;
 
             auto _t = std::chrono::high_resolution_clock::now();
             auto _parsing_duration =

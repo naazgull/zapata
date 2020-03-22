@@ -266,7 +266,7 @@ zpt::startup::engine::load() -> zpt::startup::engine& {
     do {
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 5 });
     } while (this->__configuration["load"]->size() != this->__plugins.size() - 2);
-    zlog("All plugins loaded, shuting down startup engine", zpt::info);
+    zlog("All plugins loaded", zpt::info);
     this->shutdown();
     return (*this);
 }

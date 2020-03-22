@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/exceptions/SyntaxErrorException.h>
 
-zpt::SyntaxErrorException::SyntaxErrorException(std::string _in)
-  : __what(_in) {}
+zpt::SyntaxErrorException::SyntaxErrorException(std::string const& _what)
+  : __what(_what) {}
 
 zpt::SyntaxErrorException::~SyntaxErrorException() throw() {}
 

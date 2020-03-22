@@ -22,6 +22,9 @@ distclean:
 config:
 	./.build config
 
+asan:
+	./.build asan
+
 debug:
 	./.build debug
 

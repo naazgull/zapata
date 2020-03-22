@@ -33,7 +33,7 @@ class InterruptedException : public std::exception {
     std::string __what;
 
   public:
-    InterruptedException(std::string _what);
+    InterruptedException(std::string const& _what);
     virtual ~InterruptedException() throw();
 
     auto what() const noexcept -> const char* override;

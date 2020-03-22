@@ -126,6 +126,7 @@ class json {
 
     auto size() -> size_t;
     auto value() -> zpt::JSONElementT&;
+    auto parse(std::string _in) -> zpt::json&;
     auto parse(std::istream& _in) -> zpt::json&;
     auto stringify(std::ostream& _out) -> zpt::json&;
 
@@ -550,6 +551,8 @@ class JSONRegex {
         _out << std::string(_in) << std::flush;
         return _out;
     }
+
+    auto to_string() -> std::string&;
 
   private:
     std::string __underlying_original{ "" };
@@ -1352,3 +1355,5 @@ auto
 zpt::mkptr(T _v) -> zpt::json {
     return zpt::json(_v);
 }
+
+auto operator"" _JSON(const char* _string, size_t _length) -> zpt::json;

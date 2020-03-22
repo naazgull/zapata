@@ -31,6 +31,66 @@ exp :
 	{
 		d_scanner.result(zpt::JSArray);
 	}
+|
+	STRING
+	{
+		d_scanner.result(zpt::JSString);
+
+        std::string _out(d_scanner.matched());
+		d_scanner.init(_out);
+	}
+|
+	BOOLEAN
+	{
+		d_scanner.result(zpt::JSBoolean);
+
+        bool _out;
+		std::string _in(d_scanner.matched());
+		zpt::fromstr(_in, &_out);
+		d_scanner.init(_out);
+	}
+|
+	INTEGER
+	{
+		d_scanner.result(zpt::JSInteger);
+		long long _out;
+		std::string _in(d_scanner.matched());
+		zpt::fromstr(_in, &_out);
+		d_scanner.init(_out);
+	}
+|
+	DOUBLE
+	{
+		d_scanner.result(zpt::JSDouble);
+
+        double _out;
+		std::string _in(d_scanner.matched());
+		zpt::fromstr(_in, &_out);
+		d_scanner.init(_out);
+	}
+|
+	LAMBDA
+    {
+		d_scanner.result(zpt::JSLambda);
+
+        std::string _in(d_scanner.matched());
+		zpt::lambda _out(_in);
+		d_scanner.init(_out);
+	}
+|
+	REGEX
+	{
+        d_scanner.result(zpt::JSRegex);
+
+        std::string _in(d_scanner.matched());
+		zpt::regex _out(_in);
+		d_scanner.init(_out);
+	}
+|
+	NIL
+	{
+		d_scanner.init();
+	}
 ;
 
 object :

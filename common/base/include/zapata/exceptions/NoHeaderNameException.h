@@ -34,7 +34,7 @@ class NoHeaderNameException : public std::exception {
     std::string __what;
 
   public:
-    NoHeaderNameException(std::string _what);
+    NoHeaderNameException(std::string const& _what);
     virtual ~NoHeaderNameException() throw();
 
     const char* what();

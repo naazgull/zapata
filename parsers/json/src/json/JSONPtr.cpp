@@ -206,6 +206,13 @@ zpt::json::operator std::regex&() {
 }
 
 auto
+zpt::json::parse(std::string _in) -> zpt::json& {
+    std::istringstream _iss;
+    _iss.str(_in);
+    return this->parse(_iss);
+}
+
+auto
 zpt::json::parse(std::istream& _in) -> zpt::json& {
     static thread_local zpt::JSONParser _thread_local_parser;
     _thread_local_parser.switchRoots(*this);
@@ -543,4 +550,10 @@ zpt::timestamp(zpt::timestamp_t _timestamp) {
     size_t _time_offset = (size_t)(_timestamp / 1000);
     zpt::tostr(_date, _time_offset, "%z");
     return _date;
+}
+
+auto operator"" _JSON(const char* _string, size_t _length) -> zpt::json {
+    zpt::json _to_return;
+    _to_return.parse(std::string{ _string, _length });
+    return _to_return;
 }

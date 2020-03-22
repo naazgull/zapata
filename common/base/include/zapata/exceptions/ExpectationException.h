@@ -31,13 +31,13 @@ namespace zpt {
 
 class ExpectationException : public std::exception {
   public:
-    ExpectationException(std::string _what,
+    ExpectationException(std::string const& _what,
                          int _http_code,
                          int _code,
                          std::string _desc,
                          int _line = 0,
                          std::string _file = "");
-    ExpectationException(std::string _in,
+    ExpectationException(std::string const& _what,
                          int _http_code,
                          int _code,
                          std::string _desc,

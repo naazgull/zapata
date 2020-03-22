@@ -33,7 +33,7 @@ class ClosedException : public std::exception {
     std::string __what;
 
   public:
-    ClosedException(std::string _what);
+    ClosedException(std::string const& _what);
     virtual ~ClosedException() throw();
 
     auto what() const noexcept -> const char* override;

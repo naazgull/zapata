@@ -51,7 +51,7 @@ class message {
         auto keep_alive() -> bool&;
 
       private:
-        zpt::stream* __stream;
+        zpt::stream* __stream{ nullptr };
         std::string __uri;
         zpt::json __path;
         std::string __version;

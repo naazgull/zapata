@@ -28,8 +28,7 @@
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Loading MySQL driver", zpt::info);
-    auto& _driver = zpt::globals::get<zpt::storage::connection>(zpt::DB_DRIVER());
-    auto _options = _plugin->config()["storage"]["mysqlx"];
+    auto _options = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG())["storage"]["mysqlx"];
     auto _connection = zpt::storage::connection::alloc<zpt::storage::mysqlx::connection>(_options);
-    _driver->add("mysqlx", _connection);
+    zpt::storage::layer::connection::add("mysqlx", _connection);
 }

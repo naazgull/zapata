@@ -26,8 +26,6 @@
 #include <zapata/connector.h>
 
 namespace zpt {
-auto
-DB_DRIVER() -> size_t&;
 namespace storage {
 namespace layer {
 class connection;
@@ -43,15 +41,14 @@ class connection : public zpt::storage::connection::type {
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
     virtual auto close() -> zpt::storage::connection::type* override;
     virtual auto session() -> zpt::storage::session override;
-    virtual auto add(std::string _name, zpt::storage::connection _connector)
-      -> zpt::storage::connection::type* override;
-
     virtual auto config() -> zpt::json& final;
-    virtual auto connectors() -> std::map<std::string, zpt::storage::connection>& final;
+
+    static auto connectors() -> std::map<std::string, zpt::storage::connection>&;
+    static auto add(std::string _name, zpt::storage::connection _connector) -> void;
 
   private:
     zpt::json __config;
-    std::map<std::string, zpt::storage::connection> __connectors;
+    static inline std::map<std::string, zpt::storage::connection> __connectors;
 };
 class session : public zpt::storage::session::type {
   public:

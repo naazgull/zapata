@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/exceptions/CastException.h>
 
-zpt::CastException::CastException(std::string _in)
-  : __what(_in) {}
+zpt::CastException::CastException(std::string const& _what)
+  : __what(_what) {}
 
 zpt::CastException::~CastException() throw() {}
 

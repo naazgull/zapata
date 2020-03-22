@@ -22,26 +22,20 @@
 
 #include <zapata/connector/layer.h>
 
-auto
-zpt::DB_DRIVER() -> size_t& {
-    static size_t _global{ 0 };
-    return _global;
-}
-
 zpt::storage::layer::connection::connection(zpt::json _config)
   : __config{ _config } {}
 
 auto
 zpt::storage::layer::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
-    for (auto [_name, _connector] : this->__connectors) {
-        _connector->open(_options[_name]);
+    for (auto [_name, _connector] : zpt::storage::layer::connection::__connectors) {
+        _connector->open(_options["storage"][_name]);
     }
     return this;
 }
 
 auto
 zpt::storage::layer::connection::close() -> zpt::storage::connection::type* {
-    for (auto [_, _connector] : this->__connectors) {
+    for (auto [_, _connector] : zpt::storage::layer::connection::__connectors) {
         _connector->close();
     }
     return this;
@@ -54,9 +48,8 @@ zpt::storage::layer::connection::session() -> zpt::storage::session {
 
 auto
 zpt::storage::layer::connection::add(std::string _name, zpt::storage::connection _connector)
-  -> zpt::storage::connection::type* {
-    this->__connectors.insert(std::make_pair(_name, _connector));
-    return this;
+  -> void {
+    zpt::storage::layer::connection::__connectors.insert(std::make_pair(_name, _connector));
 }
 
 auto
@@ -66,12 +59,12 @@ zpt::storage::layer::connection::config() -> zpt::json& {
 
 auto
 zpt::storage::layer::connection::connectors() -> std::map<std::string, zpt::storage::connection>& {
-    return this->__connectors;
+    return zpt::storage::layer::connection::__connectors;
 }
 
 zpt::storage::layer::session::session(zpt::storage::layer::connection& _connection)
   : __connection{ _connection } {
-    for (auto [_name, _connector] : this->__connection.connectors()) {
+    for (auto [_name, _connector] : zpt::storage::layer::connection::connectors()) {
         this->__sessions.insert(std::make_pair(_name, _connector->session()));
     }
 }
@@ -185,7 +178,7 @@ zpt::storage::layer::collection::collections() -> std::map<std::string, zpt::sto
 
 zpt::storage::layer::action::action(zpt::storage::layer::collection& _collection)
   : __collection{ _collection }
-  , __config{ this->__collection.database().session().connection().config()["order"] } {}
+  , __config{ this->__collection.database().session().connection().config()["storage"]["order"] } {}
 
 auto
 zpt::storage::layer::action::collection() -> zpt::storage::layer::collection& {
@@ -810,6 +803,7 @@ zpt::storage::layer::action_find::patch(zpt::json _document) -> zpt::storage::ac
 
 auto
 zpt::storage::layer::action_find::sort(std::string _attribute) -> zpt::storage::action::type* {
+    std::cout << this->__config << std::endl << std::flush;
     if (this->__config["find"]->ok()) {
         for (auto [_, __, _name] : this->__config["find"]) {
             this->__actions[static_cast<std::string>(_name)]->sort(_attribute);
@@ -913,7 +907,7 @@ zpt::storage::layer::result::fetch(size_t _amount) -> zpt::json {
         for (auto [_, __, _name] : this->__action.config()["fetch"]) {
             zpt::json _to_return = this->__results[_name]->fetch(_amount);
             if ((_amount == 1 && _to_return->type() == zpt::JSObject) ||
-                (_amount > 1 && _to_return->type() == zpt::JSArray)) {
+                _to_return->type() == zpt::JSArray) {
                 return _to_return;
             }
         }
@@ -922,7 +916,7 @@ zpt::storage::layer::result::fetch(size_t _amount) -> zpt::json {
         for (auto [_, _result] : this->__results) {
             zpt::json _to_return = _result->fetch(_amount);
             if ((_amount == 1 && _to_return->type() == zpt::JSObject) ||
-                (_amount > 1 && _to_return->type() == zpt::JSArray)) {
+                _to_return->type() == zpt::JSArray) {
                 return _to_return;
             }
         }

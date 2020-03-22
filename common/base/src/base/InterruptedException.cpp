@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/exceptions/InterruptedException.h>
 
-zpt::InterruptedException::InterruptedException(std::string _in)
-  : __what(_in) {}
+zpt::InterruptedException::InterruptedException(std::string const& _what)
+  : __what(_what) {}
 
 zpt::InterruptedException::~InterruptedException() throw() {}
 

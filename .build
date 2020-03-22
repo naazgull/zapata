@@ -91,6 +91,15 @@ do
 	    fi
         popd > /dev/null
 	    ;;
+	asan)
+        pushd ${package} > /dev/null
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-fsanitize=address -fno-omit-frame-pointer -ggdb3 -Wall -fno-stack-protector" LDFLAGS="-lasan"
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
+        popd > /dev/null
+	    ;;
 	debug)
         pushd ${package} > /dev/null
 	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"

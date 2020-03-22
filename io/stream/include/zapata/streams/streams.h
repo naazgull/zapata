@@ -36,37 +36,6 @@ class stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 
-    stream() = default;
-    stream(std::ios& _rhs);
-    stream(zpt::stream const& _rhs) = delete;
-    stream(zpt::stream&& _rhs) = delete;
-    virtual ~stream() = default;
-
-    auto operator=(zpt::stream const& _rhs) -> zpt::stream& = delete;
-    auto operator=(zpt::stream&& _rhs) -> zpt::stream& = delete;
-
-    auto operator=(int _rhs) -> zpt::stream&;
-    auto operator=(const std::string& _rhs) -> zpt::stream&;
-    template<typename T>
-    auto operator>>(T& _out) -> zpt::stream&;
-    template<typename T>
-    auto operator<<(T _in) -> zpt::stream&;
-    auto operator<<(ostream_manipulator _in) -> zpt::stream&;
-    auto operator-> () -> std::iostream*;
-    auto operator*() -> std::iostream&;
-
-    operator int();
-    operator std::string&();
-
-    auto swap(std::ios& _rhs) -> zpt::stream&;
-    auto swap(zpt::stream& _rhs) -> zpt::stream&;
-    auto swap(std::unique_ptr<zpt::stream>& _rhs) -> zpt::stream&;
-    template<typename T, typename... Args>
-    auto swap(Args... _args) -> zpt::stream&;
-
-    template<typename T, typename... Args>
-    static auto alloc(Args... _args) -> std::unique_ptr<zpt::stream>;
-
     class polling {
       public:
         constexpr static int MAX_EVENT_PER_POLL{ 10 };
@@ -86,12 +55,47 @@ class stream {
         zpt::lf::queue<zpt::stream*> __alive_streams;
     };
 
+    stream() = default;
+    stream(std::ios& _rhs);
+    stream(zpt::stream const& _rhs) = delete;
+    stream(zpt::stream&& _rhs) = delete;
+    virtual ~stream() = default;
+
+    auto operator=(zpt::stream const& _rhs) -> zpt::stream& = delete;
+    auto operator=(zpt::stream&& _rhs) -> zpt::stream& = delete;
+
+    auto operator=(int _rhs) -> zpt::stream&;
+    template<typename T>
+    auto operator>>(T& _out) -> zpt::stream&;
+    template<typename T>
+    auto operator<<(T _in) -> zpt::stream&;
+    auto operator<<(ostream_manipulator _in) -> zpt::stream&;
+    auto operator-> () -> std::iostream*;
+    auto operator*() -> std::iostream&;
+
+    operator int();
+
+    auto transport(const std::string& _rhs) -> zpt::stream&;
+    auto transport() -> std::string&;
+    auto uri(const std::string& _rhs) -> zpt::stream&;
+    auto uri() -> std::string&;
+
+    auto swap(std::ios& _rhs) -> zpt::stream&;
+    auto swap(zpt::stream& _rhs) -> zpt::stream&;
+    auto swap(std::unique_ptr<zpt::stream>& _rhs) -> zpt::stream&;
+    template<typename T, typename... Args>
+    auto swap(Args... _args) -> zpt::stream&;
+
+    template<typename T, typename... Args>
+    static auto alloc(Args... _args) -> std::unique_ptr<zpt::stream>;
+
   private:
     stream(std::unique_ptr<std::iostream> _underlying);
 
     std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
+    std::string __uri{ "" };
     zpt::lf::spin_lock __input_lock;
     zpt::lf::spin_lock __output_lock;
 };
@@ -134,6 +138,9 @@ zpt::stream::alloc(Args... _args) -> std::unique_ptr<zpt::stream> {
     std::unique_ptr<zpt::stream> _to_return{ new zpt::stream{ std::make_unique<T>(_args...) } };
     if constexpr (std::is_convertible<T, int>::value) {
         (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));
+    }
+    if constexpr (std::is_convertible<T, std::string>::value) {
+        _to_return->uri(static_cast<std::string>(static_cast<T&>(**_to_return)));
     }
     return _to_return;
 }

@@ -26,7 +26,6 @@ SOFTWARE.
 #include <zapata/base/expect.h>
 
 namespace zpt {
-
 std::string* tz = nullptr;
 }
 

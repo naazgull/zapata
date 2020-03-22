@@ -30,7 +30,7 @@ SOFTWARE.
 namespace zpt {
 class CastException : public std::exception {
   public:
-    CastException(std::string _what);
+    CastException(std::string const& _what);
     virtual ~CastException() throw();
 
     auto what() const noexcept -> const char* override;

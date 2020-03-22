@@ -41,7 +41,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
               static_cast<unsigned int>(_config["port"])) };
             do {
                 auto _client = _server_sock->accept();
-                (*_client.get()) = "http";
+                _client->transport("http");
                 _polling.listen_on(_client);
             } while (true);
         });

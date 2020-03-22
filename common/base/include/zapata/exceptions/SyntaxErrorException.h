@@ -33,7 +33,7 @@ class SyntaxErrorException : public std::exception {
     std::string __what;
 
   public:
-    SyntaxErrorException(std::string _what);
+    SyntaxErrorException(std::string const& _what);
     virtual ~SyntaxErrorException() throw();
 
     auto what() const noexcept -> const char* override;

@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <zapata/exceptions/ParserEOF.h>
 
-zpt::ParserEOF::ParserEOF(std::string _in)
-  : __what(_in) {}
+zpt::ParserEOF::ParserEOF(std::string const& _what)
+  : __what(_what) {}
 
 zpt::ParserEOF::~ParserEOF() throw() {}
 

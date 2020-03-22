@@ -27,14 +27,14 @@ SOFTWARE.
 #include <sstream>
 #include <zapata/text/convert.h>
 
-zpt::ExpectationException::ExpectationException(std::string _in,
+zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 int _http_code,
                                                 int _code,
                                                 std::string _desc,
                                                 int _line,
                                                 std::string _file)
   : std::exception()
-  , __what(_in)
+  , __what(_what)
   , __http_code(_http_code)
   , __code(_code)
   , __description(_desc)
@@ -51,7 +51,7 @@ zpt::ExpectationException::ExpectationException(std::string _in,
     }
 }
 
-zpt::ExpectationException::ExpectationException(std::string _in,
+zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 int _http_code,
                                                 int _code,
                                                 std::string _desc,
@@ -60,7 +60,7 @@ zpt::ExpectationException::ExpectationException(std::string _in,
                                                 char** _backtrace,
                                                 size_t _backtrace_size)
   : std::exception()
-  , __what(_in)
+  , __what(_what)
   , __http_code(_http_code)
   , __code(_code)
   , __description(_desc)

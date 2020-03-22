@@ -34,6 +34,7 @@
 #include <iomanip>
 
 #include <zapata/base/expect.h>
+#include <zapata/log/log.h>
 
 namespace zpt {
 namespace lf {
@@ -144,6 +145,7 @@ template<typename T>
 zpt::lf::hptr_domain<T>::~hptr_domain() {
     this->clear();
     delete[] this->__hp;
+    delete[] this->__next_thr_idx;
 }
 
 template<typename T>

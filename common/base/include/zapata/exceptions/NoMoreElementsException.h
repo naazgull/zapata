@@ -20,7 +20,7 @@ class NoMoreElementsException : public std::exception {
     std::string __what;
 
   public:
-    NoMoreElementsException(std::string _what);
+    NoMoreElementsException(std::string const& _what);
     virtual ~NoMoreElementsException() throw();
 
     auto what() const noexcept -> const char* override;

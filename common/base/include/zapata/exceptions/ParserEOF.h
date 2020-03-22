@@ -33,7 +33,7 @@ class ParserEOF : public std::exception {
     std::string __what;
 
   public:
-    ParserEOF(std::string _what);
+    ParserEOF(std::string const& _what);
     virtual ~ParserEOF() throw();
 
     const char* what();

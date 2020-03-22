@@ -79,18 +79,18 @@ zpt::net::transport::http::receive(zpt::message& _message) -> void {
                                   << " bytes content",
          zpt::trace);
 
-    this
-      ->set_headers(_message, _request) //
+    this //
+      ->set_headers(_message, _request)
       .set_body(_message, _request)
       .set_params(_message, _request);
-    _message
-      ->version() //
+    _message //
+      ->version()
       .assign(_request->version());
-    _message
-      ->scheme() //
+    _message //
+      ->scheme()
       .assign("http");
-    _message
-      ->uri() //
+    _message //
+      ->uri()
       .assign(_request->url());
     _message->method() = _request->method();
     _message->keep_alive() = (_request->header("Connection") == "keep-alive");

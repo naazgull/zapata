@@ -34,7 +34,7 @@ class NoAttributeNameException : public std::exception {
     std::string __what;
 
   public:
-    NoAttributeNameException(std::string _what);
+    NoAttributeNameException(std::string const& _what);
     virtual ~NoAttributeNameException() throw();
 
     auto what() const noexcept -> const char* override;

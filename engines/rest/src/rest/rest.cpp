@@ -52,13 +52,8 @@ zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _m
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
           _transport->send(_message);
-          if (_message->keep_alive()) {
-              std::unique_ptr<zpt::stream> _give_back{ &_message->stream() };
-              _polling.listen_on(_give_back);
-          }
-          else {
-              std::unique_ptr<zpt::stream> _to_dispose{ &_message->stream() };
-          }
+          std::unique_ptr<zpt::stream> _give_back{ &_message->stream() };
+          _polling.listen_on(_give_back);
       });
 }
 

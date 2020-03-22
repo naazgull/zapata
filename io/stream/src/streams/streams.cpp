@@ -36,12 +36,6 @@ zpt::stream::operator=(int _rhs) -> zpt::stream& {
 }
 
 auto
-zpt::stream::operator=(const std::string& _rhs) -> zpt::stream& {
-    this->__transport = _rhs;
-    return (*this);
-}
-
-auto
 zpt::stream::operator<<(ostream_manipulator _in) -> zpt::stream& {
     (*this->__underlying.get()) << _in;
     return (*this);
@@ -59,8 +53,26 @@ zpt::stream::operator int() {
     return this->__fd;
 }
 
-zpt::stream::operator std::string&() {
+auto
+zpt::stream::transport(const std::string& _rhs) -> zpt::stream& {
+    this->__transport = _rhs;
+    return (*this);
+}
+
+auto
+zpt::stream::transport() -> std::string& {
     return this->__transport;
+}
+
+auto
+zpt::stream::uri(const std::string& _rhs) -> zpt::stream& {
+    this->__uri = _rhs;
+    return (*this);
+}
+
+auto
+zpt::stream::uri() -> std::string& {
+    return this->__uri;
 }
 
 auto
@@ -137,6 +149,7 @@ zpt::stream::polling::pool() -> void {
                 ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
                 ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
                 std::unique_ptr<zpt::stream> _to_dispose{ _stream };
+                zlog("Closing connection to " << _stream->uri(), zpt::trace);
                 this->mute(*_stream);
             }
             else if ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN) {

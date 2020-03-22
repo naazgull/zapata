@@ -11,8 +11,8 @@
 */
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-zpt::NoMoreElementsException::NoMoreElementsException(std::string _in)
-  : __what(_in) {}
+zpt::NoMoreElementsException::NoMoreElementsException(std::string const& _what)
+  : __what(_what) {}
 
 zpt::NoMoreElementsException::~NoMoreElementsException() throw() {}
 
