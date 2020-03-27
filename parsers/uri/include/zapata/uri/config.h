@@ -28,7 +28,7 @@
 #define HAVE_LIBZAPATA_BASE 1
 
 /* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
-   */
+ */
 #define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */

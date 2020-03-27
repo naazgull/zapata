@@ -28,7 +28,9 @@ SOFTWARE.
 #include <iomanip>
 
 auto
-zpt::quoted_printable::encode(std::string _quote, std::string _charset, std::string& _out) -> void {
+zpt::quoted_printable::encode(std::string const& _quote,
+                              std::string const& _charset,
+                              std::string& _out) -> void {
     std::ostringstream _oss;
     _oss << "=?" << _charset << "?Q?" << std::flush;
     std::string _s(_quote);
@@ -45,7 +47,8 @@ zpt::quoted_printable::encode(std::string _quote, std::string _charset, std::str
 }
 
 auto
-zpt::quoted_printable::r_encode(std::string _quote, std::string _charset) -> std::string {
+zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset)
+  -> std::string {
     std::string _out;
     zpt::quoted_printable::encode(_quote, _charset, _out);
     return _out;
@@ -114,14 +117,14 @@ zpt::url::decode(std::string& _out) -> void {
 }
 
 auto
-zpt::url::r_encode(std::string _out) -> std::string {
+zpt::url::r_encode(std::string const& _out) -> std::string {
     std::string _return(_out.data());
     zpt::url::encode(_return);
     return _return;
 }
 
 auto
-zpt::url::r_decode(std::string _out) -> std::string {
+zpt::url::r_decode(std::string const& _out) -> std::string {
     std::string _return(_out.data());
     zpt::url::decode(_return);
     return _return;

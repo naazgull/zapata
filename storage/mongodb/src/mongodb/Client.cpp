@@ -27,12 +27,12 @@ SOFTWARE.
 zpt::mongodb::ClientPtr::ClientPtr(zpt::mongodb::Client* _target)
   : std::shared_ptr<zpt::mongodb::Client>(_target) {}
 
-zpt::mongodb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path)
+zpt::mongodb::ClientPtr::ClientPtr(zpt::json _options, std::string const& _conf_path)
   : std::shared_ptr<zpt::mongodb::Client>(new zpt::mongodb::Client(_options, _conf_path)) {}
 
 zpt::mongodb::ClientPtr::~ClientPtr() {}
 
-zpt::mongodb::Client::Client(zpt::json _options, std::string _conf_path)
+zpt::mongodb::Client::Client(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     this->connection(_options->get_path(_conf_path));
@@ -82,7 +82,7 @@ zpt::mongodb::Client::reconnect() -> void {
 }
 
 auto
-zpt::mongodb::Client::insert(std::string _collection,
+zpt::mongodb::Client::insert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
@@ -129,7 +129,7 @@ zpt::mongodb::Client::insert(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::upsert(std::string _collection,
+zpt::mongodb::Client::upsert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
@@ -202,7 +202,7 @@ zpt::mongodb::Client::upsert(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::save(std::string _collection,
+zpt::mongodb::Client::save(std::string const& _collection,
                            std::string _href,
                            zpt::json _document,
                            zpt::json _opts) -> int {
@@ -229,7 +229,7 @@ zpt::mongodb::Client::save(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::set(std::string _collection,
+zpt::mongodb::Client::set(std::string const& _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -256,7 +256,7 @@ zpt::mongodb::Client::set(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::set(std::string _collection,
+zpt::mongodb::Client::set(std::string const& _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -293,7 +293,7 @@ zpt::mongodb::Client::set(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::unset(std::string _collection,
+zpt::mongodb::Client::unset(std::string const& _collection,
                             std::string _href,
                             zpt::json _document,
                             zpt::json _opts) -> int {
@@ -320,7 +320,7 @@ zpt::mongodb::Client::unset(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::unset(std::string _collection,
+zpt::mongodb::Client::unset(std::string const& _collection,
                             zpt::json _pattern,
                             zpt::json _document,
                             zpt::json _opts) -> int {
@@ -357,7 +357,9 @@ zpt::mongodb::Client::unset(std::string _collection,
 }
 
 auto
-zpt::mongodb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+zpt::mongodb::Client::remove(std::string const& _collection,
+                             std::string const& _href,
+                             zpt::json _opts) -> int {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -377,7 +379,8 @@ zpt::mongodb::Client::remove(std::string _collection, std::string _href, zpt::js
 }
 
 auto
-zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) {
         _pattern = zpt::json::object();
@@ -404,8 +407,9 @@ zpt::mongodb::Client::remove(std::string _collection, zpt::json _pattern, zpt::j
 }
 
 auto
-zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt::json _opts)
-  -> zpt::json {
+zpt::mongodb::Client::get(std::string const& _collection,
+                          std::string const& _topic,
+                          zpt::json _opts) -> zpt::json {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -439,13 +443,14 @@ zpt::mongodb::Client::get(std::string _collection, std::string _topic, zpt::json
 }
 
 auto
-zpt::mongodb::Client::query(std::string _collection, std::string _pattern, zpt::json _opts)
-  -> zpt::json {
+zpt::mongodb::Client::query(std::string const& _collection,
+                            std::string const& _pattern,
+                            zpt::json _opts) -> zpt::json {
     return this->query(_collection, zpt::json(_pattern), _opts);
 }
 
 auto
-zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts)
+zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
   -> zpt::json {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) {
@@ -541,7 +546,7 @@ zpt::mongodb::Client::query(std::string _collection, zpt::json _pattern, zpt::js
 }
 
 auto
-zpt::mongodb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zpt::json {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     zpt::JSONArr _elements;
 

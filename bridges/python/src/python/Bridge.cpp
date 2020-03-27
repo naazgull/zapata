@@ -72,7 +72,7 @@ zpt::python::Bridge::unbind() -> void {
 }
 
 auto
-zpt::python::Bridge::eval(std::string _call) -> zpt::python::object {
+zpt::python::Bridge::eval(std::string const& _call) -> zpt::python::object {
     return zpt::python::object();
 }
 
@@ -82,7 +82,7 @@ zpt::python::Bridge::initialize() -> void {
 }
 
 auto
-zpt::python::Bridge::load_module(std::string _module) -> void {
+zpt::python::Bridge::load_module(std::string const& _module) -> void {
     if (_module.find(".py") != std::string::npos) {
         zlog(std::string("loading module '") + _module + std::string("'"), zpt::notice);
         FILE* _fp = ::fopen(_module.data(), "r");
@@ -111,7 +111,7 @@ zpt::python::Bridge::is_booted() -> bool {
 }
 
 auto
-zpt::python::Bridge::defmdl(std::string _name, PyObject* (*_func)(void)) -> void {
+zpt::python::Bridge::defmdl(std::string const& _name, PyObject* (*_func)(void)) -> void {
     if (zpt::python::__modules->size() == 0) {
         zpt::python::__modules->push_back(std::make_pair("zpt", &zpt::python::module::init));
     }
@@ -119,7 +119,7 @@ zpt::python::Bridge::defmdl(std::string _name, PyObject* (*_func)(void)) -> void
 }
 
 auto
-zpt::python::Bridge::add_syspath(std::string _name) -> void {
+zpt::python::Bridge::add_syspath(std::string const& _name) -> void {
     zpt::python::__sys_path << _name;
 }
 

@@ -60,7 +60,7 @@ zpt::ls(std::string dir, std::vector<std::string>& result, bool recursive) {
 }
 
 bool
-zpt::mkdir_recursive(std::string _name) {
+zpt::mkdir_recursive(std::string const& _name) {
     std::istringstream _iss(_name);
     std::string _line;
     int _count = 0;
@@ -80,7 +80,7 @@ zpt::mkdir_recursive(std::string _name) {
 }
 
 bool
-zpt::copy_path(std::string _from, std::string _to) {
+zpt::copy_path(std::string const& _from, std::string const& _to) {
     int _read_fd;
     int _write_fd;
     struct stat _stat_buf;
@@ -99,7 +99,7 @@ zpt::copy_path(std::string _from, std::string _to) {
 }
 
 bool
-zpt::move_path(std::string _from, std::string _to) {
+zpt::move_path(std::string const& _from, std::string const& _to) {
     if (zpt::copy_path(_from, _to)) {
         return std::remove(_from.c_str()) != 0;
     }
@@ -107,7 +107,7 @@ zpt::move_path(std::string _from, std::string _to) {
 }
 
 bool
-zpt::load_path(std::string _in, std::string& _out) {
+zpt::load_path(std::string const& _in, std::string& _out) {
     std::ifstream _ifs;
     _ifs.open(_in.data());
 
@@ -123,7 +123,7 @@ zpt::load_path(std::string _in, std::string& _out) {
 }
 
 bool
-zpt::load_path(std::string _in, std::wstring& _out) {
+zpt::load_path(std::string const& _in, std::wstring& _out) {
     std::wifstream _ifs;
     _ifs.open(_in.data());
 
@@ -139,7 +139,7 @@ zpt::load_path(std::string _in, std::wstring& _out) {
 }
 
 bool
-zpt::dump_path(std::string _in, std::string& _content) {
+zpt::dump_path(std::string const& _in, std::string& _content) {
     std::ofstream _ofs;
     _ofs.open(_in.data());
     _ofs << _content << std::flush;
@@ -149,7 +149,7 @@ zpt::dump_path(std::string _in, std::string& _content) {
 }
 
 bool
-zpt::dump_path(std::string _in, std::wstring& _content) {
+zpt::dump_path(std::string const& _in, std::wstring& _content) {
     std::wofstream _ofs;
     _ofs.open(_in.data());
     _ofs << _content << std::flush;
@@ -202,7 +202,7 @@ zpt::glob(std::string dir, std::vector<std::string>& result, std::string pattern
 }
 
 bool
-zpt::is_dir(std::string _path) {
+zpt::is_dir(std::string const& _path) {
     struct stat _s;
     if (stat(_path.data(), &_s) == 0) {
         return _s.st_mode & S_IFDIR;
@@ -211,7 +211,7 @@ zpt::is_dir(std::string _path) {
 }
 
 bool
-zpt::file_exists(std::string _path) {
+zpt::file_exists(std::string const& _path) {
     struct stat _s;
     if (stat(_path.data(), &_s) == 0) {
         return true;

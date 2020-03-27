@@ -932,7 +932,7 @@ zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
     socklen_t _clilen = sizeof(struct sockaddr_in);
     int _newsockfd = ::accept(this->__sockfd, (struct sockaddr*)&_cli_addr, &_clilen);
 
-    expect(_newsockfd > 0, "accepted file descriptor is invalid", 500, 0);
+    expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
 
     struct linger _so_linger;
     _so_linger.l_onoff = 1;

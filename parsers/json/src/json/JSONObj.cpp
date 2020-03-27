@@ -8,7 +8,7 @@ zpt::JSONObjT::JSONObjT() {}
 zpt::JSONObjT::~JSONObjT() {}
 
 auto
-zpt::JSONObjT::push(std::string _name) -> JSONObjT& {
+zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
     if (this->__name.length() == 0) {
         this->__name.assign(_name.data());
     }
@@ -80,7 +80,7 @@ zpt::JSONObjT::pop(const char* _name) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::pop(std::string _name) -> JSONObjT& {
+zpt::JSONObjT::pop(std::string const& _name) -> JSONObjT& {
     auto _found = this->__underlying.find(_name);
     if (_found != this->__underlying.end()) {
         this->__underlying.erase(_found);
@@ -104,7 +104,7 @@ zpt::JSONObjT::key_for(size_t _idx) -> std::string {
 }
 
 auto
-zpt::JSONObjT::get_path(std::string _path, std::string _separator) -> zpt::json {
+zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     std::istringstream _iss(_path);
     std::string _part;
     std::string _remainder;
@@ -132,7 +132,8 @@ zpt::JSONObjT::get_path(std::string _path, std::string _separator) -> zpt::json 
 }
 
 auto
-zpt::JSONObjT::set_path(std::string _path, zpt::json _value, std::string _separator) -> JSONObjT& {
+zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
+  -> JSONObjT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -164,7 +165,7 @@ zpt::JSONObjT::set_path(std::string _path, zpt::json _value, std::string _separa
 }
 
 auto
-zpt::JSONObjT::del_path(std::string _path, std::string _separator) -> JSONObjT& {
+zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator) -> JSONObjT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -341,7 +342,7 @@ auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
     return this->operator[](std::string(_idx));
 }
 
-auto zpt::JSONObjT::operator[](std::string _idx) -> zpt::json& {
+auto zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json& {
     auto _found = this->__underlying.find(_idx);
     if (_found != this->__underlying.end()) {
         return _found->second;
@@ -483,7 +484,7 @@ zpt::JSONObj::operator zpt::pretty() {
 }
 
 auto
-zpt::JSONObj::operator<<(std::string _in) -> zpt::JSONObj& {
+zpt::JSONObj::operator<<(std::string const& _in) -> zpt::JSONObj& {
     (*this)->push(_in);
     return *this;
 }

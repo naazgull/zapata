@@ -13,11 +13,7 @@ zpt::JSONElementT::JSONElementT(JSONElementT&& _rhs) {
     (*this) = _rhs;
 }
 
-zpt::JSONElementT::JSONElementT(std::initializer_list<zpt::JSONElementT> _list) {
-    (*this) = _list;
-}
-
-zpt::JSONElementT::JSONElementT(std::string _rhs) {
+zpt::JSONElementT::JSONElementT(std::string const& _rhs) {
     (*this) = _rhs;
 }
 
@@ -52,10 +48,6 @@ zpt::JSONElementT::JSONElementT(unsigned int _rhs) {
 #endif
 
 zpt::JSONElementT::JSONElementT(zpt::timestamp_t _rhs) {
-    (*this) = _rhs;
-}
-
-zpt::JSONElementT::JSONElementT(zpt::json _rhs) {
     (*this) = _rhs;
 }
 
@@ -601,49 +593,7 @@ zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
 }
 
 auto
-zpt::JSONElementT::operator=(std::initializer_list<zpt::JSONElementT> _list) -> JSONElementT& {
-    if (_list.size() == 1) {
-        (*this) = (*_list.begin());
-        return (*this);
-    }
-
-    bool _is_array =
-      (_list.size() > 1 && _list.begin()->__target.__type == zpt::JSString &&
-       (*_list.begin()->__target.__string) == "1b394520-2fed-4118-b622-940f25b8b35e");
-
-    expect(_is_array || (_list.size() % 2 == 0 && _list.begin()->__target.__type == zpt::JSString),
-           "initializer list parameter doesn't seem either an array or an object",
-           500,
-           0);
-
-    this->type(_is_array ? zpt::JSArray : zpt::JSObject);
-
-    size_t _idx{ 0 };
-    for (auto _element : _list) {
-        if (_is_array && _idx == 0) {
-            ++_idx;
-            continue;
-        }
-
-        if (!_is_array && _idx % 2 == 0) {
-            this->__target.__object->push(*_element.__target.__string);
-            ++_idx;
-            continue;
-        }
-
-        if (_is_array) {
-            this->__target.__array->push(_element);
-        }
-        else {
-            this->__target.__object->push(_element);
-        }
-        ++_idx;
-    }
-    return (*this);
-}
-
-auto
-zpt::JSONElementT::operator=(std::string _rhs) -> JSONElementT& {
+zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
     this->type(zpt::JSString);
     this->__target.__string = std::make_shared<std::string>(std::string(_rhs));
     return (*this);
@@ -792,53 +742,6 @@ zpt::JSONElementT::operator std::string() {
         }
     }
     return _out;
-}
-
-zpt::JSONElementT::operator zpt::pretty() {
-    std::string _out;
-    switch (this->type()) {
-        case zpt::JSObject: {
-            this->obj()->prettify(_out);
-            break;
-        }
-        case zpt::JSArray: {
-            this->arr()->prettify(_out);
-            break;
-        }
-        case zpt::JSString: {
-            _out.assign(this->str().data());
-            break;
-        }
-        case zpt::JSInteger: {
-            zpt::tostr(_out, this->intr());
-            break;
-        }
-        case zpt::JSDouble: {
-            zpt::tostr(_out, this->dbl());
-            break;
-        }
-        case zpt::JSBoolean: {
-            zpt::tostr(_out, this->bln());
-            break;
-        }
-        case zpt::JSNil: {
-            _out.assign("");
-            break;
-        }
-        case zpt::JSDate: {
-            _out.insert(_out.length(), zpt::timestamp(this->date()));
-            break;
-        }
-        case zpt::JSLambda: {
-            _out.assign(this->lbd()->signature());
-            break;
-        }
-        case zpt::JSRegex: {
-            _out.assign(static_cast<std::string>(this->rgx()));
-            break;
-        }
-    }
-    return zpt::pretty(_out);
 }
 
 zpt::JSONElementT::operator bool() {
@@ -1216,7 +1119,7 @@ zpt::JSONElementT::operator<<(const char* _in) -> zpt::JSONElementT& {
 }
 
 auto
-zpt::JSONElementT::operator<<(std::string _in) -> zpt::JSONElementT& {
+zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->push(_in);
@@ -2241,7 +2144,7 @@ zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) -> zpt::json {
 }
 
 auto
-zpt::JSONElementT::get_path(std::string _path, std::string _separator) -> zpt::json {
+zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -2265,8 +2168,9 @@ zpt::JSONElementT::get_path(std::string _path, std::string _separator) -> zpt::j
 }
 
 auto
-zpt::JSONElementT::set_path(std::string _path, zpt::json _value, std::string _separator)
-  -> JSONElementT& {
+zpt::JSONElementT::set_path(std::string const& _path,
+                            zpt::json _value,
+                            std::string const& _separator) -> JSONElementT& {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -2292,7 +2196,8 @@ zpt::JSONElementT::set_path(std::string _path, zpt::json _value, std::string _se
 }
 
 auto
-zpt::JSONElementT::del_path(std::string _path, std::string _separator) -> JSONElementT& {
+zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator)
+  -> JSONElementT& {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -2321,14 +2226,15 @@ auto
 zpt::JSONElementT::flatten() -> zpt::json {
     if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
         zpt::json _return = zpt::json::object();
-        this->inspect(
-          { "$any", "type" },
-          [&](std::string _object_path, std::string _key, zpt::JSONElementT& _parent) -> void {
-              zpt::json _self = this->get_path(_object_path);
-              if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
-                  _return << _object_path << _self;
-              }
-          });
+        this->inspect({ "$any", "type" },
+                      [&](std::string const& _object_path,
+                          std::string const& _key,
+                          zpt::JSONElementT& _parent) -> void {
+                          zpt::json _self = this->get_path(_object_path);
+                          if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
+                              _return << _object_path << _self;
+                          }
+                      });
         return _return;
     }
     else {

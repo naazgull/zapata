@@ -281,7 +281,7 @@ zpt::authenticator::OAuth2::authorize(zpt::performative _performative,
 }
 
 auto
-zpt::authenticator::OAuth2::authorize(std::string _topic,
+zpt::authenticator::OAuth2::authorize(std::string const& _topic,
                                       zpt::json _envelope,
                                       zpt::json _roles_needed) -> zpt::json {
     std::string _access_token = zpt::authenticator::extract(_envelope);
@@ -375,7 +375,8 @@ zpt::authenticator::OAuth2::refresh(zpt::performative _performative,
 }
 
 auto
-zpt::authenticator::OAuth2::validate(std::string _access_token, zpt::json _opts) -> zpt::json {
+zpt::authenticator::OAuth2::validate(std::string const& _access_token, zpt::json _opts)
+  -> zpt::json {
     zpt::json _token = this->get_token(_access_token);
     expect(_token->ok(), "token is invalid", 403, 0);
     zpt::timestamp_t _now = zpt::timestamp();

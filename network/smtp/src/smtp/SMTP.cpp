@@ -40,7 +40,7 @@ zpt::SMTP::SMTP()
 zpt::SMTP::~SMTP() {}
 
 auto
-zpt::SMTP::credentials(std::string _user, std::string _passwd) -> void {
+zpt::SMTP::credentials(std::string const& _user, std::string const& _passwd) -> void {
     this->__user.assign(_user);
     this->__passwd.assign(_passwd);
 }
@@ -56,7 +56,7 @@ zpt::SMTP::passwd() -> std::string {
 }
 
 auto
-zpt::SMTP::connect(std::string _connection) -> void {
+zpt::SMTP::connect(std::string const& _connection) -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     this->__connection.assign(_connection);
     this->__uri = zpt::uri::parse(_connection);

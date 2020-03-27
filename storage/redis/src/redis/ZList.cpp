@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <zapata/redis/ZList.h>
 
-zpt::redis::ZList::ZList(zpt::json _options, std::string _conf_path)
+zpt::redis::ZList::ZList(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     try {
@@ -96,7 +96,7 @@ zpt::redis::ZList::reconnect() -> void {
 }
 
 auto
-zpt::redis::ZList::set(std::string _key, zpt::timestamp_t _score, zpt::json _data) -> void {
+zpt::redis::ZList::set(std::string const& _key, zpt::timestamp_t _score, zpt::json _data) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -120,7 +120,8 @@ zpt::redis::ZList::set(std::string _key, zpt::timestamp_t _score, zpt::json _dat
 }
 
 auto
-zpt::redis::ZList::reset(std::string _key, zpt::timestamp_t _increment, zpt::json _data) -> void {
+zpt::redis::ZList::reset(std::string const& _key, zpt::timestamp_t _increment, zpt::json _data)
+  -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -144,12 +145,12 @@ zpt::redis::ZList::reset(std::string _key, zpt::timestamp_t _increment, zpt::jso
 }
 
 auto
-zpt::redis::ZList::del(std::string _key, zpt::json _data) -> void {
+zpt::redis::ZList::del(std::string const& _key, zpt::json _data) -> void {
     this->del(_key, (std::string)_data);
 }
 
 auto
-zpt::redis::ZList::del(std::string _key, std::string _data) -> void {
+zpt::redis::ZList::del(std::string const& _key, std::string const& _data) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -172,7 +173,7 @@ zpt::redis::ZList::del(std::string _key, std::string _data) -> void {
 }
 
 auto
-zpt::redis::ZList::del(std::string _key, zpt::timestamp_t _min) -> void {
+zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -194,7 +195,8 @@ zpt::redis::ZList::del(std::string _key, zpt::timestamp_t _min) -> void {
 }
 
 auto
-zpt::redis::ZList::del(std::string _key, zpt::timestamp_t _min, zpt::timestamp_t _max) -> void {
+zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min, zpt::timestamp_t _max)
+  -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -216,7 +218,7 @@ zpt::redis::ZList::del(std::string _key, zpt::timestamp_t _min, zpt::timestamp_t
 }
 
 auto
-zpt::redis::ZList::rangebypos(std::string _key, long int _min, long int _max) -> zpt::json {
+zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _max) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -307,7 +309,7 @@ zpt::redis::ZList::rangebypos(std::string _key, long int _min, long int _max) ->
 }
 
 auto
-zpt::redis::ZList::range(std::string _key,
+zpt::redis::ZList::range(std::string const& _key,
                          zpt::timestamp_t _min,
                          zpt::timestamp_t _max,
                          int _direction,
@@ -446,7 +448,7 @@ zpt::redis::ZList::range(std::string _key,
 }
 
 auto
-zpt::redis::ZList::getall(std::string _key) -> zpt::json {
+zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -537,7 +539,7 @@ zpt::redis::ZList::getall(std::string _key) -> zpt::json {
 }
 
 auto
-zpt::redis::ZList::find(std::string _key, std::string _regexp) -> zpt::json {
+zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,

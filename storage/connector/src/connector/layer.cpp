@@ -47,7 +47,7 @@ zpt::storage::layer::connection::session() -> zpt::storage::session {
 }
 
 auto
-zpt::storage::layer::connection::add(std::string _name, zpt::storage::connection _connector)
+zpt::storage::layer::connection::add(std::string const& _name, zpt::storage::connection _connector)
   -> void {
     zpt::storage::layer::connection::__connectors.insert(std::make_pair(_name, _connector));
 }
@@ -101,11 +101,12 @@ zpt::storage::layer::session::sessions() -> std::map<std::string, zpt::storage::
 }
 
 auto
-zpt::storage::layer::session::database(std::string _db) -> zpt::storage::database {
+zpt::storage::layer::session::database(std::string const& _db) -> zpt::storage::database {
     return zpt::storage::database::alloc<zpt::storage::layer::database>(*this, _db);
 }
 
-zpt::storage::layer::database::database(zpt::storage::layer::session& _session, std::string _db)
+zpt::storage::layer::database::database(zpt::storage::layer::session& _session,
+                                        std::string const& _db)
   : __session{ _session } {
     for (auto [_name, _sss] : this->__session.sessions()) {
         this->__databases.insert(std::make_pair(_name, _sss->database(_db)));
@@ -113,7 +114,8 @@ zpt::storage::layer::database::database(zpt::storage::layer::session& _session, 
 }
 
 auto
-zpt::storage::layer::database::collection(std::string _collection) -> zpt::storage::collection {
+zpt::storage::layer::database::collection(std::string const& _collection)
+  -> zpt::storage::collection {
     return zpt::storage::collection::alloc<zpt::storage::layer::collection>(*this, _collection);
 }
 
@@ -128,7 +130,7 @@ zpt::storage::layer::database::databases() -> std::map<std::string, zpt::storage
 }
 
 zpt::storage::layer::collection::collection(zpt::storage::layer::database& _database,
-                                            std::string _collection)
+                                            std::string const& _collection)
   : __database{ _database } {
     for (auto [_name, _db] : this->__database.databases()) {
         this->__collections.insert(std::make_pair(_name, _db->collection(_collection)));
@@ -151,7 +153,7 @@ zpt::storage::layer::collection::remove(zpt::json _search) -> zpt::storage::acti
 }
 
 auto
-zpt::storage::layer::collection::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::collection::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action {
     return zpt::storage::action::alloc<zpt::storage::layer::action_replace>(*this, _id, _document);
 }
@@ -240,7 +242,7 @@ zpt::storage::layer::action_add::remove(zpt::json _search) -> zpt::storage::acti
 }
 
 auto
-zpt::storage::layer::action_add::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::action_add::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from an 'add' action", 500, 0);
     return this;
@@ -253,14 +255,15 @@ zpt::storage::layer::action_add::find(zpt::json _search) -> zpt::storage::action
 }
 
 auto
-zpt::storage::layer::action_add::set(std::string _attribute, zpt::json _value)
+zpt::storage::layer::action_add::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
     expect(false, "can't set from an 'add' action", 500, 0);
     return this;
 }
 
 auto
-zpt::storage::layer::action_add::unset(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_add::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action", 500, 0);
     return this;
 }
@@ -272,7 +275,8 @@ zpt::storage::layer::action_add::patch(zpt::json _document) -> zpt::storage::act
 }
 
 auto
-zpt::storage::layer::action_add::sort(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_add::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -362,7 +366,7 @@ zpt::storage::layer::action_modify::remove(zpt::json _search) -> zpt::storage::a
 }
 
 auto
-zpt::storage::layer::action_modify::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::action_modify::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'modify' action", 500, 0);
     return this;
@@ -375,7 +379,7 @@ zpt::storage::layer::action_modify::find(zpt::json _search) -> zpt::storage::act
 }
 
 auto
-zpt::storage::layer::action_modify::set(std::string _attribute, zpt::json _value)
+zpt::storage::layer::action_modify::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
     if (this->__config["modify"]->ok()) {
         for (auto [_, __, _name] : this->__config["modify"]) {
@@ -391,7 +395,8 @@ zpt::storage::layer::action_modify::set(std::string _attribute, zpt::json _value
 }
 
 auto
-zpt::storage::layer::action_modify::unset(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_modify::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     if (this->__config["modify"]->ok()) {
         for (auto [_, __, _name] : this->__config["modify"]) {
             this->__actions[static_cast<std::string>(_name)]->unset(_attribute);
@@ -421,7 +426,8 @@ zpt::storage::layer::action_modify::patch(zpt::json _document) -> zpt::storage::
 }
 
 auto
-zpt::storage::layer::action_modify::sort(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_modify::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -531,7 +537,7 @@ zpt::storage::layer::action_remove::remove(zpt::json _search) -> zpt::storage::a
 }
 
 auto
-zpt::storage::layer::action_remove::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::action_remove::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'remove' action", 500, 0);
     return this;
@@ -544,13 +550,14 @@ zpt::storage::layer::action_remove::find(zpt::json _search) -> zpt::storage::act
 }
 
 auto
-zpt::storage::layer::action_remove::set(std::string _attribute, zpt::json _value)
+zpt::storage::layer::action_remove::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
     return this;
 }
 
 auto
-zpt::storage::layer::action_remove::unset(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_remove::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -560,7 +567,8 @@ zpt::storage::layer::action_remove::patch(zpt::json _document) -> zpt::storage::
 }
 
 auto
-zpt::storage::layer::action_remove::sort(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_remove::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -663,7 +671,7 @@ zpt::storage::layer::action_replace::remove(zpt::json _search) -> zpt::storage::
 }
 
 auto
-zpt::storage::layer::action_replace::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::action_replace::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'replace' action", 500, 0);
     return this;
@@ -676,13 +684,14 @@ zpt::storage::layer::action_replace::find(zpt::json _search) -> zpt::storage::ac
 }
 
 auto
-zpt::storage::layer::action_replace::set(std::string _attribute, zpt::json _value)
+zpt::storage::layer::action_replace::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
     return this;
 }
 
 auto
-zpt::storage::layer::action_replace::unset(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_replace::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -692,7 +701,8 @@ zpt::storage::layer::action_replace::patch(zpt::json _document) -> zpt::storage:
 }
 
 auto
-zpt::storage::layer::action_replace::sort(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_replace::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -773,7 +783,7 @@ zpt::storage::layer::action_find::remove(zpt::json _search) -> zpt::storage::act
 }
 
 auto
-zpt::storage::layer::action_find::replace(std::string _id, zpt::json _document)
+zpt::storage::layer::action_find::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'find' action", 500, 0);
     return this;
@@ -786,13 +796,14 @@ zpt::storage::layer::action_find::find(zpt::json _search) -> zpt::storage::actio
 }
 
 auto
-zpt::storage::layer::action_find::set(std::string _attribute, zpt::json _value)
+zpt::storage::layer::action_find::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
     return this;
 }
 
 auto
-zpt::storage::layer::action_find::unset(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_find::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -802,7 +813,8 @@ zpt::storage::layer::action_find::patch(zpt::json _document) -> zpt::storage::ac
 }
 
 auto
-zpt::storage::layer::action_find::sort(std::string _attribute) -> zpt::storage::action::type* {
+zpt::storage::layer::action_find::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     std::cout << this->__config << std::endl << std::flush;
     if (this->__config["find"]->ok()) {
         for (auto [_, __, _name] : this->__config["find"]) {

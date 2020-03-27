@@ -34,11 +34,11 @@ copy(T const& _from, T& _to) -> void;
 class globals {
   public:
     template<typename T, typename... Args>
-    static auto alloc(size_t& _variable, Args... _args) -> T&;
+    static auto alloc(ssize_t& _variable, Args... _args) -> T&;
     template<typename T>
-    static auto get(size_t _variable) -> T&;
+    static auto get(ssize_t _variable) -> T&;
     template<typename T, typename... Args>
-    static auto dealloc(size_t _variable) -> void;
+    static auto dealloc(ssize_t _variable) -> void;
 
     template<typename T>
     class cached {
@@ -75,14 +75,14 @@ class globals {
     };
 
   private:
-    static inline std::map<size_t, std::vector<void*>> __variables{};
+    static inline std::map<ssize_t, std::vector<void*>> __variables{};
     static inline zpt::lf::spin_lock __variables_lock;
 };
 } // namespace zpt
 
 template<typename T, typename... Args>
 auto
-zpt::globals::alloc(size_t& _variable, Args... _args) -> T& {
+zpt::globals::alloc(ssize_t& _variable, Args... _args) -> T& {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
                                        zpt::lf::spin_lock::exclusive };
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
@@ -95,7 +95,7 @@ zpt::globals::alloc(size_t& _variable, Args... _args) -> T& {
 
 template<typename T>
 auto
-zpt::globals::get(size_t _variable) -> T& {
+zpt::globals::get(ssize_t _variable) -> T& {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::lf::spin_lock::shared };
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
     expect(_found != zpt::globals::__variables.end() && _found->second.size() > _variable,
@@ -108,11 +108,13 @@ zpt::globals::get(size_t _variable) -> T& {
 
 template<typename T, typename... Args>
 auto
-zpt::globals::dealloc(size_t _variable) -> void {
+zpt::globals::dealloc(ssize_t _variable) -> void {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
                                        zpt::lf::spin_lock::exclusive };
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
+    auto _ptr = static_cast<T*>(_allocated[_variable]);
     _allocated.erase(_allocated.begin() + _variable);
+    delete _ptr;
 }
 
 template<typename T>

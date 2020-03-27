@@ -29,7 +29,7 @@ namespace startup {
 namespace configuration {
 
 auto
-load(zpt::json _parameters) -> zpt::json;
+load(zpt::json _parameters, zpt::json& _output) -> void;
 
 } // namespace configuration
 } // namespace startup

@@ -25,6 +25,8 @@
 #include <zapata/rest.h>
 #include <zapata/transport.h>
 
+std::atomic<bool> _shutdown{ false };
+
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
@@ -35,13 +37,6 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     long _max_pop_wait = _config["pipeline"]["max_pop_spin_sleep"];
     zpt::globals::alloc<zpt::rest::engine>(
       zpt::REST_ENGINE(), _stages, _threads_per_stage, _max_pop_wait);
-
-    _boot.add_thread([]() -> void {
-        auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-        do {
-            _polling.pool();
-        } while (true);
-    });
 
     _boot.add_thread([_max_pop_wait]() -> void {
         zlog("Starting REST engine", zpt::info);
@@ -59,9 +54,21 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                 _waiting_iterations = 0;
             }
             catch (zpt::NoMoreElementsException const& _e) {
+                if (_rest.is_shutdown_ongoing()) {
+                    zlog("Exiting REST router", zpt::trace);
+                    _polling.shutdown();
+                    zpt::globals::dealloc<zpt::rest::engine>(zpt::REST_ENGINE());
+                    return;
+                }
                 _waiting_iterations =
                   zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_pop_wait);
             }
         } while (true);
     });
+}
+
+extern "C" auto
+_zpt_unload_(zpt::plugin& _plugin) -> void {
+    zlog("Shutting down REST engine", zpt::info);
+    zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE()).shutdown();
 }

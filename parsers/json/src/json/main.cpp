@@ -40,7 +40,6 @@ main(int argc, char* argv[]) {
               argc, argv, { "--print", { zpt::array, "optional", "single" } });
 
             auto _init = "null"_JSON;
-            std::cout << _init << std::endl << std::flush;
 
             auto _t = std::chrono::high_resolution_clock::now();
             auto _parsing_duration =

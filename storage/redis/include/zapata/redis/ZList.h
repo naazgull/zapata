@@ -38,7 +38,7 @@ namespace redis {
 
 class ZList : public zpt::Connector {
   public:
-    ZList(zpt::json _options, std::string _conf_path);
+    ZList(zpt::json _options, std::string const& _conf_path);
     virtual ~ZList();
 
     virtual auto name() -> std::string;
@@ -49,21 +49,22 @@ class ZList : public zpt::Connector {
     virtual auto connect() -> void;
     virtual auto reconnect() -> void;
 
-    virtual auto set(std::string _key, zpt::timestamp_t _score, zpt::json _data) -> void;
-    virtual auto reset(std::string _key, zpt::timestamp_t _increment, zpt::json _data) -> void;
-    virtual auto del(std::string _key, zpt::json _data) -> void;
-    virtual auto del(std::string _key, std::string _data) -> void;
-    virtual auto del(std::string _key, zpt::timestamp_t _min) -> void;
-    virtual auto del(std::string _key, zpt::timestamp_t _min, zpt::timestamp_t _max) -> void;
-    virtual auto rangebypos(std::string _key, long int _min, long int _max) -> zpt::json;
-    virtual auto range(std::string _key,
+    virtual auto set(std::string const& _key, zpt::timestamp_t _score, zpt::json _data) -> void;
+    virtual auto reset(std::string const& _key, zpt::timestamp_t _increment, zpt::json _data)
+      -> void;
+    virtual auto del(std::string const& _key, zpt::json _data) -> void;
+    virtual auto del(std::string const& _key, std::string const& _data) -> void;
+    virtual auto del(std::string const& _key, zpt::timestamp_t _min) -> void;
+    virtual auto del(std::string const& _key, zpt::timestamp_t _min, zpt::timestamp_t _max) -> void;
+    virtual auto rangebypos(std::string const& _key, long int _min, long int _max) -> zpt::json;
+    virtual auto range(std::string const& _key,
                        zpt::timestamp_t _min,
                        zpt::timestamp_t _max,
                        int _direction = 1,
                        size_t _offset = 0,
                        size_t _limit = 0) -> zpt::json;
-    virtual auto getall(std::string _key) -> zpt::json;
-    virtual auto find(std::string _key, std::string _regexp) -> zpt::json;
+    virtual auto getall(std::string const& _key) -> zpt::json;
+    virtual auto find(std::string const& _key, std::string const& _regexp) -> zpt::json;
 
   private:
     zpt::json __options;

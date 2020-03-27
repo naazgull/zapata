@@ -8,44 +8,46 @@ namespace apps {
 
 namespace ResourceOwners {
 auto
-get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
+get(std::string const& _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
   -> zpt::json;
 auto
-query(std::string _topic,
+query(std::string const& _topic,
       zpt::json _filter,
       zpt::ev::emitter _emitter,
       zpt::json _identity,
       zpt::json _envelope) -> zpt::json;
 auto
-insert(std::string _topic,
+insert(std::string const& _topic,
        zpt::json _document,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
        zpt::json _envelope) -> zpt::json;
 auto
-save(std::string _topic,
+save(std::string const& _topic,
      zpt::json _document,
      zpt::ev::emitter _emitter,
      zpt::json _identity,
      zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::json _filter,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
-  -> zpt::json;
+remove(std::string const& _topic,
+       zpt::ev::emitter _emitter,
+       zpt::json _identity,
+       zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic,
+remove(std::string const& _topic,
        zpt::json _filter,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
@@ -55,7 +57,7 @@ remove(std::string _topic,
 } // namespace zpt
 
 auto
-zpt::apps::ResourceOwners::get(std::string _topic,
+zpt::apps::ResourceOwners::get(std::string const& _topic,
                                zpt::ev::emitter _emitter,
                                zpt::json _identity,
                                zpt::json _envelope) -> zpt::json {
@@ -67,7 +69,7 @@ zpt::apps::ResourceOwners::get(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::query(std::string _topic,
+zpt::apps::ResourceOwners::query(std::string const& _topic,
                                  zpt::json _filter,
                                  zpt::ev::emitter _emitter,
                                  zpt::json _identity,
@@ -80,7 +82,7 @@ zpt::apps::ResourceOwners::query(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::insert(std::string _topic,
+zpt::apps::ResourceOwners::insert(std::string const& _topic,
                                   zpt::json _document,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
@@ -96,7 +98,7 @@ zpt::apps::ResourceOwners::insert(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::save(std::string _topic,
+zpt::apps::ResourceOwners::save(std::string const& _topic,
                                 zpt::json _document,
                                 zpt::ev::emitter _emitter,
                                 zpt::json _identity,
@@ -112,7 +114,7 @@ zpt::apps::ResourceOwners::save(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::set(std::string _topic,
+zpt::apps::ResourceOwners::set(std::string const& _topic,
                                zpt::json _document,
                                zpt::ev::emitter _emitter,
                                zpt::json _identity,
@@ -128,7 +130,7 @@ zpt::apps::ResourceOwners::set(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::set(std::string _topic,
+zpt::apps::ResourceOwners::set(std::string const& _topic,
                                zpt::json _document,
                                zpt::json _filter,
                                zpt::ev::emitter _emitter,
@@ -145,7 +147,7 @@ zpt::apps::ResourceOwners::set(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::remove(std::string _topic,
+zpt::apps::ResourceOwners::remove(std::string const& _topic,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
                                   zpt::json _envelope) -> zpt::json {
@@ -157,7 +159,7 @@ zpt::apps::ResourceOwners::remove(std::string _topic,
 }
 
 auto
-zpt::apps::ResourceOwners::remove(std::string _topic,
+zpt::apps::ResourceOwners::remove(std::string const& _topic,
                                   zpt::json _filter,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
@@ -179,44 +181,46 @@ namespace apps {
 
 namespace Applications {
 auto
-get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
+get(std::string const& _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
   -> zpt::json;
 auto
-query(std::string _topic,
+query(std::string const& _topic,
       zpt::json _filter,
       zpt::ev::emitter _emitter,
       zpt::json _identity,
       zpt::json _envelope) -> zpt::json;
 auto
-insert(std::string _topic,
+insert(std::string const& _topic,
        zpt::json _document,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
        zpt::json _envelope) -> zpt::json;
 auto
-save(std::string _topic,
+save(std::string const& _topic,
      zpt::json _document,
      zpt::ev::emitter _emitter,
      zpt::json _identity,
      zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::json _filter,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
-  -> zpt::json;
+remove(std::string const& _topic,
+       zpt::ev::emitter _emitter,
+       zpt::json _identity,
+       zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic,
+remove(std::string const& _topic,
        zpt::json _filter,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
@@ -226,7 +230,7 @@ remove(std::string _topic,
 } // namespace zpt
 
 auto
-zpt::apps::Applications::get(std::string _topic,
+zpt::apps::Applications::get(std::string const& _topic,
                              zpt::ev::emitter _emitter,
                              zpt::json _identity,
                              zpt::json _envelope) -> zpt::json {
@@ -268,7 +272,7 @@ zpt::apps::Applications::get(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::query(std::string _topic,
+zpt::apps::Applications::query(std::string const& _topic,
                                zpt::json _filter,
                                zpt::ev::emitter _emitter,
                                zpt::json _identity,
@@ -317,7 +321,7 @@ zpt::apps::Applications::query(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::insert(std::string _topic,
+zpt::apps::Applications::insert(std::string const& _topic,
                                 zpt::json _document,
                                 zpt::ev::emitter _emitter,
                                 zpt::json _identity,
@@ -333,7 +337,7 @@ zpt::apps::Applications::insert(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::save(std::string _topic,
+zpt::apps::Applications::save(std::string const& _topic,
                               zpt::json _document,
                               zpt::ev::emitter _emitter,
                               zpt::json _identity,
@@ -349,7 +353,7 @@ zpt::apps::Applications::save(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::set(std::string _topic,
+zpt::apps::Applications::set(std::string const& _topic,
                              zpt::json _document,
                              zpt::ev::emitter _emitter,
                              zpt::json _identity,
@@ -365,7 +369,7 @@ zpt::apps::Applications::set(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::set(std::string _topic,
+zpt::apps::Applications::set(std::string const& _topic,
                              zpt::json _document,
                              zpt::json _filter,
                              zpt::ev::emitter _emitter,
@@ -382,7 +386,7 @@ zpt::apps::Applications::set(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::remove(std::string _topic,
+zpt::apps::Applications::remove(std::string const& _topic,
                                 zpt::ev::emitter _emitter,
                                 zpt::json _identity,
                                 zpt::json _envelope) -> zpt::json {
@@ -394,7 +398,7 @@ zpt::apps::Applications::remove(std::string _topic,
 }
 
 auto
-zpt::apps::Applications::remove(std::string _topic,
+zpt::apps::Applications::remove(std::string const& _topic,
                                 zpt::json _filter,
                                 zpt::ev::emitter _emitter,
                                 zpt::json _identity,
@@ -416,44 +420,46 @@ namespace apps {
 
 namespace MyApplications {
 auto
-get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
+get(std::string const& _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
   -> zpt::json;
 auto
-query(std::string _topic,
+query(std::string const& _topic,
       zpt::json _filter,
       zpt::ev::emitter _emitter,
       zpt::json _identity,
       zpt::json _envelope) -> zpt::json;
 auto
-insert(std::string _topic,
+insert(std::string const& _topic,
        zpt::json _document,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
        zpt::json _envelope) -> zpt::json;
 auto
-save(std::string _topic,
+save(std::string const& _topic,
      zpt::json _document,
      zpt::ev::emitter _emitter,
      zpt::json _identity,
      zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::json _filter,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
-  -> zpt::json;
+remove(std::string const& _topic,
+       zpt::ev::emitter _emitter,
+       zpt::json _identity,
+       zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic,
+remove(std::string const& _topic,
        zpt::json _filter,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
@@ -463,7 +469,7 @@ remove(std::string _topic,
 } // namespace zpt
 
 auto
-zpt::apps::MyApplications::get(std::string _topic,
+zpt::apps::MyApplications::get(std::string const& _topic,
                                zpt::ev::emitter _emitter,
                                zpt::json _identity,
                                zpt::json _envelope) -> zpt::json {
@@ -490,7 +496,7 @@ zpt::apps::MyApplications::get(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::query(std::string _topic,
+zpt::apps::MyApplications::query(std::string const& _topic,
                                  zpt::json _filter,
                                  zpt::ev::emitter _emitter,
                                  zpt::json _identity,
@@ -527,7 +533,7 @@ zpt::apps::MyApplications::query(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::insert(std::string _topic,
+zpt::apps::MyApplications::insert(std::string const& _topic,
                                   zpt::json _document,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
@@ -538,7 +544,7 @@ zpt::apps::MyApplications::insert(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::save(std::string _topic,
+zpt::apps::MyApplications::save(std::string const& _topic,
                                 zpt::json _document,
                                 zpt::ev::emitter _emitter,
                                 zpt::json _identity,
@@ -549,7 +555,7 @@ zpt::apps::MyApplications::save(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::set(std::string _topic,
+zpt::apps::MyApplications::set(std::string const& _topic,
                                zpt::json _document,
                                zpt::ev::emitter _emitter,
                                zpt::json _identity,
@@ -560,7 +566,7 @@ zpt::apps::MyApplications::set(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::set(std::string _topic,
+zpt::apps::MyApplications::set(std::string const& _topic,
                                zpt::json _document,
                                zpt::json _filter,
                                zpt::ev::emitter _emitter,
@@ -572,7 +578,7 @@ zpt::apps::MyApplications::set(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::remove(std::string _topic,
+zpt::apps::MyApplications::remove(std::string const& _topic,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
                                   zpt::json _envelope) -> zpt::json {
@@ -582,7 +588,7 @@ zpt::apps::MyApplications::remove(std::string _topic,
 }
 
 auto
-zpt::apps::MyApplications::remove(std::string _topic,
+zpt::apps::MyApplications::remove(std::string const& _topic,
                                   zpt::json _filter,
                                   zpt::ev::emitter _emitter,
                                   zpt::json _identity,
@@ -602,44 +608,46 @@ namespace apps {
 
 namespace MyUsers {
 auto
-get(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
+get(std::string const& _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
   -> zpt::json;
 auto
-query(std::string _topic,
+query(std::string const& _topic,
       zpt::json _filter,
       zpt::ev::emitter _emitter,
       zpt::json _identity,
       zpt::json _envelope) -> zpt::json;
 auto
-insert(std::string _topic,
+insert(std::string const& _topic,
        zpt::json _document,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
        zpt::json _envelope) -> zpt::json;
 auto
-save(std::string _topic,
+save(std::string const& _topic,
      zpt::json _document,
      zpt::ev::emitter _emitter,
      zpt::json _identity,
      zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-set(std::string _topic,
+set(std::string const& _topic,
     zpt::json _document,
     zpt::json _filter,
     zpt::ev::emitter _emitter,
     zpt::json _identity,
     zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
-  -> zpt::json;
+remove(std::string const& _topic,
+       zpt::ev::emitter _emitter,
+       zpt::json _identity,
+       zpt::json _envelope) -> zpt::json;
 auto
-remove(std::string _topic,
+remove(std::string const& _topic,
        zpt::json _filter,
        zpt::ev::emitter _emitter,
        zpt::json _identity,
@@ -649,7 +657,7 @@ remove(std::string _topic,
 } // namespace zpt
 
 auto
-zpt::apps::MyUsers::get(std::string _topic,
+zpt::apps::MyUsers::get(std::string const& _topic,
                         zpt::ev::emitter _emitter,
                         zpt::json _identity,
                         zpt::json _envelope) -> zpt::json {
@@ -672,7 +680,7 @@ zpt::apps::MyUsers::get(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::query(std::string _topic,
+zpt::apps::MyUsers::query(std::string const& _topic,
                           zpt::json _filter,
                           zpt::ev::emitter _emitter,
                           zpt::json _identity,
@@ -701,7 +709,7 @@ zpt::apps::MyUsers::query(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::insert(std::string _topic,
+zpt::apps::MyUsers::insert(std::string const& _topic,
                            zpt::json _document,
                            zpt::ev::emitter _emitter,
                            zpt::json _identity,
@@ -712,7 +720,7 @@ zpt::apps::MyUsers::insert(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::save(std::string _topic,
+zpt::apps::MyUsers::save(std::string const& _topic,
                          zpt::json _document,
                          zpt::ev::emitter _emitter,
                          zpt::json _identity,
@@ -723,7 +731,7 @@ zpt::apps::MyUsers::save(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::set(std::string _topic,
+zpt::apps::MyUsers::set(std::string const& _topic,
                         zpt::json _document,
                         zpt::ev::emitter _emitter,
                         zpt::json _identity,
@@ -734,7 +742,7 @@ zpt::apps::MyUsers::set(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::set(std::string _topic,
+zpt::apps::MyUsers::set(std::string const& _topic,
                         zpt::json _document,
                         zpt::json _filter,
                         zpt::ev::emitter _emitter,
@@ -746,7 +754,7 @@ zpt::apps::MyUsers::set(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::remove(std::string _topic,
+zpt::apps::MyUsers::remove(std::string const& _topic,
                            zpt::ev::emitter _emitter,
                            zpt::json _identity,
                            zpt::json _envelope) -> zpt::json {
@@ -756,7 +764,7 @@ zpt::apps::MyUsers::remove(std::string _topic,
 }
 
 auto
-zpt::apps::MyUsers::remove(std::string _topic,
+zpt::apps::MyUsers::remove(std::string const& _topic,
                            zpt::json _filter,
                            zpt::ev::emitter _emitter,
                            zpt::json _identity,

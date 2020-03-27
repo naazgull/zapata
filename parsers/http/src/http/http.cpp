@@ -129,7 +129,7 @@ zpt::http::to_str(zpt::performative _performative) -> std::string {
 }
 
 auto
-zpt::http::from_str(std::string _performative) -> zpt::performative {
+zpt::http::from_str(std::string const& _performative) -> zpt::performative {
     if (_performative == "GET" || _performative == "get") {
         return zpt::http::Get;
     }

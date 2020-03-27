@@ -49,16 +49,16 @@ class Bridge : public zpt::Bridge {
     virtual auto events() -> zpt::ev::emitter;
     virtual auto self() const -> zpt::bridge;
     virtual auto unbind() -> void;
-    virtual auto eval(std::string _expr) -> zpt::lisp::object;
+    virtual auto eval(std::string const& _expr) -> zpt::lisp::object;
     virtual auto initialize() -> void;
-    virtual auto load_module(std::string _module) -> void;
+    virtual auto load_module(std::string const& _module) -> void;
     virtual auto deflbd(zpt::json _conf,
                         std::function<zpt::lisp::object(int, zpt::lisp::object[])> _callback)
       -> void;
     virtual auto defop(zpt::json _conf) -> void;
     virtual auto defchk(std::function<bool(const std::string, const std::string)> _callback)
       -> void;
-    virtual auto defmod(std::string _module) -> void;
+    virtual auto defmod(std::string const& _module) -> void;
     virtual auto call(const char* _c_name, int _n_args, zpt::lisp::object _args[])
       -> zpt::lisp::object;
     virtual auto check(const std::string _op1, const std::string _op2) -> bool;

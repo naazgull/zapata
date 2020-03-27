@@ -222,7 +222,9 @@ zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out) {
 }
 
 void
-zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, std::string _prefix) {
+zpt::mongodb::tosetcommand(zpt::JSONObj& _in,
+                           mongo::BSONObjBuilder& _out,
+                           std::string const& _prefix) {
     for (auto _i : *_in) {
         std::string _key = _i.first;
         JSONElement _value = _i.second;
@@ -277,7 +279,9 @@ zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, std::
 }
 
 void
-zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, std::string _prefix) {
+zpt::mongodb::tosetcommand(zpt::JSONArr& _in,
+                           mongo::BSONObjBuilder& _out,
+                           std::string const& _prefix) {
     size_t _idx = 0;
     for (auto _i : *_in) {
         zpt::json _value = _i;

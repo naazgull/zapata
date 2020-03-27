@@ -68,7 +68,7 @@ class session {
         virtual auto is_open() -> bool = 0;
         virtual auto commit() -> zpt::storage::session::type* = 0;
         virtual auto rollback() -> zpt::storage::session::type* = 0;
-        virtual auto database(std::string _db) -> zpt::storage::database = 0;
+        virtual auto database(std::string const& _db) -> zpt::storage::database = 0;
     };
 
     session() = default;
@@ -94,7 +94,7 @@ class database {
   public:
     class type {
       public:
-        virtual auto collection(std::string _name) -> zpt::storage::collection = 0;
+        virtual auto collection(std::string const& _name) -> zpt::storage::collection = 0;
     };
 
     database() = default;
@@ -123,7 +123,8 @@ class collection {
         virtual auto add(zpt::json _document) -> zpt::storage::action = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action = 0;
-        virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::action = 0;
+        virtual auto replace(std::string const& _id, zpt::json _document)
+          -> zpt::storage::action = 0;
         virtual auto find(zpt::json _search) -> zpt::storage::action = 0;
         virtual auto count() -> size_t = 0;
     };
@@ -154,14 +155,14 @@ class action {
         virtual auto add(zpt::json _document) -> zpt::storage::action::type* = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action::type* = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action::type* = 0;
-        virtual auto replace(std::string _id, zpt::json _document)
+        virtual auto replace(std::string const& _id, zpt::json _document)
           -> zpt::storage::action::type* = 0;
         virtual auto find(zpt::json _search) -> zpt::storage::action::type* = 0;
-        virtual auto set(std::string _attribute, zpt::json _value)
+        virtual auto set(std::string const& _attribute, zpt::json _value)
           -> zpt::storage::action::type* = 0;
-        virtual auto unset(std::string _attribute) -> zpt::storage::action::type* = 0;
+        virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* = 0;
         virtual auto patch(zpt::json _document) -> zpt::storage::action::type* = 0;
-        virtual auto sort(std::string _attribute) -> zpt::storage::action::type* = 0;
+        virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* = 0;
         virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* = 0;
         virtual auto offset(size_t _rows) -> zpt::storage::action::type* = 0;
         virtual auto limit(size_t _number) -> zpt::storage::action::type* = 0;

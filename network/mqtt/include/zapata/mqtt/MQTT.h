@@ -106,7 +106,7 @@ class MQTT : public zpt::Channel {
      * Sets MQTT server access credentials.
      * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_username_pw_set
      */
-    virtual auto credentials(std::string _user, std::string _passwd) -> void;
+    virtual auto credentials(std::string const& _user, std::string const& _passwd) -> void;
 
     virtual auto user() -> std::string;
     virtual auto passwd() -> std::string;
@@ -118,7 +118,7 @@ class MQTT : public zpt::Channel {
      * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
      */
     virtual auto connect(zpt::json _options) -> bool;
-    virtual auto connect(std::string _host,
+    virtual auto connect(std::string const& _host,
                          bool _tls = false,
                          int _port = 1883,
                          int _keep_alive = 25) -> bool;
@@ -130,7 +130,7 @@ class MQTT : public zpt::Channel {
      * subscription patterns.
      * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_subscribe
      */
-    virtual auto subscribe(std::string _topic) -> void;
+    virtual auto subscribe(std::string const& _topic) -> void;
 
     /**
      * Publishes a message to a given topic. See also
@@ -139,25 +139,25 @@ class MQTT : public zpt::Channel {
      * patterns.
      * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_publish
      */
-    virtual auto publish(std::string _topic, zpt::json _payload) -> void;
+    virtual auto publish(std::string const& _topic, zpt::json _payload) -> void;
 
     /**
      * Add to the callback list, the callback *_callback*, attached to the event
      * type *_event*.
      */
-    virtual auto on(std::string _event, zpt::mqtt::handler _callback) -> void;
+    virtual auto on(std::string const& _event, zpt::mqtt::handler _callback) -> void;
 
     /**
      * Remove from the callback list, the callback *_callback*, attached to the
      * event type *_event*.
      */
-    virtual auto off(std::string _event) -> void;
+    virtual auto off(std::string const& _event) -> void;
 
     /**
      * Searches for and executes registered callbacks under the event type
      * *_event*.
      */
-    virtual auto trigger(std::string _event, zpt::mqtt::data _data) -> void;
+    virtual auto trigger(std::string const& _event, zpt::mqtt::data _data) -> void;
 
     /**
      * Checks if some data is available from MQTT server.
@@ -168,14 +168,15 @@ class MQTT : public zpt::Channel {
 
     virtual auto id() -> std::string;
     virtual auto uri(size_t _idx) -> zpt::json;
-    virtual auto uri(std::string _uris) -> void;
+    virtual auto uri(std::string const& _uris) -> void;
     virtual auto detach() -> void;
     virtual auto close() -> void;
     virtual auto available() -> bool;
     virtual auto buffer(zpt::json _envelope) -> void;
     virtual auto recv() -> zpt::json;
-    virtual auto send(zpt::performative _performative, std::string _resource, zpt::json _payload)
-      -> zpt::json;
+    virtual auto send(zpt::performative _performative,
+                      std::string const& _resource,
+                      zpt::json _payload) -> zpt::json;
     virtual auto send(zpt::json _envelope) -> zpt::json;
     virtual auto loop_iteration() -> void;
     virtual auto socket() -> zmq::socket_ptr;

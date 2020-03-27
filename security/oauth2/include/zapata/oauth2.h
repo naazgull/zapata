@@ -45,24 +45,25 @@ class OAuth2 {
 
     virtual auto authorize(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
       -> zpt::json;
-    virtual auto authorize(std::string _topic, zpt::json _envelope, zpt::json _roles_needed)
+    virtual auto authorize(std::string const& _topic, zpt::json _envelope, zpt::json _roles_needed)
       -> zpt::json;
     virtual auto token(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
       -> zpt::json;
     virtual auto refresh(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
       -> zpt::json;
-    virtual auto validate(std::string _access_token, zpt::json _opts) -> zpt::json;
+    virtual auto validate(std::string const& _access_token, zpt::json _opts) -> zpt::json;
 
     virtual auto retrieve_owner(zpt::json _envelope) -> zpt::json = 0;
-    virtual auto retrieve_owner(std::string _owner, std::string _password, std::string _client_id)
-      -> zpt::json = 0;
+    virtual auto retrieve_owner(std::string const& _owner,
+                                std::string const& _password,
+                                std::string const& _client_id) -> zpt::json = 0;
     virtual auto retrieve_client(zpt::json _envelope) -> zpt::json = 0;
-    virtual auto retrieve_client(std::string _client_id, std::string _client_secret)
+    virtual auto retrieve_client(std::string const& _client_id, std::string const& _client_secret)
       -> zpt::json = 0;
     virtual auto store_token(zpt::json _token) -> std::string = 0;
-    virtual auto get_code(std::string _code) -> zpt::json = 0;
-    virtual auto get_token(std::string _access_token) -> zpt::json = 0;
-    virtual auto get_refresh_token(std::string _refresh_token) -> zpt::json = 0;
+    virtual auto get_code(std::string const& _code) -> zpt::json = 0;
+    virtual auto get_token(std::string const& _access_token) -> zpt::json = 0;
+    virtual auto get_refresh_token(std::string const& _refresh_token) -> zpt::json = 0;
     virtual auto get_roles_permissions(zpt::json _token) -> zpt::json = 0;
     virtual auto validate_roles_permissions(zpt::json _envelope,
                                             std::string _topic,

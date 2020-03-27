@@ -146,7 +146,7 @@ zpt::JSONTokenizerLexer::init(double _in) {
 }
 
 void
-zpt::JSONTokenizerLexer::init(std::string _in) {
+zpt::JSONTokenizerLexer::init(std::string const& _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;

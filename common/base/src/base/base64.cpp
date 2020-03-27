@@ -28,7 +28,7 @@ SOFTWARE.
 #include <iomanip>
 
 auto
-zpt::base64::r_encode(std::string _in) -> std::string {
+zpt::base64::r_encode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::encode(_out);
     return _out;
@@ -73,7 +73,7 @@ zpt::base64::encode(std::string& _out) {
 }
 
 auto
-zpt::base64::r_decode(std::string _in) -> std::string {
+zpt::base64::r_decode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::decode(_out);
     return _out;
@@ -185,7 +185,7 @@ zpt::base64::decode(std::istream& _in, std::ostream& _out) {
 }
 
 auto
-zpt::base64::r_url_encode(std::string _in) -> std::string {
+zpt::base64::r_url_encode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::url_encode(_out);
     return _out;
@@ -230,7 +230,7 @@ zpt::base64::url_encode(std::string& _out) {
 }
 
 auto
-zpt::base64::r_url_decode(std::string _in) -> std::string {
+zpt::base64::r_url_decode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::url_decode(_out);
     return _out;

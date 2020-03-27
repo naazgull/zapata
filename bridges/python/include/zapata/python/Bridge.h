@@ -51,9 +51,9 @@ class Bridge : public zpt::Bridge {
     virtual auto events() -> zpt::ev::emitter;
     virtual auto self() const -> zpt::bridge;
     virtual auto unbind() -> void;
-    virtual auto eval(std::string _expr) -> zpt::python::object;
+    virtual auto eval(std::string const& _expr) -> zpt::python::object;
     virtual auto initialize() -> void;
-    virtual auto load_module(std::string _module) -> void;
+    virtual auto load_module(std::string const& _module) -> void;
     virtual auto deflbd(zpt::json _conf,
                         std::function<zpt::python::object(int, zpt::python::object[])> _callback)
       -> void;
@@ -61,8 +61,8 @@ class Bridge : public zpt::Bridge {
     static auto instance() -> zpt::bridge;
     static auto is_booted() -> bool;
     static auto boot(zpt::json _options) -> void;
-    static auto defmdl(std::string _name, PyObject* (*initfunc)(void)) -> void;
-    static auto add_syspath(std::string _name) -> void;
+    static auto defmdl(std::string const& _name, PyObject* (*initfunc)(void)) -> void;
+    static auto add_syspath(std::string const& _name) -> void;
 
   private:
     zpt::bridge __self;

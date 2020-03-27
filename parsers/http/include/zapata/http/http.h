@@ -58,7 +58,7 @@ to_str(std::ostream& _out, HTTPRep& _in) -> void;
 auto
 to_str(zpt::performative _performative) -> std::string;
 auto
-from_str(std::string _performative) -> zpt::performative;
+from_str(std::string const& _performative) -> zpt::performative;
 
 }
 } // namespace zpt

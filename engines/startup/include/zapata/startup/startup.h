@@ -33,13 +33,13 @@
 namespace zpt {
 
 auto
-BOOT_ENGINE() -> size_t&;
+BOOT_ENGINE() -> ssize_t&;
 auto
-GLOBAL_CONFIG() -> size_t&;
+GLOBAL_CONFIG() -> ssize_t&;
 auto
-STREAM_POLLING() -> size_t&;
+STREAM_POLLING() -> ssize_t&;
 auto
-TRANSPORT_LAYER() -> size_t&;
+TRANSPORT_LAYER() -> ssize_t&;
 
 class plugin {
   private:
@@ -47,24 +47,34 @@ class plugin {
       public:
         plugin_t() = default;
         plugin_t(zpt::json _options, zpt::json _config);
-        virtual ~plugin_t() = default;
+        virtual ~plugin_t();
+
+        auto operator-> () -> zpt::plugin::plugin_t*;
 
         auto initialize(zpt::json _config) -> zpt::plugin::plugin_t&;
+        auto handler() -> void*;
         auto name() -> std::string&;
         auto source() -> std::string&;
         auto requirements() -> zpt::json&;
         auto config() -> zpt::json&;
         auto is_running() -> bool;
 
+        auto set_handler(void* _handler) -> zpt::plugin::plugin_t&;
+
         auto set_loader(std::function<bool(zpt::plugin& _plugin)> _loader)
           -> zpt::plugin::plugin_t&;
         auto load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t&;
+        auto set_unloader(std::function<bool(zpt::plugin& _plugin)> _loader)
+          -> zpt::plugin::plugin_t&;
+        auto unload_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t&;
 
       private:
+        void* __lib_handler{ nullptr };
         std::string __name{ "" };
         std::string __source{ "" };
         zpt::json __requirements{ zpt::json::object() };
         std::function<bool(zpt::plugin& _plugin)> __loader;
+        std::function<bool(zpt::plugin& _plugin)> __unloader;
         bool __running{ false };
         zpt::json __config;
     };
@@ -100,7 +110,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
   public:
     engine();
     engine(zpt::json _args);
-    virtual ~engine() = default;
+    virtual ~engine();
 
     auto initialize(zpt::json _args) -> zpt::startup::engine&;
 
@@ -119,6 +129,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
 
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto start() -> zpt::startup::engine&;
+    auto unload() -> bool;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::engine& _in) {
         _out << _in.to_string() << std::flush;
@@ -126,11 +137,12 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     }
 
   private:
-    zpt::json __configuration;
+    zpt::json& __configuration;
     std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
     std::map<std::string, zpt::plugin> __plugins;
     zpt::lf::spin_lock __plugin_list_lock;
     std::vector<std::thread> __workers;
+    std::atomic<bool> __unloaded{ false };
 
     auto load() -> zpt::startup::engine&;
     auto hash(zpt::json& _event) -> std::string;
@@ -138,11 +150,14 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
       -> bool;
     auto load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&;
     auto add_plugin(zpt::plugin& _plugin, zpt::json& _config) -> zpt::startup::engine&;
+    auto unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&;
 };
 
 namespace dynlib {
 auto
 load_plugin(zpt::plugin& _plugin) -> bool;
+auto
+unload_plugin(zpt::plugin& _plugin) -> bool;
 } // namespace synlib
 
 } // namespace startup

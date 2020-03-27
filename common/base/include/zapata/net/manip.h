@@ -34,6 +34,6 @@ SOFTWARE.
 namespace zpt {
 namespace net {
 auto
-getip(std::string _if = "") -> std::string;
+getip(std::string const& _if = "") -> std::string;
 }
 } // namespace zpt

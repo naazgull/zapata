@@ -247,7 +247,7 @@ zpt::Generator::load() -> void {
 }
 
 auto
-zpt::Generator::get_datum(std::string _ref) -> std::string {
+zpt::Generator::get_datum(std::string const& _ref) -> std::string {
     auto _resource =
       zpt::Generator::resources.find(zpt::gen::url_pattern_to_regexp(zpt::json::string(_ref)));
     if (_resource != zpt::Generator::resources.end()) {
@@ -666,7 +666,7 @@ zpt::Generator::build_docs() -> void {
 }
 
 auto
-zpt::Generator::generate_title_performative(zpt::json _resource, std::string _performative)
+zpt::Generator::generate_title_performative(zpt::json _resource, std::string const& _performative)
   -> std::string {
     if (_performative == "GET") {
         return "Retrieve ";
@@ -696,7 +696,7 @@ zpt::Generator::generate_title_performative(zpt::json _resource, std::string _pe
 }
 
 auto
-zpt::Generator::generate_value(zpt::json _field, std::string _name) -> std::string {
+zpt::Generator::generate_value(zpt::json _field, std::string const& _name) -> std::string {
     std::string _type = std::string(_field["type"]);
     if (_type == "utf8" || _type == "ascii" || _type == "string") {
         std::string _echo(_name.data());
@@ -1637,7 +1637,7 @@ zpt::GenDatum::build_query(zpt::json _field) -> std::string {
 }
 
 auto
-zpt::GenDatum::build_doc_query(zpt::json _field, std::string _name) -> std::string {
+zpt::GenDatum::build_doc_query(zpt::json _field, std::string const& _name) -> std::string {
     zpt::json _opts = zpt::gen::get_opts(_field);
     std::string _base = zpt::Generator::get_datum(std::string(_field["ref"]));
     zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
@@ -1687,7 +1687,8 @@ zpt::GenDatum::build_doc_query(zpt::json _field, std::string _name) -> std::stri
 }
 
 auto
-zpt::GenDatum::build_params(zpt::json _rel, bool _multi, std::string _var_name) -> std::string {
+zpt::GenDatum::build_params(zpt::json _rel, bool _multi, std::string const& _var_name)
+  -> std::string {
     std::string _params;
     for (auto _param : _rel->obj()) {
         if (_params.length() != 0) {
@@ -1893,7 +1894,7 @@ zpt::GenDatum::build_head(zpt::json _resource) -> std::string {
 }
 
 auto
-zpt::GenDatum::build_mutations(std::string _parent_name, std::string _child_includes)
+zpt::GenDatum::build_mutations(std::string const& _parent_name, std::string const& _child_includes)
   -> std::string {
     std::string _return;
     if (!this->__options["resource-out-lang"]->ok() ||
@@ -2288,7 +2289,8 @@ zpt::GenDatum::build_replace() -> std::string {
 }
 
 auto
-zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_insert(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     std::string _dbms = this->build_dbms();
     std::string _source = this->build_dbms_source();
@@ -2411,13 +2413,15 @@ zpt::GenDatum::build_associations_insert(std::string _name, zpt::json _field) ->
 }
 
 auto
-zpt::GenDatum::build_associations_update(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_update(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     return _return;
 }
 
 auto
-zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_remove(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     if (std::string(_field["rel"]).find("/") != std::string::npos) {
         return _return;
@@ -2492,7 +2496,8 @@ zpt::GenDatum::build_associations_remove(std::string _name, zpt::json _field) ->
 }
 
 auto
-zpt::GenDatum::build_associations_replace(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_replace(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     return _return;
 }
@@ -2776,7 +2781,8 @@ zpt::GenDatum::build_associations_remove() -> std::string {
 }
 
 auto
-zpt::GenDatum::build_associations_for_insert(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_for_insert(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     zpt::json _rel = zpt::uri::query::parse(std::string(_field["rel"]));
     if (_rel->ok() && _rel->obj()->size() != 0) {
@@ -2819,19 +2825,22 @@ zpt::GenDatum::build_associations_for_insert(std::string _name, zpt::json _field
 }
 
 auto
-zpt::GenDatum::build_associations_for_update(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_for_update(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     return _return;
 }
 
 auto
-zpt::GenDatum::build_associations_for_remove(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_for_remove(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     return _return;
 }
 
 auto
-zpt::GenDatum::build_associations_for_replace(std::string _name, zpt::json _field) -> std::string {
+zpt::GenDatum::build_associations_for_replace(std::string const& _name, zpt::json _field)
+  -> std::string {
     std::string _return;
     return _return;
 }
@@ -3240,7 +3249,8 @@ zpt::GenDatum::build_extends_remove_pattern() -> std::string {
 }
 
 auto
-zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespace) -> std::string {
+zpt::GenDatum::build_initialization(std::string const& _dbms, std::string const& _namespace)
+  -> std::string {
     if (_dbms == "postgresql") {
         return "{ \"dbms.pgsql." + zpt::r_replace(_namespace, "::", ".") +
                "\", zpt::connector(new zpt::pgsql::Client(_emitter->options(), "
@@ -3275,7 +3285,7 @@ zpt::GenDatum::build_initialization(std::string _dbms, std::string _namespace) -
 }
 
 auto
-zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace)
+zpt::GenDatum::build_data_client(zpt::json _dbms, zpt::json _ordered, std::string const& _namespace)
   -> std::string {
     for (auto _db : _ordered->arr()) {
         if (std::find(std::begin(_dbms->arr()), std::end(_dbms->arr()), _db) !=
@@ -3409,8 +3419,8 @@ zpt::GenResource::build_data_layer() -> std::string {
 }
 
 auto
-zpt::GenResource::build_handlers(std::string _parent_name, std::string _child_includes)
-  -> std::string {
+zpt::GenResource::build_handlers(std::string const& _parent_name,
+                                 std::string const& _child_includes) -> std::string {
     if (!this->__options["resource-out-lang"]->ok() ||
         std::find(std::begin(this->__options["resource-out-lang"]->arr()),
                   std::end(this->__options["resource-out-lang"]->arr()),
@@ -4056,7 +4066,7 @@ zpt::GenResource::build_get() -> std::string {
                    "_envelope, zpt::ev::emitter _emitter) -> void {\n");
     }
     else {
-        _return = ("auto get(zpt::performative _performative, std::string _topic, "
+        _return = ("auto get(zpt::performative _performative, std::string const& _topic, "
                    "zpt::json _envelope, "
                    "zpt::ev::emitter _emitter) -> void {\n");
     }
@@ -4200,7 +4210,7 @@ zpt::GenResource::build_post() -> std::string {
                    "_envelope, zpt::ev::emitter _emitter) -> void {\n");
     }
     else {
-        _return = ("auto post(zpt::performative _performative, std::string _topic, "
+        _return = ("auto post(zpt::performative _performative, std::string const& _topic, "
                    "zpt::json _envelope, "
                    "zpt::ev::emitter _emitter) -> void {\n");
     }
@@ -4336,7 +4346,7 @@ zpt::GenResource::build_put() -> std::string {
                    "_envelope, zpt::ev::emitter _emitter) -> void {\n");
     }
     else {
-        _return = ("auto put(zpt::performative _performative, std::string _topic, "
+        _return = ("auto put(zpt::performative _performative, std::string const& _topic, "
                    "zpt::json _envelope, "
                    "zpt::ev::emitter _emitter) -> void {\n");
     }
@@ -4576,7 +4586,7 @@ zpt::GenResource::build_patch() -> std::string {
                           "\"payload\", "
                           "_envelope[\"payload\"], \"params\", _envelope[\"params\"] },\n[ "
                           "= ] "
-                          "(zpt::performative _pfv, std::string _tpc, zpt::json _r_") +
+                          "(zpt::performative _pfv, std::string const& _tpc, zpt::json _r_") +
               _var_name +
               std::string(", zpt::ev::emitter _emitter) mutable -> void "
                           "{\n_emitter->reply(_envelope, _r_") +
@@ -4748,7 +4758,7 @@ zpt::GenResource::build_head() -> std::string {
                    "_envelope, zpt::ev::emitter _emitter) -> void {\n");
     }
     else {
-        _return = ("auto head(zpt::performative _performative, std::string _topic, "
+        _return = ("auto head(zpt::performative _performative, std::string const& _topic, "
                    "zpt::json _envelope, "
                    "zpt::ev::emitter _emitter) -> void {\n");
     }
@@ -6325,7 +6335,7 @@ zpt::gen::url_pattern_to_var_decl(zpt::json _url) -> std::string {
 }
 
 auto
-zpt::gen::url_pattern_to_vars(std::string _url) -> std::string {
+zpt::gen::url_pattern_to_vars(std::string const& _url) -> std::string {
     zpt::json _splited = zpt::split(_url, "/");
     std::string _return;
 
@@ -6371,7 +6381,7 @@ zpt::gen::url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string {
 }
 
 auto
-zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
+zpt::gen::url_pattern_to_vars_lisp(std::string const& _url) -> std::string {
     zpt::json _splited = zpt::split(_url, "/");
     std::string _return;
 
@@ -6389,7 +6399,7 @@ zpt::gen::url_pattern_to_vars_lisp(std::string _url) -> std::string {
 }
 
 auto
-zpt::gen::url_pattern_to_vars_python(std::string _url) -> std::string {
+zpt::gen::url_pattern_to_vars_python(std::string const& _url) -> std::string {
     zpt::json _splited = zpt::split(_url, "/");
     std::string _return;
 

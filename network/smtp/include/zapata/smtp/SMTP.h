@@ -54,12 +54,12 @@ class SMTP {
     SMTP();
     virtual ~SMTP();
 
-    virtual auto credentials(std::string _user, std::string _passwd) -> void;
+    virtual auto credentials(std::string const& _user, std::string const& _passwd) -> void;
 
     virtual auto user() -> std::string;
     virtual auto passwd() -> std::string;
 
-    virtual auto connect(std::string _connection) -> void;
+    virtual auto connect(std::string const& _connection) -> void;
     virtual auto send(zpt::json _e_mail) -> void;
 
   private:

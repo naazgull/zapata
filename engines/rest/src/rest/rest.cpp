@@ -23,8 +23,8 @@
 #include <zapata/rest/rest.h>
 
 auto
-zpt::REST_ENGINE() -> size_t& {
-    static size_t _global{ 0 };
+zpt::REST_ENGINE() -> ssize_t& {
+    static ssize_t _global{ -1 };
     return _global;
 }
 
@@ -125,7 +125,7 @@ zpt::rest::to_str(zpt::performative _performative) -> std::string {
 }
 
 auto
-zpt::rest::from_str(std::string _performative) -> zpt::performative {
+zpt::rest::from_str(std::string const& _performative) -> zpt::performative {
     if (_performative == "GET" || _performative == "get") {
         return zpt::rest::Get;
     }

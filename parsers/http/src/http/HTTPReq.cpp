@@ -26,7 +26,7 @@ zpt::HTTPReqT::url() -> std::string& {
 }
 
 auto
-zpt::HTTPReqT::url(std::string _url) -> void {
+zpt::HTTPReqT::url(std::string const& _url) -> void {
     this->__url.assign(_url.data());
 }
 
@@ -36,7 +36,7 @@ zpt::HTTPReqT::query() -> std::string& {
 }
 
 auto
-zpt::HTTPReqT::query(std::string _query) -> void {
+zpt::HTTPReqT::query(std::string const& _query) -> void {
     this->__query.assign(_query.data());
 }
 
@@ -60,12 +60,12 @@ zpt::HTTPReqT::param(const char* _name, const char* _value) -> void {
 }
 
 auto
-zpt::HTTPReqT::param(const char* _name, std::string _value) -> void {
+zpt::HTTPReqT::param(const char* _name, std::string const& _value) -> void {
     this->__params.insert(std::make_pair(_name, _value));
 }
 
 auto
-zpt::HTTPReqT::param(std::string _name, std::string _value) -> void {
+zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> void {
     this->__params.insert(std::make_pair(_name, _value));
 }
 

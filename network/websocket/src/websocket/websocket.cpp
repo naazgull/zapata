@@ -99,7 +99,7 @@ zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
 }
 
 auto
-zpt::net::ws::write(zpt::stream& _stream, std::string _in) -> void {
+zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
     int _len = _in.length();
 
     _stream << (unsigned char)0x81;

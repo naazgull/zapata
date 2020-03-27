@@ -94,14 +94,14 @@ class HTTPObj {
     virtual ~HTTPObj();
 
     auto body() -> std::string&;
-    auto body(std::string) -> void;
+    auto body(std::string const& _body) -> void;
     auto headers() -> zpt::http::header_map&;
     auto header(const char* _name) -> std::string;
     auto header(const char* _name, const char* _value) -> void;
-    auto header(const char* _name, std::string _value) -> void;
-    auto header(std::string _name, std::string _value) -> void;
+    auto header(const char* _name, std::string const& _value) -> void;
+    auto header(std::string const& _name, std::string const& _value) -> void;
     auto version() -> std::string&;
-    auto version(std::string _version) -> void;
+    auto version(std::string const& _version) -> void;
 
     operator std::string();
 
@@ -125,14 +125,14 @@ class HTTPReqT : public HTTPObj {
     auto method() -> zpt::performative;
     auto method(zpt::performative) -> void;
     auto url() -> std::string&;
-    auto url(std::string) -> void;
+    auto url(std::string const&) -> void;
     auto query() -> std::string&;
-    auto query(std::string) -> void;
+    auto query(std::string const&) -> void;
     auto params() -> zpt::http::parameter_map&;
     auto param(const char* _name) -> std::string;
     auto param(const char* _name, const char* _value) -> void;
-    auto param(const char* _name, std::string _value) -> void;
-    auto param(std::string _name, std::string _value) -> void;
+    auto param(const char* _name, std::string const& _value) -> void;
+    auto param(std::string const& _name, std::string const& _value) -> void;
 
     virtual auto stringify(std::string& _out) -> void;
     virtual auto stringify(std::ostream& _out) -> void;

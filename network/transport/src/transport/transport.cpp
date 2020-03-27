@@ -53,14 +53,14 @@ zpt::transport::transport(std::unique_ptr<zpt::transport::transport_t> _underlyi
   : __underlying{ _underlying.release() } {}
 
 auto
-zpt::transport::layer::add(std::string _scheme, zpt::transport _transport)
+zpt::transport::layer::add(std::string const& _scheme, zpt::transport _transport)
   -> zpt::transport::layer& {
     this->__underlying.insert(std::make_pair(_scheme, _transport));
     return (*this);
 }
 
 auto
-zpt::transport::layer::get(std::string _scheme) -> zpt::transport& {
+zpt::transport::layer::get(std::string const& _scheme) -> zpt::transport& {
     auto _found = this->__underlying.find(_scheme);
     if (_found == this->__underlying.end()) {
         throw zpt::NoMoreElementsException("there is no such transport");

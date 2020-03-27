@@ -44,7 +44,7 @@ zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
 }
 
 auto
-zpt::UPnPFactory::is_reusable(std::string _type) -> bool {
+zpt::UPnPFactory::is_reusable(std::string const& _type) -> bool {
     return true;
 }
 

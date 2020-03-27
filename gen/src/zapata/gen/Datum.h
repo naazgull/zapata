@@ -14,31 +14,31 @@ $[namespaces.begin] namespace datums {
         auto get(
           std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
           ->zpt::json;
-        auto query(std::string _topic,
+        auto query(std::string const& _topic,
                    zpt::json _filter,
                    zpt::ev::emitter _emitter,
                    zpt::json _identity,
                    zpt::json _envelope)
           ->zpt::json;
-        auto insert(std::string _topic,
+        auto insert(std::string const& _topic,
                     zpt::json _document,
                     zpt::ev::emitter _emitter,
                     zpt::json _identity,
                     zpt::json _envelope)
           ->zpt::json;
-        auto save(std::string _topic,
+        auto save(std::string const& _topic,
                   zpt::json _document,
                   zpt::ev::emitter _emitter,
                   zpt::json _identity,
                   zpt::json _envelope)
           ->zpt::json;
-        auto set(std::string _topic,
+        auto set(std::string const& _topic,
                  zpt::json _document,
                  zpt::ev::emitter _emitter,
                  zpt::json _identity,
                  zpt::json _envelope)
           ->zpt::json;
-        auto set(std::string _topic,
+        auto set(std::string const& _topic,
                  zpt::json _document,
                  zpt::json _filter,
                  zpt::ev::emitter _emitter,
@@ -48,7 +48,7 @@ $[namespaces.begin] namespace datums {
         auto remove(
           std::string _topic, zpt::ev::emitter _emitter, zpt::json _identity, zpt::json _envelope)
           ->zpt::json;
-        auto remove(std::string _topic,
+        auto remove(std::string const& _topic,
                     zpt::json _filter,
                     zpt::ev::emitter _emitter,
                     zpt::json _identity,

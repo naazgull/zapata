@@ -25,7 +25,7 @@ SOFTWARE.
 #include <zapata/mail/manip.h>
 
 bool
-zpt::sendmail(std::string _to,
+zpt::sendmail(std::string const& _to,
               std::string _from,
               std::string _subject,
               std::string _message,

@@ -40,19 +40,22 @@ class stream {
       public:
         constexpr static int MAX_EVENT_PER_POLL{ 10 };
 
-        polling(long _max_stream_readers, long _poll_wait_timeout = 50000);
+        polling(long _max_stream_readers, long _poll_wait_timeout = -1);
         virtual ~polling();
 
         auto listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling&;
         auto mute(zpt::stream& _stream) -> zpt::stream::polling&;
         auto pool() -> void;
         auto pop() -> zpt::stream*;
+        auto shutdown() -> void;
 
       private:
         int __epoll_fd{ -1 };
-        long __poll_wait_timeout{ 0 };
+        long long __poll_wait_timeout{ 0 };
         zpt::epoll_event_t __epoll_events[MAX_EVENT_PER_POLL];
         zpt::lf::queue<zpt::stream*> __alive_streams;
+        std::map<int, zpt::stream*> __polled_streams;
+        std::atomic<bool> __shutdown{ false };
     };
 
     stream() = default;

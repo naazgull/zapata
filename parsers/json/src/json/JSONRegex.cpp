@@ -15,7 +15,7 @@ zpt::JSONRegex::JSONRegex(JSONRegex&& _rhs) {
     (*this) = _rhs;
 }
 
-zpt::JSONRegex::JSONRegex(std::string _target)
+zpt::JSONRegex::JSONRegex(std::string const& _target)
   : __underlying_original{ _target }
   , __underlying{ std::make_shared<std::regex>(_target) } {}
 
@@ -73,7 +73,7 @@ zpt::JSONRegex::JSONRegex::operator==(zpt::json _rhs) -> bool {
 }
 
 auto
-zpt::JSONRegex::JSONRegex::operator==(std::string _rhs) -> bool {
+zpt::JSONRegex::JSONRegex::operator==(std::string const& _rhs) -> bool {
     return std::regex_match(_rhs, (*this->__underlying.get()));
 }
 
@@ -88,7 +88,7 @@ zpt::JSONRegex::JSONRegex::operator!=(zpt::json _rhs) -> bool {
 }
 
 auto
-zpt::JSONRegex::JSONRegex::operator!=(std::string _rhs) -> bool {
+zpt::JSONRegex::JSONRegex::operator!=(std::string const& _rhs) -> bool {
     return !((*this) == _rhs);
 }
 

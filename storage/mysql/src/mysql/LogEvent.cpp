@@ -943,7 +943,7 @@ zpt::mysql::PreviousGTIDSLogEvent::consume(zpt::mysql::event_header _header, std
 }
 
 auto
-consume(std::string _binlog) -> int {
+consume(std::string const& _binlog) -> int {
     zpt::mysql::event _event;
     return 0;
 }

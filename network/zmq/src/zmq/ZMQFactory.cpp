@@ -40,7 +40,7 @@ namespace zpt {
 zmq::context_t __context(1);
 }
 
-zpt::ZMQChannel::ZMQChannel(std::string _connection, zpt::json _options)
+zpt::ZMQChannel::ZMQChannel(std::string const& _connection, zpt::json _options)
   : zpt::Channel(_connection, _options) {}
 zpt::ZMQChannel::~ZMQChannel() {}
 
@@ -151,7 +151,7 @@ zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
     return zpt::undefined;
 }
 
-zpt::ZMQReq::ZMQReq(std::string _connection, zpt::json _options)
+zpt::ZMQReq::ZMQReq(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REQ));
@@ -253,7 +253,7 @@ zpt::ZMQReq::protocol() -> std::string {
     return "ZMQ-REQ/4.1";
 }
 
-zpt::ZMQRep::ZMQRep(std::string _connection, zpt::json _options)
+zpt::ZMQRep::ZMQRep(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_REP));
@@ -355,7 +355,7 @@ zpt::ZMQRep::protocol() -> std::string {
     return "ZMQ-REP/4.1";
 }
 
-zpt::ZMQXPubXSub::ZMQXPubXSub(std::string _connection, zpt::json _options)
+zpt::ZMQXPubXSub::ZMQXPubXSub(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket_sub(nullptr)
   , __socket_pub(nullptr) {
@@ -504,7 +504,7 @@ zpt::ZMQXPubXSub::protocol() -> std::string {
     return "ZMQ-XPUB-XSUB/4.1";
 }
 
-zpt::ZMQPubSub::ZMQPubSub(std::string _connection, zpt::json _options)
+zpt::ZMQPubSub::ZMQPubSub(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket_sub(nullptr)
   , __socket_pub(nullptr) {
@@ -664,7 +664,7 @@ zpt::ZMQPubSub::protocol() -> std::string {
 }
 
 void
-zpt::ZMQPubSub::subscribe(std::string _prefix) {
+zpt::ZMQPubSub::subscribe(std::string const& _prefix) {
     std::lock_guard<std::mutex> _lock(this->in_mtx());
     for (size_t _p = 0; _p != 8; _p++) {
         this->__socket_sub->setsockopt(
@@ -674,7 +674,7 @@ zpt::ZMQPubSub::subscribe(std::string _prefix) {
     }
 }
 
-zpt::ZMQPub::ZMQPub(std::string _connection, zpt::json _options)
+zpt::ZMQPub::ZMQPub(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_PUB));
@@ -780,7 +780,7 @@ zpt::ZMQPub::recv() -> zpt::json {
     return zpt::undefined;
 }
 
-zpt::ZMQSub::ZMQSub(std::string _connection, zpt::json _options)
+zpt::ZMQSub::ZMQSub(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_SUB));
@@ -887,7 +887,7 @@ zpt::ZMQSub::send(zpt::json _envelope) -> zpt::json {
 }
 
 void
-zpt::ZMQSub::subscribe(std::string _prefix) {
+zpt::ZMQSub::subscribe(std::string const& _prefix) {
     std::lock_guard<std::mutex> _lock(this->in_mtx());
     for (size_t _p = 0; _p != 8; _p++) {
         this->__socket->setsockopt(
@@ -897,7 +897,7 @@ zpt::ZMQSub::subscribe(std::string _prefix) {
     }
 }
 
-zpt::ZMQPush::ZMQPush(std::string _connection, zpt::json _options)
+zpt::ZMQPush::ZMQPush(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_PUSH));
@@ -1004,7 +1004,7 @@ zpt::ZMQPush::recv() -> zpt::json {
     return zpt::undefined;
 }
 
-zpt::ZMQPull::ZMQPull(std::string _connection, zpt::json _options)
+zpt::ZMQPull::ZMQPull(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_PULL));
@@ -1110,7 +1110,7 @@ zpt::ZMQPull::send(zpt::json _envelope) -> zpt::json {
     return zpt::undefined;
 }
 
-zpt::ZMQRouterDealer::ZMQRouterDealer(std::string _connection, zpt::json _options)
+zpt::ZMQRouterDealer::ZMQRouterDealer(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket_router(nullptr)
   , __socket_dealer(nullptr) {
@@ -1277,7 +1277,7 @@ zpt::ZMQRouterDealer::protocol() -> std::string {
     return "ZMQ-ROUTER-DEALER/4.1";
 }
 
-zpt::ZMQRouter::ZMQRouter(std::string _connection, zpt::json _options)
+zpt::ZMQRouter::ZMQRouter(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_ROUTER));
@@ -1542,7 +1542,7 @@ zpt::ZMQRouter::recv() -> zpt::json {
                1061 } };
 }
 
-zpt::ZMQDealer::ZMQDealer(std::string _connection, zpt::json _options)
+zpt::ZMQDealer::ZMQDealer(std::string const& _connection, zpt::json _options)
   : zpt::ZMQChannel(_connection, _options)
   , __socket(nullptr) {
     this->__socket = zmq::socket_ptr(new zmq::socket_t(zpt::__context, ZMQ_DEALER));
@@ -1732,7 +1732,7 @@ zpt::ZMQDealer::recv() -> zpt::json {
 }
 
 auto
-zpt::str2type(std::string _type) -> short {
+zpt::str2type(std::string const& _type) -> short {
     std::transform(_type.begin(), _type.end(), _type.begin(), ::toupper);
     if (_type == "ROUTER/DEALER") {
         return ZMQ_ROUTER_DEALER;
@@ -1849,7 +1849,7 @@ zpt::ZMQFactory::produce(zpt::json _options) -> zpt::socket {
 }
 
 auto
-zpt::ZMQFactory::is_reusable(std::string _type) -> bool {
+zpt::ZMQFactory::is_reusable(std::string const& _type) -> bool {
     switch (_type) {
         case ZMQ_ROUTER_DEALER: {
             return true;

@@ -47,7 +47,11 @@ zpt::to_string(const char* _in) -> std::string {
 }
 
 int
-zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file) {
+zpt::log(std::string const& _text,
+         zpt::LogLevel _level,
+         std::string const& _host,
+         int _line,
+         std::string const& _file) {
     if (zpt::log_fd == nullptr) {
         return -1;
     }
@@ -67,9 +71,6 @@ zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, 
                        << std::flush;
     }
     else {
-        zpt::replace(_text, "\n", "\\n");
-        zpt::replace(_text, "\"", "\\\"");
-
         _log.assign("{\"version\":\"1.1\",\"host\":\"");
         _log.insert(_log.length(), _host);
         _log.insert(_log.length(), "\",\"source\":\"");
@@ -81,7 +82,8 @@ zpt::log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, 
         _log.insert(_log.length(), ":");
         zpt::tostr(_log, _line);
         _log.insert(_log.length(), " | ");
-        _log.insert(_log.length(), _text);
+        _log.insert(_log.length(),
+                    zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\""));
         _log.insert(_log.length(), "\",\"timestamp\":");
         zpt::tostr(_log, _tp.tv_sec);
         _log.insert(_log.length(), ".");

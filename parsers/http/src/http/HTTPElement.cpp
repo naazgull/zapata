@@ -62,7 +62,7 @@ zpt::HTTPObj::body() -> std::string& {
 }
 
 auto
-zpt::HTTPObj::body(std::string _body) -> void {
+zpt::HTTPObj::body(std::string const& _body) -> void {
     this->__headers["Content-Length"] = std::to_string(_body.length());
     this->__body.assign(_body.data());
 }
@@ -87,14 +87,14 @@ zpt::HTTPObj::header(const char* _name, const char* _value) -> void {
 }
 
 auto
-zpt::HTTPObj::header(const char* _name, std::string _value) -> void {
+zpt::HTTPObj::header(const char* _name, std::string const& _value) -> void {
     std::string _n(_name);
     zpt::prettify_header_name(_n);
     this->__headers[_n] = _value;
 }
 
 auto
-zpt::HTTPObj::header(std::string _name, std::string _value) -> void {
+zpt::HTTPObj::header(std::string const& _name, std::string const& _value) -> void {
     std::string _n(_name);
     zpt::prettify_header_name(_n);
     this->__headers[_n] = _value;
@@ -106,7 +106,7 @@ zpt::HTTPObj::version() -> std::string& {
 }
 
 auto
-zpt::HTTPObj::version(std::string _version) -> void {
+zpt::HTTPObj::version(std::string const& _version) -> void {
     this->__version.assign(_version);
 }
 

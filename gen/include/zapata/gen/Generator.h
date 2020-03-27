@@ -44,13 +44,13 @@ typedef zpt::GenResourcePtr resource;
 auto
 url_pattern_to_regexp(zpt::json _url_pattern) -> std::string;
 auto
-url_pattern_to_vars(std::string _url_pattern) -> std::string;
+url_pattern_to_vars(std::string const& _url_pattern) -> std::string;
 auto
 url_pattern_to_var_decl(zpt::json _url) -> std::string;
 auto
-url_pattern_to_vars_lisp(std::string _url) -> std::string;
+url_pattern_to_vars_lisp(std::string const& _url) -> std::string;
 auto
-url_pattern_to_vars_python(std::string _url) -> std::string;
+url_pattern_to_vars_python(std::string const& _url) -> std::string;
 auto
 url_pattern_to_var_decl_lisp(zpt::json _url) -> std::string;
 auto
@@ -101,12 +101,12 @@ class Generator {
     virtual auto build_container() -> void;
     virtual auto build_mutations() -> void;
     virtual auto build_docs() -> void;
-    virtual auto generate_value(zpt::json _field, std::string _name) -> std::string;
-    virtual auto generate_title_performative(zpt::json _resource, std::string _performative)
+    virtual auto generate_value(zpt::json _field, std::string const& _name) -> std::string;
+    virtual auto generate_title_performative(zpt::json _resource, std::string const& _performative)
       -> std::string;
     virtual auto get_fields(zpt::json _resource, int* _parent_type = nullptr) -> zpt::json;
 
-    static auto get_datum(std::string _ref) -> std::string;
+    static auto get_datum(std::string const& _ref) -> std::string;
 
   private:
     zpt::json __options;
@@ -122,8 +122,8 @@ class GenDatum {
     virtual auto build() -> std::string;
     virtual auto build_data_layer() -> std::string;
     virtual auto build_query(zpt::json _field) -> std::string;
-    virtual auto build_doc_query(zpt::json _field, std::string _name) -> std::string;
-    virtual auto build_params(zpt::json _rel, bool _multi, std::string _var_name = "")
+    virtual auto build_doc_query(zpt::json _field, std::string const& _name) -> std::string;
+    virtual auto build_params(zpt::json _rel, bool _multi, std::string const& _var_name = "")
       -> std::string;
     virtual auto build_inverted_params(zpt::json _rel) -> std::string;
     virtual auto build_topic(zpt::json _topic) -> std::string;
@@ -135,21 +135,29 @@ class GenDatum {
     virtual auto build_patch(zpt::json _resource) -> std::string;
     virtual auto build_delete(zpt::json _resource) -> std::string;
     virtual auto build_head(zpt::json _resource) -> std::string;
-    virtual auto build_mutations(std::string _parent_name, std::string _child_includes)
-      -> std::string;
+    virtual auto build_mutations(std::string const& _parent_name,
+                                 std::string const& _child_includes) -> std::string;
     virtual auto build_insert() -> std::string;
     virtual auto build_update() -> std::string;
     virtual auto build_remove() -> std::string;
     virtual auto build_replace() -> std::string;
     virtual auto build_validation() -> std::string;
-    virtual auto build_associations_insert(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_update(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_remove(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_replace(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_for_insert(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_for_update(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_for_remove(std::string _name, zpt::json _field) -> std::string;
-    virtual auto build_associations_for_replace(std::string _name, zpt::json _field) -> std::string;
+    virtual auto build_associations_insert(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_update(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_remove(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_replace(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_for_insert(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_for_update(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_for_remove(std::string const& _name, zpt::json _field)
+      -> std::string;
+    virtual auto build_associations_for_replace(std::string const& _name, zpt::json _field)
+      -> std::string;
     virtual auto build_associations_get() -> std::string;
     virtual auto build_associations_query() -> std::string;
     virtual auto build_associations_insert() -> std::string;
@@ -165,9 +173,11 @@ class GenDatum {
     virtual auto build_extends_remove_topic() -> std::string;
     virtual auto build_extends_remove_pattern() -> std::string;
 
-    static auto build_initialization(std::string _dbms, std::string _namespace = "") -> std::string;
-    static auto build_data_client(zpt::json _dbms, zpt::json _ordered, std::string _namespace)
+    static auto build_initialization(std::string const& _dbms, std::string const& _namespace = "")
       -> std::string;
+    static auto build_data_client(zpt::json _dbms,
+                                  zpt::json _ordered,
+                                  std::string const& _namespace) -> std::string;
     static auto build_ordered_data_client(zpt::json _dbms,
                                           zpt::json _ordered,
                                           std::string _namespace) -> std::string;
@@ -187,7 +197,7 @@ class GenResource {
     virtual auto spec() -> zpt::json;
     virtual auto build() -> std::string;
     virtual auto build_data_layer() -> std::string;
-    virtual auto build_handlers(std::string _parent_name, std::string _child_includes)
+    virtual auto build_handlers(std::string const& _parent_name, std::string const& _child_includes)
       -> std::string;
     virtual auto build_mutations() -> std::string;
 

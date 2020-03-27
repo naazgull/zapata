@@ -54,7 +54,7 @@ get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
 auto
 get_column_values(zpt::json _document, zpt::json _opts) -> std::string;
 auto
-escape_name(std::string _in) -> std::string;
+escape_name(std::string const& _in) -> std::string;
 auto
 escape(zpt::json _in) -> std::string;
 } // namespace mysql

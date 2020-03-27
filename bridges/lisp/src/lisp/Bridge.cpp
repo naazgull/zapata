@@ -83,7 +83,7 @@ zpt::lisp::Bridge::unbind() -> void {
 }
 
 auto
-zpt::lisp::Bridge::eval(std::string _call) -> zpt::lisp::object {
+zpt::lisp::Bridge::eval(std::string const& _call) -> zpt::lisp::object {
     return zpt::lisp::object(cl_safe_eval(c_string_to_object(_call.c_str()), Cnil, Cnil));
 }
 
@@ -113,7 +113,7 @@ zpt::lisp::Bridge::initialize() -> void {
 }
 
 auto
-zpt::lisp::Bridge::load_module(std::string _module) -> void {
+zpt::lisp::Bridge::load_module(std::string const& _module) -> void {
     if (_module.find(".lisp") != std::string::npos || _module.find(".fasb") != std::string::npos) {
         zlog(std::string("loading module '") + _module + std::string("'"), zpt::notice);
         this->eval(std::string("(load \"") + _module + std::string("\")"));
@@ -208,7 +208,7 @@ zpt::lisp::Bridge::defchk(std::function<bool(const std::string, const std::strin
 }
 
 auto
-zpt::lisp::Bridge::defmod(std::string _module) -> void {
+zpt::lisp::Bridge::defmod(std::string const& _module) -> void {
     this->__current.assign(_module);
 }
 

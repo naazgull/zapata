@@ -39,7 +39,7 @@ class MQTTFactory : public zpt::ChannelFactory {
     MQTTFactory();
     virtual ~MQTTFactory();
     virtual auto produce(zpt::json _options) -> zpt::socket;
-    virtual auto is_reusable(std::string _type) -> bool;
+    virtual auto is_reusable(std::string const& _type) -> bool;
     virtual auto clean(zpt::socket _socket) -> bool;
 
     static auto on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void;

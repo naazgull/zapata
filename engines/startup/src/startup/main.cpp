@@ -22,9 +22,21 @@
 
 #include <zapata/startup.h>
 #include <zapata/transport.h>
+#include <signal.h>
+#include <unistd.h>
+#include <csignal>
+
+auto
+deallocate(int _signal) -> void {
+    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
+    if (!_boot.unload()) {
+        zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).shutdown();
+    }
+}
 
 auto
 main(int _argc, char* _argv[]) -> int {
+    std::signal(SIGUSR1, deallocate);
     try {
         zpt::json _parameters = zpt::parameters::parse(_argc,
                                                        _argv,
@@ -38,13 +50,17 @@ main(int _argc, char* _argv[]) -> int {
 
         zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(), 10, 10000);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+
         auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
-        _boot
-          .initialize(_parameters) //
+        _boot //
+          .initialize(_parameters)
+          .add_thread(
+            []() -> void { zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).pool(); })
           .start();
+
         zpt::globals::dealloc<zpt::stream::polling>(zpt::STREAM_POLLING());
         zpt::globals::dealloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-        zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
+        zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
     }
     catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl << std::flush;

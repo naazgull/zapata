@@ -23,15 +23,13 @@
 #include <zapata/startup/configuration.h>
 
 auto
-zpt::startup::configuration::load(zpt::json _parameters) -> zpt::json {
-    zpt::json _to_return = zpt::json::object();
+zpt::startup::configuration::load(zpt::json _parameters, zpt::json& _output) -> void {
     for (auto [_, __, _conf_file] : _parameters["--conf-file"]) {
-        zpt::conf::file(static_cast<std::string>(_conf_file), _to_return);
+        zpt::conf::file(static_cast<std::string>(_conf_file), _output);
     }
     for (auto [_, __, _conf_dir] : _parameters["--conf-dir"]) {
-        zpt::conf::dirs(static_cast<std::string>(_conf_dir), _to_return);
+        zpt::conf::dirs(static_cast<std::string>(_conf_dir), _output);
     }
-    zpt::conf::dirs(_to_return);
-    zpt::conf::env(_to_return);
-    return _to_return;
+    zpt::conf::dirs(_output);
+    zpt::conf::env(_output);
 }

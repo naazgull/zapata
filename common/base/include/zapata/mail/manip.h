@@ -31,7 +31,7 @@ SOFTWARE.
 
 namespace zpt {
 bool
-sendmail(std::string _to,
+sendmail(std::string const& _to,
          std::string _from,
          std::string _subject,
          std::string _message,

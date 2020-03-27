@@ -12,7 +12,7 @@ symbol_table __lambdas = zpt::symbol_table(
   new std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
 }
 
-zpt::pretty::pretty(std::string _rhs)
+zpt::pretty::pretty(std::string const& _rhs)
   : __underlying{ _rhs } {}
 
 zpt::pretty::pretty(const char* _rhs)
@@ -68,8 +68,9 @@ zpt::json::json(zpt::json&& _rhs) {
 zpt::json::json(std::unique_ptr<zpt::JSONElementT> _target)
   : __underlying{ _target.release() } {}
 
-zpt::json::json(std::initializer_list<zpt::JSONElementT> _init)
-  : __underlying{ std::make_shared<zpt::JSONElementT>(_init) } {}
+zpt::json::json(std::initializer_list<zpt::json> _init) {
+    (*this) = _init;
+}
 
 zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) {
     (*this) = _rhs;
@@ -100,6 +101,54 @@ zpt::json::operator=(zpt::json&& _rhs) -> zpt::json& {
 auto
 zpt::json::operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json& {
     this->__underlying = std::get<2>(_rhs).__underlying;
+    return (*this);
+}
+
+auto
+zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
+    if (_list.size() == 0) {
+        return (*this);
+    }
+
+    this->__underlying = std::make_shared<zpt::JSONElementT>();
+    zpt::json _head = *_list.begin();
+
+    if (_list.size() == 1) {
+        (*this) = _head;
+        return (*this);
+    }
+
+    bool _is_array = (_list.size() > 1 && _head->type() == zpt::JSString &&
+                      _head == "1b394520-2fed-4118-b622-940f25b8b35e");
+
+    expect(_is_array || (_list.size() % 2 == 0 && _head->type() == zpt::JSString),
+           "initializer list parameter doesn't seem either an array or an object",
+           500,
+           0);
+
+    this->__underlying->type(_is_array ? zpt::JSArray : zpt::JSObject);
+
+    size_t _idx{ 0 };
+    for (auto _element : _list) {
+        if (_is_array && _idx == 0) {
+            ++_idx;
+            continue;
+        }
+
+        if (!_is_array && _idx % 2 == 0) {
+            this->__underlying->obj()->push(_element->str());
+            ++_idx;
+            continue;
+        }
+
+        if (_is_array) {
+            this->__underlying->arr()->push(_element);
+        }
+        else {
+            this->__underlying->obj()->push(_element);
+        }
+        ++_idx;
+    }
     return (*this);
 }
 
@@ -169,9 +218,9 @@ zpt::json::operator zpt::timestamp_t() {
     return this->__underlying.get()->operator zpt::timestamp_t();
 }
 
-zpt::json::operator zpt::pretty() {
-    return this->__underlying.get()->operator zpt::pretty();
-}
+// zpt::json::operator zpt::pretty() {
+//     return this->__underlying.get()->operator zpt::pretty();
+// }
 
 zpt::json::operator zpt::JSONObj() {
     return this->__underlying.get()->operator zpt::JSONObj();
@@ -206,7 +255,7 @@ zpt::json::operator std::regex&() {
 }
 
 auto
-zpt::json::parse(std::string _in) -> zpt::json& {
+zpt::json::parse(std::string const& _in) -> zpt::json& {
     std::istringstream _iss;
     _iss.str(_in);
     return this->parse(_iss);
@@ -255,7 +304,7 @@ zpt::json::array() -> zpt::json {
 }
 
 auto
-zpt::json::date(std::string _e) -> zpt::json {
+zpt::json::date(std::string const& _e) -> zpt::json {
     zpt::timestamp_t _v(zpt::timestamp(_e));
     return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
 }
@@ -269,13 +318,13 @@ zpt::json::date() -> zpt::json {
 }
 
 auto
-zpt::json::lambda(std::string _name, unsigned short _n_args) -> zpt::json {
+zpt::json::lambda(std::string const& _name, unsigned short _n_args) -> zpt::json {
     zpt::lambda _v(_name, _n_args);
     return zpt::json{ std::make_unique<zpt::JSONElementT>(_v) };
 }
 
 auto
-zpt::json::type_of(std::string _value) -> zpt::JSONType {
+zpt::json::type_of(std::string const& _value) -> zpt::JSONType {
     return zpt::JSString;
 }
 
@@ -489,12 +538,12 @@ zpt::json::iterator::operator--(int) -> iterator {
 }
 
 zpt::json
-zpt::get(std::string _path, zpt::json _source) {
+zpt::get(std::string const& _path, zpt::json _source) {
     return _source->get_path(_path);
 }
 
 zpt::timestamp_t
-zpt::timestamp(std::string _json_date) {
+zpt::timestamp(std::string const& _json_date) {
     if (_json_date.length() == 0) {
         return (zpt::timestamp_t)std::chrono::duration_cast<std::chrono::milliseconds>(
                  std::chrono::system_clock::now().time_since_epoch())

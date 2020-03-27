@@ -90,7 +90,7 @@ zpt::normalize_path(std::string& _in_out, bool _with_trailing) {
 }
 
 void
-zpt::cipher(std::string _in, std::string _key, std::string& _out) {
+zpt::cipher(std::string const& _in, std::string const& _key, std::string& _out) {
     unsigned int _ikey = _key.length(), iIn = _in.length(), x = 0;
     std::string _s_encrypted(_in);
 
@@ -104,12 +104,12 @@ zpt::cipher(std::string _in, std::string _key, std::string& _out) {
 }
 
 void
-zpt::decipher(std::string _in, std::string _key, std::string& _out) {
+zpt::decipher(std::string const& _in, std::string const& _key, std::string& _out) {
     zpt::cipher(_in, _key, _out);
 }
 
 void
-zpt::encrypt(std::string& _out, std::string _in, std::string _key) {
+zpt::encrypt(std::string& _out, std::string const& _in, std::string const& _key) {
     Bytef* src = new Bytef[_in.length()];
     size_t destLen = (size_t)(_in.length() * 1.1 + 12);
     Bytef* dest = new Bytef[destLen];
@@ -140,7 +140,7 @@ zpt::encrypt(std::string& _out, std::string _in, std::string _key) {
 }
 
 void
-zpt::decrypt(std::string& _out, std::string _in, std::string _key) {
+zpt::decrypt(std::string& _out, std::string const& _in, std::string const& _key) {
     int _idx = _in.find('.');
     std::string _length(_in.substr(0, _idx));
     size_t _size = 0;
@@ -194,7 +194,7 @@ zpt::prettify_header_name(std::string& name) {
 }
 
 std::string
-zpt::r_ltrim(std::string _in_out) {
+zpt::r_ltrim(std::string const& _in_out) {
     std::string _return(_in_out.data());
     _return.erase(_return.begin(),
                   std::find_if(_return.begin(),
@@ -204,7 +204,7 @@ zpt::r_ltrim(std::string _in_out) {
 }
 
 std::string
-zpt::r_rtrim(std::string _in_out) {
+zpt::r_rtrim(std::string const& _in_out) {
     std::string _return(_in_out.data());
     _return.erase(std::find_if(_return.rbegin(),
                                _return.rend(),
@@ -215,7 +215,7 @@ zpt::r_rtrim(std::string _in_out) {
 }
 
 std::string
-zpt::r_trim(std::string _in_out) {
+zpt::r_trim(std::string const& _in_out) {
     std::string _return(_in_out.data());
     zpt::ltrim(_return);
     zpt::rtrim(_return);
@@ -244,7 +244,7 @@ zpt::r_replace(std::string str, std::string find, std::string replace) {
 }
 
 std::string
-zpt::r_normalize_path(std::string _in_out, bool _with_trailing) {
+zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) {
     std::string _return(_in_out.data());
     if (_with_trailing) {
         if (_return[_return.length() - 1] != '/') {
@@ -260,7 +260,7 @@ zpt::r_normalize_path(std::string _in_out, bool _with_trailing) {
 }
 
 std::string
-zpt::r_cipher(std::string _in, std::string _key) {
+zpt::r_cipher(std::string const& _in, std::string const& _key) {
     std::string _out;
     unsigned int _ikey = _key.length(), iIn = _in.length(), x = 0;
     std::string _s_encrypted(_in);
@@ -276,12 +276,12 @@ zpt::r_cipher(std::string _in, std::string _key) {
 }
 
 std::string
-zpt::r_decipher(std::string _in, std::string _key) {
+zpt::r_decipher(std::string const& _in, std::string const& _key) {
     return zpt::r_cipher(_in, _key);
 }
 
 std::string
-zpt::r_encrypt(std::string _in, std::string _key) {
+zpt::r_encrypt(std::string const& _in, std::string const& _key) {
     std::string _out;
     Bytef* src = new Bytef[_in.length()];
     size_t destLen = (size_t)(_in.length() * 1.1 + 12);
@@ -314,7 +314,7 @@ zpt::r_encrypt(std::string _in, std::string _key) {
 }
 
 std::string
-zpt::r_decrypt(std::string _in, std::string _key) {
+zpt::r_decrypt(std::string const& _in, std::string const& _key) {
     std::string _out;
     int _idx = _in.find('.');
     std::string _length(_in.substr(0, _idx));

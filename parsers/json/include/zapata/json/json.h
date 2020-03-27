@@ -14,7 +14,7 @@ class csv : public std::string {
   public:
     inline csv()
       : std::string(){};
-    inline csv(std::string _rhs)
+    inline csv(std::string const& _rhs)
       : std::string(_rhs){};
     inline csv(const char* _rhs)
       : std::string(_rhs){};
@@ -81,20 +81,20 @@ class csv : public std::string {
 };
 
 auto
-split(std::string _to_split, std::string _separator, bool _trim = false) -> zpt::json;
+split(std::string const& _to_split, std::string const& _separator, bool _trim = false) -> zpt::json;
 auto
-join(zpt::json _to_join, std::string _separator) -> std::string;
+join(zpt::json _to_join, std::string const& _separator) -> std::string;
 
 namespace path {
 auto
-split(std::string _to_split) -> zpt::json;
+split(std::string const& _to_split) -> zpt::json;
 auto
 join(zpt::json _to_join) -> std::string;
 } // namespace path
 
 namespace email {
 auto
-parse(std::string _email) -> zpt::json;
+parse(std::string const& _email) -> zpt::json;
 }
 
 auto
@@ -106,9 +106,9 @@ getopt(int _argc, char* _argv[]) -> zpt::json;
 auto
 setup(zpt::json _options) -> void;
 auto
-file(std::string _file, zpt::json _options) -> void;
+file(std::string const& _file, zpt::json _options) -> void;
 auto
-dirs(std::string _dir, zpt::json _options) -> void;
+dirs(std::string const& _dir, zpt::json _options) -> void;
 auto
 dirs(zpt::json _options) -> void;
 auto
@@ -130,7 +130,7 @@ timestamp(zpt::json _timestamp) -> bool;
 namespace http {
 namespace cookies {
 auto
-deserialize(std::string _cookie_header) -> zpt::json;
+deserialize(std::string const& _cookie_header) -> zpt::json;
 auto
 serialize(zpt::json _info) -> std::string;
 } // namespace cookies

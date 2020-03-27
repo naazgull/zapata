@@ -121,7 +121,7 @@ zpt::generate::r_uuid() -> std::string {
 }
 
 auto
-zpt::test::uuid(std::string _uuid) -> bool {
+zpt::test::uuid(std::string const& _uuid) -> bool {
     static const std::regex _uuid_rgx("^([a-fA-F0-9]{8})-"
                                       "([a-fA-F0-9]{4})-"
                                       "([a-fA-F0-9]{4})-"
@@ -131,18 +131,18 @@ zpt::test::uuid(std::string _uuid) -> bool {
 }
 
 auto
-zpt::test::utf8(std::string _uri) -> bool {
+zpt::test::utf8(std::string const& _uri) -> bool {
     return true;
 }
 
 auto
-zpt::test::ascii(std::string _ascii) -> bool {
+zpt::test::ascii(std::string const& _ascii) -> bool {
     static const std::regex _ascii_rgx("^([a-zA-Z0-9_@:;./+*|-]+)$");
     return std::regex_match(_ascii, _ascii_rgx);
 }
 
 auto
-zpt::test::token(std::string _token) -> bool {
+zpt::test::token(std::string const& _token) -> bool {
     return true;
 }
 
@@ -160,27 +160,27 @@ zpt::test::uri(std::string _uri) -> bool {
 }
 
 auto
-zpt::test::email(std::string _email) -> bool {
+zpt::test::email(std::string const& _email) -> bool {
     static const std::regex _email_rgx("([a-zA-Z0-9])([a-zA-Z0-9+._-]*)@"
                                        "([a-zA-Z0-9])([a-zA-Z0-9+._-]*)");
     return std::regex_match(_email, _email_rgx);
 }
 
 auto
-zpt::test::phone(std::string _phone) -> bool {
+zpt::test::phone(std::string const& _phone) -> bool {
     static const std::regex _phone_rgx("(?:\\(([0-9]){1,3}\\)([ ]*))?"
                                        "([0-9]){3,12}");
     return std::regex_match(_phone, _phone_rgx);
 }
 
 auto
-zpt::test::regex(std::string _target, std::string _regex) -> bool {
+zpt::test::regex(std::string const& _target, std::string const& _regex) -> bool {
     std::regex _rgx(_regex);
     return std::regex_match(_target, _rgx);
 }
 
 auto
-zpt::test::timestamp(std::string _timestamp) -> bool {
+zpt::test::timestamp(std::string const& _timestamp) -> bool {
     static const std::regex _timestamp_rgx("([0-9]){4}"
                                            "(?:[ /_-])?"
                                            "([0-9]){2}"

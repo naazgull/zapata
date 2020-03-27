@@ -39,7 +39,7 @@ class UPnPFactory : public zpt::ChannelFactory {
     UPnPFactory();
     virtual ~UPnPFactory();
     virtual auto produce(zpt::json _options) -> zpt::socket;
-    virtual auto is_reusable(std::string _type) -> bool;
+    virtual auto is_reusable(std::string const& _type) -> bool;
     virtual auto clean(zpt::socket _socket) -> bool;
 
   private:

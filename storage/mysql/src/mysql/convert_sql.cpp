@@ -346,7 +346,7 @@ zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
 }
 
 auto
-zpt::mysql::escape_name(std::string _in) -> std::string {
+zpt::mysql::escape_name(std::string const& _in) -> std::string {
     return _in;
 }
 

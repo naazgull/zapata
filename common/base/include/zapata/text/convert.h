@@ -184,13 +184,13 @@ void
 url_decode(std::string& _out);
 
 auto
-r_encode(std::string _in) -> std::string;
+r_encode(std::string const& _in) -> std::string;
 auto
-r_decode(std::string _in) -> std::string;
+r_decode(std::string const& _in) -> std::string;
 auto
-r_url_encode(std::string _in) -> std::string;
+r_url_encode(std::string const& _in) -> std::string;
 auto
-r_url_decode(std::string _in) -> std::string;
+r_url_decode(std::string const& _in) -> std::string;
 } // namespace base64
 
 using uchar = unsigned char;
@@ -217,9 +217,9 @@ escape(std::string& _out);
 
 namespace quoted_printable {
 auto
-encode(std::string _quote, std::string _charset, std::string& _out) -> void;
+encode(std::string const& _quote, std::string const& _charset, std::string& _out) -> void;
 auto
-r_encode(std::string _quote, std::string _charset) -> std::string;
+r_encode(std::string const& _quote, std::string const& _charset) -> std::string;
 } // namespace quoted_printable
 
 namespace url {
@@ -230,9 +230,9 @@ encode(std::string& out) -> void;
 auto
 decode(std::string& out) -> void;
 auto
-r_encode(std::string _out) -> std::string;
+r_encode(std::string const& _out) -> std::string;
 auto
-r_decode(std::string _out) -> std::string;
+r_decode(std::string const& _out) -> std::string;
 } // namespace url
 
 namespace ascii {
@@ -354,22 +354,22 @@ r_uuid() -> std::string;
 
 namespace test {
 auto
-uuid(std::string _uuid) -> bool;
+uuid(std::string const& _uuid) -> bool;
 auto
-utf8(std::string _uri) -> bool;
+utf8(std::string const& _uri) -> bool;
 auto
-ascii(std::string _ascii) -> bool;
+ascii(std::string const& _ascii) -> bool;
 auto
-token(std::string _token) -> bool;
+token(std::string const& _token) -> bool;
 auto
 uri(std::string _uri) -> bool;
 auto
-email(std::string _email) -> bool;
+email(std::string const& _email) -> bool;
 auto
-phone(std::string _phone) -> bool;
+phone(std::string const& _phone) -> bool;
 auto
-regex(std::string _target, std::string _regex) -> bool;
+regex(std::string const& _target, std::string const& _regex) -> bool;
 auto
-timestamp(std::string _timestamp) -> bool;
+timestamp(std::string const& _timestamp) -> bool;
 } // namespace test
 } // namespace zpt

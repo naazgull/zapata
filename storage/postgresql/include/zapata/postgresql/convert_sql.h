@@ -51,8 +51,8 @@ get_column_names(zpt::json _document, zpt::json _opts) -> std::string;
 auto
 get_column_sets(zpt::json _document, zpt::json _opts) -> std::string;
 auto
-escape_name(std::string _in) -> std::string;
+escape_name(std::string const& _in) -> std::string;
 auto
-escape(zpt::json _in, std::string _str_delimiter = "'") -> std::string;
+escape(zpt::json _in, std::string const& _str_delimiter = "'") -> std::string;
 } // namespace pgsql
 } // namespace zpt

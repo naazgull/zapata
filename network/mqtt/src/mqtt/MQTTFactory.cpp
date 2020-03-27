@@ -64,7 +64,7 @@ zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
 }
 
 auto
-zpt::MQTTFactory::is_reusable(std::string _type) -> bool {
+zpt::MQTTFactory::is_reusable(std::string const& _type) -> bool {
     return true;
 }
 

@@ -27,12 +27,12 @@ SOFTWARE.
 zpt::couchdb::ClientPtr::ClientPtr(zpt::couchdb::Client* _target)
   : std::shared_ptr<zpt::couchdb::Client>(_target) {}
 
-zpt::couchdb::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path)
+zpt::couchdb::ClientPtr::ClientPtr(zpt::json _options, std::string const& _conf_path)
   : std::shared_ptr<zpt::couchdb::Client>(new zpt::couchdb::Client(_options, _conf_path)) {}
 
 zpt::couchdb::ClientPtr::~ClientPtr() {}
 
-zpt::couchdb::Client::Client(zpt::json _options, std::string _conf_path)
+zpt::couchdb::Client::Client(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __round_robin(0) {
     try {
@@ -212,7 +212,7 @@ zpt::couchdb::Client::init_request(zpt::json _envelope) -> void {
 }
 
 auto
-zpt::couchdb::Client::create_database(std::string _collection) -> void {
+zpt::couchdb::Client::create_database(std::string const& _collection) -> void {
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -230,7 +230,7 @@ zpt::couchdb::Client::create_database(std::string _collection) -> void {
 }
 
 auto
-zpt::couchdb::Client::create_index(std::string _collection, zpt::json _fields) -> void {
+zpt::couchdb::Client::create_index(std::string const& _collection, zpt::json _fields) -> void {
     std::string _db_name = std::string("/") + std::string(this->connection()["db"]) +
                            std::string("_") + _collection + std::string("/_index");
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -252,7 +252,7 @@ zpt::couchdb::Client::create_index(std::string _collection, zpt::json _fields) -
 }
 
 auto
-zpt::couchdb::Client::insert(std::string _collection,
+zpt::couchdb::Client::insert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
@@ -304,7 +304,7 @@ zpt::couchdb::Client::insert(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::upsert(std::string _collection,
+zpt::couchdb::Client::upsert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
@@ -409,7 +409,7 @@ zpt::couchdb::Client::upsert(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::save(std::string _collection,
+zpt::couchdb::Client::save(std::string const& _collection,
                            std::string _href,
                            zpt::json _document,
                            zpt::json _opts) -> int {
@@ -447,7 +447,7 @@ zpt::couchdb::Client::save(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::set(std::string _collection,
+zpt::couchdb::Client::set(std::string const& _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -485,7 +485,7 @@ zpt::couchdb::Client::set(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::set(std::string _collection,
+zpt::couchdb::Client::set(std::string const& _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -531,7 +531,7 @@ zpt::couchdb::Client::set(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::unset(std::string _collection,
+zpt::couchdb::Client::unset(std::string const& _collection,
                             std::string _href,
                             zpt::json _document,
                             zpt::json _opts) -> int {
@@ -569,7 +569,7 @@ zpt::couchdb::Client::unset(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::unset(std::string _collection,
+zpt::couchdb::Client::unset(std::string const& _collection,
                             zpt::json _pattern,
                             zpt::json _document,
                             zpt::json _opts) -> int {
@@ -615,7 +615,9 @@ zpt::couchdb::Client::unset(std::string _collection,
 }
 
 auto
-zpt::couchdb::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+zpt::couchdb::Client::remove(std::string const& _collection,
+                             std::string const& _href,
+                             zpt::json _opts) -> int {
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -639,7 +641,8 @@ zpt::couchdb::Client::remove(std::string _collection, std::string _href, zpt::js
 }
 
 auto
-zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+zpt::couchdb::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
            "'_pattern' must be of type JSObject",
            412,
@@ -681,7 +684,7 @@ zpt::couchdb::Client::remove(std::string _collection, zpt::json _pattern, zpt::j
 }
 
 auto
-zpt::couchdb::Client::get(std::string _collection, std::string _href, zpt::json _opts)
+zpt::couchdb::Client::get(std::string const& _collection, std::string const& _href, zpt::json _opts)
   -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     expect(_href.length() != 0, "'href' parameter must not be empty", 0, 0);
@@ -712,15 +715,16 @@ zpt::couchdb::Client::get(std::string _collection, std::string _href, zpt::json 
 }
 
 auto
-zpt::couchdb::Client::query(std::string _collection, std::string _regexp, zpt::json _opts)
-  -> zpt::json {
+zpt::couchdb::Client::query(std::string const& _collection,
+                            std::string const& _regexp,
+                            zpt::json _opts) -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     expect(_regexp.length() != 0, "'_regexp' parameter must not be empty", 0, 0);
     return this->query(_collection, zpt::json(_regexp), _opts);
 }
 
 auto
-zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt::json _opts)
+zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, zpt::json _opts)
   -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     std::string _db_name =
@@ -770,7 +774,7 @@ zpt::couchdb::Client::query(std::string _collection, zpt::json _regexp, zpt::jso
 }
 
 auto
-zpt::couchdb::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+zpt::couchdb::Client::all(std::string const& _collection, zpt::json _opts) -> zpt::json {
     expect(_collection.length() != 0, "'_collection' parameter must not be empty", 0, 0);
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;

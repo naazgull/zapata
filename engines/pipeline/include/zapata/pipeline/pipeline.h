@@ -52,7 +52,7 @@ class event {
 
     auto path() -> zpt::json;
     auto content() -> T&;
-    auto set_path(std::string _path) -> zpt::pipeline::event<T>&;
+    auto set_path(std::string const& _path) -> zpt::pipeline::event<T>&;
     auto set_content(T const& _content) -> zpt::pipeline::event<T>&;
     auto next_stage() -> zpt::pipeline::event<T>&;
     auto trigger(zpt::json _path,
@@ -116,13 +116,14 @@ class engine {
     auto operator=(zpt::pipeline::engine<T>&&) = delete;
 
     auto start_threads() -> zpt::pipeline::engine<T>&;
-    auto stop_threads() -> zpt::pipeline::engine<T>&;
+    auto shutdown() -> zpt::pipeline::engine<T>&;
+    auto is_shutdown_ongoing() -> bool;
     auto add_listener(size_t _stage,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<T>&)> _callback)
       -> zpt::pipeline::engine<T>&;
     auto next_stage(zpt::pipeline::event<T> _content) -> zpt::pipeline::engine<T>&;
-    auto trigger(std::string _uri,
+    auto trigger(std::string const& _uri,
                  T _content,
                  std::function<void(zpt::pipeline::event<T>&)> _callback = nullptr)
       -> zpt::pipeline::engine<T>&;
@@ -140,9 +141,9 @@ class engine {
 };
 
 auto
-to_pattern(std::string _path) -> zpt::json;
+to_pattern(std::string const& _path) -> zpt::json;
 auto
-to_path(std::string _path) -> zpt::json;
+to_path(std::string const& _path) -> zpt::json;
 
 } // namepsace pipeline
 } // namepsace zpt
@@ -209,7 +210,7 @@ zpt::pipeline::event<T>::content() -> T& {
 
 template<typename T>
 auto
-zpt::pipeline::event<T>::set_path(std::string _path) -> zpt::pipeline::event<T>& {
+zpt::pipeline::event<T>::set_path(std::string const& _path) -> zpt::pipeline::event<T>& {
     this->__path = zpt::pipeline::to_path(_path);
     return (*this);
 }
@@ -320,11 +321,22 @@ zpt::pipeline::engine<T>::start_threads() -> zpt::pipeline::engine<T>& {
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::stop_threads() -> zpt::pipeline::engine<T>& {
+zpt::pipeline::engine<T>::shutdown() -> zpt::pipeline::engine<T>& {
     for (auto _stage : this->__stages) {
         _stage->shutdown();
     }
     return (*this);
+}
+
+template<typename T>
+auto
+zpt::pipeline::engine<T>::is_shutdown_ongoing() -> bool {
+    for (auto _stage : this->__stages) {
+        if (_stage->is_shutdown_ongoing()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 template<typename T>
@@ -353,7 +365,7 @@ zpt::pipeline::engine<T>::next_stage(zpt::pipeline::event<T> _event) -> zpt::pip
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::trigger(std::string _uri,
+zpt::pipeline::engine<T>::trigger(std::string const& _uri,
                                   T _content,
                                   std::function<void(zpt::pipeline::event<T>&)> _callback)
   -> zpt::pipeline::engine<T>& {

@@ -54,6 +54,7 @@ class dispatcher : public factory {
     template<typename F>
     auto mute(E _type, F _callback) -> C&;
     auto shutdown() -> C&;
+    auto is_shutdown_ongoing() -> bool;
     auto loop() -> void;
 
   public:
@@ -87,7 +88,7 @@ zpt::events::dispatcher<C, E, V>::~dispatcher() {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::add_consumer() -> C& {
-    this->__consumers.emplace_back([=]() { this->loop(); });
+    this->__consumers.emplace_back([=]() mutable -> void { this->loop(); });
     return (*static_cast<C*>(this));
 }
 
@@ -143,10 +144,17 @@ zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
 
 template<typename C, typename E, typename V>
 auto
+zpt::events::dispatcher<C, E, V>::is_shutdown_ongoing() -> bool {
+    return this->__shutdown.load();
+}
+
+template<typename C, typename E, typename V>
+auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
     long _waiting_iterations{ 0 };
     do {
         if (this->__shutdown.load()) {
+            zlog("Worker is exiting", zpt::trace);
             return;
         }
 

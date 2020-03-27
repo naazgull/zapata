@@ -37,7 +37,7 @@ zpt::JSONArrT::pop(const char* _idx) -> JSONArrT& {
 }
 
 auto
-zpt::JSONArrT::pop(std::string _idx) -> JSONArrT& {
+zpt::JSONArrT::pop(std::string const& _idx) -> JSONArrT& {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
     if (_i > 0) {
@@ -79,7 +79,7 @@ zpt::JSONArrT::sort(std::function<bool(zpt::json, zpt::json)> _comparator) -> JS
 }
 
 auto
-zpt::JSONArrT::get_path(std::string _path, std::string _separator) -> zpt::json {
+zpt::JSONArrT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     std::istringstream _iss(_path);
     std::string _part;
     std::string _remainder;
@@ -109,7 +109,8 @@ zpt::JSONArrT::get_path(std::string _path, std::string _separator) -> zpt::json 
 }
 
 auto
-zpt::JSONArrT::set_path(std::string _path, zpt::json _value, std::string _separator) -> JSONArrT& {
+zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
+  -> JSONArrT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -139,7 +140,7 @@ zpt::JSONArrT::set_path(std::string _path, zpt::json _value, std::string _separa
 }
 
 auto
-zpt::JSONArrT::del_path(std::string _path, std::string _separator) -> JSONArrT& {
+zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator) -> JSONArrT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -293,7 +294,7 @@ auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json& {
     return (*this)[std::string(_idx)];
 }
 
-auto zpt::JSONArrT::operator[](std::string _idx) -> zpt::json& {
+auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json& {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
 

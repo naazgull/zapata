@@ -454,29 +454,29 @@ enum MIMEType {
 int
 ls(std::string dir, std::vector<std::string>& result, bool recursive);
 bool
-mkdir_recursive(std::string _name);
+mkdir_recursive(std::string const& _name);
 
 bool
-copy_path(std::string _from, std::string _to);
+copy_path(std::string const& _from, std::string const& _to);
 bool
-move_path(std::string _from, std::string _to);
+move_path(std::string const& _from, std::string const& _to);
 bool
-load_path(std::string _in, std::string& _out);
+load_path(std::string const& _in, std::string& _out);
 bool
-load_path(std::string _in, std::wstring& _out);
+load_path(std::string const& _in, std::wstring& _out);
 bool
-dump_path(std::string _in, std::string& _content);
+dump_path(std::string const& _in, std::string& _content);
 bool
-dump_path(std::string _in, std::wstring& _content);
+dump_path(std::string const& _in, std::wstring& _content);
 
 zpt::MIMEType
-get_mime(std::string _in);
+get_mime(std::string const& _in);
 bool
-path_exists(std::string _in);
+path_exists(std::string const& _in);
 bool
-is_dir(std::string _path);
+is_dir(std::string const& _path);
 bool
-file_exists(std::string _path);
+file_exists(std::string const& _path);
 
 int
 globRegexp(std::string& dir,

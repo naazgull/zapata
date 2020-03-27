@@ -29,7 +29,7 @@
 namespace zpt {
 
 auto
-REST_ENGINE() -> size_t&;
+REST_ENGINE() -> ssize_t&;
 
 namespace rest {
 
@@ -66,7 +66,7 @@ auto
 to_str(zpt::performative _performative) -> std::string;
 
 auto
-from_str(std::string _performative) -> zpt::performative;
+from_str(std::string const& _performative) -> zpt::performative;
 
 } // namespace rest
 } // nanespace zpt

@@ -27,12 +27,12 @@ SOFTWARE.
 zpt::redis::ClientPtr::ClientPtr(zpt::redis::Client* _target)
   : std::shared_ptr<zpt::redis::Client>(_target) {}
 
-zpt::redis::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path)
+zpt::redis::ClientPtr::ClientPtr(zpt::json _options, std::string const& _conf_path)
   : std::shared_ptr<zpt::redis::Client>(new zpt::redis::Client(_options, _conf_path)) {}
 
 zpt::redis::ClientPtr::~ClientPtr() {}
 
-zpt::redis::Client::Client(zpt::json _options, std::string _conf_path)
+zpt::redis::Client::Client(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     try {
@@ -104,7 +104,7 @@ zpt::redis::Client::reconnect() -> void {
 }
 
 auto
-zpt::redis::Client::insert(std::string _collection,
+zpt::redis::Client::insert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -155,7 +155,7 @@ zpt::redis::Client::insert(std::string _collection,
 }
 
 auto
-zpt::redis::Client::upsert(std::string _collection,
+zpt::redis::Client::upsert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -246,7 +246,7 @@ zpt::redis::Client::upsert(std::string _collection,
 }
 
 auto
-zpt::redis::Client::save(std::string _collection,
+zpt::redis::Client::save(std::string const& _collection,
                          std::string _href,
                          zpt::json _document,
                          zpt::json _opts) -> int {
@@ -289,7 +289,7 @@ zpt::redis::Client::save(std::string _collection,
 }
 
 auto
-zpt::redis::Client::set(std::string _collection,
+zpt::redis::Client::set(std::string const& _collection,
                         std::string _href,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -332,7 +332,7 @@ zpt::redis::Client::set(std::string _collection,
 }
 
 auto
-zpt::redis::Client::set(std::string _collection,
+zpt::redis::Client::set(std::string const& _collection,
                         zpt::json _pattern,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -380,7 +380,7 @@ zpt::redis::Client::set(std::string _collection,
 }
 
 auto
-zpt::redis::Client::unset(std::string _collection,
+zpt::redis::Client::unset(std::string const& _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -423,7 +423,7 @@ zpt::redis::Client::unset(std::string _collection,
 }
 
 auto
-zpt::redis::Client::unset(std::string _collection,
+zpt::redis::Client::unset(std::string const& _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -471,7 +471,9 @@ zpt::redis::Client::unset(std::string _collection,
 }
 
 auto
-zpt::redis::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+zpt::redis::Client::remove(std::string const& _collection,
+                           std::string const& _href,
+                           zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -504,7 +506,8 @@ zpt::redis::Client::remove(std::string _collection, std::string _href, zpt::json
 }
 
 auto
-zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -549,7 +552,8 @@ zpt::redis::Client::remove(std::string _collection, zpt::json _pattern, zpt::jso
 }
 
 auto
-zpt::redis::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
+zpt::redis::Client::get(std::string const& _collection, std::string const& _href, zpt::json _opts)
+  -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -637,8 +641,9 @@ zpt::redis::Client::get(std::string _collection, std::string _href, zpt::json _o
 }
 
 auto
-zpt::redis::Client::query(std::string _collection, std::string _regexp, zpt::json _opts)
-  -> zpt::json {
+zpt::redis::Client::query(std::string const& _collection,
+                          std::string const& _regexp,
+                          zpt::json _opts) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -735,7 +740,7 @@ zpt::redis::Client::query(std::string _collection, std::string _regexp, zpt::jso
 }
 
 auto
-zpt::redis::Client::query(std::string _collection, zpt::json _regexp, zpt::json _opts)
+zpt::redis::Client::query(std::string const& _collection, zpt::json _regexp, zpt::json _opts)
   -> zpt::json {
     expect(_regexp->ok() && _regexp->type() == zpt::JSObject,
            "'_regexp' must be of type JSObject",
@@ -753,7 +758,7 @@ zpt::redis::Client::query(std::string _collection, zpt::json _regexp, zpt::json 
 }
 
 auto
-zpt::redis::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+zpt::redis::Client::all(std::string const& _collection, zpt::json _opts) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,

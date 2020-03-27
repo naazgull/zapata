@@ -27,12 +27,12 @@ SOFTWARE.
 zpt::mysql::ClientPtr::ClientPtr(zpt::mysql::Client* _target)
   : std::shared_ptr<zpt::mysql::Client>(_target) {}
 
-zpt::mysql::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path)
+zpt::mysql::ClientPtr::ClientPtr(zpt::json _options, std::string const& _conf_path)
   : std::shared_ptr<zpt::mysql::Client>(new zpt::mysql::Client(_options, _conf_path)) {}
 
 zpt::mysql::ClientPtr::~ClientPtr() {}
 
-zpt::mysql::Client::Client(zpt::json _options, std::string _conf_path)
+zpt::mysql::Client::Client(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     this->connection(_options->get_path(_conf_path));
@@ -94,7 +94,7 @@ zpt::mysql::Client::reconnect() -> void {
 }
 
 auto
-zpt::mysql::Client::insert(std::string _collection,
+zpt::mysql::Client::insert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -159,7 +159,7 @@ zpt::mysql::Client::insert(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::upsert(std::string _collection,
+zpt::mysql::Client::upsert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -271,7 +271,7 @@ zpt::mysql::Client::upsert(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::save(std::string _collection,
+zpt::mysql::Client::save(std::string const& _collection,
                          std::string _href,
                          zpt::json _document,
                          zpt::json _opts) -> int {
@@ -324,7 +324,7 @@ zpt::mysql::Client::save(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::set(std::string _collection,
+zpt::mysql::Client::set(std::string const& _collection,
                         std::string _href,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -377,7 +377,7 @@ zpt::mysql::Client::set(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::set(std::string _collection,
+zpt::mysql::Client::set(std::string const& _collection,
                         zpt::json _pattern,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -434,7 +434,7 @@ zpt::mysql::Client::set(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::unset(std::string _collection,
+zpt::mysql::Client::unset(std::string const& _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -485,7 +485,7 @@ zpt::mysql::Client::unset(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::unset(std::string _collection,
+zpt::mysql::Client::unset(std::string const& _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -540,7 +540,9 @@ zpt::mysql::Client::unset(std::string _collection,
 }
 
 auto
-zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+zpt::mysql::Client::remove(std::string const& _collection,
+                           std::string const& _href,
+                           zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -578,7 +580,8 @@ zpt::mysql::Client::remove(std::string _collection, std::string _href, zpt::json
 }
 
 auto
-zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+zpt::mysql::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -616,7 +619,8 @@ zpt::mysql::Client::remove(std::string _collection, zpt::json _pattern, zpt::jso
 }
 
 auto
-zpt::mysql::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
+zpt::mysql::Client::get(std::string const& _collection, std::string const& _href, zpt::json _opts)
+  -> zpt::json {
     std::string _expression("SELECT * FROM ");
     zpt::json _splited = zpt::split(_href, "/");
     _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
@@ -624,8 +628,9 @@ zpt::mysql::Client::get(std::string _collection, std::string _href, zpt::json _o
 }
 
 auto
-zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts)
-  -> zpt::json {
+zpt::mysql::Client::query(std::string const& _collection,
+                          std::string const& _pattern,
+                          zpt::json _opts) -> zpt::json {
     zpt::json _elements = zpt::json::array();
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
@@ -654,7 +659,7 @@ zpt::mysql::Client::query(std::string _collection, std::string _pattern, zpt::js
 }
 
 auto
-zpt::mysql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts)
+zpt::mysql::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
   -> zpt::json {
     std::string _expression("SELECT * FROM ");
     std::string _count_expression("SELECT COUNT(1) FROM ");
@@ -690,7 +695,7 @@ zpt::mysql::Client::query(std::string _collection, zpt::json _pattern, zpt::json
 }
 
 auto
-zpt::mysql::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+zpt::mysql::Client::all(std::string const& _collection, zpt::json _opts) -> zpt::json {
     std::string _expression("SELECT * FROM ");
     std::string _count_expression("SELECT COUNT(1) FROM ");
     _expression += _collection;

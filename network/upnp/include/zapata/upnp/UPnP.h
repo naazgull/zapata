@@ -57,13 +57,14 @@ class UPnP : public zpt::Channel {
     UPnP(zpt::json _options);
     virtual ~UPnP();
 
-    virtual auto notify(std::string _search, std::string _location) -> void;
-    virtual auto search(std::string _search) -> void;
+    virtual auto notify(std::string const& _search, std::string const& _location) -> void;
+    virtual auto search(std::string const& _search) -> void;
     virtual auto listen() -> zpt::http::req;
 
     virtual auto recv() -> zpt::json;
-    virtual auto send(zpt::performative _performative, std::string _resource, zpt::json _payload)
-      -> zpt::json;
+    virtual auto send(zpt::performative _performative,
+                      std::string const& _resource,
+                      zpt::json _payload) -> zpt::json;
     virtual auto send(zpt::json _envelope) -> zpt::json;
 
     virtual auto id() -> std::string;

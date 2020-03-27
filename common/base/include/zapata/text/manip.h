@@ -48,37 +48,37 @@ void
 normalize_path(std::string& _in_out, bool _with_trailing);
 
 void
-cipher(std::string _in, std::string _key, std::string& _out);
+cipher(std::string const& _in, std::string const& _key, std::string& _out);
 void
-decipher(std::string _in, std::string _key, std::string& _out);
+decipher(std::string const& _in, std::string const& _key, std::string& _out);
 void
-encrypt(std::string& _out, std::string _in, std::string _key);
+encrypt(std::string& _out, std::string const& _in, std::string const& _key);
 void
-decrypt(std::string& _out, std::string _in, std::string _key);
+decrypt(std::string& _out, std::string const& _in, std::string const& _key);
 
 void
 prettify_header_name(std::string& name);
 
 std::string
-r_ltrim(std::string _in_out);
+r_ltrim(std::string const& _in_out);
 std::string
-r_rtrim(std::string _in_out);
+r_rtrim(std::string const& _in_out);
 std::string
-r_trim(std::string _in_out);
+r_trim(std::string const& _in_out);
 std::string
 r_replace(std::string str, std::string find, std::string replace);
 
 std::string
-r_normalize_path(std::string _in_out, bool _with_trailing);
+r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
 std::string
-r_cipher(std::string _in, std::string _key);
+r_cipher(std::string const& _in, std::string const& _key);
 std::string
-r_decipher(std::string _in, std::string _key);
+r_decipher(std::string const& _in, std::string const& _key);
 std::string
-r_encrypt(std::string _in, std::string _key);
+r_encrypt(std::string const& _in, std::string const& _key);
 std::string
-r_decrypt(std::string _in, std::string _key);
+r_decrypt(std::string const& _in, std::string const& _key);
 
 std::string
 r_prettify_header_name(std::string name);

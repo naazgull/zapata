@@ -86,7 +86,7 @@ zpt::MQTT::unbind() -> void {
 }
 
 auto
-zpt::MQTT::credentials(std::string _user, std::string _passwd) -> void {
+zpt::MQTT::credentials(std::string const& _user, std::string const& _passwd) -> void {
 
     this->__user = _user;
     this->__passwd = _passwd;
@@ -133,7 +133,7 @@ zpt::MQTT::connect(zpt::json _options) -> bool {
 }
 
 auto
-zpt::MQTT::connect(std::string _host, bool _tls, int _port, int _keep_alive) -> bool {
+zpt::MQTT::connect(std::string const& _host, bool _tls, int _port, int _keep_alive) -> bool {
     int _rc = 0;
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_conn);
@@ -233,7 +233,7 @@ zpt::MQTT::reconnect() -> bool {
 }
 
 auto
-zpt::MQTT::subscribe(std::string _topic) -> void {
+zpt::MQTT::subscribe(std::string const& _topic) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_conn);
         if (this->__postponed[_topic]->is_string()) {
@@ -257,7 +257,7 @@ zpt::MQTT::subscribe(std::string _topic) -> void {
 }
 
 auto
-zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
+zpt::MQTT::publish(std::string const& _topic, zpt::json _payload) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         if (this->__connected) {
@@ -283,7 +283,7 @@ zpt::MQTT::publish(std::string _topic, zpt::json _payload) -> void {
 }
 
 auto
-zpt::MQTT::on(std::string _event, zpt::mqtt::handler _callback) -> void {
+zpt::MQTT::on(std::string const& _event, zpt::mqtt::handler _callback) -> void {
     /**
      * Add to the callback list, the callback *_callback*, attached to the event
      * type *_event*.
@@ -303,7 +303,7 @@ zpt::MQTT::on(std::string _event, zpt::mqtt::handler _callback) -> void {
 }
 
 auto
-zpt::MQTT::off(std::string _event) -> void {
+zpt::MQTT::off(std::string const& _event) -> void {
     /**
      * Remove from the callback list, the callback *_callback*, attached to the
      * event type *_event*.
@@ -318,7 +318,7 @@ zpt::MQTT::off(std::string _event) -> void {
 }
 
 auto
-zpt::MQTT::trigger(std::string _event, zpt::mqtt::data _data) -> void {
+zpt::MQTT::trigger(std::string const& _event, zpt::mqtt::data _data) -> void {
     /**
      * Searches for and executes registered callbacks under the event type
      * *_event*.
@@ -437,7 +437,7 @@ zpt::MQTT::uri(size_t _idx) -> zpt::json {
 }
 
 auto
-zpt::MQTT::uri(std::string _uris) -> void {}
+zpt::MQTT::uri(std::string const& _uris) -> void {}
 
 auto
 zpt::MQTT::detach() -> void {}
@@ -488,7 +488,7 @@ zpt::MQTT::recv() -> zpt::json {
 }
 
 auto
-zpt::MQTT::send(zpt::performative _performative, std::string _resource, zpt::json _payload)
+zpt::MQTT::send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
   -> zpt::json {
     this->publish(_resource, _payload);
     {

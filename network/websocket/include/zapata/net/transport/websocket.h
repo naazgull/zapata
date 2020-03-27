@@ -38,7 +38,7 @@ handshake(zpt::stream& _stream) -> void;
 auto
 read(zpt::stream& _stream) -> std::tuple<std::string, int>;
 auto
-write(zpt::stream& _stream, std::string _in) -> void;
+write(zpt::stream& _stream, std::string const& _in) -> void;
 } // namespace ws
 namespace transport {
 class websocket : public zpt::transport::transport_t {

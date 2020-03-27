@@ -34,7 +34,7 @@ namespace mongodb {
 
 class Client : public zpt::Connector {
   public:
-    Client(zpt::json _options, std::string _conf_path);
+    Client(zpt::json _options, std::string const& _conf_path);
     virtual ~Client();
 
     virtual auto name() -> std::string;
@@ -46,47 +46,50 @@ class Client : public zpt::Connector {
     virtual auto reconnect() -> void;
     virtual auto conn() -> mongo::ScopedDbConnection&;
 
-    virtual auto insert(std::string _collection,
+    virtual auto insert(std::string const& _collection,
                         std::string _href_prefix,
                         zpt::json _record,
                         zpt::json _opts = zpt::undefined) -> std::string;
-    virtual auto upsert(std::string _collection,
+    virtual auto upsert(std::string const& _collection,
                         std::string _href_prefix,
                         zpt::json _record,
                         zpt::json _opts = zpt::undefined) -> std::string;
-    virtual auto save(std::string _collection,
+    virtual auto save(std::string const& _collection,
                       std::string _href,
                       zpt::json _record,
                       zpt::json _opts = zpt::undefined) -> int;
-    virtual auto set(std::string _collection,
+    virtual auto set(std::string const& _collection,
                      std::string _href,
                      zpt::json _record,
                      zpt::json _opts = zpt::undefined) -> int;
-    virtual auto set(std::string _collection,
+    virtual auto set(std::string const& _collection,
                      zpt::json _query,
                      zpt::json _record,
                      zpt::json _opts = zpt::undefined) -> int;
-    virtual auto unset(std::string _collection,
+    virtual auto unset(std::string const& _collection,
                        std::string _href,
                        zpt::json _record,
                        zpt::json _opts = zpt::undefined) -> int;
-    virtual auto unset(std::string _collection,
+    virtual auto unset(std::string const& _collection,
                        zpt::json _query,
                        zpt::json _record,
                        zpt::json _opts = zpt::undefined) -> int;
-    virtual auto remove(std::string _collection,
+    virtual auto remove(std::string const& _collection,
                         std::string _href,
                         zpt::json _opts = zpt::undefined) -> int;
-    virtual auto remove(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
-      -> int;
-    virtual auto get(std::string _collection, std::string _href, zpt::json _opts = zpt::undefined)
-      -> zpt::json;
-    virtual auto query(std::string _collection,
+    virtual auto remove(std::string const& _collection,
+                        zpt::json _query,
+                        zpt::json _opts = zpt::undefined) -> int;
+    virtual auto get(std::string const& _collection,
+                     std::string const& _href,
+                     zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto query(std::string const& _collection,
                        std::string _query,
                        zpt::json _opts = zpt::undefined) -> zpt::json;
-    virtual auto query(std::string _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
-      -> zpt::json;
-    virtual auto all(std::string _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto query(std::string const& _collection,
+                       zpt::json _query,
+                       zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto all(std::string const& _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
 
   private:
     zpt::json __options;
@@ -105,7 +108,7 @@ class ClientPtr : public std::shared_ptr<zpt::mongodb::Client> {
      * JSON file
      */
     ClientPtr(zpt::mongodb::Client* _target);
-    ClientPtr(zpt::json _options, std::string _conf_path);
+    ClientPtr(zpt::json _options, std::string const& _conf_path);
 
     /**
      * @brief Destroys the current Self instance, freeing all allocated memory.

@@ -24,23 +24,23 @@
 #include <zapata/startup/startup.h>
 
 auto
-zpt::BOOT_ENGINE() -> size_t& {
-    static size_t _global{ 0 };
+zpt::BOOT_ENGINE() -> ssize_t& {
+    static ssize_t _global{ -1 };
     return _global;
 }
 auto
-zpt::GLOBAL_CONFIG() -> size_t& {
-    static size_t _global{ 0 };
+zpt::GLOBAL_CONFIG() -> ssize_t& {
+    static ssize_t _global{ -1 };
     return _global;
 }
 auto
-zpt::STREAM_POLLING() -> size_t& {
-    static size_t _global{ 0 };
+zpt::STREAM_POLLING() -> ssize_t& {
+    static ssize_t _global{ -1 };
     return _global;
 }
 auto
-zpt::TRANSPORT_LAYER() -> size_t& {
-    static size_t _global{ 0 };
+zpt::TRANSPORT_LAYER() -> ssize_t& {
+    static ssize_t _global{ -1 };
     return _global;
 }
 
@@ -76,6 +76,16 @@ zpt::plugin::plugin_t::plugin_t(zpt::json _options, zpt::json _config)
     this->initialize(_options);
 }
 
+zpt::plugin::plugin_t::~plugin_t() {
+    if (this->__lib_handler != nullptr) {
+        dlclose(this->__lib_handler);
+    }
+}
+
+auto zpt::plugin::plugin_t::operator-> () -> zpt::plugin::plugin_t* {
+    return this;
+}
+
 auto
 zpt::plugin::plugin_t::initialize(zpt::json _options) -> zpt::plugin::plugin_t& {
     expect(_options["name"]->ok(), "missing name definition in plugin configuration", 500, 0);
@@ -90,6 +100,11 @@ zpt::plugin::plugin_t::initialize(zpt::json _options) -> zpt::plugin::plugin_t& 
         this->__requirements << static_cast<std::string>(_req) << false;
     }
     return (*this);
+}
+
+auto
+zpt::plugin::plugin_t::handler() -> void* {
+    return this->__lib_handler;
 }
 
 auto
@@ -118,6 +133,15 @@ zpt::plugin::plugin_t::is_running() -> bool {
 }
 
 auto
+zpt::plugin::plugin_t::set_handler(void* _handler) -> zpt::plugin::plugin_t& {
+    if (this->__lib_handler != nullptr) {
+        dlclose(this->__lib_handler);
+    }
+    this->__lib_handler = _handler;
+    return (*this);
+}
+
+auto
 zpt::plugin::plugin_t::set_loader(std::function<bool(zpt::plugin& _plugin)> _loader)
   -> zpt::plugin::plugin_t& {
     this->__loader = _loader;
@@ -132,29 +156,51 @@ zpt::plugin::plugin_t::load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t
     return (*this);
 }
 
-zpt::startup::engine::engine()
-  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 50000 } {
-    this
-      ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } },
-             zpt::undefined) //
-      ->set_loader(zpt::startup::dynlib::load_plugin);
+auto
+zpt::plugin::plugin_t::set_unloader(std::function<bool(zpt::plugin& _plugin)> _unloader)
+  -> zpt::plugin::plugin_t& {
+    this->__unloader = _unloader;
+    return (*this);
 }
+
+auto
+zpt::plugin::plugin_t::unload_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t& {
+    if (this->__unloader != nullptr) {
+        _other->__running = this->__unloader(_other);
+    }
+    return (*this);
+}
+
+zpt::startup::engine::engine()
+  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 50000 }
+  , __configuration{ zpt::globals::alloc<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object()) } {}
 
 zpt::startup::engine::engine(zpt::json _args)
   : zpt::startup::engine{} {
     this->initialize(_args);
 }
 
+zpt::startup::engine::~engine() {
+    if (zpt::GLOBAL_CONFIG() != -1) {
+        zpt::globals::dealloc<zpt::json>(zpt::GLOBAL_CONFIG());
+    }
+}
+
 auto
 zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
-    this->__configuration = zpt::globals::alloc<zpt::json>(
-      zpt::GLOBAL_CONFIG(), zpt::startup::configuration::load(_args));
+    zpt::startup::configuration::load(_args, this->__configuration);
     zpt::log_lvl = this->__configuration["log"]["level"]->ok()
                      ? static_cast<int>(this->__configuration["log"]["level"])
                      : 8;
     zpt::log_format = this->__configuration["log"]["format"]->ok()
                         ? static_cast<int>(this->__configuration["log"]["format"])
                         : 0;
+
+    this //
+      ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } },
+             zpt::undefined)
+      ->set_loader(zpt::startup::dynlib::load_plugin)
+      ->set_unloader(zpt::startup::dynlib::unload_plugin);
 
     return (*this);
 }
@@ -231,8 +277,8 @@ zpt::startup::engine::load(zpt::json _plugin_options, zpt::json _plugin_config) 
         if (!this->check_requirements(_plugin)) {
             return;
         }
-        this
-          ->load_plugin(_plugin) //
+        this //
+          ->load_plugin(_plugin)
           .add_plugin(_plugin, _plugin_options);
         throw zpt::events::unregister();
     };
@@ -252,10 +298,28 @@ zpt::startup::engine::start() -> zpt::startup::engine& {
     this
       ->add_consumer() //
       .load();
+    zlog("Going to wait on " << this->__workers.size() << " running threads", zpt::trace);
     for (size_t _idx = 0; _idx != this->__workers.size(); ++_idx) {
         this->__workers[_idx].join();
     }
+    zlog("Exiting startup engine", zpt::info);
     return (*this);
+}
+
+auto
+zpt::startup::engine::unload() -> bool {
+    bool _not_unloaded{ false };
+    if (this->__unloaded.compare_exchange_strong(_not_unloaded, true)) {
+        zlog("Unloading plugins", zpt::info);
+        for (auto [_key, _plugin] : this->__plugins) {
+            if (_key == "c++_loader" || _key == ".so") {
+                continue;
+            }
+            this->unload_plugin(_plugin);
+        }
+        return true;
+    }
+    return false;
 }
 
 auto
@@ -301,6 +365,7 @@ zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<voi
 
 auto
 zpt::startup::engine::load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
+    zlog("Loading plugin " << _plugin->name(), zpt::trace);
     zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
     std::string& _lib = _plugin->source();
     size_t _idx{ _lib.find(".") };
@@ -328,6 +393,24 @@ zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
 }
 
 auto
+zpt::startup::engine::unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
+    zlog("Unloading plugin " << _plugin->name(), zpt::trace);
+    zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
+    std::string& _lib = _plugin->source();
+    size_t _idx{ _lib.find(".") };
+    if (_idx != std::string::npos) {
+        std::string _extension{ _lib.substr(_idx) };
+        if (_extension.length() != 0) {
+            auto _provider = this->__plugins.find(_extension);
+            if (_provider != this->__plugins.end()) {
+                _provider->second->unload_plugin(_plugin);
+            }
+        }
+    }
+    return (*this);
+}
+
+auto
 zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     zpt::startup::engine& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     std::string& _lib = _plugin->name();
@@ -338,6 +421,8 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
         zlog(dlerror(), zpt::emergency);
         return false;
     }
+    _plugin->set_handler(_hndl);
+
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::SEARCH }, true);
     void (*_populate)(zpt::plugin&);
     _populate = (void (*)(zpt::plugin&))dlsym(_hndl, "_zpt_load_");
@@ -358,4 +443,27 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::CONFIGURATION }, _config);
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::RUN }, true);
     return true;
+}
+
+auto
+zpt::startup::dynlib::unload_plugin(zpt::plugin& _plugin) -> bool {
+    if (_plugin->handler() == nullptr) {
+        zlog("plugin " << _plugin->name() << " wasn't properly loaded", zpt::emergency);
+        return false;
+    }
+    void (*_unpopulate)(zpt::plugin&);
+    _unpopulate = (void (*)(zpt::plugin&))dlsym(_plugin->handler(), "_zpt_unload_");
+
+    bool _unload{ _unpopulate != nullptr };
+    if (!_unload) {
+        return false;
+    }
+
+    try {
+        _unpopulate(_plugin);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        return true;
+    }
+    return false;
 }

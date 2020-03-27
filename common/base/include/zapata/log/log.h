@@ -74,10 +74,14 @@ auto
 to_string(const char* _in) -> std::string;
 
 int
-log(std::string _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file);
+log(std::string const& _text,
+    zpt::LogLevel _level,
+    std::string const& _host,
+    int _line,
+    std::string const& _file);
 template<typename T>
 int
-log(T _text, zpt::LogLevel _level, std::string _host, int _line, std::string _file) {
+log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file) {
     return zpt::log(to_string(_text), _level, _host, _line, _file);
 }
 char*

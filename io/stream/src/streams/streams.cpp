@@ -108,19 +108,23 @@ zpt::stream::polling::~polling() {
 
 auto
 zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling& {
-    zpt::stream* _new_stream = _stream.release();
+    if (!this->__shutdown.load()) {
+        zpt::stream* _new_stream = _stream.release();
+        this->__polled_streams.insert(std::make_pair(static_cast<int>(*_new_stream), _new_stream));
 
-    zpt::epoll_event_t _new_event;
-    _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
-    _new_event.data.ptr = static_cast<void*>(_new_stream);
+        zpt::epoll_event_t _new_event;
+        _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+        _new_event.data.ptr = static_cast<void*>(_new_stream);
 
-    epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, static_cast<int>(*_new_stream), &_new_event);
+        epoll_ctl(this->__epoll_fd, EPOLL_CTL_ADD, static_cast<int>(*_new_stream), &_new_event);
+    }
     return (*this);
 }
 
 auto
 zpt::stream::polling::mute(zpt::stream& _stream) -> zpt::stream::polling& {
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, static_cast<int>(_stream), nullptr);
+    this->__polled_streams.erase(static_cast<int>(_stream));
     return (*this);
 }
 
@@ -128,11 +132,19 @@ auto
 zpt::stream::polling::pool() -> void {
     uint64_t _sd_watchdog_usec = 100000;
     bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
-    uint64_t _poll_timeout =
-      std::min(uint64_t(this->__poll_wait_timeout / 1000), _sd_watchdog_usec / 1000 / 2);
+    long long _poll_timeout =
+      _sd_watchdog_enabled ? this->__poll_wait_timeout > 0
+                               ? std::min(this->__poll_wait_timeout / 1000,
+                                          static_cast<long long>(_sd_watchdog_usec / 1000 / 2))
+                               : static_cast<long long>(_sd_watchdog_usec / 1000 / 2)
+                           : std::min(this->__poll_wait_timeout / 1000, this->__poll_wait_timeout);
 
     do {
-        int _n_alive = epoll_wait(this->__epoll_fd, this->__epoll_events, MAX_EVENT_PER_POLL, -1);
+        int _n_alive =
+          epoll_wait(this->__epoll_fd, this->__epoll_events, MAX_EVENT_PER_POLL, _poll_timeout);
+        if (this->__shutdown.load()) {
+            return;
+        }
         if (_n_alive < 0) {
             continue;
         }
@@ -174,4 +186,14 @@ zpt::stream::polling::pool() -> void {
 auto
 zpt::stream::polling::pop() -> zpt::stream* {
     return this->__alive_streams.pop();
+}
+
+auto
+zpt::stream::polling::shutdown() -> void {
+    this->__shutdown.store(true);
+    for (auto [_fd, _stream] : this->__polled_streams) {
+        epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
+        std::unique_ptr<zpt::stream> _to_erase{ _stream };
+        zlog("Closing connection to " << _stream->uri(), zpt::trace);
+    }
 }

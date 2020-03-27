@@ -8,7 +8,7 @@
 #include <zapata/uri/uri.h>
 
 auto
-zpt::uri::parse(std::string _in, zpt::JSONType _type) -> zpt::json {
+zpt::uri::parse(std::string const& _in, zpt::JSONType _type) -> zpt::json {
     std::istringstream _iss;
     _iss.str(_in);
     return zpt::uri::parse(_iss, _type);
@@ -85,7 +85,7 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
 }
 
 // auto
-// zpt::uri::parse(std::string _uri) -> zpt::json {
+// zpt::uri::parse(std::string const& _uri) -> zpt::json {
 //     if (_uri.find("://") == std::string::npos) {
 //         if (_uri[0] == '/') {
 //             _uri = std::string("zpt://127.0.0.1") + _uri;
@@ -136,7 +136,7 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
 // }
 
 // auto
-// zpt::uri::query::parse(std::string _query) -> zpt::json {
+// zpt::uri::query::parse(std::string const& _query) -> zpt::json {
 //     static const std::regex _rgx("(^|&)"      // start of query or start of parameter "&"
 //                                  "([^=&]*)=?" // parameter name and "=" if value is expected
 //                                  "([^=&]*)"   // parameter value
@@ -157,7 +157,7 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
 // }
 
 // auto
-// zpt::uri::authority::parse(std::string _authority) -> zpt::json {
+// zpt::uri::authority::parse(std::string const& _authority) -> zpt::json {
 //     static const std::regex _auth_rgx("(([^:]+):([^@]+)@)?" // username and password
 //                                       "([^:]+):?"           // domain
 //                                       "(.*)"                // port

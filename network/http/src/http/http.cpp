@@ -24,6 +24,12 @@
 #include <zapata/base.h>
 
 auto
+zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
+auto
 zpt::net::transport::http::set_headers(zpt::message& _message, zpt::http::req& _request)
   -> zpt::net::transport::http& {
     zpt::json& _headers = _message->headers();

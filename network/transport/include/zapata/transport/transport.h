@@ -114,8 +114,8 @@ class transport {
         layer() = default;
         virtual ~layer() = default;
 
-        auto add(std::string _scheme, zpt::transport _transport) -> zpt::transport::layer&;
-        auto get(std::string _scheme) -> zpt::transport&;
+        auto add(std::string const& _scheme, zpt::transport _transport) -> zpt::transport::layer&;
+        auto get(std::string const& _scheme) -> zpt::transport&;
 
         auto begin() -> std::map<std::string, zpt::transport>::iterator;
         auto end() -> std::map<std::string, zpt::transport>::iterator;

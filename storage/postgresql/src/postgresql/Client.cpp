@@ -27,12 +27,12 @@ SOFTWARE.
 zpt::pgsql::ClientPtr::ClientPtr(zpt::pgsql::Client* _target)
   : std::shared_ptr<zpt::pgsql::Client>(_target) {}
 
-zpt::pgsql::ClientPtr::ClientPtr(zpt::json _options, std::string _conf_path)
+zpt::pgsql::ClientPtr::ClientPtr(zpt::json _options, std::string const& _conf_path)
   : std::shared_ptr<zpt::pgsql::Client>(new zpt::pgsql::Client(_options, _conf_path)) {}
 
 zpt::pgsql::ClientPtr::~ClientPtr() {}
 
-zpt::pgsql::Client::Client(zpt::json _options, std::string _conf_path)
+zpt::pgsql::Client::Client(zpt::json _options, std::string const& _conf_path)
   : __options(_options)
   , __conn(nullptr) {
     this->connection(_options->get_path(_conf_path));
@@ -101,7 +101,7 @@ zpt::pgsql::Client::reconnect() -> void {
 }
 
 auto
-zpt::pgsql::Client::insert(std::string _collection,
+zpt::pgsql::Client::insert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -150,7 +150,7 @@ zpt::pgsql::Client::insert(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::upsert(std::string _collection,
+zpt::pgsql::Client::upsert(std::string const& _collection,
                            std::string _href_prefix,
                            zpt::json _document,
                            zpt::json _opts) -> std::string {
@@ -242,7 +242,7 @@ zpt::pgsql::Client::upsert(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::save(std::string _collection,
+zpt::pgsql::Client::save(std::string const& _collection,
                          std::string _href,
                          zpt::json _document,
                          zpt::json _opts) -> int {
@@ -285,7 +285,7 @@ zpt::pgsql::Client::save(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::set(std::string _collection,
+zpt::pgsql::Client::set(std::string const& _collection,
                         std::string _href,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -328,7 +328,7 @@ zpt::pgsql::Client::set(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::set(std::string _collection,
+zpt::pgsql::Client::set(std::string const& _collection,
                         zpt::json _pattern,
                         zpt::json _document,
                         zpt::json _opts) -> int {
@@ -375,7 +375,7 @@ zpt::pgsql::Client::set(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::unset(std::string _collection,
+zpt::pgsql::Client::unset(std::string const& _collection,
                           std::string _href,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -418,7 +418,7 @@ zpt::pgsql::Client::unset(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::unset(std::string _collection,
+zpt::pgsql::Client::unset(std::string const& _collection,
                           zpt::json _pattern,
                           zpt::json _document,
                           zpt::json _opts) -> int {
@@ -465,7 +465,9 @@ zpt::pgsql::Client::unset(std::string _collection,
 }
 
 auto
-zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt::json _opts) -> int {
+zpt::pgsql::Client::remove(std::string const& _collection,
+                           std::string const& _href,
+                           zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -502,7 +504,8 @@ zpt::pgsql::Client::remove(std::string _collection, std::string _href, zpt::json
 }
 
 auto
-zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt::json _opts) -> int {
+zpt::pgsql::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -540,7 +543,8 @@ zpt::pgsql::Client::remove(std::string _collection, zpt::json _pattern, zpt::jso
 }
 
 auto
-zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::json _opts) -> zpt::json {
+zpt::pgsql::Client::get(std::string const& _collection, std::string const& _href, zpt::json _opts)
+  -> zpt::json {
     std::string _expression("SELECT ");
     _expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
     _expression += std::string(" FROM ");
@@ -551,8 +555,9 @@ zpt::pgsql::Client::get(std::string _collection, std::string _href, zpt::json _o
 }
 
 auto
-zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::json _opts)
-  -> zpt::json {
+zpt::pgsql::Client::query(std::string const& _collection,
+                          std::string const& _pattern,
+                          zpt::json _opts) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
@@ -582,7 +587,7 @@ zpt::pgsql::Client::query(std::string _collection, std::string _pattern, zpt::js
 }
 
 auto
-zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt::json _opts)
+zpt::pgsql::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
   -> zpt::json {
     std::string _expression("SELECT ");
     _expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
@@ -625,7 +630,7 @@ zpt::pgsql::Client::query(std::string _collection, zpt::json _pattern, zpt::json
 }
 
 auto
-zpt::pgsql::Client::all(std::string _collection, zpt::json _opts) -> zpt::json {
+zpt::pgsql::Client::all(std::string const& _collection, zpt::json _opts) -> zpt::json {
     std::string _expression("SELECT ");
     _expression += zpt::pgsql::get_column_names(zpt::undefined, _opts);
     _expression += std::string(" FROM ");

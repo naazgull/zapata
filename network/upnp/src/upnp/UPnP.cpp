@@ -130,7 +130,7 @@ zpt::UPnP::listen() -> zpt::http::req {
 }
 
 auto
-zpt::UPnP::notify(std::string _search, std::string _location) -> void {
+zpt::UPnP::notify(std::string const& _search, std::string const& _location) -> void {
     this->send({ "performative",
                  int(zpt::ev::Notify),
                  "headers",
@@ -138,7 +138,7 @@ zpt::UPnP::notify(std::string _search, std::string _location) -> void {
 }
 
 auto
-zpt::UPnP::search(std::string _search) -> void {
+zpt::UPnP::search(std::string const& _search) -> void {
     this->send({ "performative",
                  int(zpt::ev::Search),
                  "headers",
@@ -213,7 +213,7 @@ zpt::UPnP::protocol() -> std::string {
 }
 
 auto
-zpt::UPnP::send(zpt::performative _performative, std::string _resource, zpt::json _payload)
+zpt::UPnP::send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
   -> zpt::json {
     return this->send(
       { "performative", _performative, "resource", _resource, "payload", _payload });

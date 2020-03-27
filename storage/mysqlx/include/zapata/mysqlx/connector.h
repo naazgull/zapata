@@ -63,7 +63,7 @@ class session : public zpt::storage::session::type {
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
-    virtual auto database(std::string _db) -> zpt::storage::database override;
+    virtual auto database(std::string const& _db) -> zpt::storage::database override;
 
     virtual auto operator-> () -> ::mysqlx::Session*;
 
@@ -72,10 +72,10 @@ class session : public zpt::storage::session::type {
 };
 class database : public zpt::storage::database::type {
   public:
-    database(zpt::storage::mysqlx::session& _session, std::string _db);
+    database(zpt::storage::mysqlx::session& _session, std::string const& _db);
     database(const zpt::storage::mysqlx::database& _rhs) = delete;
     database(zpt::storage::mysqlx::database&& _rhs) = delete;
-    virtual auto collection(std::string _name) -> zpt::storage::collection override;
+    virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
     virtual auto operator-> () -> ::mysqlx::Schema*;
 
@@ -84,11 +84,12 @@ class database : public zpt::storage::database::type {
 };
 class collection : public zpt::storage::collection::type {
   public:
-    collection(zpt::storage::mysqlx::database& _database, std::string _collection);
+    collection(zpt::storage::mysqlx::database& _database, std::string const& _collection);
     virtual auto add(zpt::json _document) -> zpt::storage::action override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action override;
-    virtual auto replace(std::string _id, zpt::json _document) -> zpt::storage::action override;
+    virtual auto replace(std::string const& _id, zpt::json _document)
+      -> zpt::storage::action override;
     virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
@@ -107,14 +108,14 @@ class action_add : public zpt::storage::mysqlx::action {
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto replace(std::string _id, zpt::json _document)
+    virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto set(std::string _attribute, zpt::json _value)
+    virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -132,14 +133,14 @@ class action_modify : public zpt::storage::mysqlx::action {
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto replace(std::string _id, zpt::json _document)
+    virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto set(std::string _attribute, zpt::json _value)
+    virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -157,14 +158,14 @@ class action_remove : public zpt::storage::mysqlx::action {
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto replace(std::string _id, zpt::json _document)
+    virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto set(std::string _attribute, zpt::json _value)
+    virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -184,14 +185,14 @@ class action_replace : public zpt::storage::mysqlx::action {
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto replace(std::string _id, zpt::json _document)
+    virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto set(std::string _attribute, zpt::json _value)
+    virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
@@ -212,14 +213,14 @@ class action_find : public zpt::storage::mysqlx::action {
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto replace(std::string _id, zpt::json _document)
+    virtual auto replace(std::string const& _id, zpt::json _document)
       -> zpt::storage::action::type* override;
     virtual auto find(zpt::json _search) -> zpt::storage::action::type* override;
-    virtual auto set(std::string _attribute, zpt::json _value)
+    virtual auto set(std::string const& _attribute, zpt::json _value)
       -> zpt::storage::action::type* override;
-    virtual auto unset(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto patch(zpt::json _document) -> zpt::storage::action::type* override;
-    virtual auto sort(std::string _attribute) -> zpt::storage::action::type* override;
+    virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* override;
     virtual auto fields(zpt::json _fields) -> zpt::storage::action::type* override;
     virtual auto offset(size_t _rows) -> zpt::storage::action::type* override;
     virtual auto limit(size_t _number) -> zpt::storage::action::type* override;
