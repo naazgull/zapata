@@ -69,6 +69,6 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Shutting down REST engine", zpt::info);
+    zlog("Stopping REST engine", zpt::info);
     zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE()).shutdown();
 }

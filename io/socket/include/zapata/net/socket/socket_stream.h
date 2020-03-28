@@ -89,17 +89,17 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     __char_type obuf[SIZE];
     __char_type ibuf[SIZE];
 
-    int __sock;
-    bool __ssl;
+    int __sock{ -1 };
+    bool __ssl{ false };
     __sockaddr_type __server;
     __sockaddr_type __peer;
     std::string __host;
-    short __port;
-    short __protocol;
-    SSL* __sslstream;
-    SSL_CTX* __context;
-    unsigned long long __timeout;
-    unsigned int __error_code;
+    short __port{ -1 };
+    short __protocol{ -1 };
+    SSL* __sslstream{ nullptr };
+    SSL_CTX* __context{ nullptr };
+    unsigned long long __timeout{ 0 };
+    unsigned int __error_code{ 0 };
     std::string __error_string;
 
     virtual auto output_buffer() -> __int_type;
@@ -168,7 +168,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
 
   protected:
     __buf_type __buf;
-    bool __is_error;
+    bool __is_error{ false };
     sock_addr __address;
 
   private:
@@ -194,7 +194,7 @@ class basic_serversocketstream {
     auto accept() -> std::unique_ptr<zpt::stream>;
 
   protected:
-    int __sockfd;
+    int __sockfd{ -1 };
 };
 
 class serversocketstream {

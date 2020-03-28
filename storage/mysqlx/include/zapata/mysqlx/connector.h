@@ -46,6 +46,8 @@ from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json;
 class connection : public zpt::storage::connection::type {
   public:
     connection(zpt::json _options);
+    virtual ~connection() override = default;
+
     virtual auto open(zpt::json _options) -> zpt::storage::connection::type* override;
     virtual auto close() -> zpt::storage::connection::type* override;
     virtual auto session() -> zpt::storage::session override;
@@ -59,7 +61,7 @@ class session : public zpt::storage::session::type {
     session(zpt::storage::mysqlx::connection& _connection);
     session(const zpt::storage::mysqlx::session& _rhs) = delete;
     session(zpt::storage::mysqlx::session&& _rhs) = delete;
-    virtual ~session();
+    virtual ~session() override;
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
@@ -75,6 +77,7 @@ class database : public zpt::storage::database::type {
     database(zpt::storage::mysqlx::session& _session, std::string const& _db);
     database(const zpt::storage::mysqlx::database& _rhs) = delete;
     database(zpt::storage::mysqlx::database&& _rhs) = delete;
+    virtual ~database() override = default;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
     virtual auto operator-> () -> ::mysqlx::Schema*;
@@ -85,6 +88,7 @@ class database : public zpt::storage::database::type {
 class collection : public zpt::storage::collection::type {
   public:
     collection(zpt::storage::mysqlx::database& _database, std::string const& _collection);
+    virtual ~collection() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action override;
@@ -101,10 +105,12 @@ class collection : public zpt::storage::collection::type {
 class action : public zpt::storage::action::type {
   public:
     action(zpt::storage::mysqlx::collection& _collection);
+    virtual ~action() override = default;
 };
 class action_add : public zpt::storage::mysqlx::action {
   public:
     action_add(zpt::storage::mysqlx::collection& _collection, zpt::json _document);
+    virtual ~action_add() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
@@ -130,6 +136,7 @@ class action_add : public zpt::storage::mysqlx::action {
 class action_modify : public zpt::storage::mysqlx::action {
   public:
     action_modify(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual ~action_modify() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
@@ -155,6 +162,7 @@ class action_modify : public zpt::storage::mysqlx::action {
 class action_remove : public zpt::storage::mysqlx::action {
   public:
     action_remove(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual ~action_remove() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
@@ -182,6 +190,7 @@ class action_replace : public zpt::storage::mysqlx::action {
     action_replace(zpt::storage::mysqlx::collection& _collection,
                    std::string _id,
                    zpt::json _document);
+    virtual ~action_replace() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
@@ -210,6 +219,7 @@ class action_replace : public zpt::storage::mysqlx::action {
 class action_find : public zpt::storage::mysqlx::action {
   public:
     action_find(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
+    virtual ~action_find() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action::type* override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action::type* override;
@@ -239,6 +249,7 @@ class result : public zpt::storage::result::type {
     result(zpt::storage::mysqlx::action_remove& _action);
     result(zpt::storage::mysqlx::action_replace& _action);
     result(zpt::storage::mysqlx::action_find& _action);
+    virtual ~result() override = default;
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
     virtual auto generated_id() -> zpt::json override;
     virtual auto count() -> size_t override;

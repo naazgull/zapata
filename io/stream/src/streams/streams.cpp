@@ -29,6 +29,10 @@ zpt::stream::stream(std::ios& _rhs)
     this->__underlying->rdbuf(_rhs.rdbuf());
 }
 
+zpt::stream::~stream() {
+    zlog("Closing connection to " << this->uri(), zpt::trace);
+}
+
 auto
 zpt::stream::operator=(int _rhs) -> zpt::stream& {
     this->__fd = _rhs;
@@ -110,7 +114,6 @@ auto
 zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling& {
     if (!this->__shutdown.load()) {
         zpt::stream* _new_stream = _stream.release();
-        this->__polled_streams.insert(std::make_pair(static_cast<int>(*_new_stream), _new_stream));
 
         zpt::epoll_event_t _new_event;
         _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -124,7 +127,6 @@ zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::s
 auto
 zpt::stream::polling::mute(zpt::stream& _stream) -> zpt::stream::polling& {
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, static_cast<int>(_stream), nullptr);
-    this->__polled_streams.erase(static_cast<int>(_stream));
     return (*this);
 }
 
@@ -161,7 +163,6 @@ zpt::stream::polling::pool() -> void {
                 ((this->__epoll_events[_k].events & EPOLLERR) == EPOLLERR) ||
                 ((this->__epoll_events[_k].events & EPOLLRDHUP) == EPOLLRDHUP)) {
                 std::unique_ptr<zpt::stream> _to_dispose{ _stream };
-                zlog("Closing connection to " << _stream->uri(), zpt::trace);
                 this->mute(*_stream);
             }
             else if ((this->__epoll_events[_k].events & EPOLLIN) == EPOLLIN) {

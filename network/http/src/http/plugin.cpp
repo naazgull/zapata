@@ -48,7 +48,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
             }
             catch (zpt::failed_expectation& _e) {
             }
-            zlog("Shutting down HTTP socket server on " << _config["port"], zpt::info);
+            zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);
         });
     }
 }

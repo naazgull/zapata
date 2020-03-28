@@ -37,6 +37,9 @@ class connection {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto open(zpt::json _options) -> zpt::storage::connection::type* = 0;
         virtual auto close() -> zpt::storage::connection::type* = 0;
         virtual auto session() -> zpt::storage::session = 0;
@@ -65,6 +68,9 @@ class session {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto is_open() -> bool = 0;
         virtual auto commit() -> zpt::storage::session::type* = 0;
         virtual auto rollback() -> zpt::storage::session::type* = 0;
@@ -94,6 +100,9 @@ class database {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto collection(std::string const& _name) -> zpt::storage::collection = 0;
     };
 
@@ -120,6 +129,9 @@ class collection {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto add(zpt::json _document) -> zpt::storage::action = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action = 0;
@@ -152,6 +164,9 @@ class action {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto add(zpt::json _document) -> zpt::storage::action::type* = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action::type* = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action::type* = 0;
@@ -193,6 +208,9 @@ class result {
   public:
     class type {
       public:
+        type() = default;
+        virtual ~type() = default;
+
         virtual auto fetch(size_t _amount = 0) -> zpt::json = 0;
         virtual auto generated_id() -> zpt::json = 0;
         virtual auto count() -> size_t = 0;

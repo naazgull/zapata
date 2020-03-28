@@ -62,7 +62,7 @@ class stream {
     stream(std::ios& _rhs);
     stream(zpt::stream const& _rhs) = delete;
     stream(zpt::stream&& _rhs) = delete;
-    virtual ~stream() = default;
+    virtual ~stream();
 
     auto operator=(zpt::stream const& _rhs) -> zpt::stream& = delete;
     auto operator=(zpt::stream&& _rhs) -> zpt::stream& = delete;

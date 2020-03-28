@@ -196,6 +196,8 @@ zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
                         ? static_cast<int>(this->__configuration["log"]["format"])
                         : 0;
 
+    zlog("Starting server with PID " << zpt::log_pid, zpt::info);
+    
     this //
       ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } },
              zpt::undefined)

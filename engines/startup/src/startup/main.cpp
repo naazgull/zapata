@@ -35,19 +35,32 @@ deallocate(int _signal) -> void {
 }
 
 auto
+nostop(int _signal) -> void {
+    zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
+}
+
+auto
 main(int _argc, char* _argv[]) -> int {
     std::signal(SIGUSR1, deallocate);
+    // std::signal(SIGINT, nostop);
     try {
         zpt::json _parameters = zpt::parameters::parse(_argc,
                                                        _argv,
                                                        { "--conf-file",
                                                          { zpt::array, "optional", "multiple" },
                                                          "--conf-dir",
-                                                         { zpt::array, "optional", "multiple" } });
+                                                         { zpt::array, "optional", "multiple" },
+                                                         "--terminate",
+                                                         { zpt::array, "optional", "single" } });
 
         zpt::log_pname = std::make_unique<std::string>(_argv[0]);
         zpt::log_pid = ::getpid();
 
+        if (_parameters["--terminate"]->ok()) {
+            kill(static_cast<int>(_parameters["--terminate"]), SIGUSR1);
+            return 0;
+        }
+        
         zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(), 10, 10000);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
 
@@ -60,7 +73,7 @@ main(int _argc, char* _argv[]) -> int {
 
         zpt::globals::dealloc<zpt::stream::polling>(zpt::STREAM_POLLING());
         zpt::globals::dealloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-        zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
+        zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
     }
     catch (zpt::failed_expectation const& _e) {
         std::cout << _e.what() << std::endl << std::flush;

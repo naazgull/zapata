@@ -110,9 +110,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
         return (*this);
     }
 
-    this->__underlying = std::make_shared<zpt::JSONElementT>();
     zpt::json _head = *_list.begin();
-
     if (_list.size() == 1) {
         (*this) = _head;
         return (*this);
@@ -126,6 +124,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
            500,
            0);
 
+    this->__underlying = std::make_shared<zpt::JSONElementT>();
     this->__underlying->type(_is_array ? zpt::JSArray : zpt::JSObject);
 
     size_t _idx{ 0 };

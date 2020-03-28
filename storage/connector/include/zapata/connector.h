@@ -23,5 +23,4 @@
 #pragma once
 
 #include <zapata/connector/connector.h>
-#include <zapata/connector/layer.h>
 #include <zapata/connector/config.h>

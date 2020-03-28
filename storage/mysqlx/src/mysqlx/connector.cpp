@@ -62,7 +62,7 @@ zpt::storage::mysqlx::from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json
 }
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
-  : __options(_options) {}
+  : __options(_options["storage"]["mysqlx"]) {}
 
 auto
 zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
