@@ -12,9 +12,9 @@ export projects=(
        common/graph
        common/events
        network/transport
+       engines/startup
        network/websocket
        network/http
-       engines/startup
        engines/pipeline
        engines/rest
        storage/connector
