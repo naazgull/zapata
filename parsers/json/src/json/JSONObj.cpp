@@ -24,7 +24,7 @@ zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::push(zpt::JSONElementT& _value) -> JSONObjT& {
+zpt::JSONObjT::push(zpt::JSONElementT const& _value) -> JSONObjT& {
     expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
     zpt::json _ref{ _value };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
@@ -48,7 +48,7 @@ zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::push(zpt::json& _value) -> JSONObjT& {
+zpt::JSONObjT::push(zpt::json const& _value) -> JSONObjT& {
     expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _value));
     if (!_inserted) {
@@ -491,12 +491,18 @@ zpt::JSONObj::operator<<(std::string const& _in) -> zpt::JSONObj& {
 
 auto
 zpt::JSONObj::operator<<(const char* _in) -> zpt::JSONObj& {
-    (*this)->push(_in);
+    (*this)->push(std::string{ _in });
     return *this;
 }
 
 auto
 zpt::JSONObj::operator<<(JSONElementT& _in) -> zpt::JSONObj& {
     (*this)->push(_in);
+    return *this;
+}
+
+auto
+zpt::JSONObj::operator<<(std::initializer_list<zpt::json> _list) -> zpt::JSONObj& {
+    (*this)->push(zpt::json{ _list });
     return *this;
 }

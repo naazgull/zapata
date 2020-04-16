@@ -197,7 +197,7 @@ zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
                         : 0;
 
     zlog("Starting server with PID " << zpt::log_pid, zpt::info);
-    
+
     this //
       ->load({ "name", "c++_loader", "source", "*", "handles", { zpt::array, ".so" } },
              zpt::undefined)
@@ -232,7 +232,8 @@ auto
 zpt::startup::engine::error_callback(zpt::json& _event,
                                      bool& _content,
                                      const char* _what,
-                                     const char* _description) -> bool {
+                                     const char* _description,
+                                     int _error) -> bool {
     return false;
 }
 

@@ -9,10 +9,10 @@
 //%debug
 %no-lines
 
-%x scheme server_path server path params placeholder
+%x scheme server_path server path params placeholder function
 %%
 
-([^{:/]+) {
+([^{:/?]+) {
 	begin(StartCondition_::scheme);
 	return zpt::uri::lex::STRING;
 }
@@ -24,6 +24,10 @@
 "/" {
     begin(StartCondition_::path);
     return zpt::uri::lex::SLASH;
+}
+"?" {
+    begin(StartCondition_::params);
+    return zpt::uri::lex::QMARK;
 }
 
 <scheme> {
@@ -107,7 +111,10 @@
         d_intermediate_state = StartCondition_::params;
         begin(StartCondition_::placeholder);
     }
-	([^=&{]+) {
+    "(" {
+        begin(StartCondition_::function);
+    }
+	([^=&{(]+) {
 		return zpt::uri::lex::STRING;
     }
 }
@@ -124,3 +131,15 @@
         return zpt::uri::lex::STRING;
     }
 }
+
+<function> {
+    ([^,)]+) {
+        return zpt::uri::lex::FUNCTION_PARAM;
+	}
+    "," {
+	}
+	")" {
+        begin(StartCondition_::params);	    
+	}
+}	  
+	  

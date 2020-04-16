@@ -46,7 +46,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                     _polling.listen_on(_client);
                 } while (true);
             }
-            catch (zpt::failed_expectation& _e) {
+            catch (zpt::failed_expectation const& _e) {
             }
             zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);
         });

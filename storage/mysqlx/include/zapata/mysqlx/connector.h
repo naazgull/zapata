@@ -37,7 +37,13 @@ class action;
 class result;
 
 auto
+get_operator(std::string const& _op) -> std::string;
+auto
+evaluate(zpt::json _expression) -> zpt::json;
+auto
 to_search_str(zpt::json _search) -> std::string;
+auto
+to_binded_object(zpt::json _binded) -> void;
 auto
 to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
 auto
@@ -218,6 +224,7 @@ class action_replace : public zpt::storage::mysqlx::action {
 };
 class action_find : public zpt::storage::mysqlx::action {
   public:
+    action_find(zpt::storage::mysqlx::collection& _collection);
     action_find(zpt::storage::mysqlx::collection& _collection, zpt::json _search);
     virtual ~action_find() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action::type* override;
@@ -240,6 +247,7 @@ class action_find : public zpt::storage::mysqlx::action {
     virtual auto operator-> () -> ::mysqlx::CollectionFind*;
 
   private:
+    std::string __find_criteria;
     ::mysqlx::CollectionFind __underlying;
 };
 class result : public zpt::storage::result::type {

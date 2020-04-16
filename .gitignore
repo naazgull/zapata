@@ -109,3 +109,13 @@ storage/connector/include/zapata/connector/config.h
 storage/connector/m4/libtool.m4
 storage/mysqlx/include/zapata/mysqlx/config.h
 storage/mysqlx/m4/libtool.m4
+common/events/src/events/zevents
+common/globals/src/globals/zglobals
+common/graph/src/graph/zgraph
+common/lockfree/src/lockfree/zlf
+engines/pipeline/src/pipeline/zpipeline
+engines/startup/src/startup/zpt
+io/socket/src/socket/zsockc
+io/socket/src/socket/zsocks
+io/stream/src/streams/zstreams
+network/transport/src/transport/ztransport

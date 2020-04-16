@@ -119,7 +119,8 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     auto error_callback(zpt::json& _event,
                         bool& _content,
                         const char* _what,
-                        const char* _description = nullptr) -> bool;
+                        const char* _description = nullptr,
+                        int _error = 500) -> bool;
 
     auto to_string() -> std::string;
 

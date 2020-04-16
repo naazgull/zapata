@@ -186,6 +186,12 @@ class json {
     operator zpt::regex&();
     operator std::regex&();
 
+    auto operator+(std::initializer_list<zpt::json> _in) -> json;
+    auto operator+=(std::initializer_list<zpt::json> _in) -> json;
+    auto operator-(std::initializer_list<zpt::json> _in) -> json;
+    auto operator-=(std::initializer_list<zpt::json> _in) -> json;
+    auto operator/(std::initializer_list<zpt::json> _in) -> json;
+    auto operator|(std::initializer_list<zpt::json> _in) -> json;
     template<typename T>
     auto operator+(T _in) -> json;
     template<typename T>
@@ -211,6 +217,7 @@ class json {
 
     template<typename T>
     static auto data(const T _delegate) -> zpt::json;
+    static auto parse_json_str(std::string const& _in) -> zpt::json;
     static auto stringify(std::string& _str) -> void;
     static auto object() -> zpt::json;
     static auto array() -> zpt::json;
@@ -283,9 +290,9 @@ class JSONObjT {
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
 
     virtual auto push(std::string const& _name) -> zpt::JSONObjT&;
-    virtual auto push(zpt::JSONElementT& _value) -> zpt::JSONObjT&;
+    virtual auto push(zpt::JSONElementT const& _value) -> zpt::JSONObjT&;
     virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT&;
-    virtual auto push(zpt::json& _value) -> zpt::JSONObjT&;
+    virtual auto push(zpt::json const& _value) -> zpt::JSONObjT&;
 
     virtual auto pop(int _idx) -> zpt::JSONObjT&;
     virtual auto pop(size_t _idx) -> zpt::JSONObjT&;
@@ -357,9 +364,9 @@ class JSONArrT {
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
 
-    virtual auto push(zpt::JSONElementT& _value) -> zpt::JSONArrT&;
+    virtual auto push(zpt::JSONElementT const& _value) -> zpt::JSONArrT&;
     virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> zpt::JSONArrT&;
-    virtual auto push(zpt::json& _value) -> zpt::JSONArrT&;
+    virtual auto push(zpt::json const& _value) -> zpt::JSONArrT&;
 
     virtual auto pop(int _idx) -> zpt::JSONArrT&;
     virtual auto pop(size_t _idx) -> zpt::JSONArrT&;
@@ -451,7 +458,7 @@ class JSONObj {
     auto operator<<(std::string const& _in) -> JSONObj&;
     auto operator<<(const char* _in) -> JSONObj&;
     auto operator<<(zpt::JSONElementT& _in) -> JSONObj&;
-    auto operator<<(std::initializer_list<zpt::JSONElementT> _list) -> JSONObj&;
+    auto operator<<(std::initializer_list<zpt::json> _list) -> JSONObj&;
     template<typename T>
     auto operator<<(T _in) -> JSONObj&;
     template<typename T>
@@ -500,7 +507,7 @@ class JSONArr {
     template<typename T>
     auto operator>=(T _rhs) -> bool;
     auto operator<<(JSONElementT& _in) -> JSONArr&;
-    auto operator<<(std::initializer_list<zpt::JSONElementT> _list) -> JSONArr&;
+    auto operator<<(std::initializer_list<zpt::json> _list) -> JSONArr&;
     template<typename T>
     auto operator<<(T _in) -> JSONArr&;
     template<typename T>

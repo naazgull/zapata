@@ -96,9 +96,7 @@ class HTTPObj {
     auto body() -> std::string&;
     auto body(std::string const& _body) -> void;
     auto headers() -> zpt::http::header_map&;
-    auto header(const char* _name) -> std::string;
-    auto header(const char* _name, const char* _value) -> void;
-    auto header(const char* _name, std::string const& _value) -> void;
+    auto header(std::string const& _name) -> std::string const&;
     auto header(std::string const& _name, std::string const& _value) -> void;
     auto version() -> std::string&;
     auto version(std::string const& _version) -> void;
@@ -129,18 +127,16 @@ class HTTPReqT : public HTTPObj {
     auto query() -> std::string&;
     auto query(std::string const&) -> void;
     auto params() -> zpt::http::parameter_map&;
-    auto param(const char* _name) -> std::string;
-    auto param(const char* _name, const char* _value) -> void;
-    auto param(const char* _name, std::string const& _value) -> void;
+    auto param(std::string const& _name) -> std::string const&;
     auto param(std::string const& _name, std::string const& _value) -> void;
 
     virtual auto stringify(std::string& _out) -> void;
     virtual auto stringify(std::ostream& _out) -> void;
 
   private:
-    std::string __url;
-    std::string __query;
-    zpt::performative __method;
+    std::string __url{ "" };
+    std::string __query{ "" };
+    zpt::performative __method{ 0 };
     zpt::http::parameter_map __params;
 };
 
@@ -156,7 +152,7 @@ class HTTPRepT : public HTTPObj {
     virtual auto stringify(std::ostream& _out) -> void;
 
   private:
-    zpt::http::status __status;
+    zpt::http::status __status{ zpt::http::HTTP100 };
 };
 
 class HTTPReq {
@@ -180,7 +176,7 @@ class HTTPReq {
     }
 
   private:
-    std::shared_ptr<zpt::HTTPReqT> __underlying;
+    std::shared_ptr<zpt::HTTPReqT> __underlying{ nullptr };
 };
 
 class HTTPRep {
@@ -205,7 +201,7 @@ class HTTPRep {
     }
 
   private:
-    std::shared_ptr<zpt::HTTPRepT> __underlying;
+    std::shared_ptr<zpt::HTTPRepT> __underlying{ nullptr };
 };
 
 namespace http {

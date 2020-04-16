@@ -41,7 +41,8 @@ zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _m
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
           _transport->receive(_message);
-          _in.set_path(std::string("/") + zpt::rest::to_str(_message->method()) + _message->uri());
+          _in.set_path(std::string("/REST/") + zpt::rest::to_str(_message->method()) +
+                       _message->uri());
           _in.next_stage();
       });
 
@@ -61,7 +62,10 @@ auto
 zpt::rest::engine::add_listener(size_t _stage,
                                 std::string _pattern,
                                 std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
-  -> zpt::pipeline::engine<zpt::message>& {
+  -> zpt::rest::engine& {
+    if (_stage == 0) {
+        _pattern.insert(0, "/REST");
+    }
     zpt::pipeline::engine<zpt::message>::add_listener(_stage + 1, _pattern, _callback);
     return (*this);
 }
@@ -70,9 +74,10 @@ auto
 zpt::rest::engine::on_error(zpt::json& _path,
                             zpt::pipeline::event<zpt::message>& _event,
                             const char* _what,
-                            const char* _description) -> bool {
+                            const char* _description,
+                            int _error) -> bool {
     auto& _message = _event.content();
-    _message->status() = 500;
+    _message->status() = _error;
     _message->to_send() = { "message", std::string{ _what } };
     if (_description != nullptr) {
         _message->to_send() << "description" << std::string{ _description };

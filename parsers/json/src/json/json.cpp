@@ -362,6 +362,42 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
 }
 
 auto
+zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) -> void {
+    for (auto [_, _key, _parameter] : _to_check) {
+        if (!_inclusive && !_rules[_key]->ok()) {
+            continue;
+        }
+        expect(!_inclusive || _rules[_key]->type() == zpt::JSObject,
+               "'" << _key << "' is not a valid parameter",
+               400,
+               0);
+        for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
+            if (_cfg_name == "type") {
+                expect(static_cast<int>(_parameter->type()) == static_cast<int>(_cfg_value),
+                       "'" << _key << "' parameter has the wrong type",
+                       400,
+                       0);
+            }
+            else if (_cfg_value == "pattern") {
+                expect(_cfg_value->type() == zpt::JSRegex &&
+                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->rgx()),
+                       "'" << _key << "' parameter pattern doesn't match",
+                       400,
+                       0);
+            }
+        }
+    }
+
+    for (auto [_, _key, _config] : _rules) {
+        for (auto [_, _cfg_name, _cfg_value] : _config) {
+            if (_cfg_name == "mandatory") {
+                expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter", 400, 0);
+            }
+        }
+    }
+}
+
+auto
 zpt::test::location(zpt::json _location) -> bool {
     return (_location->is_object() && _location["longitude"]->is_number() &&
             _location["latitude"]->is_number()) ||

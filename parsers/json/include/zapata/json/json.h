@@ -118,6 +118,8 @@ env(zpt::json _options) -> void;
 namespace parameters {
 auto
 parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json;
+auto
+verify(zpt::json _to_check, zpt::json _rules, bool _inclusive = false) -> void;
 } // namespace parameters
 
 namespace test {

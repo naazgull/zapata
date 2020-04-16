@@ -211,9 +211,21 @@ auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
 }
 
 auto
-zpt::storage::get_filter(zpt::json _params, zpt::json _filter, zpt::json _binded) -> void {
-    for (auto [_, _key, _value] : _params) {
-        _filter << _key << zpt::regex{ _key };
-        _binded << _key << _value;
+zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _params)
+  -> zpt::storage::action {
+    if (_params->ok()) {
+        auto _find = _collection->find(_params);
+
+        if (_params->size() != 0) {
+            _find->bind(_params);
+        }
+
+        if (_params["page_size"]->ok()) {
+            _find //
+              ->limit(_params["page_size"])
+              ->offset(_params["page_start_index"]);
+        }
+        return _find;
     }
+    return _collection->find({});
 }

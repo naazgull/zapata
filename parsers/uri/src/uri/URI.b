@@ -13,7 +13,7 @@
 //%debug
 %no-lines
 
-%left DOUBLE_DOT SLASH AT QMARK EQ E STRING
+%left DOUBLE_DOT SLASH AT QMARK EQ E STRING FUNCTION_PARAM
 
 %%
 
@@ -149,8 +149,9 @@ paramslist :
 paramvalue :
 
     {
+        auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << zpt::undefined;
+            (*d_scanner)["params"] << __name << zpt::undefined;
         }
         else {
             (*d_scanner) << d_scanner.matched();
@@ -159,11 +160,38 @@ paramvalue :
 |
     STRING
     {
+        auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner)["params"] << static_cast<std::string>((*d_scanner)["__aux"]) << d_scanner.matched();
+            (*d_scanner)["params"] << __name << d_scanner.matched();
         }
         else {
             (*d_scanner) << d_scanner.matched();
         }
     }
+    function_parameters
+;
+
+function_parameters :
+
+|
+    FUNCTION_PARAM
+    {
+        auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            auto __temp = (*d_scanner)["params"][__name];
+            if (__temp->type() != zpt::JSObject) {
+                (*d_scanner)["params"] << __name << zpt::json{ "name", __temp, "args", zpt::json::array() };
+            }
+            (*d_scanner)["params"][__name]["args"] << d_scanner.matched();
+        }
+        else {
+            zpt::json __temp = (*d_scanner)[(*d_scanner)->size() - 1];
+            if (__temp->type() != zpt::JSObject) {
+                (*d_scanner) >> ((*d_scanner)->size() - 1);
+                (*d_scanner) << zpt::json{ "name", __temp, "args", zpt::json::array() };
+            }
+            (*d_scanner)[(*d_scanner)->size() - 1]["args"] << d_scanner.matched();
+        }
+    }
+    function_parameters
 ;

@@ -238,7 +238,7 @@ class result {
     result(zpt::storage::result::type* _underlying);
 };
 auto
-get_filter(zpt::json _params, zpt::json _filter, zpt::json _binded) -> void;
+filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 } // namespace storage
 } // namespace zpt
 

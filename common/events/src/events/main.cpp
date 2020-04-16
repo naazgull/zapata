@@ -60,7 +60,8 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
     auto error_callback(int _event,
                         zpt::json _content,
                         const char* _what,
-                        const char* _description = nullptr) -> bool {
+                        const char* _description = nullptr,
+                        int _error = 500) -> bool {
         return true;
     }
 

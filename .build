@@ -16,6 +16,12 @@ distro=$(lsb_release -c -s)
 goahead="false"
 for package in ${projects[@]}
 do
+    title="Processing '${package}'"
+    underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
+    echo
+    echo ${title}
+    echo ${underlines}
+    
     case "$1" in
 	all)
 	    make -s -j4 -C ${package} && sudo make -s -C ${package} install

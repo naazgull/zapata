@@ -73,31 +73,18 @@ zpt::HTTPObj::headers() -> zpt::http::header_map& {
 }
 
 auto
-zpt::HTTPObj::header(const char* _idx) -> std::string {
-    std::string _name(_idx);
-    zpt::prettify_header_name(_name);
-    return this->__headers[_name];
-}
-
-auto
-zpt::HTTPObj::header(const char* _name, const char* _value) -> void {
-    std::string _n(_name);
-    zpt::prettify_header_name(_n);
-    this->__headers[_n] = _value;
-}
-
-auto
-zpt::HTTPObj::header(const char* _name, std::string const& _value) -> void {
-    std::string _n(_name);
-    zpt::prettify_header_name(_n);
-    this->__headers[_n] = _value;
+zpt::HTTPObj::header(std::string const& _idx) -> std::string const& {
+    static std::string const _empty{ "" };
+    auto _found = this->__headers.find(zpt::r_prettify_header_name(_idx));
+    if (_found != this->__headers.end()) {
+        return _found->second;
+    }
+    return _empty;
 }
 
 auto
 zpt::HTTPObj::header(std::string const& _name, std::string const& _value) -> void {
-    std::string _n(_name);
-    zpt::prettify_header_name(_n);
-    this->__headers[_n] = _value;
+    this->__headers[zpt::r_prettify_header_name(_name)] = _value;
 }
 
 auto

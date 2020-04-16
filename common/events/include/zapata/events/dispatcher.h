@@ -107,7 +107,8 @@ zpt::events::dispatcher<C, E, V>::trap() -> C& {
         static_cast<C*>(this)->trapped(_event, _content);
     }
     catch (zpt::failed_expectation const& _e) {
-        if (!static_cast<C*>(this)->error_callback(_event, _content, _e.what(), _e.description())) {
+        if (!static_cast<C*>(this)->error_callback(
+              _event, _content, _e.what(), _e.description(), _e.status())) {
             throw;
         }
     }

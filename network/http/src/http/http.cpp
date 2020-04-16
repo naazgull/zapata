@@ -22,6 +22,7 @@
 
 #include <zapata/net/transport/http.h>
 #include <zapata/base.h>
+#include <zapata/uri.h>
 
 auto
 zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
@@ -63,15 +64,13 @@ zpt::net::transport::http::set_body(zpt::message& _message, zpt::http::req& _req
 auto
 zpt::net::transport::http::set_params(zpt::message& _message, zpt::http::req& _request)
   -> zpt::net::transport::http& {
-    zpt::json _params = zpt::json::object();
-    for (auto [_key, _value] : _request->params()) {
-        _params << _key << _value;
-    }
-    if (_params->size() != 0) {
+    auto& _query = _request->query();
+    if (_query.length() != 0) {
+        zpt::json _params = zpt::uri::parse(std::string{ "?" } + _query);
         if (!_message->received()->ok()) {
             _message->received() = zpt::json::object();
         }
-        _message->received() << "params" << _params;
+        _message->received() << "params" << _params["params"];
     }
     return (*this);
 }

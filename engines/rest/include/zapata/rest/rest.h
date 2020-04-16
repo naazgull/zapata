@@ -26,11 +26,11 @@
 #include <zapata/pipeline.h>
 #include <zapata/transport.h>
 
-namespace zpt {
+#define URI_PART_ANY "{([^/?]+)}"
 
+namespace zpt {
 auto
 REST_ENGINE() -> ssize_t&;
-
 namespace rest {
 
 static inline const unsigned short Get = 0;
@@ -54,12 +54,13 @@ class engine : public zpt::pipeline::engine<zpt::message> {
     auto add_listener(size_t _stage,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
-      -> zpt::pipeline::engine<zpt::message>&;
+      -> zpt::rest::engine&;
 
     static auto on_error(zpt::json& _path,
                          zpt::pipeline::event<zpt::message>& _event,
                          const char* _what,
-                         const char* _description) -> bool;
+                         const char* _description = nullptr,
+                         int _error = 500) -> bool;
 };
 
 auto

@@ -46,33 +46,33 @@ zpt::HTTPReqT::params() -> zpt::http::parameter_map& {
 }
 
 auto
-zpt::HTTPReqT::param(const char* _idx) -> std::string {
+zpt::HTTPReqT::param(std::string const& _idx) -> std::string const& {
+    static std::string const _empty{ "" };
     auto _found = this->__params.find(_idx);
     if (_found != this->__params.end()) {
         return _found->second;
     }
-    return "";
-}
-
-auto
-zpt::HTTPReqT::param(const char* _name, const char* _value) -> void {
-    this->__params.insert(std::make_pair(_name, _value));
-}
-
-auto
-zpt::HTTPReqT::param(const char* _name, std::string const& _value) -> void {
-    this->__params.insert(std::make_pair(_name, _value));
+    return _empty;
 }
 
 auto
 zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> void {
-    this->__params.insert(std::make_pair(_name, _value));
+    if (this->__query.length() != 0) {
+        this->__query.insert(this->__query.length(), "&");
+    }
+    this->__query.insert(this->__query.length(), _name);
+    this->__query.insert(this->__query.length(), "=");
+    this->__query.insert(this->__query.length(), _value);
+    this->__params[_name] = _value;
 }
 
 auto
 zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
     _out << zpt::http::method_names[this->__method] << " " << this->__url;
-    if (this->__params.size() != 0) {
+    if (this->__query.length() != 0) {
+        _out << "?" << this->__query;
+    }
+    else if (this->__params.size() != 0) {
         _out << "?";
         bool _first = true;
         for (auto i : this->__params) {

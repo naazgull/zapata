@@ -254,6 +254,36 @@ zpt::json::operator std::regex&() {
 }
 
 auto
+zpt::json::operator+(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator+=(zpt::json{_rhs});
+}
+
+auto
+zpt::json::operator+=(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator+=(zpt::json{_rhs});
+}
+
+auto
+zpt::json::operator-(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator-(zpt::json{_rhs});
+}
+
+auto
+zpt::json::operator-=(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator-=(zpt::json{_rhs});
+}
+
+auto
+zpt::json::operator/(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator/(zpt::json{_rhs});
+}
+
+auto
+zpt::json::operator|(std::initializer_list<zpt::json> _rhs) -> zpt::json {
+    return this->__underlying->operator|(zpt::json{_rhs});
+}
+
+auto
 zpt::json::parse(std::string const& _in) -> zpt::json& {
     std::istringstream _iss;
     _iss.str(_in);
@@ -288,6 +318,13 @@ zpt::json::begin() -> zpt::json::iterator {
 auto
 zpt::json::end() -> zpt::json::iterator {
     return zpt::json::iterator{ *this, std::numeric_limits<size_t>::max() };
+}
+
+auto
+zpt::json::parse_json_str(std::string const& _in) -> zpt::json {
+    zpt::json _to_return;
+    _to_return.parse(_in);
+    return _to_return;
 }
 
 auto

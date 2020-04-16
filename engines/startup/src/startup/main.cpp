@@ -60,7 +60,7 @@ main(int _argc, char* _argv[]) -> int {
             kill(static_cast<int>(_parameters["--terminate"]), SIGUSR1);
             return 0;
         }
-        
+
         zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(), 10, 10000);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
 

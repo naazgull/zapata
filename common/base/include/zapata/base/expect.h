@@ -28,6 +28,7 @@ SOFTWARE.
 #include <ctime>
 #include <execinfo.h>
 #include <memory>
+#include <sstream>
 #include <zapata/exceptions/ExpectationException.h>
 
 /**
@@ -44,8 +45,10 @@ SOFTWARE.
     if (!(x)) {                                                                                    \
         void* __backtrace_array__[10];                                                             \
         size_t __backtrace__size__ = backtrace(__backtrace_array__, 10);                           \
+        std::ostringstream __OSS__;                                                                \
+        __OSS__ << y << std::flush;                                                                \
         throw zpt::ExpectationException(                                                           \
-          y,                                                                                       \
+          __OSS__.str(),                                                                           \
           z,                                                                                       \
           c,                                                                                       \
           #x,                                                                                      \
