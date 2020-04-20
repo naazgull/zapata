@@ -1,7 +1,7 @@
-/* include/zapata/uri/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/uri/config.h.in.  Generated from configure.ac by autoheader.  */
+/* include/zapata/dom/config.h.  Generated from config.h.in by configure.  */
+/* include/zapata/dom/config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include <zapata/http/unconfig.h>
+#include <zapata/dom/unconfig.h>
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -18,6 +18,9 @@
 /* Define to 1 if you have the `magic' library (-lmagic). */
 #define HAVE_LIBMAGIC 1
 
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#define HAVE_LIBPTHREAD 1
+
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #define HAVE_LIBSSL 1
 
@@ -26,10 +29,6 @@
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
 #define HAVE_LIBZAPATA_BASE 1
-
-/* Define to 1 if you have the `zapata-lex-json' library (-lzapata-lex-json).
-   */
-#define HAVE_LIBZAPATA_LEX_JSON 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -59,19 +58,19 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "zapata-uri"
+#define PACKAGE "zapata-dom-processor"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "n@zgul <n@zgul.me>"
+#define PACKAGE_BUGREPORT "n@zgul.me"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "zapata-uri"
+#define PACKAGE_NAME "zapata-dom-processor"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-uri 1.0.0-1"
+#define PACKAGE_STRING "zapata-dom-processor 1.0.0-1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "zapata-uri"
+#define PACKAGE_TARNAME "zapata-dom-processor"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""

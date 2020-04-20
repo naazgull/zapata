@@ -328,21 +328,21 @@ zpt::JSONObjT::operator>=(zpt::JSONObj& _rhs) -> bool {
     return *this >= *_rhs;
 }
 
-auto zpt::JSONObjT::operator[](int _idx) -> zpt::json& {
+auto zpt::JSONObjT::operator[](int _idx) -> zpt::json {
     expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
     return this->operator[](this->key_for(_idx));
 }
 
-auto zpt::JSONObjT::operator[](size_t _idx) -> zpt::json& {
+auto zpt::JSONObjT::operator[](size_t _idx) -> zpt::json {
     expect(this->__underlying.size() < _idx, "no such index", 500, 0);
     return this->operator[](this->key_for(_idx));
 }
 
-auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
+auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json {
     return this->operator[](std::string(_idx));
 }
 
-auto zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json& {
+auto zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json {
     auto _found = this->__underlying.find(_idx);
     if (_found != this->__underlying.end()) {
         return _found->second;

@@ -41,7 +41,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _m
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
           _transport->receive(_message);
-          _in.set_path(std::string("/REST/") + zpt::rest::to_str(_message->method()) +
+          _in.set_path(std::string("/ROOT/") + zpt::rest::to_str(_message->method()) +
                        _message->uri());
           _in.next_stage();
       });
@@ -64,7 +64,7 @@ zpt::rest::engine::add_listener(size_t _stage,
                                 std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
   -> zpt::rest::engine& {
     if (_stage == 0) {
-        _pattern.insert(0, "/REST");
+        _pattern.insert(0, "/ROOT");
     }
     zpt::pipeline::engine<zpt::message>::add_listener(_stage + 1, _pattern, _callback);
     return (*this);

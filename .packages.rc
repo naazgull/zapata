@@ -19,4 +19,5 @@ export projects=(
        engines/rest
        storage/connector
        storage/mysqlx
+       engines/dom
 )

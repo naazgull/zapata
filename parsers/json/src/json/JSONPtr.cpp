@@ -217,10 +217,6 @@ zpt::json::operator zpt::timestamp_t() {
     return this->__underlying.get()->operator zpt::timestamp_t();
 }
 
-// zpt::json::operator zpt::pretty() {
-//     return this->__underlying.get()->operator zpt::pretty();
-// }
-
 zpt::json::operator zpt::JSONObj() {
     return this->__underlying.get()->operator zpt::JSONObj();
 }
@@ -255,43 +251,44 @@ zpt::json::operator std::regex&() {
 
 auto
 zpt::json::operator+(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator+=(zpt::json{_rhs});
+    return this->__underlying->operator+=(zpt::json{ _rhs });
 }
 
 auto
 zpt::json::operator+=(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator+=(zpt::json{_rhs});
+    return this->__underlying->operator+=(zpt::json{ _rhs });
 }
 
 auto
 zpt::json::operator-(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator-(zpt::json{_rhs});
+    return this->__underlying->operator-(zpt::json{ _rhs });
 }
 
 auto
 zpt::json::operator-=(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator-=(zpt::json{_rhs});
+    return this->__underlying->operator-=(zpt::json{ _rhs });
 }
 
 auto
 zpt::json::operator/(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator/(zpt::json{_rhs});
+    return this->__underlying->operator/(zpt::json{ _rhs });
 }
 
 auto
 zpt::json::operator|(std::initializer_list<zpt::json> _rhs) -> zpt::json {
-    return this->__underlying->operator|(zpt::json{_rhs});
+    return this->__underlying->operator|(zpt::json{ _rhs });
 }
 
 auto
-zpt::json::parse(std::string const& _in) -> zpt::json& {
+zpt::json::load_from(std::string const& _in) -> zpt::json& {
     std::istringstream _iss;
     _iss.str(_in);
-    return this->parse(_iss);
+    this->load_from(_iss);
+    return (*this);
 }
 
 auto
-zpt::json::parse(std::istream& _in) -> zpt::json& {
+zpt::json::load_from(std::istream& _in) -> zpt::json& {
     static thread_local zpt::JSONParser _thread_local_parser;
     _thread_local_parser.switchRoots(*this);
     _thread_local_parser.switchStreams(_in);
@@ -323,7 +320,7 @@ zpt::json::end() -> zpt::json::iterator {
 auto
 zpt::json::parse_json_str(std::string const& _in) -> zpt::json {
     zpt::json _to_return;
-    _to_return.parse(_in);
+    _to_return.load_from(_in);
     return _to_return;
 }
 
@@ -548,8 +545,8 @@ auto zpt::json::iterator::operator-> () const -> pointer {
 
 auto
 zpt::json::iterator::operator==(iterator _rhs) const -> bool {
-    return this->__index == _rhs.__index && this->__iterator == _rhs.__iterator &&
-           this->__target == _rhs.__target;
+    return this->__index == _rhs.__index &&
+           (this->__target->type() != zpt::JSObject || this->__iterator == _rhs.__iterator);
 }
 
 auto
@@ -639,6 +636,6 @@ zpt::timestamp(zpt::timestamp_t _timestamp) {
 
 auto operator"" _JSON(const char* _string, size_t _length) -> zpt::json {
     zpt::json _to_return;
-    _to_return.parse(std::string{ _string, _length });
+    _to_return.load_from(std::string{ _string, _length });
     return _to_return;
 }

@@ -279,22 +279,22 @@ zpt::JSONArrT::operator>=(zpt::JSONArr& _rhs) -> bool {
     return *this >= *_rhs;
 }
 
-auto zpt::JSONArrT::operator[](int _idx) -> zpt::json& {
+auto zpt::JSONArrT::operator[](int _idx) -> zpt::json {
     return (*this)[(size_t)_idx];
 }
 
-auto zpt::JSONArrT::operator[](size_t _idx) -> zpt::json& {
+auto zpt::JSONArrT::operator[](size_t _idx) -> zpt::json {
     if (_idx < 0 || _idx >= this->__underlying.size()) {
         return zpt::undefined;
     }
     return this->__underlying.at(_idx);
 }
 
-auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json& {
+auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json {
     return (*this)[std::string(_idx)];
 }
 
-auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json& {
+auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
 

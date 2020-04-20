@@ -74,7 +74,7 @@ class stage
     stage(int _max_threads = 1, int _max_per_thread = 1, long _max_pop_wait_micro = 0);
     stage(zpt::pipeline::stage<T> const&) = delete;
     stage(zpt::pipeline::stage<T>&&) = delete;
-    virtual ~stage() = default;
+    virtual ~stage() override = default;
 
     auto operator=(zpt::pipeline::stage<T> const&) = delete;
     auto operator=(zpt::pipeline::stage<T>&&) = delete;
@@ -305,10 +305,7 @@ zpt::pipeline::engine<T>::engine(size_t _pipeline_size,
   , __threads_per_stage{ _threads_per_stage } {
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__stages.push_back(std::make_shared<zpt::pipeline::stage<T>>(
-          _threads_per_stage + 1,
-          // std::max(32, 128 - ((_threads_per_stage - 1) * 8)),
-          8,
-          _max_pop_wait_micro));
+          _threads_per_stage + 1, 8, _max_pop_wait_micro));
     }
 }
 
@@ -365,8 +362,9 @@ template<typename T>
 auto
 zpt::pipeline::engine<T>::next_stage(zpt::pipeline::event<T> _event) -> zpt::pipeline::engine<T>& {
     size_t _stage = _event;
-    expect(_stage < this->__stages.size(), "no next stage", 500, 0);
-    this->__stages[_stage]->trigger(_event.path(), _event);
+    if (_stage < this->__stages.size()) {
+        this->__stages[_stage]->trigger(_event.path(), _event);
+    }
     return (*this);
 }
 
@@ -378,7 +376,6 @@ zpt::pipeline::engine<T>::trigger(std::string const& _uri,
   -> zpt::pipeline::engine<T>& {
     if (_callback == nullptr) {
         zpt::json _path = zpt::pipeline::to_path(_uri);
-        zlog(_path, zpt::trace);
         this->__stages[0]->trigger(_path, zpt::pipeline::event<T>{ *this, _content, _path });
     }
     return (*this);
