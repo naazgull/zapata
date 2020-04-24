@@ -31,6 +31,8 @@
 #endif
 
 namespace zpt {
+auto
+WEBSOCKET_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace ws {
 auto

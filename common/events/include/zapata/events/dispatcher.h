@@ -79,10 +79,7 @@ zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
 
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::~dispatcher() {
-    this->__shutdown.store(true);
-    for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
-        this->__consumers[_idx].join();
-    }
+    this->shutdown();
 }
 
 template<typename C, typename E, typename V>
@@ -139,7 +136,12 @@ zpt::events::dispatcher<C, E, V>::mute(E _event, F _listener) -> C& {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
-    this->__shutdown.store(true);
+    if (!this->__shutdown) {
+        this->__shutdown.store(true);
+        for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
+            this->__consumers[_idx].join();
+        }
+    }
     return (*static_cast<C*>(this));
 }
 
@@ -154,16 +156,15 @@ auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
     long _waiting_iterations{ 0 };
     do {
-        if (this->__shutdown.load()) {
-            zlog("Worker is exiting", zpt::trace);
-            return;
-        }
-
         try {
             this->trap();
             _waiting_iterations = 0;
         }
         catch (zpt::NoMoreElementsException const& e) {
+            if (this->__shutdown.load()) {
+                zlog("Worker is exiting", zpt::trace);
+                return;
+            }
             _waiting_iterations =
               zpt::this_thread::adaptive_sleep_for(_waiting_iterations, this->__max_pop_wait);
         }

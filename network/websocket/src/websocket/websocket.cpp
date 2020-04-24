@@ -24,6 +24,12 @@
 #include <zapata/base.h>
 
 auto
+zpt::WEBSOCKET_SERVER_SOCKET() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
+auto
 zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     std::string _key;
     std::string _line;

@@ -107,19 +107,11 @@ zpt::dom::engine::traverse(zpt::json _document, std::string _path, zpt::json _pa
         _path = "/ROOT";
     }
     for (auto [_idx, _key, _content] : _document) {
-        switch (_document->type()) {
-            case zpt::JSObject: {
-                std::string _xpath{ _path + std::string{ "/" } + _key };
-                zlog(_xpath, zpt::trace);
-                this->trigger(_xpath, zpt::dom::element{ _xpath, _key, _content, _document });
-                this->traverse(_content, _xpath, _document);
-                break;
-            }
-            case zpt::JSArray: {
-                this->traverse(_content, _path, _document);
-                break;
-            }
-        }
+        std::string _sub_path = (_document->is_array() ? std::to_string(_idx) : _key);
+        std::string _xpath{ _path + std::string{ "/" } + _sub_path };
+        zlog(_xpath, zpt::trace);
+        this->trigger(_xpath, zpt::dom::element{ _xpath, _sub_path, _content, _document });
+        this->traverse(_content, _xpath, _document);
     }
     return (*this);
 }
