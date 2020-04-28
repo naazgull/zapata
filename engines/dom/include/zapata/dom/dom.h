@@ -60,7 +60,15 @@ class element {
 
 class engine : public zpt::pipeline::engine<zpt::dom::element> {
   public:
-    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _max_pop_wait_micro = 500);
+    engine(size_t _pipeline_size = 1,
+           zpt::json _configuration = { "max_stage_threads",
+                                        1,
+                                        "max_producer_threads",
+                                        1,
+                                        "max_consumer_threads",
+                                        0,
+                                        "max_queue_spin_sleep",
+                                        5000 });
     virtual ~engine() override = default;
 
     auto add_listener(size_t _stage,

@@ -602,4 +602,18 @@ typedef std::shared_ptr<std::tm> tm_ptr;
 
 zpt::tm_ptr
 get_time(time_t _t);
+
+inline auto
+cache_line_size() -> size_t {
+    FILE* p = 0;
+    p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
+    unsigned int i = 0;
+    if (p) {
+        if (fscanf(p, "%d", &i)) {
+        }
+        fclose(p);
+    }
+    return i;
+}
+    
 } // namespace zpt

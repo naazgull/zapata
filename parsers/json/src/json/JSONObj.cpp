@@ -14,7 +14,7 @@ zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
     }
     else {
         auto [_it, _inserted] =
-          this->__underlying.insert(std::make_pair(this->__name, zpt::json{ _name }));
+          this->__underlying.insert(std::make_pair(this->__name, zpt::json(_name)));
         if (!_inserted) {
             _it->second = _name;
         }
@@ -141,8 +141,7 @@ zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string 
     zpt::json _current = (*this)[_part];
     if (!_current->ok()) {
         if (_iss.good()) {
-            zpt::JSONObj _new;
-            _current = zpt::mkptr(_new);
+            _current = zpt::json::object();
             this->push(_part);
             this->push(_current);
             _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
@@ -194,11 +193,11 @@ zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator)
 
 auto
 zpt::JSONObjT::clone() -> zpt::json {
-    zpt::JSONObj _return;
+    zpt::json _return = zpt::json::object();
     for (auto _f : this->__underlying) {
         _return << _f.first << _f.second->clone();
     }
-    return zpt::mkptr(_return);
+    return _return;
 }
 
 auto zpt::JSONObjT::operator-> () -> std::map<std::string, zpt::json>* {

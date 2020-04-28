@@ -8,4 +8,4 @@ Copyright (c) 2016
 #include <zapata/lockfree/spin_lock.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/list.h>
-#include <zapata/lockfree/hptr.h>
+#include <zapata/lockfree/hazard_ptr.h>

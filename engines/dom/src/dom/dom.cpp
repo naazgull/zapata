@@ -81,10 +81,8 @@ zpt::dom ::element::parent() -> zpt::json {
     return this->__parent;
 }
 
-zpt::dom::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _max_pop_wait_micro)
-  : zpt::pipeline::engine<zpt::dom::element>{ _pipeline_size,
-                                              _threads_per_stage,
-                                              _max_pop_wait_micro } {
+zpt::dom::engine::engine(size_t _pipeline_size, zpt::json _config)
+  : zpt::pipeline::engine<zpt::dom::element>{ _pipeline_size, _config } {
     this->set_error_callback(zpt::dom::engine::on_error);
 }
 

@@ -32,7 +32,7 @@ constexpr int MAX_THREADS_QUEUE = 1000;
 constexpr int N_ELEMENTS_LIST = 1000;
 constexpr int MAX_THREADS_LIST = 50;
 
-constexpr int PER_THREAD = 8;
+constexpr int PER_THREAD = 2;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
@@ -42,13 +42,17 @@ std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
-zpt::lf::queue<std::shared_ptr<std::string>> _queue{ MAX_THREADS_QUEUE,
-                                                     PER_THREAD,
-                                                     SPIN_WAIT_MICROS };
-zpt::lf::list<std::shared_ptr<std::string>> _list{ MAX_THREADS_LIST, PER_THREAD };
+zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE,
+                                                                              PER_THREAD };
+zpt::lf::list<std::shared_ptr<std::string>>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST,
+                                                                             PER_THREAD };
+zpt::lf::queue<std::shared_ptr<std::string>> _queue{ _q_hazard_domain, SPIN_WAIT_MICROS };
+zpt::lf::list<std::shared_ptr<std::string>> _list{ _l_hazard_domain };
 #else
-zpt::lf::queue<int> _queue{ MAX_THREADS_QUEUE, PER_THREAD, SPIN_WAIT_MICROS };
-zpt::lf::list<int> _list{ MAX_THREADS_LIST, PER_THREAD };
+zpt::lf::queue<int>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE, PER_THREAD };
+zpt::lf::list<int>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST, PER_THREAD };
+zpt::lf::queue<int> _queue{ _q_hazard_domain, SPIN_WAIT_MICROS };
+zpt::lf::list<int> _list{ _l_hazard_domain };
 #endif
 
 auto
@@ -60,7 +64,7 @@ pause(int _signal) -> void {
 }
 
 auto
-test_queue(int _argc, char* _argv[]) -> int {
+test_queue() -> int {
     _pushed = 0;
     _poped = 0;
     auto _t1 = std::chrono::high_resolution_clock::now();
@@ -126,7 +130,7 @@ test_queue(int _argc, char* _argv[]) -> int {
 }
 
 auto
-test_list(int _argc, char* _argv[]) -> int {
+test_list() -> int {
     _pushed = 0;
     _poped = 0;
     auto _t1 = std::chrono::high_resolution_clock::now();
@@ -195,18 +199,6 @@ test_list(int _argc, char* _argv[]) -> int {
     auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
 
     std::cout << _list << std::endl << std::endl << std::flush;
-#ifdef QUEUE_USE_STRING
-    auto _it = _list.find_if([&](std::shared_ptr<std::string> const& _item) -> bool {
-        return *_item == "5";
-#else
-    auto _it = _list.find_if([&](int const& _item) -> bool {
-        return _item == 5;
-#endif
-    });
-    if (_it != _list.end()) {
-        std::cout << "* found: " << (*_it) << std::endl << std::flush;
-    }
-
     std::cout << "* at index 0 is " << _list[0] << std::endl << std::endl << std::flush;
 
     std::cout << "* " << MAX_THREADS_LIST << " working threads:" << std::endl << std::flush;
@@ -218,10 +210,23 @@ test_list(int _argc, char* _argv[]) -> int {
 }
 
 auto
+test_hazard_ptr() -> void {
+    zpt::lf::queue<long>::hazard_domain _domain{ 2, 2 };
+    zpt::lf::queue<long> _q1{ _domain };
+    zpt::lf::queue<long> _q2{ _domain };
+
+    _q1.push(1);
+    _q1.pop();
+    _q1.push(1);
+    _q1.pop();
+}
+
+auto
 main(int _argc, char* _argv[]) -> int {
     try {
-        test_queue(_argc, _argv);
-        test_list(_argc, _argv);
+        test_queue();
+        test_list();
+        test_hazard_ptr();
         return 0;
     }
     catch (zpt::failed_expectation const& _e) {

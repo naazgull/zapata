@@ -118,10 +118,10 @@ class json {
     json(std::unique_ptr<zpt::JSONElementT> _target);
     json(std::initializer_list<zpt::json> _init);
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
-    json(const zpt::json& _rhs);
+    json(zpt::json const& _rhs);
     json(zpt::json&& _rhs);
     template<typename T>
-    json(T _rhs);
+    json(T const& _rhs);
     virtual ~json();
 
     auto size() -> size_t;
@@ -133,12 +133,12 @@ class json {
     auto begin() -> zpt::json::iterator;
     auto end() -> zpt::json::iterator;
 
-    auto operator=(const zpt::json& _rhs) -> zpt::json&;
+    auto operator=(zpt::json const& _rhs) -> zpt::json&;
     auto operator=(zpt::json&& _rhs) -> zpt::json&;
     auto operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::json&;
     auto operator=(std::initializer_list<zpt::json> _list) -> zpt::json&;
     template<typename T>
-    auto operator=(T _rhs) -> zpt::json&;
+    auto operator=(T const& _rhs) -> zpt::json&;
 
     auto operator-> () -> zpt::JSONElementT*;
     auto operator*() -> zpt::JSONElementT&;
@@ -926,11 +926,11 @@ zpt::pretty::pretty(T _rhs) {
 
 /// Class `zpt::json` methods
 template<typename T>
-zpt::json::json(T _rhs)
+zpt::json::json(T const& _rhs)
   : __underlying{ std::make_shared<zpt::JSONElementT>(_rhs) } {}
 template<typename T>
 auto
-zpt::json::operator=(T _rhs) -> zpt::json& {
+zpt::json::operator=(T const& _rhs) -> zpt::json& {
     (*this->__underlying.get()) = _rhs;
     return (*this);
 }

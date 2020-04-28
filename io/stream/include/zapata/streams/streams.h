@@ -53,6 +53,7 @@ class stream {
         int __epoll_fd{ -1 };
         long long __poll_wait_timeout{ 0 };
         zpt::epoll_event_t __epoll_events[MAX_EVENT_PER_POLL];
+        zpt::lf::queue<zpt::stream*>::hazard_domain __hazard_domain;
         zpt::lf::queue<zpt::stream*> __alive_streams;
         std::map<int, zpt::stream*> __polled_streams;
         std::atomic<bool> __shutdown{ false };

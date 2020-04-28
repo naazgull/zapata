@@ -33,6 +33,8 @@ namespace zpt {
 namespace pipeline {
 
 template<typename T>
+class event;
+template<typename T>
 class stage;
 template<typename T>
 class engine;
@@ -71,7 +73,10 @@ template<typename T>
 class stage
   : public zpt::events::dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>> {
   public:
-    stage(int _max_threads = 1, int _max_per_thread = 1, long _max_pop_wait_micro = 0);
+    using hazard_domain = typename zpt::events::
+      dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>>::hazard_domain;
+
+    stage(zpt::pipeline::stage<T>::hazard_domain& _hazard_domain, long _max_pop_wait_micro = -1);
     stage(zpt::pipeline::stage<T> const&) = delete;
     stage(zpt::pipeline::stage<T>&&) = delete;
     virtual ~stage() override = default;
@@ -110,7 +115,15 @@ class stage
 template<typename T>
 class engine {
   public:
-    engine(size_t _pipeline_size = 1, int _threads_per_stage = 1, long _max_pop_wait_micro = 500);
+    engine(size_t _pipeline_size = 1,
+           zpt::json _stage_queue_configuration = { "max_stage_threads",
+                                                    1,
+                                                    "max_producer_threads",
+                                                    1,
+                                                    "max_consumer_threads",
+                                                    0,
+                                                    "max_queue_spin_sleep",
+                                                    5000 });
     engine(zpt::pipeline::engine<T> const&) = delete;
     engine(zpt::pipeline::engine<T>&&) = delete;
     virtual ~engine() = default;
@@ -139,9 +152,10 @@ class engine {
       -> zpt::pipeline::engine<T>&;
 
   private:
+    typename zpt::pipeline::stage<T>::hazard_domain __hazard_domain;
     std::vector<std::shared_ptr<zpt::pipeline::stage<T>>> __stages;
     size_t __pipeline_size{ 1 };
-    int __threads_per_stage{ 1 };
+    long __threads_per_stage{ 1 };
 };
 
 auto
@@ -245,10 +259,10 @@ zpt::pipeline::event<T>::trigger(zpt::json _path,
 }
 
 template<typename T>
-zpt::pipeline::stage<T>::stage(int _max_threads, int _max_per_thread, long _max_pop_wait_micro)
+zpt::pipeline::stage<T>::stage(zpt::pipeline::stage<T>::hazard_domain& _hazard_domain,
+                               long _max_pop_wait_micro)
   : zpt::events::dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>>{
-      _max_threads,
-      _max_per_thread,
+      _hazard_domain,
       _max_pop_wait_micro
   } {}
 
@@ -298,14 +312,23 @@ zpt::pipeline::stage<T>::set_error_callback(std::function<bool(zpt::json& _event
 }
 
 template<typename T>
-zpt::pipeline::engine<T>::engine(size_t _pipeline_size,
-                                 int _threads_per_stage,
-                                 long _max_pop_wait_micro)
-  : __pipeline_size{ _pipeline_size }
-  , __threads_per_stage{ _threads_per_stage } {
+zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _stage_queue_configuration)
+  : __hazard_domain{ std::max(static_cast<long>(_stage_queue_configuration["max_stage_threads"]),
+                              1L) *
+                         (signed)_pipeline_size +
+                       std::max(
+                         static_cast<long>(_stage_queue_configuration["max_producer_threads"]),
+                         1L) +
+                       static_cast<long>(_stage_queue_configuration["max_consumer_threads"]),
+                     6 }
+  , __pipeline_size{ _pipeline_size }
+  , __threads_per_stage{
+      std::max(static_cast<long>(_stage_queue_configuration["max_stage_threads"]), 1L)
+  } {
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__stages.push_back(std::make_shared<zpt::pipeline::stage<T>>(
-          _threads_per_stage + 1, 8, _max_pop_wait_micro));
+          this->__hazard_domain,
+          std::min(static_cast<long>(_stage_queue_configuration["max_queue_spin_sleep"]), 5000L)));
     }
 }
 

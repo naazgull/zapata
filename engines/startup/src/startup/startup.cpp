@@ -172,7 +172,7 @@ zpt::plugin::plugin_t::unload_plugin(zpt::plugin& _other) -> zpt::plugin::plugin
 }
 
 zpt::startup::engine::engine()
-  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ 2, 8, 50000 }
+  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ __hazard_domain, 50000 }
   , __configuration{ zpt::globals::alloc<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object()) } {}
 
 zpt::startup::engine::engine(zpt::json _args)

@@ -138,6 +138,10 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     }
 
   private:
+    zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>::hazard_domain __hazard_domain{
+        2,
+        8
+    };
     zpt::json& __configuration;
     std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
     std::map<std::string, zpt::plugin> __plugins;

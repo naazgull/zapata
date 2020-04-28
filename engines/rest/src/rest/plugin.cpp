@@ -30,15 +30,12 @@ std::atomic<bool> _shutdown{ false };
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _config = _plugin->config();
-    size_t _stages = std::max(static_cast<size_t>(_config["pipeline"]["n_stages"]), 1UL);
-    int _threads_per_stage =
-      std::max(static_cast<size_t>(_config["pipeline"]["threads_per_stage"]), 2UL);
-    long _max_pop_wait = _config["pipeline"]["max_pop_spin_sleep"];
-    zpt::globals::alloc<zpt::rest::engine>(
-      zpt::REST_ENGINE(), _stages, _threads_per_stage, _max_pop_wait);
+    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
+    size_t _stages = std::max(static_cast<size_t>(_plugin->config()["pipeline"]["n_stages"]), 1UL);
+    long _max_queue_spin_sleep = _config["limits"]["max_queue_spin_sleep"];
+    zpt::globals::alloc<zpt::rest::engine>(zpt::REST_ENGINE(), _stages, _config["limits"]);
 
-    _boot.add_thread([_max_pop_wait]() -> void {
+    _boot.add_thread([_max_queue_spin_sleep]() -> void {
         zlog("Starting REST engine", zpt::info);
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
         auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
@@ -61,7 +58,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                     return;
                 }
                 _waiting_iterations =
-                  zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_pop_wait);
+                  zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_queue_spin_sleep);
             }
         } while (true);
     });

@@ -28,10 +28,9 @@ zpt::REST_ENGINE() -> ssize_t& {
     return _global;
 }
 
-zpt::rest::engine::engine(size_t _pipeline_size, int _threads_per_stage, long _max_pop_wait_micro)
+zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
   : zpt::pipeline::engine<zpt::message>{ _pipeline_size + 2,
-                                         _threads_per_stage,
-                                         _max_pop_wait_micro } {
+                                         _configuration } {
 
     this->set_error_callback(zpt::rest::engine::on_error);
 

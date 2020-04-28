@@ -118,8 +118,7 @@ zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::string 
     zpt::json _current = (*this)[_part];
     if (!_current->ok()) {
         if (_iss.good()) {
-            zpt::JSONObj _new;
-            _current = mkptr(_new);
+            _current = zpt::json::object();
             this->__underlying.push_back(_current);
             _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
@@ -169,11 +168,11 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
 
 auto
 zpt::JSONArrT::clone() -> zpt::json {
-    zpt::JSONArr _return;
+    zpt::json _return = zpt::json::array();
     for (auto _f : this->__underlying) {
         _return << _f->clone();
     }
-    return zpt::mkptr(_return);
+    return _return;
 }
 
 auto zpt::JSONArrT::operator-> () -> std::vector<zpt::json>* {

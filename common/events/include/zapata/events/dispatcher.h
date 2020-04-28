@@ -43,7 +43,9 @@ class factory {
 template<typename C, typename E, typename V>
 class dispatcher : public factory {
   public:
-    dispatcher(int _max_threads = 1, int _max_per_thread = 1, long _max_pop_wait_micro = 0);
+    using hazard_domain = typename zpt::lf::queue<std::tuple<E, V>>::hazard_domain;
+
+    dispatcher(hazard_domain& _hazard_domain, long _max_pop_wait_micro = 0);
     virtual ~dispatcher();
 
     auto add_consumer() -> C&;
@@ -68,13 +70,10 @@ class dispatcher : public factory {
 } // namespace zpt
 
 template<typename C, typename E, typename V>
-zpt::events::dispatcher<C, E, V>::dispatcher(int _max_threads,
-                                             int _max_per_thread,
+zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
                                              long _max_pop_wait_micro)
-  : __queue{ _max_threads, _max_per_thread, 5 }
+  : __queue{ _hazard_domain, 5 }
   , __max_pop_wait{ _max_pop_wait_micro } {
-    expect(_max_threads > 1, "`_max_threads` expected to be higher than 1", 500, 0);
-    expect(_max_per_thread > 0, "`_max_per_thread` expected to be higher than 0", 500, 0);
 }
 
 template<typename C, typename E, typename V>
