@@ -73,12 +73,11 @@ template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
                                              long _max_pop_wait_micro)
   : __queue{ _hazard_domain, 5 }
-  , __max_pop_wait{ _max_pop_wait_micro } {
-}
+  , __max_pop_wait{ _max_pop_wait_micro } {}
 
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::~dispatcher() {
-    this->shutdown();
+    expect(this->__shutdown.load(), "dispatcher has not been shutdown", 500, 0);
 }
 
 template<typename C, typename E, typename V>
@@ -135,11 +134,13 @@ zpt::events::dispatcher<C, E, V>::mute(E _event, F _listener) -> C& {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
-    if (!this->__shutdown) {
-        this->__shutdown.store(true);
-        for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
-            this->__consumers[_idx].join();
-        }
+    expect(!this->__shutdown.load(),
+           "`shutdown()` already been called from another execution path",
+           500,
+           0);
+    this->__shutdown.store(true);
+    for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
+        this->__consumers[_idx].join();
     }
     return (*static_cast<C*>(this));
 }

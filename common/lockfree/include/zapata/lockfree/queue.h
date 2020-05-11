@@ -33,7 +33,7 @@
 #include <type_traits>
 
 #include <zapata/lockfree/hazard_ptr.h>
-#include <zapata/base.h>
+#include <zapata/exceptions/exceptions.h>
 
 namespace zpt {
 namespace lf {

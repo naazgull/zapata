@@ -185,7 +185,6 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
            "Hazard pointer domain for the given template type has not been initialized",
            500,
            0);
-    expect(_max_threads > 0, "`_max_threads` expected to be higher than 0", 500, 0);
     expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
     this->__hp = std::make_unique<unsigned char[]>(this->N * element_size);
     this->__next_thr_idx = std::make_unique<std::atomic<bool>[]>(this->P);

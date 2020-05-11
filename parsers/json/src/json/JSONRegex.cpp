@@ -43,16 +43,6 @@ auto zpt::JSONRegex::operator*() -> std::regex& {
     return *this->__underlying.get();
 }
 
-zpt::JSONRegex::operator std::string() {
-    std::string _out{ std::string("/") + this->__underlying_original + std::string("/") };
-    return _out;
-}
-
-zpt::JSONRegex::operator zpt::pretty() {
-    std::string _out{ std::string("/") + this->__underlying_original + std::string("/") };
-    return _out;
-}
-
 zpt::JSONRegex::operator std::regex&() {
     return (*this->__underlying.get());
 }

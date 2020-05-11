@@ -12,6 +12,7 @@ Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
 BreakBeforeBraces: Custom
+IncludeBlocks: Regroup
 BraceWrapping:
     AfterClass: false
     AfterControlStatement: false

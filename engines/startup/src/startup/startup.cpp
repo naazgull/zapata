@@ -21,6 +21,7 @@
 */
 
 #include <dlfcn.h>
+#include <zapata/transport.h>
 #include <zapata/startup/startup.h>
 
 auto
@@ -306,6 +307,7 @@ zpt::startup::engine::start() -> zpt::startup::engine& {
         this->__workers[_idx].join();
     }
     zlog("Exiting startup engine", zpt::info);
+    this->shutdown();
     return (*this);
 }
 
@@ -326,6 +328,12 @@ zpt::startup::engine::unload() -> bool {
 }
 
 auto
+zpt::startup::engine::exit() -> void {
+    zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).shutdown();
+    this->unload();
+}
+
+auto
 zpt::startup::engine::load() -> zpt::startup::engine& {
     for (auto [_, __, _lib] : this->__configuration["load"]) {
         this->load(_lib, this->__configuration[_lib["name"]->str()]);
@@ -334,7 +342,6 @@ zpt::startup::engine::load() -> zpt::startup::engine& {
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 5 });
     } while (this->__configuration["load"]->size() != this->__plugins.size() - 2);
     zlog("All plugins loaded", zpt::info);
-    this->shutdown();
     return (*this);
 }
 

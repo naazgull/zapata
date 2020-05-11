@@ -9,12 +9,6 @@ zpt::JSONArrT::JSONArrT() {}
 zpt::JSONArrT::~JSONArrT() {}
 
 auto
-zpt::JSONArrT::push(zpt::JSONElementT const& _value) -> JSONArrT& {
-    this->__underlying.push_back(zpt::json{ _value });
-    return (*this);
-}
-
-auto
 zpt::JSONArrT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONArrT& {
     this->__underlying.push_back(zpt::json{ std::move(_value) });
     return (*this);
@@ -428,12 +422,6 @@ zpt::JSONArr::operator zpt::pretty() {
     std::string _out;
     (*this)->prettify(_out);
     return _out;
-}
-
-auto
-zpt::JSONArr::operator<<(zpt::JSONElementT& _in) -> zpt::JSONArr& {
-    (*this)->push(_in);
-    return *this;
 }
 
 auto

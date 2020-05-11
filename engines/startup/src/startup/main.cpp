@@ -29,9 +29,7 @@
 auto
 deallocate(int _signal) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    if (!_boot.unload()) {
-        zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).shutdown();
-    }
+    _boot.exit();
 }
 
 auto
@@ -42,7 +40,7 @@ nostop(int _signal) -> void {
 auto
 main(int _argc, char* _argv[]) -> int {
     std::signal(SIGUSR1, deallocate);
-    // std::signal(SIGINT, nostop);
+    std::signal(SIGINT, deallocate);
     try {
         zpt::json _parameters = zpt::parameters::parse(_argc,
                                                        _argv,
@@ -61,14 +59,13 @@ main(int _argc, char* _argv[]) -> int {
             return 0;
         }
 
-        auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
+        auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE(), _parameters);
         auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
         zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(),
                                                   _config["limits"]["max_producer_threads"],
                                                   _config["limits"]["max_queue_spin_sleep"]);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         _boot //
-          .initialize(_parameters)
           .add_thread(
             []() -> void { zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).pool(); })
           .start();

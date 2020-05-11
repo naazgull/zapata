@@ -30,12 +30,12 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
-    auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
-      zpt::WEBSOCKET_SERVER_SOCKET(),
-      static_cast<uint16_t>(static_cast<unsigned int>(_config["port"])));
 
     _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
     if (_config["port"]->ok()) {
+        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
+          zpt::WEBSOCKET_SERVER_SOCKET(),
+          static_cast<uint16_t>(static_cast<unsigned int>(_config["port"])));
         _boot.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
             zlog("Starting WebSocket transport on port " << _config["port"], zpt::info);

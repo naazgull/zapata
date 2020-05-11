@@ -192,10 +192,12 @@ zpt::stream::polling::pop() -> zpt::stream* {
 
 auto
 zpt::stream::polling::shutdown() -> void {
+    expect(!this->__shutdown.load(), "Stream polling shutdown already started elsewhere", 500, 0);
     this->__shutdown.store(true);
     for (auto [_fd, _stream] : this->__polled_streams) {
         epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
         std::unique_ptr<zpt::stream> _to_erase{ _stream };
         zlog("Closing connection to " << _stream->uri(), zpt::trace);
     }
+    zlog("Closing stream polling", zpt::info);
 }

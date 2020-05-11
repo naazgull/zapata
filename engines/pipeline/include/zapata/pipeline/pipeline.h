@@ -320,7 +320,7 @@ zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _stage_queue_c
                          static_cast<long>(_stage_queue_configuration["max_producer_threads"]),
                          1L) +
                        static_cast<long>(_stage_queue_configuration["max_consumer_threads"]),
-                     6 }
+                     4 }
   , __pipeline_size{ _pipeline_size }
   , __threads_per_stage{
       std::max(static_cast<long>(_stage_queue_configuration["max_stage_threads"]), 1L)
@@ -349,8 +349,11 @@ zpt::pipeline::engine<T>::start_threads() -> zpt::pipeline::engine<T>& {
 template<typename T>
 auto
 zpt::pipeline::engine<T>::shutdown() -> zpt::pipeline::engine<T>& {
+    size_t _n_stage{ 1 };
     for (auto _stage : this->__stages) {
         _stage->shutdown();
+        zlog("Exited from stage " << _n_stage, zpt::trace);
+        ++_n_stage;
     }
     return (*this);
 }

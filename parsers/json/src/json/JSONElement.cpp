@@ -355,7 +355,7 @@ zpt::JSONElementT::arr() -> zpt::JSONArr& {
 }
 
 auto
-zpt::JSONElementT::str() -> std::string {
+zpt::JSONElementT::str() -> std::string& {
     expect(this->__target.__type == zpt::JSString,
            std::string("this element is not of type JSString: ") + this->stringify(),
            500,
@@ -364,7 +364,7 @@ zpt::JSONElementT::str() -> std::string {
 }
 
 auto
-zpt::JSONElementT::intr() -> long long {
+zpt::JSONElementT::intr() -> long long& {
     expect(this->__target.__type == zpt::JSInteger,
            std::string("this element is not of type JSInteger: ") + this->stringify(),
            500,
@@ -373,7 +373,7 @@ zpt::JSONElementT::intr() -> long long {
 }
 
 auto
-zpt::JSONElementT::dbl() -> double {
+zpt::JSONElementT::dbl() -> double& {
     expect(this->__target.__type == zpt::JSDouble,
            std::string("this element is not of type JSDouble: ") + this->stringify(),
            500,
@@ -382,7 +382,7 @@ zpt::JSONElementT::dbl() -> double {
 }
 
 auto
-zpt::JSONElementT::bln() -> bool {
+zpt::JSONElementT::bln() -> bool& {
     expect(this->__target.__type == zpt::JSBoolean,
            std::string("this element is not of type JSBoolean: ") + this->stringify(),
            500,
@@ -391,14 +391,11 @@ zpt::JSONElementT::bln() -> bool {
 }
 
 auto
-zpt::JSONElementT::date() -> zpt::timestamp_t {
-    expect(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString,
+zpt::JSONElementT::date() -> zpt::timestamp_t& {
+    expect(this->__target.__type == zpt::JSDate,
            std::string("this element is not of type JSDate: ") + this->stringify(),
            500,
            1100);
-    if (this->__target.__type == zpt::JSString) {
-        return zpt::timestamp(*(this->__target.__string.get()));
-    }
     return this->__target.__date;
 }
 
@@ -459,33 +456,33 @@ zpt::JSONElementT::clone() -> zpt::json {
         }
         case zpt::JSString: {
             std::string _v = this->str();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
         case zpt::JSInteger: {
             int _v = this->intr();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
         case zpt::JSDouble: {
             double _v = this->dbl();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
         case zpt::JSBoolean: {
             bool _v = this->bln();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
         case zpt::JSNil: {
             return zpt::undefined;
         }
         case zpt::JSDate: {
             zpt::timestamp_t _v = this->date();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
         case zpt::JSLambda: {
             return zpt::json::lambda(this->lbd()->name(), this->lbd()->n_args());
         }
         case zpt::JSRegex: {
             zpt::regex _v = this->rgx();
-            return zpt::mkptr(_v);
+            return zpt::json{ _v };
         }
     }
     return zpt::undefined;
@@ -737,7 +734,7 @@ zpt::JSONElementT::operator std::string() {
             break;
         }
         case zpt::JSRegex: {
-            _out.assign(static_cast<std::string>(this->rgx()));
+            _out.assign(std::string("/") + this->rgx().to_string() + std::string("/"));
             break;
         }
     }
@@ -1141,27 +1138,6 @@ zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
 }
 
 auto
-zpt::JSONElementT::operator<<(JSONElementT _in) -> zpt::JSONElementT& {
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            this->__target.__object->push(_in);
-            break;
-        }
-        case zpt::JSArray: {
-            this->__target.__array->push(_in);
-            break;
-        }
-        default: {
-            expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
-                   "the type must be a JSObject or JSArray in order to push a value",
-                   500,
-                   0);
-        }
-    }
-    return (*this);
-}
-
-auto
 zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1180,29 +1156,6 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
         }
     }
     return *this;
-}
-
-auto
-zpt::JSONElementT::operator<<(zpt::regex _in) -> zpt::JSONElementT& {
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            zpt::JSONElementT _element{ _in };
-            this->__target.__object->push(_element);
-            break;
-        }
-        case zpt::JSArray: {
-            zpt::JSONElementT _element{ _in };
-            this->__target.__array->push(_element);
-            break;
-        }
-        default: {
-            expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
-                   "the type must be a JSObject or JSArray in order to push a value",
-                   500,
-                   0);
-        }
-    }
-    return (*this);
 }
 
 auto
@@ -1583,567 +1536,6 @@ zpt::JSONElementT::operator>=(zpt::json _rhs) -> bool {
 }
 
 auto
-zpt::JSONElementT::operator+(zpt::json _rhs) -> zpt::json {
-    return (*this) + (*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator+(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        zpt::json _rrhs = _rhs.clone();
-        return _rrhs;
-    }
-    if (_rhs.__target.__type == zpt::JSNil) {
-        zpt::json _lhs = this->clone();
-        return _lhs;
-    }
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-    expect(this->__target.__type == zpt::JSArray || _rhs.__target.__type == zpt::JSArray ||
-             this->__target.__type == _rhs.__target.__type,
-           "can't add JSON objects of different types",
-           500,
-           0);
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            zpt::json _lhs = this->clone();
-            for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                if (_lhs[_key]->type() == zpt::JSObject || _lhs[_key]->type() == zpt::JSArray) {
-                    _lhs << _key << (_lhs[_key] + _e);
-                }
-                else {
-                    _lhs << _key << _e;
-                }
-            }
-            return _lhs;
-        }
-        case zpt::JSArray: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = this->clone();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << _e;
-                }
-                return _lhs;
-            }
-            else {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ *this }) {
-                    _lhs << (_e + _rhs);
-                }
-                return _lhs;
-            }
-        }
-        case zpt::JSString: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) + _e);
-                }
-                return _lhs;
-            }
-            else {
-                std::string _lhs((*(this->__target.__string.get())) + _rhs.str());
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSInteger: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) + _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__integer + _rhs.intr();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSDouble: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) + _e);
-                }
-                return _lhs;
-            }
-            else {
-                double _lhs = this->__target.__double + _rhs.dbl();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSBoolean: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) + _e);
-                }
-                return _lhs;
-            }
-            else {
-                bool _lhs = this->__target.__boolean || _rhs.bln();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSNil: {
-            return zpt::undefined;
-        }
-        case zpt::JSDate: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) + _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__date + _rhs.number();
-                return zpt::mkptr((zpt::timestamp_t)_lhs);
-            }
-        }
-        case zpt::JSLambda: {
-            return zpt::undefined;
-        }
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
-zpt::JSONElementT::operator+=(zpt::json _rhs) -> zpt::json {
-    return this->operator+=(*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator+=(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        (*this) = _rhs.clone();
-        return zpt::json{ *this };
-    }
-    if (_rhs.__target.__type == zpt::JSNil || this->__target.__type != _rhs.__target.__type) {
-        return zpt::json{ *this };
-    }
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            for (auto [_, _key, _e] : zpt::json{ _rhs }) {
-                if ((*this)[_key]->ok()) {
-                    (*this)[_key] += _e;
-                }
-                else {
-                    (*this) << _key << _e;
-                }
-            }
-            return zpt::json{ *this };
-        }
-        case zpt::JSArray: {
-            for (auto [_, __, _e] : zpt::json{ _rhs }) {
-                (*this) << _e;
-            }
-            return zpt::json{ *this };
-        }
-        case zpt::JSString: {
-            (*(this->__target.__string.get()))
-              .insert((*(this->__target.__string.get())).length(), _rhs.str());
-            return zpt::json{ *this };
-        }
-        case zpt::JSInteger: {
-            this->__target.__integer += _rhs.intr();
-            return zpt::json{ *this };
-        }
-        case zpt::JSDouble: {
-            this->__target.__double += _rhs.dbl();
-            return zpt::json{ *this };
-        }
-        case zpt::JSBoolean: {
-            this->__target.__boolean += _rhs.bln();
-            return zpt::json{ *this };
-        }
-        case zpt::JSNil: {
-            return zpt::json{ *this };
-        }
-        case zpt::JSDate: {
-            this->__target.__date += _rhs.number();
-            return zpt::json{ *this };
-        }
-        case zpt::JSLambda: {
-            return zpt::undefined;
-        }
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
-zpt::JSONElementT::operator-(zpt::json _rhs) -> zpt::json {
-    return (*this) - (*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator-(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        zpt::json _rrhs = _rhs.clone();
-        return _rrhs;
-    }
-    if (_rhs.__target.__type == zpt::JSNil) {
-        zpt::json _lhs = this->clone();
-        return _lhs;
-    }
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-    expect(this->__target.__type == zpt::JSArray ||
-             (this->__target.__type != zpt::JSObject && _rhs.__target.__type == zpt::JSArray) ||
-             this->__target.__type == _rhs.__target.__type,
-           "can't substract JSON objects of different types",
-           500,
-           0);
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            zpt::json _lhs = this->clone();
-            for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                _lhs >> _key;
-            }
-            return _lhs;
-        }
-        case zpt::JSArray: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                expect((**this->arr()).size() == (**_rhs.arr()).size(),
-                       "both arrays must have the same size",
-                       500,
-                       0);
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << (this[_idx] - _rhs[_idx]);
-                }
-                return _lhs;
-            }
-            else {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << (_e - _rhs);
-                }
-                return _lhs;
-            }
-        }
-        case zpt::JSString: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) - _e);
-                }
-                return _lhs;
-            }
-            else {
-                std::string _lhs(this->__target.__string.get()->data());
-                std::size_t _idx = 0;
-                while ((_idx = _lhs.find(_rhs.str(), _idx)) != std::string::npos) {
-                    _lhs.erase(_idx, _rhs.str().length());
-                }
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSInteger: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) - _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__integer - _rhs.intr();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSDouble: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) - _e);
-                }
-                return _lhs;
-            }
-            else {
-                double _lhs = this->__target.__double - _rhs.dbl();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSBoolean: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) - _e);
-                }
-                return _lhs;
-            }
-            else {
-                bool _lhs = this->__target.__boolean & _rhs.bln();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSNil: {
-            return zpt::undefined;
-        }
-        case zpt::JSDate: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) - _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__date - _rhs.number();
-                return zpt::mkptr((zpt::timestamp_t)_lhs);
-            }
-        }
-        case zpt::JSLambda: {
-            return zpt::undefined;
-        }
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
-zpt::JSONElementT::operator-=(zpt::json _rhs) -> zpt::json {
-    return this->operator-=(*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator-=(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        (*this) = _rhs.clone();
-        return zpt::json{ *this };
-    }
-    if (_rhs.__target.__type == zpt::JSNil || this->__target.__type != _rhs.__target.__type) {
-        return zpt::json{ *this };
-    }
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            for (auto [_, _key, __] : zpt::json{ _rhs }) {
-                (*this) >> _key;
-            }
-            return zpt::json{ *this };
-        }
-        case zpt::JSArray: {
-            for (auto [_idx, _, __] : zpt::json{ _rhs }) {
-                (*this) >> _idx;
-            }
-            return zpt::json{ *this };
-        }
-        case zpt::JSString: {
-            zpt::replace(*(this->__target.__string.get()), _rhs.str(), "");
-            return zpt::json{ *this };
-        }
-        case zpt::JSInteger: {
-            this->__target.__integer -= _rhs.intr();
-            return zpt::json{ *this };
-        }
-        case zpt::JSDouble: {
-            this->__target.__double = _rhs.dbl();
-            return zpt::json{ *this };
-        }
-        case zpt::JSBoolean: {
-            this->__target.__boolean -= _rhs.bln();
-            return zpt::json{ *this };
-        }
-        case zpt::JSNil: {
-            return zpt::json{ *this };
-        }
-        case zpt::JSDate: {
-            this->__target.__date -= _rhs.number();
-            return zpt::json{ *this };
-        }
-        case zpt::JSLambda: {
-            return zpt::undefined;
-        }
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
-zpt::JSONElementT::operator/(zpt::json _rhs) -> zpt::json {
-    return (*this) / (*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator/(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        zpt::json _rrhs = _rhs.clone();
-        return _rrhs;
-    }
-    if (_rhs.__target.__type == zpt::JSNil) {
-        zpt::json _lhs = this->clone();
-        return _lhs;
-    }
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-    expect(this->__target.__type == zpt::JSArray || _rhs.__target.__type == zpt::JSArray ||
-             this->__target.__type == _rhs.__target.__type,
-           "can't divide JSON objects of different types",
-           500,
-           0);
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            expect(this->__target.__type == zpt::JSObject, "can't divide JSON objects", 500, 0);
-        }
-        case zpt::JSArray: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                expect((**this->arr()).size() == (**_rhs.arr()).size(),
-                       "both arrays must have the same size",
-                       500,
-                       0);
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << (this[_idx] / _rhs[_idx]);
-                }
-                return _lhs;
-            }
-            else {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << (_e / _rhs);
-                }
-                return _lhs;
-            }
-        }
-        case zpt::JSString: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) / _e);
-                }
-                return _lhs;
-            }
-            else {
-                std::string _lhs(this->__target.__string.get()->data());
-                std::size_t _idx = 0;
-                while ((_idx = _lhs.find(_rhs.str(), _idx)) != std::string::npos) {
-                    _lhs.erase(_idx, _rhs.str().length());
-                }
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSInteger: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) / _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__integer / _rhs.intr();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSDouble: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) / _e);
-                }
-                return _lhs;
-            }
-            else {
-                double _lhs = this->__target.__double / _rhs.dbl();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSBoolean: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) / _e);
-                }
-                return _lhs;
-            }
-            else {
-                bool _lhs = this->__target.__boolean / _rhs.bln();
-                return zpt::mkptr(_lhs);
-            }
-        }
-        case zpt::JSNil: {
-            return zpt::undefined;
-        }
-        case zpt::JSDate: {
-            if (_rhs.__target.__type == zpt::JSArray) {
-                zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                    _lhs << ((*this) / _e);
-                }
-                return _lhs;
-            }
-            else {
-                int _lhs = this->__target.__date / _rhs.number();
-                return zpt::mkptr((zpt::timestamp_t)_lhs);
-            }
-        }
-        case zpt::JSLambda: {
-            return zpt::undefined;
-        }
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
-zpt::JSONElementT::operator|(zpt::json _rhs) -> zpt::json {
-    return (*this) | (*_rhs);
-}
-
-auto
-zpt::JSONElementT::operator|(zpt::JSONElementT& _rhs) -> zpt::json {
-    if (this->__target.__type == zpt::JSNil) {
-        zpt::json _rrhs = _rhs.clone();
-        return _rrhs;
-    }
-    if (_rhs.__target.__type == zpt::JSNil) {
-        zpt::json _lhs = this->clone();
-        return _lhs;
-    }
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
-    expect(this->__target.__type == _rhs.__target.__type,
-           "can't add JSON objects of different types",
-           500,
-           0);
-    switch (this->__target.__type) {
-        case zpt::JSObject: {
-            zpt::json _lhs = this->clone();
-            for (auto [_idx, _key, _e] : zpt::json{ _rhs }) {
-                if (_lhs[_key]->type() == zpt::JSObject) {
-                    _lhs << _key << (_lhs[_key] | _e);
-                }
-                else {
-                    _lhs << _key << _e;
-                }
-            }
-            return _lhs;
-        }
-        case zpt::JSArray:
-        case zpt::JSString:
-        case zpt::JSInteger:
-        case zpt::JSDouble:
-        case zpt::JSBoolean:
-        case zpt::JSNil:
-        case zpt::JSDate:
-        case zpt::JSLambda:
-        case zpt::JSRegex: {
-            return zpt::undefined;
-        }
-    }
-    return zpt::undefined;
-}
-
-auto
 zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
@@ -2381,7 +1773,7 @@ zpt::JSONElementT::stringify(std::ostream& _out) -> JSONElementT& {
             break;
         }
         case zpt::JSRegex: {
-            _out << static_cast<std::string>(this->__target.__regex) << std::flush;
+            _out << "/" << this->__target.__regex.to_string() << "/" << std::flush;
             break;
         }
     }
@@ -2434,7 +1826,9 @@ zpt::JSONElementT::stringify(std::string& _out) -> JSONElementT& {
             break;
         }
         case zpt::JSRegex: {
-            _out.insert(_out.length(), static_cast<std::string>(this->__target.__regex));
+            _out.insert(_out.length(), "/");
+            _out.insert(_out.length(), this->__target.__regex.to_string());
+            _out.insert(_out.length(), "/");
             break;
         }
     }
@@ -2490,7 +1884,7 @@ zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) -> JSONElementT& {
             break;
         }
         case zpt::JSRegex: {
-            _out << static_cast<std::string>(this->__target.__regex) << std::flush;
+            _out << "/" << this->__target.__regex.to_string() << "/" << std::flush;
             break;
         }
     }
@@ -2546,7 +1940,9 @@ zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> JSONElementT& {
             break;
         }
         case zpt::JSRegex: {
-            _out.insert(_out.length(), static_cast<std::string>(this->__target.__regex));
+            _out.insert(_out.length(), "/");
+            _out.insert(_out.length(), this->__target.__regex.to_string());
+            _out.insert(_out.length(), "/");
             break;
         }
     }

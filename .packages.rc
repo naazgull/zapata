@@ -4,11 +4,11 @@ export projects=(
        common/base
        common/lockfree
        common/globals
+       parsers/uri
        io/stream
        io/socket
        parsers/json
        parsers/http
-       parsers/uri
        common/graph
        common/events
        network/transport
@@ -20,4 +20,5 @@ export projects=(
        storage/connector
        storage/mysqlx
        engines/dom
+       ontology/openapi
 )

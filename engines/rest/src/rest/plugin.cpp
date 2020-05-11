@@ -53,8 +53,6 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
             catch (zpt::NoMoreElementsException const& _e) {
                 if (_rest.is_shutdown_ongoing()) {
                     zlog("Exiting REST router", zpt::trace);
-                    _polling.shutdown();
-                    zpt::globals::dealloc<zpt::rest::engine>(zpt::REST_ENGINE());
                     return;
                 }
                 _waiting_iterations =
@@ -68,4 +66,5 @@ extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Stopping REST engine", zpt::info);
     zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE()).shutdown();
+    zpt::globals::dealloc<zpt::rest::engine>(zpt::REST_ENGINE());
 }

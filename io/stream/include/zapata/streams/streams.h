@@ -26,7 +26,8 @@
 #include <memory>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
-#include <zapata/lockfree.h>
+#include <zapata/lockfree/queue.h>
+#include <zapata/lockfree/spin_lock.h>
 
 namespace zpt {
 

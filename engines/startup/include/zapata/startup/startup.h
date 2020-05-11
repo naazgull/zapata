@@ -131,6 +131,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto start() -> zpt::startup::engine&;
     auto unload() -> bool;
+    auto exit() -> void;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::startup::engine& _in) {
         _out << _in.to_string() << std::flush;

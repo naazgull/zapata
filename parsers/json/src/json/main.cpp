@@ -39,6 +39,9 @@ main(int argc, char* argv[]) {
             auto _parameters = zpt::parameters::parse(
               argc, argv, { "--print", { zpt::array, "optional", "single" } });
 
+            zpt::json _o{ "a", 1 };
+            _o << "b" << zpt::json{ "c", 2 };
+            zlog(_o, zpt::info);
             auto _init = "null"_JSON;
 
             auto _t = std::chrono::high_resolution_clock::now();
