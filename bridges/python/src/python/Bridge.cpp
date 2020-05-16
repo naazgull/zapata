@@ -28,8 +28,8 @@ namespace zpt {
 
 namespace python {
 zpt::python::bridge* __instance = nullptr;
-std::shared_ptr<std::vector<std::pair<std::string, PyObject* (*)(void)>>>
-__modules(new std::vector<std::pair<std::string, PyObject* (*)(void)>>());
+std::shared_ptr<std::vector<std::pair<std::string, PyObject* (*)(void)>>> __modules(
+  new std::vector<std::pair<std::string, PyObject* (*)(void)>>());
 zpt::json __sys_path = zpt::json::array();
 } // namespace python
 } // namespace zpt

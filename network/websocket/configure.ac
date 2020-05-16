@@ -21,8 +21,8 @@ AC_HAVE_LIBRARY(zapata-base)
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/net/transport/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/net/transport/config.h])
+AH_TOP([#include <zapata/net/transport/websocket/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/net/transport/websocket/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])

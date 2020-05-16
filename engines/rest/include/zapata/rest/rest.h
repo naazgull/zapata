@@ -46,18 +46,18 @@ static inline const unsigned short Notify = 9;
 static inline const unsigned short Trace = 10;
 static inline const unsigned short Connect = 11;
 
-class engine : public zpt::pipeline::engine<zpt::message> {
+class engine : public zpt::pipeline::engine<zpt::exchange> {
   public:
     engine(size_t _pipeline_size, zpt::json _configuration);
     virtual ~engine() = default;
 
     auto add_listener(size_t _stage,
                       std::string _pattern,
-                      std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
+                      std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
       -> zpt::rest::engine&;
 
     static auto on_error(zpt::json& _path,
-                         zpt::pipeline::event<zpt::message>& _event,
+                         zpt::pipeline::event<zpt::exchange>& _event,
                          const char* _what,
                          const char* _description = nullptr,
                          int _error = 500) -> bool;

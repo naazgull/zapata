@@ -22,6 +22,7 @@
 
 #include <zapata/openapi.h>
 #include <zapata/streams/streams.h>
+#include <zapata/transport/transport.h>
 
 auto
 zpt::OPENAPI_ENGINE() -> ssize_t& {
@@ -34,13 +35,18 @@ zpt::openapi::engine::engine(zpt::json _configuration)
 
 auto
 zpt::openapi::engine::add_source(zpt::json _source) -> zpt::openapi::engine& {
-    std::string _uri{ _source["source"]->str() };
-    zpt::stream _ifs;
-    // _ifs.open(_path);
+    auto _uri = zpt::uri::parse(_source["source"]->str());
+    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _transport = _layer.get(_uri["scheme"]->str());
 
-    zpt::json _document;
-    _ifs >> _document;
-    this->__sources << _uri << zpt::json{ "config", _source, "document", _document };
+    zpt::exchange _channel = _transport->resolve(_uri);
+    _transport->send_request(_channel);
+    _transport->receive_reply(_channel);
+
+    // zpt::json _document;
+    // _request->stream() >> _document;
+    // this->__sources << _uri << zpt::json{ "config", _source, "document", _document };
+    zlog(_channel, zpt::info);
 
     return (*this);
 }

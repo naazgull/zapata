@@ -22,6 +22,7 @@
 
 #include <zapata/net/transport/websocket.h>
 #include <zapata/base.h>
+#include <zapata/net/socket/socket_stream.h>
 
 auto
 zpt::WEBSOCKET_SERVER_SOCKET() -> ssize_t& {
@@ -125,25 +126,59 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
 }
 
 auto
-zpt::net::transport::websocket::receive(zpt::message& _message) -> void {
-    auto [_body, _] = zpt::net::ws::read(_message->stream());
+zpt::net::transport::websocket::receive_request(zpt::exchange& _channel) -> void {
+    this->receive_reply(_channel);
+}
+
+auto
+zpt::net::transport::websocket::send_reply(zpt::exchange& _channel) -> void {
+    this->send_request(_channel);
+}
+
+auto
+zpt::net::transport::websocket::send_request(zpt::exchange& _channel) -> void {
+    if (_channel->to_send()->ok()) {
+        zpt::net::ws::write(_channel->stream(), _channel->to_send());
+    }
+}
+
+auto
+zpt::net::transport::websocket::receive_reply(zpt::exchange& _channel) -> void {
+    auto [_body, _] = zpt::net::ws::read(_channel->stream());
     if (_body.length() != 0) {
         std::istringstream _iss;
         _iss.str(_body);
         zpt::json _content;
         try {
             _iss >> _content;
-            _message->received() = _content;
+            _channel->received() = _content;
         }
         catch (...) {
+            _channel->received() = { "body", _body };
         }
-        _message->keep_alive() = true;
+        _channel->keep_alive() = true;
     }
 }
 
 auto
-zpt::net::transport::websocket::send(zpt::message& _message) -> void {
-    if (_message->to_send()->ok()) {
-        zpt::net::ws::write(_message->stream(), _message->to_send());
+zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
+    expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
+           "URI parameter must contain 'scheme', 'domain' and 'port'",
+           500,
+           0);
+    expect(_uri["scheme"] == "ws", "scheme must be 'ws'", 500, 0);
+    auto _stream =
+      zpt::stream::alloc<zpt::basic_socketstream<char>>(_uri["domain"], _uri["port"]->intr());
+    zpt::exchange _to_return{ _stream.release() };
+    _to_return //
+      ->scheme()
+      .assign("ws");
+    _to_return //
+      ->uri()
+      .assign(zpt::path::join(_uri["path"]));
+    _to_return->keep_alive() = true;
+    if (_uri["scheme_options"]->ok()) {
+        _to_return->options() << "scheme" << _uri["scheme_options"];
     }
+    return _to_return;
 }

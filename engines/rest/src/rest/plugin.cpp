@@ -46,8 +46,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
             try {
                 auto _stream = _polling.pop();
                 std::string _scheme{ _stream->transport() };
-                zpt::message _message{ _stream };
-                _rest.trigger(_scheme + std::string(":"), _message);
+                zpt::exchange _channel{ _stream };
+                _rest.trigger(_scheme + std::string(":"), _channel);
                 _waiting_iterations = 0;
             }
             catch (zpt::NoMoreElementsException const& _e) {

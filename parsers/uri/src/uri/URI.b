@@ -29,7 +29,15 @@ scheme :
     STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner) << "scheme" << d_scanner.matched();
+            std::string _scheme{d_scanner.matched()};
+            if (!d_scanner.d_part_is_placeholder) {
+                auto _idx = _scheme.find("+");
+                if (_idx != std::string::npos) {
+                    (*d_scanner) << "scheme_options" << _scheme.substr(_idx + 1);
+                    _scheme.assign(_scheme.substr(0, _idx));
+                }
+            }
+            (*d_scanner) << "scheme" << _scheme;
         }
         else {
             (*d_scanner) << d_scanner.matched();
@@ -47,7 +55,7 @@ server :
         else {
             (*d_scanner) << d_scanner.matched();
         }
-    }
+    } port
 |
     SLASH SLASH STRING
     {
@@ -57,7 +65,7 @@ server :
         else {
             (*d_scanner) << d_scanner.matched();
         }
-    }
+    } port
 ;
 
 user :
@@ -71,26 +79,24 @@ user :
         }
     }
     AT
+;
+
+port :
+
 |
-    STRING
-    {
-        if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner) << "user" << zpt::json{ "name", d_scanner.matched() };
-        }
-        else {
-            (*d_scanner) << d_scanner.matched();
-        }
-    }
     DOUBLE_DOT STRING
     {
+        int _port{0};
+        std::istringstream _iss;
+        _iss.str(d_scanner.matched());
+        _iss >> _port;
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner)["user"] << "password" << d_scanner.matched();
+            (*d_scanner) << "port" << _port;
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << _port;
         }
     }
-    AT
 ;
 
 path :

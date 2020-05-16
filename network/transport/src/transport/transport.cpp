@@ -22,6 +22,95 @@
 
 #include <zapata/transport/transport.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
+#include <zapata/uri/uri.h>
+
+zpt::exchange::exchange(zpt::stream* _stream)
+  : __underlying{ std::make_shared<zpt::exchange::exchange_t>(_stream) } {}
+
+zpt::exchange::exchange(zpt::exchange const& _rhs)
+  : __underlying{ _rhs.__underlying } {}
+
+zpt::exchange::exchange(zpt::exchange&& _rhs)
+  : __underlying{ std::move(_rhs.__underlying) } {}
+
+auto
+zpt::exchange::operator=(zpt::exchange const& _rhs) -> zpt::exchange& {
+    this->__underlying = _rhs.__underlying;
+    return (*this);
+}
+
+auto
+zpt::exchange::operator=(zpt::exchange&& _rhs) -> zpt::exchange& {
+    this->__underlying = std::move(_rhs.__underlying);
+    return (*this);
+}
+
+auto zpt::exchange::operator-> () -> zpt::exchange::exchange_t* {
+    return this->__underlying.get();
+}
+
+auto zpt::exchange::operator*() -> zpt::exchange::exchange_t& {
+    return *this->__underlying.get();
+}
+
+zpt::exchange::exchange_t::exchange_t(zpt::stream* _stream)
+  : __stream{ _stream }
+  , __scheme{ _stream->transport() } {}
+
+auto
+zpt::exchange::exchange_t::stream() -> zpt::stream& {
+    return *this->__stream;
+}
+
+auto
+zpt::exchange::exchange_t::uri() -> std::string& {
+    return this->__uri;
+}
+
+auto
+zpt::exchange::exchange_t::version() -> std::string& {
+    return this->__version;
+}
+
+auto
+zpt::exchange::exchange_t::scheme() -> std::string& {
+    return this->__scheme;
+}
+
+auto
+zpt::exchange::exchange_t::method() -> zpt::performative& {
+    return this->__method;
+}
+
+auto
+zpt::exchange::exchange_t::options() -> zpt::json& {
+    return this->__options;
+}
+
+auto
+zpt::exchange::exchange_t::headers() -> zpt::json& {
+    return this->__headers;
+}
+
+auto
+zpt::exchange::exchange_t::received() -> zpt::json& {
+    return this->__received;
+}
+
+auto
+zpt::exchange::exchange_t::to_send() -> zpt::json& {
+    return this->__send;
+}
+
+auto
+zpt::exchange::exchange_t::status() -> zpt::status& {
+    return this->__status;
+}
+
+auto
+zpt::exchange::exchange_t::keep_alive() -> bool& {
+    return this->__keep_alive;
+}
 
 zpt::transport::transport(zpt::transport const& _rhs)
   : __underlying{ _rhs.__underlying } {}
@@ -78,85 +167,9 @@ zpt::transport::layer::end() -> std::map<std::string, zpt::transport>::iterator 
     return this->__underlying.end();
 }
 
-zpt::message::message(zpt::stream* _stream)
-  : __underlying{ std::make_shared<zpt::message::message_t>(_stream) } {}
-
-zpt::message::message(zpt::message const& _rhs)
-  : __underlying{ _rhs.__underlying } {}
-
-zpt::message::message(zpt::message&& _rhs)
-  : __underlying{ std::move(_rhs.__underlying) } {}
-
 auto
-zpt::message::operator=(zpt::message const& _rhs) -> zpt::message& {
-    this->__underlying = _rhs.__underlying;
-    return (*this);
-}
-
-auto
-zpt::message::operator=(zpt::message&& _rhs) -> zpt::message& {
-    this->__underlying = std::move(_rhs.__underlying);
-    return (*this);
-}
-
-auto zpt::message::operator-> () -> zpt::message::message_t* {
-    return this->__underlying.get();
-}
-
-auto zpt::message::operator*() -> zpt::message::message_t& {
-    return *this->__underlying.get();
-}
-
-zpt::message::message_t::message_t(zpt::stream* _stream)
-  : __stream{ _stream }
-  , __scheme{ _stream->transport() } {}
-
-auto
-zpt::message::message_t::stream() -> zpt::stream& {
-    return *this->__stream;
-}
-
-auto
-zpt::message::message_t::uri() -> std::string& {
-    return this->__uri;
-}
-
-auto
-zpt::message::message_t::version() -> std::string& {
-    return this->__version;
-}
-
-auto
-zpt::message::message_t::scheme() -> std::string& {
-    return this->__scheme;
-}
-
-auto
-zpt::message::message_t::method() -> zpt::performative& {
-    return this->__method;
-}
-
-auto
-zpt::message::message_t::headers() -> zpt::json& {
-    return this->__headers;
-}
-
-auto
-zpt::message::message_t::received() -> zpt::json& {
-    return this->__received;
-}
-
-auto
-zpt::message::message_t::to_send() -> zpt::json& {
-    return this->__send;
-}
-
-auto
-zpt::message::message_t::status() -> zpt::status& {
-    return this->__status;
-}
-
-auto
-zpt::message::message_t::keep_alive() -> bool& {
-    return this->__keep_alive;
+zpt::transport::layer::resolve(std::string _uri) -> zpt::exchange {
+    auto _parsed = zpt::uri::parse(_uri);
+    zlog(_parsed, zpt::debug);
+    return this->get(_parsed["scheme"])->resolve(_parsed);
 }

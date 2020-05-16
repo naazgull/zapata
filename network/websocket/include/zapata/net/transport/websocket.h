@@ -26,10 +26,6 @@
 #include <zapata/streams.h>
 #include <zapata/transport.h>
 
-#ifndef CRLF
-#define CRLF "\r\n"
-#endif
-
 namespace zpt {
 auto
 WEBSOCKET_SERVER_SOCKET() -> ssize_t&;
@@ -48,8 +44,11 @@ class websocket : public zpt::transport::transport_t {
     websocket() = default;
     virtual ~websocket() = default;
 
-    auto receive(zpt::message& _message) -> void override;
-    auto send(zpt::message& _message) -> void override;
+    auto receive_request(zpt::exchange& _channel) -> void override;
+    auto send_reply(zpt::exchange& _channel) -> void override;
+    auto send_request(zpt::exchange& _channel) -> void override;
+    auto receive_reply(zpt::exchange& _channel) -> void override;
+    auto resolve(zpt::json _uri) -> zpt::exchange override;
 };
 } // namespace transport
 } // namespace net

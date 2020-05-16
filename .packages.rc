@@ -4,21 +4,22 @@ export projects=(
        common/base
        common/lockfree
        common/globals
-       parsers/uri
        io/stream
        io/socket
        parsers/json
        parsers/http
+       parsers/uri
        common/graph
        common/events
-       network/transport
        engines/startup
+       network/transport
        network/websocket
        network/http
+       network/local
        engines/pipeline
        engines/rest
+       engines/dom
        storage/connector
        storage/mysqlx
-       engines/dom
        ontology/openapi
 )

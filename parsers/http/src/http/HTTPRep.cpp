@@ -68,3 +68,11 @@ zpt::HTTPRep::parse(std::istream& _in) -> void {
     _p.switchStreams(_in);
     _p.parse();
 }
+
+auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::http::rep {
+    std::istringstream _oss;
+    zpt::http::rep _to_return;
+    _oss.str(std::string{ _string, _length });
+    _oss >> _to_return;
+    return _to_return;
+}

@@ -615,5 +615,5 @@ cache_line_size() -> size_t {
     }
     return i;
 }
-    
+
 } // namespace zpt

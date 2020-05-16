@@ -29,29 +29,28 @@ zpt::REST_ENGINE() -> ssize_t& {
 }
 
 zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
-  : zpt::pipeline::engine<zpt::message>{ _pipeline_size + 2,
-                                         _configuration } {
+  : zpt::pipeline::engine<zpt::exchange>{ _pipeline_size + 2, _configuration } {
 
     this->set_error_callback(zpt::rest::engine::on_error);
 
-    zpt::pipeline::engine<zpt::message>::add_listener(
-      0, "{(.*)}", [](zpt::pipeline::event<zpt::message>& _in) -> void {
+    zpt::pipeline::engine<zpt::exchange>::add_listener(
+      0, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _in) -> void {
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
-          _transport->receive(_message);
+          _transport->receive_request(_message);
           _in.set_path(std::string("/ROOT/") + zpt::rest::to_str(_message->method()) +
                        _message->uri());
           _in.next_stage();
       });
 
-    zpt::pipeline::engine<zpt::message>::add_listener(
-      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::message>& _in) -> void {
+    zpt::pipeline::engine<zpt::exchange>::add_listener(
+      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _in) -> void {
           auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
-          _transport->send(_message);
+          _transport->send_reply(_message);
           std::unique_ptr<zpt::stream> _give_back{ &_message->stream() };
           _polling.listen_on(_give_back);
       });
@@ -60,18 +59,18 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
 auto
 zpt::rest::engine::add_listener(size_t _stage,
                                 std::string _pattern,
-                                std::function<void(zpt::pipeline::event<zpt::message>&)> _callback)
+                                std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
   -> zpt::rest::engine& {
     if (_stage == 0) {
         _pattern.insert(0, "/ROOT");
     }
-    zpt::pipeline::engine<zpt::message>::add_listener(_stage + 1, _pattern, _callback);
+    zpt::pipeline::engine<zpt::exchange>::add_listener(_stage + 1, _pattern, _callback);
     return (*this);
 }
 
 auto
 zpt::rest::engine::on_error(zpt::json& _path,
-                            zpt::pipeline::event<zpt::message>& _event,
+                            zpt::pipeline::event<zpt::exchange>& _event,
                             const char* _what,
                             const char* _description,
                             int _error) -> bool {

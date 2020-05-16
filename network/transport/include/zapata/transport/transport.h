@@ -27,23 +27,25 @@
 #include <zapata/lockfree.h>
 
 namespace zpt {
-class message {
+class exchange {
   private:
-    class message_t {
+    class exchange_t {
       public:
-        message_t(zpt::stream* _stream);
-        message_t(zpt::message::message_t const& _rhs) = delete;
-        message_t(zpt::message::message_t&& _rhs) = delete;
-        virtual ~message_t() = default;
+        exchange_t(zpt::stream* _stream);
+        exchange_t(zpt::exchange::exchange_t const& _rhs) = delete;
+        exchange_t(zpt::exchange::exchange_t&& _rhs) = delete;
+        virtual ~exchange_t() = default;
 
-        auto operator=(zpt::message::message_t const& _rhs) -> zpt::message::message_t& = delete;
-        auto operator=(zpt::message::message_t&& _rhs) -> zpt::message::message_t& = delete;
+        auto operator=(zpt::exchange::exchange_t const& _rhs)
+          -> zpt::exchange::exchange_t& = delete;
+        auto operator=(zpt::exchange::exchange_t&& _rhs) -> zpt::exchange::exchange_t& = delete;
 
         auto stream() -> zpt::stream&;
         auto uri() -> std::string&;
         auto version() -> std::string&;
         auto scheme() -> std::string&;
         auto method() -> zpt::performative&;
+        auto options() -> zpt::json&;
         auto headers() -> zpt::json&;
         auto received() -> zpt::json&;
         auto to_send() -> zpt::json&;
@@ -53,10 +55,10 @@ class message {
       private:
         zpt::stream* __stream{ nullptr };
         std::string __uri;
-        zpt::json __path;
         std::string __version;
         std::string __scheme;
         zpt::performative __method{ 0 };
+        zpt::json __options{ zpt::json::object() };
         zpt::json __headers{ zpt::json::object() };
         zpt::json __received{ zpt::undefined };
         zpt::json __send{ zpt::undefined };
@@ -65,19 +67,19 @@ class message {
     };
 
   public:
-    message() = default;
-    message(zpt::stream* _stream);
-    message(zpt::message const& _rhs);
-    message(zpt::message&& _rhs);
-    virtual ~message() = default;
+    exchange() = default;
+    exchange(zpt::stream* _stream);
+    exchange(zpt::exchange const& _rhs);
+    exchange(zpt::exchange&& _rhs);
+    virtual ~exchange() = default;
 
-    auto operator=(zpt::message const& _rhs) -> zpt::message&;
-    auto operator=(zpt::message&& _rhs) -> zpt::message&;
+    auto operator=(zpt::exchange const& _rhs) -> zpt::exchange&;
+    auto operator=(zpt::exchange&& _rhs) -> zpt::exchange&;
 
-    auto operator-> () -> zpt::message::message_t*;
-    auto operator*() -> zpt::message::message_t&;
+    auto operator-> () -> zpt::exchange::exchange_t*;
+    auto operator*() -> zpt::exchange::exchange_t&;
 
-    friend auto operator<<(std::ostream& _out, zpt::message& _in) -> std::ostream& {
+    friend auto operator<<(std::ostream& _out, zpt::exchange& _in) -> std::ostream& {
         _out << _in->method() << " " << _in->scheme() << " " << _in->uri() << std::endl
              << zpt::pretty(_in->headers()) << std::endl
              << zpt::pretty(_in->received()) << std::flush;
@@ -85,15 +87,18 @@ class message {
     }
 
   private:
-    std::shared_ptr<zpt::message::message_t> __underlying;
+    std::shared_ptr<zpt::exchange::exchange_t> __underlying;
 };
 
 class transport {
   public:
     class transport_t {
       public:
-        virtual auto receive(zpt::message& _out) -> void = 0;
-        virtual auto send(zpt::message& _message) -> void = 0;
+        virtual auto receive_request(zpt::exchange& _channel) -> void = 0;
+        virtual auto send_reply(zpt::exchange& _channel) -> void = 0;
+        virtual auto send_request(zpt::exchange& _channel) -> void = 0;
+        virtual auto receive_reply(zpt::exchange& _channel) -> void = 0;
+        virtual auto resolve(zpt::json _uri) -> zpt::exchange = 0;
     };
 
     transport(zpt::transport const& _rhs);
@@ -119,6 +124,8 @@ class transport {
 
         auto begin() -> std::map<std::string, zpt::transport>::iterator;
         auto end() -> std::map<std::string, zpt::transport>::iterator;
+
+        auto resolve(std::string _uri) -> zpt::exchange;
 
       private:
         std::map<std::string, zpt::transport> __underlying;

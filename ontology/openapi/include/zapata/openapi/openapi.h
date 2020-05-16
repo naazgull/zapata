@@ -46,7 +46,7 @@ class engine : public zpt::dom::engine {
     auto traverse() -> zpt::openapi::engine&;
 
     static auto process_operation() -> void;
-    
+
   private:
     zpt::json __sources{ zpt::json::object() };
     zpt::json __root{ zpt::json::object() };

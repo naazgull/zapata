@@ -14,7 +14,8 @@
 
 ([^{:/?]+) {
 	begin(StartCondition_::scheme);
-	return zpt::uri::lex::STRING;
+	d_part_is_placeholder = false;
+    return zpt::uri::lex::STRING;
 }
 "{" {
     d_path_helper.assign("{");
@@ -54,6 +55,7 @@
 <server> {
     ([^:@/{]+) {
         d_server_part.assign(matched());
+    	d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
     "/" {
@@ -95,6 +97,7 @@
         _matched.insert(0, d_path_helper);
         d_path_helper.assign("");
         setMatched(_matched);
+	    d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
 }
@@ -115,7 +118,8 @@
         begin(StartCondition_::function);
     }
 	([^=&{(]+) {
-		return zpt::uri::lex::STRING;
+	    d_part_is_placeholder = false;
+        return zpt::uri::lex::STRING;
     }
 }
 
@@ -128,6 +132,7 @@
         setMatched(d_path_helper);
         d_path_helper.assign("");
         begin(d_intermediate_state);
+		d_part_is_placeholder = true;
         return zpt::uri::lex::STRING;
     }
 }
@@ -139,7 +144,6 @@
     "," {
 	}
 	")" {
-        begin(StartCondition_::params);	    
+        begin(StartCondition_::params);
 	}
-}	  
-	  
+}

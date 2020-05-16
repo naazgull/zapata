@@ -231,3 +231,6 @@ init(HTTPReq& _out);
 void
 init(HTTPRep& _out);
 } // namespace zpt
+
+auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::http::req;
+auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::http::rep;
