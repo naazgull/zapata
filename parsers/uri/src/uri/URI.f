@@ -9,10 +9,10 @@
 //%debug
 %no-lines
 
-%x scheme server_path server path params placeholder function
+%x scheme server_path server path params placeholder function anchor
 %%
 
-([^{:/?]+) {
+([^{:/?#]+) {
 	begin(StartCondition_::scheme);
 	d_part_is_placeholder = false;
     return zpt::uri::lex::STRING;
@@ -29,6 +29,10 @@
 "?" {
     begin(StartCondition_::params);
     return zpt::uri::lex::QMARK;
+}
+"#" {
+    begin(StartCondition_::anchor);
+    return zpt::uri::lex::CARDINAL;
 }
 
 <scheme> {
@@ -92,7 +96,11 @@
         begin(StartCondition_::params);
         return zpt::uri::lex::QMARK;
     }
-    ([^{/?]+) {
+    "#" {
+	    begin(StartCondition_::anchor);
+        return zpt::uri::lex::CARDINAL;
+    }
+    ([^{/?#]+) {
         std::string _matched{matched()};
         _matched.insert(0, d_path_helper);
         d_path_helper.assign("");
@@ -117,7 +125,11 @@
     "(" {
         begin(StartCondition_::function);
     }
-	([^=&{(]+) {
+    "#" {
+	    begin(StartCondition_::anchor);
+        return zpt::uri::lex::CARDINAL;
+    }
+	([^=&{(#]+) {
 	    d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
@@ -147,3 +159,11 @@
         begin(StartCondition_::params);
 	}
 }
+
+<anchor> {
+	(.+) {
+	    d_part_is_placeholder = false;
+        return zpt::uri::lex::STRING;
+    }
+}
+	  

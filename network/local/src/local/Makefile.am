@@ -1,4 +1,6 @@
-lib_LTLIBRARIES = libzapata-net-local-file.la libzapata-net-local-unix.la
+lib_LTLIBRARIES = libzapata-net-local-file.la					\
+libzapata-net-local-file-plugin.la libzapata-net-local-unix.la	\
+libzapata-net-local-unix-plugin.la
 
 libzapata_net_local_file_la_LIBADD = -lpthread -lzapata-base	\
 -lzapata-io-streams -lzapata-transport
@@ -6,24 +8,29 @@ libzapata_net_local_file_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_net_local_file_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_net_local_file_la_SOURCES = \
-./file/file.cpp \
+./file/file.cpp
+
+libzapata_net_local_file_plugin_la_LIBADD = -lpthread -lzapata-base		\
+-lzapata-io-streams -lzapata-transport libzapata-net-local-file.la
+libzapata_net_local_file_plugin_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_net_local_file_plugin_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
+
+libzapata_net_local_file_plugin_la_SOURCES = \
 ./file/plugin.cpp
 
 libzapata_net_local_unix_la_LIBADD = -lpthread -lzapata-base	\
--lzapata-io-streams -lzapata-transport
+-lzapata-io-streams -lzapata-net-socket -lzapata-transport
 libzapata_net_local_unix_la_LDFLAGS = -version-info 1:0:0 -shared
 libzapata_net_local_unix_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_net_local_unix_la_SOURCES = \
-./unix/unix.cpp \
-./unix/plugin.cpp
+./unix/unix.cpp
 
-bin_PROGRAMS = zlocal
-
-zlocal_LDADD = -lpthread libzapata-net-local-file.la	\
+libzapata_net_local_unix_plugin_la_LIBADD = -lpthread -lzapata-base	\
+-lzapata-io-streams -lzapata-net-socket -lzapata-transport			\
 libzapata-net-local-unix.la
-zlocal_LDFLAGS =
-zlocal_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
+libzapata_net_local_unix_plugin_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_net_local_unix_plugin_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
-zlocal_SOURCES = \
-./main.cpp
+libzapata_net_local_unix_plugin_la_SOURCES = \
+./unix/plugin.cpp

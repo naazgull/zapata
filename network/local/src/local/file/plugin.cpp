@@ -28,11 +28,8 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
-
-    // _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
+    _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
 }
 
 extern "C" auto

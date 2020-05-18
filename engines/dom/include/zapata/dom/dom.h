@@ -83,7 +83,8 @@ class engine : public zpt::pipeline::engine<zpt::dom::element> {
                          zpt::pipeline::event<zpt::dom::element>& _event,
                          const char* _what,
                          const char* _description = nullptr,
-                         int _error = 500) -> bool;
+                         int _error = -1,
+                         int _status = 500) -> bool;
 };
 
 } // namespace dom

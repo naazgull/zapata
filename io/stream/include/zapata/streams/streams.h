@@ -33,6 +33,9 @@ namespace zpt {
 
 using epoll_event_t = struct epoll_event;
 
+auto
+STREAM_POLLING() -> ssize_t&;
+
 class stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
@@ -147,5 +150,9 @@ zpt::stream::alloc(Args... _args) -> std::unique_ptr<zpt::stream> {
     if constexpr (std::is_convertible<T, std::string>::value) {
         _to_return->uri(static_cast<std::string>(static_cast<T&>(**_to_return)));
     }
+    expect(!(**_to_return.get()).fail() && !(**_to_return.get()).bad(),
+           "unable to open underlying `std::iostream`",
+           500,
+           0);
     return _to_return;
 }

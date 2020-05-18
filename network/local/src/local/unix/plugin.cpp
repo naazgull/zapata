@@ -32,31 +32,32 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
 
-    // _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix>());
-    if (_config["file"]->ok()) {
-        // auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
-        //   zpt::HTTP_SERVER_SOCKET(),
-        //   static_cast<uint16_t>(static_cast<unsigned int>(_config["port"])));
-        // _boot.add_thread([=]() mutable -> void {
-        //     auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-        //     zlog("Starting HTTP transport on port " << _config["port"], zpt::info);
+    _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix>());
+    if (_config["path"]->ok()) {
+        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
+                                                                          _config["path"]->str());
 
-        //     try {
-        //         do {
-        //             auto _client = _server_sock->accept();
-        //             _client->transport("unix");
-        //             _polling.listen_on(_client);
-        //         } while (true);
-        //     }
-        //     catch (zpt::failed_expectation const& _e) {
-        //     }
-        //     zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);
-        // });
+        _boot.add_thread([=]() mutable -> void {
+            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+            zlog("Starting UNIX transport on '" << _config["path"]->str() << "'", zpt::info);
+
+            try {
+                do {
+                    auto _client = _server_sock->accept();
+                    _client->transport("unix");
+                    _polling.listen_on(_client);
+                } while (true);
+            }
+            catch (zpt::failed_expectation const& _e) {
+            }
+            unlink(_config["path"]->str().data());
+            zlog("Stopping UNIX transport on '" << _config["path"]->str() << "'", zpt::info);
+        });
     }
 }
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) {
-    // zpt::globals::get<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET())->close();
-    // zpt::globals::dealloc<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET());
+    zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
+    zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
 }

@@ -62,6 +62,9 @@ zpt::serversocketstream::serversocketstream()
 zpt::serversocketstream::serversocketstream(uint16_t _port)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_port) } {}
 
+zpt::serversocketstream::serversocketstream(std::string const& _path)
+  : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_path) } {}
+
 zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs) {
     (*this) = _rhs;
 }
@@ -96,6 +99,9 @@ zpt::wserversocketstream::wserversocketstream()
 
 zpt::wserversocketstream::wserversocketstream(uint16_t _port)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
+
+zpt::wserversocketstream::wserversocketstream(std::string const& _path)
+  : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}
 
 zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _rhs) {
     (*this) = _rhs;

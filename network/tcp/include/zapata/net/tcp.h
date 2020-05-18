@@ -20,9 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/net/local.h>
+#pragma once
 
-auto
-main(int argc, char* argv[]) -> int {
-    return 0;
-}
+#include <zapata/net/transport/tcp.h>
+#include <zapata/net/transport/tcp/config.h>
+

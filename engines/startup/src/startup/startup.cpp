@@ -34,16 +34,6 @@ zpt::GLOBAL_CONFIG() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
-auto
-zpt::STREAM_POLLING() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
-auto
-zpt::TRANSPORT_LAYER() -> ssize_t& {
-    static ssize_t _global{ -1 };
-    return _global;
-}
 
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
   : __underlying{ std::make_shared<zpt::plugin::plugin_t>(_options, _config) } {}
@@ -234,7 +224,8 @@ zpt::startup::engine::error_callback(zpt::json& _event,
                                      bool& _content,
                                      const char* _what,
                                      const char* _description,
-                                     int _error) -> bool {
+                                     int _error,
+                                     int _status) -> bool {
     return false;
 }
 
@@ -316,11 +307,12 @@ zpt::startup::engine::unload() -> bool {
     bool _not_unloaded{ false };
     if (this->__unloaded.compare_exchange_strong(_not_unloaded, true)) {
         zlog("Unloading plugins", zpt::info);
-        for (auto [_key, _plugin] : this->__plugins) {
+        for (auto _it = this->__load_order.rbegin(); _it != this->__load_order.rend(); ++_it) {
+            auto _key = *_it;
             if (_key == "c++_loader" || _key == ".so") {
                 continue;
             }
-            this->unload_plugin(_plugin);
+            this->unload_plugin(this->__plugins[_key]);
         }
         return true;
     }
@@ -398,6 +390,7 @@ zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
     for (auto [_, __, _handled] : _config["handles"]) {
         this->__plugins.insert(std::make_pair(static_cast<std::string>(_handled), _plugin));
     }
+    this->__load_order.push_back(_plugin->name());
     this->__plugins.insert(std::make_pair(_plugin->name(), _plugin));
     return (*this);
 }

@@ -24,6 +24,12 @@
 #include <systemd/sd-daemon.h>
 #include <errno.h>
 
+auto
+zpt::STREAM_POLLING() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
 zpt::stream::stream(std::ios& _rhs)
   : __underlying{ std::make_unique<std::stringstream>() } {
     this->__underlying->rdbuf(_rhs.rdbuf());

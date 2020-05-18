@@ -38,6 +38,7 @@
 #include <streambuf>
 #include <strings.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <zapata/base/expect.h>
 #include <zapata/exceptions/ClosedException.h>
@@ -46,7 +47,12 @@
 #include <zapata/text/manip.h>
 #include <zapata/streams.h>
 
+#define UNIXPROTO_RAW -2
+
 namespace zpt {
+using sockaddr_t = struct sockaddr;
+using sockaddrin_t = struct sockaddr_in;
+using sockaddrun_t = struct sockaddr_un;
 
 auto
 ssl_error_print(SSL* _ssl, int _ret) -> std::string;
@@ -61,21 +67,20 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
     using __stream_type = std::basic_ostream<__char_type>;
     using __int_type = typename __buf_type::int_type;
     using __traits_type = typename std::basic_streambuf<Char>::traits_type;
-    using __sockaddr_type = struct sockaddr_in;
 
     basic_socketbuf();
     virtual ~basic_socketbuf();
 
-    auto set_socket(int _sock) -> void;
     auto get_socket() -> int;
-
+    auto set_socket(int _sock) -> void;
     auto set_context(SSL_CTX* _ctx) -> void;
+    auto set_protocol(short _protocol) -> void;
 
-    auto address() -> __sockaddr_type&;
+    auto address() -> zpt::sockaddr_t&;
     auto ssl() -> bool&;
     auto host() -> std::string&;
     auto port() -> short&;
-    auto protocol() -> short&;
+    auto protocol() -> short;
     auto timeout() -> unsigned long long&;
 
     auto error_code() -> unsigned int&;
@@ -91,8 +96,8 @@ class basic_socketbuf : public std::basic_streambuf<Char> {
 
     int __sock{ -1 };
     bool __ssl{ false };
-    __sockaddr_type __server;
-    __sockaddr_type __peer;
+    std::unique_ptr<zpt::sockaddr_t> __server{ nullptr };
+    std::unique_ptr<zpt::sockaddr_t> __peer{ nullptr };
     std::string __host;
     short __port{ -1 };
     short __protocol{ -1 };
@@ -125,14 +130,18 @@ class basic_socketstream : public std::basic_iostream<Char> {
     using __char_type = Char;
     using __stream_type = std::basic_iostream<__char_type>;
     using __buf_type = basic_socketbuf<__char_type>;
-    using sock_addr = struct sockaddr_in;
 
     basic_socketstream();
-    basic_socketstream(int s, sock_addr& _address, bool _ssl = false, short _protocol = IPPROTO_IP);
-    basic_socketstream(const std::string& _host,
+    basic_socketstream(int s,
+                       zpt::sockaddrin_t& _address,
+                       bool _ssl = false,
+                       short _protocol = IPPROTO_TCP);
+    basic_socketstream(std::string const& _host,
                        uint16_t _port,
                        bool _ssl = false,
-                       short _protocol = IPPROTO_IP);
+                       short _protocol = IPPROTO_TCP);
+    basic_socketstream(int s, zpt::sockaddrun_t& _address);
+    basic_socketstream(std::string const& _path);
     basic_socketstream(const basic_socketstream&) = delete;
     basic_socketstream(basic_socketstream&&) = delete;
     virtual ~basic_socketstream();
@@ -146,7 +155,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
     auto ssl() -> bool&;
     auto host() -> std::string&;
     auto port() -> short&;
-    auto protocol() -> short&;
+    auto protocol() -> short;
 
     auto assign(int _sockfd) -> void;
     auto assign(int _sockfd, SSL_CTX* _ctx) -> void;
@@ -161,15 +170,15 @@ class basic_socketstream : public std::basic_iostream<Char> {
     auto error_code() -> unsigned int&;
     auto error_string() -> std::string&;
 
-    auto open(const std::string& _host,
+    auto open(std::string const& _host,
               uint16_t _port,
               bool _ssl = false,
-              short _protocol = IPPROTO_IP) -> bool;
+              short _protocol = IPPROTO_TCP) -> bool;
+    auto open(std::string const& _path) -> bool;
 
   protected:
     __buf_type __buf;
     bool __is_error{ false };
-    sock_addr __address;
 
   private:
     auto open_ip() -> bool;
@@ -185,22 +194,28 @@ class basic_serversocketstream {
   public:
     basic_serversocketstream();
     basic_serversocketstream(uint16_t _port);
+    basic_serversocketstream(std::string const& _path);
     virtual ~basic_serversocketstream();
 
     auto close() -> void;
     auto is_open() -> bool;
     auto ready() -> bool;
     auto bind(uint16_t _port) -> bool;
+    auto bind(std::string const& _path) -> bool;
     auto accept() -> std::unique_ptr<zpt::stream>;
 
   protected:
     int __sockfd{ -1 };
+    short __protocol{ -1 };
+    std::string __path{ "" };
+    uint16_t __port{ 0 };
 };
 
 class serversocketstream {
   public:
     serversocketstream();
     serversocketstream(uint16_t _port);
+    serversocketstream(std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
     serversocketstream(serversocketstream&& _rhs);
     virtual ~serversocketstream() = default;
@@ -219,6 +234,7 @@ class wserversocketstream {
   public:
     wserversocketstream();
     wserversocketstream(uint16_t _port);
+    wserversocketstream(std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
     wserversocketstream(zpt::wserversocketstream&& _rhs);
     virtual ~wserversocketstream() = default;
@@ -300,8 +316,23 @@ zpt::basic_socketbuf<Char>::set_context(SSL_CTX* _ctx) -> void {
 
 template<typename Char>
 auto
-zpt::basic_socketbuf<Char>::address() -> struct sockaddr_in& {
-    return this->__server;
+zpt::basic_socketbuf<Char>::set_protocol(short _protocol) -> void {
+    this->__protocol = _protocol;
+    switch (this->__protocol) {
+        case IPPROTO_TCP:
+        case IPPROTO_UDP: {
+            this->__server.reset((zpt::sockaddr_t*)new zpt::sockaddrin_t());
+        }
+        case UNIXPROTO_RAW: {
+            this->__server.reset((zpt::sockaddr_t*)new zpt::sockaddrun_t());
+        }
+    }
+}
+
+template<typename Char>
+auto
+zpt::basic_socketbuf<Char>::address() -> zpt::sockaddr_t& {
+    return *this->__server.get();
 }
 
 template<typename Char>
@@ -324,7 +355,7 @@ zpt::basic_socketbuf<Char>::port() -> short& {
 
 template<typename Char>
 auto
-zpt::basic_socketbuf<Char>::protocol() -> short& {
+zpt::basic_socketbuf<Char>::protocol() -> short {
     return this->__protocol;
 }
 
@@ -362,11 +393,14 @@ zpt::basic_socketbuf<Char>::output_buffer() -> __int_type {
 
     if (!this->__ssl) {
         switch (protocol()) {
-            case IPPROTO_IP: {
+            case IPPROTO_TCP: {
                 return this->output_buffer_ip();
             }
             case IPPROTO_UDP: {
                 return this->output_buffer_udp();
+            }
+            case UNIXPROTO_RAW: {
+                return this->output_buffer_ip();
             }
             default: {
                 return __traits_type::eof();
@@ -415,11 +449,14 @@ zpt::basic_socketbuf<Char>::underflow() -> __int_type {
 
     if (!this->__ssl) {
         switch (protocol()) {
-            case IPPROTO_IP: {
+            case IPPROTO_TCP: {
                 return this->underflow_ip();
             }
             case IPPROTO_UDP: {
                 return this->underflow_udp();
+            }
+            case UNIXPROTO_RAW: {
+                return this->underflow_ip();
             }
         }
     }
@@ -576,27 +613,48 @@ zpt::basic_socketstream<Char>::basic_socketstream()
 
 template<typename Char>
 zpt::basic_socketstream<Char>::basic_socketstream(int s,
-                                                  sock_addr& _address,
+                                                  zpt::sockaddrin_t& _address,
                                                   bool _ssl,
                                                   short _protocol)
   : __stream_type(&__buf)
   , __is_error(false) {
     __buf.set_socket(s);
-    __buf.protocol() = _protocol;
+    __buf.set_protocol(_protocol);
     __buf.ssl() = _ssl;
-    __buf.address().sin_family = _address.sin_family;
-    __buf.address().sin_port = _address.sin_port;
-    __buf.address().sin_addr.s_addr = _address.sin_addr.s_addr;
+    auto& _in_addr = reinterpret_cast<zpt::sockaddrin_t&>(__buf.address());
+    _in_addr.sin_family = _address.sin_family;
+    _in_addr.sin_port = _address.sin_port;
+    _in_addr.sin_addr.s_addr = _address.sin_addr.s_addr;
 }
 
 template<typename Char>
-zpt::basic_socketstream<Char>::basic_socketstream(const std::string& _host,
+zpt::basic_socketstream<Char>::basic_socketstream(std::string const& _host,
                                                   uint16_t _port,
                                                   bool _ssl,
                                                   short _protocol)
   : __stream_type(&__buf)
   , __is_error(false) {
     this->open(_host, _port, _ssl, _protocol);
+}
+
+template<typename Char>
+zpt::basic_socketstream<Char>::basic_socketstream(int s, zpt::sockaddrun_t& _address)
+  : __stream_type(&__buf)
+  , __is_error(false) {
+    __buf.set_socket(s);
+    __buf.set_protocol(UNIXPROTO_RAW);
+    __buf.ssl() = false;
+    auto& _in_addr = reinterpret_cast<zpt::sockaddrun_t&>(__buf.address());
+    bzero((char*)&_in_addr, sizeof _in_addr);
+    _in_addr.sun_family = AF_UNIX;
+    strncpy(_in_addr.sun_path, _address.sun_path, sizeof _in_addr.sun_path);
+}
+
+template<typename Char>
+zpt::basic_socketstream<Char>::basic_socketstream(std::string const& _path)
+  : __stream_type(&__buf)
+  , __is_error(false) {
+    this->open(_path);
 }
 
 template<typename Char>
@@ -612,24 +670,29 @@ zpt::basic_socketstream<Char>::operator int() {
 template<typename Char>
 zpt::basic_socketstream<Char>::operator std::string() {
     std::ostringstream _oss;
+    zpt::sockaddr_t& _address = __buf.address();
     switch (__buf.protocol()) {
-        case IPPROTO_IP: {
-            _oss << "tcp";
+        case IPPROTO_TCP: {
+            auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(_address);
+            _oss << "tcp" << (__buf.ssl() ? "+ssl" : "") << "://" << inet_ntoa(_in_address.sin_addr)
+                 << ":" << _in_address.sin_port << std::flush;
             break;
         }
         case IPPROTO_UDP: {
-            _oss << "udp";
+            auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(_address);
+            _oss << "udp" << (__buf.ssl() ? "+ssl" : "") << "://" << inet_ntoa(_in_address.sin_addr)
+                 << ":" << _in_address.sin_port << std::flush;
+            break;
+        }
+        case UNIXPROTO_RAW: {
+            _oss << "unix:" << reinterpret_cast<zpt::sockaddrun_t&>(_address).sun_path
+                 << std::flush;
             break;
         }
         default: {
             _oss << "raw";
         }
     }
-    if (__buf.ssl()) {
-        _oss << "+ssl";
-    }
-    _oss << "://" << inet_ntoa(__buf.address().sin_addr) << ":" << __buf.address().sin_port
-         << std::flush;
     return _oss.str();
 }
 
@@ -653,7 +716,7 @@ zpt::basic_socketstream<Char>::port() -> short& {
 
 template<typename Char>
 auto
-zpt::basic_socketstream<Char>::protocol() -> short& {
+zpt::basic_socketstream<Char>::protocol() -> short {
     return __buf.protocol();
 }
 
@@ -731,7 +794,7 @@ zpt::basic_socketstream<Char>::error_string() -> std::string& {
 
 template<typename Char>
 auto
-zpt::basic_socketstream<Char>::open(const std::string& _host,
+zpt::basic_socketstream<Char>::open(std::string const& _host,
                                     uint16_t _port,
                                     bool _ssl,
                                     short _protocol) -> bool {
@@ -740,7 +803,7 @@ zpt::basic_socketstream<Char>::open(const std::string& _host,
     }
     __buf.host() = _host;
     __buf.port() = _port;
-    __buf.protocol() = _protocol;
+    __buf.set_protocol(_protocol);
     __buf.ssl() = _ssl;
 
     ::hostent* _he = gethostbyname(_host.c_str());
@@ -748,16 +811,17 @@ zpt::basic_socketstream<Char>::open(const std::string& _host,
         return false;
     }
 
+    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(__buf.address());
     std::string _addr(reinterpret_cast<char*>(_he->h_addr), _he->h_length);
     std::copy(_addr.c_str(),
               _addr.c_str() + _addr.length(),
-              reinterpret_cast<char*>(&__buf.address().sin_addr.s_addr));
-    __buf.address().sin_family = AF_INET;
-    __buf.address().sin_port = htons(_port);
+              reinterpret_cast<char*>(&_in_address.sin_addr.s_addr));
+    _in_address.sin_family = AF_INET;
+    _in_address.sin_port = htons(_port);
 
     if (!_ssl) {
         switch (_protocol) {
-            case IPPROTO_IP: {
+            case IPPROTO_TCP: {
                 return this->open_ip();
             }
             case IPPROTO_UDP: {
@@ -776,9 +840,39 @@ zpt::basic_socketstream<Char>::open(const std::string& _host,
 
 template<typename Char>
 auto
+zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
+    if (this->is_open()) {
+        this->close();
+    }
+    __buf.host() = _path;
+    __buf.set_protocol(UNIXPROTO_RAW);
+    __buf.ssl() = false;
+
+    auto& _in_address = reinterpret_cast<zpt::sockaddrun_t&>(__buf.address());
+    bzero((char*)&_in_address, sizeof _in_address);
+    _in_address.sun_family = AF_UNIX;
+    strncpy(_in_address.sun_path, _path.data(), sizeof _in_address.sun_path);
+
+    int _sd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (::connect(_sd, &__buf.address(), sizeof __buf.address()) < 0) {
+        __stream_type::setstate(std::ios::failbit);
+        __buf.set_socket(0);
+        __is_error = true;
+        this->__buf.error_code() = errno;
+        this->__buf.error_string() = std::strerror(errno);
+        return false;
+    }
+    else {
+        __buf.set_socket(_sd);
+    }
+    return true;
+}
+
+template<typename Char>
+auto
 zpt::basic_socketstream<Char>::open_ip() -> bool {
-    int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.address()), sizeof __buf.address()) < 0) {
+    int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (::connect(_sd, &__buf.address(), sizeof __buf.address()) < 0) {
         __stream_type::setstate(std::ios::failbit);
         __buf.set_socket(0);
         __is_error = true;
@@ -795,10 +889,11 @@ zpt::basic_socketstream<Char>::open_ip() -> bool {
 template<typename Char>
 auto
 zpt::basic_socketstream<Char>::open_udp() -> bool {
+    auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(__buf.address());
     int _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     int _reuse = 1;
     setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char*)&_reuse, sizeof _reuse);
-    int _ret = inet_aton(__buf.host().c_str(), &__buf.address().sin_addr);
+    int _ret = inet_aton(__buf.host().c_str(), &_in_address.sin_addr);
     if (_ret == 0) {
         struct addrinfo _hints, *_result = NULL;
         std::memset(&_hints, 0, sizeof _hints);
@@ -815,7 +910,7 @@ zpt::basic_socketstream<Char>::open_udp() -> bool {
             return false;
         }
         struct sockaddr_in* _host_addr = (struct sockaddr_in*)_result->ai_addr;
-        memcpy(&__buf.address().sin_addr, &_host_addr->sin_addr, sizeof(struct in_addr));
+        memcpy(&_in_address.sin_addr, &_host_addr->sin_addr, sizeof(struct in_addr));
         freeaddrinfo(_result);
     }
     __buf.set_socket(_sd);
@@ -865,6 +960,12 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream(uint16_t _port)
 }
 
 template<typename Char>
+zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::string const& _path)
+  : __sockfd{ 0 } {
+    this->bind(_path);
+}
+
+template<typename Char>
 zpt::basic_serversocketstream<Char>::~basic_serversocketstream() {
     this->close();
 }
@@ -895,6 +996,8 @@ zpt::basic_serversocketstream<Char>::ready() -> bool {
 template<typename Char>
 auto
 zpt::basic_serversocketstream<Char>::bind(uint16_t _port) -> bool {
+    this->__port = _port;
+    this->__protocol = IPPROTO_TCP;
     this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (this->__sockfd < 0) {
         return false;
@@ -914,7 +1017,33 @@ zpt::basic_serversocketstream<Char>::bind(uint16_t _port) -> bool {
     _serv_addr.sin_family = AF_INET;
     _serv_addr.sin_addr.s_addr = INADDR_ANY;
     _serv_addr.sin_port = htons(_port);
-    if (::bind(this->__sockfd, (struct sockaddr*)&_serv_addr, sizeof _serv_addr) < 0) {
+    if (::bind(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_serv_addr), sizeof _serv_addr) <
+        0) {
+        ::shutdown(this->__sockfd, SHUT_RDWR);
+        ::close(this->__sockfd);
+        this->__sockfd = 0;
+        return false;
+    }
+    ::listen(this->__sockfd, 100);
+    return true;
+}
+
+template<typename Char>
+auto
+zpt::basic_serversocketstream<Char>::bind(std::string const& _path) -> bool {
+    this->__path = _path;
+    this->__protocol = UNIXPROTO_RAW;
+    this->__sockfd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (this->__sockfd < 0) {
+        return false;
+    }
+
+    struct sockaddr_un _serv_addr;
+    bzero((char*)&_serv_addr, sizeof _serv_addr);
+    _serv_addr.sun_family = AF_UNIX;
+    strncpy(_serv_addr.sun_path, _path.data(), (sizeof _serv_addr.sun_path) - 1);
+    if (::bind(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_serv_addr), sizeof _serv_addr) <
+        0) {
         ::shutdown(this->__sockfd, SHUT_RDWR);
         ::close(this->__sockfd);
         this->__sockfd = 0;
@@ -928,15 +1057,32 @@ template<typename Char>
 auto
 zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
     expect(this->__sockfd != -1, "server socket file descriptor is invalid", 500, 0);
-    struct sockaddr_in _cli_addr {};
-    socklen_t _clilen = sizeof(struct sockaddr_in);
-    int _newsockfd = ::accept(this->__sockfd, (struct sockaddr*)&_cli_addr, &_clilen);
+    switch (this->__protocol) {
+        case IPPROTO_TCP: {
+            zpt::sockaddrin_t _cli_addr{};
+            socklen_t _clilen = sizeof(zpt::sockaddrin_t);
+            int _newsockfd =
+              ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
 
-    expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
+            expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
 
-    struct linger _so_linger;
-    _so_linger.l_onoff = 1;
-    _so_linger.l_linger = 30;
-    ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
-    return zpt::stream::alloc<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+            struct linger _so_linger;
+            _so_linger.l_onoff = 1;
+            _so_linger.l_linger = 30;
+            ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
+            return zpt::stream::alloc<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+        }
+        case UNIXPROTO_RAW: {
+            zpt::sockaddrun_t _cli_addr{};
+            bzero((char*)&_cli_addr, sizeof _cli_addr);
+            _cli_addr.sun_family = AF_UNIX;
+            strncpy(_cli_addr.sun_path, this->__path.data(), (sizeof _cli_addr.sun_path) - 1);
+            int _newsockfd = ::accept(this->__sockfd, nullptr, nullptr);
+
+            expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
+
+            return zpt::stream::alloc<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+        }
+    }
+    return nullptr;
 }

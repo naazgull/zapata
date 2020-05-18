@@ -91,13 +91,15 @@ class stage
                         zpt::pipeline::event<T>& _content,
                         const char* _what,
                         const char* _description = nullptr,
-                        int _error = 500) -> bool;
+                        int _error = -1,
+                        int status = 500) -> bool;
 
     auto set_error_callback(std::function<bool(zpt::json& _event,
                                                zpt::pipeline::event<T>& _content,
                                                const char* _what,
                                                const char* _description,
-                                               int _error)> _error_callback)
+                                               int _error,
+                                               int _status)> _error_callback)
       -> zpt::pipeline::stage<T>&;
 
   private:
@@ -108,7 +110,8 @@ class stage
                        zpt::pipeline::event<T>& _content,
                        const char* _what,
                        const char* _description,
-                       int _error)>
+                       int _error,
+                       int _status)>
       __error_callback;
 };
 
@@ -148,7 +151,8 @@ class engine {
                                                zpt::pipeline::event<T>& _content,
                                                const char* _what,
                                                const char* _description,
-                                               int _error)> _error_callback)
+                                               int _error,
+                                               int status)> _error_callback)
       -> zpt::pipeline::engine<T>&;
 
   private:
@@ -292,9 +296,10 @@ zpt::pipeline::stage<T>::error_callback(zpt::json& _event,
                                         zpt::pipeline::event<T>& _content,
                                         const char* _what,
                                         const char* _description,
-                                        int _error) -> bool {
+                                        int _error,
+                                        int status) -> bool {
     if (this->__error_callback != nullptr) {
-        return this->__error_callback(_event, _content, _what, _description, _error);
+        return this->__error_callback(_event, _content, _what, _description, _error, status);
     }
     return false;
 }
@@ -305,7 +310,8 @@ zpt::pipeline::stage<T>::set_error_callback(std::function<bool(zpt::json& _event
                                                                zpt::pipeline::event<T>& _content,
                                                                const char* _what,
                                                                const char* _description,
-                                                               int _error)> _error_callback)
+                                                               int _error,
+                                                               int status)> _error_callback)
   -> zpt::pipeline::stage<T>& {
     this->__error_callback = _error_callback;
     return (*this);
@@ -413,7 +419,8 @@ zpt::pipeline::engine<T>::set_error_callback(std::function<bool(zpt::json& _even
                                                                 zpt::pipeline::event<T>& _content,
                                                                 const char* _what,
                                                                 const char* _description,
-                                                                int _error)> _error_callback)
+                                                                int _error,
+                                                                int _status)> _error_callback)
   -> zpt::pipeline::engine<T>& {
     for (auto _stage : this->__stages) {
         _stage->set_error_callback(_error_callback);

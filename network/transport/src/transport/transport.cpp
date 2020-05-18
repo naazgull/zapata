@@ -24,6 +24,12 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 #include <zapata/uri/uri.h>
 
+auto
+zpt::TRANSPORT_LAYER() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
 zpt::exchange::exchange(zpt::stream* _stream)
   : __underlying{ std::make_shared<zpt::exchange::exchange_t>(_stream) } {}
 
@@ -78,21 +84,6 @@ zpt::exchange::exchange_t::scheme() -> std::string& {
 }
 
 auto
-zpt::exchange::exchange_t::method() -> zpt::performative& {
-    return this->__method;
-}
-
-auto
-zpt::exchange::exchange_t::options() -> zpt::json& {
-    return this->__options;
-}
-
-auto
-zpt::exchange::exchange_t::headers() -> zpt::json& {
-    return this->__headers;
-}
-
-auto
 zpt::exchange::exchange_t::received() -> zpt::json& {
     return this->__received;
 }
@@ -100,11 +91,6 @@ zpt::exchange::exchange_t::received() -> zpt::json& {
 auto
 zpt::exchange::exchange_t::to_send() -> zpt::json& {
     return this->__send;
-}
-
-auto
-zpt::exchange::exchange_t::status() -> zpt::status& {
-    return this->__status;
 }
 
 auto
@@ -141,6 +127,15 @@ auto zpt::transport::operator*() -> zpt::transport::transport_t& {
 zpt::transport::transport(std::unique_ptr<zpt::transport::transport_t> _underlying)
   : __underlying{ _underlying.release() } {}
 
+zpt::transport::layer::layer() {
+    this->add_content_provider("*/*", zpt::transport::layer::translate_from_default);
+    this->add_content_provider("text", zpt::transport::layer::translate_from_raw);
+    this->add_content_provider("text/plain", zpt::transport::layer::translate_from_raw);
+    this->add_content_provider("json", zpt::transport::layer::translate_from_json);
+    this->add_content_provider("application/json", zpt::transport::layer::translate_from_json);
+    this->add_content_provider("text/x-json", zpt::transport::layer::translate_from_json);
+}
+
 auto
 zpt::transport::layer::add(std::string const& _scheme, zpt::transport _transport)
   -> zpt::transport::layer& {
@@ -158,6 +153,15 @@ zpt::transport::layer::get(std::string const& _scheme) -> zpt::transport& {
 }
 
 auto
+zpt::transport::layer::translate(std::istream& _io, std::string _mime) -> zpt::json {
+    auto _found = this->__content_providers.find(_mime);
+    if (_found != this->__content_providers.end()) {
+        return _found->second(_io);
+    }
+    return zpt::undefined;
+}
+
+auto
 zpt::transport::layer::begin() -> std::map<std::string, zpt::transport>::iterator {
     return this->__underlying.begin();
 }
@@ -170,6 +174,40 @@ zpt::transport::layer::end() -> std::map<std::string, zpt::transport>::iterator 
 auto
 zpt::transport::layer::resolve(std::string _uri) -> zpt::exchange {
     auto _parsed = zpt::uri::parse(_uri);
-    zlog(_parsed, zpt::debug);
     return this->get(_parsed["scheme"])->resolve(_parsed);
+}
+
+auto
+zpt::transport::layer::add_content_provider(std::string const& _mime,
+                                            std::function<zpt::json(std::istream&)> _callback)
+  -> zpt::transport::layer& {
+    this->__content_providers.insert(std::make_pair(_mime, _callback));
+    return (*this);
+}
+
+auto
+zpt::transport::layer::translate_from_default(std::istream& _io) -> zpt::json {
+    try {
+        return zpt::transport::layer::translate_from_json(_io);
+    }
+    catch (...) {
+    }
+    return zpt::transport::layer::translate_from_raw(_io);
+}
+
+auto
+zpt::transport::layer::translate_from_json(std::istream& _io) -> zpt::json {
+    zpt::json _to_return;
+    _io >> _to_return;
+    return _to_return;
+}
+
+auto
+zpt::transport::layer::translate_from_raw(std::istream& _io) -> zpt::json {
+    std::string _content;
+    _io.seekg(0, std::ios::end);
+    _content.reserve(_io.tellg());
+    _io.seekg(0, std::ios::beg);
+    _content.assign((std::istreambuf_iterator<char>(_io)), std::istreambuf_iterator<char>());
+    return { _content };
 }

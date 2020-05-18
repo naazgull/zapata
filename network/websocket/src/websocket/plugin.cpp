@@ -36,6 +36,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
           zpt::WEBSOCKET_SERVER_SOCKET(),
           static_cast<uint16_t>(static_cast<unsigned int>(_config["port"])));
+
         _boot.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
             zlog("Starting WebSocket transport on port " << _config["port"], zpt::info);

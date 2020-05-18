@@ -64,7 +64,8 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
                         zpt::json _content,
                         const char* _what,
                         const char* _description = nullptr,
-                        int _error = 500) -> bool {
+                        int _error = -1,
+                        int _status = 500) -> bool {
         return true;
     }
 

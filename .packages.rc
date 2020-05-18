@@ -11,11 +11,12 @@ export projects=(
        parsers/uri
        common/graph
        common/events
-       engines/startup
        network/transport
+       engines/startup
        network/websocket
        network/http
        network/local
+       network/tcp
        engines/pipeline
        engines/rest
        engines/dom

@@ -13,14 +13,14 @@
 //%debug
 %no-lines
 
-%left DOUBLE_DOT SLASH AT QMARK EQ E STRING FUNCTION_PARAM
+%left DOUBLE_DOT SLASH AT QMARK EQ E STRING FUNCTION_PARAM CARDINAL
 
 %%
 
 exp :
-    scheme server path params
+    scheme server path params anchor
 |
-	scheme path params
+	scheme path params anchor
 ;
 
 scheme :
@@ -201,3 +201,18 @@ function_parameters :
     }
     function_parameters
 ;
+
+anchor :
+
+|
+	CARDINAL STRING
+    {
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "anchor" << d_scanner.matched();
+        }
+        else {
+            (*d_scanner) << d_scanner.matched();
+        }
+    }
+;
+

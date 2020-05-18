@@ -39,8 +39,8 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
           auto& _message = _in.content();
           auto& _transport = _layer.get(_message->scheme());
           _transport->receive_request(_message);
-          _in.set_path(std::string("/ROOT/") + zpt::rest::to_str(_message->method()) +
-                       _message->uri());
+          _in.set_path(std::string("/ROOT/") +
+                       zpt::rest::to_str(_message->received()["method"]->intr()) + _message->uri());
           _in.next_stage();
       });
 
@@ -73,12 +73,14 @@ zpt::rest::engine::on_error(zpt::json& _path,
                             zpt::pipeline::event<zpt::exchange>& _event,
                             const char* _what,
                             const char* _description,
-                            int _error) -> bool {
-    auto& _message = _event.content();
-    _message->status() = _error;
-    _message->to_send() = { "message", std::string{ _what } };
+                            int _error,
+                            int _status) -> bool {
+    auto& _channel = _event.content();
+    _channel->to_send() = {
+        "status", _status, "body", { "error", _error, "message", std::string{ _what } }
+    };
     if (_description != nullptr) {
-        _message->to_send() << "description" << std::string{ _description };
+        _channel->to_send()["body"] << "description" << std::string{ _description };
     }
     _event.next_stage();
     return true;

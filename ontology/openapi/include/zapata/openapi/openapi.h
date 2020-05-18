@@ -40,7 +40,7 @@ class engine : public zpt::dom::engine {
                                         0,
                                         "max_queue_spin_sleep",
                                         5000 });
-    virtual ~engine() = default;
+    virtual ~engine() override = default;
 
     auto add_source(zpt::json _source) -> zpt::openapi::engine&;
     auto traverse() -> zpt::openapi::engine&;
@@ -49,10 +49,15 @@ class engine : public zpt::dom::engine {
 
   private:
     zpt::json __sources{ zpt::json::object() };
-    zpt::json __root{ zpt::json::object() };
+    zpt::json __root{ nullptr };
 
-    auto evaluate_ref(zpt::json _document) -> zpt::openapi::engine&;
+    auto evaluate_ref(zpt::json _document, std::string _parent_key, zpt::json _parent)
+      -> zpt::openapi::engine&;
 };
+
+auto
+process_path(zpt::dom::element& _element, zpt::dom::element& _root, zpt::json _source_config)
+  -> void;
 
 } // namespace openapi
 } // nanespace zpt

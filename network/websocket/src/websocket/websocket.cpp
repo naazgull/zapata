@@ -22,6 +22,7 @@
 
 #include <zapata/net/transport/websocket.h>
 #include <zapata/base.h>
+#include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
 auto
@@ -146,16 +147,13 @@ auto
 zpt::net::transport::websocket::receive_reply(zpt::exchange& _channel) -> void {
     auto [_body, _] = zpt::net::ws::read(_channel->stream());
     if (_body.length() != 0) {
-        std::istringstream _iss;
-        _iss.str(_body);
-        zpt::json _content;
-        try {
-            _iss >> _content;
-            _channel->received() = _content;
-        }
-        catch (...) {
-            _channel->received() = { "body", _body };
-        }
+        auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+        std::istringstream _is;
+        _is.str(_body);
+
+        std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
+        zpt::json _content = _layer.translate(_is, _content_type);
+        _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
         _channel->keep_alive() = true;
     }
 }
@@ -167,8 +165,8 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
            500,
            0);
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'", 500, 0);
-    auto _stream =
-      zpt::stream::alloc<zpt::basic_socketstream<char>>(_uri["domain"], _uri["port"]->intr());
+    auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
+      _uri["domain"]->str(), static_cast<uint16_t>(_uri["port"]->intr()));
     zpt::exchange _to_return{ _stream.release() };
     _to_return //
       ->scheme()
@@ -178,7 +176,10 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
       .assign(zpt::path::join(_uri["path"]));
     _to_return->keep_alive() = true;
     if (_uri["scheme_options"]->ok()) {
-        _to_return->options() << "scheme" << _uri["scheme_options"];
+        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
+    }
+    else {
+        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
     }
     return _to_return;
 }

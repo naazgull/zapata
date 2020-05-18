@@ -27,6 +27,9 @@
 #include <zapata/lockfree.h>
 
 namespace zpt {
+auto
+TRANSPORT_LAYER() -> ssize_t&;
+
 class exchange {
   private:
     class exchange_t {
@@ -44,12 +47,8 @@ class exchange {
         auto uri() -> std::string&;
         auto version() -> std::string&;
         auto scheme() -> std::string&;
-        auto method() -> zpt::performative&;
-        auto options() -> zpt::json&;
-        auto headers() -> zpt::json&;
         auto received() -> zpt::json&;
         auto to_send() -> zpt::json&;
-        auto status() -> zpt::status&;
         auto keep_alive() -> bool&;
 
       private:
@@ -57,12 +56,8 @@ class exchange {
         std::string __uri;
         std::string __version;
         std::string __scheme;
-        zpt::performative __method{ 0 };
-        zpt::json __options{ zpt::json::object() };
-        zpt::json __headers{ zpt::json::object() };
         zpt::json __received{ zpt::undefined };
         zpt::json __send{ zpt::undefined };
-        zpt::status __status{ 404 };
         bool __keep_alive{ false };
     };
 
@@ -80,8 +75,7 @@ class exchange {
     auto operator*() -> zpt::exchange::exchange_t&;
 
     friend auto operator<<(std::ostream& _out, zpt::exchange& _in) -> std::ostream& {
-        _out << _in->method() << " " << _in->scheme() << " " << _in->uri() << std::endl
-             << zpt::pretty(_in->headers()) << std::endl
+        _out << _in->scheme() << ":" << _in->uri() << std::endl
              << zpt::pretty(_in->received()) << std::flush;
         return _out;
     }
@@ -116,11 +110,13 @@ class transport {
 
     class layer {
       public:
-        layer() = default;
+        layer();
         virtual ~layer() = default;
 
         auto add(std::string const& _scheme, zpt::transport _transport) -> zpt::transport::layer&;
         auto get(std::string const& _scheme) -> zpt::transport&;
+
+        auto translate(std::istream& _io, std::string _mime = "*/*") -> zpt::json;
 
         auto begin() -> std::map<std::string, zpt::transport>::iterator;
         auto end() -> std::map<std::string, zpt::transport>::iterator;
@@ -129,12 +125,20 @@ class transport {
 
       private:
         std::map<std::string, zpt::transport> __underlying;
+        std::map<std::string, std::function<zpt::json(std::istream&)>> __content_providers;
+
+        auto add_content_provider(std::string const& _scheme,
+                                  std::function<zpt::json(std::istream&)> _callback)
+          -> zpt::transport::layer&;
+        static auto translate_from_default(std::istream& _io) -> zpt::json;
+        static auto translate_from_json(std::istream& _io) -> zpt::json;
+        static auto translate_from_raw(std::istream& _io) -> zpt::json;
     };
 
   private:
-    transport(std::unique_ptr<zpt::transport::transport_t> _underlying);
-
     std::shared_ptr<zpt::transport::transport_t> __underlying;
+
+    transport(std::unique_ptr<zpt::transport::transport_t> _underlying);
 };
 } // namespace zpt
 

@@ -65,7 +65,7 @@ zpt::UPnP::UPnP(zpt::json _options)
 
     char _accept_lo = 1;
     setsockopt(this->__underlying->buffer().get_socket(),
-               IPPROTO_IP,
+               IPPROTO_TCP,
                IP_MULTICAST_LOOP,
                (char*)&_accept_lo,
                sizeof _accept_lo);
@@ -84,7 +84,7 @@ zpt::UPnP::UPnP(zpt::json _options)
     struct in_addr _local_interface;
     _local_interface.s_addr = inet_addr(_ip.data());
     setsockopt(this->__underlying->buffer().get_socket(),
-               IPPROTO_IP,
+               IPPROTO_TCP,
                IP_MULTICAST_IF,
                (char*)&_local_interface,
                sizeof _local_interface);
@@ -102,7 +102,7 @@ zpt::UPnP::UPnP(zpt::json _options)
     _group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->str().data());
     _group_addr.imr_interface.s_addr = inet_addr(_ip.data());
     setsockopt(this->__underlying->buffer().get_socket(),
-               IPPROTO_IP,
+               IPPROTO_TCP,
                IP_ADD_MEMBERSHIP,
                (char*)&_group_addr,
                sizeof _group_addr);

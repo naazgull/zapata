@@ -60,7 +60,8 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
                          zpt::pipeline::event<zpt::exchange>& _event,
                          const char* _what,
                          const char* _description = nullptr,
-                         int _error = 500) -> bool;
+                         int _error = -1,
+                         int _status = 500) -> bool;
 };
 
 auto

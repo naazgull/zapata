@@ -31,37 +31,68 @@ zpt::OPENAPI_ENGINE() -> ssize_t& {
 }
 
 zpt::openapi::engine::engine(zpt::json _configuration)
-  : zpt::dom::engine{ 2, _configuration } {}
+  : zpt::dom::engine{ 2, _configuration } {
+    zpt::dom::engine::add_listener(
+      0, "/paths", [=](zpt::pipeline::event<zpt::dom::element>& _event) mutable -> void {
+          zpt::dom::element _root{ "/ROOT", "ROOT", this->__root["document"] };
+          zpt::openapi::process_path(_event.content(), _root, this->__root["config"]);
+      });
+}
 
 auto
 zpt::openapi::engine::add_source(zpt::json _source) -> zpt::openapi::engine& {
-    auto _uri = zpt::uri::parse(_source["source"]->str());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _transport = _layer.get(_uri["scheme"]->str());
+    try {
+        auto _uri = zpt::uri::parse(_source["$ref"]->str());
+        auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+        auto& _transport = _layer.get(_uri["scheme"]->str());
 
-    zpt::exchange _channel = _transport->resolve(_uri);
-    _transport->send_request(_channel);
-    _transport->receive_reply(_channel);
+        zpt::exchange _channel = _transport->resolve(_uri);
+        _transport->send_request(_channel);
+        _transport->receive_reply(_channel);
+        zpt::json _document{ "config", _source, "document", _channel->received()["body"] };
 
-    // zpt::json _document;
-    // _request->stream() >> _document;
-    // this->__sources << _uri << zpt::json{ "config", _source, "document", _document };
-    zlog(_channel, zpt::info);
-
+        this->__sources << _source["$ref"]->str() << _document;
+        this->evaluate_ref(_document["document"], "document", _document);
+    }
+    catch (...) {
+    }
     return (*this);
 }
 
 auto
 zpt::openapi::engine::traverse() -> zpt::openapi::engine& {
-    zlog(this->__sources, zpt::debug);
+    for (auto [_, __, _document] : this->__sources) {
+        if (_document["config"]["target"]->ok()) {
+            this->__root = _document;
+            zpt::dom::engine::traverse(_document["document"]);
+        }
+    }
     return (*this);
 }
 
 auto
-zpt::openapi::engine::evaluate_ref(zpt::json _document) -> zpt::openapi::engine& {
+zpt::openapi::engine::evaluate_ref(zpt::json _document, std::string _parent_key, zpt::json _parent)
+  -> zpt::openapi::engine& {
     for (auto [_, _key, _value] : _document) {
         if (_key == "$ref") {
+            if (!this->__sources[_value->str()]->ok()) {
+                this->add_source({ _key, _value });
+            }
+            if (this->__sources[_value->str()]->ok()) {
+                _parent << _parent_key << this->__sources[_value->str()]["document"];
+            }
+            return (*this);
+        }
+        else {
+            this->evaluate_ref(_value, _key, _document);
         }
     }
     return (*this);
+}
+
+auto
+zpt::openapi::process_path(zpt::dom::element& _element,
+                           zpt::dom::element& _root,
+                           zpt::json _source_config) -> void {
+    zlog(zpt::pretty(_root.content()), zpt::info)
 }

@@ -105,9 +105,18 @@ zpt::dom::engine::traverse(zpt::json _document, std::string _path, zpt::json _pa
         _path = "/ROOT";
     }
     for (auto [_idx, _key, _content] : _document) {
-        std::string _sub_path = (_document->is_array() ? std::to_string(_idx) : _key);
+        std::string _name = zpt::r_replace(_key, "/", "_");
+        _name = zpt::r_replace(_name, ":", "_");
+        _name = zpt::r_replace(_name, ".", "_");
+        _name = zpt::r_replace(_name, "{", "_");
+        _name = zpt::r_replace(_name, "}", "_");
+        _name = zpt::r_replace(_name, "?", "_");
+        _name = zpt::r_replace(_name, "=", "_");
+        _name = zpt::r_replace(_name, "&", "_");
+        _name = zpt::r_replace(_name, "#", "_");
+        std::string _sub_path = (_document->is_array() ? std::to_string(_idx) : _name);
         std::string _xpath{ _path + std::string{ "/" } + _sub_path };
-        zlog(_xpath, zpt::trace);
+        zlog(_xpath, zpt::info);
         this->trigger(_xpath, zpt::dom::element{ _xpath, _sub_path, _content, _document });
         this->traverse(_content, _xpath, _document);
     }
@@ -119,7 +128,8 @@ zpt::dom::engine::on_error(zpt::json _path,
                            zpt::pipeline::event<zpt::dom::element>& _event,
                            const char* _what,
                            const char* _description,
-                           int _error) -> bool {
+                           int _error,
+                           int status) -> bool {
     zlog("error found while processing '" << _event.content().xpath() << "': " << _what << ", "
                                           << _description,
          zpt::error);

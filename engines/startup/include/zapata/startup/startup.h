@@ -36,10 +36,6 @@ auto
 BOOT_ENGINE() -> ssize_t&;
 auto
 GLOBAL_CONFIG() -> ssize_t&;
-auto
-STREAM_POLLING() -> ssize_t&;
-auto
-TRANSPORT_LAYER() -> ssize_t&;
 
 class plugin {
   private:
@@ -120,7 +116,8 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
                         bool& _content,
                         const char* _what,
                         const char* _description = nullptr,
-                        int _error = 500) -> bool;
+                        int _error = -1,
+                        int status = 500) -> bool;
 
     auto to_string() -> std::string;
 
@@ -146,6 +143,7 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     zpt::json& __configuration;
     std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
     std::map<std::string, zpt::plugin> __plugins;
+    std::vector<std::string> __load_order;
     zpt::lf::spin_lock __plugin_list_lock;
     std::vector<std::thread> __workers;
     std::atomic<bool> __unloaded{ false };

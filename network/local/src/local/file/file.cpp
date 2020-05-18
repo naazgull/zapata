@@ -22,6 +22,7 @@
 
 #include <zapata/net/transport/local.h>
 #include <zapata/base.h>
+#include <zapata/globals/globals.h>
 
 auto
 zpt::net::transport::file::receive_request(zpt::exchange& _channel) -> void {
@@ -30,24 +31,20 @@ zpt::net::transport::file::receive_request(zpt::exchange& _channel) -> void {
 
 auto
 zpt::net::transport::file::send_reply(zpt::exchange& _channel) -> void {
-    this->send_request(_channel);
 }
 
 auto
 zpt::net::transport::file::send_request(zpt::exchange& _channel) -> void {
-    if (_channel->to_send()->ok()) {
-    }
 }
 
 auto
 zpt::net::transport::file::receive_reply(zpt::exchange& _channel) -> void {
-    zpt::json _content;
-    try {
-        _channel->stream() >> _content;
-        _channel->received() = _content;
-    }
-    catch (...) {
-    }
+    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _is = reinterpret_cast<std::istream&>(*(_channel->stream()));
+
+    std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
+    zpt::json _content = _layer.translate(_is, _content_type);
+    _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
     _channel->keep_alive() = true;
 }
 
@@ -66,7 +63,10 @@ zpt::net::transport::file::resolve(zpt::json _uri) -> zpt::exchange {
       .assign(_path);
     _to_return->keep_alive() = true;
     if (_uri["scheme_options"]->ok()) {
-        _to_return->options() << "scheme" << _uri["scheme_options"];
+        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
+    }
+    else {
+        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
     }
     return _to_return;
 }

@@ -1,6 +1,5 @@
 /* include/zapata/net/transport/websocket/config.h.  Generated from config.h.in by configure.  */
-/* include/zapata/net/transport/websocket/config.h.in.  Generated from configure.ac by autoheader.
- */
+/* include/zapata/net/transport/websocket/config.h.in.  Generated from configure.ac by autoheader.  */
 
 #include <zapata/net/transport/websocket/unconfig.h>
 

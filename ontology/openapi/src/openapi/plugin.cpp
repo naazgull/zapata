@@ -35,6 +35,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
         auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
         auto& _openapi = zpt::globals::get<zpt::openapi::engine>(zpt::OPENAPI_ENGINE());
+        _openapi.start_threads();
 
         for (auto [_idx, _key, _source] : _config["openapi"]) {
             _openapi.add_source(_source);

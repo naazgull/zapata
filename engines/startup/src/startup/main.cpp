@@ -61,9 +61,10 @@ main(int _argc, char* _argv[]) -> int {
 
         auto& _boot = zpt::globals::alloc<zpt::startup::engine>(zpt::BOOT_ENGINE(), _parameters);
         auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
-        zpt::globals::alloc<zpt::stream::polling>(zpt::STREAM_POLLING(),
-                                                  _config["limits"]["max_producer_threads"],
-                                                  _config["limits"]["max_queue_spin_sleep"]);
+        zpt::globals::alloc<zpt::stream::polling>(
+          zpt::STREAM_POLLING(),
+          static_cast<int>(_config["limits"]["max_producer_threads"]) + 1,
+          _config["limits"]["max_queue_spin_sleep"]);
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         _boot //
           .add_thread(
