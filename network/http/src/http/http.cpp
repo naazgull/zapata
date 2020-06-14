@@ -94,7 +94,17 @@ zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _
     if (!_channel->received()->ok()) {
         _channel->received() = zpt::json::object();
     }
-    _channel->received() << "method" << _request->method();
+    _channel->received() << "performative" << _request->method();
+    return (*this);
+}
+
+auto
+zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _response)
+  -> zpt::net::transport::http& {
+    if (!_channel->received()->ok()) {
+        _channel->received() = zpt::json::object();
+    }
+    _channel->received() << "performative" << zpt::http::Reply;
     return (*this);
 }
 
@@ -129,10 +139,65 @@ zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _ch
 auto
 zpt::net::transport::http::set_method(zpt::http::req& _request, zpt::exchange& _channel)
   -> zpt::net::transport::http& {
-    if (_channel->to_send()["method"]->ok()) {
-        _request->method(static_cast<unsigned int>(_channel->to_send()["method"]));
+    if (_channel->to_send()["performative"]->ok()) {
+        _request->method(static_cast<unsigned int>(_channel->to_send()["performative"]));
     }
     return (*this);
+}
+
+auto
+zpt::net::transport::http::receive(zpt::exchange& _channel) -> void {
+    if (_channel->stream().state() == zpt::stream_state::IDLE) {
+        this->receive_request(_channel);
+        _channel->stream().state() = zpt::stream_state::PROCESSING;
+    }
+    else if (_channel->stream().state() == zpt::stream_state::WAITING) {
+        this->receive_reply(_channel);
+        _channel->stream().state() = zpt::stream_state::IDLE;
+    }
+}
+
+auto
+zpt::net::transport::http::send(zpt::exchange& _channel) -> void {
+    if (_channel->stream().state() == zpt::stream_state::IDLE) {
+        this->send_request(_channel);
+        _channel->stream().state() = zpt::stream_state::WAITING;
+    }
+    else if (_channel->stream().state() == zpt::stream_state::PROCESSING) {
+        this->send_reply(_channel);
+        _channel->stream().state() = zpt::stream_state::IDLE;
+    }
+}
+
+auto
+zpt::net::transport::http::resolve(zpt::json _uri) -> zpt::exchange {
+    expect(_uri["scheme"]->ok() && _uri["domain"]->ok(),
+           "URI parameter must contain 'scheme', 'domain' and 'port'",
+           500,
+           0);
+    expect(_uri["scheme"]->str().find("http") == 0, "scheme must be 'http(s)'", 500, 0);
+    auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
+      _uri["domain"],
+      _uri["port"]->ok() ? _uri["port"]->intr() : 80,
+      _uri["scheme"]->str() == "https");
+    _stream->transport("http");
+    zpt::exchange _to_return{ _stream.release() };
+    _to_return->to_send() = {
+        "headers",
+        { "Host",
+          (_uri["domain"]->str() + std::string{ ":" } +
+           (_uri["port"]->ok() ? static_cast<std::string>(_uri["port"]) : "80")) }
+    };
+    _to_return //
+      ->scheme()
+      .assign(_uri["scheme"]->str());
+    _to_return //
+      ->uri()
+      .assign(zpt::path::join(_uri["path"]));
+    _to_return //
+      ->version()
+      .assign("1.1");
+    return _to_return;
 }
 
 auto
@@ -159,21 +224,26 @@ zpt::net::transport::http::receive_request(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::send_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::receive_reply(zpt::exchange& _channel) -> void {
     zpt::http::rep _response;
-    zpt::init(_response);
+    _channel->stream() >> _response;
+    zlog("Received HTTP message:\n" << _response, zpt::trace);
 
-    zlog(zpt::pretty(_channel->to_send()), zpt::trace);
-    zpt::http::status _status =
-      static_cast<zpt::http::status>(_channel->to_send()["status"]->intr());
-    _response->status(_status);
-    _response->version(_channel->version());
-    if (_channel->to_send()["body"]->ok()) {
-        _response->body(_channel->to_send()["body"]);
-        _response->header("Content-Type", _channel->to_send()["headers"]["Content-Type"]);
-    }
-    zlog("Sending HTTP message:\n" << _response, zpt::trace);
-    _channel->stream() << _response << std::flush;
+    this //
+      ->set_headers(_channel, *_response)
+      .set_body(_channel, *_response)
+      .set_method(_channel, _response)
+      .set_status(_channel, _response);
+    _channel //
+      ->version()
+      .assign(_response->version());
+    _channel //
+      ->scheme()
+      .assign("http");
+    _channel //
+      ->uri()
+      .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
+    _channel->keep_alive() = (_response->header("Connection") == "keep-alive");
 }
 
 auto
@@ -185,58 +255,31 @@ zpt::net::transport::http::send_request(zpt::exchange& _channel) -> void {
       ->set_method(_request, _channel)
       .set_headers(_request, _channel)
       .set_body(_request, _channel);
-    _request->method(static_cast<unsigned int>(_channel->to_send()["method"]));
+    _request->method(static_cast<unsigned int>(_channel->to_send()["performative"]));
     _request->url(_channel->uri());
     _request->version(_channel->version());
-    _channel->stream() << _request << std::flush;
     zlog("Sending HTTP message:\n" << _request, zpt::trace);
+    _channel->stream() << _request << std::flush;
 }
 
 auto
-zpt::net::transport::http::receive_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::send_reply(zpt::exchange& _channel) -> void {
     zpt::http::rep _response;
-    _channel->stream() >> _response;
-    zlog("Received HTTP message:\n" << _response, zpt::trace);
+    zpt::init(_response);
 
-    this //
-      ->set_headers(_channel, *_response)
-      .set_body(_channel, *_response)
-      .set_status(_channel, _response);
-    _channel //
-      ->version()
-      .assign(_response->version());
-    _channel //
-      ->scheme()
-      .assign("http");
-    _channel->keep_alive() = false;
-}
-
-auto
-zpt::net::transport::http::resolve(zpt::json _uri) -> zpt::exchange {
-    expect(_uri["scheme"]->ok() && _uri["domain"]->ok(),
-           "URI parameter must contain 'scheme', 'domain' and 'port'",
-           500,
-           0);
-    expect(_uri["scheme"]->str().find("http") == 0, "scheme must be 'http(s)'", 500, 0);
-    auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
-      _uri["domain"],
-      _uri["port"]->ok() ? _uri["port"]->intr() : 80,
-      _uri["scheme"]->str() == "https");
-    zpt::exchange _to_return{ _stream.release() };
-    _to_return->to_send() = {
-        "headers",
-        { "Host",
-          (_uri["domain"]->str() + std::string{ ":" } +
-           (_uri["port"]->ok() ? static_cast<std::string>(_uri["port"]) : "80")) }
-    };
-    _to_return //
-      ->scheme()
-      .assign(_uri["scheme"]->str());
-    _to_return //
-      ->uri()
-      .assign(zpt::path::join(_uri["path"]));
-    _to_return //
-      ->version()
-      .assign("1.1");
-    return _to_return;
+    _response->version(_channel->version());
+    if (_channel->to_send()->ok()) {
+        zpt::http::status _status =
+          static_cast<zpt::http::status>(_channel->to_send()["status"]->intr());
+        _response->status(_status);
+        if (_channel->to_send()["body"]->ok()) {
+            _response->body(_channel->to_send()["body"]);
+            _response->header("Content-Type", _channel->to_send()["headers"]["Content-Type"]);
+        }
+    }
+    else {
+        _response->status(zpt::http::HTTP404);
+    }
+    zlog("Sending HTTP message:\n" << _response, zpt::trace);
+    _channel->stream() << _response << std::flush;
 }

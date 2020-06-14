@@ -51,9 +51,15 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
     engine(size_t _pipeline_size, zpt::json _configuration);
     virtual ~engine() = default;
 
+    auto add_listener(std::string _pattern,
+                      std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
+      -> zpt::rest::engine&;
     auto add_listener(size_t _stage,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
+      -> zpt::rest::engine&;
+    auto request(std::string _uri,
+                 std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
       -> zpt::rest::engine&;
 
     static auto on_error(zpt::json& _path,
@@ -62,6 +68,10 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
                          const char* _description = nullptr,
                          int _error = -1,
                          int _status = 500) -> bool;
+
+  private:
+    zpt::lf::spin_lock __pending_lock;
+    std::map<std::string, std::function<void(zpt::pipeline::event<zpt::exchange>&)>> __pending;
 };
 
 auto

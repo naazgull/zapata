@@ -55,7 +55,7 @@ class URILexerBase {
     };
     std::string d_server_part;
     std::string d_path_helper;
-    bool d_part_is_placeholder{false};
+    bool d_part_is_placeholder{ false };
     StartCondition_ d_intermediate_state;
 
   private:

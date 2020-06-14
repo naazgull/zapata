@@ -25,22 +25,12 @@
 #include <zapata/globals/globals.h>
 
 auto
-zpt::net::transport::file::receive_request(zpt::exchange& _channel) -> void {
-    this->receive_reply(_channel);
-}
+zpt::net::transport::file::send(zpt::exchange& _channel) -> void {}
 
 auto
-zpt::net::transport::file::send_reply(zpt::exchange& _channel) -> void {
-}
-
-auto
-zpt::net::transport::file::send_request(zpt::exchange& _channel) -> void {
-}
-
-auto
-zpt::net::transport::file::receive_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::file::receive(zpt::exchange& _channel) -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = reinterpret_cast<std::istream&>(*(_channel->stream()));
+    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
     std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
     zpt::json _content = _layer.translate(_is, _content_type);
@@ -54,6 +44,7 @@ zpt::net::transport::file::resolve(zpt::json _uri) -> zpt::exchange {
     expect(_uri["scheme"] == "file", "scheme must be 'file'", 500, 0);
     std::string _path{ zpt::path::join(_uri["path"]) };
     auto _stream = zpt::stream::alloc<std::basic_fstream<char>>(_path);
+    _stream->transport("file");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //
       ->scheme()

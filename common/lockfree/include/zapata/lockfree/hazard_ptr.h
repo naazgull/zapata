@@ -223,7 +223,7 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
         }
     }
 
-    zlog("thread " << std::this_thread::get_id() << ": holding " << this->get_thread_held_count()
+    zlog("Thread " << std::this_thread::get_id() << ": holding " << this->get_thread_held_count()
                    << " pointers in " << K << " positions between " << (_idx * K) << " and "
                    << ((_idx + 1) * K),
          zpt::debug);

@@ -55,7 +55,7 @@ zpt::net::ws::handshake(zpt::stream& _stream) -> void {
 auto
 zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     std::string _out;
-    unsigned char _hdr;
+    unsigned char _hdr = 0;
     _stream >> std::noskipws >> _hdr;
 
     int _op_code = _hdr & 0x0F;
@@ -127,24 +127,14 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
 }
 
 auto
-zpt::net::transport::websocket::receive_request(zpt::exchange& _channel) -> void {
-    this->receive_reply(_channel);
-}
-
-auto
-zpt::net::transport::websocket::send_reply(zpt::exchange& _channel) -> void {
-    this->send_request(_channel);
-}
-
-auto
-zpt::net::transport::websocket::send_request(zpt::exchange& _channel) -> void {
+zpt::net::transport::websocket::send(zpt::exchange& _channel) -> void {
     if (_channel->to_send()->ok()) {
         zpt::net::ws::write(_channel->stream(), _channel->to_send());
     }
 }
 
 auto
-zpt::net::transport::websocket::receive_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::websocket::receive(zpt::exchange& _channel) -> void {
     auto [_body, _] = zpt::net::ws::read(_channel->stream());
     if (_body.length() != 0) {
         auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
@@ -152,10 +142,31 @@ zpt::net::transport::websocket::receive_reply(zpt::exchange& _channel) -> void {
         _is.str(_body);
 
         std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
-        zpt::json _content = _layer.translate(_is, _content_type);
-        _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
-        _channel->keep_alive() = true;
+        _channel->received() =
+          _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
+
+        _channel //
+          ->version()
+          .assign("1.0");
+        _channel //
+          ->scheme()
+          .assign("ws");
+
+        if (!_channel->received()["performative"]->ok() || _channel->received()["status"]->ok()) {
+            _channel->received() << "performative" << 7;
+        }
+        if (!_channel->received()["resource"]->ok()) {
+            _channel //
+              ->uri()
+              .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
+        }
+        else {
+            _channel //
+              ->uri()
+              .assign(_channel->received()["resource"]);
+        }
     }
+    _channel->keep_alive() = true;
 }
 
 auto
@@ -167,6 +178,7 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'", 500, 0);
     auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
       _uri["domain"]->str(), static_cast<uint16_t>(_uri["port"]->intr()));
+    _stream->transport("ws");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //
       ->scheme()

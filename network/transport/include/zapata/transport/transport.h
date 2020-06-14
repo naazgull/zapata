@@ -88,10 +88,8 @@ class transport {
   public:
     class transport_t {
       public:
-        virtual auto receive_request(zpt::exchange& _channel) -> void = 0;
-        virtual auto send_reply(zpt::exchange& _channel) -> void = 0;
-        virtual auto send_request(zpt::exchange& _channel) -> void = 0;
-        virtual auto receive_reply(zpt::exchange& _channel) -> void = 0;
+        virtual auto receive(zpt::exchange& _channel) -> void = 0;
+        virtual auto send(zpt::exchange& _channel) -> void = 0;
         virtual auto resolve(zpt::json _uri) -> zpt::exchange = 0;
     };
 

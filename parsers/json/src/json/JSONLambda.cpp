@@ -17,7 +17,7 @@ zpt::JSONContext::unpack() -> void* {
 }
 
 zpt::context::context(void* _target)
-  : __underlying{ std::make_shared<zpt::JSONContext>(zpt::JSONContext(_target)) } {}
+  : __underlying{ std::make_shared<zpt::JSONContext>(_target) } {}
 
 zpt::context::~context() {}
 
@@ -87,7 +87,7 @@ zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) -> zpt::json {
 }
 
 zpt::lambda::lambda()
-  : std::shared_ptr<zpt::JSONLambda>(std::make_shared<zpt::JSONLambda>(zpt::JSONLambda())) {}
+  : std::shared_ptr<zpt::JSONLambda>(std::make_shared<zpt::JSONLambda>()) {}
 
 zpt::lambda::lambda(std::shared_ptr<zpt::JSONLambda> _target)
   : std::shared_ptr<zpt::JSONLambda>(_target) {}

@@ -31,15 +31,13 @@ auto
 UNIX_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
-class unix : public zpt::transport::transport_t {
+class unix_socket : public zpt::transport::transport_t {
   public:
-    unix() = default;
-    virtual ~unix() = default;
+    unix_socket() = default;
+    virtual ~unix_socket() = default;
 
-    auto receive_request(zpt::exchange& _channel) -> void override;
-    auto send_reply(zpt::exchange& _channel) -> void override;
-    auto send_request(zpt::exchange& _channel) -> void override;
-    auto receive_reply(zpt::exchange& _channel) -> void override;
+    auto receive(zpt::exchange& _channel) -> void override;
+    auto send(zpt::exchange& _channel) -> void override;
     auto resolve(zpt::json _uri) -> zpt::exchange override;
 };
 class file : public zpt::transport::transport_t {
@@ -47,10 +45,8 @@ class file : public zpt::transport::transport_t {
     file() = default;
     virtual ~file() = default;
 
-    auto receive_request(zpt::exchange& _channel) -> void override;
-    auto send_reply(zpt::exchange& _channel) -> void override;
-    auto send_request(zpt::exchange& _channel) -> void override;
-    auto receive_reply(zpt::exchange& _channel) -> void override;
+    auto receive(zpt::exchange& _channel) -> void override;
+    auto send(zpt::exchange& _channel) -> void override;
     auto resolve(zpt::json _uri) -> zpt::exchange override;
 };
 } // namespace transport

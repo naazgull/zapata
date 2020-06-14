@@ -124,5 +124,30 @@ do
 	    fi
         popd > /dev/null
 	    ;;
+    format)
+        pushd ${package} > /dev/null
+        change_list=($(find . -name "*.cpp" -o -name "*.h"))
+        for f in ${change_list[@]}
+        do
+            echo "checking '${f}'"
+            dos2unix ${f}
+            clang-format -i --style=file ${f}
+	        if [[ $? != 0 ]]
+	        then
+		        exit -1
+	        fi
+        done
+        ;;
+    tidy)
+        pushd ${package} > /dev/null
+        # clang-tidy --format-style=file --config= $(find . -name "*.cpp")
+        #  --fix-errors --fix
+        # '-*,cppcoreguidelines*,clang-analyzer-cplusplus*,modernize*,bugprone*,-cppcoreguidelines-pro-*,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-init-variables'
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
+        popd > /dev/null
+        ;;
     esac
 done

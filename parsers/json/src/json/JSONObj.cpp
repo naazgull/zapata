@@ -93,12 +93,13 @@ zpt::JSONObjT::key_for(size_t _idx) -> std::string {
 
 auto
 zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
-    std::istringstream _iss(_path);
+    std::istringstream _iss;
     std::string _part;
     std::string _remainder;
 
-    getline(_iss, _part, _separator[0]);
-    getline(_iss, _remainder);
+    _iss.str(_path);
+    std::getline(_iss, _part, _separator[0]);
+    std::getline(_iss, _remainder);
     zpt::trim(_remainder);
     zpt::json _current = (*this)[_part];
     if (!_current->ok()) {

@@ -26,6 +26,49 @@ zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
 }
 
 auto
+zpt::uri::to_string(zpt::json _uri) -> std::string {
+    std::ostringstream _oss;
+    if (_uri->type() == zpt::JSObject) {
+        if (_uri["scheme"]->ok()) {
+            _oss << _uri["scheme"]->str();
+            if (_uri["scheme_options"]->ok()) {
+                _oss << "+" << zpt::join(_uri["scheme_options"], "+") << std::flush;
+            }
+            _oss << ":" << std::flush;
+        }
+        if (_uri["domain"]->ok()) {
+            _oss << "//" << std::flush;
+            if (_uri["user"]["name"]->ok()) {
+                _oss << _uri["user"]["name"]->str() << "@" << std::flush;
+            }
+            _oss << _uri["domain"]->str() << std::flush;
+            if (_uri["port"]->ok()) {
+                _oss << ":" << _uri["port"] << std::flush;
+            }
+        }
+        if (_uri["path"]->ok()) {
+            _oss << "/" << zpt::join(_uri["path"], "/") << std::flush;
+        }
+        if (_uri["params"]->ok()) {
+            bool _first{ true };
+            _oss << "?" << std::flush;
+            for (auto [_, _key, _value] : _uri["params"]) {
+                if (!_first) {
+                    _oss << "&";
+                }
+                _first = false;
+                _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
+                     << std::flush;
+            }
+        }
+        if (_uri["anchor"]->ok()) {
+            _oss << "#" << _uri["anchor"]->str() << std::flush;
+        }
+    }
+    return _oss.str();
+}
+
+auto
 zpt::uri::to_regex(zpt::json _in) -> zpt::json {
     if (_in->type() == zpt::JSObject) {
         return zpt::uri::to_regex_object(_in);

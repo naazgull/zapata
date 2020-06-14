@@ -28,11 +28,6 @@ SOFTWARE.
 #include <sys/time.h>
 #include <unistd.h>
 
-namespace zpt {
-uuid uuid_gen;
-std::mutex uuid_mtx;
-} // namespace zpt
-
 auto
 zpt::ascii::encode(std::string& _out, bool quote) -> void {
     wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
@@ -108,16 +103,14 @@ zpt::generate::r_hash() -> std::string {
 
 auto
 zpt::generate::uuid(std::string& _out) -> void {
-    std::lock_guard<std::mutex> _lock(zpt::uuid_mtx);
-    zpt::uuid_gen.make(UUID_MAKE_V1);
-    _out.append(zpt::uuid_gen.string());
+    _out.append(zpt::generate::r_uuid());
 }
 
 auto
 zpt::generate::r_uuid() -> std::string {
-    std::lock_guard<std::mutex> _lock(zpt::uuid_mtx);
-    zpt::uuid_gen.make(UUID_MAKE_V1);
-    return zpt::uuid_gen.string();
+    static thread_local ::uuid uuid_gen;
+    uuid_gen.make(UUID_MAKE_V1);
+    return uuid_gen.string();
 }
 
 auto

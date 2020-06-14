@@ -32,54 +32,68 @@ zpt::TCP_SERVER_SOCKET() -> ssize_t& {
 }
 
 auto
-zpt::net::transport::tcp::receive_request(zpt::exchange& _channel) -> void {
-    this->receive_reply(_channel);
-}
-
-auto
-zpt::net::transport::tcp::send_reply(zpt::exchange& _channel) -> void {
-    this->send_request(_channel);
-}
-
-auto
-zpt::net::transport::tcp::send_request(zpt::exchange& _channel) -> void {
+zpt::net::transport::tcp::send(zpt::exchange& _channel) -> void {
     if (_channel->to_send()->ok()) {
         _channel->stream() << _channel->to_send();
     }
 }
 
 auto
-zpt::net::transport::tcp::receive_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::tcp::receive(zpt::exchange& _channel) -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = reinterpret_cast<std::istream&>(*(_channel->stream()));
+    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
     std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
-    zpt::json _content = _layer.translate(_is, _content_type);
-    _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
+    _channel->received() =
+      _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
+
+    _channel //
+      ->version()
+      .assign("1.0");
+    _channel //
+      ->scheme()
+      .assign("tcp");
+
+    if (!_channel->received()["performative"]->ok() || _channel->received()["status"]->ok()) {
+        _channel->received() << "performative" << 7;
+    }
+    if (!_channel->received()["resource"]->ok()) {
+        _channel //
+          ->uri()
+          .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
+    }
+    else {
+        _channel //
+          ->uri()
+          .assign(_channel->received()["resource"]);
+    }
+
     _channel->keep_alive() = true;
 }
 
 auto
 zpt::net::transport::tcp::resolve(zpt::json _uri) -> zpt::exchange {
-    expect(_uri["scheme"]->ok() && _uri["domain"]->ok(),
+    expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
            "URI parameter must contain 'scheme', 'domain' and 'port'",
            500,
            0);
     expect(_uri["scheme"] == "tcp", "scheme must be 'tcp'", 500, 0);
-    std::string _path{ zpt::path::join(_uri["path"]) };
-    std::string _options{ static_cast<std::string>(_uri["scheme_options"]) };
     auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
-      _uri["domain"],
-      _uri["port"]->ok() ? _uri["port"]->intr() : 80,
-      _options.find("ssl") != std::string::npos);
+      _uri["domain"]->str(), static_cast<uint16_t>(_uri["port"]->intr()));
+    _stream->transport("tcp");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //
       ->scheme()
       .assign("tcp");
     _to_return //
       ->uri()
-      .assign(_path);
+      .assign(zpt::path::join(_uri["path"]));
     _to_return->keep_alive() = true;
-    _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
+    if (_uri["scheme_options"]->ok()) {
+        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
+    }
+    else {
+        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
+    }
     return _to_return;
 }

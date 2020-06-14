@@ -36,7 +36,7 @@ zpt::stream::stream(std::ios& _rhs)
 }
 
 zpt::stream::~stream() {
-    zlog("Closing connection to " << this->uri(), zpt::trace);
+    this->close();
 }
 
 auto
@@ -64,6 +64,17 @@ zpt::stream::operator int() {
 }
 
 auto
+zpt::stream::close() -> zpt::stream& {
+    zlog("Closing connection to " << this->uri(), zpt::trace);
+    this->__underlying.reset(nullptr);
+    this->__fd = -1;
+    this->__transport = "";
+    this->__uri = "";
+    this->__state = zpt::stream_state::IDLE;
+    return (*this);
+}
+
+auto
 zpt::stream::transport(const std::string& _rhs) -> zpt::stream& {
     this->__transport = _rhs;
     return (*this);
@@ -83,6 +94,11 @@ zpt::stream::uri(const std::string& _rhs) -> zpt::stream& {
 auto
 zpt::stream::uri() -> std::string& {
     return this->__uri;
+}
+
+auto
+zpt::stream::state() -> zpt::stream_state& {
+    return this->__state;
 }
 
 auto

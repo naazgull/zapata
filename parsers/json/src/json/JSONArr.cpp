@@ -371,7 +371,7 @@ zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
 
 /*JSON POINTER TO ARRAY*/
 zpt::JSONArr::JSONArr()
-  : __underlying{ std::make_shared<zpt::JSONArrT>(JSONArrT()) } {}
+  : __underlying{ std::make_shared<zpt::JSONArrT>() } {}
 
 zpt::JSONArr::JSONArr(const JSONArr& _rhs) {
     (*this) = _rhs;

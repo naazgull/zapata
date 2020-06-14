@@ -67,8 +67,11 @@ zpt::log(std::string const& _text,
     if (zpt::log_format == 1) {
         (*zpt::log_fd) << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
                        << *zpt::log_pname << "[" << zpt::log_pid
-                       << "]: " << zpt::log_lvl_names[_level] << " " << _text << std::endl
-                       << std::flush;
+                       << "]: " << zpt::log_lvl_names[_level] << " " << _text;
+        if (_level > 6) {
+            (*zpt::log_fd) << " " << _file << ":" << _line;
+        }
+        (*zpt::log_fd) << std::endl << std::flush;
     }
     else {
         _log.assign("{\"version\":\"1.1\",\"host\":\"");

@@ -592,7 +592,7 @@ zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
 auto
 zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
     this->type(zpt::JSString);
-    this->__target.__string = std::make_shared<std::string>(std::string(_rhs));
+    this->__target.__string = std::make_shared<std::string>(_rhs);
     return (*this);
 }
 
@@ -605,7 +605,7 @@ zpt::JSONElementT::operator=(std::nullptr_t) -> JSONElementT& {
 auto
 zpt::JSONElementT::operator=(const char* _rhs) -> JSONElementT& {
     this->type(zpt::JSString);
-    this->__target.__string = std::make_shared<std::string>(std::string(_rhs));
+    this->__target.__string = std::make_shared<std::string>(_rhs);
     return (*this);
 }
 
@@ -1123,8 +1123,7 @@ zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
             break;
         }
         case zpt::JSArray: {
-            zpt::JSONElementT _element{ _in };
-            this->__target.__array->push(_element);
+            this->__target.__array->push(_in);
             break;
         }
         default: {

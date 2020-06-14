@@ -34,26 +34,62 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
     this->set_error_callback(zpt::rest::engine::on_error);
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      0, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _in) -> void {
+      0, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-          auto& _message = _in.content();
-          auto& _transport = _layer.get(_message->scheme());
-          _transport->receive_request(_message);
-          _in.set_path(std::string("/ROOT/") +
-                       zpt::rest::to_str(_message->received()["method"]->intr()) + _message->uri());
-          _in.next_stage();
+          auto& _channel = _event->content();
+          auto& _transport = _layer.get(_channel->scheme());
+
+          _transport->receive(_channel);
+          _event->set_path(std::string("/ROOT/") +
+                           zpt::rest::to_str(_channel->received()["performative"]->intr()) +
+                           _channel->uri());
       });
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _in) -> void {
+      1, "/ROOT/REPLY/{(.*)}", [=](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
+          auto& _channel = _event->content();
+          std::string _key{ "/REPLY" };
+          _key.append(_channel->uri());
+          {
+              zpt::lf::spin_lock::guard _shared_sentry{ this->__pending_lock,
+                                                        zpt::lf::spin_lock::shared };
+              auto _found = this->__pending.find(_key);
+              if (_found != this->__pending.end()) {
+                  _found->second(_event);
+                  auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+                  std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
+                  if (_channel->keep_alive()) {
+                      _polling.listen_on(_give_back);
+                  }
+                  _event.cancel();
+              }
+          }
+          {
+              zpt::lf::spin_lock::guard _shared_sentry{ this->__pending_lock,
+                                                        zpt::lf::spin_lock::exclusive };
+              this->__pending.erase(_key);
+          }
+      });
+
+    zpt::pipeline::engine<zpt::exchange>::add_listener(
+      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
           auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-          auto& _message = _in.content();
-          auto& _transport = _layer.get(_message->scheme());
-          _transport->send_reply(_message);
-          std::unique_ptr<zpt::stream> _give_back{ &_message->stream() };
-          _polling.listen_on(_give_back);
+          auto& _channel = _event->content();
+          auto& _transport = _layer.get(_channel->scheme());
+          _transport->send(_channel);
+          std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
+          if (_channel->keep_alive()) {
+              _polling.listen_on(_give_back);
+          }
       });
+}
+
+auto
+zpt::rest::engine::add_listener(std::string _pattern,
+                                std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
+  -> zpt::rest::engine& {
+    return this->add_listener(0, _pattern, _callback);
 }
 
 auto
@@ -61,10 +97,33 @@ zpt::rest::engine::add_listener(size_t _stage,
                                 std::string _pattern,
                                 std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
   -> zpt::rest::engine& {
-    if (_stage == 0) {
-        _pattern.insert(0, "/ROOT");
+    zlog("Registering " << _pattern, zpt::trace);
+    if (_pattern.find("/REPLY/") == 0) {
+        zpt::lf::spin_lock::guard _shared_sentry{ this->__pending_lock,
+                                                  zpt::lf::spin_lock::exclusive };
+        this->__pending.insert(std::make_pair(_pattern, _callback));
     }
-    zpt::pipeline::engine<zpt::exchange>::add_listener(_stage + 1, _pattern, _callback);
+    else {
+        _pattern.insert(0, "/ROOT");
+        zpt::pipeline::engine<zpt::exchange>::add_listener(_stage + 1, _pattern, _callback);
+    }
+    return (*this);
+}
+
+auto
+zpt::rest::engine::request(std::string _uri,
+                           std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
+  -> zpt::rest::engine& {
+    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+    auto _channel = _layer.resolve(_uri);
+    auto& _transport = _layer.get(_channel->scheme());
+
+    this->add_listener("/REPLY/" + std::to_string(static_cast<int>(_channel->stream())), _callback);
+    _transport->send(_channel);
+
+    std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
+    _polling.listen_on(_give_back);
     return (*this);
 }
 
@@ -75,14 +134,13 @@ zpt::rest::engine::on_error(zpt::json& _path,
                             const char* _description,
                             int _error,
                             int _status) -> bool {
-    auto& _channel = _event.content();
+    auto& _channel = _event->content();
     _channel->to_send() = {
         "status", _status, "body", { "error", _error, "message", std::string{ _what } }
     };
     if (_description != nullptr) {
         _channel->to_send()["body"] << "description" << std::string{ _description };
     }
-    _event.next_stage();
     return true;
 }
 

@@ -35,6 +35,12 @@ deb:
 	sudo rm -rfv upstream/*
 	./.build package
 
+format:
+	./.build format
+
+tidy:
+	./.build tidy
+
 from:
 	./.build from ${module}
 

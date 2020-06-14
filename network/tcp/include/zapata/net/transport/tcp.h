@@ -36,10 +36,8 @@ class tcp : public zpt::transport::transport_t {
     tcp() = default;
     virtual ~tcp() = default;
 
-    auto receive_request(zpt::exchange& _channel) -> void override;
-    auto send_reply(zpt::exchange& _channel) -> void override;
-    auto send_request(zpt::exchange& _channel) -> void override;
-    auto receive_reply(zpt::exchange& _channel) -> void override;
+    auto send(zpt::exchange& _channel) -> void override;
+    auto receive(zpt::exchange& _channel) -> void override;
     auto resolve(zpt::json _uri) -> zpt::exchange override;
 };
 } // namespace transport

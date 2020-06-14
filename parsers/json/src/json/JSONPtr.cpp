@@ -7,7 +7,7 @@
 namespace zpt {
 zpt::json undefined;
 zpt::json nilptr = undefined;
-zpt::json array = "1b394520-2fed-4118-b622-940f25b8b35e";
+zpt::json array = undefined; //"1b394520-2fed-4118-b622-940f25b8b35e";
 symbol_table __lambdas = zpt::symbol_table(
   new std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
 }
@@ -116,8 +116,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
         return (*this);
     }
 
-    bool _is_array = (_list.size() > 1 && _head->type() == zpt::JSString &&
-                      _head == "1b394520-2fed-4118-b622-940f25b8b35e");
+    bool _is_array = (_list.size() > 1 && _head->type() == zpt::JSNil);
 
     expect(_is_array || (_list.size() % 2 == 0 && _head->type() == zpt::JSString),
            "initializer list parameter doesn't seem either an array or an object",

@@ -32,7 +32,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
 
-    _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix>());
+    _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
                                                                           _config["path"]->str());

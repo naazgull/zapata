@@ -22,5 +22,4 @@ export projects=(
        engines/dom
        storage/connector
        storage/mysqlx
-       ontology/openapi
 )

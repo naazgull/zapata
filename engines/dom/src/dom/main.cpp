@@ -54,7 +54,7 @@ main(int argc, char* argv[]) -> int {
 
     _dom.add_listener(
       0, "/router/rest/credentials", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto& _element = _event.content();
+          auto& _element = _event->content();
           std::cout << "----------------------------------------------------" << std::endl
                     << "xpath: " << _element.xpath() << std::endl
                     << "name: " << _element.name() << std::endl
@@ -64,7 +64,7 @@ main(int argc, char* argv[]) -> int {
       });
     _dom.add_listener(
       0, "/router/rest/version", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto& _element = _event.content();
+          auto& _element = _event->content();
           std::cout << "----------------------------------------------------" << std::endl
                     << "xpath: " << _element.xpath() << std::endl
                     << "name: " << _element.name() << std::endl
@@ -74,7 +74,7 @@ main(int argc, char* argv[]) -> int {
       });
     _dom.add_listener(
       0, "/stand-alone/zmq/{([^/]+)}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto _element = _event.content();
+          auto _element = _event->content();
           std::cout << "----------------------------------------------------" << std::endl
                     << "xpath: " << _element.xpath() << std::endl
                     << "name: " << _element.name() << std::endl
@@ -83,7 +83,7 @@ main(int argc, char* argv[]) -> int {
                     << std::flush;
       });
     _dom.add_listener(0, "/worker/http/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-        auto& _element = _event.content();
+        auto& _element = _event->content();
         std::cout << "----------------------------------------------------" << std::endl
                   << "xpath: " << _element.xpath() << std::endl
                   << "name: " << _element.name() << std::endl
@@ -92,7 +92,7 @@ main(int argc, char* argv[]) -> int {
                   << std::flush;
     });
     _dom.add_listener(0, "/worker/zmq/0/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-        auto _element = _event.content();
+        auto _element = _event->content();
         std::cout << "----------------------------------------------------" << std::endl
                   << "xpath: " << _element.xpath() << std::endl
                   << "name: " << _element.name() << std::endl

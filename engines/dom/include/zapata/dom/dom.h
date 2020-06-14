@@ -51,6 +51,10 @@ class element {
     auto content() -> zpt::json;
     auto parent() -> zpt::json;
 
+    friend auto operator<<(std::ostream& _os, zpt::dom::element& _out) -> std::ostream& {
+        return _os;
+    }
+
   private:
     std::string __xpath{ "" };
     std::string __name{ "" };

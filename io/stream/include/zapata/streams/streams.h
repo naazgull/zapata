@@ -26,6 +26,7 @@
 #include <memory>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
+#include <zapata/text/convert.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/spin_lock.h>
 
@@ -35,6 +36,8 @@ using epoll_event_t = struct epoll_event;
 
 auto
 STREAM_POLLING() -> ssize_t&;
+
+enum class stream_state { IDLE, WAITING, PROCESSING };
 
 class stream {
   public:
@@ -83,10 +86,12 @@ class stream {
 
     operator int();
 
+    auto close() -> zpt::stream&;
     auto transport(const std::string& _rhs) -> zpt::stream&;
     auto transport() -> std::string&;
     auto uri(const std::string& _rhs) -> zpt::stream&;
     auto uri() -> std::string&;
+    auto state() -> zpt::stream_state&;
 
     auto swap(std::ios& _rhs) -> zpt::stream&;
     auto swap(zpt::stream& _rhs) -> zpt::stream&;
@@ -98,14 +103,15 @@ class stream {
     static auto alloc(Args... _args) -> std::unique_ptr<zpt::stream>;
 
   private:
-    stream(std::unique_ptr<std::iostream> _underlying);
-
     std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
     std::string __uri{ "" };
     zpt::lf::spin_lock __input_lock;
     zpt::lf::spin_lock __output_lock;
+    zpt::stream_state __state{ zpt::stream_state::IDLE };
+
+    stream(std::unique_ptr<std::iostream> _underlying);
 };
 
 #define CRLF "\r\n"

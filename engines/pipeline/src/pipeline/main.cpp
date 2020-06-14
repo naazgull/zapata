@@ -35,30 +35,28 @@ main(int argc, char* argv[]) -> int {
                                                 5000 } };
 
     _engine.add_listener(0, "http:/{(.*)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
-        _in.set_path(zpt::r_replace(static_cast<std::string>(_in.path()["raw"]), "http:", ""));
-
-        zpt::json _content = _in.content();
+        _in->set_path(zpt::r_replace(static_cast<std::string>(_in->path()["raw"]), "http:", ""));
+        zpt::json _content = _in->content();
         std::cout << std::this_thread::get_id() << ": " << _content << std::endl << std::flush;
-        _in.set_content({ "a", _content["k"], "b", _content["l"], "c", _content["m"] });
-        _in.next_stage();
+        _in->set_content({ "a", _content["k"], "b", _content["l"], "c", _content["m"] });
     });
 
     _engine.add_listener(1, "/users/{([^/]+)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
-        zpt::json _content = _in.content();
+        zpt::json _content = _in->content();
         std::cout << std::this_thread::get_id() << ": " << _content << std::endl << std::flush;
-        _in.set_content({ "x", _content["a"], "z", _content["b"], "y", _content["c"] });
-        _in.next_stage();
+        _in->set_content({ "x", _content["a"], "z", _content["b"], "y", _content["c"] });
     });
 
     _engine.add_listener(2, "/users/{([^/]+)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
-        std::cout << std::this_thread::get_id() << ": " << _in.content() << std::endl << std::flush;
+        std::cout << std::this_thread::get_id() << ": " << _in->content() << std::endl
+                  << std::flush;
     });
 
     _engine.start_threads();
 
     unsigned long _c{ 0 };
     do {
-        _engine.trigger("http:/users/1000", { "k", _c, "l", _c, "m", _c });
+        _engine.trigger(std::string{ "http:/users/1000" }, { "k", _c, "l", _c, "m", _c });
         ++_c;
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1 });
     } while (true);

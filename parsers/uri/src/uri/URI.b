@@ -33,7 +33,7 @@ scheme :
             if (!d_scanner.d_part_is_placeholder) {
                 auto _idx = _scheme.find("+");
                 if (_idx != std::string::npos) {
-                    (*d_scanner) << "scheme_options" << _scheme.substr(_idx + 1);
+                    (*d_scanner) << "scheme_options" << zpt::split(_scheme.substr(_idx + 1), "+", true);
                     _scheme.assign(_scheme.substr(0, _idx));
                 }
             }

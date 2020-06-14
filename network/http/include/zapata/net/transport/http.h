@@ -49,6 +49,8 @@ class http : public zpt::transport::transport_t {
       -> zpt::net::transport::http&;
     auto set_method(zpt::exchange& _channel, zpt::http::req& _request)
       -> zpt::net::transport::http&;
+    auto set_method(zpt::exchange& _channel, zpt::http::rep& _response)
+      -> zpt::net::transport::http&;
     auto set_status(zpt::exchange& _channel, zpt::http::rep& _response)
       -> zpt::net::transport::http&;
     auto set_headers(zpt::http::req& _request, zpt::exchange& _channel)
@@ -57,11 +59,13 @@ class http : public zpt::transport::transport_t {
     auto set_method(zpt::http::req& _request, zpt::exchange& _channel)
       -> zpt::net::transport::http&;
 
-    auto receive_request(zpt::exchange& _channel) -> void override;
-    auto send_reply(zpt::exchange& _channel) -> void override;
-    auto send_request(zpt::exchange& _channel) -> void override;
-    auto receive_reply(zpt::exchange& _channel) -> void override;
+    auto receive(zpt::exchange& _channel) -> void override;
+    auto send(zpt::exchange& _channel) -> void override;
     auto resolve(zpt::json _uri) -> zpt::exchange override;
+    auto receive_request(zpt::exchange& _channel) -> void;
+    auto receive_reply(zpt::exchange& _channel) -> void;
+    auto send_request(zpt::exchange& _channel) -> void;
+    auto send_reply(zpt::exchange& _channel) -> void;
 };
 } // namespace transport
 } // namespace net
