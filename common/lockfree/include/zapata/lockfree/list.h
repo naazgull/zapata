@@ -69,18 +69,18 @@ class list {
         auto operator=(iterator const& _rhs) -> iterator&;
         auto operator=(iterator&& _rhs) -> iterator&;
         auto operator++() -> iterator&;
-        auto operator*() const -> reference;
+        auto operator*() -> reference;
         // END / BASIC ITERATOR METHODS //
 
         // INPUT ITERATOR METHODS //
         auto operator++(int) -> iterator;
-        auto operator-> () const -> pointer;
+        auto operator-> () -> pointer;
         auto operator==(iterator const& _rhs) const -> bool;
         auto operator!=(iterator const& _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
 
         // OUTPUT ITERATOR METHODS //
-        // reference operator*() const; <- already defined
+        // reference operator*(); <- already defined
         // iterator operator++(int); <- already defined
         // END / OUTPUT ITERATOR METHODS //
 
@@ -244,7 +244,7 @@ zpt::lf::list<T>::iterator::operator++() -> zpt::lf::list<T>::iterator& {
 }
 
 template<typename T>
-auto zpt::lf::list<T>::iterator::operator*() const -> zpt::lf::list<T>::iterator::reference {
+auto zpt::lf::list<T>::iterator::operator*() -> zpt::lf::list<T>::iterator::reference {
     return this->__current->__value;
 }
 
@@ -257,7 +257,7 @@ zpt::lf::list<T>::iterator::operator++(int) -> zpt::lf::list<T>::iterator {
 }
 
 template<typename T>
-auto zpt::lf::list<T>::iterator::operator-> () const -> zpt::lf::list<T>::iterator::pointer {
+auto zpt::lf::list<T>::iterator::operator-> () -> zpt::lf::list<T>::iterator::pointer {
     return this->__current->__value;
 }
 

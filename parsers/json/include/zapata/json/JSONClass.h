@@ -100,18 +100,18 @@ class json {
         // BASIC ITERATOR METHODS //
         auto operator=(const iterator& _rhs) -> iterator&;
         auto operator++() -> iterator&;
-        auto operator*() const -> reference;
+        auto operator*() -> reference;
         // END / BASIC ITERATOR METHODS //
 
         // INPUT ITERATOR METHODS //
         auto operator++(int) -> iterator;
-        auto operator-> () const -> pointer;
+        auto operator-> () -> pointer;
         auto operator==(iterator _rhs) const -> bool;
         auto operator!=(iterator _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
 
         // OUTPUT ITERATOR METHODS //
-        // reference operator*() const; <- already defined
+        // reference operator*(); <- already defined
         // iterator operator++(int); <- already defined
         // END / OUTPUT ITERATOR METHODS //
 

@@ -64,10 +64,12 @@ class hazard_ptr {
         friend class zpt::lf::hazard_ptr<T>;
 
         guard(T* _target, zpt::lf::hazard_ptr<T>& _parent);
+        guard(std::atomic<T*>& _target, zpt::lf::hazard_ptr<T>& _parent);
         virtual ~guard();
 
+        auto is_acquired() -> bool;
         auto retire() -> guard&;
-        auto target() const -> T&;
+        auto target() const -> T*;
 
       private:
         T* __target{ nullptr };
@@ -86,7 +88,8 @@ class hazard_ptr {
     auto operator[](size_t _idx) -> std::atomic<T*>&;
     auto at(size_t _idx) -> std::atomic<T*>&;
 
-    auto acquire(T* _ptr) -> hazard_ptr<T>&;
+    auto acquire(T* _ptr) -> T*;
+    auto acquire(std::atomic<T*>& _ptr) -> T*;
     auto release(T* _ptr) -> hazard_ptr<T>&;
     auto retire(T* _ptr) -> hazard_ptr<T>&;
     auto clean() -> hazard_ptr<T>&;
@@ -150,10 +153,22 @@ zpt::lf::hazard_ptr<T>::guard::guard(T* _ptr, zpt::lf::hazard_ptr<T>& _parent)
 }
 
 template<typename T>
+zpt::lf::hazard_ptr<T>::guard::guard(std::atomic<T*>& _atomic, zpt::lf::hazard_ptr<T>& _parent)
+  : __parent{ _parent } {
+    this->__target = this->__parent.acquire(_atomic);
+}
+
+template<typename T>
 zpt::lf::hazard_ptr<T>::guard::~guard() {
     this->__parent.release(this->__target);
     if (this->__retire)
         this->__parent.retire(this->__target);
+}
+
+template<typename T>
+auto
+zpt::lf::hazard_ptr<T>::guard::is_acquired() -> bool {
+    return this->__target != nullptr;
 }
 
 template<typename T>
@@ -165,8 +180,8 @@ zpt::lf::hazard_ptr<T>::guard::retire() -> guard& {
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::guard::target() const -> T& {
-    return *this->__target;
+zpt::lf::hazard_ptr<T>::guard::target() const -> T* {
+    return this->__target;
 }
 
 template<typename T>
@@ -209,7 +224,7 @@ zpt::lf::hazard_ptr<T>::at(size_t _idx) -> std::atomic<T*>& {
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
+zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
     size_t _idx = this->get_this_thread_idx();
 
     for (size_t _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
@@ -218,21 +233,33 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
             T* _exchange = _ptr;
             T* _null{ nullptr };
             if (_current->compare_exchange_strong(_null, _exchange, std::memory_order_release)) {
-                return (*this);
+                return _ptr;
             }
         }
     }
 
-    zlog("Thread " << std::this_thread::get_id() << ": holding " << this->get_thread_held_count()
-                   << " pointers in " << K << " positions between " << (_idx * K) << " and "
-                   << ((_idx + 1) * K),
-         zpt::debug);
+    // zlog("Thread " << std::this_thread::get_id() << ": holding " << this->get_thread_held_count()
+    //                << " pointers in " << K << " positions between " << (_idx * K) << " and "
+    //                << ((_idx + 1) * K),
+    //      zpt::debug);
     expect(
       false,
       "No more hazard-pointer slots available for this thread, release some before continuing.",
       500,
       0);
-    return (*this);
+    return nullptr;
+}
+
+template<typename T>
+auto
+zpt::lf::hazard_ptr<T>::acquire(std::atomic<T*>& _atomic) -> T* {
+    auto _ptr = _atomic.load();
+    this->acquire(_ptr);
+    if (_ptr != _atomic.load(std::memory_order_acquire)) {
+        this->release(_ptr);
+        return nullptr;
+    }
+    return _ptr;
 }
 
 template<typename T>

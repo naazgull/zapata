@@ -28,6 +28,7 @@ SOFTWARE.
 #include <ctime>
 #include <execinfo.h>
 #include <memory>
+#include <iostream>
 #include <sstream>
 #include <zapata/exceptions/ExpectationException.h>
 
@@ -605,15 +606,17 @@ get_time(time_t _t);
 
 inline auto
 cache_line_size() -> size_t {
-    FILE* p = 0;
-    p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
-    unsigned int i = 0;
-    if (p) {
-        if (fscanf(p, "%d", &i)) {
+    static size_t _cache_line_size{ 0 };
+    if (_cache_line_size == 0) {
+        FILE* _p = 0;
+        _p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
+        if (_p) {
+            if (fscanf(_p, "%ld", &_cache_line_size)) {
+            }
+            fclose(_p);
         }
-        fclose(p);
     }
-    return i;
+    return _cache_line_size;
 }
 
 } // namespace zpt

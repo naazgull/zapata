@@ -1,6 +1,7 @@
 
 nobase_include_HEADERS = \
 ./zapata/lockfree.h \
+./zapata/lockfree/aligned.h \
 ./zapata/lockfree/spin_lock.h \
 ./zapata/lockfree/queue.h \
 ./zapata/lockfree/list.h \

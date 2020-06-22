@@ -20,6 +20,7 @@
 #include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
+#include <zapata/lockfree/aligned.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/list.h>
 #include <zapata/log/log.h>
@@ -222,11 +223,21 @@ test_hazard_ptr() -> void {
 }
 
 auto
+test_aligned() -> void {
+    zpt::aligned_atomic<bool> _atomic{false};
+    _atomic->store(true);
+    std::cout << _atomic->load(std::memory_order_acquire) << std::endl << std::flush;
+    (*_atomic) = false;
+    std::cout << _atomic->load(std::memory_order_acquire) << std::endl << std::flush;
+}
+
+auto
 main(int _argc, char* _argv[]) -> int {
     try {
         test_queue();
-        test_list();
-        test_hazard_ptr();
+        // test_list();
+        // test_hazard_ptr();
+        // test_aligned();
         return 0;
     }
     catch (zpt::failed_expectation const& _e) {

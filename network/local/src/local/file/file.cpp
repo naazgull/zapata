@@ -43,6 +43,7 @@ zpt::net::transport::file::resolve(zpt::json _uri) -> zpt::exchange {
     expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
     expect(_uri["scheme"] == "file", "scheme must be 'file'", 500, 0);
     std::string _path{ zpt::path::join(_uri["path"]) };
+    zlog(_path, zpt::debug);
     auto _stream = zpt::stream::alloc<std::basic_fstream<char>>(_path);
     _stream->transport("file");
     zpt::exchange _to_return{ _stream.release() };

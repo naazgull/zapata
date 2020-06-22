@@ -991,7 +991,7 @@ zpt::json::iterator::operator++() -> iterator& {
     return (*this);
 }
 
-auto zpt::json::iterator::operator*() const -> reference {
+auto zpt::json::iterator::operator*() -> reference {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(
@@ -1014,7 +1014,7 @@ zpt::json::iterator::operator++(int) -> iterator {
     return _to_return;
 }
 
-auto zpt::json::iterator::operator-> () const -> pointer {
+auto zpt::json::iterator::operator-> () -> pointer {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(

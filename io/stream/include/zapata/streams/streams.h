@@ -157,7 +157,7 @@ zpt::stream::alloc(Args... _args) -> std::unique_ptr<zpt::stream> {
         _to_return->uri(static_cast<std::string>(static_cast<T&>(**_to_return)));
     }
     expect(!(**_to_return.get()).fail() && !(**_to_return.get()).bad(),
-           "unable to open underlying `std::iostream`",
+           "unable to open underlying `std::iostream` named '" << _to_return->uri() << "'",
            500,
            0);
     return _to_return;
