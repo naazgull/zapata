@@ -224,7 +224,7 @@ test_hazard_ptr() -> void {
 
 auto
 test_aligned() -> void {
-    zpt::aligned_atomic<bool> _atomic{false};
+    zpt::padded_atomic<bool> _atomic{false};
     _atomic->store(true);
     std::cout << _atomic->load(std::memory_order_acquire) << std::endl << std::flush;
     (*_atomic) = false;

@@ -28,16 +28,16 @@
 
 namespace zpt {
 template<typename T>
-class aligned_atomic {
+class padded_atomic {
   public:
-    aligned_atomic();
-    aligned_atomic(T _value);
-    aligned_atomic(zpt::aligned_atomic<T> const& _rhs);
-    aligned_atomic(zpt::aligned_atomic<T>&& _rhs);
-    virtual ~aligned_atomic();
+    padded_atomic();
+    padded_atomic(T _value);
+    padded_atomic(zpt::padded_atomic<T> const& _rhs);
+    padded_atomic(zpt::padded_atomic<T>&& _rhs);
+    virtual ~padded_atomic();
 
-    auto operator=(zpt::aligned_atomic<T> const& _rhs) -> zpt::aligned_atomic<T>&;
-    auto operator=(zpt::aligned_atomic<T>&& _rhs) -> zpt::aligned_atomic<T>&;
+    auto operator=(zpt::padded_atomic<T> const& _rhs) -> zpt::padded_atomic<T>&;
+    auto operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>&;
 
     auto operator-> () -> std::atomic<T>*;
     auto operator*() -> std::atomic<T>&;
@@ -49,26 +49,26 @@ class aligned_atomic {
 } // namespace zpt
 
 template<typename T>
-zpt::aligned_atomic<T>::aligned_atomic()
+zpt::padded_atomic<T>::padded_atomic()
   : __storage{ new std::byte[zpt::cache_line_size()] } {
     new (this->__storage) std::atomic<T>();
     this->__underlying = reinterpret_cast<std::atomic<T>*>(this->__storage);
 }
 
 template<typename T>
-zpt::aligned_atomic<T>::aligned_atomic(T _value)
-  : zpt::aligned_atomic<T>() {
+zpt::padded_atomic<T>::padded_atomic(T _value)
+  : zpt::padded_atomic<T>() {
     this->__underlying->store(_value);
 }
 
 template<typename T>
-zpt::aligned_atomic<T>::aligned_atomic(zpt::aligned_atomic<T> const& _rhs)
+zpt::padded_atomic<T>::padded_atomic(zpt::padded_atomic<T> const& _rhs)
   : __storage{ _rhs.__storage } {
     this->__underlying = reinterpret_cast<std::atomic<T>*>(this->__storage);
 }
 
 template<typename T>
-zpt::aligned_atomic<T>::aligned_atomic(zpt::aligned_atomic<T>&& _rhs)
+zpt::padded_atomic<T>::padded_atomic(zpt::padded_atomic<T>&& _rhs)
   : __storage{ _rhs.__storage } {
     this->__underlying = reinterpret_cast<std::atomic<T>*>(this->__storage);
     _rhs.__storage = nullptr;
@@ -76,14 +76,16 @@ zpt::aligned_atomic<T>::aligned_atomic(zpt::aligned_atomic<T>&& _rhs)
 }
 
 template<typename T>
-zpt::aligned_atomic<T>::~aligned_atomic() {
+zpt::padded_atomic<T>::~padded_atomic() {
     this->__underlying->~atomic();
+    this->__underlying = nullptr;
     delete[] this->__storage;
+    this->__storage = nullptr;
 }
 
 template<typename T>
 auto
-zpt::aligned_atomic<T>::operator=(zpt::aligned_atomic<T> const& _rhs) -> zpt::aligned_atomic<T>& {
+zpt::padded_atomic<T>::operator=(zpt::padded_atomic<T> const& _rhs) -> zpt::padded_atomic<T>& {
     this->__storage = _rhs.__storage;
     this->__underlying = reinterpret_cast<std::atomic<T>*>(this->__storage);
     return (*this);
@@ -91,7 +93,7 @@ zpt::aligned_atomic<T>::operator=(zpt::aligned_atomic<T> const& _rhs) -> zpt::al
 
 template<typename T>
 auto
-zpt::aligned_atomic<T>::operator=(zpt::aligned_atomic<T>&& _rhs) -> zpt::aligned_atomic<T>& {
+zpt::padded_atomic<T>::operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>& {
     this->__storage = _rhs.__storage;
     this->__underlying = reinterpret_cast<std::atomic<T>*>(this->__storage);
     _rhs.__storage = nullptr;
@@ -99,11 +101,13 @@ zpt::aligned_atomic<T>::operator=(zpt::aligned_atomic<T>&& _rhs) -> zpt::aligned
 }
 
 template<typename T>
-auto zpt::aligned_atomic<T>::operator-> () -> std::atomic<T>* {
+auto zpt::padded_atomic<T>::operator-> () -> std::atomic<T>* {
+    expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
     return this->__underlying;
 }
 
 template<typename T>
-auto zpt::aligned_atomic<T>::operator*() -> std::atomic<T>& {
+auto zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
+    expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
     return *this->__underlying;
 }

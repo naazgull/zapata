@@ -43,8 +43,8 @@ template<typename T>
 class forward_node {
   public:
     T __value;
-    zpt::aligned_atomic<bool> __is_null{ true };
-    zpt::aligned_atomic<zpt::lf::forward_node<T>*> __next{ nullptr };
+    zpt::padded_atomic<bool> __is_null{ true };
+    zpt::padded_atomic<zpt::lf::forward_node<T>*> __next{ nullptr };
 
     forward_node() = default;
     forward_node(T _value);
@@ -179,8 +179,8 @@ class queue {
     }
 
   private:
-    zpt::aligned_atomic<zpt::lf::forward_node<T>*> __head{ nullptr };
-    zpt::aligned_atomic<zpt::lf::forward_node<T>*> __tail{ nullptr };
+    zpt::padded_atomic<zpt::lf::forward_node<T>*> __head{ nullptr };
+    zpt::padded_atomic<zpt::lf::forward_node<T>*> __tail{ nullptr };
     zpt::lf::queue<T>::hazard_domain& __hazard_domain;
     long __spin_sleep;
 };
