@@ -20,7 +20,7 @@
 #include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <zapata/lockfree/aligned.h>
+#include <zapata/lockfree/atomics.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/list.h>
 #include <zapata/log/log.h>

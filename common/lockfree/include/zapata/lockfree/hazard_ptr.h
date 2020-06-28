@@ -130,9 +130,6 @@ zpt::lf::hazard_ptr<T>::pending_list::pending_list(zpt::lf::hazard_ptr<T>& _pare
 template<typename T>
 zpt::lf::hazard_ptr<T>::pending_list::~pending_list() {
     this->__parent.release_thread_idx();
-    for (auto _it = this->__underlying.begin(); _it != this->__underlying.end(); ++_it) {
-        delete _it->first;
-    }
 }
 
 template<typename T>
@@ -191,7 +188,7 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
   , P{ _max_threads }
   , K{ (signed)((FACTOR * zpt::cache_line_size()) / element_size) }
   , N{ P * K }
-  , R{ N / 2 } {
+  , R{ N } {
     expect(!zpt::lf::hazard_ptr<T>::__initialized.test_and_set(),
            "Hazard domain for type `" << typeid(T).name() << "` already initialized",
            500,
@@ -238,10 +235,6 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
         }
     }
 
-    // zlog("Thread " << std::this_thread::get_id() << ": holding " << this->get_thread_held_count()
-    //                << " pointers in " << K << " positions between " << (_idx * K) << " and "
-    //                << ((_idx + 1) * K),
-    //      zpt::debug);
     expect(
       false,
       "No more hazard-pointer slots available for this thread, release some before continuing.",

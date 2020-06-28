@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <type_traits>
 
-#include <zapata/lockfree/aligned.h>
+#include <zapata/lockfree/atomics.h>
 #include <zapata/lockfree/hazard_ptr.h>
 #include <zapata/exceptions/exceptions.h>
 
@@ -48,7 +48,12 @@ class forward_node {
 
     forward_node() = default;
     forward_node(T _value);
+    forward_node(forward_node const&) = delete;
+    forward_node(forward_node&&) = delete;
     virtual ~forward_node() = default;
+
+    auto operator=(forward_node const&) -> forward_node& = delete;
+    auto operator=(forward_node &&) -> forward_node& = delete;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::forward_node<T>& _in) -> std::ostream& {
         if constexpr (std::is_pointer<T>::value) {
@@ -248,9 +253,9 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     typename zpt::lf::queue<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
 
     do {
-        zpt::lf::forward_node<T>* _null{ nullptr };
         typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail,
                                                                        this->__hazard_domain };
+        zpt::lf::forward_node<T>* _null{ nullptr };
         if (_tail_sentry.is_acquired()) {
             auto _tail = _tail_sentry.target();
             if (_tail->__next->compare_exchange_strong(_null, _new)) {
@@ -284,13 +289,19 @@ zpt::lf::queue<T>::pop() -> T {
                 break;
             }
             else {
-                auto _next = _head->__next->load();
-                if (this->__head->compare_exchange_strong(
-                      _head, _next, std::memory_order_release)) {
-                    _head->__is_null->store(true);
-                    T _value = _head->__value;
-                    _head_sentry.retire();
-                    return _value;
+                try {
+                    auto _next = _head->__next->load(std::memory_order_acquire);
+                    if (this->__head->compare_exchange_strong(
+                          _head, _next, std::memory_order_release)) {
+                        _head->__is_null->store(true);
+                        T _value = _head->__value;
+                        _head_sentry.retire();
+                        return _value;
+                    }
+                }
+                catch (zpt::failed_expectation const& _e) {
+                    std::cout << std::hex << _head << std::endl << std::flush;
+                    exit(0);
                 }
             }
         }

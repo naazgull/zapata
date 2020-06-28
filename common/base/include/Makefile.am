@@ -17,6 +17,7 @@ nobase_include_HEADERS = \
 ./zapata/log/log.h \
 ./zapata/mail/manip.h \
 ./zapata/mem/usage.h \
+./zapata/mem/ref_ptr.h \
 ./zapata/text/convert.h \
 ./zapata/text/html.h \
 ./zapata/text/manip.h \

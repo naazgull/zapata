@@ -119,3 +119,4 @@ io/socket/src/socket/zsockc
 io/socket/src/socket/zsocks
 io/stream/src/streams/zstreams
 network/transport/src/transport/ztransport
+common/globals/src/globals/zglobals
