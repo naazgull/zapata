@@ -239,6 +239,8 @@ class result {
 };
 auto
 filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+auto
+filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 } // namespace storage
 } // namespace zpt
 

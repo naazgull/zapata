@@ -591,6 +591,8 @@ enum JSONType {
     JSLambda,
     JSRegex
 };
+auto
+to_string(zpt::JSONType _type) -> std::string;
 
 using performative = unsigned short;
 using status = unsigned short;

@@ -13,19 +13,17 @@
 //%debug
 %no-lines
 
-%left DOUBLE_DOT SLASH AT QMARK EQ E STRING FUNCTION_PARAM CARDINAL
+%left STRING DOUBLE_DOT SLASH AT QMARK EQ E FUNCTION_PARAM CARDINAL DOT DOT_DOT
 
 %%
 
 exp :
-    scheme server path params anchor
+	scheme object params anchor
 |
-	scheme path params anchor
+	object params anchor
 ;
 
 scheme :
-
-|
     STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
@@ -44,6 +42,12 @@ scheme :
         }
     }
     DOUBLE_DOT
+;
+
+object :
+    server path
+|
+    path
 ;
 
 server :
@@ -109,11 +113,42 @@ path :
         if ((*d_scanner)->type() == zpt::JSObject) {
             if ((*d_scanner)["path"] == zpt::undefined) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "is_relative" << false;
             }
             (*d_scanner)["path"] << d_scanner.matched();
         }
         else {
             (*d_scanner) << d_scanner.matched();
+        }
+    }
+    path
+|
+    DOT
+    {
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            if ((*d_scanner)["path"] == zpt::undefined) {
+                (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "is_relative" << true;
+            }
+            (*d_scanner)["path"] << ".";
+        }
+        else {
+            (*d_scanner) << ".";
+        }
+    }
+    path
+|
+    DOT_DOT
+    {
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            if ((*d_scanner)["path"] == zpt::undefined) {
+                (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "is_relative" << true;
+            }
+            (*d_scanner)["path"] << "..";
+        }
+        else {
+            (*d_scanner) << "..";
         }
     }
     path

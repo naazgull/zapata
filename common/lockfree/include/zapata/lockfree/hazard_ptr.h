@@ -48,6 +48,8 @@ class hazard_ptr {
 
     class pending_list {
       public:
+        friend class zpt::lf::hazard_ptr<T>;
+
         pending_list(zpt::lf::hazard_ptr<T>& _parent);
         virtual ~pending_list();
 
@@ -85,8 +87,8 @@ class hazard_ptr {
     auto operator=(const hazard_ptr<T>& _rhs) -> hazard_ptr<T>& = delete;
     auto operator=(hazard_ptr<T>&& _rhs) -> hazard_ptr<T>& = delete;
 
-    auto operator[](size_t _idx) -> std::atomic<T*>&;
-    auto at(size_t _idx) -> std::atomic<T*>&;
+    auto operator[](size_t _idx) -> zpt::padded_atomic<T*>&;
+    auto at(size_t _idx) -> zpt::padded_atomic<T*>&;
 
     auto acquire(T* _ptr) -> T*;
     auto acquire(std::atomic<T*>& _ptr) -> T*;
@@ -112,9 +114,8 @@ class hazard_ptr {
     friend class guard;
 
   private:
-    alignas(std::atomic<T*>) std::unique_ptr<unsigned char[]> __hp{ nullptr };
-    alignas(std::atomic<bool>) std::unique_ptr<std::atomic<bool>[]> __next_thr_idx { nullptr };
-    long FACTOR{ 0 };
+    std::unique_ptr<zpt::padded_atomic<T*>[]> __hp { nullptr };
+    std::unique_ptr<zpt::padded_atomic<bool>[]> __next_thr_idx { nullptr };
     long P{ 0 };
     long K{ 0 };
     long N{ 0 };
@@ -129,6 +130,7 @@ zpt::lf::hazard_ptr<T>::pending_list::pending_list(zpt::lf::hazard_ptr<T>& _pare
 
 template<typename T>
 zpt::lf::hazard_ptr<T>::pending_list::~pending_list() {
+    this->__parent.clean();
     this->__parent.release_thread_idx();
 }
 
@@ -183,10 +185,8 @@ zpt::lf::hazard_ptr<T>::guard::target() const -> T* {
 
 template<typename T>
 zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
-  : FACTOR{ (signed)std::ceil(static_cast<double>(_ptr_per_thread * element_size) /
-                              static_cast<double>(zpt::cache_line_size())) }
-  , P{ _max_threads }
-  , K{ (signed)((FACTOR * zpt::cache_line_size()) / element_size) }
+  : P{ _max_threads }
+  , K{ _ptr_per_thread }
   , N{ P * K }
   , R{ N } {
     expect(!zpt::lf::hazard_ptr<T>::__initialized.test_and_set(),
@@ -198,8 +198,8 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
            500,
            0);
     expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
-    this->__hp = std::make_unique<unsigned char[]>(this->N * element_size);
-    this->__next_thr_idx = std::make_unique<std::atomic<bool>[]>(this->P);
+    this->__hp = std::make_unique<zpt::padded_atomic<T*>[]>(this->N);
+    this->__next_thr_idx = std::make_unique<zpt::padded_atomic<bool>[]>(this->P);
     this->init();
 }
 
@@ -209,14 +209,14 @@ zpt::lf::hazard_ptr<T>::~hazard_ptr() {
 }
 
 template<typename T>
-auto zpt::lf::hazard_ptr<T>::operator[](size_t _idx) -> std::atomic<T*>& {
-    return *reinterpret_cast<std::atomic<T*>*>(&this->__hp[_idx * element_size]);
+auto zpt::lf::hazard_ptr<T>::operator[](size_t _idx) -> zpt::padded_atomic<T*>& {
+    return this->__hp[_idx];
 }
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::at(size_t _idx) -> std::atomic<T*>& {
-    return *reinterpret_cast<std::atomic<T*>*>(&this->__hp[_idx * element_size]);
+zpt::lf::hazard_ptr<T>::at(size_t _idx) -> zpt::padded_atomic<T*>& {
+    return this->__hp[_idx];
 }
 
 template<typename T>
@@ -225,7 +225,7 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
     size_t _idx = this->get_this_thread_idx();
 
     for (size_t _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
-        auto _current = reinterpret_cast<std::atomic<T*>*>(&this->__hp[_k * element_size]);
+        auto& _current = this->__hp[_k];
         if (_current->load(std::memory_order_acquire) == nullptr) {
             T* _exchange = _ptr;
             T* _null{ nullptr };
@@ -265,8 +265,7 @@ zpt::lf::hazard_ptr<T>::release(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
     size_t _idx = this->get_this_thread_idx();
     for (size_t _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
         T* _exchange = _ptr;
-        if (reinterpret_cast<std::atomic<T*>*>(&this->__hp[_k * element_size])
-              ->compare_exchange_strong(_exchange, nullptr)) {
+        if (this->__hp[_k]->compare_exchange_strong(_exchange, nullptr)) {
             return (*this);
         }
     }
@@ -292,7 +291,7 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
 
     std::map<T*, bool> _to_process;
     for (long _idx = 0; _idx != this->N; ++_idx) {
-        auto* _item = reinterpret_cast<std::atomic<T*>*>(&this->__hp[_idx * element_size]);
+        auto& _item = this->__hp[_idx];
         T* _ptr = _item->load();
         if (_ptr != nullptr) {
             _to_process.insert(std::make_pair(_ptr, true));
@@ -317,7 +316,7 @@ auto
 zpt::lf::hazard_ptr<T>::clear() -> zpt::lf::hazard_ptr<T>& {
     std::map<T*, bool> _to_process;
     for (long _idx = 0; _idx != this->N; ++_idx) {
-        auto* _item = reinterpret_cast<std::atomic<T*>*>(&this->__hp[_idx * element_size]);
+        auto& _item = this->__hp[_idx];
         T* _ptr = _item->load();
         if (_ptr != nullptr) {
             _item->store(nullptr);
@@ -343,7 +342,7 @@ zpt::lf::hazard_ptr<T>::get_thread_held_count() -> size_t {
     int _idx = this->get_this_thread_idx();
     size_t _held{ 0 };
     for (long _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
-        if (reinterpret_cast<std::atomic<T*>*>(&this->__hp[_k * element_size])->load() != nullptr) {
+        if (this->__hp[_k]->load() != nullptr) {
             ++_held;
         }
     }
@@ -356,7 +355,7 @@ zpt::lf::hazard_ptr<T>::release_thread_idx() -> zpt::lf::hazard_ptr<T>& {
     int _idx = this->get_this_thread_idx();
 
     for (long _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
-        reinterpret_cast<std::atomic<T*>*>(&this->__hp[_k * element_size])->store(nullptr);
+        this->__hp[_k]->store(nullptr);
     }
     this->__next_thr_idx[_idx] = false;
 
@@ -367,11 +366,10 @@ template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::init() -> zpt::lf::hazard_ptr<T>& {
     for (long _idx = 0; _idx != this->N; ++_idx) {
-        ::new (&this->__hp[_idx * element_size]) std::atomic<T*>(nullptr);
-        reinterpret_cast<std::atomic<T*>*>(&this->__hp[_idx * element_size])->store(nullptr);
+        this->__hp[_idx]->store(nullptr);
     }
     for (long _idx = 0; _idx != this->P; ++_idx) {
-        this->__next_thr_idx[_idx].store(false);
+        this->__next_thr_idx[_idx]->store(false);
     }
     return (*this);
 }
@@ -389,7 +387,7 @@ zpt::lf::hazard_ptr<T>::get_next_available_idx() -> int {
     long _idx{ 0 };
     for (; _idx != this->P; ++_idx) {
         bool _acquired{ false };
-        if (this->__next_thr_idx[_idx].compare_exchange_strong(_acquired, true)) {
+        if (this->__next_thr_idx[_idx]->compare_exchange_strong(_acquired, true)) {
             return _idx;
         }
     }

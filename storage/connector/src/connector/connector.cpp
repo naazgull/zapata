@@ -229,3 +229,16 @@ zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _para
     }
     return _collection->find({});
 }
+
+auto
+zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _params)
+  -> zpt::storage::action {
+    if (_params->ok()) {
+        auto _remove = _collection->remove(_params);
+        if (_params->size() != 0) {
+            _remove->bind(_params);
+        }
+        return _remove;
+    }
+    return _collection->remove({});
+}

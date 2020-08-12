@@ -40,6 +40,11 @@ class padded_atomic {
     auto operator=(zpt::padded_atomic<T> const& _rhs) -> zpt::padded_atomic<T>& = delete;
     auto operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>&;
 
+    auto operator==(T const& _rhs) -> bool;
+    auto operator!=(T const& _rhs) -> bool;
+
+    operator T();
+
     auto operator-> () -> std::atomic<T>*;
     auto operator*() -> std::atomic<T>&;
 
@@ -54,8 +59,7 @@ zpt::padded_atomic<T>::padded_atomic()
   : __storage{ new std::byte[static_cast<size_t>(
       zpt::cache_line_size() * std::ceil(static_cast<double>(sizeof(std::atomic<T>)) /
                                          static_cast<double>(zpt::cache_line_size())))] }
-  , __underlying{ new (this->__storage) std::atomic<T>() } {
-}
+  , __underlying{ new (this->__storage) std::atomic<T>() } {}
 
 template<typename T>
 zpt::padded_atomic<T>::padded_atomic(T _value)
@@ -89,6 +93,23 @@ zpt::padded_atomic<T>::operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_at
     _rhs.__storage = nullptr;
     _rhs.__underlying = nullptr;
     return (*this);
+}
+
+template<typename T>
+auto
+zpt::padded_atomic<T>::operator==(T const& _rhs) -> bool {
+    return (this->__underlying->load()) == _rhs;
+}
+
+template<typename T>
+auto
+zpt::padded_atomic<T>::operator!=(T const& _rhs) -> bool {
+    return !((*this) == _rhs);
+}
+
+template<typename T>
+zpt::padded_atomic<T>::operator T() {
+    return this->__underlying->load();
 }
 
 template<typename T>

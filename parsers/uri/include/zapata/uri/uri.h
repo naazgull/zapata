@@ -16,5 +16,9 @@ auto
 to_regex_object(zpt::json _in) -> zpt::json;
 auto
 to_regex_array(zpt::json _in) -> zpt::json;
+namespace path {
+auto
+to_string(zpt::json _uri) -> std::string;
+} // namespace path
 } // namespace uri
 } // namespace zpt

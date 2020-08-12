@@ -265,7 +265,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
                 return (*this);
             }
         }
-        if (this->__spin_sleep < 0) {
+        if (this->__spin_sleep <= 0) {
             std::this_thread::yield();
         }
         else if (this->__spin_sleep != 0) {

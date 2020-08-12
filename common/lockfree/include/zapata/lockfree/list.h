@@ -366,7 +366,7 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
             this->__tail.store(_new, std::memory_order_release);
             return (*this);
         }
-        if (this->__spin_sleep < 0) {
+        if (this->__spin_sleep <= 0) {
             std::this_thread::yield();
         }
         else if (this->__spin_sleep != 0) {

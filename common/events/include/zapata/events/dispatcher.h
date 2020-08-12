@@ -72,7 +72,7 @@ class dispatcher : public factory {
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
                                              long _max_pop_wait_micro)
-  : __queue{ _hazard_domain, 5 }
+  : __queue{ _hazard_domain, 0 }
   , __max_pop_wait{ _max_pop_wait_micro } {}
 
 template<typename C, typename E, typename V>

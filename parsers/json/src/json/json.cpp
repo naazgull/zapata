@@ -373,7 +373,7 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
                0);
         for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
             if (_cfg_name == "type") {
-                expect(static_cast<int>(_parameter->type()) == static_cast<int>(_cfg_value),
+                expect(zpt::to_string(_parameter->type()) == _cfg_value->str(),
                        "'" << _key << "' parameter has the wrong type",
                        400,
                        0);

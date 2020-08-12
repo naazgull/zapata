@@ -47,7 +47,8 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
             }
         }
         if (_uri["path"]->ok()) {
-            _oss << "/" << zpt::join(_uri["path"], "/") << std::flush;
+            _oss << (_uri["is_relative"]->bln() ? "" : "/") << zpt::join(_uri["path"], "/")
+                 << std::flush;
         }
         if (_uri["params"]->ok()) {
             bool _first{ true };
@@ -125,6 +126,22 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
         }
     }
     return _to_return;
+}
+
+auto
+zpt::uri::path::to_string(zpt::json _uri) -> std::string {
+    std::ostringstream _oss;
+    if (_uri->type() == zpt::JSObject) {
+        if (_uri["path"]->ok()) {
+            _oss << (_uri["is_relative"]->bln() ? "" : "/") << zpt::join(_uri["path"], "/")
+                 << std::flush;
+        }
+    }
+    else {
+        _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri["path"], "/")
+             << std::flush;
+    }
+    return _oss.str();
 }
 
 // auto

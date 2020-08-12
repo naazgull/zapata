@@ -258,12 +258,7 @@ zpt::storage::mysqlx::collection::replace(std::string const& _id, zpt::json _doc
 
 auto
 zpt::storage::mysqlx::collection::find(zpt::json _search) -> zpt::storage::action {
-    if (_search->ok() && _search->size() != 0) {
-        return zpt::storage::action::alloc<zpt::storage::mysqlx::action_find>(*this, _search);
-    }
-    else {
-        return zpt::storage::action::alloc<zpt::storage::mysqlx::action_find>(*this);
-    }
+    return zpt::storage::action::alloc<zpt::storage::mysqlx::action_find>(*this, _search);
 }
 
 auto

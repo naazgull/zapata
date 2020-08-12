@@ -29,6 +29,43 @@ namespace zpt {
 std::string* tz = nullptr;
 }
 
+auto
+zpt::to_string(zpt::JSONType _type) -> std::string {
+    switch (_type) {
+        case JSObject: {
+            return "object";
+        }
+        case JSArray: {
+            return "array";
+        }
+        case JSString: {
+            return "string";
+        }
+        case JSInteger: {
+            return "int";
+        }
+        case JSDouble: {
+            return "double";
+        }
+        case JSBoolean: {
+            return "bool";
+        }
+        case JSNil: {
+            return "null";
+        }
+        case JSDate: {
+            return "date-time";
+        }
+        case JSLambda: {
+            return "lambda";
+        }
+        case JSRegex: {
+            return "regexp";
+        }
+    }
+    return "undefined";
+}
+
 std::string
 zpt::get_tz() {
     if (zpt::tz == nullptr) {

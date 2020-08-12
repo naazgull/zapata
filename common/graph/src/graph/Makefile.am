@@ -9,7 +9,8 @@ libzapata_common_graph_la_SOURCES = \
 
 bin_PROGRAMS = zgraph
 
-zgraph_LDADD = -lpthread -lzapata-base -lzapata-lex-json -lzapata-lex-uri libzapata-common-graph.la
+zgraph_LDADD = -lpthread -lzapata-base -lzapata-common-lockfree	\
+-lzapata-lex-json -lzapata-lex-uri libzapata-common-graph.la
 zgraph_LDFLAGS =
 zgraph_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
