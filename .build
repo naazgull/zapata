@@ -2,85 +2,152 @@
 
 source .packages.rc
 
+if [[ "$1" == "one" ]]
+then
+	make -s -j4 -C ${2} && sudo make -s -C ${2} install
+	if [[ $? != 0 ]]
+	then
+		exit -1
+	fi
+    exit 0
+fi
+
 distro=$(lsb_release -c -s)
+goahead="false"
 for package in ${projects[@]}
 do
-    pushd $package
-    echo && pwd
-
+    title="Processing '${package}'"
+    underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
+    echo
+    echo ${title}
+    echo ${underlines}
+    
     case "$1" in
-	j4)
-	    make -j4 && sudo make install
+	all)
+	    make -s -j4 -C ${package} && sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
-	all)
-	    make && sudo make install
+    from)
+        if [[ "$2" == "${package}" ]]
+        then
+            goahead="yes"
+        fi
+        if [[ "${goahead}" == "yes" ]]
+        then
+	        make -s -j4 -C ${package} && sudo make -s -C ${package} install
+	        if [[ $? != 0 ]]
+	        then
+		        exit -1
+	        fi
+        fi
+        ;;
+	single)
+	    make -s -C ${package} && sudo make  -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	clean)
-	    make clean
+	    make -s -C ${package} clean
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	install)
-	    sudo make install
+	    sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make uninstall
+	    sudo make -s -C ${package} uninstall
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	distcheck)
-	    rm -rfv *.tar.gz
-	    sudo make distcheck && sudo make install
+	    rm -rfv ${package}/*.tar.gz
+	    sudo make -s -C ${package} -j4 distcheck && sudo make -s -C ${package} install
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	distclean)
-	    rm -rfv *.tar.gz
-	    sudo make distclean
+	    rm -rfv ${package}/*.tar.gz
+	    sudo make -s -C ${package} distclean
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
 	    ;;
 	config)
-	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall"
+        pushd ${package} > /dev/null
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
+	    ;;
+	asan)
+        pushd ${package} > /dev/null
+	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-fsanitize=address -fno-omit-frame-pointer -ggdb3 -Wall -fno-stack-protector" LDFLAGS="-lasan"
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
+        popd > /dev/null
 	    ;;
 	debug)
+        pushd ${package} > /dev/null
 	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
 	    ;;
 	package)
+        pushd ${package} > /dev/null
 	    ./make_deb
 	    if [[ $? != 0 ]]
 	    then
-		exit -1
+		    exit -1
 	    fi
+        popd > /dev/null
 	    ;;
+    format)
+        pushd ${package} > /dev/null
+        change_list=($(find . -name "*.cpp" -o -name "*.h"))
+        for f in ${change_list[@]}
+        do
+            echo "checking '${f}'"
+            dos2unix ${f}
+            clang-format -i --style=file ${f}
+	        if [[ $? != 0 ]]
+	        then
+		        exit -1
+	        fi
+        done
+        ;;
+    tidy)
+        pushd ${package} > /dev/null
+        # clang-tidy --format-style=file --config= $(find . -name "*.cpp")
+        #  --fix-errors --fix
+        # '-*,cppcoreguidelines*,clang-analyzer-cplusplus*,modernize*,bugprone*,-cppcoreguidelines-pro-*,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-init-variables'
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
+        popd > /dev/null
+        ;;
     esac
-    popd
 done

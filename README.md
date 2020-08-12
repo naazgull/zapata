@@ -4,10 +4,10 @@
 Zapata is a RESTful API development framework for **C++**, built upon the **&#216;mq**
 communication library and designed for high-performance and high
 scalability. It follows the _C++14_ and _C++17_ standards and coding style,
-including _lambda_ functions, _promisses_ and _assync_ programming. It delivers 
-*Router/Dealer*, *Pub/Sub* and *Push/Pull* networking patterns 
+including _lambda_ functions, _promisses_ and _assync_ programming. It delivers
+*Router/Dealer*, *Pub/Sub* and *Push/Pull* networking patterns
 encapsulated and abstracted by the RESTful pattern. It has built-in support
-for MongoDB, Redis, Oauth2.0 user authorization and authentication. Finally, 
+for MongoDB, Redis, Oauth2.0 user authorization and authentication. Finally,
 it has a really neat JSON support. It still lacks documentation, that's a work in progress.
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/naazgull/zapata?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
@@ -36,7 +36,7 @@ a) Add GPG key and repository to your 'sources.list.d'
 b) Update your repository cache and install base packages:
 
 	$ sudo apt-get update
-	$ sudo apt-get install zapata-base zapata-json zapata-events zapata-http zapata-zmq zapata-mqtt zapata-lisp zapata-python zapata-rest zapata-oauth2 zapata-gen zapata-smtp
+	$ sudo apt-get install zapata-base zapata-lex-json zapata-common-events zapata-lex-http zapata-zmq zapata-mqtt zapata-lisp zapata-python zapata-rest zapata-oauth2 zapata-gen zapata-smtp
 
 ### 2) PostgreSQL support ###
 
@@ -90,7 +90,7 @@ a) Install Users/OAuth2.0 support packages:
 
 ## Compiling from sources
 
-Each package is an autonomous autotools based project so, all you have to do is clone the project, 
+Each package is an autonomous autotools based project so, all you have to do is clone the project,
 navigate into the package dir and build the package.
 
 ### 1) C++ compiler and autotools dependencies
@@ -104,18 +104,18 @@ a) Install dependencies:
 a) Clone the git repository:
 
 	$ git clone git://github.com/naazgull/zapata.git
-	
+
 b) Go into package source dir and build (using zapata-base as an example):
 
 	$ cd zapata/base
-	$ autoreconf -vfi 
+	$ autoreconf -vfi
 	$ ./configure --prefix=/usr --sysconf=/etc "CXXFLAGS=-O3 -Wall"
 	$ make
 	$ sudo make install
-	
+
 c) Repeat _b)_ for every package you want
 
-# CONFIGURATION 
+# CONFIGURATION
 
 ## Available configurations
 
@@ -130,7 +130,7 @@ You may manually manage your Zapata daemons, example files are provide in the _*
 To enable a given configuration, run:
 
 	$ sudo zctl --add <available configuration file name, without the '.conf'>
-	
+
 e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists:
 
 	$ sudo zctl --add my-container
@@ -140,7 +140,7 @@ e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists
 To disable a given configuration, run:
 
 	$ sudo zctl --remove <available configuration file name, without the '.conf'>
-	
+
 e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists:
 
 	$ sudo zctl --remove my-container
@@ -150,7 +150,7 @@ e.g., assuming that _**/etc/zapata/backend-available/my-container.conf**_ exists
 Each time you change the files in _**/etc/zapata/backend-available/**_ or in _**/etc/zapata/rc.d**_, you should run:
 
 	$ sudo zctl --reconfigure
-	
+
 This command will refresh both configurations and **systemd** units.
 
 ## Configuration attributes

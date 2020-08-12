@@ -1,10 +1,9 @@
 
-BasedOnStyle: LLVM
-ColumnLimit: 120
+BasedOnStyle: Mozilla
+ColumnLimit: 100
 Standard: Cpp11
-UseTab: Always
-IndentWidth: 8
-TabWidth: 8
+IndentWidth: 4
+TabWidth: 4
 SortIncludes: false
 BinPackArguments: false
 BinPackParameters: false
@@ -12,3 +11,19 @@ BinPackParameters: false
 Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
+BreakBeforeBraces: Custom
+IncludeBlocks: Regroup
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: true
+    BeforeElse: true
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false

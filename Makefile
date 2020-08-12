@@ -1,8 +1,8 @@
 all:
 	./.build all
 
-j4:
-	./.build j4
+single:
+	./.build single
 
 clean:
 	./.build clean
@@ -22,6 +22,9 @@ distclean:
 config:
 	./.build config
 
+asan:
+	./.build asan
+
 debug:
 	./.build debug
 
@@ -32,3 +35,14 @@ deb:
 	sudo rm -rfv upstream/*
 	./.build package
 
+format:
+	./.build format
+
+tidy:
+	./.build tidy
+
+from:
+	./.build from ${module}
+
+one:
+	./.build one ${module}
