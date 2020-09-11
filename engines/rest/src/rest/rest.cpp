@@ -41,7 +41,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
 
           _transport->receive(_channel);
           _event->set_path(std::string("/ROOT/") +
-                           zpt::rest::to_str(_channel->received()["performative"]->intr()) +
+                           zpt::rest::to_str(_channel->received()["performative"]->integer()) +
                            _channel->uri());
       });
 
@@ -132,6 +132,7 @@ zpt::rest::engine::on_error(zpt::json& _path,
                             zpt::pipeline::event<zpt::exchange>& _event,
                             const char* _what,
                             const char* _description,
+                            const char* _backtrace,
                             int _error,
                             int _status) -> bool {
     auto& _channel = _event->content();
@@ -140,6 +141,9 @@ zpt::rest::engine::on_error(zpt::json& _path,
     };
     if (_description != nullptr) {
         _channel->to_send()["body"] << "description" << std::string{ _description };
+    }
+    if (_backtrace != nullptr) {
+        _channel->to_send()["body"] << "backtrace" << zpt::split(std::string{ _backtrace }, "\n");
     }
     return true;
 }

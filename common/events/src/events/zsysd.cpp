@@ -163,7 +163,7 @@ main(int argc, char* argv[]) {
             _zfs.close();
         }
 
-        for (auto _to_add : _args["add"]->arr()) {
+        for (auto _to_add : _args["add"]->array()) {
             generate(_to_add, _global_conf);
         }
     }
@@ -196,7 +196,7 @@ main(int argc, char* argv[]) {
         }
     }
     else if (_args["remove"]) {
-        for (auto _to_remove : _args["remove"]->arr()) {
+        for (auto _to_remove : _args["remove"]->array()) {
             std::ifstream _ifs;
             _ifs.open((std::string("/etc/zapata/backend-available/") + std::string(_to_remove) +
                        std::string(".conf"))

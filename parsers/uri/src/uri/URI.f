@@ -139,6 +139,7 @@
         begin(StartCondition_::placeholder);
     }
     "(" {
+	    ++d_function_level;
         begin(StartCondition_::function);
     }
     "#" {
@@ -166,13 +167,32 @@
 }
 
 <function> {
-    ([^,)]+) {
-        return zpt::uri::lex::FUNCTION_PARAM;
+	([^,)]+) {
+        if (matched().find("(") != std::string::npos) {
+		    ++d_function_level;
+		    d_function_helper = matched();
+		}
+	    else {
+		    return zpt::uri::lex::FUNCTION_PARAM;
+		}
 	}
     "," {
+	    if (d_function_level != 1) {
+            d_function_helper += ",";
+		}
 	}
 	")" {
-        begin(StartCondition_::params);
+	    --d_function_level;
+	    if (d_function_level == 0) {
+            begin(StartCondition_::params);
+		}
+	    else {
+            d_function_helper += ")";
+			if (d_function_level == 1) {
+			    setMatched(d_function_helper);
+				return zpt::uri::lex::FUNCTION_PARAM;
+			}
+		}
 	}
 }
 

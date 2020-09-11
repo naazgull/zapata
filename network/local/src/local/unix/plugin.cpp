@@ -35,11 +35,11 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
-                                                                          _config["path"]->str());
+                                                                          _config["path"]->string());
 
         _boot.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-            zlog("Starting UNIX transport on '" << _config["path"]->str() << "'", zpt::info);
+            zlog("Starting UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
 
             try {
                 do {
@@ -50,8 +50,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
             }
             catch (zpt::failed_expectation const& _e) {
             }
-            unlink(_config["path"]->str().data());
-            zlog("Stopping UNIX transport on '" << _config["path"]->str() << "'", zpt::info);
+            unlink(_config["path"]->string().data());
+            zlog("Stopping UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
         });
     }
 }

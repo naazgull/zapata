@@ -32,7 +32,7 @@ zpt::UPnPFactory::~UPnPFactory() {}
 auto
 zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
-    auto _found = this->__channels.find(_options["connection"]->str());
+    auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) {
         _return = _found->second;
     }
@@ -61,7 +61,7 @@ _zpt_plugin_load_() {
     zpt::json _options = _emitter->options();
 
     if (_options["upnp"]->ok() && _options["upnp"]->is_array()) {
-        for (auto _definition : _options["upnp"]->arr()) {
+        for (auto _definition : _options["upnp"]->array()) {
             zpt::socket _upnp = _factory->produce(_definition["bind"]);
             zpt::poll::instance<zpt::ChannelPoll>()->poll(_upnp);
 

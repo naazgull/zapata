@@ -122,7 +122,7 @@ zpt::lisp::Bridge::load_module(std::string const& _module) -> void {
 
 auto
 zpt::lisp::Bridge::defun(zpt::json _conf, cl_objectfn_fixed _fun, int _n_args) -> void {
-    cl_def_c_function(c_string_to_object(_conf["name"]->str().data()), _fun, _n_args);
+    cl_def_c_function(c_string_to_object(_conf["name"]->string().data()), _fun, _n_args);
     this->defop(_conf);
 }
 
@@ -130,8 +130,8 @@ auto
 zpt::lisp::Bridge::deflbd(zpt::json _conf,
                           std::function<zpt::lisp::object(int, zpt::lisp::object[])> _callback)
   -> void {
-    size_t _n_args = _conf["args"]->type() != zpt::JSArray ? 0 : _conf["args"]->arr()->size();
-    std::string _name(_conf["name"]->str() + std::string("/") + std::to_string(_n_args));
+    size_t _n_args = _conf["args"]->type() != zpt::JSArray ? 0 : _conf["args"]->array()->size();
+    std::string _name(_conf["name"]->string() + std::string("/") + std::to_string(_n_args));
     auto _found = this->__lambdas->find(_name);
     if (_found == this->__lambdas->end()) {
         this->__lambdas->insert(make_pair(_name, _callback));
@@ -139,7 +139,7 @@ zpt::lisp::Bridge::deflbd(zpt::json _conf,
         std::string _coerced_args_string;
         if (_conf["args"]->type() == zpt::JSArray) {
             size_t _i = 0;
-            for (auto _arg : _conf["args"]->arr()) {
+            for (auto _arg : _conf["args"]->array()) {
                 _args_string += (bool(_arg["optional"]) ? "&optional " : "") + std::string("arg") +
                                 std::to_string(_i) + std::string(" ");
                 _coerced_args_string += std::string("arg") + std::to_string(_i) + std::string(" ");
@@ -147,7 +147,7 @@ zpt::lisp::Bridge::deflbd(zpt::json _conf,
             }
         }
         std::string _expression =
-          std::string("(defun ") + _conf["name"]->str() + std::string(" (") + _args_string +
+          std::string("(defun ") + _conf["name"]->string() + std::string(" (") + _args_string +
           std::string(") (cpp-lambda-call \"") + _name + std::string("\" ") +
           std::to_string(_n_args) + std::string(" (make-array ") + std::to_string(_n_args) +
           std::string(" :initial-contents (list ") + _coerced_args_string + std::string(") ) ) )");
@@ -164,9 +164,9 @@ zpt::lisp::Bridge::defop(zpt::json _conf) -> void {
     expect(_conf["access"]->ok(), "the configuration attribute 'access' is required", 0, 0);
 
     std::string _expression(
-      std::string("(setf (gethash '") + _conf["name"]->str() +
-      std::string(" *defined-operators*) '((name . \"") + _conf["name"]->str() +
-      std::string("\") (access . \"") + _conf["access"]->str() + std::string("\") ") +
+      std::string("(setf (gethash '") + _conf["name"]->string() +
+      std::string(" *defined-operators*) '((name . \"") + _conf["name"]->string() +
+      std::string("\") (access . \"") + _conf["access"]->string() + std::string("\") ") +
       (_conf["category"]->ok()
          ? std::string("(category . \"") + ((std::string)_conf["category"]) + std::string("\") ")
          : std::string("")) +
@@ -175,27 +175,27 @@ zpt::lisp::Bridge::defop(zpt::json _conf) -> void {
                                   : std::string("")) +
       std::string("(args . ("));
     if (_conf["args"]->ok()) {
-        for (auto _a : _conf["args"]->arr()) {
-            _expression += std::string("((type . \"") + _a["type"]->str() +
-                           std::string("\") (label . \"") + _a["label"]->str() +
+        for (auto _a : _conf["args"]->array()) {
+            _expression += std::string("((type . \"") + _a["type"]->string() +
+                           std::string("\") (label . \"") + _a["label"]->string() +
                            std::string("\")) ");
         }
     }
     _expression += std::string("))");
     if (_conf["post-state"]->ok()) {
         _expression += std::string(" (post-state . (");
-        for (auto _a : _conf["post-state"]->arr()) {
-            _expression += std::string("((prop . \"") + _a["prop"]->str() +
-                           std::string("\") (value . \"") + _a["value"]->str() +
+        for (auto _a : _conf["post-state"]->array()) {
+            _expression += std::string("((prop . \"") + _a["prop"]->string() +
+                           std::string("\") (value . \"") + _a["value"]->string() +
                            std::string("\"))");
         }
         _expression += std::string("))");
     }
-    _expression += std::string(" (label . \"") + _conf["label"]->str() +
-                   std::string("\") (type . \"") + _conf["type"]->str() + std::string("\")))");
+    _expression += std::string(" (label . \"") + _conf["label"]->string() +
+                   std::string("\") (type . \"") + _conf["type"]->string() + std::string("\")))");
 
     this->eval(_expression);
-    this->__modules->insert(make_pair(_conf["name"]->str(), this->__current));
+    this->__modules->insert(make_pair(_conf["name"]->string(), this->__current));
 }
 
 auto
@@ -463,7 +463,7 @@ zpt::lisp::builtin_operators(zpt::lisp::bridge* _bridge) -> void {
           zpt::json _opts = _bridge->from<zpt::lisp::object>(_args[2]);
           std::map<zpt::performative, zpt::ev::Handler> _handlers;
 
-          for (auto _lambda : _lambdas->obj()) {
+          for (auto _lambda : _lambdas->object()) {
               zpt::performative _performative = zpt::ev::from_str(_lambda.first);
               std::string _name = std::string(_lambda.second);
               _handlers.insert(std::make_pair(

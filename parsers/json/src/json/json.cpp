@@ -373,14 +373,14 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
                0);
         for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
             if (_cfg_name == "type") {
-                expect(zpt::to_string(_parameter->type()) == _cfg_value->str(),
+                expect(zpt::to_string(_parameter->type()) == _cfg_value->string(),
                        "'" << _key << "' parameter has the wrong type",
                        400,
                        0);
             }
             else if (_cfg_value == "pattern") {
                 expect(_cfg_value->type() == zpt::JSRegex &&
-                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->rgx()),
+                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
                        "'" << _key << "' parameter pattern doesn't match",
                        400,
                        0);
@@ -421,7 +421,7 @@ zpt::test::timestamp(zpt::json _timestamp) -> bool {
                                            "([0-9]{2})."
                                            "([0-9]{3})([+-])"
                                            "([0-9]{4})$");
-    return std::regex_match(_timestamp->str(), _timestamp_rgx);
+    return std::regex_match(_timestamp->string(), _timestamp_rgx);
 }
 
 auto
@@ -439,7 +439,7 @@ zpt::http::cookies::deserialize(std::string const& _cookie_header) -> zpt::json 
         else {
             zpt::json _pair = zpt::split(_value, "=");
             if (_pair->size() == 2) {
-                _return << _pair[0]->str() << _pair[1];
+                _return << _pair[0]->string() << _pair[1];
             }
         }
     }

@@ -77,16 +77,16 @@ zpt::tostr(std::string& s, long long i) -> void {
 }
 
 auto
-zpt::tostr(std::string& s, float i) -> void {
+zpt::tostr(std::string& s, float i, int precision) -> void {
     std::ostringstream _oss;
-    _oss << i << std::flush;
+    _oss << std::fixed << std::setprecision(precision) << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
 auto
-zpt::tostr(std::string& s, double i) -> void {
+zpt::tostr(std::string& s, double i, int precision) -> void {
     std::ostringstream _oss;
-    _oss << i << std::flush;
+    _oss << std::fixed << std::setprecision(precision) << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
@@ -157,14 +157,14 @@ zpt::tostr(long long i) -> std::string {
 }
 
 auto
-zpt::tostr(float i) -> std::string {
+zpt::tostr(float i, int precision) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
 auto
-zpt::tostr(double i) -> std::string {
+zpt::tostr(double i, int precision) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();

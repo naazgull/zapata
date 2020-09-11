@@ -76,7 +76,7 @@ main(int _argc, char* _argv[]) -> int {
         zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << _e.what() << std::endl << std::flush;
+        std::cout << _e.what() << ": " << _e.description() << std::endl << std::flush;
     }
     return 0;
 }

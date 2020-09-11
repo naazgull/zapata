@@ -112,7 +112,7 @@ zpt::mongodb::Client::insert(std::string const& _collection,
         _document << "href"
                   << (_href_prefix +
                       (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                      _document["id"]->str());
+                      _document["id"]->string());
     }
     _document << "_id" << _document["href"];
 
@@ -120,12 +120,12 @@ zpt::mongodb::Client::insert(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
-    _conn->insert(_full_collection, _mongo_document.obj());
+    _conn->insert(_full_collection, _mongo_document.object());
     _conn.done();
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -149,11 +149,11 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
                 _document << "href"
                           << (_href_prefix +
                               (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                              _document["id"]->str());
+                              _document["id"]->string());
             }
             if (!_document["id"]->ok()) {
-                zpt::json _split = zpt::split(_document["href"]->str(), "/");
-                _document << "id" << _split->arr()->back();
+                zpt::json _split = zpt::split(_document["href"]->string(), "/");
+                _document << "id" << _split->array()->back();
             }
             std::string _href = std::string(_document["href"]);
             unsigned long _size = 0;
@@ -166,12 +166,12 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
                 mongo::BSONObjBuilder _mongo_document;
                 zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
                 _conn->update(
-                  _full_collection, BSON("_id" << _href), _mongo_document.obj(), false, false);
+                  _full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
                 _conn.done();
 
                 if (!bool(_opts["mutated-event"]))
                     zpt::Connector::set(_collection, _href, _document, _opts);
-                return _document["id"]->str();
+                return _document["id"]->string();
             }
         }
     }
@@ -183,7 +183,7 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
             _document << "href"
                       << (_href_prefix +
                           (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                          _document["id"]->str());
+                          _document["id"]->string());
         }
         _document << "_id" << _document["href"];
 
@@ -192,13 +192,13 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
                                        : zpt::undefined);
         mongo::BSONObjBuilder _mongo_document;
         zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
-        _conn->insert(_full_collection, _mongo_document.obj());
+        _conn->insert(_full_collection, _mongo_document.object());
         _conn.done();
 
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -220,7 +220,7 @@ zpt::mongodb::Client::save(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
-    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.obj(), false, false);
+    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
     _conn.done();
 
     if (!bool(_opts["mutated-event"]))
@@ -247,7 +247,7 @@ zpt::mongodb::Client::set(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
-    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.obj(), false, false);
+    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
     _conn.done();
 
     if (!bool(_opts["mutated-event"]))
@@ -284,7 +284,7 @@ zpt::mongodb::Client::set(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
-    _conn->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
+    _conn->update(_full_collection, _filter, _mongo_document.object(), false, bool(_opts["multi"]));
     _conn.done();
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -311,7 +311,7 @@ zpt::mongodb::Client::unset(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
-    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.obj(), false, false);
+    _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
     _conn.done();
 
     if (!bool(_opts["mutated-event"]))
@@ -348,7 +348,7 @@ zpt::mongodb::Client::unset(std::string const& _collection,
       (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
-    _conn->update(_full_collection, _filter, _mongo_document.obj(), false, bool(_opts["multi"]));
+    _conn->update(_full_collection, _filter, _mongo_document.object(), false, bool(_opts["multi"]));
     _conn.done();
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -374,7 +374,7 @@ zpt::mongodb::Client::remove(std::string const& _collection,
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::remove(
-          _collection, _removed["href"]->str(), _opts + zpt::json{ "removed", _removed });
+          _collection, _removed["href"]->string(), _opts + zpt::json{ "removed", _removed });
     return 1;
 }
 
@@ -394,12 +394,12 @@ zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern,
     if (!_selected->ok()) {
         return 0;
     }
-    for (auto _record : _selected["elements"]->arr()) {
-        _conn->remove(_full_collection, BSON("id" << _record["id"]->str()));
+    for (auto _record : _selected["elements"]->array()) {
+        _conn->remove(_full_collection, BSON("id" << _record["id"]->string()));
 
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::remove(
-              _collection, _record["href"]->str(), _opts + zpt::json{ "removed", _record });
+              _collection, _record["href"]->string(), _opts + zpt::json{ "removed", _record });
     }
     _conn.done();
 
@@ -419,7 +419,7 @@ zpt::mongodb::Client::get(std::string const& _collection,
     zpt::json _fields = zpt::mongodb::get_fields(_opts);
     mongo::BSONObjBuilder _bb_fields;
     zpt::mongodb::tomongo(_fields, _bb_fields);
-    mongo::BSONObj _filter = _bb_fields.obj();
+    mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
     _result.reset(
       _conn
@@ -427,7 +427,7 @@ zpt::mongodb::Client::get(std::string const& _collection,
                 BSON("_id" << _topic),
                 0,
                 0,
-                (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr),
+                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
                 (int)mongo::QueryOption_SlaveOk)
         .release());
 
@@ -506,7 +506,7 @@ zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, 
     zpt::json _fields = zpt::mongodb::get_fields(_opts);
     mongo::BSONObjBuilder _bb_fields;
     zpt::mongodb::tomongo(_fields, _bb_fields);
-    mongo::BSONObj _filter = _bb_fields.obj();
+    mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
     _result.reset(
       _conn
@@ -514,7 +514,7 @@ zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, 
                 _query,
                 _page_size,
                 _page_start_index,
-                (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr),
+                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
                 (int)mongo::QueryOption_SlaveOk)
         .release());
     while (_result->more()) {
@@ -595,7 +595,7 @@ zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
     zpt::json _fields = zpt::mongodb::get_fields(_opts);
     mongo::BSONObjBuilder _bb_fields;
     zpt::mongodb::tomongo(_fields, _bb_fields);
-    mongo::BSONObj _filter = _bb_fields.obj();
+    mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
     _result.reset(
       _conn
@@ -603,7 +603,7 @@ zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
                 _query,
                 _page_size,
                 _page_start_index,
-                (_fields->is_object() && _fields->obj()->size() != 0 ? &_filter : nullptr),
+                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
                 (int)mongo::QueryOption_SlaveOk)
         .release());
 

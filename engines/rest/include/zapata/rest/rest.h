@@ -32,19 +32,18 @@ namespace zpt {
 auto
 REST_ENGINE() -> ssize_t&;
 namespace rest {
-
-static inline const unsigned short Get = 0;
-static inline const unsigned short Put = 1;
-static inline const unsigned short Post = 2;
-static inline const unsigned short Delete = 3;
-static inline const unsigned short Head = 4;
-static inline const unsigned short Options = 5;
-static inline const unsigned short Patch = 6;
-static inline const unsigned short Reply = 7;
-static inline const unsigned short Msearch = 8;
-static inline const unsigned short Notify = 9;
-static inline const unsigned short Trace = 10;
-static inline const unsigned short Connect = 11;
+static inline const zpt::performative Get = 0;
+static inline const zpt::performative Put = 1;
+static inline const zpt::performative Post = 2;
+static inline const zpt::performative Delete = 3;
+static inline const zpt::performative Head = 4;
+static inline const zpt::performative Options = 5;
+static inline const zpt::performative Patch = 6;
+static inline const zpt::performative Reply = 7;
+static inline const zpt::performative Msearch = 8;
+static inline const zpt::performative Notify = 9;
+static inline const zpt::performative Trace = 10;
+static inline const zpt::performative Connect = 11;
 
 class engine : public zpt::pipeline::engine<zpt::exchange> {
   public:
@@ -66,6 +65,7 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
                          zpt::pipeline::event<zpt::exchange>& _event,
                          const char* _what,
                          const char* _description = nullptr,
+                         const char* _backtrace = nullptr,
                          int _error = -1,
                          int _status = 500) -> bool;
 

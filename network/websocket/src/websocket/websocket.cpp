@@ -177,7 +177,7 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
            0);
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'", 500, 0);
     auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
-      _uri["domain"]->str(), static_cast<uint16_t>(_uri["port"]->intr()));
+      _uri["domain"]->string(), static_cast<uint16_t>(_uri["port"]->integer()));
     _stream->transport("ws");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

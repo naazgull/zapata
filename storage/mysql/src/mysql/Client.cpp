@@ -70,7 +70,7 @@ auto
 zpt::mysql::Client::connect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(
-      string("tcp://") + this->connection()["bind"]->str(),
+      string("tcp://") + this->connection()["bind"]->string(),
       std::string(this->connection()["user"]),
       std::string(this->connection()["passwd"])));
     zpt::Connector::connect();
@@ -87,7 +87,7 @@ zpt::mysql::Client::reconnect() -> void {
     this->__conn->close();
     this->__conn.release();
     this->__conn.reset(sql::mysql::get_mysql_driver_instance()->connect(
-      string("tcp://") + this->connection()["bind"]->str(),
+      string("tcp://") + this->connection()["bind"]->string(),
       std::string(this->connection()["user"]),
       std::string(this->connection()["passwd"])));
     zpt::Connector::reconnect();
@@ -110,7 +110,7 @@ zpt::mysql::Client::insert(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     if (!_document["id"]->ok()) {
@@ -120,7 +120,7 @@ zpt::mysql::Client::insert(std::string const& _collection,
         _document << "href"
                   << (_href_prefix +
                       (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                      _document["id"]->str());
+                      _document["id"]->string());
     }
 
     std::string _expression("INSERT INTO ");
@@ -128,7 +128,7 @@ zpt::mysql::Client::insert(std::string const& _collection,
     _expression += std::string("(");
     std::string _columns;
     std::string _values;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_columns.length() != 0) {
             _columns += std::string(",");
         }
@@ -155,7 +155,7 @@ zpt::mysql::Client::insert(std::string const& _collection,
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -175,7 +175,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     {
@@ -184,18 +184,18 @@ zpt::mysql::Client::upsert(std::string const& _collection,
                 _document << "href"
                           << (_href_prefix +
                               (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                              _document["id"]->str());
+                              _document["id"]->string());
             }
             if (!_document["id"]->ok()) {
-                zpt::json _split = zpt::split(_document["href"]->str(), "/");
-                _document << "id" << _split->arr()->back();
+                zpt::json _split = zpt::split(_document["href"]->string(), "/");
+                _document << "id" << _split->array()->back();
             }
             std::string _href = std::string(_document["href"]);
             std::string _expression("UPDATE ");
             _expression += _collection;
             _expression += std::string(" SET ");
             std::string _sets;
-            for (auto _c : _document->obj()) {
+            for (auto _c : _document->object()) {
                 if (_sets.length() != 0) {
                     _sets += std::string(",");
                 }
@@ -206,7 +206,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
             _expression += _sets;
 
             zpt::json _splited = zpt::split(_href, "/");
-            _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
+            _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
 
             try {
                 {
@@ -220,7 +220,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
 
             if (!bool(_opts["mutated-event"]))
                 zpt::Connector::set(_collection, _href, _document, _opts);
-            return _document["id"]->str();
+            return _document["id"]->string();
         }
     }
     {
@@ -231,7 +231,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
             _document << "href"
                       << (_href_prefix +
                           (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                          _document["id"]->str());
+                          _document["id"]->string());
         }
 
         std::string _expression("INSERT INTO ");
@@ -239,7 +239,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
         _expression += std::string("(");
         std::string _columns;
         std::string _values;
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
             if (_columns.length() != 0) {
                 _columns += std::string(",");
             }
@@ -267,7 +267,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -287,14 +287,14 @@ zpt::mysql::Client::save(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::string _expression("UPDATE ");
     _expression += _collection;
     _expression += std::string(" SET ");
     std::string _sets;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_sets.length() != 0) {
             _sets += std::string(",");
         }
@@ -305,7 +305,7 @@ zpt::mysql::Client::save(std::string const& _collection,
     _expression += _sets;
 
     zpt::json _splited = zpt::split(_href, "/");
-    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
+    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
 
     int _size = 0;
     try {
@@ -340,14 +340,14 @@ zpt::mysql::Client::set(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::string _expression("UPDATE ");
     _expression += _collection;
     _expression += std::string(" SET ");
     std::string _sets;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_sets.length() != 0) {
             _sets += std::string(",");
         }
@@ -358,7 +358,7 @@ zpt::mysql::Client::set(std::string const& _collection,
     _expression += _sets;
 
     zpt::json _splited = zpt::split(_href, "/");
-    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
+    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
 
     int _size = 0;
     try {
@@ -393,14 +393,14 @@ zpt::mysql::Client::set(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::string _expression("UPDATE ");
     _expression += _collection;
     _expression += std::string(" SET ");
     std::string _sets;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_sets.length() != 0) {
             _sets += std::string(",");
         }
@@ -450,14 +450,14 @@ zpt::mysql::Client::unset(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::string _expression("UPDATE ");
     _expression += _collection;
     _expression += std::string(" SET ");
     std::string _sets;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_sets.length() != 0) {
             _sets += std::string(",");
         }
@@ -466,7 +466,7 @@ zpt::mysql::Client::unset(std::string const& _collection,
     _expression += _sets;
 
     zpt::json _splited = zpt::split(_href, "/");
-    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
+    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
 
     int _size = 0;
     try {
@@ -501,14 +501,14 @@ zpt::mysql::Client::unset(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::string _expression("UPDATE ");
     _expression += _collection;
     _expression += std::string(" SET ");
     std::string _sets;
-    for (auto _c : _document->obj()) {
+    for (auto _c : _document->object()) {
         if (_sets.length() != 0) {
             _sets += std::string(",");
         }
@@ -551,13 +551,13 @@ zpt::mysql::Client::remove(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     zpt::json _splited = zpt::split(_href, "/");
     std::string _expression = std::string("DELETE FROM ") + _collection +
                               std::string(" WHERE id=") +
-                              zpt::mysql::escape(_splited->arr()->back());
+                              zpt::mysql::escape(_splited->array()->back());
 
     int _size = 0;
     zpt::json _removed;
@@ -590,14 +590,14 @@ zpt::mysql::Client::remove(std::string const& _collection, zpt::json _pattern, z
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     zpt::json _selected = this->query(_collection, _pattern, _opts);
     if (!_selected->ok()) {
         return 0;
     }
-    for (auto _record : _selected["elements"]->arr()) {
+    for (auto _record : _selected["elements"]->array()) {
         std::string _expression = std::string("DELETE FROM ") + _collection +
                                   std::string(" WHERE id=") + zpt::mysql::escape(_record["id"]);
         try {
@@ -612,7 +612,7 @@ zpt::mysql::Client::remove(std::string const& _collection, zpt::json _pattern, z
 
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::remove(
-              _collection, _record["href"]->str(), _opts + zpt::json{ "removed", _record });
+              _collection, _record["href"]->string(), _opts + zpt::json{ "removed", _record });
     }
 
     return int(_selected["size"]);
@@ -623,7 +623,7 @@ zpt::mysql::Client::get(std::string const& _collection, std::string const& _href
   -> zpt::json {
     std::string _expression("SELECT * FROM ");
     zpt::json _splited = zpt::split(_href, "/");
-    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->arr()->back());
+    _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
     return this->query(_collection, _expression, _opts)["elements"][0];
 }
 
@@ -640,7 +640,7 @@ zpt::mysql::Client::query(std::string const& _collection,
                500,
                0);
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
-        _stmt->execute(string("USE ") + this->connection()["db"]->str());
+        _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
     std::shared_ptr<sql::ResultSet> _result;
@@ -652,10 +652,10 @@ zpt::mysql::Client::query(std::string const& _collection,
     for (; _result->next();) {
         _elements << zpt::mysql::fromsql_r(_result);
     }
-    if (_elements->arr()->size() == 0) {
+    if (_elements->array()->size() == 0) {
         return zpt::undefined;
     }
-    return { "size", _elements->arr()->size(), "elements", _elements };
+    return { "size", _elements->array()->size(), "elements", _elements };
 }
 
 auto

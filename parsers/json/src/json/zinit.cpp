@@ -66,7 +66,7 @@ main(int _argc, char* _argv[]) {
 
     std::string _project_name;
     if (_options["name"]->type() == zpt::JSString) {
-        _project_name.assign(_options["name"]->str());
+        _project_name.assign(_options["name"]->string());
     }
     else {
         do {
@@ -81,7 +81,7 @@ main(int _argc, char* _argv[]) {
 
     std::string _project_abbr;
     if (_options["abbr"]->type() == zpt::JSString) {
-        _project_abbr.assign(_options["abbr"]->str());
+        _project_abbr.assign(_options["abbr"]->string());
     }
     else {
         do {
@@ -97,7 +97,7 @@ main(int _argc, char* _argv[]) {
 
     std::string _path_prefix;
     if (_options["prefix"]->type() == zpt::JSString) {
-        _path_prefix.assign(_options["prefix"]->str());
+        _path_prefix.assign(_options["prefix"]->string());
     }
     else {
         std::cout << "Path prefix: " << std::flush;
@@ -110,7 +110,7 @@ main(int _argc, char* _argv[]) {
 
     std::string _dev_name;
     if (_options["developer"]["name"]->type() == zpt::JSString) {
-        _dev_name.assign(_options["developer"]["name"]->str());
+        _dev_name.assign(_options["developer"]["name"]->string());
     }
     else {
         do {
@@ -122,7 +122,7 @@ main(int _argc, char* _argv[]) {
 
     std::string _dev_email;
     if (_options["developer"]["email"]->type() == zpt::JSString) {
-        _dev_email.assign(_options["developer"]["email"]->str());
+        _dev_email.assign(_options["developer"]["email"]->string());
     }
     else {
         do {

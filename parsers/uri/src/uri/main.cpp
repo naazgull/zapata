@@ -124,6 +124,15 @@ main(int argc, char* argv[]) {
                   << std::endl
                   << std::endl
                   << std::flush;
+        std::cout << zpt::uri::parse(
+                       "http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=&d=ge(integer(0))")
+                  << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse(
+                       "http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=&d=ge(integer(0))"))
+                  << std::endl
+                  << std::endl
+                  << std::flush;
         std::cout << zpt::uri::parse("ftp://pf@na.zgul.me/files/movies") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("ftp://pf@na.zgul.me/files/movies"))
                   << std::endl

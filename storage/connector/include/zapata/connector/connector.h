@@ -240,6 +240,8 @@ class result {
 auto
 filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 auto
+reply_find(zpt::json& _reply, zpt::json _params) -> void;
+auto
 filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 } // namespace storage
 } // namespace zpt

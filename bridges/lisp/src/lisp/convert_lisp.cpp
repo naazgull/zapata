@@ -411,7 +411,7 @@ zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
     switch (_json->type()) {
         case zpt::JSObject: {
             _ret += std::string("(json ");
-            for (auto _o : _json->obj()) {
+            for (auto _o : _json->object()) {
                 _ret += std::string(" \"") + _o.first + std::string("\" ") +
                         zpt::lisp::to_lisp_string(_o.second);
             }
@@ -420,7 +420,7 @@ zpt::lisp::to_lisp_string(zpt::json _json) -> std::string {
         }
         case zpt::JSArray: {
             _ret += std::string("(list ");
-            for (auto _o : _json->arr()) {
+            for (auto _o : _json->array()) {
                 _ret += std::string(" ") + zpt::lisp::to_lisp_string(_o) + std::string(" ");
             }
             _ret += std::string(")");

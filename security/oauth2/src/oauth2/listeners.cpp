@@ -19,9 +19,31 @@
   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
-#pragma once
-
-#include <zapata/oauth2/config.h>
+#include <ctime>
+#include <memory>
+#include <zapata/rest.h>
+#include <zapata/http.h>
 #include <zapata/oauth2/oauth2.h>
 #include <zapata/oauth2/listeners.h>
+
+auto
+zpt::auth::oauth2::authorize_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void {
+    auto& _channel = _event->content();
+    auto _message = _channel->received();
+    auto _body = _message["body"];
+    auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
+    auto& _server = zpt::globals::get<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    auto _authorization =
+      _server.authorize(_message["performative"]->integer(), _message, _config["oauth2"]);
+
+    _channel->to_send() = _authorization;
+}
+
+auto
+zpt::auth::oauth2::token_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void {}
+
+auto
+zpt::auth::oauth2::refresh_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void {}
+
+auto
+zpt::auth::oauth2::validate_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void {}

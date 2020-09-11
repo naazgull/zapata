@@ -305,7 +305,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
         }
     }
 
-    return { "size", _return->obj()->size(), "elements", _return };
+    return { "size", _return->object()->size(), "elements", _return };
 }
 
 auto
@@ -444,7 +444,7 @@ zpt::redis::ZList::range(std::string const& _key,
         }
     }
 
-    return { "size", _return->obj()->size(), "elements", _return };
+    return { "size", _return->object()->size(), "elements", _return };
 }
 
 auto
@@ -535,7 +535,7 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
         }
     }
 
-    return { "size", _return->obj()->size(), "elements", _return };
+    return { "size", _return->object()->size(), "elements", _return };
 }
 
 auto
@@ -640,5 +640,5 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
         }
     } while (_cursor != 0);
 
-    return { "size", _return->obj()->size(), "elements", _return };
+    return { "size", _return->object()->size(), "elements", _return };
 }

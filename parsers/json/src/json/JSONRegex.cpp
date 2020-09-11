@@ -55,7 +55,7 @@ zpt::JSONRegex::JSONRegex::operator==(zpt::regex _rhs) -> bool {
 auto
 zpt::JSONRegex::JSONRegex::operator==(zpt::json _rhs) -> bool {
     if (_rhs->type() == zpt::JSRegex) {
-        return (*this) == _rhs->rgx();
+        return (*this) == _rhs->regex();
     }
     else {
         return std::regex_match(static_cast<std::string>(_rhs), (*this->__underlying.get()));

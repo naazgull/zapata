@@ -42,9 +42,9 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
   , __file(_file) {
     zpt::replace(this->__what, "\"", "");
     zpt::replace(this->__description, "\"", "");
-    this->__description.insert(0, "'");
+    this->__description.insert(0, "expected '");
     if (this->__line != 0) {
-        this->__description.insert(this->__description.length(), "' failed on file ");
+        this->__description.insert(this->__description.length(), "' to be true on file ");
         this->__description.insert(this->__description.length(), this->__file);
         this->__description.insert(this->__description.length(), ", line ");
         zpt::tostr(this->__description, this->__line);
@@ -68,9 +68,9 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
   , __file(_file) {
     zpt::replace(this->__what, "\"", "");
     zpt::replace(this->__description, "\"", "");
-    this->__description.insert(0, "'");
+    this->__description.insert(0, "expected '");
     if (this->__line != 0) {
-        this->__description.insert(this->__description.length(), "' failed on file ");
+        this->__description.insert(this->__description.length(), "' to be true on file ");
         this->__description.insert(this->__description.length(), this->__file);
         this->__description.insert(this->__description.length(), ", line ");
         zpt::tostr(this->__description, this->__line);

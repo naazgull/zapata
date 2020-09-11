@@ -71,9 +71,9 @@ tostr(std::string& s, long i) -> void;
 auto
 tostr(std::string& s, long long i) -> void;
 auto
-tostr(std::string& s, float i) -> void;
+tostr(std::string& s, float i, int precision = 3) -> void;
 auto
-tostr(std::string& s, double i) -> void;
+tostr(std::string& s, double i, int precision = 3) -> void;
 auto
 tostr(std::string& s, char i) -> void;
 auto
@@ -96,9 +96,9 @@ tostr(long i) -> std::string;
 auto
 tostr(long long i) -> std::string;
 auto
-tostr(float i) -> std::string;
+tostr(float i, int precision = 3) -> std::string;
 auto
-tostr(double i) -> std::string;
+tostr(double i, int precision = 3) -> std::string;
 auto
 tostr(char i) -> std::string;
 auto

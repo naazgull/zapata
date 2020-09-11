@@ -146,91 +146,91 @@ SOFTWARE.
 
 #define expect_uuid(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),              \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->string())),              \
                std::string(x),                                                                     \
                z,                                                                                  \
                1010)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())),     \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->string())),     \
                std::string(y),                                                                     \
                z,                                                                                  \
                1010)                                                                               \
     }
 #define expect_utf8(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),              \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->string())),              \
                std::string(x),                                                                     \
                z,                                                                                  \
                1011)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())),     \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->string())),     \
                std::string(y),                                                                     \
                z,                                                                                  \
                1011)                                                                               \
     }
 #define expect_ascii(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->string())),             \
                std::string(x),                                                                     \
                z,                                                                                  \
                1012)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->string())),    \
                std::string(y),                                                                     \
                z,                                                                                  \
                1012)                                                                               \
     }
 #define expect_hash(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->string())),             \
                std::string(x),                                                                     \
                z,                                                                                  \
                1013)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->string())),    \
                std::string(y),                                                                     \
                z,                                                                                  \
                1013)                                                                               \
     }
 #define expect_token(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->string())),             \
                std::string(x),                                                                     \
                z,                                                                                  \
                1014)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->string())),    \
                std::string(y),                                                                     \
                z,                                                                                  \
                1014)                                                                               \
     }
 #define expect_uri(x, y, z)                                                                        \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),               \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->string())),               \
                std::string(x),                                                                     \
                z,                                                                                  \
                1015)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())),      \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->string())),      \
                std::string(y),                                                                     \
                z,                                                                                  \
                1015)                                                                               \
     }
 #define expect_email(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->string())),             \
                std::string(x),                                                                     \
                z,                                                                                  \
                1016)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->string())),    \
                std::string(y),                                                                     \
                z,                                                                                  \
                1016);                                                                              \
@@ -257,13 +257,13 @@ SOFTWARE.
     }
 #define expect_phone(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
-        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),             \
+        expect(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->string())),             \
                std::string(x),                                                                     \
                z,                                                                                  \
                1018)                                                                               \
     }                                                                                              \
     else {                                                                                         \
-        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())),    \
+        expect(!x[y]->ok() || (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->string())),    \
                std::string(y),                                                                     \
                z,                                                                                  \
                1018)                                                                               \
@@ -273,10 +273,10 @@ SOFTWARE.
     {                                                                                              \
         std::vector<zpt::json> __result__;                                                         \
         std::set_intersection(                                                                     \
-          std::begin(x->arr()),                                                                    \
-          std::end(x->arr()),                                                                      \
-          std::begin(y->arr()),                                                                    \
-          std::end(y->arr()),                                                                      \
+          std::begin(x->array()),                                                                    \
+          std::end(x->array()),                                                                      \
+          std::begin(y->array()),                                                                    \
+          std::end(y->array()),                                                                      \
           std::back_inserter(__result__),                                                          \
           [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });                    \
         expect(__result__.size() != 0, std::string(y), z, 1018);                                   \
@@ -395,7 +395,7 @@ SOFTWARE.
 
 #define expect_uuid_reply(x, y, z, e, r)                                                           \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->str())),        \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uuid(x->string())),        \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1010,                                                                         \
@@ -404,7 +404,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->str())),            \
+                       (x[y]->type() == zpt::JSString && zpt::test::uuid(x[y]->string())),            \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1010,                                                                         \
@@ -413,7 +413,7 @@ SOFTWARE.
     }
 #define expect_utf8_reply(x, y, z, e, r)                                                           \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->str())),        \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::utf8(x->string())),        \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1011,                                                                         \
@@ -422,7 +422,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->str())),            \
+                       (x[y]->type() == zpt::JSString && zpt::test::utf8(x[y]->string())),            \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1011,                                                                         \
@@ -431,7 +431,7 @@ SOFTWARE.
     }
 #define expect_ascii_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::ascii(x->string())),       \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1012,                                                                         \
@@ -440,7 +440,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->str())),           \
+                       (x[y]->type() == zpt::JSString && zpt::test::ascii(x[y]->string())),           \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1012,                                                                         \
@@ -449,7 +449,7 @@ SOFTWARE.
     }
 #define expect_hash_reply(x, y, z, e, r)                                                           \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->string())),       \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1013,                                                                         \
@@ -458,7 +458,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),           \
+                       (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->string())),           \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1013,                                                                         \
@@ -467,7 +467,7 @@ SOFTWARE.
     }
 #define expect_token_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::token(x->string())),       \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1014,                                                                         \
@@ -476,7 +476,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->str())),           \
+                       (x[y]->type() == zpt::JSString && zpt::test::token(x[y]->string())),           \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1014,                                                                         \
@@ -485,7 +485,7 @@ SOFTWARE.
     }
 #define expect_uri_reply(x, y, z, e, r)                                                            \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->str())),         \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::uri(x->string())),         \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1015,                                                                         \
@@ -494,7 +494,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->str())),             \
+                       (x[y]->type() == zpt::JSString && zpt::test::uri(x[y]->string())),             \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1015,                                                                         \
@@ -503,7 +503,7 @@ SOFTWARE.
     }
 #define expect_email_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::email(x->string())),       \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1016,                                                                         \
@@ -512,7 +512,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->str())),           \
+                       (x[y]->type() == zpt::JSString && zpt::test::email(x[y]->string())),           \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1016,                                                                         \
@@ -546,7 +546,7 @@ SOFTWARE.
     }
 #define expect_phone_reply(x, y, z, e, r)                                                          \
     if (std::string(y).length() == 0) {                                                            \
-        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->str())),       \
+        expect_reply(!x->ok() || (x->type() == zpt::JSString && zpt::test::phone(x->string())),       \
                      std::string(x),                                                               \
                      z,                                                                            \
                      1018,                                                                         \
@@ -555,7 +555,7 @@ SOFTWARE.
     }                                                                                              \
     else {                                                                                         \
         expect_reply(!x[y]->ok() ||                                                                \
-                       (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->str())),           \
+                       (x[y]->type() == zpt::JSString && zpt::test::phone(x[y]->string())),           \
                      std::string(y),                                                               \
                      z,                                                                            \
                      1018,                                                                         \
@@ -567,10 +567,10 @@ SOFTWARE.
     {                                                                                              \
         std::vector<zpt::json> __result__;                                                         \
         std::set_intersection(                                                                     \
-          std::begin(x->arr()),                                                                    \
-          std::end(x->arr()),                                                                      \
-          std::begin(y->arr()),                                                                    \
-          std::end(y->arr()),                                                                      \
+          std::begin(x->array()),                                                                    \
+          std::end(x->array()),                                                                      \
+          std::begin(y->array()),                                                                    \
+          std::end(y->array()),                                                                      \
           std::back_inserter(__result__),                                                          \
           [](zpt::json _lhs, zpt::json _rhs) -> bool { return _lhs == _rhs; });                    \
         expect_reply(__result__.size() != 0, std::string(y), z, 1018, e, r);                       \

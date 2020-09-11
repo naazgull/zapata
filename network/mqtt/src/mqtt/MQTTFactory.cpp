@@ -32,7 +32,7 @@ zpt::MQTTFactory::~MQTTFactory() {}
 auto
 zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
-    auto _found = this->__channels.find(_options["connection"]->str());
+    auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) {
         _return = _found->second;
     }
@@ -40,7 +40,7 @@ zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
         zpt::MQTT* _mqtt = new zpt::MQTT();
         int _attempts = 0;
         do {
-            if (_mqtt->connect(zpt::uri::parse(_options["connection"]->str()))) {
+            if (_mqtt->connect(zpt::uri::parse(_options["connection"]->string()))) {
                 break;
             }
             ++_attempts;
@@ -156,7 +156,7 @@ _zpt_plugin_load_() {
     }
 
     if (_options["mqtt"]->ok() && _options["mqtt"]->is_array()) {
-        for (auto _definition : _options["mqtt"]->arr()) {
+        for (auto _definition : _options["mqtt"]->array()) {
             zpt::mqtt::broker _mqtt;
             zpt::json _uri = zpt::uri::parse(std::string(_definition["bind"]));
 

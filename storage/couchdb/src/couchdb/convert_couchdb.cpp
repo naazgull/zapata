@@ -35,7 +35,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
         _query << "limit" << INT_MAX;
         return _query;
     }
-    for (auto _i : _in->obj()) {
+    for (auto _i : _in->object()) {
         std::string _key = _i.first;
         zpt::json _value = _i.second;
 
@@ -58,7 +58,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
             else {
                 _splited = _value;
             }
-            for (auto _field : _splited->arr()) {
+            for (auto _field : _splited->array()) {
                 std::string _name = std::string(_field);
                 std::string _direction;
                 if (_name[0] == '-') {
@@ -78,7 +78,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
         }
         else if (_key == "fields" && (_value->is_string() || _value->is_array())) {
             _query << "fields"
-                   << (_value->is_string() ? zpt::split(_value->str(), ",", true) : _value);
+                   << (_value->is_string() ? zpt::split(_value->string(), ",", true) : _value);
             continue;
         }
         else if (_key == "embed") {
@@ -265,7 +265,7 @@ zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
             _fields = zpt::split(std::string(_opts["fields"]), ",");
         }
         if (_fields->is_array()) {
-            for (auto _f : _fields->arr()) {
+            for (auto _f : _fields->array()) {
                 _return << std::string(_f) << true;
             }
             _return << "_id" << true;

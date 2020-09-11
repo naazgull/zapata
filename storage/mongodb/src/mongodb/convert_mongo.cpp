@@ -133,14 +133,14 @@ zpt::mongodb::tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out) {
         switch (_value->type()) {
             case zpt::JSObject: {
                 mongo::BSONObjBuilder _mobj;
-                zpt::mongodb::tomongo(_value->obj(), _mobj);
-                _out << _key << _mobj.obj();
+                zpt::mongodb::tomongo(_value->object(), _mobj);
+                _out << _key << _mobj.object();
                 break;
             }
             case zpt::JSArray: {
                 mongo::BSONArrayBuilder _mobj;
-                zpt::mongodb::tomongo(_value->arr(), _mobj);
-                _out << _key << _mobj.arr();
+                zpt::mongodb::tomongo(_value->array(), _mobj);
+                _out << _key << _mobj.array();
                 break;
             }
             case zpt::JSString: {
@@ -181,14 +181,14 @@ zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out) {
         switch (_value->type()) {
             case zpt::JSObject: {
                 mongo::BSONObjBuilder _mobj;
-                zpt::mongodb::tomongo(_value->obj(), _mobj);
-                _out << _mobj.obj();
+                zpt::mongodb::tomongo(_value->object(), _mobj);
+                _out << _mobj.object();
                 break;
             }
             case zpt::JSArray: {
                 mongo::BSONArrayBuilder _mobj;
-                zpt::mongodb::tomongo(_value->arr(), _mobj);
-                _out << _mobj.arr();
+                zpt::mongodb::tomongo(_value->array(), _mobj);
+                _out << _mobj.array();
                 break;
             }
             case zpt::JSString: {
@@ -232,14 +232,14 @@ zpt::mongodb::tosetcommand(zpt::JSONObj& _in,
         switch (_value->type()) {
             case zpt::JSObject: {
                 zpt::mongodb::tosetcommand(
-                  _value->obj(),
+                  _value->object(),
                   _out,
                   (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
                 break;
             }
             case zpt::JSArray: {
                 zpt::mongodb::tosetcommand(
-                  _value->arr(),
+                  _value->array(),
                   _out,
                   (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
                 break;
@@ -288,7 +288,7 @@ zpt::mongodb::tosetcommand(zpt::JSONArr& _in,
 
         switch (_value->type()) {
             case zpt::JSObject: {
-                zpt::mongodb::tosetcommand(_value->obj(),
+                zpt::mongodb::tosetcommand(_value->object(),
                                            _out,
                                            (_prefix.length() != 0
                                               ? _prefix + std::string(".") + std::to_string(_idx)
@@ -296,7 +296,7 @@ zpt::mongodb::tosetcommand(zpt::JSONArr& _in,
                 break;
             }
             case zpt::JSArray: {
-                zpt::mongodb::tosetcommand(_value->arr(),
+                zpt::mongodb::tosetcommand(_value->array(),
                                            _out,
                                            (_prefix.length() != 0
                                               ? _prefix + std::string(".") + std::to_string(_idx)
@@ -350,7 +350,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
     if (!_in->is_object()) {
         return;
     }
-    for (auto _i : _in->obj()) {
+    for (auto _i : _in->object()) {
         std::string _key = _i.first;
         JSONElement _value = _i.second;
 
@@ -371,8 +371,8 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
         }
         if (_value->type() == zpt::JSArray) {
             mongo::BSONArrayBuilder _tmp;
-            zpt::mongodb::tomongo(_value->arr(), _tmp);
-            _queryr.append(key, _tmp.arr());
+            zpt::mongodb::tomongo(_value->array(), _tmp);
+            _queryr.append(key, _tmp.array());
             continue;
         }
 
@@ -490,12 +490,12 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                             if (_json->type() == zpt::JSObject) {
                                 mongo::BSONObjBuilder _mongo_json;
                                 zpt::mongodb::tomongo(_json, _mongo_json);
-                                _queryr.append(key, BSON(comp << _mongo_json.obj()));
+                                _queryr.append(key, BSON(comp << _mongo_json.object()));
                             }
                             else if (_json->type() == zpt::JSArray) {
                                 mongo::BSONArrayBuilder _mongo_json;
                                 zpt::mongodb::tomongo(_json, _mongo_json);
-                                _queryr.append(key, BSON(comp << _mongo_json.arr()));
+                                _queryr.append(key, BSON(comp << _mongo_json.array()));
                             }
                         }
                         catch (std::exception const& _e) {
@@ -505,7 +505,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                         zpt::json _json({ "time", zpt::timestamp(expression) });
                         mongo::BSONObjBuilder _mongo_json;
                         zpt::mongodb::tomongo(_json, _mongo_json);
-                        _queryr.append(key, BSON(comp << _mongo_json.obj()["time"]));
+                        _queryr.append(key, BSON(comp << _mongo_json.object()["time"]));
                     }
                     continue;
                 }
@@ -525,7 +525,7 @@ zpt::mongodb::get_fields(zpt::json _opts) -> zpt::json {
             _fields = zpt::split(std::string(_opts["fields"]), ",");
         }
         if (_fields->is_array()) {
-            for (auto _f : _fields->arr()) {
+            for (auto _f : _fields->array()) {
                 _return << std::string(_f) << true;
             }
             _return << "_id" << true;

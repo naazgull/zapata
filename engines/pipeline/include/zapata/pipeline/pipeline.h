@@ -137,8 +137,11 @@ class stage
   : public zpt::events::dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>> {
   public:
     friend class zpt::pipeline::event<T>;
+
     using hazard_domain = typename zpt::events::
       dispatcher<zpt::pipeline::stage<T>, zpt::json, zpt::pipeline::event<T>>::hazard_domain;
+    using event_callback = typename zpt::pipeline::engine<T>::event_callback;
+    using error_callback = typename zpt::pipeline::engine<T>::error_callback;
 
     stage(zpt::pipeline::stage<T>::hazard_domain& _hazard_domain, long _max_pop_wait_micro = -1);
     stage(zpt::pipeline::stage<T> const&) = delete;
@@ -149,40 +152,35 @@ class stage
     auto operator=(zpt::pipeline::stage<T>&&) = delete;
 
     auto trapped(zpt::json _path, zpt::pipeline::event<T> _content) -> void;
-    auto listen_to(zpt::json _path, std::function<void(zpt::pipeline::event<T>&)> _callback)
-      -> void;
-    auto error_callback(zpt::json& _event,
-                        zpt::pipeline::event<T>& _content,
-                        const char* _what,
-                        const char* _description = nullptr,
-                        int _error = -1,
-                        int status = 500) -> bool;
+    auto listen_to(zpt::json _path, event_callback _callback) -> void;
+    auto report_error(zpt::json& _event,
+                      zpt::pipeline::event<T>& _content,
+                      const char* _what,
+                      const char* _description = nullptr,
+                      const char* _backtrace = nullptr,
+                      int _error = -1,
+                      int status = 500) -> bool;
 
-    auto set_error_callback(std::function<bool(zpt::json& _event,
-                                               zpt::pipeline::event<T>& _content,
-                                               const char* _what,
-                                               const char* _description,
-                                               int _error,
-                                               int _status)> _error_callback)
-      -> zpt::pipeline::stage<T>&;
+    auto set_error_callback(error_callback _error_callback) -> zpt::pipeline::stage<T>&;
 
   private:
-    zpt::tree::node<zpt::json, zpt::regex, std::function<void(zpt::pipeline::event<T>&)>>
-      __callbacks;
+    zpt::tree::node<zpt::json, zpt::regex, event_callback> __callbacks;
     zpt::lf::spin_lock __callback_lock;
-    std::function<bool(zpt::json& _event,
-                       zpt::pipeline::event<T>& _content,
-                       const char* _what,
-                       const char* _description,
-                       int _error,
-                       int _status)>
-      __error_callback;
+    error_callback __error_callback;
 };
 
 template<typename T>
 class engine {
   public:
     friend class zpt::pipeline::event<T>;
+    using event_callback = std::function<void(zpt::pipeline::event<T>&)>;
+    using error_callback = std::function<bool(zpt::json& _event,
+                                              zpt::pipeline::event<T>& _content,
+                                              const char* _what,
+                                              const char* _description,
+                                              const char* _backtrace,
+                                              int _error,
+                                              int status)>;
 
     engine(size_t _pipeline_size = 1,
            zpt::json _stage_queue_configuration = { "max_stage_threads",
@@ -206,20 +204,12 @@ class engine {
     auto shutdown() -> zpt::pipeline::engine<T>&;
     auto is_shutdown_ongoing() -> bool;
 
-    auto add_listener(size_t _stage,
-                      std::string _pattern,
-                      std::function<void(zpt::pipeline::event<T>&)> _callback)
+    auto add_listener(size_t _stage, std::string _pattern, event_callback _callback)
       -> zpt::pipeline::engine<T>&;
     auto trigger(std::string const& _uri, T _content) -> zpt::pipeline::engine<T>&;
     auto trigger(zpt::json _uri, T _content) -> zpt::pipeline::engine<T>&;
 
-    auto set_error_callback(std::function<bool(zpt::json& _event,
-                                               zpt::pipeline::event<T>& _content,
-                                               const char* _what,
-                                               const char* _description,
-                                               int _error,
-                                               int status)> _error_callback)
-      -> zpt::pipeline::engine<T>&;
+    auto set_error_callback(error_callback _error_callback) -> zpt::pipeline::engine<T>&;
 
   private:
     typename zpt::pipeline::stage<T>::hazard_domain __hazard_domain;
@@ -412,7 +402,7 @@ auto
 zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event) -> void {
     zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::shared };
     this->__callbacks.eval(
-      _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->str(), _event);
+      _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->string(), _event);
     if (_event->stages().marked() == _event->stages().current()) {
         _event->stages().next().mark();
     }
@@ -421,25 +411,25 @@ zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event
 
 template<typename T>
 auto
-zpt::pipeline::stage<T>::listen_to(zpt::json _path,
-                                   std::function<void(zpt::pipeline::event<T>&)> _callback)
-  -> void {
+zpt::pipeline::stage<T>::listen_to(zpt::json _path, event_callback _callback) -> void {
     zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::exclusive };
     this->__callbacks.merge(
-      _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->rgx(), _callback);
+      _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->regex(), _callback);
 }
 
 template<typename T>
 auto
-zpt::pipeline::stage<T>::error_callback(zpt::json& _event,
-                                        zpt::pipeline::event<T>& _content,
-                                        const char* _what,
-                                        const char* _description,
-                                        int _error,
-                                        int status) -> bool {
+zpt::pipeline::stage<T>::report_error(zpt::json& _event,
+                                      zpt::pipeline::event<T>& _content,
+                                      const char* _what,
+                                      const char* _description,
+                                      const char* _backtrace,
+                                      int _error,
+                                      int status) -> bool {
     bool _to_return{ true };
     if (this->__error_callback != nullptr) {
-        _to_return = this->__error_callback(_event, _content, _what, _description, _error, status);
+        _to_return =
+          this->__error_callback(_event, _content, _what, _description, _backtrace, _error, status);
     }
     _content->stages().last().mark();
     _content.send_to_next_stage();
@@ -448,12 +438,7 @@ zpt::pipeline::stage<T>::error_callback(zpt::json& _event,
 
 template<typename T>
 auto
-zpt::pipeline::stage<T>::set_error_callback(std::function<bool(zpt::json& _event,
-                                                               zpt::pipeline::event<T>& _content,
-                                                               const char* _what,
-                                                               const char* _description,
-                                                               int _error,
-                                                               int status)> _error_callback)
+zpt::pipeline::stage<T>::set_error_callback(error_callback _error_callback)
   -> zpt::pipeline::stage<T>& {
     this->__error_callback = _error_callback;
     return (*this);
@@ -527,8 +512,7 @@ template<typename T>
 auto
 zpt::pipeline::engine<T>::add_listener(size_t _stage,
                                        std::string _pattern,
-                                       std::function<void(zpt::pipeline::event<T>&)> _callback)
-  -> zpt::pipeline::engine<T>& {
+                                       event_callback _callback) -> zpt::pipeline::engine<T>& {
     expect(_stage < this->__pipeline_size,
            std::string("invalid pipeline::stage number, should be lower then ") +
              std::to_string(this->__pipeline_size),
@@ -554,12 +538,7 @@ zpt::pipeline::engine<T>::trigger(zpt::json _uri, T _content) -> zpt::pipeline::
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::set_error_callback(std::function<bool(zpt::json& _event,
-                                                                zpt::pipeline::event<T>& _content,
-                                                                const char* _what,
-                                                                const char* _description,
-                                                                int _error,
-                                                                int _status)> _error_callback)
+zpt::pipeline::engine<T>::set_error_callback(error_callback _error_callback)
   -> zpt::pipeline::engine<T>& {
     for (auto _stage : this->__stages) {
         _stage->set_error_callback(_error_callback);

@@ -60,12 +60,13 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
             this->__callbacks.erase(_found);
         }
     }
-    auto error_callback(int _event,
-                        zpt::json _content,
-                        const char* _what,
-                        const char* _description = nullptr,
-                        int _error = -1,
-                        int _status = 500) -> bool {
+    auto report_error(int _event,
+                      zpt::json _content,
+                      const char* _what,
+                      const char* _description = nullptr,
+                      const char* _backtrace = nullptr,
+                      int _error = -1,
+                      int _status = 500) -> bool {
         return true;
     }
 
