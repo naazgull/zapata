@@ -97,7 +97,7 @@ zpt::mysql::get_query(zpt::json _in, std::string& _queryr) -> void {
     if (!_in->is_object()) {
         return;
     }
-    for (auto _i : _in->obj()) {
+    for (auto _i : _in->object()) {
         std::string _key = _i.first;
         zpt::json _v = _i.second;
 
@@ -278,7 +278,7 @@ zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
     std::string _columns;
     if (_opts["fields"]->ok()) {
         if (!_document->ok()) {
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
                 if (_columns.length() != 0) {
                     _columns += std::string(",");
                 }
@@ -286,7 +286,7 @@ zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
             }
         }
         else {
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
                 if (!_document[std::string(_c)]->ok()) {
                     continue;
                 }
@@ -301,7 +301,7 @@ zpt::mysql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
         if (!_document->ok()) {
             return "*";
         }
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
             if (_columns.length() != 0) {
                 _columns += std::string(",");
             }
@@ -319,7 +319,7 @@ zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
             return "";
         }
         else {
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
                 if (!_document[std::string(_c)]->ok()) {
                     continue;
                 }
@@ -334,7 +334,7 @@ zpt::mysql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
         if (!_document->ok()) {
             return "";
         }
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
             if (_values.length() != 0) {
                 _values += std::string(",");
             }

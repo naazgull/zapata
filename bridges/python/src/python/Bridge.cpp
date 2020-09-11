@@ -286,7 +286,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
         zpt::json _opts = _params[2];
         zpt::json _instance;
         PyObject* _context = nullptr;
-        if (_params->arr()->size() == 4) {
+        if (_params->array()->size() == 4) {
             _context = zpt::python::from_ref(_params[3]);
             _instance = _params[3];
             Py_INCREF(_context);
@@ -294,7 +294,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 
         _opts >> "bubble-error";
 
-        for (auto _handler : _callbacks->obj()) {
+        for (auto _handler : _callbacks->object()) {
             zpt::performative _performative = zpt::ev::from_str(_handler.first);
             PyObject* _func = **_bridge->to<zpt::python::object>(_handler.second);
             zpt::json _lambda = zpt::python::to_ref(_func);

@@ -56,7 +56,9 @@ zpt::log(std::string const& _text,
         return -1;
     }
     if (!zpt::log_format) {
-        (*zpt::log_fd) << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
+        std::ostringstream _oss;
+        _oss << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
+        (*zpt::log_fd) << _oss.str() << std::flush;
         return 0;
     }
 
@@ -65,44 +67,27 @@ zpt::log(std::string const& _text,
 
     std::string _log;
     if (zpt::log_format == 1) {
-        (*zpt::log_fd) << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-                       << *zpt::log_pname << "[" << zpt::log_pid
-                       << "]: " << zpt::log_lvl_names[_level] << " " << _text;
+        std::ostringstream _oss;
+        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
+             << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
+             << _text;
         if (_level > 6) {
-            (*zpt::log_fd) << " " << _file << ":" << _line;
+            _oss << " " << _file << ":" << _line;
         }
-        (*zpt::log_fd) << std::endl << std::flush;
+        _oss << std::endl << std::flush;
+        (*zpt::log_fd) << _oss.str() << std::flush;
     }
     else {
-        _log.assign("{\"version\":\"1.1\",\"host\":\"");
-        _log.insert(_log.length(), _host);
-        _log.insert(_log.length(), "\",\"source\":\"");
-        _log.insert(_log.length(), _host);
-        _log.insert(_log.length(), "\",\"short_message\":\"");
-        _log.insert(_log.length(), _text);
-        _log.insert(_log.length(), "\",\"full_message\":\"");
-        _log.insert(_log.length(), _file);
-        _log.insert(_log.length(), ":");
-        zpt::tostr(_log, _line);
-        _log.insert(_log.length(), " | ");
-        _log.insert(_log.length(),
-                    zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\""));
-        _log.insert(_log.length(), "\",\"timestamp\":");
-        zpt::tostr(_log, _tp.tv_sec);
-        _log.insert(_log.length(), ".");
-        zpt::tostr(_log, (int)(_tp.tv_usec / 1000));
-        _log.insert(_log.length(), ",\"level\":");
-        zpt::tostr(_log, (int)_level);
-        _log.insert(_log.length(), ",\"pid\":");
-        zpt::tostr(_log, zpt::log_pid);
-        _log.insert(_log.length(), ",\"exec\":\"");
-        _log.insert(_log.length(), *zpt::log_pname);
-        _log.insert(_log.length(), "\",\"file\":\"");
-        _log.insert(_log.length(), _file);
-        _log.insert(_log.length(), "\",\"line\":");
-        zpt::tostr(_log, _line);
-        _log.insert(_log.length(), "}");
-        (*zpt::log_fd) << _log << std::endl << std::flush;
+        std::ostringstream _oss;
+        _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host
+             << "\",\"short_message\":\"" << _text << "\",\"full_message\":\"" << _file << ":"
+             << _line << " | " << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"")
+             << "\",\"timestamp\":" << _tp.tv_sec << "." << (int)(_tp.tv_usec / 1000)
+             << ",\"level\":" << (int)_level << ",\"pid\":" << zpt::log_pid << ",\"exec\":\""
+             << *zpt::log_pname << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}"
+             << std::endl
+             << std::flush;
+        (*zpt::log_fd) << _oss.str() << std::flush;
     }
     return 0;
 }

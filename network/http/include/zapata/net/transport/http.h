@@ -55,8 +55,13 @@ class http : public zpt::transport::transport_t {
       -> zpt::net::transport::http&;
     auto set_headers(zpt::http::req& _request, zpt::exchange& _channel)
       -> zpt::net::transport::http&;
+    auto set_headers(zpt::http::rep& _response, zpt::exchange& _channel)
+      -> zpt::net::transport::http&;
     auto set_body(zpt::http::req& _request, zpt::exchange& _channel) -> zpt::net::transport::http&;
+    auto set_body(zpt::http::rep& _response, zpt::exchange& _channel) -> zpt::net::transport::http&;
     auto set_method(zpt::http::req& _request, zpt::exchange& _channel)
+      -> zpt::net::transport::http&;
+    auto set_status(zpt::http::rep& _response, zpt::exchange& _channel)
       -> zpt::net::transport::http&;
 
     auto receive(zpt::exchange& _channel) -> void override;

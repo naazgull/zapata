@@ -231,6 +231,18 @@ zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _para
 }
 
 auto
+zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
+    if (_params->ok()) {
+        if (_params["page_size"]->ok()) {
+            _reply["body"] << "page_size" << _params["page_size"];
+        }
+        if (_params["page_start_index"]->ok()) {
+            _reply["body"] << "page_start_index" << _params["page_start_index"];
+        }
+    }
+}
+
+auto
 zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _params)
   -> zpt::storage::action {
     if (_params->ok()) {

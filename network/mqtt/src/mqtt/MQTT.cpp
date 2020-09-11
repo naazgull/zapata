@@ -124,11 +124,11 @@ zpt::MQTT::connected() -> bool {
 auto
 zpt::MQTT::connect(zpt::json _options) -> bool {
     if (_options["uri"]["user"]->ok() && _options["uri"]["password"]->ok()) {
-        this->credentials(_options["uri"]["user"]->str(), _options["uri"]["password"]->str());
+        this->credentials(_options["uri"]["user"]->string(), _options["uri"]["password"]->string());
     }
-    return this->connect(_options["uri"]["domain"]->str(),
-                         _options["uri"]["scheme"]->str() == "mqtts",
-                         _options["uri"]["port"]->intr(),
+    return this->connect(_options["uri"]["domain"]->string(),
+                         _options["uri"]["scheme"]->string() == "mqtts",
+                         _options["uri"]["port"]->integer(),
                          1000);
 }
 
@@ -343,7 +343,7 @@ zpt::MQTT::on_connect(struct mosquitto* _mosq, void* _ptr, int _rc) -> void {
         {
             std::lock_guard<std::mutex> _lock(_self->__mtx_conn);
             int _return;
-            for (auto _topic : _self->__postponed->obj()) {
+            for (auto _topic : _self->__postponed->object()) {
                 zlog(std::string("subscribing MQTT topic ") + _topic.first, zpt::notice);
                 mosquitto_subscribe(_mosq, &_return, _topic.first.data(), 0);
                 mosquitto_loop_write(_mosq, 1);

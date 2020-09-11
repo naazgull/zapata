@@ -22,4 +22,5 @@ export projects=(
        engines/dom
        storage/connector
        storage/mysqlx
+       security/oauth2
 )

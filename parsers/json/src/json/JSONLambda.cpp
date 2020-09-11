@@ -165,8 +165,8 @@ zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _
 auto
 zpt::lambda::call(std::string const& _name, zpt::json _args, zpt::context _ctx) -> zpt::json {
     expect(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
-    zpt::symbol _f = zpt::lambda::find(_name, (**_args->arr()).size());
-    return _f(_args, (**_args->arr()).size(), _ctx);
+    zpt::symbol _f = zpt::lambda::find(_name, (**_args->array()).size());
+    return _f(_args, (**_args->array()).size(), _ctx);
 }
 
 auto

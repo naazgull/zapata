@@ -240,7 +240,7 @@ zpt::couchdb::Client::create_index(std::string const& _collection, zpt::json _fi
     _req->url(_db_name);
     _req->header("Content-Type", "application/json");
 
-    for (auto _field : _fields->obj()) {
+    for (auto _field : _fields->object()) {
         std::string _body = std::string(zpt::json{ "index",
                                                    { "fields", { zpt::array, _field.first } },
                                                    "name",
@@ -271,7 +271,7 @@ zpt::couchdb::Client::insert(std::string const& _collection,
         _document << "href"
                   << (_href_prefix +
                       (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                      _document["id"]->str());
+                      _document["id"]->string());
     }
 
     _document << "_id" << _document["href"];
@@ -300,7 +300,7 @@ zpt::couchdb::Client::insert(std::string const& _collection,
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -322,11 +322,11 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
                 _document << "href"
                           << (_href_prefix +
                               (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                              _document["id"]->str());
+                              _document["id"]->string());
             }
             if (!_document["id"]->ok()) {
-                zpt::json _split = zpt::split(_document["href"]->str(), "/");
-                _document << "id" << _split->arr()->back();
+                zpt::json _split = zpt::split(_document["href"]->string(), "/");
+                _document << "id" << _split->array()->back();
             }
             std::string _url =
               _db_name + std::string("/") + zpt::url::r_encode(std::string(_document["href"]));
@@ -349,7 +349,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
                     _upsert << "href"
                             << (_href_prefix +
                                 (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                                _upsert["id"]->str());
+                                _upsert["id"]->string());
                 }
                 _upsert << "_id" << _upsert["href"];
 
@@ -364,7 +364,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
             if (_rep->status() == zpt::http::status::HTTP201) {
                 if (!bool(_opts["mutated-event"]))
                     zpt::Connector::set(_collection, std::string(_upsert["href"]), _upsert, _opts);
-                return _upsert["id"]->str();
+                return _upsert["id"]->string();
             }
         }
     }
@@ -376,7 +376,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
             _document << "href"
                       << (_href_prefix +
                           (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                          _document["id"]->str());
+                          _document["id"]->string());
         }
         _document << "_id" << _document["href"];
         _document >> "_rev";
@@ -405,7 +405,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -507,7 +507,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
         return 0;
     }
 
-    for (auto _revision : _result["elements"]->arr()) {
+    for (auto _revision : _result["elements"]->array()) {
         std::string _url =
           _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
 
@@ -591,7 +591,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
         return 0;
     }
 
-    for (auto _revision : _result["elements"]->arr()) {
+    for (auto _revision : _result["elements"]->array()) {
         std::string _url =
           _db_name + std::string("/") + zpt::url::r_encode(std::string(_revision["href"]));
 
@@ -657,10 +657,10 @@ zpt::couchdb::Client::remove(std::string const& _collection, zpt::json _pattern,
     if (!_result->ok()) {
         return 0;
     }
-    _size = _result["elements"]->arr()->size();
+    _size = _result["elements"]->array()->size();
     zpt::json _removed = zpt::json::array();
 
-    for (auto _record : _result["elements"]->arr()) {
+    for (auto _record : _result["elements"]->array()) {
         _removed << zpt::json{ "_id", _record["_id"], "_rev", _record["_rev"], "_deleted", true };
     }
 
@@ -758,7 +758,7 @@ zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, z
     if (_result["docs"]->is_array()) {
         _return = _result["docs"];
         _size = _result["total_rows"]->ok() ? size_t(_result["total_rows"])
-                                            : (_return->is_array() ? _return->arr()->size() : 0);
+                                            : (_return->is_array() ? _return->array()->size() : 0);
     }
     else if (_result["rows"]->is_array()) {
         _size = size_t(_result["total_rows"]);

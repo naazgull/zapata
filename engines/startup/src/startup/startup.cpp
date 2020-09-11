@@ -220,12 +220,13 @@ zpt::startup::engine::listen_to(zpt::json _event, std::function<void(bool)> _cal
 }
 
 auto
-zpt::startup::engine::error_callback(zpt::json& _event,
-                                     bool& _content,
-                                     const char* _what,
-                                     const char* _description,
-                                     int _error,
-                                     int _status) -> bool {
+zpt::startup::engine::report_error(zpt::json& _event,
+                                   bool& _content,
+                                   const char* _what,
+                                   const char* _description,
+                                   const char* _backtrace,
+                                   int _error,
+                                   int _status) -> bool {
     return false;
 }
 
@@ -321,14 +322,18 @@ zpt::startup::engine::unload() -> bool {
 
 auto
 zpt::startup::engine::exit() -> void {
-    zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).shutdown();
-    this->unload();
+    try {
+        zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING()).shutdown();
+        this->unload();
+    }
+    catch (...) {
+    }
 }
 
 auto
 zpt::startup::engine::load() -> zpt::startup::engine& {
     for (auto [_, __, _lib] : this->__configuration["load"]) {
-        this->load(_lib, this->__configuration[_lib["name"]->str()]);
+        this->load(_lib, this->__configuration[_lib["name"]->string()]);
     }
     do {
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 5 });
@@ -441,17 +446,20 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
         _populate(_plugin);
     }
     catch (zpt::failed_expectation const& _e) {
+        zlog(_e, zpt::emergency);
+        dlclose(_plugin->handler());
+        _plugin->set_handler(nullptr);
         _config = false;
     }
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::CONFIGURATION }, _config);
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::RUN }, true);
-    return true;
+    return _config;
 }
 
 auto
 zpt::startup::dynlib::unload_plugin(zpt::plugin& _plugin) -> bool {
     if (_plugin->handler() == nullptr) {
-        zlog("plugin " << _plugin->name() << " wasn't properly loaded", zpt::emergency);
+        zlog("plugin " << _plugin->name() << " wasn't properly loaded", zpt::warning);
         return false;
     }
     void (*_unpopulate)(zpt::plugin&);
@@ -462,11 +470,13 @@ zpt::startup::dynlib::unload_plugin(zpt::plugin& _plugin) -> bool {
         return false;
     }
 
+    bool _unconfig{ true };
     try {
         _unpopulate(_plugin);
     }
     catch (zpt::failed_expectation const& _e) {
-        return true;
+        zlog(_e, zpt::emergency);
+        _unconfig = false;
     }
-    return false;
+    return _unconfig;
 }

@@ -30,6 +30,7 @@
 #include <sstream>
 #include <string>
 #include <sys/time.h>
+#include <unordered_map>
 #include <vector>
 #include <zapata/base/expect.h>
 #include <zapata/json/config.h>
@@ -45,6 +46,7 @@ class JSONObj;
 class JSONArr;
 class JSONLambda;
 class JSONRegex;
+class JSONIterator;
 class lambda;
 class json;
 
@@ -83,57 +85,9 @@ class pretty {
 namespace zpt {
 class json {
   public:
+    using map = std::map<std::string, zpt::json>;
     using element = std::tuple<size_t, std::string, zpt::json>;
-
-    class iterator {
-      public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = zpt::json::element;
-        using pointer = zpt::json::element;
-        using reference = zpt::json::element;
-        using iterator_category = std::bidirectional_iterator_tag;
-
-        explicit iterator(zpt::json& _target, size_t _pos);
-        iterator(const iterator& _rhs);
-        virtual ~iterator() = default;
-
-        // BASIC ITERATOR METHODS //
-        auto operator=(const iterator& _rhs) -> iterator&;
-        auto operator++() -> iterator&;
-        auto operator*() -> reference;
-        // END / BASIC ITERATOR METHODS //
-
-        // INPUT ITERATOR METHODS //
-        auto operator++(int) -> iterator;
-        auto operator-> () -> pointer;
-        auto operator==(iterator _rhs) const -> bool;
-        auto operator!=(iterator _rhs) const -> bool;
-        // END / INPUT ITERATOR METHODS //
-
-        // OUTPUT ITERATOR METHODS //
-        // reference operator*(); <- already defined
-        // iterator operator++(int); <- already defined
-        // END / OUTPUT ITERATOR METHODS //
-
-        // FORWARD ITERATOR METHODS //
-        // Enable support for both input and output iterator <- already enabled
-        // END / FORWARD ITERATOR METHODS //
-
-        // BIDIRECTIOANL ITERATOR METHODS //
-        auto operator--() -> iterator&;
-        auto operator--(int) -> iterator;
-        // END / BIDIRECTIOANL ITERATOR METHODS //
-
-        friend auto operator<<(std::ostream& _out, zpt::json::iterator& _in) -> std::ostream& {
-            _out << _in.__index << std::flush;
-            return _out;
-        }
-
-      private:
-        zpt::json& __target;
-        size_t __index;
-        std::map<std::string, zpt::json>::iterator __iterator;
-    };
+    using iterator = zpt::JSONIterator;
 
     json();
     json(std::nullptr_t);
@@ -290,6 +244,58 @@ class json {
 }
 
 namespace zpt {
+class JSONIterator {
+  public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = zpt::json::element;
+    using pointer = zpt::json::element;
+    using reference = zpt::json::element;
+    using iterator_category = std::bidirectional_iterator_tag;
+
+    explicit JSONIterator(zpt::json& _target, size_t _pos);
+    JSONIterator(const JSONIterator& _rhs);
+    virtual ~JSONIterator() = default;
+
+    // BASIC ITERATOR METHODS //
+    auto operator=(const JSONIterator& _rhs) -> JSONIterator&;
+    auto operator++() -> JSONIterator&;
+    auto operator*() -> reference;
+    // END / BASIC ITERATOR METHODS //
+
+    // INPUT ITERATOR METHODS //
+    auto operator++(int) -> JSONIterator;
+    auto operator-> () -> pointer;
+    auto operator==(JSONIterator _rhs) const -> bool;
+    auto operator!=(JSONIterator _rhs) const -> bool;
+    // END / INPUT ITERATOR METHODS //
+
+    // OUTPUT ITERATOR METHODS //
+    // reference operator*(); <- already defined
+    // iterator operator++(int); <- already defined
+    // END / OUTPUT ITERATOR METHODS //
+
+    // FORWARD ITERATOR METHODS //
+    // Enable support for both input and output iterator <- already enabled
+    // END / FORWARD ITERATOR METHODS //
+
+    // BIDIRECTIOANL ITERATOR METHODS //
+    auto operator--() -> JSONIterator&;
+    auto operator--(int) -> JSONIterator;
+    // END / BIDIRECTIOANL ITERATOR METHODS //
+
+    friend auto operator<<(std::ostream& _out, zpt::JSONIterator& _in) -> std::ostream& {
+        _out << _in.__index << std::flush;
+        return _out;
+    }
+
+  private:
+    zpt::json& __target;
+    size_t __index;
+    zpt::json::map::iterator __iterator;
+};
+}
+
+namespace zpt {
 extern zpt::json undefined;
 extern zpt::json nilptr;
 extern zpt::json array;
@@ -325,8 +331,8 @@ class JSONObjT {
 
     auto clone() -> zpt::json;
 
-    auto operator-> () -> std::map<std::string, zpt::json>*;
-    auto operator*() -> std::map<std::string, zpt::json>&;
+    auto operator-> () -> zpt::json::map*;
+    auto operator*() -> zpt::json::map&;
 
     auto operator==(zpt::JSONObjT& _in) -> bool;
     auto operator==(zpt::JSONObj& _in) -> bool;
@@ -365,7 +371,7 @@ class JSONObjT {
 
   private:
     std::string __name{ "" };
-    std::map<std::string, zpt::json> __underlying;
+    zpt::json::map __underlying;
 };
 }
 
@@ -614,8 +620,8 @@ class context {
 
 namespace zpt {
 using symbol = std::function<zpt::json(zpt::json, unsigned short, zpt::context)>;
-using symbol_table =
-  std::shared_ptr<std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
+using symbol_table = std::shared_ptr<
+  std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
 
 extern zpt::symbol_table __lambdas;
 }
@@ -764,23 +770,24 @@ class JSONElementT {
     virtual auto is_array() -> bool;
     virtual auto is_string() -> bool;
     virtual auto is_integer() -> bool;
-    virtual auto is_double() -> bool;
+    virtual auto is_floating() -> bool;
     virtual auto is_number() -> bool;
     virtual auto is_bool() -> bool;
     virtual auto is_date() -> bool;
     virtual auto is_lambda() -> bool;
+    virtual auto is_regex() -> bool;
     virtual auto is_nil() -> bool;
     virtual auto is_iterable() -> bool;
 
-    virtual auto obj() -> JSONObj&;
-    virtual auto arr() -> JSONArr&;
-    virtual auto str() -> std::string&;
-    virtual auto intr() -> long long&;
-    virtual auto dbl() -> double&;
-    virtual auto bln() -> bool&;
+    virtual auto object() -> JSONObj&;
+    virtual auto array() -> JSONArr&;
+    virtual auto string() -> std::string&;
+    virtual auto integer() -> long long&;
+    virtual auto floating() -> double&;
+    virtual auto boolean() -> bool&;
     virtual auto date() -> zpt::timestamp_t&;
-    virtual auto lbd() -> zpt::lambda&;
-    virtual auto rgx() -> zpt::regex&;
+    virtual auto lambda() -> zpt::lambda&;
+    virtual auto regex() -> zpt::regex&;
     virtual auto number() -> double;
 
     auto operator=(const JSONElementT& _rhs) -> JSONElementT&;

@@ -9,7 +9,7 @@ zpt::json undefined;
 zpt::json nilptr = undefined;
 zpt::json array = undefined; //"1b394520-2fed-4118-b622-940f25b8b35e";
 symbol_table __lambdas = zpt::symbol_table(
-  new std::map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
+  new std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
 }
 
 zpt::pretty::pretty(std::string const& _rhs)
@@ -134,16 +134,16 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
         }
 
         if (!_is_array && _idx % 2 == 0) {
-            this->__underlying->obj()->push(_element->str());
+            this->__underlying->object()->push(_element->string());
             ++_idx;
             continue;
         }
 
         if (_is_array) {
-            this->__underlying->arr()->push(_element);
+            this->__underlying->array()->push(_element);
         }
         else {
-            this->__underlying->obj()->push(_element);
+            this->__underlying->object()->push(_element);
         }
         ++_idx;
     }
@@ -250,7 +250,7 @@ zpt::json::operator zpt::regex&() {
 }
 
 zpt::json::operator std::regex&() {
-    return this->__underlying.get()->rgx().operator std::regex&();
+    return this->__underlying.get()->regex().operator std::regex&();
 }
 
 auto
@@ -329,8 +329,8 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->str() +
-                                  static_cast<std::string>(_rhs->str()) };
+                return zpt::json{ this->__underlying->string() +
+                                  static_cast<std::string>(_rhs->string()) };
             }
         }
         case zpt::JSInteger: {
@@ -342,7 +342,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->intr() + _rhs->number() };
+                return zpt::json{ this->__underlying->integer() + _rhs->number() };
             }
         }
         case zpt::JSDouble: {
@@ -354,7 +354,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->dbl() + _rhs->number() };
+                return zpt::json{ this->__underlying->floating() + _rhs->number() };
             }
         }
         case zpt::JSBoolean: {
@@ -366,7 +366,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->bln() || _rhs->number() };
+                return zpt::json{ this->__underlying->boolean() || _rhs->number() };
             }
         }
         case zpt::JSNil: {
@@ -423,20 +423,20 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSString: {
-            this->__underlying->str().insert(this->__underlying->str().length(),
+            this->__underlying->string().insert(this->__underlying->string().length(),
                                              static_cast<std::string>(_rhs));
             return (*this);
         }
         case zpt::JSInteger: {
-            this->__underlying->intr() += _rhs->number();
+            this->__underlying->integer() += _rhs->number();
             return (*this);
         }
         case zpt::JSDouble: {
-            this->__underlying->dbl() += _rhs->number();
+            this->__underlying->floating() += _rhs->number();
             return (*this);
         }
         case zpt::JSBoolean: {
-            this->__underlying->bln() += _rhs->number();
+            this->__underlying->boolean() += _rhs->number();
             return (*this);
         }
         case zpt::JSNil: {
@@ -497,7 +497,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                std::string _lhs{ this->__underlying->str().data() };
+                std::string _lhs{ this->__underlying->string().data() };
                 std::string _rhs_str = static_cast<std::string>(_rhs);
                 std::size_t _idx = 0;
                 while ((_idx = _lhs.find(_rhs_str, _idx)) != std::string::npos) {
@@ -515,7 +515,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->intr() - _rhs->number() };
+                return zpt::json{ this->__underlying->integer() - _rhs->number() };
             }
         }
         case zpt::JSDouble: {
@@ -527,7 +527,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->dbl() - _rhs->number() };
+                return zpt::json{ this->__underlying->floating() - _rhs->number() };
             }
         }
         case zpt::JSBoolean: {
@@ -539,7 +539,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->bln() && _rhs->number() };
+                return zpt::json{ this->__underlying->boolean() && _rhs->number() };
             }
         }
         case zpt::JSNil: {
@@ -590,19 +590,19 @@ zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSString: {
-            zpt::replace(this->__underlying->str(), static_cast<std::string>(_rhs), "");
+            zpt::replace(this->__underlying->string(), static_cast<std::string>(_rhs), "");
             return (*this);
         }
         case zpt::JSInteger: {
-            this->__underlying->intr() -= _rhs->number();
+            this->__underlying->integer() -= _rhs->number();
             return (*this);
         }
         case zpt::JSDouble: {
-            this->__underlying->dbl() = _rhs->number();
+            this->__underlying->floating() = _rhs->number();
             return (*this);
         }
         case zpt::JSBoolean: {
-            this->__underlying->bln() -= _rhs->number();
+            this->__underlying->boolean() -= _rhs->number();
             return (*this);
         }
         case zpt::JSNil: {
@@ -660,7 +660,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                std::string _lhs{ this->__underlying->str().data() };
+                std::string _lhs{ this->__underlying->string().data() };
                 std::string _rhs_str = static_cast<std::string>(_rhs);
                 std::size_t _idx = 0;
                 while ((_idx = _lhs.find(_rhs_str, _idx)) != std::string::npos) {
@@ -678,7 +678,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->intr() / _rhs->number() };
+                return zpt::json{ this->__underlying->integer() / _rhs->number() };
             }
         }
         case zpt::JSDouble: {
@@ -690,7 +690,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->dbl() / _rhs->number() };
+                return zpt::json{ this->__underlying->floating() / _rhs->number() };
             }
         }
         case zpt::JSBoolean: {
@@ -702,7 +702,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 return _lhs;
             }
             else {
-                return zpt::json{ this->__underlying->bln() / _rhs->number() };
+                return zpt::json{ this->__underlying->boolean() / _rhs->number() };
             }
         }
         case zpt::JSNil: {
@@ -935,30 +935,30 @@ zpt::json::type_of(zpt::json& _value) -> zpt::JSONType {
     return _value->type();
 }
 
-zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
+zpt::JSONIterator::JSONIterator(zpt::json& _target, size_t _pos)
   : __target{ _target }
   , __index{ _pos } {
     switch (_target->type()) {
         case zpt::JSObject: {
             if (_pos == std::numeric_limits<size_t>::max()) {
-                this->__index = (**this->__target->obj()).size();
-                this->__iterator = (**this->__target->obj()).end();
+                this->__index = (**this->__target->object()).size();
+                this->__iterator = (**this->__target->object()).end();
             }
             else {
                 try {
                     this->__iterator =
-                      (**this->__target->obj()).find(_target->obj()->key_for(_pos));
+                      (**this->__target->object()).find(_target->object()->key_for(_pos));
                 }
                 catch (zpt::failed_expectation const& _e) {
-                    this->__index = (**this->__target->obj()).size();
-                    this->__iterator = (**this->__target->obj()).end();
+                    this->__index = (**this->__target->object()).size();
+                    this->__iterator = (**this->__target->object()).end();
                 }
             }
             break;
         }
         case zpt::JSArray: {
             if (_pos == std::numeric_limits<size_t>::max()) {
-                this->__index = (**this->__target->arr()).size();
+                this->__index = (**this->__target->array()).size();
             }
             break;
         }
@@ -969,13 +969,13 @@ zpt::json::iterator::iterator(zpt::json& _target, size_t _pos)
     }
 }
 
-zpt::json::iterator::iterator(const iterator& _rhs)
+zpt::JSONIterator::JSONIterator(const JSONIterator& _rhs)
   : __target{ _rhs.__target }
   , __index{ _rhs.__index }
   , __iterator{ _rhs.__iterator } {}
 
 auto
-zpt::json::iterator::operator=(const iterator& _rhs) -> iterator& {
+zpt::JSONIterator::operator=(const JSONIterator& _rhs) -> JSONIterator& {
     this->__target = _rhs.__target;
     this->__index = _rhs.__index;
     this->__iterator = _rhs.__iterator;
@@ -983,7 +983,7 @@ zpt::json::iterator::operator=(const iterator& _rhs) -> iterator& {
 }
 
 auto
-zpt::json::iterator::operator++() -> iterator& {
+zpt::JSONIterator::operator++() -> JSONIterator& {
     ++this->__index;
     if (this->__target->type() == zpt::JSObject) {
         ++this->__iterator;
@@ -991,14 +991,14 @@ zpt::json::iterator::operator++() -> iterator& {
     return (*this);
 }
 
-auto zpt::json::iterator::operator*() -> reference {
+auto zpt::JSONIterator::operator*() -> reference {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(
               this->__index, this->__iterator->first, this->__iterator->second);
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (**this->__target->arr())[this->__index]);
+            return std::make_tuple(this->__index, "", (**this->__target->array())[this->__index]);
         }
         default: {
             break;
@@ -1008,20 +1008,20 @@ auto zpt::json::iterator::operator*() -> reference {
 }
 
 auto
-zpt::json::iterator::operator++(int) -> iterator {
-    zpt::json::iterator _to_return = (*this);
+zpt::JSONIterator::operator++(int) -> JSONIterator {
+    zpt::JSONIterator _to_return = (*this);
     ++(*this);
     return _to_return;
 }
 
-auto zpt::json::iterator::operator-> () -> pointer {
+auto zpt::JSONIterator::operator-> () -> pointer {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(
               this->__index, this->__iterator->first, this->__iterator->second);
         }
         case zpt::JSArray: {
-            return std::make_tuple(this->__index, "", (**this->__target->arr())[this->__index]);
+            return std::make_tuple(this->__index, "", (**this->__target->array())[this->__index]);
         }
         default: {
             break;
@@ -1031,18 +1031,18 @@ auto zpt::json::iterator::operator-> () -> pointer {
 }
 
 auto
-zpt::json::iterator::operator==(iterator _rhs) const -> bool {
+zpt::JSONIterator::operator==(JSONIterator _rhs) const -> bool {
     return this->__index == _rhs.__index &&
            (this->__target->type() != zpt::JSObject || this->__iterator == _rhs.__iterator);
 }
 
 auto
-zpt::json::iterator::operator!=(iterator _rhs) const -> bool {
+zpt::JSONIterator::operator!=(JSONIterator _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 
 auto
-zpt::json::iterator::operator--() -> iterator& {
+zpt::JSONIterator::operator--() -> JSONIterator& {
     --this->__index;
     if (this->__target->type() == zpt::JSObject) {
         --this->__iterator;
@@ -1051,8 +1051,8 @@ zpt::json::iterator::operator--() -> iterator& {
 }
 
 auto
-zpt::json::iterator::operator--(int) -> iterator {
-    zpt::json::iterator _to_return = (*this);
+zpt::JSONIterator::operator--(int) -> JSONIterator {
+    zpt::JSONIterator _to_return = (*this);
     --(*this);
     return _to_return;
 }

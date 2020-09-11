@@ -43,7 +43,7 @@ zpt::UPnPPtr::UPnPPtr(zpt::json _options)
 zpt::UPnPPtr::~UPnPPtr() {}
 
 zpt::UPnP::UPnP(zpt::json _options)
-  : zpt::Channel((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->str()
+  : zpt::Channel((_options["upnp"]["bind"]->is_string() ? _options["upnp"]["bind"]->string()
                                                         : "udp://239.255.255.250:1991"),
                  _options)
   , __underlying()
@@ -51,13 +51,13 @@ zpt::UPnP::UPnP(zpt::json _options)
     this->uri(this->connection());
 
     this->__underlying->open(
-      this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+      this->uri()["domain"]->string().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
     expect(!this->__underlying->is_error(),
            std::string("upnp: error with socket: ") + this->__underlying->error_string(),
            503,
            this->__underlying->error_code());
     this->__send->open(
-      this->uri()["domain"]->str().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+      this->uri()["domain"]->string().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
     expect(!this->__send->is_error(),
            std::string("upnp: error with socket: ") + this->__send->error_string(),
            503,
@@ -72,7 +72,7 @@ zpt::UPnP::UPnP(zpt::json _options)
 
     std::string _ip;
     if (_options["upnp"]["interface"]->is_string()) {
-        _ip = zpt::net::getip(_options["upnp"]["interface"]->str());
+        _ip = zpt::net::getip(_options["upnp"]["interface"]->string());
         // if (_ip == "127.0.0.1") {
         // 	_ip = "0.0.0.0";
         // }
@@ -99,7 +99,7 @@ zpt::UPnP::UPnP(zpt::json _options)
            sizeof _local_addr);
 
     struct ip_mreq _group_addr;
-    _group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->str().data());
+    _group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->string().data());
     _group_addr.imr_interface.s_addr = inet_addr(_ip.data());
     setsockopt(this->__underlying->buffer().get_socket(),
                IPPROTO_TCP,
@@ -249,7 +249,7 @@ zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
         }
 
         ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") +
-               _envelope["resource"]->str() +
+               _envelope["resource"]->string() +
                (_performative == zpt::ev::Reply
                   ? std::string(" ") + std::string(_envelope["status"])
                   : std::string("")));
@@ -275,7 +275,7 @@ zpt::UPnP::recv() -> zpt::json {
             << "protocol" << this->protocol();
     }
     ztrace(std::string("< ") + zpt::ev::to_str(zpt::performative(int(_in["performative"]))) +
-           std::string(" ") + _in["resource"]->str() +
+           std::string(" ") + _in["resource"]->string() +
            (zpt::performative(int(_in["performative"])) == zpt::ev::Reply
               ? std::string(" ") + std::string(_in["status"])
               : std::string("")));

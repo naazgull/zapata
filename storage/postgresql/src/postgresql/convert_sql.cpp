@@ -612,7 +612,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
                 size_t _lparen = _functor.find("(");
                 _functor = _functor.substr(0, _lparen);
                 std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
-                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
+                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->array()->size());
                 break;
             }
             // T_regoper
@@ -628,7 +628,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
                 size_t _lparen = _functor.find("(");
                 _functor = _functor.substr(0, _lparen);
                 std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
-                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
+                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->array()->size());
                 break;
             }
             // T_regclass
@@ -648,7 +648,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
                 size_t _lparen = _functor.find("(");
                 _functor = _functor.substr(0, _lparen);
                 std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
-                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
+                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->array()->size());
                 break;
             }
             // T__regoper
@@ -663,7 +663,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
                 size_t _lparen = _functor.find("(");
                 _functor = _functor.substr(0, _lparen);
                 std::string _args = _functor.substr(_lparen, _functor.length() - _lparen - 1);
-                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->arr()->size());
+                _out << zpt::json::lambda(_functor, zpt::split(_args, ",")->array()->size());
                 break;
             }
             // T__regclass
@@ -945,7 +945,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
         return;
     }
 
-    for (auto _i : _in->obj()) {
+    for (auto _i : _in->object()) {
 
         std::string _key = _i.first;
         zpt::json _v = _i.second;
@@ -1124,7 +1124,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 
                                 std::string _v;
 
-                                for (auto _e : _json->arr()) {
+                                for (auto _e : _json->array()) {
                                     if (_v.length() != 0) {
                                         _v += ", ";
                                     }
@@ -1215,7 +1215,7 @@ zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
 
         if (!_document->ok()) {
 
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
 
                 if (_columns.length() != 0) {
                     _columns += std::string(", ");
@@ -1226,7 +1226,7 @@ zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
         }
         else {
 
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
 
                 if (!_document[std::string(_c)]->ok()) {
                     continue;
@@ -1246,7 +1246,7 @@ zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
             return "*";
         }
 
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
 
             if (_columns.length() != 0) {
                 _columns += std::string(", ");
@@ -1271,7 +1271,7 @@ zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
         }
         else {
 
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
 
                 if (!_document[std::string(_c)]->ok()) {
                     continue;
@@ -1291,7 +1291,7 @@ zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
             return "";
         }
 
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
 
             if (_values.length() != 0) {
                 _values += std::string(", ");
@@ -1317,7 +1317,7 @@ zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string
         }
         else {
 
-            for (auto _c : _opts["fields"]->arr()) {
+            for (auto _c : _opts["fields"]->array()) {
 
                 if (!_document[std::string(_c)]->ok()) {
                     continue;
@@ -1338,7 +1338,7 @@ zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string
             return "";
         }
 
-        for (auto _c : _document->obj()) {
+        for (auto _c : _document->object()) {
 
             if (_values.length() != 0) {
                 _values += std::string(", ");
@@ -1373,7 +1373,7 @@ zpt::pgsql::escape(zpt::json _in, std::string const& _str_delimiter) -> std::str
             break;
         }
         case zpt::JSArray: {
-            if (_in->arr()->size() == 2 && _in[0]->is_number() && _in[1]->is_number()) {
+            if (_in->array()->size() == 2 && _in[0]->is_number() && _in[1]->is_number()) {
                 _out.assign(std::string("point") +
                             zpt::r_replace(zpt::r_replace(std::string(_in), "[", "("), "]", ")"));
             }

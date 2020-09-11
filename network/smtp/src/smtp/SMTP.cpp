@@ -82,7 +82,7 @@ zpt::SMTP::compose(zpt::json _e_mail) -> std::string {
     bool first = true;
     std::string _recipients;
     zpt::json _parsed_to = zpt::json::array();
-    for (auto _r : _e_mail["To"]->arr()) {
+    for (auto _r : _e_mail["To"]->array()) {
         zpt::json _parsed = zpt::email::parse(std::string(_r));
         _parsed_to << _parsed;
         if (!first) {
@@ -133,7 +133,7 @@ zpt::SMTP::compose(zpt::json _e_mail) -> std::string {
     _oss << "Content-Type: multipart/alternative; boundary=\"" << _boundary << "\"" << CRLF
          << std::flush;
 
-    for (auto _part : _e_mail["Body"]->obj()) {
+    for (auto _part : _e_mail["Body"]->object()) {
         _oss << CRLF << std::flush;
         _oss << "--" << _boundary << CRLF << std::flush;
         _oss << "Content-Type: " << _part.first << "; charset=\"utf-8\"" << CRLF << std::flush;
@@ -256,7 +256,7 @@ zpt::SMTP::send(zpt::json _e_mail) -> void {
           std::string _mimed_mail = this->compose(_e_mail);
         zdbg(_mimed_mail);
 
-        for (auto _r : _e_mail["To"]->arr()) {
+        for (auto _r : _e_mail["To"]->array()) {
             if (this->__type[0] == zpt::json::string("esmtp")) {
                 expect(mailesmtp_rcpt(_smtp,
                                       std::string(_r["address"]).data(),

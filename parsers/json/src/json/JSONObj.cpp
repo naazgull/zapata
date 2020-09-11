@@ -189,11 +189,11 @@ zpt::JSONObjT::clone() -> zpt::json {
     return _return;
 }
 
-auto zpt::JSONObjT::operator-> () -> std::map<std::string, zpt::json>* {
+auto zpt::JSONObjT::operator-> () -> zpt::json::map* {
     return &this->__underlying;
 }
 
-auto zpt::JSONObjT::operator*() -> std::map<std::string, zpt::json>& {
+auto zpt::JSONObjT::operator*() -> zpt::json::map& {
     return this->__underlying;
 }
 

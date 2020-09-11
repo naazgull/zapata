@@ -112,10 +112,11 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
 
     auto trapped(zpt::json _event, bool _content) -> void;
     auto listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void;
-    auto error_callback(zpt::json& _event,
+    auto report_error(zpt::json& _event,
                         bool& _content,
                         const char* _what,
                         const char* _description = nullptr,
+                        const char* _backtrace = nullptr,
                         int _error = -1,
                         int status = 500) -> bool;
 

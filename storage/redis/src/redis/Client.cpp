@@ -132,7 +132,7 @@ zpt::redis::Client::insert(std::string const& _collection,
         _document << "href"
                   << (_href_prefix +
                       (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                      _document["id"]->str());
+                      _document["id"]->string());
     }
 
     redisReply* _reply = nullptr;
@@ -142,7 +142,7 @@ zpt::redis::Client::insert(std::string const& _collection,
         redisAppendCommand(this->__conn,
                            "HSET %s %s %s",
                            _key.data(),
-                           _document["href"]->str().data(),
+                           _document["href"]->string().data(),
                            ((std::string)_document).data());
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
@@ -151,7 +151,7 @@ zpt::redis::Client::insert(std::string const& _collection,
 
     if (!bool(_opts["mutated-event"]))
         zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -181,16 +181,16 @@ zpt::redis::Client::upsert(std::string const& _collection,
                 _document << "href"
                           << (_href_prefix +
                               (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                              _document["id"]->str());
+                              _document["id"]->string());
             }
             if (!_document["id"]->ok()) {
-                zpt::json _split = zpt::split(_document["href"]->str(), "/");
-                _document << "id" << _split->arr()->back();
+                zpt::json _split = zpt::split(_document["href"]->string(), "/");
+                _document << "id" << _split->array()->back();
             }
             std::string _href = std::string(_document["href"]);
             zpt::json _record = this->get(_collection, _href);
             if (_record->ok()) {
-                for (auto _field : _document->obj()) {
+                for (auto _field : _document->object()) {
                     _record << _field.first << _field.second;
                 }
 
@@ -210,7 +210,7 @@ zpt::redis::Client::upsert(std::string const& _collection,
 
                 if (!bool(_opts["mutated-event"]))
                     zpt::Connector::set(_collection, _href, _document, _opts);
-                return _document["id"]->str();
+                return _document["id"]->string();
             }
         }
     }
@@ -222,7 +222,7 @@ zpt::redis::Client::upsert(std::string const& _collection,
             _document << "href"
                       << (_href_prefix +
                           (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
-                          _document["id"]->str());
+                          _document["id"]->string());
         }
 
         redisReply* _reply = nullptr;
@@ -232,7 +232,7 @@ zpt::redis::Client::upsert(std::string const& _collection,
             redisAppendCommand(this->__conn,
                                "HSET %s %s %s",
                                _key.data(),
-                               _document["href"]->str().data(),
+                               _document["href"]->string().data(),
                                ((std::string)_document).data());
             _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
         }
@@ -242,7 +242,7 @@ zpt::redis::Client::upsert(std::string const& _collection,
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
-    return _document["id"]->str();
+    return _document["id"]->string();
 }
 
 auto
@@ -311,7 +311,7 @@ zpt::redis::Client::set(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _record = this->get(_collection, _href);
-    for (auto _field : _document->obj()) {
+    for (auto _field : _document->object()) {
         _record << _field.first << _field.second;
     }
 
@@ -354,8 +354,8 @@ zpt::redis::Client::set(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
-    for (auto _record : _selected["elements"]->arr()) {
-        for (auto _field : _document->obj()) {
+    for (auto _record : _selected["elements"]->array()) {
+        for (auto _field : _document->object()) {
             _record << _field.first << _field.second;
         }
 
@@ -366,7 +366,7 @@ zpt::redis::Client::set(std::string const& _collection,
             redisAppendCommand(this->__conn,
                                "HSET %s %s %s",
                                _key.data(),
-                               _record["href"]->str().data(),
+                               _record["href"]->string().data(),
                                ((std::string)_record).data());
             _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
         }
@@ -402,7 +402,7 @@ zpt::redis::Client::unset(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _record = this->get(_collection, _href);
-    for (auto _attribute : _document->obj()) {
+    for (auto _attribute : _document->object()) {
         _record >> _attribute.first;
     }
 
@@ -445,8 +445,8 @@ zpt::redis::Client::unset(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
-    for (auto _record : _selected["elements"]->arr()) {
-        for (auto _attribute : _document->obj()) {
+    for (auto _record : _selected["elements"]->array()) {
+        for (auto _attribute : _document->object()) {
             _record >> _attribute.first;
         }
 
@@ -457,7 +457,7 @@ zpt::redis::Client::unset(std::string const& _collection,
             redisAppendCommand(this->__conn,
                                "HSET %s %s %s",
                                _key.data(),
-                               _record["href"]->str().data(),
+                               _record["href"]->string().data(),
                                ((std::string)_record).data());
             _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
         }
@@ -528,24 +528,24 @@ zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, z
     if (!_selected->ok()) {
         return 0;
     }
-    for (auto _record : _selected["elements"]->arr()) {
+    for (auto _record : _selected["elements"]->array()) {
         zpt::json _removed;
         if (!bool(_opts["mutated-event"]))
-            _removed = this->get(_collection, _record["href"]->str());
+            _removed = this->get(_collection, _record["href"]->string());
 
         redisReply* _reply = nullptr;
         bool _success = true;
         {
             std::lock_guard<std::mutex> _lock(this->__mtx);
             redisAppendCommand(
-              this->__conn, "HDEL %s %s", _key.data(), _record["href"]->str().data());
+              this->__conn, "HDEL %s %s", _key.data(), _record["href"]->string().data());
             _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
         }
         freeReplyObject(_reply);
         expect(_success, "something whent wrong while accessing Redis", 500, 0);
         if (!bool(_opts["mutated-event"]))
             zpt::Connector::remove(
-              _collection, _record["href"]->str(), _opts + zpt::json{ "removed", _removed });
+              _collection, _record["href"]->string(), _opts + zpt::json{ "removed", _removed });
     }
 
     return int(_selected["size"]);

@@ -714,7 +714,7 @@ zpt::python::from_ref(zpt::json _in) -> PyObject* {
     if (_in->is_lambda()) {
         unsigned long _ref = 0;
         std::istringstream _iss;
-        _iss.str(_in->lbd()->name());
+        _iss.str(_in->lambda()->name());
         _iss >> std::hex >> _ref;
         return (PyObject*)_ref;
     }
@@ -750,7 +750,7 @@ zpt::python::to_python(zpt::json _in) -> PyObject* {
         case zpt::JSObject: {
             _ret = PyDict_New();
             Py_INCREF(_ret);
-            for (auto _o : _in->obj()) {
+            for (auto _o : _in->object()) {
                 PyObject* _key = zpt::python::to_python(zpt::json::string(_o.first));
                 PyObject* _value = zpt::python::to_python(_o.second);
                 PyDict_SetItem(_ret, _key, _value);
@@ -758,10 +758,10 @@ zpt::python::to_python(zpt::json _in) -> PyObject* {
             break;
         }
         case zpt::JSArray: {
-            _ret = PyList_New(_in->arr()->size());
+            _ret = PyList_New(_in->array()->size());
             Py_INCREF(_ret);
             size_t _idx = 0;
-            for (auto _o : _in->arr()) {
+            for (auto _o : _in->array()) {
                 PyObject* _value = zpt::python::to_python(_o);
                 PyList_SET_ITEM(_ret, _idx, _value);
                 _idx++;
@@ -805,7 +805,7 @@ zpt::python::to_python(zpt::json _in) -> PyObject* {
         case zpt::JSLambda: {
             unsigned long _ref = 0;
             std::istringstream _iss;
-            _iss.str(_in->lbd()->name());
+            _iss.str(_in->lambda()->name());
             _iss >> std::hex >> _ref;
             _ret = (PyObject*)_ref;
             break;

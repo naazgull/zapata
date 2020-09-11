@@ -125,6 +125,17 @@ zpt::HTTPTokenizerLexer::add() -> void {
 
 auto
 zpt::HTTPTokenizerLexer::name() -> void {
+    if (this->__param_name.length() != 0) {
+        switch (this->__root_type) {
+            case zpt::http::message_type::request: {
+                this->__root_req->param(this->__param_name, "");
+                break;
+            }
+            case zpt::http::message_type::reply: {
+                break;
+            }
+        }
+    }
     std::string _s(this->matched());
     zpt::trim(_s);
     this->__param_name.assign(_s);

@@ -132,7 +132,7 @@ zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
     int _status = (int)_envelope["headers"]["X-Status"];
 
     std::string _directive(
-      zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->str() +
+      zpt::ev::to_str(_performative) + std::string(" ") + _envelope["resource"]->string() +
       (_performative == zpt::ev::Reply ? std::string(" ") + std::to_string(_status)
                                        : std::string("")));
     std::string _buffer(_envelope);
@@ -1424,7 +1424,7 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
     int _status = (int)_envelope["headers"]["X-Status"];
 
     std::string _directive(zpt::ev::to_str(_performative) + std::string(" ") +
-                           _envelope["resource"]->str() +
+                           _envelope["resource"]->string() +
                            (_performative == zpt::ev::Reply
                               ? std::string(" ") + std::to_string(_status)
                               : std::string(""))); // + std::string(" ") + zpt::generate::r_uuid());
@@ -1836,13 +1836,13 @@ zpt::ZMQFactory::~ZMQFactory() {}
 auto
 zpt::ZMQFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
-    auto _found = this->__channels.find(_options["connection"]->str());
+    auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) {
         _return = _found->second;
     }
     else {
         zpt::MQTT* _mqtt = new zpt::MQTT();
-        _mqtt->connect(zpt::uri::parse(_options["connection"]->str()));
+        _mqtt->connect(zpt::uri::parse(_options["connection"]->string()));
         _return = zpt::socket(_mqtt);
     }
     return _return;
@@ -1938,13 +1938,13 @@ _zpt_plugin_load_() {
 
     if (_options["zmq"]->ok() && _options["zmq"]->is_array()) {
         std::string _ip = std::string("tcp://") + zpt::net::getip();
-        for (auto _definition : _options["zmq"]->arr()) {
+        for (auto _definition : _options["zmq"]->array()) {
             zpt::socket _zmq = _factory->produce(_definition["bind"]);
             zpt::poll::instance<zpt::ChannelPoll>()->poll(_zmq);
 
             _definition << "connect"
                         << (_definition["public"]->is_string()
-                              ? _definition["public"]->str()
+                              ? _definition["public"]->string()
                               : zpt::r_replace(
                                   zpt::r_replace(_socket->connection(), "@tcp", ">tcp"),
                                   "tcp://*",

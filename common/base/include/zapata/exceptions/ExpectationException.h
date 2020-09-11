@@ -25,6 +25,7 @@ SOFTWARE.
 #pragma once
 
 #include <exception>
+#include <iostream>
 #include <string>
 
 namespace zpt {
@@ -52,6 +53,12 @@ class ExpectationException : public std::exception {
     virtual auto backtrace() const -> const char*;
     virtual auto code() const -> int;
     virtual auto status() const -> int;
+
+    friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
+      -> std::ostream& {
+        _out << _in.description() << ": " << _in.what() << " ERROR(" << _in.code() << ")";
+        return _out;
+    }
 
   private:
     std::string __what;

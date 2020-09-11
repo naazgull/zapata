@@ -125,6 +125,7 @@ zpt::dom::engine::on_error(zpt::json _path,
                            zpt::pipeline::event<zpt::dom::element>& _event,
                            const char* _what,
                            const char* _description,
+                           const char* _backtrace,
                            int _error,
                            int status) -> bool {
     zlog("Error found while processing '" << _event->content().xpath() << "': " << _what << ", "

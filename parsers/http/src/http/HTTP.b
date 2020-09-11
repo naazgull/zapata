@@ -89,21 +89,22 @@ paramslist :
 		d_scanner.name();
 	}
 	 EQ paramvalue
-	 {
-		d_scanner.value();
-	 }
 |
 	paramslist E STRING
 	 {
 		d_scanner.name();
 	}
 	 EQ paramvalue
+;
+
+paramvalue:
+
+|
+    STRING
 	 {
 		d_scanner.value();
 	 }
 ;
-
-paramvalue: | STRING;
 
 status_description : | SPACE STRING;
 

@@ -102,13 +102,19 @@ zpt::events::dispatcher<C, E, V>::trap() -> C& {
         static_cast<C*>(this)->trapped(_event, _content);
     }
     catch (zpt::failed_expectation const& _e) {
-        if (!static_cast<C*>(this)->error_callback(
-              _event, _content, _e.what(), _e.description(), _e.code(), _e.status())) {
+        if (!static_cast<C*>(this)->report_error(_event,
+                                                 _content,
+                                                 _e.what(),
+                                                 _e.description(),
+                                                 _e.backtrace(),
+                                                 _e.code(),
+                                                 _e.status())) {
             throw;
         }
     }
     catch (std::exception const& _e) {
-        if (!static_cast<C*>(this)->error_callback(_event, _content, _e.what(), nullptr, -1, 500)) {
+        if (!static_cast<C*>(this)->report_error(
+              _event, _content, _e.what(), nullptr, nullptr, -1, 500)) {
             throw;
         }
     }

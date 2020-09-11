@@ -30,7 +30,7 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri["scheme"]->ok()) {
-            _oss << _uri["scheme"]->str();
+            _oss << _uri["scheme"]->string();
             if (_uri["scheme_options"]->ok()) {
                 _oss << "+" << zpt::join(_uri["scheme_options"], "+") << std::flush;
             }
@@ -39,15 +39,15 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
         if (_uri["domain"]->ok()) {
             _oss << "//" << std::flush;
             if (_uri["user"]["name"]->ok()) {
-                _oss << _uri["user"]["name"]->str() << "@" << std::flush;
+                _oss << _uri["user"]["name"]->string() << "@" << std::flush;
             }
-            _oss << _uri["domain"]->str() << std::flush;
+            _oss << _uri["domain"]->string() << std::flush;
             if (_uri["port"]->ok()) {
                 _oss << ":" << _uri["port"] << std::flush;
             }
         }
         if (_uri["path"]->ok()) {
-            _oss << (_uri["is_relative"]->bln() ? "" : "/") << zpt::join(_uri["path"], "/")
+            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
                  << std::flush;
         }
         if (_uri["params"]->ok()) {
@@ -63,7 +63,7 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
             }
         }
         if (_uri["anchor"]->ok()) {
-            _oss << "#" << _uri["anchor"]->str() << std::flush;
+            _oss << "#" << _uri["anchor"]->string() << std::flush;
         }
     }
     return _oss.str();
@@ -133,7 +133,7 @@ zpt::uri::path::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri["path"]->ok()) {
-            _oss << (_uri["is_relative"]->bln() ? "" : "/") << zpt::join(_uri["path"], "/")
+            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
                  << std::flush;
         }
     }
