@@ -8,7 +8,7 @@ main(int argc, char* argv[]) -> int {
         try {
             std::istringstream _iss;
             _iss.str(std::string{ argv[1] });
-            uint16_t _port{ 0 };
+            std::uint16_t _port{ 0 };
             _iss >> _port;
 
             zpt::serversocketstream _ssock{ _port };

@@ -58,6 +58,9 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) {
-    zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
-    zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
+    auto& _config = _plugin->config();
+    if (_config["path"]->ok()) {
+        zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
+        zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
+    }
 }

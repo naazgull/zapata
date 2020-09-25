@@ -58,7 +58,6 @@ zpt::HTTPReqT::param(std::string const& _idx) -> std::string const& {
 
 auto
 zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> void {
-    zlog(this->__query, zpt::trace);
     if (this->__query.length() != 0) {
         this->__query.insert(this->__query.length(), "&");
     }

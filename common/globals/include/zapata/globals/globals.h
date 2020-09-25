@@ -41,6 +41,7 @@ class globals {
     static auto get(ssize_t _variable) -> T&;
     template<typename T>
     static auto dealloc(ssize_t _variable) -> void;
+    static inline auto to_string() -> std::string;
 
     template<typename T>
     class cached {
@@ -77,7 +78,7 @@ class globals {
     };
 
   private:
-    static inline std::map<ssize_t, std::vector<void*>> __variables{};
+    static inline std::map<size_t, std::vector<void*>> __variables{};
     static inline zpt::lf::spin_lock __variables_lock;
 };
 } // namespace zpt
@@ -85,7 +86,11 @@ class globals {
 template<typename T, typename... Args>
 auto
 zpt::globals::alloc(ssize_t& _variable, Args... _args) -> T& {
-    expect(_variable == -1, "variable already assigned with identifier " << _variable, 500, 0);
+    expect(_variable == -1,
+           "variable already assigned with identifier " << _variable << "  for "
+                                                        << typeid(T).name(),
+           500,
+           0);
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
                                        zpt::lf::spin_lock::exclusive };
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
@@ -99,8 +104,12 @@ zpt::globals::alloc(ssize_t& _variable, Args... _args) -> T& {
 template<typename T, typename C>
 auto
 zpt::globals::global_cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T& {
-    expect(_variable == -1, "variable already assigned with identifier " << _variable, 500, 0);
-    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::lf::spin_lock::exclusive };
+    expect(_variable == -1,
+           "variable already assigned with identifier " << _variable << " for " << typeid(T).name(),
+           500,
+           0);
+    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
+                                       zpt::lf::spin_lock::exclusive };
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
 
     T* _new = static_cast<T*>(_value.release());
@@ -114,8 +123,12 @@ auto
 zpt::globals::get(ssize_t _variable) -> T& {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::lf::spin_lock::shared };
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
-    expect(_found != zpt::globals::__variables.end() && _found->second.size() > _variable,
-           "no such global variable",
+    expect(_found != zpt::globals::__variables.end(),
+           "no such global variable for " << typeid(T).name(),
+           500,
+           0);
+    expect(_found->second.size() > _variable,
+           "no such global variable for " << typeid(T).name(),
            500,
            0);
 
@@ -127,10 +140,31 @@ auto
 zpt::globals::dealloc(ssize_t _variable) -> void {
     zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
                                        zpt::lf::spin_lock::exclusive };
-    auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
-    auto _ptr = static_cast<T*>(_allocated[_variable]);
-    _allocated.erase(_allocated.begin() + _variable);
+    auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
+    expect(_found != zpt::globals::__variables.end(),
+           "no such global variable for " << typeid(T).name(),
+           500,
+           0);
+    expect(_found->second.size() > _variable,
+           "no such global variable for " << typeid(T).name(),
+           500,
+           0);
+    auto _ptr = static_cast<T*>(_found->second[_variable]);
+    _found->second.erase(_found->second.begin() + _variable);
     delete _ptr;
+}
+
+auto
+zpt::globals::to_string() -> std::string {
+    std::ostringstream _out;
+    _out << "Global variables:" << std::endl;
+    for (auto [_key, _value] : __variables) {
+        _out << _key << ":" << std::endl << std::flush;
+        for (auto _variable : _value) {
+            _out << "\t- " << _variable << std::endl << std::flush;
+        }
+    }
+    return _out.str();
 }
 
 template<typename T>

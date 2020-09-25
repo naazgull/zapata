@@ -26,10 +26,10 @@
 #include <zapata/globals/globals.h>
 
 auto
-zpt::net::transport::file::send(zpt::exchange& _channel) -> void {}
+zpt::net::transport::file::send(zpt::exchange& _channel) const -> void {}
 
 auto
-zpt::net::transport::file::receive(zpt::exchange& _channel) -> void {
+zpt::net::transport::file::receive(zpt::exchange& _channel) const -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
@@ -40,7 +40,7 @@ zpt::net::transport::file::receive(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::file::resolve(zpt::json _uri) -> zpt::exchange {
+zpt::net::transport::file::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
     expect(_uri["scheme"] == "file", "scheme must be 'file'", 500, 0);
     std::string _path{ zpt::uri::path::to_string(_uri) };

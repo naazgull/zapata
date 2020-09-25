@@ -36,7 +36,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     if (_config["port"]->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
           zpt::TCP_SERVER_SOCKET(),
-          static_cast<uint16_t>(static_cast<unsigned int>(_config["port"])));
+          static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _boot.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
@@ -58,6 +58,9 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) {
-    zpt::globals::get<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET())->close();
-    zpt::globals::dealloc<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET());
+    auto& _config = _plugin->config();
+    if (_config["port"]->ok()) {
+        zpt::globals::get<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET())->close();
+        zpt::globals::dealloc<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET());
+    }
 }

@@ -155,7 +155,7 @@ zpt::stream::polling::mute(zpt::stream& _stream) -> zpt::stream::polling& {
 
 auto
 zpt::stream::polling::pool() -> void {
-    uint64_t _sd_watchdog_usec = 100000;
+    std::uint64_t _sd_watchdog_usec = 100000;
     bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
     long long _poll_timeout =
       _sd_watchdog_enabled ? this->__poll_wait_timeout > 0

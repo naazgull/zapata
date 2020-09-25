@@ -6,6 +6,7 @@ export projects=(
        common/globals
        io/stream
        io/socket
+       io/pipe
        parsers/json
        parsers/http
        parsers/uri
@@ -17,6 +18,7 @@ export projects=(
        network/http
        network/local
        network/tcp
+       network/pipe
        engines/pipeline
        engines/rest
        engines/dom

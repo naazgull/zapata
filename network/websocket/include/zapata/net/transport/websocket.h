@@ -44,9 +44,9 @@ class websocket : public zpt::transport::transport_t {
     websocket() = default;
     virtual ~websocket() = default;
 
-    auto receive(zpt::exchange& _channel) -> void override;
-    auto send(zpt::exchange& _channel) -> void override;
-    auto resolve(zpt::json _uri) -> zpt::exchange override;
+    auto receive(zpt::exchange& _channel) const -> void override;
+    auto send(zpt::exchange& _channel) const -> void override;
+    auto resolve(zpt::json _uri) const -> zpt::exchange override;
 };
 } // namespace transport
 } // namespace net

@@ -28,7 +28,7 @@
 #define HAVE_LIBZ 1
 
 /* Define to 1 if you have the `zapata-base' library (-lzapata-base). */
-#define HAVE_LIBZAPATA_BASE 1
+/* #undef HAVE_LIBZAPATA_BASE */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -67,7 +67,7 @@
 #define PACKAGE_NAME "zapata-net-socket"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zapata-net-socket 1.0.0-1"
+#define PACKAGE_STRING "zapata-net-socket 2.0.0-1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zapata-net-socket"
@@ -76,10 +76,10 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.0-1"
+#define PACKAGE_VERSION "2.0.0-1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0.0-1"
+#define VERSION "2.0.0-1"

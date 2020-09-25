@@ -4,7 +4,7 @@
 
 class some_protocol : public zpt::transport::transport_t {
   public:
-    auto receive(zpt::exchange& _channel) -> void override {
+    auto receive(zpt::exchange& _channel) const -> void override {
         zpt::http::req _request;
         (*_channel->stream()) >> std::noskipws >> _request;
         if (_request->body().length() != 0 &&
@@ -21,7 +21,7 @@ class some_protocol : public zpt::transport::transport_t {
         }
     }
 
-    auto send(zpt::exchange& _channel) -> void override {
+    auto send(zpt::exchange& _channel) const -> void override {
         zpt::http::rep _response;
         zpt::init(_response);
         if (_channel->received()->size() != 0) {
@@ -36,7 +36,7 @@ class some_protocol : public zpt::transport::transport_t {
         (*_channel->stream()) << _response << std::flush;
     }
 
-    auto resolve(zpt::json _uri) -> zpt::exchange { return zpt::exchange(); }
+    auto resolve(zpt::json _uri) const -> zpt::exchange override { return zpt::exchange(); }
 };
 
 auto
@@ -45,7 +45,7 @@ main(int argc, char* argv[]) -> int {
         try {
             std::istringstream _iss;
             _iss.str(std::string{ argv[1] });
-            uint16_t _port{ 0 };
+            std::uint16_t _port{ 0 };
             _iss >> _port;
 
             zpt::transport _transport = zpt::transport::alloc<some_protocol>();
