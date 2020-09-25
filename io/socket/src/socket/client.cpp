@@ -7,7 +7,7 @@ main(int argc, char* argv[]) -> int {
         if (_type == "-t") {
             std::istringstream _iss;
             _iss.str(std::string{ argv[2] });
-            uint16_t _port{ 0 };
+            std::uint16_t _port{ 0 };
             _iss >> _port;
 
             auto _csock = zpt::stream::alloc<zpt::socketstream>("localhost", _port);

@@ -42,9 +42,9 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
   , __file(_file) {
     zpt::replace(this->__what, "\"", "");
     zpt::replace(this->__description, "\"", "");
-    this->__description.insert(0, "expected '");
+    this->__description.insert(0, "expected `");
     if (this->__line != 0) {
-        this->__description.insert(this->__description.length(), "' to be true on file ");
+        this->__description.insert(this->__description.length(), "` to be true on file ");
         this->__description.insert(this->__description.length(), this->__file);
         this->__description.insert(this->__description.length(), ", line ");
         zpt::tostr(this->__description, this->__line);
@@ -59,23 +59,7 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 std::string _file,
                                                 char** _backtrace,
                                                 size_t _backtrace_size)
-  : std::exception()
-  , __what(_what)
-  , __http_code(_http_code)
-  , __code(_code)
-  , __description(_desc)
-  , __line(_line)
-  , __file(_file) {
-    zpt::replace(this->__what, "\"", "");
-    zpt::replace(this->__description, "\"", "");
-    this->__description.insert(0, "expected '");
-    if (this->__line != 0) {
-        this->__description.insert(this->__description.length(), "' to be true on file ");
-        this->__description.insert(this->__description.length(), this->__file);
-        this->__description.insert(this->__description.length(), ", line ");
-        zpt::tostr(this->__description, this->__line);
-    }
-
+  : zpt::ExpectationException(_what, _http_code, _code, _desc, _line, _file) {
     for (size_t _i = 0; _i != _backtrace_size; _i++) {
         this->__backtrace.insert(this->__backtrace.length(), "\t");
         this->__backtrace.insert(this->__backtrace.length(), std::string(_backtrace[_i]));

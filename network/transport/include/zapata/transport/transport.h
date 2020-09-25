@@ -71,8 +71,8 @@ class exchange {
     auto operator=(zpt::exchange const& _rhs) -> zpt::exchange&;
     auto operator=(zpt::exchange&& _rhs) -> zpt::exchange&;
 
-    auto operator-> () -> zpt::exchange::exchange_t*;
-    auto operator*() -> zpt::exchange::exchange_t&;
+    auto operator-> () const -> zpt::exchange::exchange_t*;
+    auto operator*() const -> zpt::exchange::exchange_t&;
 
     friend auto operator<<(std::ostream& _out, zpt::exchange& _in) -> std::ostream& {
         _out << _in->scheme() << ":" << _in->uri() << std::endl
@@ -88,9 +88,9 @@ class transport {
   public:
     class transport_t {
       public:
-        virtual auto receive(zpt::exchange& _channel) -> void = 0;
-        virtual auto send(zpt::exchange& _channel) -> void = 0;
-        virtual auto resolve(zpt::json _uri) -> zpt::exchange = 0;
+        virtual auto receive(zpt::exchange& _channel) const -> void = 0;
+        virtual auto send(zpt::exchange& _channel) const -> void = 0;
+        virtual auto resolve(zpt::json _uri) const -> zpt::exchange = 0;
     };
 
     transport(zpt::transport const& _rhs);
@@ -100,8 +100,8 @@ class transport {
     auto operator=(zpt::transport const& _rhs) -> zpt::transport&;
     auto operator=(zpt::transport&& _rhs) -> zpt::transport&;
 
-    auto operator-> () -> zpt::transport::transport_t*;
-    auto operator*() -> zpt::transport::transport_t&;
+    auto operator-> () const -> zpt::transport::transport_t*;
+    auto operator*() const -> zpt::transport::transport_t&;
 
     template<typename T, typename... Args>
     static auto alloc(Args... _args) -> zpt::transport;
@@ -112,14 +112,14 @@ class transport {
         virtual ~layer() = default;
 
         auto add(std::string const& _scheme, zpt::transport _transport) -> zpt::transport::layer&;
-        auto get(std::string const& _scheme) -> zpt::transport&;
+        auto get(std::string const& _scheme) const -> const zpt::transport&;
 
-        auto translate(std::istream& _io, std::string _mime = "*/*") -> zpt::json;
+        auto translate(std::istream& _io, std::string _mime = "*/*") const -> zpt::json;
 
-        auto begin() -> std::map<std::string, zpt::transport>::iterator;
-        auto end() -> std::map<std::string, zpt::transport>::iterator;
+        auto begin() const -> std::map<std::string, zpt::transport>::const_iterator;
+        auto end() const -> std::map<std::string, zpt::transport>::const_iterator;
 
-        auto resolve(std::string _uri) -> zpt::exchange;
+        auto resolve(std::string _uri) const -> zpt::exchange;
 
       private:
         std::map<std::string, zpt::transport> __underlying;

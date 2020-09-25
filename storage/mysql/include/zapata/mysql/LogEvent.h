@@ -18,7 +18,7 @@ namespace zpt {
 namespace mysql {
 
 extern uint8_t* post_header_lengths;
-extern uint16_t post_header_lengths_size;
+extern std::uint16_t post_header_lengths_size;
 
 auto
 arr2str(char* _arr, size_t _arr_len) -> std::string;
@@ -27,11 +27,11 @@ class LogEventHeader {
   public:
     virtual auto to_json() -> zpt::json;
 
-    uint32_t __timestamp = 0x0;
+    std::uint32_t __timestamp = 0x0;
     uint8_t __type_code = 0x0;
-    uint32_t __server_id = 0x0;
-    uint32_t __event_length = 0x0;
-    uint32_t __next_position = 0x0;
+    std::uint32_t __server_id = 0x0;
+    std::uint32_t __event_length = 0x0;
+    std::uint32_t __next_position = 0x0;
     std::bitset<16> __flags = 0x0;
 };
 
@@ -152,9 +152,9 @@ class StartEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint16_t __binlog_version = 0x0;
+    std::uint16_t __binlog_version = 0x0;
     std::string __server_version;
-    uint32_t __timestamp = 0x0;
+    std::uint32_t __timestamp = 0x0;
 };
 
 enum QueryVarType {
@@ -241,7 +241,7 @@ typedef struct q_variables {
                 // auto_increment_increment and auto_increment_offset system
                 // variables. This variable is present only if auto_increment is
                 // greater than 1.
-                new (&__auto_increment) std::tuple<uint16_t, uint16_t>;
+                new (&__auto_increment) std::tuple<std::uint16_t, std::uint16_t>;
                 std::get<0>(__auto_increment) = std::get<0>(_other.__auto_increment);
                 std::get<1>(__auto_increment) = std::get<1>(_other.__auto_increment);
                 break;
@@ -251,7 +251,7 @@ typedef struct q_variables {
                 // the
                 // character_set_client, collation_connection, and collation_server
                 // system variables.
-                new (&__charset_code) std::tuple<uint16_t, uint16_t, uint16_t>;
+                new (&__charset_code) std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
                 std::get<0>(__charset_code) = std::get<0>(_other.__charset_code);
                 std::get<1>(__charset_code) = std::get<1>(_other.__charset_code);
                 std::get<2>(__charset_code) = std::get<2>(_other.__charset_code);
@@ -365,7 +365,7 @@ typedef struct q_variables {
                 // auto_increment_increment and auto_increment_offset system
                 // variables. This variable is present only if auto_increment is
                 // greater than 1.
-                new (&__auto_increment) std::tuple<uint16_t, uint16_t>;
+                new (&__auto_increment) std::tuple<std::uint16_t, std::uint16_t>;
                 std::get<0>(__auto_increment) = std::get<0>(_other.__auto_increment);
                 std::get<1>(__auto_increment) = std::get<1>(_other.__auto_increment);
                 break;
@@ -375,7 +375,7 @@ typedef struct q_variables {
                 // the
                 // character_set_client, collation_connection, and collation_server
                 // system variables.
-                new (&__charset_code) std::tuple<uint16_t, uint16_t, uint16_t>;
+                new (&__charset_code) std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
                 std::get<0>(__charset_code) = std::get<0>(_other.__charset_code);
                 std::get<1>(__charset_code) = std::get<1>(_other.__charset_code);
                 std::get<2>(__charset_code) = std::get<2>(_other.__charset_code);
@@ -466,11 +466,11 @@ typedef struct q_variables {
                 break;
             }
             case zpt::mysql::Q_AUTO_INCREMENT: {
-                __auto_increment.~tuple<uint16_t, uint16_t>();
+                __auto_increment.~tuple<std::uint16_t, std::uint16_t>();
                 break;
             }
             case zpt::mysql::Q_CHARSET_CODE: {
-                __charset_code.~tuple<uint16_t, uint16_t, uint16_t>();
+                __charset_code.~tuple<std::uint16_t, std::uint16_t, std::uint16_t>();
                 break;
             }
             case zpt::mysql::Q_TIME_ZONE_CODE: {
@@ -569,22 +569,22 @@ typedef struct q_variables {
     zpt::mysql::QueryVarType __type;
     union {
         std::bitset<32> __flags2_code = 0x0;
-        uint64_t __sql_mode_code;
+        std::uint64_t __sql_mode_code;
         std::string __catalog_code;
-        std::tuple<uint16_t, uint16_t> __auto_increment;
-        std::tuple<uint16_t, uint16_t, uint16_t> __charset_code;
+        std::tuple<std::uint16_t, std::uint16_t> __auto_increment;
+        std::tuple<std::uint16_t, std::uint16_t, std::uint16_t> __charset_code;
         std::string __time_zone_code;
         std::string __catalog_nz_code;
-        uint16_t __lc_time_names_code;
-        uint16_t __charset_database_code;
-        uint64_t __table_map_for_update_code;
-        uint32_t __master_data_written_code;
+        std::uint16_t __lc_time_names_code;
+        std::uint16_t __charset_database_code;
+        std::uint64_t __table_map_for_update_code;
+        std::uint32_t __master_data_written_code;
         std::tuple<std::string, std::string> __invoker;
         std::vector<std::string> __updated_db_names;
-        uint64_t __microseconds;
-        uint64_t __commit_ts;
-        uint64_t __commit_ts2;
-        uint64_t __explicit_defaults_for_timestam;
+        std::uint64_t __microseconds;
+        std::uint64_t __commit_ts;
+        std::uint64_t __commit_ts2;
+        std::uint64_t __explicit_defaults_for_timestam;
     };
 } query_variable;
 
@@ -593,11 +593,11 @@ class QueryEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint32_t __thread_id = 0x0;
-    uint32_t __execution_time = 0x0;
+    std::uint32_t __thread_id = 0x0;
+    std::uint32_t __execution_time = 0x0;
     uint8_t __database_name_length = 0x0;
-    uint16_t __error_code = 0x0;
-    uint16_t __variable_length = 0x0;
+    std::uint16_t __error_code = 0x0;
+    std::uint16_t __variable_length = 0x0;
     std::string __database_name;
     std::string __query;
     std::vector<zpt::mysql::query_variable> __variables;
@@ -614,7 +614,7 @@ class RotateEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint64_t __position_next_event;
+    std::uint64_t __position_next_event;
     std::string __next_binlog_filename;
 };
 
@@ -683,9 +683,9 @@ class FormatDescriptionEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint16_t __binlog_version = 0x0;
+    std::uint16_t __binlog_version = 0x0;
     std::string __server_version;
-    uint32_t __timestamp = 0x0;
+    std::uint32_t __timestamp = 0x0;
     uint8_t __header_length = 0x0;
 };
 
@@ -730,8 +730,8 @@ class PreGADeleteRowsEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint64_t __table_id;
-    uint64_t __number_of_columns;
+    std::uint64_t __table_id;
+    std::uint64_t __number_of_columns;
     std::vector<bool> __nullable_columns;
 };
 
@@ -752,8 +752,8 @@ class DeleteRowsEvent : public zpt::mysql::LogEvent {
     virtual auto data_to_json() -> zpt::json;
     static auto consume(zpt::mysql::event_header _header, std::istream& _in) -> zpt::mysql::event;
 
-    uint64_t __table_id;
-    uint64_t __number_of_columns;
+    std::uint64_t __table_id;
+    std::uint64_t __number_of_columns;
     std::vector<bool> __nullable_columns;
 };
 

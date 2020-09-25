@@ -32,14 +32,14 @@ zpt::UNIX_SERVER_SOCKET() -> ssize_t& {
 }
 
 auto
-zpt::net::transport::unix_socket::send(zpt::exchange& _channel) -> void {
+zpt::net::transport::unix_socket::send(zpt::exchange& _channel) const -> void {
     if (_channel->to_send()->ok()) {
         _channel->stream() << _channel->to_send();
     }
 }
 
 auto
-zpt::net::transport::unix_socket::receive(zpt::exchange& _channel) -> void {
+zpt::net::transport::unix_socket::receive(zpt::exchange& _channel) const -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
@@ -72,7 +72,7 @@ zpt::net::transport::unix_socket::receive(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::unix_socket::resolve(zpt::json _uri) -> zpt::exchange {
+zpt::net::transport::unix_socket::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
     expect(_uri["scheme"] == "unix", "scheme must be 'unix'", 500, 0);
     std::string _path{ zpt::path::join(_uri["path"]) };

@@ -59,7 +59,7 @@ zpt::ssl_error_print(unsigned long _error) -> std::string {
 zpt::serversocketstream::serversocketstream()
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>() } {}
 
-zpt::serversocketstream::serversocketstream(uint16_t _port)
+zpt::serversocketstream::serversocketstream(std::uint16_t _port)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_port) } {}
 
 zpt::serversocketstream::serversocketstream(std::string const& _path)
@@ -97,7 +97,7 @@ auto zpt::serversocketstream::operator*() -> zpt::basic_serversocketstream<char>
 zpt::wserversocketstream::wserversocketstream()
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>() } {}
 
-zpt::wserversocketstream::wserversocketstream(uint16_t _port)
+zpt::wserversocketstream::wserversocketstream(std::uint16_t _port)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_port) } {}
 
 zpt::wserversocketstream::wserversocketstream(std::string const& _path)

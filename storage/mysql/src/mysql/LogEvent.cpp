@@ -4,7 +4,7 @@ namespace zpt {
 namespace mysql {
 
 uint8_t* post_header_lengths = nullptr;
-uint16_t post_header_lengths_size = 0x0;
+std::uint16_t post_header_lengths_size = 0x0;
 
 namespace lengths {
 size_t magic_number = 4;
@@ -110,9 +110,9 @@ zpt::mysql::StartEvent::consume(zpt::mysql::event_header _header, std::istream& 
     if (_header->__event_length) {
         char _server_version[50] = { 0 };
 
-        _in.read((char*)&_event->__binlog_version, sizeof(uint16_t));
+        _in.read((char*)&_event->__binlog_version, sizeof(std::uint16_t));
         _in.read(_server_version, 50);
-        _in.read((char*)&_event->__timestamp, sizeof(uint32_t));
+        _in.read((char*)&_event->__timestamp, sizeof(std::uint32_t));
 
         _event->__server_version = zpt::mysql::arr2str(_server_version, 50);
     }
@@ -152,13 +152,13 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
     zpt::mysql::QueryEvent* _event = new zpt::mysql::QueryEvent();
     _event->header(_header);
     if (_header->__event_length) {
-        _in.read((char*)&_event->__thread_id, sizeof(uint32_t));
-        _in.read((char*)&_event->__execution_time, sizeof(uint32_t));
+        _in.read((char*)&_event->__thread_id, sizeof(std::uint32_t));
+        _in.read((char*)&_event->__execution_time, sizeof(std::uint32_t));
         _in.read((char*)&_event->__database_name_length, sizeof(uint8_t));
-        _in.read((char*)&_event->__error_code, sizeof(uint16_t));
-        _in.read((char*)&_event->__variable_length, sizeof(uint16_t));
+        _in.read((char*)&_event->__error_code, sizeof(std::uint16_t));
+        _in.read((char*)&_event->__variable_length, sizeof(std::uint16_t));
 
-        uint32_t _idx = 0;
+        std::uint32_t _idx = 0;
         for (; _idx != _event->__variable_length;) {
             uint8_t _var_type = 0;
             _in.read((char*)&_var_type, sizeof(uint8_t));
@@ -174,17 +174,17 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     // written only
                     // as of MySQL 5.0.
                     std::bitset<32> _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint32_t));
+                    _in.read((char*)&_var_value, sizeof(std::uint32_t));
                     new (&_q_var.__flags2_code) std::bitset<32>;
                     _q_var.__flags2_code = _var_value;
-                    _idx += sizeof(uint32_t);
+                    _idx += sizeof(std::uint32_t);
                     break;
                 }
                 case zpt::mysql::Q_SQL_MODE_CODE: { // Value is an 8-byte SQL mode value.
-                    uint64_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint64_t));
+                    std::uint64_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint64_t));
                     _q_var.__sql_mode_code = _var_value;
-                    _idx += sizeof(uint64_t);
+                    _idx += sizeof(std::uint64_t);
                     break;
                 }
                 case zpt::mysql::Q_CATALOG_CODE: { // Value is the catalog name: a length
@@ -209,14 +209,14 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     // auto_increment_increment and auto_increment_offset
                     // system variables. This variable is present only if
                     // auto_increment is greater than 1.
-                    uint16_t _var_value_1 = 0;
-                    _in.read((char*)&_var_value_1, sizeof(uint16_t));
-                    uint16_t _var_value_2 = 0;
-                    _in.read((char*)&_var_value_2, sizeof(uint16_t));
-                    new (&_q_var.__auto_increment) std::tuple<uint16_t, uint16_t>;
+                    std::uint16_t _var_value_1 = 0;
+                    _in.read((char*)&_var_value_1, sizeof(std::uint16_t));
+                    std::uint16_t _var_value_2 = 0;
+                    _in.read((char*)&_var_value_2, sizeof(std::uint16_t));
+                    new (&_q_var.__auto_increment) std::tuple<std::uint16_t, std::uint16_t>;
                     std::get<0>(_q_var.__auto_increment) = _var_value_1;
                     std::get<1>(_q_var.__auto_increment) = _var_value_2;
-                    _idx += 2 * sizeof(uint16_t);
+                    _idx += 2 * sizeof(std::uint16_t);
                     break;
                 }
                 case zpt::mysql::Q_CHARSET_CODE: { // Value is three 2-byte unsigned
@@ -224,17 +224,17 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     // representing the
                     // character_set_client, collation_connection, and
                     // collation_server system variables.
-                    uint16_t _var_value_1 = 0;
-                    _in.read((char*)&_var_value_1, sizeof(uint16_t));
-                    uint16_t _var_value_2 = 0;
-                    _in.read((char*)&_var_value_2, sizeof(uint16_t));
-                    uint16_t _var_value_3 = 0;
-                    _in.read((char*)&_var_value_3, sizeof(uint16_t));
-                    new (&_q_var.__charset_code) std::tuple<uint16_t, uint16_t, uint16_t>;
+                    std::uint16_t _var_value_1 = 0;
+                    _in.read((char*)&_var_value_1, sizeof(std::uint16_t));
+                    std::uint16_t _var_value_2 = 0;
+                    _in.read((char*)&_var_value_2, sizeof(std::uint16_t));
+                    std::uint16_t _var_value_3 = 0;
+                    _in.read((char*)&_var_value_3, sizeof(std::uint16_t));
+                    new (&_q_var.__charset_code) std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
                     std::get<0>(_q_var.__charset_code) = _var_value_1;
                     std::get<1>(_q_var.__charset_code) = _var_value_2;
                     std::get<2>(_q_var.__charset_code) = _var_value_3;
-                    _idx += 3 * sizeof(uint16_t);
+                    _idx += 3 * sizeof(std::uint16_t);
                     break;
                 }
                 case zpt::mysql::Q_TIME_ZONE_CODE: { // Value is the time zone name: a
@@ -270,20 +270,20 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     // representing the
                     // lc_time_names number. This variable is present only
                     // if the value is not 0 (that is, not en_US).
-                    uint16_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint16_t));
+                    std::uint16_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint16_t));
                     _q_var.__lc_time_names_code = _var_value;
-                    _idx += sizeof(uint16_t);
+                    _idx += sizeof(std::uint16_t);
                     break;
                 }
                 case zpt::mysql::Q_CHARSET_DATABASE_CODE: { // Value is a 2-byte unsigned
                                                             // integer
                     // representing
                     // the collation_database system variable.
-                    uint16_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint16_t));
+                    std::uint16_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint16_t));
                     _q_var.__charset_database_code = _var_value;
-                    _idx += sizeof(uint16_t);
+                    _idx += sizeof(std::uint16_t);
                     break;
                 }
                 case zpt::mysql::Q_TABLE_MAP_FOR_UPDATE_CODE: { // Value is 8 bytes
@@ -294,17 +294,17 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     // represents a table, and is set to 1 if the
                     // corresponding table is to be updated by the
                     // statement.
-                    uint64_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint64_t));
+                    std::uint64_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint64_t));
                     _q_var.__table_map_for_update_code = _var_value;
-                    _idx += sizeof(uint64_t);
+                    _idx += sizeof(std::uint64_t);
                     break;
                 }
                 case zpt::mysql::Q_MASTER_DATA_WRITTEN_CODE: {
-                    uint32_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint32_t));
+                    std::uint32_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint32_t));
                     _q_var.__master_data_written_code = _var_value;
-                    _idx += sizeof(uint32_t);
+                    _idx += sizeof(std::uint32_t);
                     break;
                 }
                 case zpt::mysql::Q_INVOKER: {
@@ -335,8 +335,8 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     _in.read((char*)&_arr_length, sizeof(uint8_t));
                     _idx += sizeof(uint8_t);
                     for (uint8_t _arr_idx = 0; _arr_idx != _arr_length; _arr_idx++) {
-                        uint32_t _str_len =
-                          std::min<uint32_t>(NAME_LEN, _event->__variable_length - _idx);
+                        std::uint32_t _str_len =
+                          std::min<std::uint32_t>(NAME_LEN, _event->__variable_length - _idx);
                         char _var_value[_str_len + 1] = { 0 };
                         _in.read(_var_value, _str_len);
                         _idx += _str_len;
@@ -346,17 +346,17 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     break;
                 }
                 case zpt::mysql::Q_MICROSECONDS: {
-                    uint64_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint64_t));
+                    std::uint64_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint64_t));
                     _q_var.__commit_ts = _var_value;
-                    _idx += sizeof(uint64_t);
+                    _idx += sizeof(std::uint64_t);
                     break;
                 }
                 case zpt::mysql::Q_COMMIT_TS: {
-                    uint64_t _var_value = 0;
-                    _in.read((char*)&_var_value, sizeof(uint64_t));
+                    std::uint64_t _var_value = 0;
+                    _in.read((char*)&_var_value, sizeof(std::uint64_t));
                     _q_var.__commit_ts = _var_value;
-                    _idx += sizeof(uint64_t);
+                    _idx += sizeof(std::uint64_t);
                     break;
                 }
                 case zpt::mysql::Q_COMMIT_TS2: {
@@ -419,9 +419,9 @@ zpt::mysql::RotateEvent::consume(zpt::mysql::event_header _header, std::istream&
     zpt::mysql::RotateEvent* _event = new zpt::mysql::RotateEvent();
     _event->header(_header);
     if (_header->__event_length) {
-        _in.read((char*)&_event->__position_next_event, sizeof(uint64_t));
+        _in.read((char*)&_event->__position_next_event, sizeof(std::uint64_t));
 
-        size_t _next_binlog_filename_size = _event->header()->__event_length - sizeof(uint64_t);
+        size_t _next_binlog_filename_size = _event->header()->__event_length - sizeof(std::uint64_t);
         char _next_binlog_filename[_next_binlog_filename_size] = { 0 };
         _in.read(_next_binlog_filename, _next_binlog_filename_size);
         _event->__next_binlog_filename =
@@ -593,7 +593,7 @@ zpt::mysql::UserVarEvent::consume(zpt::mysql::event_header _header, std::istream
 auto
 zpt::mysql::FormatDescriptionEvent::data_to_json() -> zpt::json {
     zpt::json _post_header_lengths = zpt::json::array();
-    for (uint16_t _c = 0; _c != zpt::mysql::post_header_lengths_size; _c++) {
+    for (std::uint16_t _c = 0; _c != zpt::mysql::post_header_lengths_size; _c++) {
         _post_header_lengths << zpt::mysql::post_header_lengths[_c];
     }
     return { zpt::array,
@@ -739,13 +739,13 @@ zpt::mysql::PreGADeleteRowsEvent::consume(zpt::mysql::event_header _header, std:
     _event->header(_header);
     if (_header->__event_length) {
         _in.read((char*)&_event->__table_id, 6);
-        uint16_t _to_dispose = 0x0;
+        std::uint16_t _to_dispose = 0x0;
         _in.read((char*)&_to_dispose, 2);
 
         char _pi_0 = 0x0;
         _in.read(&_pi_0, 1);
         if (_pi_0 <= 250) {
-            _event->__number_of_columns = (uint64_t)_pi_0;
+            _event->__number_of_columns = (std::uint64_t)_pi_0;
         }
         else if (_pi_0 == 252) {
             _in.read((char*)&_event->__number_of_columns, 2);
@@ -805,13 +805,13 @@ zpt::mysql::DeleteRowsEvent::consume(zpt::mysql::event_header _header, std::istr
     _event->header(_header);
     if (_header->__event_length) {
         _in.read((char*)&_event->__table_id, 6);
-        uint16_t _to_dispose = 0x0;
+        std::uint16_t _to_dispose = 0x0;
         _in.read((char*)&_to_dispose, 2);
 
         char _pi_0 = 0x0;
         _in.read(&_pi_0, 1);
         if (_pi_0 <= 250) {
-            _event->__number_of_columns = (uint64_t)_pi_0;
+            _event->__number_of_columns = (std::uint64_t)_pi_0;
         }
         else if (_pi_0 == 252) {
             _in.read((char*)&_event->__number_of_columns, 2);

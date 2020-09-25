@@ -127,14 +127,14 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
 }
 
 auto
-zpt::net::transport::websocket::send(zpt::exchange& _channel) -> void {
+zpt::net::transport::websocket::send(zpt::exchange& _channel) const -> void {
     if (_channel->to_send()->ok()) {
         zpt::net::ws::write(_channel->stream(), _channel->to_send());
     }
 }
 
 auto
-zpt::net::transport::websocket::receive(zpt::exchange& _channel) -> void {
+zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
     auto [_body, _] = zpt::net::ws::read(_channel->stream());
     if (_body.length() != 0) {
         auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
@@ -170,14 +170,14 @@ zpt::net::transport::websocket::receive(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::websocket::resolve(zpt::json _uri) -> zpt::exchange {
+zpt::net::transport::websocket::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
            "URI parameter must contain 'scheme', 'domain' and 'port'",
            500,
            0);
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'", 500, 0);
     auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
-      _uri["domain"]->string(), static_cast<uint16_t>(_uri["port"]->integer()));
+      _uri["domain"]->string(), static_cast<std::uint16_t>(_uri["port"]->integer()));
     _stream->transport("ws");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

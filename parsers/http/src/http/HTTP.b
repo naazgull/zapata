@@ -79,8 +79,6 @@ params :
 
 |
 	QMARK paramslist
-	{
-	}
 ;
 
 paramslist :
@@ -88,22 +86,25 @@ paramslist :
 	{
 		d_scanner.name();
 	}
-	 EQ paramvalue
+	EQ paramvalue
+	{
+		d_scanner.value();
+	}
 |
 	paramslist E STRING
-	 {
+    {
 		d_scanner.name();
 	}
-	 EQ paramvalue
+    EQ paramvalue
+	{
+		d_scanner.value();
+	}
 ;
 
 paramvalue:
 
 |
     STRING
-	 {
-		d_scanner.value();
-	 }
 ;
 
 status_description : | SPACE STRING;

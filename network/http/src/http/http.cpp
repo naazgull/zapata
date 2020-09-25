@@ -33,8 +33,8 @@ zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
 }
 
 auto
-zpt::net::transport::http::set_headers(zpt::exchange& _channel, zpt::HTTPObj& _http_message)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_headers(zpt::exchange& _channel, zpt::HTTPObj& _http_message) const
+  -> const zpt::net::transport::http& {
     if (!_channel->received()->ok()) {
         _channel->received() = zpt::json::object();
     }
@@ -55,8 +55,8 @@ zpt::net::transport::http::set_headers(zpt::exchange& _channel, zpt::HTTPObj& _h
 }
 
 auto
-zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http_message)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http_message) const
+  -> const zpt::net::transport::http& {
     if (_http_message.body().length() != 0) {
         if (!_channel->received()->ok()) {
             _channel->received() = zpt::json::object();
@@ -75,8 +75,8 @@ zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http
 }
 
 auto
-zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _request)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _request) const
+  -> const zpt::net::transport::http& {
     auto& _query = _request->query();
     if (_query.length() != 0) {
         zpt::json _params = zpt::uri::parse(std::string{ "?" } + _query);
@@ -89,8 +89,8 @@ zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _
 }
 
 auto
-zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _request)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _request) const
+  -> const zpt::net::transport::http& {
     if (!_channel->received()->ok()) {
         _channel->received() = zpt::json::object();
     }
@@ -99,8 +99,8 @@ zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _
 }
 
 auto
-zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _response)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _response) const
+  -> const zpt::net::transport::http& {
     if (!_channel->received()->ok()) {
         _channel->received() = zpt::json::object();
     }
@@ -109,8 +109,8 @@ zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _
 }
 
 auto
-zpt::net::transport::http::set_status(zpt::exchange& _channel, zpt::http::rep& _response)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_status(zpt::exchange& _channel, zpt::http::rep& _response) const
+  -> const zpt::net::transport::http& {
     if (!_channel->received()->ok()) {
         _channel->received() = zpt::json::object();
     }
@@ -119,8 +119,8 @@ zpt::net::transport::http::set_status(zpt::exchange& _channel, zpt::http::rep& _
 }
 
 auto
-zpt::net::transport::http::set_headers(zpt::http::req& _request, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_headers(zpt::http::req& _request, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     for (auto [_idx, _key, _value] : _channel->to_send()["headers"]) {
         _request->header(_key, _value);
     }
@@ -128,8 +128,8 @@ zpt::net::transport::http::set_headers(zpt::http::req& _request, zpt::exchange& 
 }
 
 auto
-zpt::net::transport::http::set_headers(zpt::http::rep& _reply, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_headers(zpt::http::rep& _reply, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     for (auto [_idx, _key, _value] : _channel->to_send()["headers"]) {
         _reply->header(_key, _value);
     }
@@ -137,8 +137,8 @@ zpt::net::transport::http::set_headers(zpt::http::rep& _reply, zpt::exchange& _c
 }
 
 auto
-zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     if (_channel->to_send()["body"]->ok()) {
         _request->body(static_cast<std::string>(_channel->to_send()["body"]));
     }
@@ -146,8 +146,8 @@ zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _ch
 }
 
 auto
-zpt::net::transport::http::set_body(zpt::http::rep& _reply, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_body(zpt::http::rep& _reply, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     if (_channel->to_send()["body"]->ok()) {
         _reply->body(static_cast<std::string>(_channel->to_send()["body"]));
     }
@@ -155,8 +155,8 @@ zpt::net::transport::http::set_body(zpt::http::rep& _reply, zpt::exchange& _chan
 }
 
 auto
-zpt::net::transport::http::set_method(zpt::http::req& _request, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_method(zpt::http::req& _request, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     if (_channel->to_send()["performative"]->ok()) {
         _request->method(static_cast<unsigned int>(_channel->to_send()["performative"]));
     }
@@ -164,8 +164,8 @@ zpt::net::transport::http::set_method(zpt::http::req& _request, zpt::exchange& _
 }
 
 auto
-zpt::net::transport::http::set_status(zpt::http::rep& _response, zpt::exchange& _channel)
-  -> zpt::net::transport::http& {
+zpt::net::transport::http::set_status(zpt::http::rep& _response, zpt::exchange& _channel) const
+  -> const zpt::net::transport::http& {
     if (_channel->to_send()["status"]->ok()) {
         _response->status(static_cast<zpt::http::status>(_channel->to_send()["status"]->integer()));
     }
@@ -173,7 +173,7 @@ zpt::net::transport::http::set_status(zpt::http::rep& _response, zpt::exchange& 
 }
 
 auto
-zpt::net::transport::http::receive(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::receive(zpt::exchange& _channel) const -> void {
     if (_channel->stream().state() == zpt::stream_state::IDLE) {
         this->receive_request(_channel);
         _channel->stream().state() = zpt::stream_state::PROCESSING;
@@ -185,7 +185,7 @@ zpt::net::transport::http::receive(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::send(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::send(zpt::exchange& _channel) const -> void {
     if (_channel->stream().state() == zpt::stream_state::IDLE) {
         this->send_request(_channel);
         _channel->stream().state() = zpt::stream_state::WAITING;
@@ -197,7 +197,7 @@ zpt::net::transport::http::send(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::resolve(zpt::json _uri) -> zpt::exchange {
+zpt::net::transport::http::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok() && _uri["domain"]->ok(),
            "URI parameter must contain 'scheme', 'domain' and 'port'",
            500,
@@ -228,7 +228,7 @@ zpt::net::transport::http::resolve(zpt::json _uri) -> zpt::exchange {
 }
 
 auto
-zpt::net::transport::http::receive_request(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::receive_request(zpt::exchange& _channel) const -> void {
     zpt::http::req _request;
     _channel->stream() >> _request;
     zlog("Received HTTP message:\n" << _request, zpt::trace);
@@ -251,7 +251,7 @@ zpt::net::transport::http::receive_request(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::receive_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::receive_reply(zpt::exchange& _channel) const -> void {
     zpt::http::rep _response;
     _channel->stream() >> _response;
     zlog("Received HTTP message:\n" << _response, zpt::trace);
@@ -274,7 +274,7 @@ zpt::net::transport::http::receive_reply(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::send_request(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::send_request(zpt::exchange& _channel) const -> void {
     zpt::http::req _request;
     zpt::init(_request);
 
@@ -290,7 +290,7 @@ zpt::net::transport::http::send_request(zpt::exchange& _channel) -> void {
 }
 
 auto
-zpt::net::transport::http::send_reply(zpt::exchange& _channel) -> void {
+zpt::net::transport::http::send_reply(zpt::exchange& _channel) const -> void {
     zpt::http::rep _response;
     zpt::init(_response);
 

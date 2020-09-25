@@ -137,7 +137,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
                        bool _ssl = false,
                        short _protocol = IPPROTO_TCP);
     basic_socketstream(std::string const& _host,
-                       uint16_t _port,
+                       std::uint16_t _port,
                        bool _ssl = false,
                        short _protocol = IPPROTO_TCP);
     basic_socketstream(int s, zpt::sockaddrun_t& _address);
@@ -171,7 +171,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
     auto error_string() -> std::string&;
 
     auto open(std::string const& _host,
-              uint16_t _port,
+              std::uint16_t _port,
               bool _ssl = false,
               short _protocol = IPPROTO_TCP) -> bool;
     auto open(std::string const& _path) -> bool;
@@ -193,14 +193,14 @@ template<typename Char>
 class basic_serversocketstream {
   public:
     basic_serversocketstream();
-    basic_serversocketstream(uint16_t _port);
+    basic_serversocketstream(std::uint16_t _port);
     basic_serversocketstream(std::string const& _path);
     virtual ~basic_serversocketstream();
 
     auto close() -> void;
     auto is_open() -> bool;
     auto ready() -> bool;
-    auto bind(uint16_t _port) -> bool;
+    auto bind(std::uint16_t _port) -> bool;
     auto bind(std::string const& _path) -> bool;
     auto accept() -> std::unique_ptr<zpt::stream>;
 
@@ -208,13 +208,13 @@ class basic_serversocketstream {
     int __sockfd{ -1 };
     short __protocol{ -1 };
     std::string __path{ "" };
-    uint16_t __port{ 0 };
+    std::uint16_t __port{ 0 };
 };
 
 class serversocketstream {
   public:
     serversocketstream();
-    serversocketstream(uint16_t _port);
+    serversocketstream(std::uint16_t _port);
     serversocketstream(std::string const& _path);
     serversocketstream(const serversocketstream& _rhs);
     serversocketstream(serversocketstream&& _rhs);
@@ -233,7 +233,7 @@ class serversocketstream {
 class wserversocketstream {
   public:
     wserversocketstream();
-    wserversocketstream(uint16_t _port);
+    wserversocketstream(std::uint16_t _port);
     wserversocketstream(std::string const& _path);
     wserversocketstream(const zpt::wserversocketstream& _rhs);
     wserversocketstream(zpt::wserversocketstream&& _rhs);
@@ -629,7 +629,7 @@ zpt::basic_socketstream<Char>::basic_socketstream(int s,
 
 template<typename Char>
 zpt::basic_socketstream<Char>::basic_socketstream(std::string const& _host,
-                                                  uint16_t _port,
+                                                  std::uint16_t _port,
                                                   bool _ssl,
                                                   short _protocol)
   : __stream_type(&__buf)
@@ -795,7 +795,7 @@ zpt::basic_socketstream<Char>::error_string() -> std::string& {
 template<typename Char>
 auto
 zpt::basic_socketstream<Char>::open(std::string const& _host,
-                                    uint16_t _port,
+                                    std::uint16_t _port,
                                     bool _ssl,
                                     short _protocol) -> bool {
     if (this->is_open()) {
@@ -954,7 +954,7 @@ zpt::basic_serversocketstream<Char>::basic_serversocketstream()
   : __sockfd{ 0 } {}
 
 template<typename Char>
-zpt::basic_serversocketstream<Char>::basic_serversocketstream(uint16_t _port)
+zpt::basic_serversocketstream<Char>::basic_serversocketstream(std::uint16_t _port)
   : __sockfd{ 0 } {
     this->bind(_port);
 }
@@ -995,7 +995,7 @@ zpt::basic_serversocketstream<Char>::ready() -> bool {
 
 template<typename Char>
 auto
-zpt::basic_serversocketstream<Char>::bind(uint16_t _port) -> bool {
+zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
     this->__port = _port;
     this->__protocol = IPPROTO_TCP;
     this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
