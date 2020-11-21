@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-common-events.la
 
 libzapata_common_events_la_LIBADD = -lpthread -lmagic -lzapata-base -lzapata-lex-json
-libzapata_common_events_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_common_events_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_common_events_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_common_events_la_SOURCES = \

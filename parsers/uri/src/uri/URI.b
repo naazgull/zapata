@@ -228,7 +228,7 @@ function_parameters :
         else {
             zpt::json __temp = (*d_scanner)[(*d_scanner)->size() - 1];
             if (__temp->type() != zpt::JSObject) {
-                (*d_scanner) >> ((*d_scanner)->size() - 1);
+                (*d_scanner)->array()->pop((*d_scanner)->size() - 1);
                 (*d_scanner) << zpt::json{ "name", __temp, "args", zpt::json::array() };
             }
             (*d_scanner)[(*d_scanner)->size() - 1]["args"] << d_scanner.matched();

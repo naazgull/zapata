@@ -1131,11 +1131,41 @@ zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
             this->__target.__array->push(_in);
             break;
         }
-        default: {
-            expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
-                   "the type must be a JSObject or JSArray in order to push a value",
-                   500,
-                   0);
+        case zpt::JSString: {
+            this->__target.__string->assign(_in);
+            break;
+        }
+        case zpt::JSInteger: {
+            int _converted{ 0 };
+            zpt::fromstr(_in, &_converted);
+            this->__target.__integer = _converted;
+            break;
+        }
+        case zpt::JSDouble: {
+            double _converted{ 0 };
+            zpt::fromstr(_in, &_converted);
+            this->__target.__double = _converted;
+            break;
+        }
+        case zpt::JSBoolean: {
+            bool _converted{ false };
+            zpt::fromstr(_in, &_converted);
+            this->__target.__boolean = _converted;
+            break;
+        }
+        case zpt::JSNil: {
+            break;
+        }
+        case zpt::JSDate: {
+            this->__target.__date = zpt::timestamp(_in);
+            break;
+        }
+        case zpt::JSLambda: {
+            break;
+        }
+        case zpt::JSRegex: {
+            this->__target.__regex = zpt::regex{ _in };
+            break;
         }
     }
     return (*this);
@@ -1152,11 +1182,35 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
             this->__target.__array->push(_in);
             break;
         }
-        default: {
-            expect(this->__target.__type == zpt::JSObject || this->__target.__type == zpt::JSArray,
-                   "the type must be a JSObject or JSArray in order to push a value",
-                   500,
-                   0);
+        case zpt::JSString: {
+            this->__target.__string->assign(*_in->__target.__string.get());
+            break;
+        }
+        case zpt::JSInteger: {
+            this->__target.__integer = _in->__target.__integer;
+            break;
+        }
+        case zpt::JSDouble: {
+            this->__target.__double = _in->__target.__double;
+            break;
+        }
+        case zpt::JSBoolean: {
+            this->__target.__boolean = _in->__target.__boolean;
+            break;
+        }
+        case zpt::JSNil: {
+            break;
+        }
+        case zpt::JSDate: {
+            this->__target.__date = _in->__target.__date;
+            break;
+        }
+        case zpt::JSLambda: {
+            break;
+        }
+        case zpt::JSRegex: {
+            this->__target.__regex = _in->__target.__regex;
+            break;
         }
     }
     return *this;
@@ -1612,123 +1666,6 @@ zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separa
         case zpt::JSLambda:
         case zpt::JSDate:
         case zpt::JSRegex: {
-            break;
-        }
-    }
-    return (*this);
-}
-
-auto
-zpt::JSONElementT::flatten() -> zpt::json {
-    if (this->type() == zpt::JSObject || this->type() == zpt::JSArray) {
-        zpt::json _return = zpt::json::object();
-        this->inspect({ "$any", "type" },
-                      [&](std::string const& _object_path,
-                          std::string const& _key,
-                          zpt::JSONElementT& _parent) -> void {
-                          zpt::json _self = this->get_path(_object_path);
-                          if (_self->type() != zpt::JSObject && _self->type() != zpt::JSArray) {
-                              _return << _object_path << _self;
-                          }
-                      });
-        return _return;
-    }
-    else {
-        return this->clone();
-    }
-}
-
-auto
-zpt::JSONElementT::inspect(
-  zpt::json _pattern,
-  std::function<void(std::string, std::string, zpt::JSONElementT&)> _callback,
-  zpt::JSONElementT* _parent,
-  std::string _key,
-  std::string _parent_path) -> JSONElementT& {
-    switch (this->type()) {
-        case zpt::JSObject: {
-            for (auto [_idx, _name, _item] : zpt::json{ *this }) {
-                if (_pattern->type() == zpt::JSObject && _pattern[_name]->ok()) {
-                    _item->inspect(_pattern[_name],
-                                   _callback,
-                                   this,
-                                   _name,
-                                   (_parent_path.length() != 0
-                                      ? (_parent_path + std::string(".") + _key)
-                                      : _key));
-                    continue;
-                }
-                _item->inspect(
-                  _pattern,
-                  _callback,
-                  this,
-                  _name,
-                  (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
-            }
-            if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
-                _callback(_parent_path + std::string(".") + _key, _key, *_parent);
-            }
-            else {
-                if (*this == _pattern) {
-                    _callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key)
-                                                          : _key),
-                              _key,
-                              *_parent);
-                }
-            }
-            break;
-        }
-        case zpt::JSArray: {
-            for (auto [_idx, _name, _item] : zpt::json{ *this }) {
-                _item->inspect(
-                  _pattern,
-                  _callback,
-                  this,
-                  std::to_string(_idx),
-                  (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key));
-            }
-            if (_pattern["$any"]->ok() && _parent_path.length() != 0) {
-                _callback(
-                  (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key),
-                  _key,
-                  *_parent);
-            }
-            else {
-                if (*this == _pattern) {
-                    _callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key)
-                                                          : _key),
-                              _key,
-                              *_parent);
-                }
-            }
-            break;
-        }
-        default: {
-            if (_pattern["$regexp"]->ok()) {
-                std::regex _rgx(static_cast<std::string>(_pattern["$regexp"]));
-                std::string _exp;
-                this->stringify(_exp);
-                if (std::regex_match(_exp, _rgx)) {
-                    _callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key)
-                                                          : _key),
-                              _key,
-                              *_parent);
-                }
-            }
-            else if (_pattern["$any"]->ok()) {
-                _callback(
-                  (_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key) : _key),
-                  _key,
-                  *_parent);
-            }
-            else {
-                if (*this == _pattern) {
-                    _callback((_parent_path.length() != 0 ? (_parent_path + std::string(".") + _key)
-                                                          : _key),
-                              _key,
-                              *_parent);
-                }
-            }
             break;
         }
     }

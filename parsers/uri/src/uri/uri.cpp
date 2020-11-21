@@ -21,7 +21,9 @@ zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
     _thread_local_parser.switchRoots(_root);
     _thread_local_parser.switchStreams(_in);
     _thread_local_parser.parse();
-    _root >> "__aux";
+    if (_type == zpt::JSObject) {
+        _root->object()->pop("__aux");
+    }
     return _root;
 }
 

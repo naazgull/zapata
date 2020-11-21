@@ -62,6 +62,8 @@ main(int argc, char* argv[]) {
                     auto _t2 = std::chrono::high_resolution_clock::now();
                     _parsing_duration +=
                       std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
+                    zpt::conf::dirs(_ptr);
+                    zpt::conf::env(_ptr);
                 }
                 catch (zpt::SyntaxErrorException const& _e) {
                     std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl

@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libzapata-lex-http.la
 
 libzapata_lex_http_la_LIBADD = -lpthread -lzapata-base
-libzapata_lex_http_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_lex_http_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_lex_http_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_lex_http_la_SOURCES = \
