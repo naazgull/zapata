@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libzapata-io-pipe.la
 
 libzapata_io_pipe_la_LIBADD = -lpthread -lzapata-base -lzapata-common-lockfree	\
 -lzapata-io-streams
-libzapata_io_pipe_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_io_pipe_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_io_pipe_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_io_pipe_la_SOURCES = \

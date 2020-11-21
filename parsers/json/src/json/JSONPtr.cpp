@@ -424,7 +424,7 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
         }
         case zpt::JSString: {
             this->__underlying->string().insert(this->__underlying->string().length(),
-                                             static_cast<std::string>(_rhs));
+                                                static_cast<std::string>(_rhs));
             return (*this);
         }
         case zpt::JSInteger: {
@@ -468,7 +468,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
         case zpt::JSObject: {
             zpt::json _lhs = this->__underlying->clone();
             for (auto [_idx, _key, _e] : _rhs) {
-                _lhs >> _key;
+                _lhs->object()->pop(_key);
             }
             return _lhs;
         }
@@ -579,13 +579,13 @@ zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             for (auto [_, _key, __] : _rhs) {
-                (*this) >> _key;
+                (**this).object()->pop(_key);
             }
             return (*this);
         }
         case zpt::JSArray: {
             for (auto [_idx, _, __] : _rhs) {
-                (*this) >> _idx;
+                (**this).array()->pop(_idx);
             }
             return (*this);
         }
@@ -933,6 +933,63 @@ zpt::json::type_of(zpt::regex& _value) -> zpt::JSONType {
 auto
 zpt::json::type_of(zpt::json& _value) -> zpt::JSONType {
     return _value->type();
+}
+
+auto
+zpt::json::traverse(zpt::json _document, zpt::json::traverse_callback _callback) -> void {
+    zpt::json::traverse(_document, _callback, "");
+}
+
+auto
+zpt::json::traverse(zpt::json _document, zpt::json::traverse_callback _callback, std::string _path)
+  -> void {
+    switch (_document->type()) {
+        case zpt::JSArray:
+        case zpt::JSObject: {
+            for (auto [_idx, _name, _item] : _document) {
+                std::string _current_path{ _document->type() == zpt::JSArray ? std::to_string(_idx)
+                                                                             : _name };
+                std::string _item_path{ _path + std::string{ _path.length() == 0 ? "" : "." } +
+                                        _current_path };
+                _callback(_name, _item, _item_path);
+                if (_item->type() == zpt::JSObject || _item->type() == zpt::JSArray) {
+                    zpt::json::traverse(_item, _callback, _item_path);
+                }
+            }
+            break;
+        }
+        default: {
+            _callback("", _document, _path);
+            break;
+        }
+    }
+}
+
+auto
+zpt::json::flatten(zpt::json _document) -> zpt::json {
+    if (_document->type() == zpt::JSObject || _document->type() == zpt::JSArray) {
+        zpt::json _return = zpt::json::object();
+        zpt::json::traverse(
+          _document,
+          [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+              if (_item->type() != zpt::JSObject && _item->type() != zpt::JSArray) {
+                  _return << _path << _item;
+              }
+          });
+        return _return;
+    }
+    return { ".", _document };
+}
+
+auto
+zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
+  -> zpt::json::iterator {
+    for (zpt::json::iterator _to_return = _begin; _to_return != _end; ++_to_return) {
+        if (std::get<2>(*_to_return) == _to_find) {
+            return _to_return;
+        }
+    }
+    return _end;
 }
 
 zpt::JSONIterator::JSONIterator(zpt::json& _target, size_t _pos)

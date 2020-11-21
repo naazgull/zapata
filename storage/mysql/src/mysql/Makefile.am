@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libzapata-mysql.la libzapata-mysql-binlog-stream.la
 
 libzapata_mysql_la_LIBADD = -lpthread -lssl -lcrypto -lmysqlcppconn -lzapata-base -lzapata-lex-json
-libzapata_mysql_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_mysql_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_mysql_la_CPPFLAGS = -O3 -std=c++17 -I../../include
 
 libzapata_mysql_la_SOURCES = \

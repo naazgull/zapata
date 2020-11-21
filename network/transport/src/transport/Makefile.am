@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libzapata-transport.la
 
 libzapata_transport_la_LIBADD = -lpthread -lzapata-base							\
 -lzapata-common-lockfree -lzapata-io-streams -lzapata-lex-json -lzapata-lex-uri
-libzapata_transport_la_LDFLAGS = -version-info 1:0:0 -shared
+libzapata_transport_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_transport_la_CPPFLAGS = -O3 -std=c++17 -Wall -I../../include
 
 libzapata_transport_la_SOURCES = \

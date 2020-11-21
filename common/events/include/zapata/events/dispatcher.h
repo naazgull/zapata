@@ -160,19 +160,18 @@ zpt::events::dispatcher<C, E, V>::is_shutdown_ongoing() -> bool {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
-    long _waiting_iterations{ 0 };
+    zpt::this_thread::adaptive_timer<long> _timer;
     do {
         try {
             this->trap();
-            _waiting_iterations = 0;
+            _timer = 0;
         }
         catch (zpt::NoMoreElementsException const& e) {
             if (this->__shutdown.load()) {
                 zlog("Worker is exiting", zpt::trace);
                 return;
             }
-            _waiting_iterations =
-              zpt::this_thread::adaptive_sleep_for(_waiting_iterations, this->__max_pop_wait);
+            _timer.sleep_for(this->__max_pop_wait);
         }
     } while (true);
 }

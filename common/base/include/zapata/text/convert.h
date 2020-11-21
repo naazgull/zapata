@@ -126,6 +126,9 @@ auto
 fromstr(std::string s, bool* i) -> void;
 auto
 fromstr(std::string s, time_t* i, const char* f, bool _no_timezone = false) -> void;
+template<typename T>
+auto
+fromstr(T _in) -> std::string;
 
 const char encodeCharacterTable[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

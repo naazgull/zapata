@@ -197,26 +197,22 @@ zpt::conf::dirs(zpt::json _options) -> void {
     do {
         *_redo = false;
         zpt::json _traversable = _options->clone();
-        _traversable->inspect(
-          { "$any", "type" },
-          [&](std::string const& _object_path,
-              std::string const& _key,
-              zpt::JSONElementT& _parent) -> void {
+        zpt::json::traverse(
+          _traversable,
+          [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
               if (_key == "$include") {
-                  zpt::json _object =
-                    (_object_path.rfind(".") != std::string::npos
-                       ? _options->get_path(_object_path.substr(0, _object_path.rfind(".")))
-                       : _options);
-                  zpt::json _to_include = _options->get_path(_object_path);
-                  if (_to_include->is_array()) {
-                      for (auto [_idx, _key, _file] : _to_include) {
+                  zpt::json _object = (_path.rfind(".") != std::string::npos
+                                         ? _options->get_path(_path.substr(0, _path.rfind(".")))
+                                         : _options);
+                  if (_item->is_array()) {
+                      for (auto [_idx, _key, _file] : _item) {
                           zpt::conf::dirs((std::string)_file, _object);
                       }
                   }
                   else {
-                      zpt::conf::dirs((std::string)_to_include, _object);
+                      zpt::conf::dirs((std::string)_item, _object);
                   }
-                  _object >> "$include";
+                  _object->object()->pop("$include");
                   *_redo = true;
               }
           });
@@ -227,27 +223,28 @@ zpt::conf::dirs(zpt::json _options) -> void {
 auto
 zpt::conf::env(zpt::json _options) -> void {
     zpt::json _traversable = _options->clone();
-    _traversable->inspect({ "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
-                          [&](std::string const& _object_path,
-                              std::string const& _key,
-                              zpt::JSONElementT& _parent) -> void {
-                              std::string _value = std::string(_options->get_path(_object_path));
-                              std::string _found = std::string(_value.data());
-
-                              for (size_t _idx = _found.find("$"); _idx != std::string::npos;
-                                   _idx = _found.find("$", _idx + 1)) {
-                                  std::string _var =
-                                    _found.substr(_idx + 2, _found.find("}", _idx) - _idx - 2);
-
-                                  const char* _var_val = std::getenv(_var.data());
-                                  if (_var_val != nullptr) {
-                                      zpt::replace(_value,
-                                                   std::string("${") + _var + std::string("}"),
-                                                   zpt::r_trim(_var_val));
-                                  }
-                              }
-                              _options->set_path(_object_path, zpt::json::string(_value));
-                          });
+    zpt::json::traverse(
+      _traversable,
+      [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
+          if (_item->type() != zpt::JSString) {
+              return;
+          }
+          std::string _value{ static_cast<std::string>(_item) };
+          bool _changed{ false };
+          for (size_t _idx = _value.find("$"); _idx != std::string::npos;
+               _idx = _value.find("$", _idx + 1)) {
+              std::string _var = _value.substr(_idx + 2, _value.find("}", _idx) - _idx - 2);
+              const char* _env_value = std::getenv(_var.data());
+              if (_env_value != nullptr) {
+                  zpt::replace(
+                    _value, std::string("${") + _var + std::string("}"), zpt::r_trim(_env_value));
+                  _changed = true;
+              }
+          }
+          if (_changed) {
+              _options->set_path(_object_path, zpt::json::string(_value));
+          }
+      });
 }
 
 auto
@@ -379,11 +376,12 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
                        0);
             }
             else if (_cfg_value == "pattern") {
-                expect(_cfg_value->type() == zpt::JSRegex &&
-                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
-                       "'" << _key << "' parameter pattern doesn't match",
-                       400,
-                       0);
+                expect(
+                  _cfg_value->type() == zpt::JSRegex &&
+                    std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
+                  "'" << _key << "' parameter pattern doesn't match",
+                  400,
+                  0);
             }
         }
     }

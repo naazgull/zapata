@@ -41,22 +41,21 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
         _rest.start_threads();
 
-        long _waiting_iterations{ 0 };
+        zpt::this_thread::adaptive_timer<long> _timer;
         do {
             try {
                 auto _stream = _polling.pop();
                 std::string _scheme{ _stream->transport() };
                 zpt::exchange _channel{ _stream };
                 _rest.trigger(_scheme + std::string(":"), _channel);
-                _waiting_iterations = 0;
+                _timer = 0;
             }
             catch (zpt::NoMoreElementsException const& _e) {
                 if (_rest.is_shutdown_ongoing()) {
                     zlog("Exiting REST router", zpt::trace);
                     return;
                 }
-                _waiting_iterations =
-                  zpt::this_thread::adaptive_sleep_for(_waiting_iterations, _max_queue_spin_sleep);
+                _timer.sleep_for(_max_queue_spin_sleep);
             }
         } while (true);
     });

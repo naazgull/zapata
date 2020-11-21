@@ -89,20 +89,47 @@ log_hostname();
 
 namespace this_thread {
 template<typename T>
-auto
-adaptive_sleep_for(T _iteration_counter, T _upper_limit = -1) -> T;
+class adaptive_timer {
+    static_assert(std::is_integral<T>::value,
+                  "Type `T` in `zpt::this_thread::adaptive_timer` must be an integral type.");
+
+  public:
+    adaptive_timer() = default;
+    virtual ~adaptive_timer() = default;
+
+    auto operator=(T _rhs) -> zpt::this_thread::adaptive_timer<T>&;
+    auto reset() -> zpt::this_thread::adaptive_timer<T>&;
+    auto sleep_for(T _upper_limit) -> T;
+
+  private:
+    T __sleep_tics{ 0 };
+};
 
 } // namespace this_thread
 } // namespace zpt
 
 template<typename T>
 auto
-zpt::this_thread::adaptive_sleep_for(T _iteration_counter, T _upper_limit) -> T {
+zpt::this_thread::adaptive_timer<T>::operator=(T _rhs) -> zpt::this_thread::adaptive_timer<T>& {
+    this->__sleep_tics = _rhs;
+    return (*this);
+}
+
+template<typename T>
+auto
+zpt::this_thread::adaptive_timer<T>::reset() -> zpt::this_thread::adaptive_timer<T>& {
+    this->__sleep_tics = 0;
+    return (*this);
+}
+
+template<typename T>
+auto
+zpt::this_thread::adaptive_timer<T>::sleep_for(T _upper_limit) -> T {
     static constexpr T _max{ std::numeric_limits<T>::max() - 1 };
-    if (_iteration_counter != _max) {
-        ++_iteration_counter;
+    if (this->__sleep_tics != _max) {
+        ++this->__sleep_tics;
     }
     std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{
-      _upper_limit > 0 ? std::min(_iteration_counter, _upper_limit) : _iteration_counter });
-    return _iteration_counter;
+      _upper_limit > 0 ? std::min(this->__sleep_tics, _upper_limit) : this->__sleep_tics });
+    return this->__sleep_tics;
 }

@@ -170,7 +170,7 @@ zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator)
                 _current = _current[_part];
             }
             else {
-                _current >> _part;
+                _current->object()->pop(_part);
             }
         }
         else {
