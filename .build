@@ -24,7 +24,7 @@ do
     
     case "$1" in
 	all)
-	    make -s -j4 -C ${package} && sudo make -s -C ${package} install
+	    make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -37,7 +37,7 @@ do
         fi
         if [[ "${goahead}" == "yes" ]]
         then
-	        make -s -j4 -C ${package} && sudo make -s -C ${package} install
+	        make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
 	        if [[ $? != 0 ]]
 	        then
 		        exit -1
@@ -45,36 +45,28 @@ do
         fi
         ;;
 	single)
-	    make -s -C ${package} && sudo make  -s -C ${package} install
+	    make -s -C ${package}/build && sudo make  -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	clean)
-	    make -s -C ${package} clean
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
+	    make -s -C ${package}/build clean
 	    ;;
 	install)
-	    sudo make -s -C ${package} install
+	    sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make -s -C ${package} uninstall
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
+	    sudo make -s -C ${package}/build uninstall
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package} -j4 distcheck && sudo make -s -C ${package} install
+	    sudo make -s -C ${package}/build -j4 distcheck && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -82,24 +74,11 @@ do
 	    ;;
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package} distclean
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
+	    sudo make -s -C ${package}/build distclean
 	    ;;
 	config)
         pushd ${package} > /dev/null
-	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
-        popd > /dev/null
-	    ;;
-	asan)
-        pushd ${package} > /dev/null
-	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-fsanitize=address -fno-omit-frame-pointer -ggdb3 -Wall -fno-stack-protector" LDFLAGS="-lasan"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -108,7 +87,7 @@ do
 	    ;;
 	debug)
         pushd ${package} > /dev/null
-	    autoreconf -vfi && ./configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1

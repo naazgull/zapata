@@ -41,18 +41,47 @@ auto
 main(int _argc, char* _argv[]) -> int {
     std::signal(SIGUSR1, deallocate);
     std::signal(SIGINT, deallocate);
+    zpt::json _parameter_setup{
+        "--conf-file",
+        { "options",
+          { zpt::array, "optional", "multiple" },
+          "type",
+          "path",
+          "description",
+          "configuration file" },
+        "--conf-dir",
+        { "options",
+          { zpt::array, "optional", "multiple" },
+          "type",
+          "path",
+          "description",
+          "configuration directory, all the files in it are assumed to be configuration "
+          "files" },
+        "--help",
+        { "options",
+          { zpt::array, "optional", "single" },
+          "type",
+          "void",
+          "description",
+          "show this help" },
+        "--terminate",
+        { "options",
+          { zpt::array, "optional", "single" },
+          "type",
+          "number",
+          "description",
+          "PID for the `zpt` process to terminate" }
+    };
     try {
-        zpt::json _parameters = zpt::parameters::parse(_argc,
-                                                       _argv,
-                                                       { "--conf-file",
-                                                         { zpt::array, "optional", "multiple" },
-                                                         "--conf-dir",
-                                                         { zpt::array, "optional", "multiple" },
-                                                         "--terminate",
-                                                         { zpt::array, "optional", "single" } });
+        zpt::json _parameters = zpt::parameters::parse(_argc, _argv, _parameter_setup);
 
         zpt::log_pname = std::make_unique<std::string>(_argv[0]);
         zpt::log_pid = ::getpid();
+
+        if (_parameters["--help"]->ok()) {
+            std::cout << zpt::parameters::usage(_parameter_setup) << std::flush;
+            return 0;
+        }
 
         if (_parameters["--terminate"]->ok()) {
             kill(static_cast<int>(_parameters["--terminate"]), SIGUSR1);
@@ -76,7 +105,9 @@ main(int _argc, char* _argv[]) -> int {
         zpt::globals::dealloc<zpt::startup::engine>(zpt::BOOT_ENGINE());
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << _e.what() << ": " << _e.description() << std::endl << std::flush;
+        std::cout << _e.what() << std::endl
+                  << std::endl
+                  << zpt::parameters::usage(_parameter_setup) << std::flush;
     }
     return 0;
 }

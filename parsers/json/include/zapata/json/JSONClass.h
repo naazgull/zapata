@@ -1269,7 +1269,7 @@ zpt::JSONElementT::operator!=(T _in) -> bool {
         return this->__target.__type == zpt::JSNil;
     }
     JSONElementT _rhs{ _in };
-    return (*this) == _rhs;
+    return (*this) != _rhs;
 }
 template<typename T>
 auto
