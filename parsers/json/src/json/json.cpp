@@ -290,6 +290,9 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             _value.assign("");
         }
         else if (_arg.find("--") == 0 || _arg.find("-") == 0) {
+            if (_key.length() != 0) {
+                _return << _key << true;
+            }
             _key.assign(_arg);
             _value.assign("");
         }
@@ -309,6 +312,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
                 _values << _old << _value;
                 _return << _key << _values;
             }
+            _key.assign("");
         }
         else {
             _value.assign(_arg);
@@ -320,16 +324,19 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             _values << _value;
         }
     }
+    if (_key.length() != 0) {
+        _return << _key << true;
+    }
 
     for (auto [_, _key, _option] : _return) {
         if (_key == "--") {
             continue;
         }
-        expect(_config[_key]->type() == zpt::JSArray,
+        expect(_config[_key]->type() == zpt::JSObject,
                std::string{ "'" } + _key + std::string{ "' is not a valid option" },
                500,
                0);
-        for (auto [_, __, _cfg_value] : _config[_key]) {
+        for (auto [_, __, _cfg_value] : _config[_key]["options"]) {
             if (_cfg_value == "single") {
                 expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
                        std::string{ "'" } + _key +
@@ -346,7 +353,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
     }
 
     for (auto [_, _key, _option] : _config) {
-        for (auto [_, __, _cfg_value] : _option) {
+        for (auto [_, __, _cfg_value] : _option["options"]) {
             if (_cfg_value == "mandatory") {
                 expect(_return[_key] != zpt::undefined,
                        std::string{ "'" } + _key + std::string{ "' option is mandatory" },
@@ -393,6 +400,32 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
             }
         }
     }
+}
+
+auto
+zpt::parameters::usage(zpt::json _config) -> std::string {
+    std::ostringstream _oss;
+    _oss << "Usage: zpt [OPTIONS]" << std::endl << "Options:" << std::endl << std::flush;
+    size_t _max_len{0};
+    for (auto [_, _key, _parameter] : _config) {
+        size_t _len = _key.length();
+        if (_parameter["type"]->ok() && _parameter["type"] != "void") {
+            _len += 2 + _parameter["type"]->string().length();
+        }
+        _max_len = std::max(_max_len, _len);
+    }
+    for (auto [_, _key, _parameter] : _config) {
+        size_t _len = _key.length();
+        _oss << "\t" << _key << " ";
+        if (_parameter["type"]->ok() && _parameter["type"] != "void") {
+            _oss << "<" << _parameter["type"]->string() << ">" << std::flush;
+            _len += 2 + _parameter["type"]->string().length();
+        }
+        _oss << std::string(_max_len + 3 - _len, ' ') << _parameter["description"]->string() << " "
+             << _parameter["options"] << std::endl
+             << std::flush;
+    }
+    return zpt::r_replace(_oss.str(), "\"", "");
 }
 
 auto

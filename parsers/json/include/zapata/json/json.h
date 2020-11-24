@@ -120,6 +120,8 @@ auto
 parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json;
 auto
 verify(zpt::json _to_check, zpt::json _rules, bool _inclusive = false) -> void;
+auto
+usage(zpt::json _config) -> std::string;
 } // namespace parameters
 
 namespace test {

@@ -147,7 +147,7 @@ class basic_socketstream : public std::basic_iostream<Char> {
     virtual ~basic_socketstream();
 
     auto operator=(const basic_socketstream&) -> basic_socketstream& = delete;
-    auto operator=(basic_socketstream &&) -> basic_socketstream& = delete;
+    auto operator=(basic_socketstream&&) -> basic_socketstream& = delete;
 
     operator int();
     operator std::string();
@@ -223,7 +223,7 @@ class serversocketstream {
     auto operator=(const zpt::serversocketstream& _rhs) -> zpt::serversocketstream&;
     auto operator=(zpt::serversocketstream&& _rhs) -> zpt::serversocketstream&;
 
-    auto operator-> () -> zpt::basic_serversocketstream<char>*;
+    auto operator->() -> zpt::basic_serversocketstream<char>*;
     auto operator*() -> zpt::basic_serversocketstream<char>&;
 
   private:
@@ -242,7 +242,7 @@ class wserversocketstream {
     auto operator=(const zpt::wserversocketstream& _rhs) -> zpt::wserversocketstream&;
     auto operator=(zpt::wserversocketstream&& _rhs) -> zpt::wserversocketstream&;
 
-    auto operator-> () -> zpt::basic_serversocketstream<wchar_t>*;
+    auto operator->() -> zpt::basic_serversocketstream<wchar_t>*;
     auto operator*() -> zpt::basic_serversocketstream<wchar_t>&;
 
   private:
@@ -851,7 +851,10 @@ zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrun_t&>(__buf.address());
     bzero((char*)&_in_address, sizeof _in_address);
     _in_address.sun_family = AF_UNIX;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(_in_address.sun_path, _path.data(), sizeof _in_address.sun_path);
+#pragma GCC diagnostic pop
 
     int _sd = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (::connect(_sd, &__buf.address(), sizeof __buf.address()) < 0) {

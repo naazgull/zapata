@@ -344,8 +344,10 @@ zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performati
                      std::string("&state=") + static_cast<std::string>(_state))) } };
     }
     else {
-        _token >> "roles";
-        _token >> "permissions";
+        _token //
+          ->object()
+          ->pop("roles")
+          .pop("permissions");
         return { "status", 200, "body", _token };
     }
 }
@@ -408,8 +410,10 @@ zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _
                      std::string("&state=") + static_cast<std::string>(_state))) } };
     }
     else {
-        _token >> "roles";
-        _token >> "permissions";
+        _token
+          ->object() //
+          ->pop("roles")
+          .pop("permissions");
         return { "status", 200, "body", _token };
     }
 }
