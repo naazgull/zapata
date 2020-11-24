@@ -124,4 +124,3 @@ io/socket/src/socket/zsocks
 io/socket/src/socket/zsockc
 engines/dom/src/dom/zdom
 io/pipe/src/pipe/zpipe
-*/**/build
