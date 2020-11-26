@@ -59,7 +59,7 @@ class basic_pipebuf : public std::basic_streambuf<Char> {
     virtual ~basic_pipebuf() override;
 
     auto operator=(const basic_pipebuf<char_type>&) -> basic_pipebuf<char_type>&;
-    auto operator=(basic_pipebuf<char_type> &&) -> basic_pipebuf<char_type>& = delete;
+    auto operator=(basic_pipebuf<char_type>&&) -> basic_pipebuf<char_type>& = delete;
 
     virtual auto open() -> void;
     virtual auto close() -> void;
@@ -112,7 +112,7 @@ class basic_pipestream : public std::basic_iostream<Char> {
     virtual ~basic_pipestream() override;
 
     auto operator=(const basic_pipestream<char_type>&) -> basic_pipestream<char_type>&;
-    auto operator=(basic_pipestream<char_type> &&) -> basic_pipestream<char_type>& = delete;
+    auto operator=(basic_pipestream<char_type>&&) -> basic_pipestream<char_type>& = delete;
 
     operator int();
     operator std::string();
@@ -132,9 +132,7 @@ using pipestream = zpt::basic_pipestream<char>;
 
 template<typename Char>
 zpt::basic_pipebuf<Char>::basic_pipebuf(bool initialize) {
-    if (initialize) {
-        this->open();
-    }
+    if (initialize) { this->open(); }
     buf_type::setp(this->__obuf, this->__obuf + 1023);
     buf_type::setg(this->__ibuf, this->__ibuf, this->__ibuf);
 }
@@ -168,12 +166,8 @@ zpt::basic_pipebuf<Char>::open() -> void {
 template<typename Char>
 auto
 zpt::basic_pipebuf<Char>::close() -> void {
-    if (this->__fds[0]) {
-        ::close(this->__fds[0]);
-    }
-    if (this->__fds[1]) {
-        ::close(this->__fds[1]);
-    }
+    if (this->__fds[0]) { ::close(this->__fds[0]); }
+    if (this->__fds[1]) { ::close(this->__fds[1]); }
     this->__fds[0] = 0;
     this->__fds[1] = 0;
 }
@@ -203,20 +197,14 @@ zpt::basic_pipebuf<Char>::overflow(int_type _c) -> int_type {
 template<typename Char>
 auto
 zpt::basic_pipebuf<Char>::underflow() -> int_type {
-    if (buf_type::gptr() < buf_type::egptr()) {
-        return *buf_type::gptr();
-    }
-    if (!this->__fds[0]) {
-        return traits_type::eof();
-    }
+    if (buf_type::gptr() < buf_type::egptr()) { return *buf_type::gptr(); }
+    if (!this->__fds[0]) { return traits_type::eof(); }
 
     auto _actually_read = -1;
     if ((_actually_read = ::read(this->__fds[0], this->__ibuf, 1024)) <= 0) {
         return traits_type::eof();
     }
-    if (_actually_read == 0) {
-        return traits_type::eof();
-    }
+    if (_actually_read == 0) { return traits_type::eof(); }
     buf_type::setg(this->__ibuf, this->__ibuf, this->__ibuf + _actually_read);
     return *buf_type::gptr();
 }
@@ -224,18 +212,14 @@ zpt::basic_pipebuf<Char>::underflow() -> int_type {
 template<typename Char>
 auto
 zpt::basic_pipebuf<Char>::sync() -> int {
-    if (this->dump() == traits_type::eof()) {
-        return traits_type::eof();
-    }
+    if (this->dump() == traits_type::eof()) { return traits_type::eof(); }
     return 0;
 }
 
 template<typename Char>
 auto
 zpt::basic_pipebuf<Char>::dump() -> int_type {
-    if (!this->__fds[1]) {
-        return traits_type::eof();
-    }
+    if (!this->__fds[1]) { return traits_type::eof(); }
     auto _num = buf_type::pptr() - buf_type::pbase();
     auto _actually_written = -1;
     if ((_actually_written = ::write(this->__fds[1], this->__obuf, _num)) < 0) {

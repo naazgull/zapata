@@ -21,9 +21,7 @@ zpt::lf::spin_lock::count_exclusive() -> long {
 auto
 zpt::lf::spin_lock::acquire_shared() -> zpt::lf::spin_lock& {
     auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
-    if (_count == 0) {
-        this->spin_shared_lock();
-    }
+    if (_count == 0) { this->spin_shared_lock(); }
     expect(_count >= 0, "can't re-acquire in shared mode while holding in exclusive mode", 500, 0);
     ++_count;
     return (*this);
@@ -32,9 +30,7 @@ zpt::lf::spin_lock::acquire_shared() -> zpt::lf::spin_lock& {
 auto
 zpt::lf::spin_lock::acquire_exclusive() -> zpt::lf::spin_lock& {
     auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
-    if (_count == 0) {
-        this->spin_exclusive_lock();
-    }
+    if (_count == 0) { this->spin_exclusive_lock(); }
     expect(_count <= 0, "can't re-acquire in exclusive mode while holding in shared mode", 500, 0);
     --_count;
     return (*this);
@@ -104,9 +100,7 @@ zpt::lf::spin_lock::guard::guard(zpt::lf::spin_lock& _target, bool _can_be_share
   : __target(_target)
   , __can_be_shared(_can_be_shared) {
     try {
-        if (this->__can_be_shared) {
-            this->__target.acquire_shared();
-        }
+        if (this->__can_be_shared) { this->__target.acquire_shared(); }
         else {
             this->__target.acquire_exclusive();
         }
@@ -117,18 +111,12 @@ zpt::lf::spin_lock::guard::guard(zpt::lf::spin_lock& _target, bool _can_be_share
     }
 }
 
-zpt::lf::spin_lock::guard::~guard() {
-    this->release();
-}
+zpt::lf::spin_lock::guard::~guard() { this->release(); }
 
 auto
 zpt::lf::spin_lock::guard::release() -> zpt::lf::spin_lock::guard& {
-    if (this->__released) {
-        return (*this);
-    }
-    if (this->__can_be_shared) {
-        this->__target.release_shared();
-    }
+    if (this->__released) { return (*this); }
+    if (this->__can_be_shared) { this->__target.release_shared(); }
     else {
         this->__target.release_exclusive();
     }

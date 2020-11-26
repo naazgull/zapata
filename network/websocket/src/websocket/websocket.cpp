@@ -119,18 +119,14 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
     else {
         _stream << (unsigned char)(0x80 | ((unsigned char)_len));
     }
-    for (int _i = 0; _i != 4; _i++) {
-        _stream << (unsigned char)0x00;
-    }
+    for (int _i = 0; _i != 4; _i++) { _stream << (unsigned char)0x00; }
 
     _stream << _in << std::flush;
 }
 
 auto
 zpt::net::transport::websocket::send(zpt::exchange& _channel) const -> void {
-    if (_channel->to_send()->ok()) {
-        zpt::net::ws::write(_channel->stream(), _channel->to_send());
-    }
+    if (_channel->to_send()->ok()) { zpt::net::ws::write(_channel->stream(), _channel->to_send()); }
 }
 
 auto

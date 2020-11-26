@@ -58,9 +58,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
                   _found->second(_event);
                   auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
                   std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
-                  if (_channel->keep_alive()) {
-                      _polling.listen_on(_give_back);
-                  }
+                  if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
                   _event.cancel();
               }
           }
@@ -79,9 +77,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
           auto& _transport = _layer.get(_channel->scheme());
           _transport->send(_channel);
           std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
-          if (_channel->keep_alive()) {
-              _polling.listen_on(_give_back);
-          }
+          if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
       });
 }
 
@@ -193,41 +189,17 @@ zpt::rest::to_str(zpt::performative _performative) -> std::string {
 
 auto
 zpt::rest::from_str(std::string const& _performative) -> zpt::performative {
-    if (_performative == "GET" || _performative == "get") {
-        return zpt::rest::Get;
-    }
-    if (_performative == "PUT" || _performative == "put") {
-        return zpt::rest::Put;
-    }
-    if (_performative == "POST" || _performative == "post") {
-        return zpt::rest::Post;
-    }
-    if (_performative == "DELETE" || _performative == "delete") {
-        return zpt::rest::Delete;
-    }
-    if (_performative == "HEAD" || _performative == "head") {
-        return zpt::rest::Head;
-    }
-    if (_performative == "OPTIONS" || _performative == "options") {
-        return zpt::rest::Options;
-    }
-    if (_performative == "PATCH" || _performative == "patch") {
-        return zpt::rest::Patch;
-    }
-    if (_performative == "REPLY" || _performative == "reply") {
-        return zpt::rest::Reply;
-    }
-    if (_performative == "M-SEARCH" || _performative == "m-search") {
-        return zpt::rest::Msearch;
-    }
-    if (_performative == "NOTIFY" || _performative == "notify") {
-        return zpt::rest::Notify;
-    }
-    if (_performative == "TRACE" || _performative == "trace") {
-        return zpt::rest::Msearch;
-    }
-    if (_performative == "CONNECT" || _performative == "connect") {
-        return zpt::rest::Connect;
-    }
+    if (_performative == "GET" || _performative == "get") { return zpt::rest::Get; }
+    if (_performative == "PUT" || _performative == "put") { return zpt::rest::Put; }
+    if (_performative == "POST" || _performative == "post") { return zpt::rest::Post; }
+    if (_performative == "DELETE" || _performative == "delete") { return zpt::rest::Delete; }
+    if (_performative == "HEAD" || _performative == "head") { return zpt::rest::Head; }
+    if (_performative == "OPTIONS" || _performative == "options") { return zpt::rest::Options; }
+    if (_performative == "PATCH" || _performative == "patch") { return zpt::rest::Patch; }
+    if (_performative == "REPLY" || _performative == "reply") { return zpt::rest::Reply; }
+    if (_performative == "M-SEARCH" || _performative == "m-search") { return zpt::rest::Msearch; }
+    if (_performative == "NOTIFY" || _performative == "notify") { return zpt::rest::Notify; }
+    if (_performative == "TRACE" || _performative == "trace") { return zpt::rest::Msearch; }
+    if (_performative == "CONNECT" || _performative == "connect") { return zpt::rest::Connect; }
     return 0;
 }

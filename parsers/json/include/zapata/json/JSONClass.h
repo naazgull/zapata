@@ -69,7 +69,7 @@ class pretty {
     auto operator=(const pretty& _rhs) -> pretty&;
     auto operator=(pretty&& _rhs) -> pretty&;
 
-    auto operator-> () -> std::string*;
+    auto operator->() -> std::string*;
     auto operator*() -> std::string&;
 
     friend auto operator<<(std::ostream& _out, zpt::pretty _in) -> std::ostream& {
@@ -118,7 +118,7 @@ class json {
     template<typename T>
     auto operator=(T const& _rhs) -> zpt::json&;
 
-    auto operator-> () -> zpt::JSONElementT*;
+    auto operator->() -> zpt::JSONElementT*;
     auto operator*() -> zpt::JSONElementT&;
 
     auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
@@ -276,7 +276,7 @@ class JSONIterator {
 
     // INPUT ITERATOR METHODS //
     auto operator++(int) -> JSONIterator;
-    auto operator-> () -> pointer;
+    auto operator->() -> pointer;
     auto operator==(JSONIterator _rhs) const -> bool;
     auto operator!=(JSONIterator _rhs) const -> bool;
     // END / INPUT ITERATOR METHODS //
@@ -343,7 +343,7 @@ class JSONObjT {
 
     auto clone() -> zpt::json;
 
-    auto operator-> () -> zpt::json::map*;
+    auto operator->() -> zpt::json::map*;
     auto operator*() -> zpt::json::map&;
 
     auto operator==(zpt::JSONObjT& _in) -> bool;
@@ -417,7 +417,7 @@ class JSONArrT {
 
     auto clone() -> zpt::json;
 
-    auto operator-> () -> std::vector<zpt::json>*;
+    auto operator->() -> std::vector<zpt::json>*;
     auto operator*() -> std::vector<zpt::json>&;
 
     auto operator==(zpt::JSONArrT& _in) -> bool;
@@ -472,7 +472,7 @@ class JSONObj {
     auto operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj&;
     auto operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj&;
 
-    auto operator-> () -> zpt::JSONObjT*;
+    auto operator->() -> zpt::JSONObjT*;
     auto operator*() -> zpt::JSONObjT&;
 
     operator std::string();
@@ -524,7 +524,7 @@ class JSONArr {
     auto operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr&;
     auto operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr&;
 
-    auto operator-> () -> zpt::JSONArrT*;
+    auto operator->() -> zpt::JSONArrT*;
     auto operator*() -> zpt::JSONArrT&;
 
     template<typename T>
@@ -573,7 +573,7 @@ class JSONRegex {
     auto operator=(const zpt::JSONRegex& _rhs) -> zpt::JSONRegex&;
     auto operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex&;
 
-    auto operator-> () -> std::regex*;
+    auto operator->() -> std::regex*;
     auto operator*() -> std::regex&;
 
     operator zpt::pretty();
@@ -619,7 +619,7 @@ class context {
     context(context&& _rhs);
     virtual ~context();
 
-    auto operator-> () -> zpt::JSONContext*;
+    auto operator->() -> zpt::JSONContext*;
     auto operator*() -> zpt::JSONContext&;
 
     auto operator=(const zpt::context& _rhs) -> zpt::context&;
@@ -984,7 +984,8 @@ zpt::json::data(const T _delegate) -> zpt::json {
     return _delegate->get_json();
 }
 template<typename T>
-auto zpt::json::operator[](T _idx) -> zpt::json {
+auto
+zpt::json::operator[](T _idx) -> zpt::json {
     return (*this->__underlying.get())[_idx];
 }
 template<typename T>
@@ -1155,7 +1156,8 @@ zpt::JSONObj::operator<<(T _in) -> JSONObj& {
 //     return *this;
 // }
 template<typename T>
-auto zpt::JSONObj::operator[](T _idx) -> json {
+auto
+zpt::JSONObj::operator[](T _idx) -> json {
     return (*this->__underlying.get())[_idx];
 }
 
@@ -1203,7 +1205,8 @@ zpt::JSONArr::operator<<(T _in) -> JSONArr& {
 //     return *this;
 // }
 template<typename T>
-auto zpt::JSONArr::operator[](T _idx) -> json {
+auto
+zpt::JSONArr::operator[](T _idx) -> json {
     return (*this->__underlying.get())[_idx];
 }
 
@@ -1247,10 +1250,9 @@ zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
 //     return *this;
 // }
 template<typename T>
-auto zpt::JSONElementT::operator[](T _idx) -> json {
-    if (this->__target.__type == zpt::JSObject) {
-        return this->__target.__object[_idx];
-    }
+auto
+zpt::JSONElementT::operator[](T _idx) -> json {
+    if (this->__target.__type == zpt::JSObject) { return this->__target.__object[_idx]; }
     else if (this->__target.__type == zpt::JSArray) {
         return this->__target.__array[_idx];
     }
@@ -1265,9 +1267,7 @@ zpt::JSONElementT::operator==(T _in) -> bool {
 template<typename T>
 auto
 zpt::JSONElementT::operator!=(T _in) -> bool {
-    if (_in == nullptr) {
-        return this->__target.__type == zpt::JSNil;
-    }
+    if (_in == nullptr) { return this->__target.__type == zpt::JSNil; }
     JSONElementT _rhs{ _in };
     return (*this) != _rhs;
 }
@@ -1301,9 +1301,7 @@ template<typename T>
 auto
 zpt::set(std::string const& _path, T _value, zpt::json _target) -> zpt::json {
     zpt::json _return;
-    if (_target->ok()) {
-        _return = _target;
-    }
+    if (_target->ok()) { _return = _target; }
     else {
         _return = zpt::json::object();
     }

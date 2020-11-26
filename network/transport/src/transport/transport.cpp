@@ -51,11 +51,13 @@ zpt::exchange::operator=(zpt::exchange&& _rhs) -> zpt::exchange& {
     return (*this);
 }
 
-auto zpt::exchange::operator-> () const -> zpt::exchange::exchange_t* {
+auto
+zpt::exchange::operator->() const -> zpt::exchange::exchange_t* {
     return this->__underlying.get();
 }
 
-auto zpt::exchange::operator*() const -> zpt::exchange::exchange_t& {
+auto
+zpt::exchange::operator*() const -> zpt::exchange::exchange_t& {
     return *this->__underlying.get();
 }
 
@@ -116,11 +118,13 @@ zpt::transport::operator=(zpt::transport&& _rhs) -> zpt::transport& {
     return (*this);
 }
 
-auto zpt::transport::operator-> () const -> zpt::transport::transport_t* {
+auto
+zpt::transport::operator->() const -> zpt::transport::transport_t* {
     return this->__underlying.get();
 }
 
-auto zpt::transport::operator*() const -> zpt::transport::transport_t& {
+auto
+zpt::transport::operator*() const -> zpt::transport::transport_t& {
     return *this->__underlying.get();
 }
 
@@ -155,9 +159,7 @@ zpt::transport::layer::get(std::string const& _scheme) const -> const zpt::trans
 auto
 zpt::transport::layer::translate(std::istream& _io, std::string _mime) const -> zpt::json {
     auto _found = this->__content_providers.find(_mime);
-    if (_found != this->__content_providers.end()) {
-        return _found->second(_io);
-    }
+    if (_found != this->__content_providers.end()) { return _found->second(_io); }
     return zpt::undefined;
 }
 

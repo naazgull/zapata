@@ -236,9 +236,7 @@ auto
 zpt::MQTT::subscribe(std::string const& _topic) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_conn);
-        if (this->__postponed[_topic]->is_string()) {
-            return;
-        }
+        if (this->__postponed[_topic]->is_string()) { return; }
 
         this->__postponed << _topic << _topic;
         if (this->__connected) {
@@ -291,9 +289,7 @@ zpt::MQTT::on(std::string const& _event, zpt::mqtt::handler _callback) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_callbacks);
         auto _found = this->__callbacks.find(_event);
-        if (_found != this->__callbacks.end()) {
-            _found->second.push_back(_callback);
-        }
+        if (_found != this->__callbacks.end()) { _found->second.push_back(_callback); }
         else {
             std::vector<zpt::mqtt::handler> _callbacks;
             _callbacks.push_back(_callback);
@@ -311,9 +307,7 @@ zpt::MQTT::off(std::string const& _event) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_callbacks);
         auto _found = this->__callbacks.find(_event);
-        if (_found != this->__callbacks.end()) {
-            this->__callbacks.erase(_found);
-        }
+        if (_found != this->__callbacks.end()) { this->__callbacks.erase(_found); }
     }
 }
 
@@ -327,13 +321,9 @@ zpt::MQTT::trigger(std::string const& _event, zpt::mqtt::data _data) -> void {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_callbacks);
         auto _found = this->__callbacks.find(_event);
-        if (_found != this->__callbacks.end()) {
-            _callbacks = _found->second;
-        }
+        if (_found != this->__callbacks.end()) { _callbacks = _found->second; }
     }
-    for (auto _c : _callbacks) {
-        _c(_data, this->self());
-    }
+    for (auto _c : _callbacks) { _c(_data, this->self()); }
 }
 
 auto

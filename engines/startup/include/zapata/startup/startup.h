@@ -45,7 +45,7 @@ class plugin {
         plugin_t(zpt::json _options, zpt::json _config);
         virtual ~plugin_t();
 
-        auto operator-> () -> zpt::plugin::plugin_t*;
+        auto operator->() -> zpt::plugin::plugin_t*;
 
         auto initialize(zpt::json _config) -> zpt::plugin::plugin_t&;
         auto handler() -> void*;
@@ -86,7 +86,7 @@ class plugin {
 
     auto operator=(zpt::plugin const& _rhs) -> zpt::plugin&;
     auto operator=(zpt::plugin&& _rhs) -> zpt::plugin&;
-    auto operator-> () -> reference;
+    auto operator->() -> reference;
 
     friend std::ostream& operator<<(std::ostream& _out, zpt::plugin& _in) {
         _out << zpt::pretty{ zpt::json{
@@ -113,12 +113,12 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     auto trapped(zpt::json _event, bool _content) -> void;
     auto listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void;
     auto report_error(zpt::json& _event,
-                        bool& _content,
-                        const char* _what,
-                        const char* _description = nullptr,
-                        const char* _backtrace = nullptr,
-                        int _error = -1,
-                        int status = 500) -> bool;
+                      bool& _content,
+                      const char* _what,
+                      const char* _description = nullptr,
+                      const char* _backtrace = nullptr,
+                      int _error = -1,
+                      int status = 500) -> bool;
 
     auto to_string() -> std::string;
 

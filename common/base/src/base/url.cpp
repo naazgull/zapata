@@ -108,9 +108,7 @@ zpt::url::decode(std::string& _out) -> void {
     }
 
     // the last 2- chars
-    while (pSrc < SRC_END) {
-        *pEnd++ = *pSrc++;
-    }
+    while (pSrc < SRC_END) { *pEnd++ = *pSrc++; }
     std::string sResult(pStart, pEnd);
     delete[] pStart;
     _out.assign(sResult);

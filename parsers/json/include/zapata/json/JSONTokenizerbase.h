@@ -135,8 +135,8 @@ JSONTokenizerBase::savedToken_() const {
 }
 
 // hdr/opbitand
-inline JSONTokenizerBase::DebugMode_ operator&(JSONTokenizerBase::DebugMode_ lhs,
-                                               JSONTokenizerBase::DebugMode_ rhs) {
+inline JSONTokenizerBase::DebugMode_
+operator&(JSONTokenizerBase::DebugMode_ lhs, JSONTokenizerBase::DebugMode_ rhs) {
     return static_cast<JSONTokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 

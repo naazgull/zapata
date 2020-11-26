@@ -543,9 +543,7 @@ typedef struct q_variables {
             }
             case zpt::mysql::Q_UPDATED_DB_NAMES: {
                 zpt::json _ret = zpt::json::array();
-                for (auto _e : __updated_db_names) {
-                    _ret << _e;
-                }
+                for (auto _e : __updated_db_names) { _ret << _e; }
                 return _ret;
             }
             case zpt::mysql::Q_MICROSECONDS: {
@@ -814,9 +812,7 @@ class LogEventPtr : public std::shared_ptr<zpt::mysql::LogEvent> {
             zpt::mysql::event_header _header;
             _in >> _header;
             zdbg(std::string("type_code: ") + std::to_string(_header->__type_code));
-            if (_header->__type_code == 0) {
-                return _in;
-            }
+            if (_header->__type_code == 0) { return _in; }
             _out = zpt::mysql::consumers[(size_t)_header->__type_code](_header, _in);
         }
         else {

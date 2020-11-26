@@ -268,12 +268,9 @@ size_t
 JSONLexerBase::Input::get() {
     switch (size_t ch = next()) // get the next input char
     {
-        case '\n':
-            ++d_lineNr;
-            [[fallthrough]];
+        case '\n': ++d_lineNr; [[fallthrough]];
 
-        default:
-            return ch;
+        default: return ch;
     }
 }
 
@@ -283,8 +280,7 @@ JSONLexerBase::Input::next() {
 
     if (d_deque.empty()) // deque empty: next char fm d_in
     {
-        if (d_in == 0)
-            return AT_EOF;
+        if (d_in == 0) return AT_EOF;
         ch = d_in->get();
         return *d_in ? ch : static_cast<size_t>(AT_EOF);
     }
@@ -298,16 +294,14 @@ JSONLexerBase::Input::next() {
 void
 JSONLexerBase::Input::reRead(size_t ch) {
     if (ch < 0x100) {
-        if (ch == '\n')
-            --d_lineNr;
+        if (ch == '\n') --d_lineNr;
         d_deque.push_front(ch);
     }
 }
 
 void
 JSONLexerBase::Input::reRead(std::string const& str, size_t fm) {
-    for (size_t idx = str.size(); idx-- > fm;)
-        reRead(str[idx]);
+    for (size_t idx = str.size(); idx-- > fm;) reRead(str[idx]);
 }
 
 JSONLexerBase::JSONLexerBase(std::istream& in, std::ostream& out)
@@ -327,9 +321,9 @@ JSONLexerBase::switchStream_(std::istream& in, size_t lineNr) {
 
 JSONLexerBase::JSONLexerBase(std::string const& infilename, std::string const& outfilename)
   : d_filename(infilename)
-  , d_out(outfilename == "-" ? new std::ostream(std::cout.rdbuf())
-                             : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
-                                                 : new std::ofstream(outfilename))
+  , d_out(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
+          : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
+                              : new std::ofstream(outfilename))
   , d_input(new std::ifstream(infilename))
   , d_dfaBase_(s_dfa_) {}
 
@@ -364,9 +358,9 @@ JSONLexerBase::redo(size_t nChars) {
 void
 JSONLexerBase::switchOstream(std::string const& outfilename) {
     *d_out << std::flush;
-    d_out.reset(outfilename == "-" ? new std::ostream(std::cout.rdbuf())
-                                   : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
-                                                       : new std::ofstream(outfilename));
+    d_out.reset(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
+                : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
+                                    : new std::ofstream(outfilename));
 }
 
 void
@@ -416,8 +410,7 @@ bool
 JSONLexerBase::popStream() {
     d_input.close();
 
-    if (d_streamStack.empty())
-        return false;
+    if (d_streamStack.empty()) return false;
 
     StreamStruct& top = d_streamStack.back();
 
@@ -440,8 +433,7 @@ JSONLexerBase::actionType_(size_t range) {
     if (knownFinalState()) // FINAL state reached
         return ActionType_::MATCH;
 
-    if (d_matched.size())
-        return ActionType_::ECHO_FIRST; // no match, echo the 1st char
+    if (d_matched.size()) return ActionType_::ECHO_FIRST; // no match, echo the 1st char
 
     return range != s_rangeOfEOF_ ? ActionType_::ECHO_CH : ActionType_::RETURN;
 }
@@ -511,8 +503,7 @@ void
 JSONLexerBase::continue_(int ch) {
     d_state = d_nextState;
 
-    if (ch != AT_EOF)
-        d_matched += ch;
+    if (ch != AT_EOF) d_matched += ch;
 }
 
 void
@@ -561,8 +552,7 @@ JSONLexerBase::reset_() {
     d_state = 0;
     d_return = true;
 
-    if (!d_more)
-        d_matched.clear();
+    if (!d_more) d_matched.clear();
 
     d_more = false;
 }
@@ -788,9 +778,7 @@ JSONLexer::executeAction_(size_t ruleIdx) try {
                 wchar_t w = (wchar_t)c;
                 std::string dest("");
 
-                if (w <= 0x7f) {
-                    dest.insert(dest.begin(), w);
-                }
+                if (w <= 0x7f) { dest.insert(dest.begin(), w); }
                 else if (w <= 0x7ff) {
                     dest.insert(dest.end(), 0xc0 | ((w >> 6) & 0x1f));
                     dest.insert(dest.end(), 0x80 | (w & 0x3f));
@@ -839,9 +827,7 @@ JSONLexer::lex_() {
 
         switch (actionType_(range)) // determine the action
         {
-            case ActionType_::CONTINUE:
-                continue_(ch);
-                continue;
+            case ActionType_::CONTINUE: continue_(ch); continue;
 
             case ActionType_::MATCH: {
                 d_token_ = executeAction_(matched_(ch));
@@ -853,13 +839,9 @@ JSONLexer::lex_() {
                 break;
             }
 
-            case ActionType_::ECHO_FIRST:
-                echoFirst_(ch);
-                break;
+            case ActionType_::ECHO_FIRST: echoFirst_(ch); break;
 
-            case ActionType_::ECHO_CH:
-                echoCh_(ch);
-                break;
+            case ActionType_::ECHO_CH: echoCh_(ch); break;
 
             case ActionType_::RETURN:
                 if (!popStream()) {

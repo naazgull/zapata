@@ -21,9 +21,7 @@ zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
     _thread_local_parser.switchRoots(_root);
     _thread_local_parser.switchStreams(_in);
     _thread_local_parser.parse();
-    if (_type == zpt::JSObject) {
-        _root->object()->pop("__aux");
-    }
+    if (_type == zpt::JSObject) { _root->object()->pop("__aux"); }
     return _root;
 }
 
@@ -44,9 +42,7 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
                 _oss << _uri["user"]["name"]->string() << "@" << std::flush;
             }
             _oss << _uri["domain"]->string() << std::flush;
-            if (_uri["port"]->ok()) {
-                _oss << ":" << _uri["port"] << std::flush;
-            }
+            if (_uri["port"]->ok()) { _oss << ":" << _uri["port"] << std::flush; }
         }
         if (_uri["path"]->ok()) {
             _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
@@ -56,29 +52,21 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
             bool _first{ true };
             _oss << "?" << std::flush;
             for (auto [_, _key, _value] : _uri["params"]) {
-                if (!_first) {
-                    _oss << "&";
-                }
+                if (!_first) { _oss << "&"; }
                 _first = false;
                 _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
                      << std::flush;
             }
         }
-        if (_uri["anchor"]->ok()) {
-            _oss << "#" << _uri["anchor"]->string() << std::flush;
-        }
+        if (_uri["anchor"]->ok()) { _oss << "#" << _uri["anchor"]->string() << std::flush; }
     }
     return _oss.str();
 }
 
 auto
 zpt::uri::to_regex(zpt::json _in) -> zpt::json {
-    if (_in->type() == zpt::JSObject) {
-        return zpt::uri::to_regex_object(_in);
-    }
-    if (_in->type() == zpt::JSArray) {
-        return zpt::uri::to_regex_array(_in);
-    }
+    if (_in->type() == zpt::JSObject) { return zpt::uri::to_regex_object(_in); }
+    if (_in->type() == zpt::JSArray) { return zpt::uri::to_regex_array(_in); }
     return _in;
 }
 

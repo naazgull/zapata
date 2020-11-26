@@ -33,9 +33,7 @@ zpt::UNIX_SERVER_SOCKET() -> ssize_t& {
 
 auto
 zpt::net::transport::unix_socket::send(zpt::exchange& _channel) const -> void {
-    if (_channel->to_send()->ok()) {
-        _channel->stream() << _channel->to_send();
-    }
+    if (_channel->to_send()->ok()) { _channel->stream() << _channel->to_send(); }
 }
 
 auto

@@ -70,12 +70,8 @@ zpt::storage::mysqlx::bind_operators()
 auto
 zpt::storage::mysqlx::cast(zpt::json _expression) -> zpt::json {
     auto _args = _expression["args"];
-    if (!_args->ok()) {
-        return _expression;
-    }
-    if (_args->size() == 1) {
-        return _args[0];
-    }
+    if (!_args->ok()) { return _expression; }
+    if (_args->size() == 1) { return _args[0]; }
     auto _cast = _args[_args->size() - 1]->string();
     if (_args->size() > 2) {
         auto _arr = zpt::json::array();
@@ -89,21 +85,11 @@ zpt::storage::mysqlx::cast(zpt::json _expression) -> zpt::json {
 
 auto
 zpt::storage::mysqlx::cast(zpt::json _expression, std::string _cast) -> zpt::json {
-    if (_cast == "boolean") {
-        return static_cast<bool>(_expression);
-    }
-    if (_cast == "date") {
-        return static_cast<zpt::timestamp_t>(_expression);
-    }
-    if (_cast == "integer") {
-        return static_cast<long long>(_expression);
-    }
-    if (_cast == "float" || _cast == "double") {
-        return static_cast<double>(_expression);
-    }
-    if (_cast == "string") {
-        return static_cast<std::string>(_expression);
-    }
+    if (_cast == "boolean") { return static_cast<bool>(_expression); }
+    if (_cast == "date") { return static_cast<zpt::timestamp_t>(_expression); }
+    if (_cast == "integer") { return static_cast<long long>(_expression); }
+    if (_cast == "float" || _cast == "double") { return static_cast<double>(_expression); }
+    if (_cast == "string") { return static_cast<std::string>(_expression); }
     return _expression;
 }
 
@@ -312,13 +298,9 @@ zpt::storage::mysqlx::to_search_str(zpt::json _search) -> std::string {
         std::ostringstream _oss;
         bool _first{ true };
         for (auto [_, _key, _value] : _search) {
-            if (_reserved.find(_key) != _reserved.end()) {
-                continue;
-            }
+            if (_reserved.find(_key) != _reserved.end()) { continue; }
 
-            if (!_first) {
-                _oss << " and " << std::flush;
-            }
+            if (!_first) { _oss << " and " << std::flush; }
             _first = false;
             if (_value->type() == zpt::JSObject) {
                 try {
@@ -429,9 +411,7 @@ zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connec
                   ::mysqlx::SessionOption::SSL_MODE,
                   ::mysqlx::SSLMode::REQUIRED } {}
 
-zpt::storage::mysqlx::session::~session() {
-    this->__underlying.close();
-}
+zpt::storage::mysqlx::session::~session() { this->__underlying.close(); }
 
 auto
 zpt::storage::mysqlx::session::is_open() -> bool {
@@ -450,7 +430,8 @@ zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::mysqlx::session::operator-> () -> ::mysqlx::Session* {
+auto
+zpt::storage::mysqlx::session::operator->() -> ::mysqlx::Session* {
     return &this->__underlying;
 }
 
@@ -463,7 +444,8 @@ zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session
                                          std::string const& _db)
   : __underlying{ _session->getSchema(_db) } {}
 
-auto zpt::storage::mysqlx::database::operator-> () -> ::mysqlx::Schema* {
+auto
+zpt::storage::mysqlx::database::operator->() -> ::mysqlx::Schema* {
     return &this->__underlying;
 }
 
@@ -508,7 +490,8 @@ zpt::storage::mysqlx::collection::count() -> size_t {
     return this->__underlying.count();
 }
 
-auto zpt::storage::mysqlx::collection::operator-> () -> ::mysqlx::Collection* {
+auto
+zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
     return &this->__underlying;
 }
 
@@ -603,7 +586,8 @@ zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_add::operator-> () -> ::mysqlx::CollectionAdd* {
+auto
+zpt::storage::mysqlx::action_add::operator->() -> ::mysqlx::CollectionAdd* {
     return &this->__underlying;
 }
 
@@ -702,7 +686,8 @@ zpt::storage::mysqlx::action_modify::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_modify::operator-> () -> ::mysqlx::CollectionModify* {
+auto
+zpt::storage::mysqlx::action_modify::operator->() -> ::mysqlx::CollectionModify* {
     return &this->__underlying;
 }
 
@@ -797,7 +782,8 @@ zpt::storage::mysqlx::action_remove::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_remove::operator-> () -> ::mysqlx::CollectionRemove* {
+auto
+zpt::storage::mysqlx::action_remove::operator->() -> ::mysqlx::CollectionRemove* {
     return &this->__underlying;
 }
 
@@ -895,7 +881,8 @@ zpt::storage::mysqlx::action_replace::replace_one() -> ::mysqlx::Result {
                                           zpt::storage::mysqlx::to_db_doc(this->__document));
 }
 
-auto zpt::storage::mysqlx::action_replace::operator-> () -> ::mysqlx::Collection* {
+auto
+zpt::storage::mysqlx::action_replace::operator->() -> ::mysqlx::Collection* {
     return this->__underlying;
 }
 
@@ -967,9 +954,7 @@ zpt::storage::mysqlx::action_find::sort(std::string const& _attribute)
 
 auto
 zpt::storage::mysqlx::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
-    for (auto [_, __, _value] : _fields) {
-        this->__underlying.fields(_value->string());
-    }
+    for (auto [_, __, _value] : _fields) { this->__underlying.fields(_value->string()); }
     return this;
 }
 
@@ -1001,7 +986,8 @@ zpt::storage::mysqlx::action_find::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::action_find::operator-> () -> ::mysqlx::CollectionFind* {
+auto
+zpt::storage::mysqlx::action_find::operator->() -> ::mysqlx::CollectionFind* {
     return &this->__underlying;
 }
 
@@ -1025,22 +1011,16 @@ auto
 zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
     if (this->__is_doc_result) {
         zpt::json _to_return{ zpt::json::array() };
-        if (_amount == 0) {
-            _amount = std::numeric_limits<size_t>::max();
-        }
+        if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
         for (size_t _idx = 0; _idx != _amount; ++_idx) {
             ::mysqlx::DbDoc _doc = this->__doc_result.fetchOne();
             if (_doc.isNull()) {
-                if (_idx == 0) {
-                    return zpt::undefined;
-                }
+                if (_idx == 0) { return zpt::undefined; }
                 break;
             }
             _to_return << zpt::storage::mysqlx::from_db_doc(_doc);
         }
-        if (_amount == 1 && _to_return->size() != 0) {
-            return _to_return[0];
-        }
+        if (_amount == 1 && _to_return->size() != 0) { return _to_return[0]; }
         return _to_return;
     }
     return zpt::undefined;
@@ -1050,9 +1030,7 @@ auto
 zpt::storage::mysqlx::result::generated_id() -> zpt::json {
     if (!this->__is_doc_result) {
         zpt::json _to_return{ zpt::json::array() };
-        for (auto _id : this->__result.getGeneratedIds()) {
-            _to_return << _id;
-        }
+        for (auto _id : this->__result.getGeneratedIds()) { _to_return << _id; }
         return _to_return;
     }
     return zpt::undefined;
@@ -1060,17 +1038,13 @@ zpt::storage::mysqlx::result::generated_id() -> zpt::json {
 
 auto
 zpt::storage::mysqlx::result::count() -> size_t {
-    if (this->__is_doc_result) {
-        return this->__doc_result.count();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.count(); }
     return 0;
 }
 
 auto
 zpt::storage::mysqlx::result::status() -> zpt::status {
-    if (this->__is_doc_result) {
-        return this->__doc_result.getWarning(0).getCode();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getCode(); }
     else {
         return this->__result.getWarning(0).getCode();
     }
@@ -1078,9 +1052,7 @@ zpt::storage::mysqlx::result::status() -> zpt::status {
 
 auto
 zpt::storage::mysqlx::result::message() -> std::string {
-    if (this->__is_doc_result) {
-        return this->__doc_result.getWarning(0).getMessage();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getMessage(); }
     else {
         return this->__result.getWarning(0).getMessage();
     }

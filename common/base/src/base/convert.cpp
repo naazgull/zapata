@@ -192,9 +192,7 @@ zpt::fromstr(std::string s, int* i) -> void {
     size_t sz = 0;
     try {
         int r = std::stoi(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -207,9 +205,7 @@ zpt::fromstr(std::string s, unsigned int* i) -> void {
     size_t sz = 0;
     try {
         unsigned int r = std::stoul(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -222,9 +218,7 @@ zpt::fromstr(std::string s, size_t* i) -> void {
     size_t sz = 0;
     try {
         size_t r = std::stoull(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -236,9 +230,7 @@ zpt::fromstr(std::string s, long* i) -> void {
     size_t sz = 0;
     try {
         long r = std::stol(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -250,9 +242,7 @@ zpt::fromstr(std::string s, long long* i) -> void {
     size_t sz = 0;
     try {
         int r = std::stoll(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -264,9 +254,7 @@ zpt::fromstr(std::string s, float* i) -> void {
     size_t sz = 0;
     try {
         float r = std::stof(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {
@@ -278,9 +266,7 @@ zpt::fromstr(std::string s, double* i) -> void {
     size_t sz = 0;
     try {
         double r = std::stod(s, &sz);
-        if (sz != s.length()) {
-            return;
-        }
+        if (sz != s.length()) { return; }
         *i = r;
     }
     catch (std::exception const& _e) {

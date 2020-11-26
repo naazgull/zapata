@@ -48,13 +48,9 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
             continue;
         }
         else if (_key == "order_by" && (_value->is_string() || _value->is_array())) {
-            if (!_query["sort"]->is_array()) {
-                _query << "sort" << zpt::json::array();
-            }
+            if (!_query["sort"]->is_array()) { _query << "sort" << zpt::json::array(); }
             zpt::json _splited;
-            if (_value->is_string()) {
-                _splited = zpt::split(std::string(_value), ",", true);
-            }
+            if (_value->is_string()) { _splited = zpt::split(std::string(_value), ",", true); }
             else {
                 _splited = _value;
             }
@@ -249,9 +245,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
         _selector << std::string(_key) << _value;
     }
 
-    if (!_query["limit"]->ok()) {
-        _query << "limit" << INT_MAX;
-    }
+    if (!_query["limit"]->ok()) { _query << "limit" << INT_MAX; }
 
     return _query;
 }
@@ -261,13 +255,9 @@ zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _fields = _opts["fields"];
     if (_fields->ok()) {
-        if (_fields->is_string()) {
-            _fields = zpt::split(std::string(_opts["fields"]), ",");
-        }
+        if (_fields->is_string()) { _fields = zpt::split(std::string(_opts["fields"]), ","); }
         if (_fields->is_array()) {
-            for (auto _f : _fields->array()) {
-                _return << std::string(_f) << true;
-            }
+            for (auto _f : _fields->array()) { _return << std::string(_f) << true; }
             _return << "_id" << true;
         }
     }

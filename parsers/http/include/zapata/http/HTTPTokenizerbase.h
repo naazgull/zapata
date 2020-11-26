@@ -134,8 +134,8 @@ HTTPTokenizerBase::savedToken_() const {
 }
 
 // hdr/opbitand
-inline HTTPTokenizerBase::DebugMode_ operator&(HTTPTokenizerBase::DebugMode_ lhs,
-                                               HTTPTokenizerBase::DebugMode_ rhs) {
+inline HTTPTokenizerBase::DebugMode_
+operator&(HTTPTokenizerBase::DebugMode_ lhs, HTTPTokenizerBase::DebugMode_ rhs) {
     return static_cast<HTTPTokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 

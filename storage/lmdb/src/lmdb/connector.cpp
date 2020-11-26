@@ -119,7 +119,7 @@
 
 auto
 zpt::storage::lmdb::to_db_key(zpt::json _document) -> std::string {
-    return static_cast<std::string>(_document["_id"]);
+    return _document["_id"]->string();
 }
 
 auto
@@ -166,9 +166,7 @@ zpt::storage::lmdb::session::session(zpt::storage::lmdb::connection& _connection
     this->__underlying.set_mapsize(1UL * 1024UL * 1024UL * 1024UL); /* 1 GiB */
 }
 
-zpt::storage::lmdb::session::~session() {
-    this->__underlying.close();
-}
+zpt::storage::lmdb::session::~session() { this->__underlying.close(); }
 
 auto
 zpt::storage::lmdb::session::is_open() -> bool {
@@ -188,11 +186,13 @@ zpt::storage::lmdb::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::session::operator-> () -> ::lmdb::env* {
+auto
+zpt::storage::lmdb::session::operator->() -> ::lmdb::env* {
     return &this->__underlying;
 }
 
-auto zpt::storage::lmdb::session::operator*() -> ::lmdb::env& {
+auto
+zpt::storage::lmdb::session::operator*() -> ::lmdb::env& {
     return this->__underlying;
 }
 
@@ -217,11 +217,13 @@ zpt::storage::lmdb::database::database(zpt::storage::lmdb::session& _session,
                              0664);
 }
 
-auto zpt::storage::lmdb::database::operator-> () -> ::lmdb::env* {
+auto
+zpt::storage::lmdb::database::operator->() -> ::lmdb::env* {
     return &(*this->__underlying);
 }
 
-auto zpt::storage::lmdb::database::operator*() -> ::lmdb::env& {
+auto
+zpt::storage::lmdb::database::operator*() -> ::lmdb::env& {
     return *this->__underlying;
 }
 
@@ -272,23 +274,16 @@ auto
 zpt::storage::lmdb::collection::count() -> size_t {
     auto _read_trx = ::lmdb::txn::begin(this->__underlying->handle(), nullptr, MDB_RDONLY);
     auto _dbi = ::lmdb::dbi::open(_read_trx, nullptr);
-    auto _cursor = ::lmdb::cursor::open(_read_trx, _dbi);
-    std::string _key;
-    std::string _value;
-    size_t _to_return{ 0 };
-    for (; _cursor.get(_key, _value, MDB_NEXT);) {
-        ++_to_return;
-    }
-    _cursor.close();
-    _read_trx.abort();
-    return _to_return;
+    return _dbi.size(_read_trx);
 }
 
-auto zpt::storage::lmdb::collection::operator-> () -> ::lmdb::env* {
+auto
+zpt::storage::lmdb::collection::operator->() -> ::lmdb::env* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::lmdb::collection::operator*() -> ::lmdb::env& {
+auto
+zpt::storage::lmdb::collection::operator*() -> ::lmdb::env& {
     return *this->__underlying.get();
 }
 
@@ -397,11 +392,13 @@ zpt::storage::lmdb::action_add::execute() -> zpt::storage::result {
     return _to_return;
 }
 
-auto zpt::storage::lmdb::action_add::operator-> () -> ::lmdb::txn* {
+auto
+zpt::storage::lmdb::action_add::operator->() -> ::lmdb::txn* {
     return &this->__underlying;
 }
 
-auto zpt::storage::lmdb::action_add::operator*() -> ::lmdb::txn& {
+auto
+zpt::storage::lmdb::action_add::operator*() -> ::lmdb::txn& {
     return this->__underlying;
 }
 
@@ -412,7 +409,12 @@ zpt::storage::lmdb::action_modify::action_modify(zpt::storage::lmdb::collection&
   , __stub{ ::lmdb::dbi::open(this->__underlying) }
   , __search{ _search }
   , __set{ zpt::json::object() }
-  , __unset{ zpt::json::object() } {}
+  , __unset{ zpt::json::object() } {
+    expect(this->__search->is_object() && this->__search["_id"]->ok(),
+           "search object must be a JSON object with `_id` instantiated",
+           500,
+           0);
+}
 
 auto
 zpt::storage::lmdb::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -461,14 +463,13 @@ zpt::storage::lmdb::action_modify::unset(std::string const& _attribute)
 
 auto
 zpt::storage::lmdb::action_modify::patch(zpt::json _document) -> zpt::storage::action::type* {
-    this->__underlying.patch(static_cast<std::string>(_document));
+    for (auto [_, _key, _member] : _document) { this->__set << _key << _member; }
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::sort(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
     return this;
 }
 
@@ -489,45 +490,57 @@ zpt::storage::lmdb::action_modify::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::lmdb::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    // this->__set->inspect({ "$regexp", "([\"])(.*)([$])([{])([^}]+)([}])(.*)([\"])" },
-    //                       [&](std::string const& _object_path,
-    //                           std::string const& _key,
-    //                           zpt::JSONElementT& _parent) -> void {
-    //                       });
-    // for (auto [_, _key, _value] : _binded) {
-    //     this->__set.bind(_key, zpt::storage::lmdb::cast_to_db_value(_value)[0]);
-    // }
     auto _transform =
       [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-        if (_item->type() != zpt::JSString) {
-            return;
-        }
+        if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
-            if (_item == _key) {
-                _item << _value;
-            }
+            if (_item == _key) { _item << _value; }
         }
     };
-
     zpt::json::traverse(this->__set, _transform);
+    zpt::json::traverse(this->__search, _transform);
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
+    std::string _value;
+    std::string _key = zpt::storage::lmdb::to_db_key(this->__search);
+
+    auto _cursor = ::lmdb::cursor::open(this->__underlying, this->__stub);
+    _cursor.find(_key);
+    _cursor.get(_key, _value, MDB_GET_CURRENT);
+    _cursor.close();
+
+    auto _current = zpt::json::parse_json_str(_value) + this->__set - this->__unset;
+    this->__stub.put(this->__underlying, _key, zpt::storage::lmdb::to_db_doc(_current));
+    this->__underlying.commit();
     zpt::storage::result _to_return =
       zpt::storage::result::alloc<zpt::storage::lmdb::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::lmdb::action_modify::operator-> () -> ::lmdb::CollectionModify* {
+auto
+zpt::storage::lmdb::action_modify::operator->() -> ::lmdb::txn* {
     return &this->__underlying;
+}
+
+auto
+zpt::storage::lmdb::action_modify::operator*() -> ::lmdb::txn& {
+    return this->__underlying;
 }
 
 zpt::storage::lmdb::action_remove::action_remove(zpt::storage::lmdb::collection& _collection,
                                                  zpt::json _search)
-  : zpt::storage::lmdb::action::action(_collection)
-  , __underlying{ _collection->remove(zpt::storage::lmdb::to_search_str(_search)) } {}
+  : zpt::storage::lmdb::action::action{ _collection }
+  , __underlying{ ::lmdb::txn::begin(*_collection) }
+  , __stub{ ::lmdb::dbi::open(this->__underlying) }
+  , __search{ _search } {
+    expect(this->__search->is_object() && this->__search["_id"]->ok(),
+           "search object must be a JSON object with `_id` instantiated",
+           500,
+           0);
+}
 
 auto
 zpt::storage::lmdb::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -579,7 +592,6 @@ zpt::storage::lmdb::action_remove::patch(zpt::json _document) -> zpt::storage::a
 auto
 zpt::storage::lmdb::action_remove::sort(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
     return this;
 }
 
@@ -595,36 +607,49 @@ zpt::storage::lmdb::action_remove::offset(size_t _rows) -> zpt::storage::action:
 
 auto
 zpt::storage::lmdb::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
-    this->__underlying.limit(_number);
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _binded = zpt::storage::lmdb::to_binded_object(_map);
-    for (auto [_, _key, _value] : _binded) {
-        this->__underlying.bind(_key, zpt::storage::lmdb::cast_to_db_value(_value)[0]);
-    }
+    auto _transform =
+      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+        if (_item->type() != zpt::JSString) { return; }
+        for (auto [_, _key, _value] : _map) {
+            if (_item == _key) { _item << _value; }
+        }
+    };
+    zpt::json::traverse(this->__search, _transform);
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
+    this->__stub.del(this->__underlying, zpt::storage::lmdb::to_db_key(this->__search));
+    this->__underlying.commit();
     zpt::storage::result _to_return =
       zpt::storage::result::alloc<zpt::storage::lmdb::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::lmdb::action_remove::operator-> () -> ::lmdb::CollectionRemove* {
+auto
+zpt::storage::lmdb::action_remove::operator->() -> ::lmdb::txn* {
     return &this->__underlying;
+}
+
+auto
+zpt::storage::lmdb::action_remove::operator*() -> ::lmdb::txn& {
+    return this->__underlying;
 }
 
 zpt::storage::lmdb::action_replace::action_replace(zpt::storage::lmdb::collection& _collection,
                                                    std::string _id,
                                                    zpt::json _document)
-  : zpt::storage::lmdb::action::action(_collection)
+  : zpt::storage::lmdb::action::action{ _collection }
+  , __underlying{ ::lmdb::txn::begin(*_collection) }
+  , __stub{ ::lmdb::dbi::open(this->__underlying) }
   , __id{ _id }
-  , __document{ _document } {}
+  , __set{ _document } {}
 
 auto
 zpt::storage::lmdb::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -697,36 +722,58 @@ zpt::storage::lmdb::action_replace::limit(size_t _number) -> zpt::storage::actio
 
 auto
 zpt::storage::lmdb::action_replace::bind(zpt::json _map) -> zpt::storage::action::type* {
+    auto _transform =
+      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+        if (_item->type() != zpt::JSString) { return; }
+        for (auto [_, _key, _value] : _map) {
+            if (_item == _key) { _item << _value; }
+        }
+    };
+    zpt::json::traverse(this->__set, _transform);
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_replace::execute() -> zpt::storage::result {
+    this->__stub.del(this->__underlying, this->__id);
+    this->__stub.put(this->__underlying, this->__id, zpt::storage::lmdb::to_db_doc(this->__set));
+    this->__underlying.commit();
     zpt::storage::result _to_return =
       zpt::storage::result::alloc<zpt::storage::lmdb::result>(*this);
     return _to_return;
 }
 
 auto
-zpt::storage::lmdb::action_replace::replace_one() -> ::lmdb::Result {
-    return this->__underlying->replaceOne(this->__id,
-                                          zpt::storage::lmdb::to_db_doc(this->__document));
+zpt::storage::lmdb::action_replace::replace_one() -> void {
+    this->execute();
 }
 
-auto zpt::storage::lmdb::action_replace::operator-> () -> ::lmdb::Collection* {
+auto
+zpt::storage::lmdb::action_replace::operator->() -> ::lmdb::txn* {
+    return &this->__underlying;
+}
+
+auto
+zpt::storage::lmdb::action_replace::operator*() -> ::lmdb::txn& {
     return this->__underlying;
 }
 
 zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _collection)
-  : zpt::storage::lmdb::action::action(_collection)
-  , __underlying{ _collection->find() } {}
+  : zpt::storage::lmdb::action::action{ _collection }
+  , __underlying{ ::lmdb::txn::begin(*_collection) }
+  , __stub{ ::lmdb::dbi::open(this->__underlying) }
+  , __search{ zpt::json::object() }
+  , __sort{ zpt::json::array() }
+  , __fields{ zpt::json::array() } {}
 
 zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _collection,
                                              zpt::json _search)
-  : zpt::storage::lmdb::action::action(_collection)
-  , __find_criteria(zpt::storage::lmdb::to_search_str(_search))
-  , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
-                                                : _collection->find() } {}
+  : zpt::storage::lmdb::action::action{ _collection }
+  , __underlying{ ::lmdb::txn::begin(*_collection) }
+  , __stub{ ::lmdb::dbi::open(this->__underlying) }
+  , __search{ _search }
+  , __sort{ zpt::json::array() }
+  , __fields{ zpt::json::array() } {}
 
 auto
 zpt::storage::lmdb::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -779,48 +826,77 @@ zpt::storage::lmdb::action_find::patch(zpt::json _document) -> zpt::storage::act
 auto
 zpt::storage::lmdb::action_find::sort(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    this->__underlying.sort(_attribute);
+    this->__sort << _attribute;
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
-    for (auto [_, __, _value] : _fields) {
-        this->__underlying.fields(_value->string());
-    }
+    this->__fields += _fields;
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::offset(size_t _rows) -> zpt::storage::action::type* {
-    this->__underlying.offset(_rows);
+    this->__offset = _rows;
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::limit(size_t _number) -> zpt::storage::action::type* {
-    this->__underlying.limit(_number);
+    this->__limit = _number;
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _binded = zpt::storage::lmdb::to_binded_object(_map);
-    for (auto [_, _key, _value] : _binded) {
-        this->__underlying.bind(_key, zpt::storage::lmdb::cast_to_db_value(_value)[0]);
-    }
+    auto _transform =
+      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+        if (_item->type() != zpt::JSString) { return; }
+        for (auto [_, _key, _value] : _map) {
+            if (_item == _key) { _item << _value; }
+        }
+    };
+    zpt::json::traverse(this->__search, _transform);
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
+    auto _result = zpt::json::array();
+    auto _cursor = ::lmdb::cursor::open(this->__underlying, this->__stub);
+    try {
+        std::string _key = zpt::storage::lmdb::to_db_key(this->__search);
+        std::string _value;
+        _cursor.find(_key);
+        _cursor.get(_key, _value, MDB_GET_CURRENT);
+        _cursor.close();
+        _result << zpt::json::parse_json_str(_value);
+    }
+    catch (zpt::failed_expectation& _) {
+        std::string _key;
+        std::string _value;
+        while (cursor.get(_key, _value, MDB_NEXT)) {
+            zpt::json _object = zpt::json::parse_json_str(_value);
+            if (!this->is_filtered_out(_object)) { _result << this->trim(_object); }
+        }
+        cursor.close();
+    }
+    this->__stub.put(this->__underlying, _key, zpt::storage::lmdb::to_db_doc(_current));
+    this->__underlying.commit();
     zpt::storage::result _to_return =
       zpt::storage::result::alloc<zpt::storage::lmdb::result>(*this);
     return _to_return;
 }
 
-auto zpt::storage::lmdb::action_find::operator-> () -> ::lmdb::CollectionFind* {
+auto
+zpt::storage::lmdb::action_find::operator->() -> ::lmdb::txn* {
     return &this->__underlying;
+}
+
+auto
+zpt::storage::lmdb::action_find::operator*() -> ::lmdb::txn& {
+    return this->__underlying;
 }
 
 zpt::storage::lmdb::result::result(zpt::storage::lmdb::action_add& _action)
@@ -843,22 +919,16 @@ auto
 zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
     if (this->__is_doc_result) {
         zpt::json _to_return{ zpt::json::array() };
-        if (_amount == 0) {
-            _amount = std::numeric_limits<size_t>::max();
-        }
+        if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
         for (size_t _idx = 0; _idx != _amount; ++_idx) {
             ::lmdb::DbDoc _doc = this->__doc_result.fetchOne();
             if (_doc.isNull()) {
-                if (_idx == 0) {
-                    return zpt::undefined;
-                }
+                if (_idx == 0) { return zpt::undefined; }
                 break;
             }
             _to_return << zpt::storage::lmdb::from_db_doc(_doc);
         }
-        if (_amount == 1 && _to_return->size() != 0) {
-            return _to_return[0];
-        }
+        if (_amount == 1 && _to_return->size() != 0) { return _to_return[0]; }
         return _to_return;
     }
     return zpt::undefined;
@@ -868,9 +938,7 @@ auto
 zpt::storage::lmdb::result::generated_id() -> zpt::json {
     if (!this->__is_doc_result) {
         zpt::json _to_return{ zpt::json::array() };
-        for (auto _id : this->__result.getGeneratedIds()) {
-            _to_return << _id;
-        }
+        for (auto _id : this->__result.getGeneratedIds()) { _to_return << _id; }
         return _to_return;
     }
     return zpt::undefined;
@@ -878,17 +946,13 @@ zpt::storage::lmdb::result::generated_id() -> zpt::json {
 
 auto
 zpt::storage::lmdb::result::count() -> size_t {
-    if (this->__is_doc_result) {
-        return this->__doc_result.count();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.count(); }
     return 0;
 }
 
 auto
 zpt::storage::lmdb::result::status() -> zpt::status {
-    if (this->__is_doc_result) {
-        return this->__doc_result.getWarning(0).getCode();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getCode(); }
     else {
         return this->__result.getWarning(0).getCode();
     }
@@ -896,9 +960,7 @@ zpt::storage::lmdb::result::status() -> zpt::status {
 
 auto
 zpt::storage::lmdb::result::message() -> std::string {
-    if (this->__is_doc_result) {
-        return this->__doc_result.getWarning(0).getMessage();
-    }
+    if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getMessage(); }
     else {
         return this->__result.getWarning(0).getMessage();
     }

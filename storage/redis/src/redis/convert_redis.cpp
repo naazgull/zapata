@@ -35,9 +35,7 @@ zpt::redis::to_regex(zpt::json _regexp) -> std::string {
         }
     }
     else if (_regexp->type() == zpt::JSArray) {
-        for (auto _r : _regexp->array()) {
-            _return += std::string("*") + zpt::redis::to_regex(_r);
-        }
+        for (auto _r : _regexp->array()) { _return += std::string("*") + zpt::redis::to_regex(_r); }
     }
     else {
         std::string _value;

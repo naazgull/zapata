@@ -119,7 +119,7 @@ class event {
     auto operator=(zpt::pipeline::event<T> const& _rhs) -> zpt::pipeline::event<T>& = default;
     auto operator=(zpt::pipeline::event<T>&& _rhs) -> zpt::pipeline::event<T>& = default;
 
-    auto operator-> () -> zpt::pipeline::event<T>::event_t*;
+    auto operator->() -> zpt::pipeline::event<T>::event_t*;
     auto operator*() -> zpt::pipeline::event<T>::event_t&;
 
     auto pause() -> zpt::pipeline::event<T>&;
@@ -349,12 +349,14 @@ zpt::pipeline::event<T>::event(zpt::pipeline::engine<T>& _parent,
   : __underlying{ std::make_shared<zpt::pipeline::event<T>::event_t>(_parent, _content, _path) } {}
 
 template<typename T>
-auto zpt::pipeline::event<T>::operator-> () -> zpt::pipeline::event<T>::event_t* {
+auto
+zpt::pipeline::event<T>::operator->() -> zpt::pipeline::event<T>::event_t* {
     return this->__underlying.get();
 }
 
 template<typename T>
-auto zpt::pipeline::event<T>::operator*() -> zpt::pipeline::event<T>::event_t& {
+auto
+zpt::pipeline::event<T>::operator*() -> zpt::pipeline::event<T>::event_t& {
     return *this->__underlying.get();
 }
 
@@ -403,9 +405,7 @@ zpt::pipeline::stage<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event
     zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::shared };
     this->__callbacks.eval(
       _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->string(), _event);
-    if (_event->stages().marked() == _event->stages().current()) {
-        _event->stages().next().mark();
-    }
+    if (_event->stages().marked() == _event->stages().current()) { _event->stages().next().mark(); }
     _event.send_to_next_stage();
 }
 
@@ -501,9 +501,7 @@ template<typename T>
 auto
 zpt::pipeline::engine<T>::is_shutdown_ongoing() -> bool {
     for (auto _stage : this->__stages) {
-        if (_stage->is_shutdown_ongoing()) {
-            return true;
-        }
+        if (_stage->is_shutdown_ongoing()) { return true; }
     }
     return false;
 }
@@ -540,9 +538,7 @@ template<typename T>
 auto
 zpt::pipeline::engine<T>::set_error_callback(error_callback _error_callback)
   -> zpt::pipeline::engine<T>& {
-    for (auto _stage : this->__stages) {
-        _stage->set_error_callback(_error_callback);
-    }
+    for (auto _stage : this->__stages) { _stage->set_error_callback(_error_callback); }
     return (*this);
 }
 

@@ -75,16 +75,12 @@ zpt::utf8::utf8_to_wstring(std::string s) {
     }
 
     for (const char* a = _str; *a; a++) {
-        if (((uchar)*a) < 128 || (*a & 192) == 192) {
-            c++;
-        }
+        if (((uchar)*a) < 128 || (*a & 192) == 192) { c++; }
     }
     wchar_t* res = new wchar_t[c + 1];
     res[c] = 0;
     for (uchar* a = (uchar*)_str; *a; a++) {
-        if (!(*a & 128)) {
-            res[b] = *a;
-        }
+        if (!(*a & 128)) { res[b] = *a; }
         else if ((*a & 192) == 128) {
             continue;
         }
@@ -106,9 +102,7 @@ int
 zpt::utf8::length(std::string s) {
     int size = 0;
     for (size_t i = 0; i != s.length(); i++) {
-        if (((wchar_t)s[i]) < 0x80) {
-            size++;
-        }
+        if (((wchar_t)s[i]) < 0x80) { size++; }
         else if (((wchar_t)s[i]) < 0x800) {
             size += 2;
         }
@@ -169,16 +163,12 @@ zpt::utf8::encode(std::string& _out, bool quote) {
     }
 
     for (const char* a = _str; *a; a++) {
-        if (((uchar)*a) < 128 || (*a & 192) == 192) {
-            c++;
-        }
+        if (((uchar)*a) < 128 || (*a & 192) == 192) { c++; }
     }
     wchar_t* res = new wchar_t[c + 1];
     res[c] = 0;
     for (uchar* a = (uchar*)_str; *a; a++) {
-        if (!(*a & 128)) {
-            res[b] = *a;
-        }
+        if (!(*a & 128)) { res[b] = *a; }
         else if ((*a & 192) == 128) {
             continue;
         }
@@ -230,27 +220,13 @@ zpt::unicode::escape(std::string& _out) {
     std::ostringstream _oss;
     for (const auto& c : _out) {
         switch (c) {
-            case '"':
-                _oss << "\\\"";
-                break;
-            case '\\':
-                _oss << "\\\\";
-                break;
-            case '\b':
-                _oss << "\\b";
-                break;
-            case '\f':
-                _oss << "\\f";
-                break;
-            case '\n':
-                _oss << "\\n";
-                break;
-            case '\r':
-                _oss << "\\r";
-                break;
-            case '\t':
-                _oss << "\\t";
-                break;
+            case '"': _oss << "\\\""; break;
+            case '\\': _oss << "\\\\"; break;
+            case '\b': _oss << "\\b"; break;
+            case '\f': _oss << "\\f"; break;
+            case '\n': _oss << "\\n"; break;
+            case '\r': _oss << "\\r"; break;
+            case '\t': _oss << "\\t"; break;
             default:
                 if (((uchar)c) > 127) {
                     _oss << "\\u" << std::hex << std::setw(4) << std::setfill('0')

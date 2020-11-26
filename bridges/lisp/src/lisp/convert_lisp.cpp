@@ -40,9 +40,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_list: {
             if (Null(_exp)) {
-                if (_parent->ok()) {
-                    _parent << zpt::undefined;
-                }
+                if (_parent->ok()) { _parent << zpt::undefined; }
             }
             else {
                 zpt::json _ret = zpt::json::array();
@@ -51,9 +49,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                     auto _item = ecl_car(_list);
                     zpt::lisp::from_lisp(_item, _ret);
                 }
-                if (_parent->ok()) {
-                    _parent << _ret;
-                }
+                if (_parent->ok()) { _parent << _ret; }
                 else {
                     _parent = _ret;
                 }
@@ -63,9 +59,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         case t_character: {
             char _o = (char)ECL_CHAR_CODE(_exp);
             std::string _s(&_o, 1);
-            if (_parent->ok()) {
-                _parent << _s;
-            }
+            if (_parent->ok()) { _parent << _s; }
             else {
                 _parent = zpt::json::string(_s);
             }
@@ -73,9 +67,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_fixnum: {
             int _o = (int)ecl_to_fixnum(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::integer(_o);
             }
@@ -83,9 +75,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_bignum: {
             double _o = ecl_to_double(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::floating(_o);
             }
@@ -93,9 +83,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_ratio: {
             double _o = ecl_to_double(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::floating(_o);
             }
@@ -103,9 +91,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_singlefloat: {
             float _o = ecl_to_float(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::floating(_o);
             }
@@ -113,9 +99,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
         }
         case t_doublefloat: {
             double _o = ecl_to_double(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::floating(_o);
             }
@@ -124,9 +108,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
 #ifdef ECL_LONG_FLOAT
         case t_longfloat: {
             double _o = (double)ecl_to_long_double(_exp);
-            if (_parent->ok()) {
-                _parent << _o;
-            }
+            if (_parent->ok()) { _parent << _o; }
             else {
                 _parent = zpt::json::floating(_o);
             }
@@ -144,25 +126,19 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                         _str.push_back((char)ecl_char(_exp->symbol.name, _i));
                     }
                     if (_str == "FALSE") {
-                        if (_parent->ok()) {
-                            _parent << false;
-                        }
+                        if (_parent->ok()) { _parent << false; }
                         else {
                             _parent = zpt::json::boolean(false);
                         }
                     }
                     else if (_str == "ARRAY") {
-                        if (_parent->ok()) {
-                            _parent << zpt::json::array();
-                        }
+                        if (_parent->ok()) { _parent << zpt::json::array(); }
                         else {
                             _parent = zpt::json::array();
                         }
                     }
                     else {
-                        if (_parent->ok()) {
-                            _parent << true;
-                        }
+                        if (_parent->ok()) { _parent << true; }
                         else {
                             _parent = zpt::json::boolean(true);
                         }
@@ -173,9 +149,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                 }
             }
             else {
-                if (_parent->ok()) {
-                    _parent << zpt::undefined;
-                }
+                if (_parent->ok()) { _parent << zpt::undefined; }
                 // expect(false, "symbol is pair", 500, 0);
             }
             break;
@@ -192,14 +166,10 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                     zpt::lisp::from_lisp(_e.key, _key);
                     zpt::json _value;
                     zpt::lisp::from_lisp(_e.value, _value);
-                    if (_value->ok()) {
-                        _ret << ((std::string)_key) << _value;
-                    }
+                    if (_value->ok()) { _ret << ((std::string)_key) << _value; }
                 }
             }
-            if (_parent->ok()) {
-                _parent << _ret;
-            }
+            if (_parent->ok()) { _parent << _ret; }
             else {
                 _parent = _ret;
             }
@@ -211,9 +181,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             for (unsigned int _i = 0; _i != _arr_dim; _i++) {
                 zpt::lisp::from_lisp(ecl_aref1(_exp, _i), _ret);
             }
-            if (_parent->ok()) {
-                _parent << _ret;
-            }
+            if (_parent->ok()) { _parent << _ret; }
             else {
                 _parent = _ret;
             }
@@ -225,9 +193,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             for (unsigned int _i = 0; _i != _arr_dim; _i++) {
                 zpt::lisp::from_lisp(ecl_aref1(_exp, _i), _ret);
             }
-            if (_parent->ok()) {
-                _parent << _ret;
-            }
+            if (_parent->ok()) { _parent << _ret; }
             else {
                 _parent = _ret;
             }
@@ -241,9 +207,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             }
             zpt::replace(_str, "[[*nl*]]", "\\n");
             zpt::replace(_str, "[*nl*]", "\n");
-            if (_parent->ok()) {
-                _parent << _str;
-            }
+            if (_parent->ok()) { _parent << _str; }
             else {
                 _parent = zpt::json::string(_str);
             }
@@ -257,9 +221,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             }
             zpt::replace(_str, "[[*nl*]]", "\\n");
             zpt::replace(_str, "[*nl*]", "\n");
-            if (_parent->ok()) {
-                _parent << _str;
-            }
+            if (_parent->ok()) { _parent << _str; }
             else {
                 _parent = zpt::json::string(_str);
             }
@@ -374,30 +336,14 @@ zpt::lisp::to_lisp(zpt::json _in, zpt::lisp::bridge* _bridge) -> zpt::lisp::obje
     std::ostringstream _ss;
     for (auto _iter = _str.cbegin(); _iter != _str.cend(); _iter++) {
         switch (*_iter) {
-            case '\\':
-                _ss << "\\\\";
-                break;
-            case '"':
-                _ss << "\\\"";
-                break;
-            case '\b':
-                _ss << "\\b";
-                break;
-            case '\f':
-                _ss << "\\f";
-                break;
-            case '\n':
-                _ss << "\\n";
-                break;
-            case '\r':
-                _ss << "\\r";
-                break;
-            case '\t':
-                _ss << "\\t";
-                break;
-            default:
-                _ss << *_iter;
-                break;
+            case '\\': _ss << "\\\\"; break;
+            case '"': _ss << "\\\""; break;
+            case '\b': _ss << "\\b"; break;
+            case '\f': _ss << "\\f"; break;
+            case '\n': _ss << "\\n"; break;
+            case '\r': _ss << "\\r"; break;
+            case '\t': _ss << "\\t"; break;
+            default: _ss << *_iter; break;
         }
     }
     _str.assign(_ss.str());

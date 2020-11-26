@@ -56,9 +56,7 @@ class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json
     }
     auto mute_from(int _event, std::function<void(zpt::json)> _callback) -> void {
         auto _found = this->__callbacks.find(_event);
-        if (_found != this->__callbacks.end()) {
-            this->__callbacks.erase(_found);
-        }
+        if (_found != this->__callbacks.end()) { this->__callbacks.erase(_found); }
     }
     auto report_error(int _event,
                       zpt::json _content,

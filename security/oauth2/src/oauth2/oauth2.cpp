@@ -61,9 +61,7 @@ zpt::auth::oauth2::server::authorize(zpt::performative _performative,
                                      zpt::json _envelope,
                                      zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) {
-        _param.assign("body");
-    }
+    if (_performative == zpt::rest::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -122,9 +120,7 @@ zpt::auth::oauth2::server::token(zpt::performative _performative,
                                  zpt::json _envelope,
                                  zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) {
-        _param.assign("body");
-    }
+    if (_performative == zpt::rest::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -142,9 +138,7 @@ zpt::auth::oauth2::server::refresh(zpt::performative _performative,
                                    zpt::json _envelope,
                                    zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) {
-        _param.assign("body");
-    }
+    if (_performative == zpt::rest::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -168,9 +162,7 @@ zpt::auth::oauth2::server::validate(std::string const& _access_token, zpt::json 
     expect(_token->ok(), "token is invalid", 403, 0);
     auto _now = zpt::timestamp();
     auto _expires = _token["expires"]->date();
-    if (_expires < _now) {
-        this->__token_provider->remove_token(_token);
-    }
+    if (_expires < _now) { this->__token_provider->remove_token(_token); }
     expect(_expires > _now, "token has expired", 403, 0);
     return _token;
 }

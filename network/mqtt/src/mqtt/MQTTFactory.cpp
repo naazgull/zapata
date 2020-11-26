@@ -33,16 +33,12 @@ auto
 zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
-    if (_found != this->__channels.end()) {
-        _return = _found->second;
-    }
+    if (_found != this->__channels.end()) { _return = _found->second; }
     else {
         zpt::MQTT* _mqtt = new zpt::MQTT();
         int _attempts = 0;
         do {
-            if (_mqtt->connect(zpt::uri::parse(_options["connection"]->string()))) {
-                break;
-            }
+            if (_mqtt->connect(zpt::uri::parse(_options["connection"]->string()))) { break; }
             ++_attempts;
             sleep(1);
         } while (_attempts < 10);
@@ -85,9 +81,7 @@ zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) 
     zpt::poll::instance()->vanished(_mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
         int _attempts = 0;
         do {
-            if (_mqtt->reconnect()) {
-                break;
-            }
+            if (_mqtt->reconnect()) { break; }
             ++_attempts;
             sleep(1);
         } while (_attempts < 10);
@@ -122,18 +116,14 @@ zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mut
 
     _envelope << "resource" << _data->__topic;
 
-    if (!_data->__message["payload"]->ok()) {
-        _envelope << "payload" << _data->__message;
-    }
+    if (!_data->__message["payload"]->ok()) { _envelope << "payload" << _data->__message; }
     else {
         _envelope << "payload" << _data->__message["payload"];
     }
     if (_data->__message["headers"]->ok()) {
         _envelope << "headers" << _data->__message["headers"];
     }
-    if (_data->__message["params"]->ok()) {
-        _envelope << "params" << _data->__message["params"];
-    }
+    if (_data->__message["params"]->ok()) { _envelope << "params" << _data->__message["params"]; }
     _envelope << "protocol" << _mqtt->protocol();
     ztrace(std::string("MQTT ") + std::string(_data->__topic));
     zverbose(zpt::ev::pretty(_envelope));
@@ -150,8 +140,7 @@ _zpt_plugin_load_() {
     zpt::json _credentials = _emitter->credentials();
 
     if (_credentials["endpoints"]["mqtt"]->ok()) {
-        if (!_options["mqtt"]->ok())
-            _options << "mqtt" << zpt::json::array();
+        if (!_options["mqtt"]->ok()) _options << "mqtt" << zpt::json::array();
         _options["mqtt"] << _credentials["endpoints"]["mqtt"];
     }
 

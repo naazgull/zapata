@@ -113,9 +113,7 @@ zpt::mysql::Client::insert(std::string const& _collection,
         _stmt->execute(string("USE ") + this->connection()["db"]->string());
     }
 
-    if (!_document["id"]->ok()) {
-        _document << "id" << zpt::generate::r_uuid();
-    }
+    if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
                   << (_href_prefix +
@@ -129,13 +127,9 @@ zpt::mysql::Client::insert(std::string const& _collection,
     std::string _columns;
     std::string _values;
     for (auto _c : _document->object()) {
-        if (_columns.length() != 0) {
-            _columns += std::string(",");
-        }
+        if (_columns.length() != 0) { _columns += std::string(","); }
         _columns += _c.first;
-        if (_values.length() != 0) {
-            _values += std::string(",");
-        }
+        if (_values.length() != 0) { _values += std::string(","); }
         std::string _val;
         _c.second->stringify(_val);
         _values += _val;
@@ -196,9 +190,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
             _expression += std::string(" SET ");
             std::string _sets;
             for (auto _c : _document->object()) {
-                if (_sets.length() != 0) {
-                    _sets += std::string(",");
-                }
+                if (_sets.length() != 0) { _sets += std::string(","); }
                 std::string _val;
                 _c.second->stringify(_val);
                 _sets += _c.first + std::string("=") + _val;
@@ -206,7 +198,8 @@ zpt::mysql::Client::upsert(std::string const& _collection,
             _expression += _sets;
 
             zpt::json _splited = zpt::split(_href, "/");
-            _expression += std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
+            _expression +=
+              std::string(" WHERE id=") + zpt::mysql::escape(_splited->array()->back());
 
             try {
                 {
@@ -224,9 +217,7 @@ zpt::mysql::Client::upsert(std::string const& _collection,
         }
     }
     {
-        if (!_document["id"]->ok()) {
-            _document << "id" << zpt::generate::r_uuid();
-        }
+        if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
                       << (_href_prefix +
@@ -240,13 +231,9 @@ zpt::mysql::Client::upsert(std::string const& _collection,
         std::string _columns;
         std::string _values;
         for (auto _c : _document->object()) {
-            if (_columns.length() != 0) {
-                _columns += std::string(",");
-            }
+            if (_columns.length() != 0) { _columns += std::string(","); }
             _columns += _c.first;
-            if (_values.length() != 0) {
-                _values += std::string(",");
-            }
+            if (_values.length() != 0) { _values += std::string(","); }
             std::string _val;
             _c.second->stringify(_val);
             _values += _val;
@@ -295,9 +282,7 @@ zpt::mysql::Client::save(std::string const& _collection,
     _expression += std::string(" SET ");
     std::string _sets;
     for (auto _c : _document->object()) {
-        if (_sets.length() != 0) {
-            _sets += std::string(",");
-        }
+        if (_sets.length() != 0) { _sets += std::string(","); }
         std::string _val;
         _c.second->stringify(_val);
         _sets += _c.first + std::string("=") + _val;
@@ -318,8 +303,7 @@ zpt::mysql::Client::save(std::string const& _collection,
     catch (std::exception const& _e) {
     }
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::save(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -348,9 +332,7 @@ zpt::mysql::Client::set(std::string const& _collection,
     _expression += std::string(" SET ");
     std::string _sets;
     for (auto _c : _document->object()) {
-        if (_sets.length() != 0) {
-            _sets += std::string(",");
-        }
+        if (_sets.length() != 0) { _sets += std::string(","); }
         std::string _val;
         _c.second->stringify(_val);
         _sets += _c.first + std::string("=") + _val;
@@ -371,8 +353,7 @@ zpt::mysql::Client::set(std::string const& _collection,
     catch (std::exception const& _e) {
     }
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::set(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -401,9 +382,7 @@ zpt::mysql::Client::set(std::string const& _collection,
     _expression += std::string(" SET ");
     std::string _sets;
     for (auto _c : _document->object()) {
-        if (_sets.length() != 0) {
-            _sets += std::string(",");
-        }
+        if (_sets.length() != 0) { _sets += std::string(","); }
         std::string _val;
         _c.second->stringify(_val);
         _sets += _c.first + std::string("=") + _val;
@@ -458,9 +437,7 @@ zpt::mysql::Client::unset(std::string const& _collection,
     _expression += std::string(" SET ");
     std::string _sets;
     for (auto _c : _document->object()) {
-        if (_sets.length() != 0) {
-            _sets += std::string(",");
-        }
+        if (_sets.length() != 0) { _sets += std::string(","); }
         _sets += _c.first + std::string("=NULL");
     }
     _expression += _sets;
@@ -479,8 +456,7 @@ zpt::mysql::Client::unset(std::string const& _collection,
     catch (std::exception const& _e) {
     }
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::unset(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -509,9 +485,7 @@ zpt::mysql::Client::unset(std::string const& _collection,
     _expression += std::string(" SET ");
     std::string _sets;
     for (auto _c : _document->object()) {
-        if (_sets.length() != 0) {
-            _sets += std::string(",");
-        }
+        if (_sets.length() != 0) { _sets += std::string(","); }
         _sets += _c.first + std::string("=NULL");
     }
     _expression += _sets;
@@ -562,8 +536,7 @@ zpt::mysql::Client::remove(std::string const& _collection,
     int _size = 0;
     zpt::json _removed;
     try {
-        if (!bool(_opts["mutated-event"]))
-            _removed = this->get(_collection, _href);
+        if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
 
         {
             std::lock_guard<std::mutex> _lock(this->__mtx);
@@ -594,9 +567,7 @@ zpt::mysql::Client::remove(std::string const& _collection, zpt::json _pattern, z
     }
 
     zpt::json _selected = this->query(_collection, _pattern, _opts);
-    if (!_selected->ok()) {
-        return 0;
-    }
+    if (!_selected->ok()) { return 0; }
     for (auto _record : _selected["elements"]->array()) {
         std::string _expression = std::string("DELETE FROM ") + _collection +
                                   std::string(" WHERE id=") + zpt::mysql::escape(_record["id"]);
@@ -649,12 +620,8 @@ zpt::mysql::Client::query(std::string const& _collection,
         std::unique_ptr<sql::Statement> _stmt(this->__conn->createStatement());
         _result.reset(_stmt->executeQuery(_pattern));
     }
-    for (; _result->next();) {
-        _elements << zpt::mysql::fromsql_r(_result);
-    }
-    if (_elements->array()->size() == 0) {
-        return zpt::undefined;
-    }
+    for (; _result->next();) { _elements << zpt::mysql::fromsql_r(_result); }
+    if (_elements->array()->size() == 0) { return zpt::undefined; }
     return { "size", _elements->array()->size(), "elements", _elements };
 }
 
@@ -680,17 +647,11 @@ zpt::mysql::Client::query(std::string const& _collection, zpt::json _pattern, zp
         _result.reset(_stmt->executeQuery(_count_expression));
     }
     size_t _size = 0;
-    if (_result->next()) {
-        _size = size_t(zpt::mysql::fromsql_r(_result)["count"]);
-    }
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    if (_result->next()) { _size = size_t(zpt::mysql::fromsql_r(_result)["count"]); }
+    if (_size == 0) { return zpt::undefined; }
 
     zpt::json _return = this->query(_collection, _expression, _opts);
-    if (_return->ok()) {
-        _return << "size" << _size;
-    }
+    if (_return->ok()) { _return << "size" << _size; }
     return _return;
 }
 
@@ -709,17 +670,11 @@ zpt::mysql::Client::all(std::string const& _collection, zpt::json _opts) -> zpt:
         _result.reset(_stmt->executeQuery(_count_expression));
     }
     size_t _size = 0;
-    if (_result->next()) {
-        _size = size_t(zpt::mysql::fromsql_r(_result)["count"]);
-    }
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    if (_result->next()) { _size = size_t(zpt::mysql::fromsql_r(_result)["count"]); }
+    if (_size == 0) { return zpt::undefined; }
 
     zpt::json _return = this->query(_collection, _expression, _opts);
-    if (_return->ok()) {
-        _return << "size" << _size;
-    }
+    if (_return->ok()) { _return << "size" << _size; }
     return _return;
 }
 

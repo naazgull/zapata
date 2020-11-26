@@ -258,9 +258,7 @@ class URILexerBase {
     static bool constexpr available(size_t value);
 };
 
-inline URILexerBase::~URILexerBase() {
-    d_input.close();
-}
+inline URILexerBase::~URILexerBase() { d_input.close(); }
 
 template<typename ReturnType, typename ArgType>
 inline ReturnType constexpr URILexerBase::as(ArgType value) {
@@ -272,9 +270,7 @@ inline URILexerBase::StartCondition_ constexpr URILexerBase::SC(int sc) {
     return as<StartCondition_>(sc);
 }
 
-inline int constexpr URILexerBase::SC(StartCondition_ sc) {
-    return as<int>(sc);
-}
+inline int constexpr URILexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
 inline URILexerBase::StartCondition_
 URILexerBase::startCondition() const {

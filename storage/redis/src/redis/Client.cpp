@@ -48,9 +48,7 @@ zpt::redis::Client::Client(zpt::json _options, std::string const& _conf_path)
 }
 
 zpt::redis::Client::~Client() {
-    if (this->__conn != nullptr) {
-        redisFree(this->__conn);
-    }
+    if (this->__conn != nullptr) { redisFree(this->__conn); }
 }
 
 auto
@@ -125,9 +123,7 @@ zpt::redis::Client::insert(std::string const& _collection,
     _key.insert(0, "/");
     _key.insert(0, (std::string)this->connection()["db"]);
 
-    if (!_document["id"]->ok()) {
-        _document << "id" << zpt::generate::r_uuid();
-    }
+    if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
                   << (_href_prefix +
@@ -215,9 +211,7 @@ zpt::redis::Client::upsert(std::string const& _collection,
         }
     }
     {
-        if (!_document["id"]->ok()) {
-            _document << "id" << zpt::generate::r_uuid();
-        }
+        if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
                       << (_href_prefix +
@@ -283,8 +277,7 @@ zpt::redis::Client::save(std::string const& _collection,
     freeReplyObject(_reply);
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::save(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
     return 1;
 }
 
@@ -311,9 +304,7 @@ zpt::redis::Client::set(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _record = this->get(_collection, _href);
-    for (auto _field : _document->object()) {
-        _record << _field.first << _field.second;
-    }
+    for (auto _field : _document->object()) { _record << _field.first << _field.second; }
 
     redisReply* _reply = nullptr;
     bool _success = true;
@@ -326,8 +317,7 @@ zpt::redis::Client::set(std::string const& _collection,
     freeReplyObject(_reply);
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::set(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
     return 1;
 }
 
@@ -355,9 +345,7 @@ zpt::redis::Client::set(std::string const& _collection,
 
     zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
     for (auto _record : _selected["elements"]->array()) {
-        for (auto _field : _document->object()) {
-            _record << _field.first << _field.second;
-        }
+        for (auto _field : _document->object()) { _record << _field.first << _field.second; }
 
         redisReply* _reply = nullptr;
         bool _success = true;
@@ -402,9 +390,7 @@ zpt::redis::Client::unset(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _record = this->get(_collection, _href);
-    for (auto _attribute : _document->object()) {
-        _record >> _attribute.first;
-    }
+    for (auto _attribute : _document->object()) { _record >> _attribute.first; }
 
     redisReply* _reply = nullptr;
     bool _success = true;
@@ -417,8 +403,7 @@ zpt::redis::Client::unset(std::string const& _collection,
     freeReplyObject(_reply);
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::unset(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
     return 1;
 }
 
@@ -446,9 +431,7 @@ zpt::redis::Client::unset(std::string const& _collection,
 
     zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
     for (auto _record : _selected["elements"]->array()) {
-        for (auto _attribute : _document->object()) {
-            _record >> _attribute.first;
-        }
+        for (auto _attribute : _document->object()) { _record >> _attribute.first; }
 
         redisReply* _reply = nullptr;
         bool _success = true;
@@ -487,8 +470,7 @@ zpt::redis::Client::remove(std::string const& _collection,
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _removed;
-    if (!bool(_opts["mutated-event"]))
-        _removed = this->get(_collection, _href);
+    if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
 
     redisReply* _reply = nullptr;
     bool _success = true;
@@ -525,9 +507,7 @@ zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, z
     _key.insert(0, (std::string)this->connection()["db"]);
 
     zpt::json _selected = this->query(_collection, zpt::redis::to_regex(_pattern), _opts);
-    if (!_selected->ok()) {
-        return 0;
-    }
+    if (!_selected->ok()) { return 0; }
     for (auto _record : _selected["elements"]->array()) {
         zpt::json _removed;
         if (!bool(_opts["mutated-event"]))
@@ -577,9 +557,7 @@ zpt::redis::Client::get(std::string const& _collection, std::string const& _href
         _success =
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
-    if (!_success && _reply != nullptr) {
-        freeReplyObject(_reply);
-    }
+    if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
     int _type = _reply->type;
@@ -635,8 +613,7 @@ zpt::redis::Client::get(std::string const& _collection, std::string const& _href
     }
     freeReplyObject(_reply);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::get(_collection, _href, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::get(_collection, _href, _opts);
     return zpt::undefined;
 }
 
@@ -672,9 +649,7 @@ zpt::redis::Client::query(std::string const& _collection,
             _success =
               (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
         }
-        if (!_success && _reply != nullptr) {
-            freeReplyObject(_reply);
-        }
+        if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
         expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
         int _type = _reply->type;
@@ -734,8 +709,7 @@ zpt::redis::Client::query(std::string const& _collection,
         }
     } while (_cursor != 0);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::query(_collection, _regexp, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::query(_collection, _regexp, _opts);
     return { "size", _return->size(), "elements", _return };
 }
 
@@ -781,9 +755,7 @@ zpt::redis::Client::all(std::string const& _collection, zpt::json _opts) -> zpt:
         _success =
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
-    if (!_success && _reply != nullptr) {
-        freeReplyObject(_reply);
-    }
+    if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
     int _type = _reply->type;
@@ -833,8 +805,7 @@ zpt::redis::Client::all(std::string const& _collection, zpt::json _opts) -> zpt:
     }
     freeReplyObject(_reply);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::all(_collection, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::all(_collection, _opts);
     return zpt::undefined;
 }
 

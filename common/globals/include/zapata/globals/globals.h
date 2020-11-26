@@ -53,7 +53,7 @@ class globals {
         auto invalidate() -> cached<T>&;
         auto invalidate(T const& _new_value) -> cached<T>&;
 
-        auto operator-> () -> T*;
+        auto operator->() -> T*;
         auto operator*() -> T&;
 
       private:
@@ -160,9 +160,7 @@ zpt::globals::to_string() -> std::string {
     _out << "Global variables:" << std::endl;
     for (auto [_key, _value] : __variables) {
         _out << _key << ":" << std::endl << std::flush;
-        for (auto _variable : _value) {
-            _out << "\t- " << _variable << std::endl << std::flush;
-        }
+        for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
     }
     return _out.str();
 }
@@ -191,20 +189,20 @@ zpt::globals::cached<T>::invalidate(T const& _new_value) -> zpt::globals::cached
     {
         zpt::lf::spin_lock::guard _sentry{ this->__cache_validation_guard,
                                            zpt::lf::spin_lock::shared };
-        for (auto [_atomic, _] : this->__cache_validation) {
-            _atomic->store(true);
-        }
+        for (auto [_atomic, _] : this->__cache_validation) { _atomic->store(true); }
     }
     return (*this);
 }
 
 template<typename T>
-auto zpt::globals::cached<T>::operator-> () -> T* {
+auto
+zpt::globals::cached<T>::operator->() -> T* {
     return &this->instance();
 }
 
 template<typename T>
-auto zpt::globals::cached<T>::operator*() -> T& {
+auto
+zpt::globals::cached<T>::operator*() -> T& {
     return this->instance();
 }
 

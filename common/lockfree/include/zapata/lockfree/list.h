@@ -31,9 +31,7 @@ class bidirectional_node {
 
     friend auto operator<<(std::ostream& _out, zpt::lf::bidirectional_node<T>& _in)
       -> std::ostream& {
-        if constexpr (std::is_pointer<T>::value) {
-            _out << *(_in.__value) << std::flush;
-        }
+        if constexpr (std::is_pointer<T>::value) { _out << *(_in.__value) << std::flush; }
         else {
             _out << _in.__value << std::flush;
         }
@@ -74,7 +72,7 @@ class list {
 
         // INPUT ITERATOR METHODS //
         auto operator++(int) -> iterator;
-        auto operator-> () -> pointer;
+        auto operator->() -> pointer;
         auto operator==(iterator const& _rhs) const -> bool;
         auto operator!=(iterator const& _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
@@ -143,8 +141,7 @@ class list {
         _out << "\t[" << std::flush;
         try {
             for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
-                if (_it.node()->__is_null.load())
-                    continue;
+                if (_it.node()->__is_null.load()) continue;
                 _out << (_count != 0 ? (_count % 5 == 0 ? "\n\t" : ", ") : "") << *_it.node()
                      << std::flush;
                 _count++;
@@ -244,7 +241,8 @@ zpt::lf::list<T>::iterator::operator++() -> zpt::lf::list<T>::iterator& {
 }
 
 template<typename T>
-auto zpt::lf::list<T>::iterator::operator*() -> zpt::lf::list<T>::iterator::reference {
+auto
+zpt::lf::list<T>::iterator::operator*() -> zpt::lf::list<T>::iterator::reference {
     return this->__current->__value;
 }
 
@@ -257,7 +255,8 @@ zpt::lf::list<T>::iterator::operator++(int) -> zpt::lf::list<T>::iterator {
 }
 
 template<typename T>
-auto zpt::lf::list<T>::iterator::operator-> () -> zpt::lf::list<T>::iterator::pointer {
+auto
+zpt::lf::list<T>::iterator::operator->() -> zpt::lf::list<T>::iterator::pointer {
     return this->__current->__value;
 }
 
@@ -329,9 +328,7 @@ auto
 zpt::lf::list<T>::head() const -> zpt::lf::bidirectional_node<T>* {
     zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
     zpt::lf::bidirectional_node<T>* _front = this->__head.load();
-    if (_front != nullptr && !_front->__is_null.load()) {
-        return _front;
-    }
+    if (_front != nullptr && !_front->__is_null.load()) { return _front; }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
@@ -340,9 +337,7 @@ auto
 zpt::lf::list<T>::tail() const -> zpt::lf::bidirectional_node<T>* {
     zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
     zpt::lf::bidirectional_node<T>* _back = this->__tail.load();
-    if (_back != nullptr && !_back->__is_null.load()) {
-        return _back;
-    }
+    if (_back != nullptr && !_back->__is_null.load()) { return _back; }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
@@ -366,9 +361,7 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
             this->__tail.store(_new, std::memory_order_release);
             return (*this);
         }
-        if (this->__spin_sleep <= 0) {
-            std::this_thread::yield();
-        }
+        if (this->__spin_sleep <= 0) { std::this_thread::yield(); }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
               std::chrono::duration<int, std::micro>{ this->__spin_sleep });
@@ -387,9 +380,7 @@ zpt::lf::list<T>::pop() -> T {
         typename zpt::lf::list<T>::hazard_domain::guard _head_sentry{ _head,
                                                                       this->__hazard_domain };
 
-        if (_head->__is_null.load()) {
-            break;
-        }
+        if (_head->__is_null.load()) { break; }
         else {
             zpt::lf::bidirectional_node<T>* _next = _head->__next.load();
             zpt::lf::bidirectional_node<T>* _null{ nullptr };
@@ -404,9 +395,7 @@ zpt::lf::list<T>::pop() -> T {
                 return _value;
             }
         }
-        if (this->__spin_sleep < 0) {
-            std::this_thread::yield();
-        }
+        if (this->__spin_sleep < 0) { std::this_thread::yield(); }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
               std::chrono::duration<int, std::micro>{ this->__spin_sleep });
@@ -429,9 +418,7 @@ zpt::lf::list<T>::erase(F _remove_if) -> zpt::lf::list<T>::iterator {
             zpt::lf::bidirectional_node<T>* _prev = _node->__prev.load();
 
             if (!_node->__is_null.load() && _remove_if(_node->__value)) {
-                if (_prev == nullptr) {
-                    this->__head.store(_next);
-                }
+                if (_prev == nullptr) { this->__head.store(_next); }
                 else {
                     _prev->__next.store(_next);
                 }
@@ -455,9 +442,7 @@ zpt::lf::list<T>::erase(zpt::lf::list<T>::iterator& _to_remove) -> zpt::lf::list
     zpt::lf::bidirectional_node<T>* _next = _node->__next.load();
     if (_node != nullptr && !_node->__is_null.load()) {
         zpt::lf::bidirectional_node<T>* _prev = _node->__prev.load();
-        if (_prev == nullptr) {
-            this->__head.store(_next);
-        }
+        if (_prev == nullptr) { this->__head.store(_next); }
         else {
             _node->__prev.store(_next);
         }
@@ -516,9 +501,7 @@ template<typename T>
 auto
 zpt::lf::list<T>::clear() -> zpt::lf::list<T>& {
     try {
-        while (true) {
-            this->pop();
-        }
+        while (true) { this->pop(); }
     }
     catch (zpt::NoMoreElementsException const& e) {
     }
@@ -546,7 +529,8 @@ zpt::lf::list<T>::operator std::string() {
 }
 
 template<typename T>
-auto zpt::lf::list<T>::operator[](size_t _idx) -> T {
+auto
+zpt::lf::list<T>::operator[](size_t _idx) -> T {
     return this->at(_idx);
 }
 

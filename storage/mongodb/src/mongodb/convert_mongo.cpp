@@ -347,9 +347,7 @@ zpt::mongodb::tosetcommand(zpt::JSONArr& _in,
 
 void
 zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
-    if (!_in->is_object()) {
-        return;
-    }
+    if (!_in->is_object()) { return; }
     for (auto _i : _in->object()) {
         std::string _key = _i.first;
         JSONElement _value = _i.second;
@@ -398,9 +396,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                         ++bar_count;
                     }
                     else {
-                        if (expression.length() > 0) {
-                            expression[expression.length() - 1] = '/';
-                        }
+                        if (expression.length() > 0) { expression[expression.length() - 1] = '/'; }
                     }
                 }
                 else if (bar_count == 2) {
@@ -452,9 +448,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                 comp.insert(comp.length(), command);
 
                 if (_VALID_OPS.find(comp + std::string("^")) != std::string::npos) {
-                    if (bar_count == 2) {
-                        _queryr.append(key, BSON(comp << expression));
-                    }
+                    if (bar_count == 2) { _queryr.append(key, BSON(comp << expression)); }
                     else if (options == "n") {
                         istringstream iss(expression);
                         int i = 0;
@@ -521,13 +515,9 @@ zpt::mongodb::get_fields(zpt::json _opts) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _fields = _opts["fields"];
     if (_fields->ok()) {
-        if (_fields->is_string()) {
-            _fields = zpt::split(std::string(_opts["fields"]), ",");
-        }
+        if (_fields->is_string()) { _fields = zpt::split(std::string(_opts["fields"]), ","); }
         if (_fields->is_array()) {
-            for (auto _f : _fields->array()) {
-                _return << std::string(_f) << true;
-            }
+            for (auto _f : _fields->array()) { _return << std::string(_f) << true; }
             _return << "_id" << true;
         }
     }

@@ -86,7 +86,7 @@ class session : public zpt::storage::session::type {
     virtual auto rollback() -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
 
-    virtual auto operator-> () -> ::lmdb::env*;
+    virtual auto operator->() -> ::lmdb::env*;
     virtual auto operator*() -> ::lmdb::env&;
 
     virtual auto is_to_commit() -> bool&;
@@ -104,7 +104,7 @@ class database : public zpt::storage::database::type {
     virtual ~database() override = default;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
-    virtual auto operator-> () -> ::lmdb::env*;
+    virtual auto operator->() -> ::lmdb::env*;
     virtual auto operator*() -> ::lmdb::env&;
 
     virtual auto is_to_commit() -> bool&;
@@ -125,7 +125,7 @@ class collection : public zpt::storage::collection::type {
     virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
-    virtual auto operator-> () -> ::lmdb::env*;
+    virtual auto operator->() -> ::lmdb::env*;
     virtual auto operator*() -> ::lmdb::env&;
 
     virtual auto is_to_commit() -> bool&;
@@ -167,7 +167,7 @@ class action_add : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator-> () -> ::lmdb::txn*;
+    virtual auto operator->() -> ::lmdb::txn*;
     virtual auto operator*() -> ::lmdb::txn&;
 
   private:
@@ -195,7 +195,7 @@ class action_modify : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator-> () -> ::lmdb::txn*;
+    virtual auto operator->() -> ::lmdb::txn*;
     virtual auto operator*() -> ::lmdb::txn&;
 
   private:
@@ -226,11 +226,13 @@ class action_remove : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator-> () -> ::lmdb::txn*;
+    virtual auto operator->() -> ::lmdb::txn*;
     virtual auto operator*() -> ::lmdb::txn&;
 
   private:
     ::lmdb::txn __underlying;
+    ::lmdb::dbi __stub;
+    zpt::json __search;
 };
 class action_replace : public zpt::storage::lmdb::action {
   public:
@@ -256,13 +258,14 @@ class action_replace : public zpt::storage::lmdb::action {
     virtual auto execute() -> zpt::storage::result override;
     virtual auto replace_one() -> void;
 
-    virtual auto operator-> () -> ::lmdb::txn*;
+    virtual auto operator->() -> ::lmdb::txn*;
     virtual auto operator*() -> ::lmdb::txn&;
 
   private:
-    std::string __id;
-    zpt::json __document;
     ::lmdb::txn __underlying;
+    ::lmdb::dbi __stub;
+    std::string __id;
+    zpt::json __set;
 };
 class action_find : public zpt::storage::lmdb::action {
   public:
@@ -286,12 +289,17 @@ class action_find : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator-> () -> ::lmdb::txn*;
+    virtual auto operator->() -> ::lmdb::txn*;
     virtual auto operator*() -> ::lmdb::txn&;
 
   private:
-    std::string __find_criteria;
     ::lmdb::txn __underlying;
+    ::lmdb::dbi __stub;
+    zpt::json __search;
+    zpt::json __sort;
+    zpt::json __fields;
+    size_t __limit{ std::numeric_limits<size_t>::max() };
+    size_t __offset{ 0 };
 };
 class result : public zpt::storage::result::type {
   public:
@@ -307,7 +315,7 @@ class result : public zpt::storage::result::type {
     virtual auto status() -> zpt::status override;
     virtual auto message() -> std::string override;
 
-    virtual auto operator-> () -> ::lmdb::cursor*;
+    virtual auto operator->() -> ::lmdb::cursor*;
     virtual auto operator*() -> ::lmdb::cursor&;
 
   private:

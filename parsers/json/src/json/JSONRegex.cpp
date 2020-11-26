@@ -7,13 +7,9 @@
 zpt::JSONRegex::JSONRegex()
   : zpt::JSONRegex::JSONRegex{ "" } {}
 
-zpt::JSONRegex::JSONRegex(const JSONRegex& _rhs) {
-    (*this) = _rhs;
-}
+zpt::JSONRegex::JSONRegex(const JSONRegex& _rhs) { (*this) = _rhs; }
 
-zpt::JSONRegex::JSONRegex(JSONRegex&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::JSONRegex::JSONRegex(JSONRegex&& _rhs) { (*this) = _rhs; }
 
 zpt::JSONRegex::JSONRegex(std::string const& _target)
   : __underlying_original{ _target }
@@ -35,17 +31,17 @@ zpt::JSONRegex::operator=(zpt::JSONRegex&& _rhs) -> zpt::JSONRegex& {
     return (*this);
 }
 
-auto zpt::JSONRegex::operator-> () -> std::regex* {
+auto
+zpt::JSONRegex::operator->() -> std::regex* {
     return this->__underlying.get();
 }
 
-auto zpt::JSONRegex::operator*() -> std::regex& {
+auto
+zpt::JSONRegex::operator*() -> std::regex& {
     return *this->__underlying.get();
 }
 
-zpt::JSONRegex::operator std::regex&() {
-    return (*this->__underlying.get());
-}
+zpt::JSONRegex::operator std::regex&() { return (*this->__underlying.get()); }
 
 auto
 zpt::JSONRegex::JSONRegex::operator==(zpt::regex _rhs) -> bool {
@@ -54,9 +50,7 @@ zpt::JSONRegex::JSONRegex::operator==(zpt::regex _rhs) -> bool {
 
 auto
 zpt::JSONRegex::JSONRegex::operator==(zpt::json _rhs) -> bool {
-    if (_rhs->type() == zpt::JSRegex) {
-        return (*this) == _rhs->regex();
-    }
+    if (_rhs->type() == zpt::JSRegex) { return (*this) == _rhs->regex(); }
     else {
         return std::regex_match(static_cast<std::string>(_rhs), (*this->__underlying.get()));
     }

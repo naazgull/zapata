@@ -7,9 +7,7 @@
 zpt::JSONContext::JSONContext(void* _target)
   : __target(_target) {}
 
-zpt::JSONContext::~JSONContext() {
-    this->__target = nullptr;
-}
+zpt::JSONContext::~JSONContext() { this->__target = nullptr; }
 
 auto
 zpt::JSONContext::unpack() -> void* {
@@ -21,19 +19,17 @@ zpt::context::context(void* _target)
 
 zpt::context::~context() {}
 
-zpt::context::context(const context& _rhs) {
-    (*this) = _rhs;
-}
+zpt::context::context(const context& _rhs) { (*this) = _rhs; }
 
-zpt::context::context(context&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::context::context(context&& _rhs) { (*this) = _rhs; }
 
-auto zpt::context::operator-> () -> zpt::JSONContext* {
+auto
+zpt::context::operator->() -> zpt::JSONContext* {
     return this->__underlying.get();
 }
 
-auto zpt::context::operator*() -> zpt::JSONContext& {
+auto
+zpt::context::operator*() -> zpt::JSONContext& {
     return *this->__underlying.get();
 }
 

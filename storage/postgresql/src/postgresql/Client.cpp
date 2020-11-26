@@ -118,9 +118,7 @@ zpt::pgsql::Client::insert(std::string const& _collection,
            412,
            1201);
 
-    if (!_document["id"]->ok()) {
-        _document << "id" << zpt::generate::r_uuid();
-    }
+    if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
                   << (_href_prefix +
@@ -209,9 +207,7 @@ zpt::pgsql::Client::upsert(std::string const& _collection,
         }
     }
     {
-        if (!_document["id"]->ok()) {
-            _document << "id" << zpt::generate::r_uuid();
-        }
+        if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
                       << (_href_prefix +
@@ -484,8 +480,7 @@ zpt::pgsql::Client::remove(std::string const& _collection,
     _expression += std::string(" WHERE \"id\"=") + zpt::pgsql::escape(_splited->array()->back());
 
     zpt::json _removed;
-    if (!bool(_opts["mutated-event"]))
-        _removed = this->get(_collection, _href);
+    if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _href);
 
     int _size = 0;
     try {
@@ -516,9 +511,7 @@ zpt::pgsql::Client::remove(std::string const& _collection, zpt::json _pattern, z
     }
 
     zpt::json _selected = this->query(_collection, _pattern, _opts);
-    if (!_selected->ok()) {
-        return 0;
-    }
+    if (!_selected->ok()) { return 0; }
     for (auto _record : _selected["elements"]->array()) {
         std::string _expression = std::string("DELETE FROM ") +
                                   zpt::pgsql::escape_name(_collection) +
@@ -575,14 +568,10 @@ zpt::pgsql::Client::query(std::string const& _collection,
             pqxx::work _stmt(this->conn());
             _result = _stmt.exec(_pattern);
         }
-        for (auto _r : _result) {
-            _elements << zpt::pgsql::fromsql_r(_r);
-        }
+        for (auto _r : _result) { _elements << zpt::pgsql::fromsql_r(_r); }
     }
     psql_catch_block(1200);
-    if (_elements->array()->size() == 0) {
-        return zpt::undefined;
-    }
+    if (_elements->array()->size() == 0) { return zpt::undefined; }
     return { "size", _elements->array()->size(), "elements", _elements };
 }
 
@@ -615,17 +604,11 @@ zpt::pgsql::Client::query(std::string const& _collection, zpt::json _pattern, zp
     }
     psql_catch_block(1200);
     size_t _size = 0;
-    for (auto _r : _result) {
-        _size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
-    }
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    for (auto _r : _result) { _size = size_t(zpt::pgsql::fromsql_r(_r)["count"]); }
+    if (_size == 0) { return zpt::undefined; }
 
     zpt::json _return = this->query(_collection, _expression, _opts);
-    if (_return->ok()) {
-        _return << "size" << _size;
-    }
+    if (_return->ok()) { _return << "size" << _size; }
     return _return;
 }
 
@@ -649,17 +632,11 @@ zpt::pgsql::Client::all(std::string const& _collection, zpt::json _opts) -> zpt:
     }
     psql_catch_block(1200);
     size_t _size = 0;
-    for (auto _r : _result) {
-        _size = size_t(zpt::pgsql::fromsql_r(_r)["count"]);
-    }
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    for (auto _r : _result) { _size = size_t(zpt::pgsql::fromsql_r(_r)["count"]); }
+    if (_size == 0) { return zpt::undefined; }
 
     zpt::json _return = this->query(_collection, _expression, _opts);
-    if (_return->ok()) {
-        _return << "size" << _size;
-    }
+    if (_return->ok()) { _return << "size" << _size; }
     return _return;
 }
 

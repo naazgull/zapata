@@ -18,10 +18,12 @@ zpt::URITokenizerLexer::justLeave() -> void {
     this->leave(-1);
 }
 
-auto zpt::URITokenizerLexer::operator-> () -> zpt::json& {
+auto
+zpt::URITokenizerLexer::operator->() -> zpt::json& {
     return this->__root;
 }
 
-auto zpt::URITokenizerLexer::operator*() -> zpt::json& {
+auto
+zpt::URITokenizerLexer::operator*() -> zpt::json& {
     return this->__root;
 }

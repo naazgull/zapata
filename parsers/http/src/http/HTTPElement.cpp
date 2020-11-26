@@ -76,9 +76,7 @@ auto
 zpt::HTTPObj::header(std::string const& _idx) -> std::string const& {
     static std::string const _empty{ "" };
     auto _found = this->__headers.find(zpt::r_prettify_header_name(_idx));
-    if (_found != this->__headers.end()) {
-        return _found->second;
-    }
+    if (_found != this->__headers.end()) { return _found->second; }
     return _empty;
 }
 
@@ -97,9 +95,7 @@ zpt::HTTPObj::version(std::string const& _version) -> void {
     this->__version.assign(_version);
 }
 
-zpt::HTTPObj::operator std::string() {
-    return this->to_string();
-}
+zpt::HTTPObj::operator std::string() { return this->to_string(); }
 
 auto
 zpt::HTTPObj::to_string() -> std::string {

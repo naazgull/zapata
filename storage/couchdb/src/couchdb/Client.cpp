@@ -58,12 +58,8 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string const& _conf_path)
 }
 
 zpt::couchdb::Client::~Client() {
-    for (auto _socket : this->__sockets) {
-        _socket->close();
-    }
-    for (auto _mtx : this->__mtxs) {
-        delete _mtx;
-    }
+    for (auto _socket : this->__sockets) { _socket->close(); }
+    for (auto _mtx : this->__mtxs) { delete _mtx; }
 }
 
 auto
@@ -108,9 +104,7 @@ zpt::couchdb::Client::send(zpt::http::req _req) -> zpt::http::rep {
         {
             std::lock_guard<std::mutex> _l(this->__global);
             _k = this->__round_robin++;
-            if (this->__round_robin == this->__sockets.size()) {
-                this->__round_robin = 0;
-            }
+            if (this->__round_robin == this->__sockets.size()) { this->__round_robin = 0; }
         }
 
         {
@@ -264,9 +258,7 @@ zpt::couchdb::Client::insert(std::string const& _collection,
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
-    if (!_document["id"]->ok()) {
-        _document << "id" << zpt::generate::r_uuid();
-    }
+    if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
                   << (_href_prefix +
@@ -338,13 +330,9 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
             _req->header("Content-Type", "application/json");
             do {
                 zpt::json _revision = this->get(_collection, std::string(_document["href"]));
-                if (!_revision->ok()) {
-                    break;
-                }
+                if (!_revision->ok()) { break; }
                 _upsert = _revision | _document;
-                if (!_upsert["id"]->ok()) {
-                    _upsert << "id" << zpt::generate::r_uuid();
-                }
+                if (!_upsert["id"]->ok()) { _upsert << "id" << zpt::generate::r_uuid(); }
                 if (!_upsert["href"]->ok() && _href_prefix.length() != 0) {
                     _upsert << "href"
                             << (_href_prefix +
@@ -369,9 +357,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
         }
     }
     {
-        if (!_document["id"]->ok()) {
-            _document << "id" << zpt::generate::r_uuid();
-        }
+        if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
                       << (_href_prefix +
@@ -441,8 +427,7 @@ zpt::couchdb::Client::save(std::string const& _collection,
     } while (_rep->status() == zpt::http::status::HTTP409);
     size_t _size = size_t(_rep->status() == zpt::http::status::HTTP201);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::save(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::save(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -479,8 +464,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
     } while (_rep->status() == zpt::http::status::HTTP409);
     size_t _size = size_t(_rep->status() == zpt::http::status::HTTP201);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::set(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -503,9 +487,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
     _req->method(zpt::ev::Put);
     _req->header("Content-Type", "application/json");
     zpt::json _result = this->query(_collection, _pattern);
-    if (!_result->ok()) {
-        return 0;
-    }
+    if (!_result->ok()) { return 0; }
 
     for (auto _revision : _result["elements"]->array()) {
         std::string _url =
@@ -520,9 +502,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
         _req->header("Content-Length", std::to_string(_body.length()));
         _req->body(_body);
         zpt::http::rep _rep = this->send(_req);
-        if (_rep->status() == zpt::http::status::HTTP201) {
-            _size++;
-        }
+        if (_rep->status() == zpt::http::status::HTTP201) { _size++; }
     }
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -563,8 +543,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
     } while (_rep->status() == zpt::http::status::HTTP409);
     size_t _size = size_t(_rep->status() == zpt::http::status::HTTP201);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::unset(_collection, _href, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::unset(_collection, _href, _document, _opts);
     return _size;
 }
 
@@ -587,9 +566,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
     _req->method(zpt::ev::Put);
     _req->header("Content-Type", "application/json");
     zpt::json _result = this->query(_collection, _pattern);
-    if (!_result->ok()) {
-        return 0;
-    }
+    if (!_result->ok()) { return 0; }
 
     for (auto _revision : _result["elements"]->array()) {
         std::string _url =
@@ -604,9 +581,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
         _req->header("Content-Length", std::to_string(_body.length()));
         _req->body(_body);
         zpt::http::rep _rep = this->send(_req);
-        if (_rep->status() == zpt::http::status::HTTP201) {
-            _size++;
-        }
+        if (_rep->status() == zpt::http::status::HTTP201) { _size++; }
     }
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
@@ -654,9 +629,7 @@ zpt::couchdb::Client::remove(std::string const& _collection, zpt::json _pattern,
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
     zpt::json _result = this->query(_collection, _pattern);
-    if (!_result->ok()) {
-        return 0;
-    }
+    if (!_result->ok()) { return 0; }
     _size = _result["elements"]->array()->size();
     zpt::json _removed = zpt::json::array();
 
@@ -673,9 +646,7 @@ zpt::couchdb::Client::remove(std::string const& _collection, zpt::json _pattern,
     _req->header("Content-Type", "application/json");
     _req->header("Content-Length", std::to_string(_body.length()));
     zpt::http::rep _rep = this->send(_req);
-    if (_rep->status() > 399) {
-        _size = 0;
-    }
+    if (_rep->status() > 399) { _size = 0; }
 
     if (!bool(_opts["mutated-event"]) && _size != 0)
         zpt::Connector::remove(
@@ -705,12 +676,9 @@ zpt::couchdb::Client::get(std::string const& _collection, std::string const& _hr
            int(_rep->status()),
            1201);
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::get(_collection, _href, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::get(_collection, _href, _opts);
 
-    if (_rep->status() == zpt::http::status::HTTP200) {
-        return zpt::json(_rep->body());
-    }
+    if (_rep->status() == zpt::http::status::HTTP200) { return zpt::json(_rep->body()); }
     return zpt::undefined;
 }
 
@@ -732,9 +700,7 @@ zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, z
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
 
     zpt::json _query = zpt::couchdb::get_query(_regexp);
-    if (_opts["fields"]->is_array()) {
-        _query << "fields" << _opts["fields"];
-    }
+    if (_opts["fields"]->is_array()) { _query << "fields" << _opts["fields"]; }
     std::string _body = std::string(_query);
     zpt::http::req _req;
     size_t _size = 0;
@@ -765,11 +731,8 @@ zpt::couchdb::Client::query(std::string const& _collection, zpt::json _regexp, z
         _return = _result->get_path("rows.*.doc");
     }
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::query(_collection, _regexp, _opts);
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    if (!bool(_opts["mutated-event"])) zpt::Connector::query(_collection, _regexp, _opts);
+    if (_size == 0) { return zpt::undefined; }
     return { "size", _size, "elements", _return };
 }
 
@@ -785,9 +748,7 @@ zpt::couchdb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
     _req->url(_db_name + std::string("/_all_docs"));
     _req->param("include_docs", "true");
     _req->param("endkey", "\"_\"");
-    if (_opts["page_size"]->ok()) {
-        _req->param("limit", std::string(_opts["page_size"]));
-    }
+    if (_opts["page_size"]->ok()) { _req->param("limit", std::string(_opts["page_size"])); }
     if (_opts["page_start_index"]->ok()) {
         _req->param("skip", std::string(_opts["page_start_index"]));
     }
@@ -811,11 +772,8 @@ zpt::couchdb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
         _return = _result->get_path("rows.*.doc");
     }
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::all(_collection, _opts);
-    if (_size == 0) {
-        return zpt::undefined;
-    }
+    if (!bool(_opts["mutated-event"])) zpt::Connector::all(_collection, _opts);
+    if (_size == 0) { return zpt::undefined; }
     return { "size", _size, "elements", _return };
 }
 

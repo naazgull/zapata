@@ -13,7 +13,7 @@ class URITokenizerLexer : public URILexer {
     auto switchRoots(zpt::json& _root) -> void;
     auto justLeave() -> void;
 
-    auto operator-> () -> zpt::json&;
+    auto operator->() -> zpt::json&;
     auto operator*() -> zpt::json&;
 
   private:

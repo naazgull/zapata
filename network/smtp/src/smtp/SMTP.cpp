@@ -66,9 +66,7 @@ zpt::SMTP::connect(std::string const& _connection) -> void {
     this->__port = this->__uri["port"]->ok() ? (unsigned int)this->__uri["port"] : 25;
     this->__type = zpt::split(std::string(this->__uri["scheme"]), "+");
 
-    if (this->__uri["user"]->ok()) {
-        this->__user.assign(std::string(this->__uri["user"]));
-    }
+    if (this->__uri["user"]->ok()) { this->__user.assign(std::string(this->__uri["user"])); }
     if (this->__uri["password"]->ok()) {
         this->__passwd.assign(std::string(this->__uri["password"]));
     }
@@ -85,9 +83,7 @@ zpt::SMTP::compose(zpt::json _e_mail) -> std::string {
     for (auto _r : _e_mail["To"]->array()) {
         zpt::json _parsed = zpt::email::parse(std::string(_r));
         _parsed_to << _parsed;
-        if (!first) {
-            _recipients += std::string(", ");
-        }
+        if (!first) { _recipients += std::string(", "); }
         first = false;
         _recipients += (_parsed["name"]->ok()
                           ? zpt::quoted_printable::r_encode(std::string(_parsed["name"]), "utf-8") +
@@ -225,9 +221,7 @@ zpt::SMTP::open() -> mailsmtp* {
 
 auto
 zpt::SMTP::close(mailsmtp* _smtp) -> void {
-    if (_smtp != nullptr) {
-        mailsmtp_free(_smtp);
-    }
+    if (_smtp != nullptr) { mailsmtp_free(_smtp); }
 }
 
 auto

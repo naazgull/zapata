@@ -46,11 +46,13 @@ zpt::storage::connection::operator=(zpt::storage::connection&& _rhs) -> zpt::sto
     return (*this);
 }
 
-auto zpt::storage::connection::operator-> () -> zpt::storage::connection::type* {
+auto
+zpt::storage::connection::operator->() -> zpt::storage::connection::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::connection::operator*() -> zpt::storage::connection::type& {
+auto
+zpt::storage::connection::operator*() -> zpt::storage::connection::type& {
     return *this->__underlying.get();
 }
 
@@ -77,11 +79,13 @@ zpt::storage::session::operator=(zpt::storage::session&& _rhs) -> zpt::storage::
     return (*this);
 }
 
-auto zpt::storage::session::operator-> () -> zpt::storage::session::type* {
+auto
+zpt::storage::session::operator->() -> zpt::storage::session::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::session::operator*() -> zpt::storage::session::type& {
+auto
+zpt::storage::session::operator*() -> zpt::storage::session::type& {
     return *this->__underlying.get();
 }
 
@@ -108,11 +112,13 @@ zpt::storage::database::operator=(zpt::storage::database&& _rhs) -> zpt::storage
     return (*this);
 }
 
-auto zpt::storage::database::operator-> () -> zpt::storage::database::type* {
+auto
+zpt::storage::database::operator->() -> zpt::storage::database::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::database::operator*() -> zpt::storage::database::type& {
+auto
+zpt::storage::database::operator*() -> zpt::storage::database::type& {
     return *this->__underlying.get();
 }
 
@@ -140,11 +146,13 @@ zpt::storage::collection::operator=(zpt::storage::collection&& _rhs) -> zpt::sto
     return (*this);
 }
 
-auto zpt::storage::collection::operator-> () -> zpt::storage::collection::type* {
+auto
+zpt::storage::collection::operator->() -> zpt::storage::collection::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::collection::operator*() -> zpt::storage::collection::type& {
+auto
+zpt::storage::collection::operator*() -> zpt::storage::collection::type& {
     return *this->__underlying.get();
 }
 
@@ -171,11 +179,13 @@ zpt::storage::action::operator=(zpt::storage::action&& _rhs) -> zpt::storage::ac
     return (*this);
 }
 
-auto zpt::storage::action::operator-> () -> zpt::storage::action::type* {
+auto
+zpt::storage::action::operator->() -> zpt::storage::action::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::action::operator*() -> zpt::storage::action::type& {
+auto
+zpt::storage::action::operator*() -> zpt::storage::action::type& {
     return *this->__underlying.get();
 }
 
@@ -202,11 +212,13 @@ zpt::storage::result::operator=(zpt::storage::result&& _rhs) -> zpt::storage::re
     return (*this);
 }
 
-auto zpt::storage::result::operator-> () -> zpt::storage::result::type* {
+auto
+zpt::storage::result::operator->() -> zpt::storage::result::type* {
     return this->__underlying.get();
 }
 
-auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
+auto
+zpt::storage::result::operator*() -> zpt::storage::result::type& {
     return *this->__underlying.get();
 }
 
@@ -216,9 +228,7 @@ zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _para
     if (_params->ok()) {
         auto _find = _collection->find(_params);
 
-        if (_params->size() != 0) {
-            _find->bind(_params);
-        }
+        if (_params->size() != 0) { _find->bind(_params); }
 
         if (_params["page_size"]->ok()) {
             _find //
@@ -233,9 +243,7 @@ zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _para
 auto
 zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
     if (_params->ok()) {
-        if (_params["page_size"]->ok()) {
-            _reply["body"] << "page_size" << _params["page_size"];
-        }
+        if (_params["page_size"]->ok()) { _reply["body"] << "page_size" << _params["page_size"]; }
         if (_params["page_start_index"]->ok()) {
             _reply["body"] << "page_start_index" << _params["page_start_index"];
         }
@@ -247,9 +255,7 @@ zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _pa
   -> zpt::storage::action {
     if (_params->ok()) {
         auto _remove = _collection->remove(_params);
-        if (_params->size() != 0) {
-            _remove->bind(_params);
-        }
+        if (_params->size() != 0) { _remove->bind(_params); }
         return _remove;
     }
     return _collection->remove({});

@@ -71,7 +71,7 @@ class exchange {
     auto operator=(zpt::exchange const& _rhs) -> zpt::exchange&;
     auto operator=(zpt::exchange&& _rhs) -> zpt::exchange&;
 
-    auto operator-> () const -> zpt::exchange::exchange_t*;
+    auto operator->() const -> zpt::exchange::exchange_t*;
     auto operator*() const -> zpt::exchange::exchange_t&;
 
     friend auto operator<<(std::ostream& _out, zpt::exchange& _in) -> std::ostream& {
@@ -100,7 +100,7 @@ class transport {
     auto operator=(zpt::transport const& _rhs) -> zpt::transport&;
     auto operator=(zpt::transport&& _rhs) -> zpt::transport&;
 
-    auto operator-> () const -> zpt::transport::transport_t*;
+    auto operator->() const -> zpt::transport::transport_t*;
     auto operator*() const -> zpt::transport::transport_t&;
 
     template<typename T, typename... Args>

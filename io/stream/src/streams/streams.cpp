@@ -35,9 +35,7 @@ zpt::stream::stream(std::ios& _rhs)
     this->__underlying->rdbuf(_rhs.rdbuf());
 }
 
-zpt::stream::~stream() {
-    this->close();
-}
+zpt::stream::~stream() { this->close(); }
 
 auto
 zpt::stream::operator=(int _rhs) -> zpt::stream& {
@@ -51,17 +49,17 @@ zpt::stream::operator<<(ostream_manipulator _in) -> zpt::stream& {
     return (*this);
 }
 
-auto zpt::stream::operator-> () -> std::iostream* {
+auto
+zpt::stream::operator->() -> std::iostream* {
     return this->__underlying.get();
 }
 
-auto zpt::stream::operator*() -> std::iostream& {
+auto
+zpt::stream::operator*() -> std::iostream& {
     return *this->__underlying.get();
 }
 
-zpt::stream::operator int() {
-    return this->__fd;
-}
+zpt::stream::operator int() { return this->__fd; }
 
 auto
 zpt::stream::close() -> zpt::stream& {
@@ -129,9 +127,7 @@ zpt::stream::polling::polling(long _max_stream_readers, long _poll_wait_timeout)
   , __hazard_domain{ _max_stream_readers, 8 }
   , __alive_streams{ __hazard_domain, 0 } {}
 
-zpt::stream::polling::~polling() {
-    ::close(this->__epoll_fd);
-}
+zpt::stream::polling::~polling() { ::close(this->__epoll_fd); }
 
 auto
 zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling& {
@@ -167,16 +163,10 @@ zpt::stream::polling::pool() -> void {
     do {
         int _n_alive =
           epoll_wait(this->__epoll_fd, this->__epoll_events, MAX_EVENT_PER_POLL, _poll_timeout);
-        if (this->__shutdown.load()) {
-            return;
-        }
-        if (_n_alive < 0) {
-            continue;
-        }
+        if (this->__shutdown.load()) { return; }
+        if (_n_alive < 0) { continue; }
 
-        if (_sd_watchdog_enabled) {
-            sd_notify(0, "WATCHDOG=1");
-        }
+        if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
 
         for (int _k = 0; _k != _n_alive; ++_k) {
             zpt::stream* _stream = static_cast<zpt::stream*>(this->__epoll_events[_k].data.ptr);

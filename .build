@@ -4,7 +4,7 @@ source .packages.rc
 
 if [[ "$1" == "one" ]]
 then
-	make -s -j4 -C ${2} && sudo make -s -C ${2} install
+	make -s -j4 -C ${2}/build && sudo make -s -C ${2}/build install
 	if [[ $? != 0 ]]
 	then
 		exit -1
@@ -45,7 +45,7 @@ do
         fi
         ;;
 	single)
-	    make -s -C ${package}/build && sudo make  -s -C ${package}/build install
+	    make -s -C ${package}/build && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1

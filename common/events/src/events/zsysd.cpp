@@ -163,9 +163,7 @@ main(int argc, char* argv[]) {
             _zfs.close();
         }
 
-        for (auto _to_add : _args["add"]->array()) {
-            generate(_to_add, _global_conf);
-        }
+        for (auto _to_add : _args["add"]->array()) { generate(_to_add, _global_conf); }
     }
     else if (_args["reconfigure"]) {
         zpt::json _global_conf;
@@ -208,15 +206,13 @@ main(int argc, char* argv[]) {
 
                 if (system((std::string("rm -rf /etc/zapata/backend-enabled/") +
                             std::string(_conf["boot"][0]["name"]) + std::string(".conf"))
-                             .data())) {
-                }
+                             .data())) {}
                 std::cout << "> removing /etc/zapata/backend-enabled/"
                           << std::string(_conf["boot"][0]["name"]) << ".conf" << std::endl
                           << std::flush;
                 if (system((std::string("rm -rf /lib/systemd/system/") +
                             std::string(_conf["boot"][0]["name"]) + std::string(".service"))
-                             .data())) {
-                }
+                             .data())) {}
                 std::cout << "> removing /lib/systemd/system/"
                           << std::string(_conf["boot"][0]["name"]) << ".service" << std::endl
                           << std::flush;

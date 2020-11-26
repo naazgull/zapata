@@ -50,17 +50,13 @@ auto
 zpt::HTTPReqT::param(std::string const& _idx) -> std::string const& {
     static std::string const _empty{ "" };
     auto _found = this->__params.find(_idx);
-    if (_found != this->__params.end()) {
-        return _found->second;
-    }
+    if (_found != this->__params.end()) { return _found->second; }
     return _empty;
 }
 
 auto
 zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> void {
-    if (this->__query.length() != 0) {
-        this->__query.insert(this->__query.length(), "&");
-    }
+    if (this->__query.length() != 0) { this->__query.insert(this->__query.length(), "&"); }
     this->__query.insert(this->__query.length(), _name);
     this->__query.insert(this->__query.length(), "=");
     this->__query.insert(this->__query.length(), _value);
@@ -70,16 +66,12 @@ zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> voi
 auto
 zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
     _out << zpt::http::method_names[this->__method] << " " << this->__url;
-    if (this->__query.length() != 0) {
-        _out << "?" << this->__query;
-    }
+    if (this->__query.length() != 0) { _out << "?" << this->__query; }
     else if (this->__params.size() != 0) {
         _out << "?";
         bool _first = true;
         for (auto i : this->__params) {
-            if (!_first) {
-                _out << "&";
-            }
+            if (!_first) { _out << "&"; }
             _first = false;
             std::string _n(i.first);
             zpt::url::encode(_n);
@@ -90,9 +82,7 @@ zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
     }
     _out << " HTTP/" << this->version() << CRLF;
 
-    for (auto h : this->__headers) {
-        _out << h.first << ": " << h.second << CRLF;
-    }
+    for (auto h : this->__headers) { _out << h.first << ": " << h.second << CRLF; }
     _out << CRLF << this->__body;
 }
 
@@ -109,17 +99,17 @@ zpt::HTTPReq::HTTPReq()
 
 zpt::HTTPReq::~HTTPReq() {}
 
-auto zpt::HTTPReq::operator*() -> zpt::HTTPReqT& {
+auto
+zpt::HTTPReq::operator*() -> zpt::HTTPReqT& {
     return *this->__underlying.get();
 }
 
-auto zpt::HTTPReq::operator-> () -> zpt::HTTPReqT* {
+auto
+zpt::HTTPReq::operator->() -> zpt::HTTPReqT* {
     return this->__underlying.get();
 }
 
-zpt::HTTPReq::operator std::string() {
-    return (*this)->to_string();
-}
+zpt::HTTPReq::operator std::string() { return (*this)->to_string(); }
 
 auto
 zpt::HTTPReq::parse(std::istream& _in) -> void {

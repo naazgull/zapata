@@ -83,9 +83,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
     try {
         if (_exp == nullptr || _exp == Py_None) {
             // zdbg("Py_None");
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << zpt::undefined;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << zpt::undefined; }
             else {
                 _parent = zpt::undefined;
             }
@@ -93,9 +91,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         else if (PyBool_Check(_exp)) {
             // zdbg("Py_Bool");
             zpt::json _value = zpt::json::boolean(_exp == Py_True ? true : false);
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -104,9 +100,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             // zdbg("Py_ByteArray");
             zpt::json _value =
               zpt::json::string(std::string(PyByteArray_AsString(_exp), PyByteArray_Size(_exp)));
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -115,9 +109,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             // zdbg("Py_Bytes");
             zpt::json _value =
               zpt::json::string(std::string(PyBytes_AsString(_exp), PyBytes_Size(_exp)));
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -126,9 +118,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             // zdbg("Py_Complex");
             zpt::json _value(
               { "real", PyComplex_RealAsDouble(_exp), "imaginary", PyComplex_ImagAsDouble(_exp) });
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -143,9 +133,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
                 _object << std::string(zpt::python::from_python(_key))
                         << zpt::python::from_python(_value);
             }
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _object;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _object; }
             else {
                 _parent = _object;
             }
@@ -153,9 +141,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         else if (PyFloat_CheckExact(_exp)) {
             // zdbg("Py_Float");
             zpt::json _value = zpt::json::floating(PyFloat_AsDouble(_exp));
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -166,9 +152,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             for (long _idx = 0; _idx != PyList_GET_SIZE(_exp); _idx++) {
                 _array << zpt::python::from_python(PyList_GET_ITEM(_exp, _idx));
             }
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _array;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _array; }
             else {
                 _parent = _array;
             }
@@ -176,9 +160,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         else if (PyLong_CheckExact(_exp)) {
             // zdbg("Py_Long");
             zpt::json _value = zpt::json::integer((long long)PyLong_AsLong(_exp));
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -193,9 +175,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
                 _object << std::string(zpt::python::from_python(_key))
                         << zpt::python::from_python(_value);
             }
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _object;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _object; }
             else {
                 _parent = _object;
             }
@@ -206,9 +186,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             for (long _idx = 0; _idx != PyTuple_GET_SIZE(_exp); _idx++) {
                 _array << zpt::python::from_python(PyTuple_GET_ITEM(_exp, _idx));
             }
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _array;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _array; }
             else {
                 _parent = _array;
             }
@@ -218,9 +196,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             PyObject* _bytes = PyUnicode_EncodeLocale(_exp, nullptr);
             std::string _s = std::string(PyBytes_AsString(_bytes), PyBytes_Size(_bytes));
             zpt::json _value = zpt::json::string(_s);
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -438,9 +414,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
             std::ostringstream _oss;
             _oss << _exp << std::flush;
             zpt::json _value = zpt::json::lambda(_oss.str(), 0);
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -563,9 +537,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         }
         else if (PyType_Check(_exp)) {
             zpt::json _value = zpt::json::string(((PyTypeObject*)_exp)->tp_name);
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -687,9 +659,7 @@ zpt::python::from_python(PyObject* _exp, zpt::json& _parent) -> void {
         else {
             // zdbg("SOME OTHER Py THINGY");
             zpt::json _value = zpt::python::to_ref(_exp);
-            if (_parent->is_object() || _parent->is_array()) {
-                _parent << _value;
-            }
+            if (_parent->is_object() || _parent->is_array()) { _parent << _value; }
             else {
                 _parent = _value;
             }
@@ -735,9 +705,7 @@ zpt::python::to_ref(PyObject* _in) -> zpt::json {
     std::ostringstream _oss;
     _oss << _in << std::flush;
     Py_INCREF(_in);
-    if (PyFunction_Check(_in)) {
-        return zpt::json::lambda(_oss.str(), 0);
-    }
+    if (PyFunction_Check(_in)) { return zpt::json::lambda(_oss.str(), 0); }
     else {
         return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")"));
     }
@@ -770,9 +738,7 @@ zpt::python::to_python(zpt::json _in) -> PyObject* {
         }
         case zpt::JSString: {
             //_ret = PyUnicode_DecodeFSDefault(std::string(_in).data());
-            if (std::string(_in).find("ref(") == 0) {
-                _ret = zpt::python::from_ref(_in);
-            }
+            if (std::string(_in).find("ref(") == 0) { _ret = zpt::python::from_ref(_in); }
             else {
                 _ret = PyUnicode_DecodeLocale(std::string(_in).data(), nullptr);
                 Py_INCREF(_ret);

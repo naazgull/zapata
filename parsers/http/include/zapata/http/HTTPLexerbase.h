@@ -261,9 +261,7 @@ class HTTPLexerBase {
     static bool constexpr available(size_t value);
 };
 
-inline HTTPLexerBase::~HTTPLexerBase() {
-    d_input.close();
-}
+inline HTTPLexerBase::~HTTPLexerBase() { d_input.close(); }
 
 template<typename ReturnType, typename ArgType>
 inline ReturnType constexpr HTTPLexerBase::as(ArgType value) {
@@ -275,9 +273,7 @@ inline HTTPLexerBase::StartCondition_ constexpr HTTPLexerBase::SC(int sc) {
     return as<StartCondition_>(sc);
 }
 
-inline int constexpr HTTPLexerBase::SC(StartCondition_ sc) {
-    return as<int>(sc);
-}
+inline int constexpr HTTPLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
 inline HTTPLexerBase::StartCondition_
 HTTPLexerBase::startCondition() const {

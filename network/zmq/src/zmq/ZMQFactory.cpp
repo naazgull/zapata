@@ -57,9 +57,7 @@ zpt::ZMQChannel::recv() -> zpt::json {
             std::lock_guard<std::mutex> _lock(this->in_mtx());
             this->in()->recv(&_frame1);
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame2);
-            }
+            if (_more != 0) { this->in()->recv(&_frame2); }
         }
 
         std::string _directive(static_cast<char*>(_frame1.data()), _frame1.size());
@@ -123,9 +121,7 @@ zpt::ZMQChannel::send(zpt::json _envelope) -> zpt::json {
         expect(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
         _envelope["headers"] << "X-Status" << _envelope["status"];
     }
-    if (!_envelope["payload"]->ok()) {
-        _envelope << "payload" << zpt::json::object();
-    }
+    if (!_envelope["payload"]->ok()) { _envelope << "payload" << zpt::json::object(); }
     if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
         _envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
     }
@@ -1415,9 +1411,7 @@ zpt::ZMQRouter::send(zpt::json _envelope) -> zpt::json {
         expect(_envelope["status"]->ok(), "'status' attribute is required", 412, 0);
         _envelope["headers"] << "X-Status" << _envelope["status"];
     }
-    if (!_envelope["payload"]->ok()) {
-        _envelope << "payload" << zpt::json::object();
-    }
+    if (!_envelope["payload"]->ok()) { _envelope << "payload" << zpt::json::object(); }
     if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
         _envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
     }
@@ -1465,19 +1459,13 @@ zpt::ZMQRouter::recv() -> zpt::json {
             std::lock_guard<std::mutex> _lock(this->in_mtx());
             this->in()->recv(_frame1);
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame2);
-            }
+            if (_more != 0) { this->in()->recv(&_frame2); }
             _more = 0;
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame3);
-            }
+            if (_more != 0) { this->in()->recv(&_frame3); }
             _more = 0;
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame4);
-            }
+            if (_more != 0) { this->in()->recv(&_frame4); }
         }
 
         std::string _id(static_cast<char*>(_frame1->data()), _frame1->size());
@@ -1668,14 +1656,10 @@ zpt::ZMQDealer::recv() -> zpt::json {
             std::lock_guard<std::mutex> _lock(this->in_mtx());
             this->in()->recv(&_frame1);
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame2);
-            }
+            if (_more != 0) { this->in()->recv(&_frame2); }
             _more = 0;
             this->in()->getsockopt(ZMQ_RCVMORE, &_more, &_more_size);
-            if (_more != 0) {
-                this->in()->recv(&_frame3);
-            }
+            if (_more != 0) { this->in()->recv(&_frame3); }
         }
 
         std::string _empty(static_cast<char*>(_frame1.data()), _frame1.size());
@@ -1687,9 +1671,7 @@ zpt::ZMQDealer::recv() -> zpt::json {
             _directive.assign(_empty);
         }
 
-        if (_raw.length() == 0 || _directive.length() == 0) {
-            return zpt::undefined;
-        }
+        if (_raw.length() == 0 || _directive.length() == 0) { return zpt::undefined; }
 
         try {
             zpt::json _envelope(_raw);
@@ -1734,48 +1716,20 @@ zpt::ZMQDealer::recv() -> zpt::json {
 auto
 zpt::str2type(std::string const& _type) -> short {
     std::transform(_type.begin(), _type.end(), _type.begin(), ::toupper);
-    if (_type == "ROUTER/DEALER") {
-        return ZMQ_ROUTER_DEALER;
-    }
-    if (_type == "ROUTER") {
-        return ZMQ_ROUTER;
-    }
-    if (_type == "DEALER") {
-        return ZMQ_DEALER;
-    }
-    if (_type == "REQ") {
-        return ZMQ_REQ;
-    }
-    if (_type == "REP") {
-        return ZMQ_REP;
-    }
-    if (_type == "PUB/SUB") {
-        return ZMQ_PUB_SUB;
-    }
-    if (_type == "XPUB/XSUB") {
-        return ZMQ_XPUB_XSUB;
-    }
-    if (_type == "PUB") {
-        return ZMQ_PUB;
-    }
-    if (_type == "SUB") {
-        return ZMQ_SUB;
-    }
-    if (_type == "PUSH") {
-        return ZMQ_PUSH;
-    }
-    if (_type == "PULL") {
-        return ZMQ_PULL;
-    }
-    if (_type == "HTTP" || _type == "HTTPS") {
-        return ZMQ_HTTP_RAW;
-    }
-    if (_type == "UPNP") {
-        return ZMQ_UPNP_RAW;
-    }
-    if (_type == "MQTT" || _type == "MQTTS") {
-        return -6;
-    }
+    if (_type == "ROUTER/DEALER") { return ZMQ_ROUTER_DEALER; }
+    if (_type == "ROUTER") { return ZMQ_ROUTER; }
+    if (_type == "DEALER") { return ZMQ_DEALER; }
+    if (_type == "REQ") { return ZMQ_REQ; }
+    if (_type == "REP") { return ZMQ_REP; }
+    if (_type == "PUB/SUB") { return ZMQ_PUB_SUB; }
+    if (_type == "XPUB/XSUB") { return ZMQ_XPUB_XSUB; }
+    if (_type == "PUB") { return ZMQ_PUB; }
+    if (_type == "SUB") { return ZMQ_SUB; }
+    if (_type == "PUSH") { return ZMQ_PUSH; }
+    if (_type == "PULL") { return ZMQ_PULL; }
+    if (_type == "HTTP" || _type == "HTTPS") { return ZMQ_HTTP_RAW; }
+    if (_type == "UPNP") { return ZMQ_UPNP_RAW; }
+    if (_type == "MQTT" || _type == "MQTTS") { return -6; }
     return -20;
 }
 
@@ -1837,9 +1791,7 @@ auto
 zpt::ZMQFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
-    if (_found != this->__channels.end()) {
-        _return = _found->second;
-    }
+    if (_found != this->__channels.end()) { _return = _found->second; }
     else {
         zpt::MQTT* _mqtt = new zpt::MQTT();
         _mqtt->connect(zpt::uri::parse(_options["connection"]->string()));
