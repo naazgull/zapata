@@ -40,9 +40,7 @@ zpt::ascii::encode(std::string& _out, bool quote) -> void {
     std::ostringstream _oss;
     delete[] wc;
     for (size_t i = 0; i != ws.length(); i++) {
-        if (((int)ws[i]) <= 127) {
-            _oss << ((char)ws[i]) << std::flush;
-        }
+        if (((int)ws[i]) <= 127) { _oss << ((char)ws[i]) << std::flush; }
         else {
             _oss << " " << std::flush;
         }
@@ -86,9 +84,7 @@ zpt::generate::hash(std::string& _out) -> void {
 
     srand(_tv.tv_usec);
     for (int i = 0; i < 45; i++) {
-        if (i % 10 == 0) {
-            srand(_tv.tv_usec * i);
-        }
+        if (i % 10 == 0) { srand(_tv.tv_usec * i); }
         _randompass[i] = _charset[rand() % _charset.length()];
     };
     _out.insert(_out.length(), _randompass);
@@ -141,9 +137,7 @@ zpt::test::token(std::string const& _token) -> bool {
 
 auto
 zpt::test::uri(std::string _uri) -> bool {
-    if (_uri.find(":") >= _uri.find("/")) {
-        _uri = std::string("zpt:") + _uri;
-    }
+    if (_uri.find(":") >= _uri.find("/")) { _uri = std::string("zpt:") + _uri; }
     static const std::regex _uri_rgx("([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]+):" // scheme:
                                      "([^?#]*)"                              // authority and path
                                      "(?:\\?([^#]*))?"                       // ?query

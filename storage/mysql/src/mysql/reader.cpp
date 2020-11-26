@@ -20,9 +20,7 @@ main(int _arg_c, char* _argv[]) -> int {
     while (_ifs.good()) {
         zpt::mysql::event _event;
         _ifs >> _event;
-        if (!_event.get()) {
-            break;
-        }
+        if (!_event.get()) { break; }
         std::cout << zpt::json::pretty(_event->to_json()) << std::endl << std::flush;
     }
     return 0;

@@ -99,9 +99,7 @@ zpt::dom::engine::add_listener(
 auto
 zpt::dom::engine::traverse(zpt::json _document, std::string _path, zpt::json _parent)
   -> zpt::dom::engine& {
-    if (_path.length() == 0) {
-        _path = "/ROOT";
-    }
+    if (_path.length() == 0) { _path = "/ROOT"; }
     for (auto [_idx, _key, _content] : _document) {
         std::string _name = zpt::r_replace(_key, "/", "_");
         _name = zpt::r_replace(_name, ":", "_");

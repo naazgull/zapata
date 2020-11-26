@@ -329,9 +329,7 @@ HMAC_SHA256(const type& input, k_type key) {
 
     std::stringstream ss;
     ss << std::setfill('0');
-    for (unsigned int i = 0; i < len; i++) {
-        ss << hash[i];
-    }
+    for (unsigned int i = 0; i < len; i++) { ss << hash[i]; }
     ss << std::flush;
 
     return (ss.str());

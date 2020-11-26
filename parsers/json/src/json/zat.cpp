@@ -49,17 +49,13 @@ main(int argc, char* argv[]) {
     std::string _line;
     while (std::getline(std::cin, _line)) {
         zpt::trim(_line);
-        if (_line.find("{") != 0) {
-            continue;
-        }
+        if (_line.find("{") != 0) { continue; }
         try {
             zpt::json _json;
             _iss.str(_line);
             _iss >> _json;
 
-            if ((int)_json["level"] > _level) {
-                continue;
-            }
+            if ((int)_json["level"] > _level) { continue; }
             double _intpart;
             double _fracpart = modf((double)_json["timestamp"], &_intpart);
             zpt::timestamp_t _ts = (_intpart * 1000) + (_fracpart * 1000);

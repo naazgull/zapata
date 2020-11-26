@@ -52,9 +52,7 @@ zpt::log(std::string const& _text,
          std::string const& _host,
          int _line,
          std::string const& _file) {
-    if (zpt::log_fd == nullptr) {
-        return -1;
-    }
+    if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
         _oss << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
@@ -71,9 +69,7 @@ zpt::log(std::string const& _text,
         _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
              << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
              << _text;
-        if (_level > 6) {
-            _oss << " " << _file << ":" << _line;
-        }
+        if (_level > 6) { _oss << " " << _file << ":" << _line; }
         _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
     }

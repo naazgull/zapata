@@ -130,42 +130,18 @@ zpt::http::to_str(zpt::performative _performative) -> std::string {
 
 auto
 zpt::http::from_str(std::string const& _performative) -> zpt::performative {
-    if (_performative == "GET" || _performative == "get") {
-        return zpt::http::Get;
-    }
-    if (_performative == "PUT" || _performative == "put") {
-        return zpt::http::Put;
-    }
-    if (_performative == "POST" || _performative == "post") {
-        return zpt::http::Post;
-    }
-    if (_performative == "DELETE" || _performative == "delete") {
-        return zpt::http::Delete;
-    }
-    if (_performative == "HEAD" || _performative == "head") {
-        return zpt::http::Head;
-    }
-    if (_performative == "OPTIONS" || _performative == "options") {
-        return zpt::http::Options;
-    }
-    if (_performative == "PATCH" || _performative == "patch") {
-        return zpt::http::Patch;
-    }
-    if (_performative == "REPLY" || _performative == "reply") {
-        return zpt::http::Reply;
-    }
-    if (_performative == "M-SEARCH" || _performative == "m-search") {
-        return zpt::http::Msearch;
-    }
-    if (_performative == "NOTIFY" || _performative == "notify") {
-        return zpt::http::Notify;
-    }
-    if (_performative == "TRACE" || _performative == "trace") {
-        return zpt::http::Msearch;
-    }
-    if (_performative == "CONNECT" || _performative == "connect") {
-        return zpt::http::Connect;
-    }
+    if (_performative == "GET" || _performative == "get") { return zpt::http::Get; }
+    if (_performative == "PUT" || _performative == "put") { return zpt::http::Put; }
+    if (_performative == "POST" || _performative == "post") { return zpt::http::Post; }
+    if (_performative == "DELETE" || _performative == "delete") { return zpt::http::Delete; }
+    if (_performative == "HEAD" || _performative == "head") { return zpt::http::Head; }
+    if (_performative == "OPTIONS" || _performative == "options") { return zpt::http::Options; }
+    if (_performative == "PATCH" || _performative == "patch") { return zpt::http::Patch; }
+    if (_performative == "REPLY" || _performative == "reply") { return zpt::http::Reply; }
+    if (_performative == "M-SEARCH" || _performative == "m-search") { return zpt::http::Msearch; }
+    if (_performative == "NOTIFY" || _performative == "notify") { return zpt::http::Notify; }
+    if (_performative == "TRACE" || _performative == "trace") { return zpt::http::Msearch; }
+    if (_performative == "CONNECT" || _performative == "connect") { return zpt::http::Connect; }
     return 0;
 }
 

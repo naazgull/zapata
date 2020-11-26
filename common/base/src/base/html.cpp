@@ -32,9 +32,7 @@ void
 zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) {
     std::ostringstream oss;
     for (size_t i = 0; i != s.length(); i++) {
-        if (((unsigned char)s[i]) > 127) {
-            oss << "&#" << std::dec << ((int)s.at(i)) << ";";
-        }
+        if (((unsigned char)s[i]) > 127) { oss << "&#" << std::dec << ((int)s.at(i)) << ";"; }
         else if (s[i] == '"' && quote) {
             oss << "&quot;";
         }
@@ -97,7 +95,5 @@ zpt::html::entities_decode(std::string& _out) {
 void
 zpt::html::content_boundary(std::string& _in, std::string& _out) {
     size_t _idx = _in.find("boundary=");
-    if (_idx != std::string::npos) {
-        _out.assign(_in.substr(_idx + 9));
-    }
+    if (_idx != std::string::npos) { _out.assign(_in.substr(_idx + 9)); }
 }

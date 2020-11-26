@@ -133,8 +133,8 @@ URITokenizerBase::savedToken_() const {
 }
 
 // hdr/opbitand
-inline URITokenizerBase::DebugMode_ operator&(URITokenizerBase::DebugMode_ lhs,
-                                              URITokenizerBase::DebugMode_ rhs) {
+inline URITokenizerBase::DebugMode_
+operator&(URITokenizerBase::DebugMode_ lhs, URITokenizerBase::DebugMode_ rhs) {
     return static_cast<URITokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 

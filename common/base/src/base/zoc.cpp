@@ -69,15 +69,11 @@ main(int _argc, char* _argv[]) {
                                 _state = HEADER;
                             }
                             else if (_line[0] == '-') {
-                                if (_state != LIST) {
-                                    std::cout << std::endl << std::flush;
-                                }
+                                if (_state != LIST) { std::cout << std::endl << std::flush; }
                                 _state = LIST;
                             }
                             else if (_line[0] == '`') {
-                                if (_state == CODE) {
-                                    _state = PARAGRAPH;
-                                }
+                                if (_state == CODE) { _state = PARAGRAPH; }
                                 else {
                                     std::cout << std::endl << std::flush;
                                     _state = CODE;

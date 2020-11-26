@@ -217,25 +217,19 @@ zpt::lisp::Bridge::call(const char* _c_name, int _n_args, zpt::lisp::object _arg
   -> zpt::lisp::object {
     std::string _name(_c_name);
     auto _found = this->__lambdas->find(_name);
-    if (_found != this->__lambdas->end()) {
-        return (_found->second)(_n_args, _args);
-    }
+    if (_found != this->__lambdas->end()) { return (_found->second)(_n_args, _args); }
     return zpt::lisp::object(ecl_make_bool(false));
 }
 
 auto
 zpt::lisp::Bridge::check(const std::string _op1, const std::string _op2) -> bool {
-    if (_op1 == _op2) {
-        return true;
-    }
+    if (_op1 == _op2) { return true; }
     std::string _name(_op1);
     auto _module_found = this->__modules->find(_name);
     if (_module_found != this->__modules->end()) {
         string _module = _module_found->second;
         auto _found = this->__consistency->find(_module);
-        if (_found != this->__consistency->end()) {
-            return (_found->second)(_op1, _op2);
-        }
+        if (_found != this->__consistency->end()) { return (_found->second)(_op1, _op2); }
     }
     return true;
 }

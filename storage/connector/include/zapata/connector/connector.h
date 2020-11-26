@@ -53,7 +53,7 @@ class connection {
     auto operator=(zpt::storage::connection const& _rhs) -> zpt::storage::connection&;
     auto operator=(zpt::storage::connection&& _rhs) -> zpt::storage::connection&;
 
-    auto operator-> () -> zpt::storage::connection::type*;
+    auto operator->() -> zpt::storage::connection::type*;
     auto operator*() -> zpt::storage::connection::type&;
 
     template<typename T, typename... Args>
@@ -85,7 +85,7 @@ class session {
     auto operator=(zpt::storage::session const& _rhs) -> zpt::storage::session&;
     auto operator=(zpt::storage::session&& _rhs) -> zpt::storage::session&;
 
-    auto operator-> () -> zpt::storage::session::type*;
+    auto operator->() -> zpt::storage::session::type*;
     auto operator*() -> zpt::storage::session::type&;
 
     template<typename T, typename... Args>
@@ -114,7 +114,7 @@ class database {
     auto operator=(zpt::storage::database const& _rhs) -> zpt::storage::database&;
     auto operator=(zpt::storage::database&& _rhs) -> zpt::storage::database&;
 
-    auto operator-> () -> zpt::storage::database::type*;
+    auto operator->() -> zpt::storage::database::type*;
     auto operator*() -> zpt::storage::database::type&;
 
     template<typename T, typename... Args>
@@ -149,7 +149,7 @@ class collection {
     auto operator=(zpt::storage::collection const& _rhs) -> zpt::storage::collection&;
     auto operator=(zpt::storage::collection&& _rhs) -> zpt::storage::collection&;
 
-    auto operator-> () -> zpt::storage::collection::type*;
+    auto operator->() -> zpt::storage::collection::type*;
     auto operator*() -> zpt::storage::collection::type&;
 
     template<typename T, typename... Args>
@@ -193,7 +193,7 @@ class action {
     auto operator=(zpt::storage::action const& _rhs) -> zpt::storage::action&;
     auto operator=(zpt::storage::action&& _rhs) -> zpt::storage::action&;
 
-    auto operator-> () -> zpt::storage::action::type*;
+    auto operator->() -> zpt::storage::action::type*;
     auto operator*() -> zpt::storage::action::type&;
 
     template<typename T, typename... Args>
@@ -226,7 +226,7 @@ class result {
     auto operator=(zpt::storage::result const& _rhs) -> zpt::storage::result&;
     auto operator=(zpt::storage::result&& _rhs) -> zpt::storage::result&;
 
-    auto operator-> () -> zpt::storage::result::type*;
+    auto operator->() -> zpt::storage::result::type*;
     auto operator*() -> zpt::storage::result::type&;
 
     template<typename T, typename... Args>

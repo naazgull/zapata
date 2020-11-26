@@ -35,18 +35,14 @@ zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
 auto
 zpt::net::transport::http::set_headers(zpt::exchange& _channel, zpt::HTTPObj& _http_message) const
   -> const zpt::net::transport::http& {
-    if (!_channel->received()->ok()) {
-        _channel->received() = zpt::json::object();
-    }
+    if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
 
     zpt::json _headers = _channel->received()["headers"];
     if (!_headers->ok()) {
         _headers = zpt::json::object();
         _channel->received() << "headers" << _headers;
     }
-    for (auto [_key, _value] : _http_message.headers()) {
-        _headers << _key << _value;
-    }
+    for (auto [_key, _value] : _http_message.headers()) { _headers << _key << _value; }
     if (!_headers["Content-Type"]->ok()) {
         _headers << "Content-Type"
                  << "*/*";
@@ -58,9 +54,7 @@ auto
 zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http_message) const
   -> const zpt::net::transport::http& {
     if (_http_message.body().length() != 0) {
-        if (!_channel->received()->ok()) {
-            _channel->received() = zpt::json::object();
-        }
+        if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
 
         auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         std::istringstream _is;
@@ -80,9 +74,7 @@ zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _
     auto& _query = _request->query();
     if (_query.length() != 0) {
         zpt::json _params = zpt::uri::parse(std::string{ "?" } + _query);
-        if (!_channel->received()->ok()) {
-            _channel->received() = zpt::json::object();
-        }
+        if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
         _channel->received() << "params" << _params["params"];
     }
     return (*this);
@@ -91,9 +83,7 @@ zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _
 auto
 zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _request) const
   -> const zpt::net::transport::http& {
-    if (!_channel->received()->ok()) {
-        _channel->received() = zpt::json::object();
-    }
+    if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
     _channel->received() << "performative" << _request->method();
     return (*this);
 }
@@ -101,9 +91,7 @@ zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::req& _
 auto
 zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _response) const
   -> const zpt::net::transport::http& {
-    if (!_channel->received()->ok()) {
-        _channel->received() = zpt::json::object();
-    }
+    if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
     _channel->received() << "performative" << zpt::http::Reply;
     return (*this);
 }
@@ -111,9 +99,7 @@ zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _
 auto
 zpt::net::transport::http::set_status(zpt::exchange& _channel, zpt::http::rep& _response) const
   -> const zpt::net::transport::http& {
-    if (!_channel->received()->ok()) {
-        _channel->received() = zpt::json::object();
-    }
+    if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
     _channel->received() << "status" << _response->status();
     return (*this);
 }

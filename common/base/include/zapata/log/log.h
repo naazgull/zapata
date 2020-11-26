@@ -126,9 +126,7 @@ template<typename T>
 auto
 zpt::this_thread::adaptive_timer<T>::sleep_for(T _upper_limit) -> T {
     static constexpr T _max{ std::numeric_limits<T>::max() - 1 };
-    if (this->__sleep_tics != _max) {
-        ++this->__sleep_tics;
-    }
+    if (this->__sleep_tics != _max) { ++this->__sleep_tics; }
     std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{
       _upper_limit > 0 ? std::min(this->__sleep_tics, _upper_limit) : this->__sleep_tics });
     return this->__sleep_tics;

@@ -19,11 +19,8 @@ zpt::net::getip(std::string const& _if) -> std::string {
                 bzero(_address_buf, INET_ADDRSTRLEN);
                 inet_ntop(AF_INET, _tmp_add_ptr, _address_buf, INET_ADDRSTRLEN);
                 _out.assign(_address_buf);
-                if (_if_addr != nullptr)
-                    freeifaddrs(_if_addr);
-                if (_out.length() == 0 || _out == "::") {
-                    return "127.0.0.1";
-                }
+                if (_if_addr != nullptr) freeifaddrs(_if_addr);
+                if (_out.length() == 0 || _out == "::") { return "127.0.0.1"; }
                 return _out;
             }
         }
@@ -38,19 +35,13 @@ zpt::net::getip(std::string const& _if) -> std::string {
                 bzero(_address_buf, INET6_ADDRSTRLEN);
                 inet_ntop(AF_INET6, _tmp_add_ptr, _address_buf, INET6_ADDRSTRLEN);
                 _out.assign(_address_buf);
-                if (_if_addr != nullptr)
-                    freeifaddrs(_if_addr);
-                if (_out.length() == 0 || _out == "::") {
-                    return "127.0.0.1";
-                }
+                if (_if_addr != nullptr) freeifaddrs(_if_addr);
+                if (_out.length() == 0 || _out == "::") { return "127.0.0.1"; }
                 return _out;
             }
         }
     }
-    if (_if_addr != nullptr)
-        freeifaddrs(_if_addr);
-    if (_out.length() == 0 || _out == "::") {
-        return "127.0.0.1";
-    }
+    if (_if_addr != nullptr) freeifaddrs(_if_addr);
+    if (_out.length() == 0 || _out == "::") { return "127.0.0.1"; }
     return _out;
 }

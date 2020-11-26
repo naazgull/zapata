@@ -85,19 +85,13 @@ template<typename I, typename M, typename... Types>
 auto
 zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... _callback_args)
   -> bool {
-    if (_sequence == _end) {
-        return false;
-    }
+    if (_sequence == _end) { return false; }
 
     bool _return{ false };
-    if (this->__value != (*_sequence)) {
-        return false;
-    }
+    if (this->__value != (*_sequence)) { return false; }
 
     if (this->__path == _value_to_match) {
-        for (auto& _call : this->__callbacks) {
-            _call(_callback_args...);
-        }
+        for (auto& _call : this->__callbacks) { _call(_callback_args...); }
         _return = true;
     }
 
@@ -114,9 +108,7 @@ template<typename I>
 auto
 zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bool {
     bool _is_null{ this->__value == nullptr };
-    if (_is_null) {
-        this->__value = (*_sequence);
-    }
+    if (_is_null) { this->__value = (*_sequence); }
 
     if (_is_null || this->__value == (*_sequence)) {
         auto _next = _sequence;
@@ -128,9 +120,7 @@ zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bo
         }
 
         for (auto& _child : this->__children) {
-            if (_child.merge(_next, _end, _path, _callback)) {
-                return true;
-            }
+            if (_child.merge(_next, _end, _path, _callback)) { return true; }
         }
 
         this->__children.emplace_back();
@@ -144,9 +134,7 @@ template<typename T, typename P, typename C>
 auto
 zpt::tree::node<T, P, C>::to_string(uint _n_tabs) -> std::string {
     std::string _to_return = std::string(_n_tabs, '\t');
-    if (_n_tabs != 0) {
-        _to_return.insert(_to_return.length(), "|");
-    }
+    if (_n_tabs != 0) { _to_return.insert(_to_return.length(), "|"); }
     _to_return.insert(_to_return.length(), "_ ");
     _to_return.insert(_to_return.length(), this->__value);
     _to_return.insert(_to_return.length(), "\n");

@@ -35,9 +35,7 @@ zpt::sendmail(std::string const& _to,
     if (_mailpipe != nullptr) {
         fprintf(_mailpipe, "To: %s\n", _to.data());
         fprintf(_mailpipe, "From: %s\n", _from.data());
-        if (_replyto.length() != 0) {
-            fprintf(_mailpipe, "Reply-To: %s\n", _replyto.data());
-        }
+        if (_replyto.length() != 0) { fprintf(_mailpipe, "Reply-To: %s\n", _replyto.data()); }
         fprintf(_mailpipe, "Subject: %s\n", _subject.data());
         fprintf(_mailpipe, "Mime-Version: 1.0\n");
         fprintf(_mailpipe, "Content-Type: text/html; charset=utf-8\n\n");

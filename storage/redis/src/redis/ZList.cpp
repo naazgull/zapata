@@ -40,9 +40,7 @@ zpt::redis::ZList::ZList(zpt::json _options, std::string const& _conf_path)
 }
 
 zpt::redis::ZList::~ZList() {
-    if (this->__conn != nullptr) {
-        redisFree(this->__conn);
-    }
+    if (this->__conn != nullptr) { redisFree(this->__conn); }
 }
 
 auto
@@ -236,9 +234,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
         _success =
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
-    if (!_success && _reply != nullptr) {
-        freeReplyObject(_reply);
-    }
+    if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
     zpt::json _return = zpt::json::object();
@@ -289,9 +285,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
                 catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
-                if (_return[_key]->ok()) {
-                    _return[_key] << _payload;
-                }
+                if (_return[_key]->ok()) { _return[_key] << _payload; }
                 else {
                     _return << _key << zpt::json{ zpt::array, _payload };
                 }
@@ -327,12 +321,8 @@ zpt::redis::ZList::range(std::string const& _key,
     redisReply* _reply = nullptr;
     std::string _minimum("-inf");
     std::string _maximum("+inf");
-    if (_min != 0) {
-        _minimum = std::to_string(_min);
-    }
-    if (_max != 0) {
-        _maximum = std::to_string(_max);
-    }
+    if (_min != 0) { _minimum = std::to_string(_min); }
+    if (_max != 0) { _maximum = std::to_string(_max); }
     bool _success = false;
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
@@ -375,9 +365,7 @@ zpt::redis::ZList::range(std::string const& _key,
         _success =
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
-    if (!_success && _reply != nullptr) {
-        freeReplyObject(_reply);
-    }
+    if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
     zpt::json _return = zpt::json::object();
@@ -428,9 +416,7 @@ zpt::redis::ZList::range(std::string const& _key,
                 catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
-                if (_return[_key]->ok()) {
-                    _return[_key] << _payload;
-                }
+                if (_return[_key]->ok()) { _return[_key] << _payload; }
                 else {
                     _return << _key << zpt::json{ zpt::array, _payload };
                 }
@@ -466,9 +452,7 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
         _success =
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
-    if (!_success && _reply != nullptr) {
-        freeReplyObject(_reply);
-    }
+    if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
     zpt::json _return = zpt::json::object();
@@ -519,9 +503,7 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
                 catch (zpt::SyntaxErrorException const& _e) {
                     _payload = zpt::json::string(_data);
                 }
-                if (_return[_key]->ok()) {
-                    _return[_key] << _payload;
-                }
+                if (_return[_key]->ok()) { _return[_key] << _payload; }
                 else {
                     _return << _key << zpt::json{ zpt::array, _payload };
                 }
@@ -564,9 +546,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
             _success =
               (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
         }
-        if (!_success && _reply != nullptr) {
-            freeReplyObject(_reply);
-        }
+        if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
         expect(_success, "something whent wrong while accessing Redis", 500, 0);
 
         int _type = _reply->type;
@@ -622,9 +602,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
                     catch (zpt::SyntaxErrorException const& _e) {
                         _payload = zpt::json::string(_data);
                     }
-                    if (_return[_key]->ok()) {
-                        _return[_key] << _payload;
-                    }
+                    if (_return[_key]->ok()) { _return[_key] << _payload; }
                     else {
                         _return << _key << zpt::json{ zpt::array, _payload };
                     }

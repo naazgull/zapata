@@ -45,7 +45,7 @@ class padded_atomic {
 
     operator T();
 
-    auto operator-> () -> std::atomic<T>*;
+    auto operator->() -> std::atomic<T>*;
     auto operator*() -> std::atomic<T>&;
 
   private:
@@ -113,13 +113,15 @@ zpt::padded_atomic<T>::operator T() {
 }
 
 template<typename T>
-auto zpt::padded_atomic<T>::operator-> () -> std::atomic<T>* {
+auto
+zpt::padded_atomic<T>::operator->() -> std::atomic<T>* {
     expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
     return this->__underlying;
 }
 
 template<typename T>
-auto zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
+auto
+zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
     expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
     return *this->__underlying;
 }

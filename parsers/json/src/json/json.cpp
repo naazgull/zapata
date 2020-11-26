@@ -12,17 +12,13 @@ zpt::to_string(zpt::json _in) -> std::string {
 auto
 zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim) -> zpt::json {
     zpt::json _ret = zpt::json::array();
-    if (_to_split.length() == 0 || _separator.length() == 0) {
-        return _ret;
-    }
+    if (_to_split.length() == 0 || _separator.length() == 0) { return _ret; }
     std::istringstream _iss(_to_split);
     std::string _part;
     while (_iss.good()) {
         std::getline(_iss, _part, _separator[0]);
         if (_part.length() != 0) {
-            if (_trim) {
-                zpt::trim(_part);
-            }
+            if (_trim) { zpt::trim(_part); }
             _ret << _part;
         }
     }
@@ -37,12 +33,8 @@ zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string {
            0);
     std::string _return{ "" };
     for (auto [_idx, _key, _value] : _to_join) {
-        if (_return.length() != 0) {
-            _return += _separator;
-        }
-        if (_to_join->type() == zpt::JSArray) {
-            _return += static_cast<std::string>(_value);
-        }
+        if (_return.length() != 0) { _return += _separator; }
+        if (_to_join->type() == zpt::JSArray) { _return += static_cast<std::string>(_value); }
         else if (_to_join->type() == zpt::JSObject) {
             _return += _key + _separator + static_cast<std::string>(_value);
         }
@@ -70,38 +62,28 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
         if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 ||
             _arg.find("--force") == 0) {
             if (_last.length() != 0) {
-                if (!_return[_last]->ok()) {
-                    _return << _last << zpt::json::array();
-                }
+                if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
             }
             _arg.erase(0, 2);
-            if (!_return[_arg]->ok()) {
-                _return << _arg << zpt::json::array();
-            }
+            if (!_return[_arg]->ok()) { _return << _arg << zpt::json::array(); }
             _return[_arg] << true;
             _last.assign("");
         }
         else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 ||
                  _arg.find("-force") == 0) {
             if (_last.length() != 0) {
-                if (!_return[_last]->ok()) {
-                    _return << _last << zpt::json::array();
-                }
+                if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
             }
             _arg.erase(0, 1);
-            if (!_return[_arg]->ok()) {
-                _return << _arg << zpt::json::array();
-            }
+            if (!_return[_arg]->ok()) { _return << _arg << zpt::json::array(); }
             _return[_arg] << true;
             _last.assign("");
         }
         else if (_arg.find("--") == 0) {
             if (_last.length() != 0) {
-                if (!_return[_last]->ok()) {
-                    _return << _last << zpt::json::array();
-                }
+                if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
             }
             _arg.erase(0, 2);
@@ -109,9 +91,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
         }
         else if (_arg.find("-") == 0) {
             if (_last.length() != 0) {
-                if (!_return[_last]->ok()) {
-                    _return << _last << zpt::json::array();
-                }
+                if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
             }
             _arg.erase(0, 1);
@@ -119,9 +99,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
         }
         else {
             if (_last.length() != 0) {
-                if (!_return[_last]->ok()) {
-                    _return << _last << zpt::json::array();
-                }
+                if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << _arg;
                 _last.assign("");
             }
@@ -131,9 +109,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
         }
     }
     if (_last.length() != 0) {
-        if (!_return[_last]->ok()) {
-            _return << _last << zpt::json::array();
-        }
+        if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
         _return[_last] << true;
     }
     return _return;
@@ -170,9 +146,7 @@ zpt::conf::file(std::string const& _file, zpt::json _options) -> void {
 auto
 zpt::conf::dirs(std::string const& _dir, zpt::json _options) -> void {
     std::vector<std::string> _non_positional;
-    if (zpt::is_dir(_dir)) {
-        zpt::glob(_dir, _non_positional, "(.*)\\.conf");
-    }
+    if (zpt::is_dir(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
     else {
         _non_positional.push_back(_dir);
     }
@@ -182,9 +156,7 @@ zpt::conf::dirs(std::string const& _dir, zpt::json _options) -> void {
                std::string("'") + _file + std::string("' can't be found."),
                500,
                0);
-        if (zpt::is_dir(_file)) {
-            zpt::conf::dirs(_file, _options);
-        }
+        if (zpt::is_dir(_file)) { zpt::conf::dirs(_file, _options); }
         else {
             zpt::conf::file(static_cast<std::string>(_file), _options);
         }
@@ -226,9 +198,7 @@ zpt::conf::env(zpt::json _options) -> void {
     zpt::json::traverse(
       _traversable,
       [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
-          if (_item->type() != zpt::JSString) {
-              return;
-          }
+          if (_item->type() != zpt::JSString) { return; }
           std::string _value{ static_cast<std::string>(_item) };
           bool _changed{ false };
           for (size_t _idx = _value.find("$"); _idx != std::string::npos;
@@ -241,9 +211,7 @@ zpt::conf::env(zpt::json _options) -> void {
                   _changed = true;
               }
           }
-          if (_changed) {
-              _options->set_path(_object_path, zpt::json::string(_value));
-          }
+          if (_changed) { _options->set_path(_object_path, zpt::json::string(_value)); }
       });
 }
 
@@ -290,9 +258,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             _value.assign("");
         }
         else if (_arg.find("--") == 0 || _arg.find("-") == 0) {
-            if (_key.length() != 0) {
-                _return << _key << true;
-            }
+            if (_key.length() != 0) { _return << _key << true; }
             _key.assign(_arg);
             _value.assign("");
         }
@@ -300,9 +266,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             _value.assign(_arg);
 
             _values = _return[_key];
-            if (_values == zpt::undefined) {
-                _return << _key << _value;
-            }
+            if (_values == zpt::undefined) { _return << _key << _value; }
             else if (_values->type() == zpt::JSArray) {
                 _values << _value;
             }
@@ -324,14 +288,10 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
             _values << _value;
         }
     }
-    if (_key.length() != 0) {
-        _return << _key << true;
-    }
+    if (_key.length() != 0) { _return << _key << true; }
 
     for (auto [_, _key, _option] : _return) {
-        if (_key == "--") {
-            continue;
-        }
+        if (_key == "--") { continue; }
         expect(_config[_key]->type() == zpt::JSObject,
                std::string{ "'" } + _key + std::string{ "' is not a valid option" },
                500,
@@ -368,9 +328,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
 auto
 zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) -> void {
     for (auto [_, _key, _parameter] : _to_check) {
-        if (!_inclusive && !_rules[_key]->ok()) {
-            continue;
-        }
+        if (!_inclusive && !_rules[_key]->ok()) { continue; }
         expect(!_inclusive || _rules[_key]->type() == zpt::JSObject,
                "'" << _key << "' is not a valid parameter",
                400,
@@ -406,7 +364,7 @@ auto
 zpt::parameters::usage(zpt::json _config) -> std::string {
     std::ostringstream _oss;
     _oss << "Usage: zpt [OPTIONS]" << std::endl << "Options:" << std::endl << std::flush;
-    size_t _max_len{0};
+    size_t _max_len{ 0 };
     for (auto [_, _key, _parameter] : _config) {
         size_t _len = _key.length();
         if (_parameter["type"]->ok() && _parameter["type"] != "void") {
@@ -438,12 +396,8 @@ zpt::test::location(zpt::json _location) -> bool {
 
 auto
 zpt::test::timestamp(zpt::json _timestamp) -> bool {
-    if (_timestamp->type() == zpt::JSDate) {
-        return true;
-    }
-    if (_timestamp->type() != zpt::JSString) {
-        return false;
-    }
+    if (_timestamp->type() == zpt::JSDate) { return true; }
+    if (_timestamp->type() != zpt::JSString) { return false; }
     static const std::regex _timestamp_rgx("^([0-9]{4})-"
                                            "([0-9]{2})-"
                                            "([0-9]{2})T"
@@ -469,9 +423,7 @@ zpt::http::cookies::deserialize(std::string const& _cookie_header) -> zpt::json 
         }
         else {
             zpt::json _pair = zpt::split(_value, "=");
-            if (_pair->size() == 2) {
-                _return << _pair[0]->string() << _pair[1];
-            }
+            if (_pair->size() == 2) { _return << _pair[0]->string() << _pair[1]; }
         }
     }
     return _return;
@@ -481,9 +433,7 @@ auto
 zpt::http::cookies::serialize(zpt::json _info) -> std::string {
     std::string _return((std::string)_info["value"]);
     for (auto [_idx, _key, _field] : _info) {
-        if (_key == "value") {
-            continue;
-        }
+        if (_key == "value") { continue; }
         _return += std::string("; ") + _key + std::string("=") + std::string(_field);
     }
     return _return;

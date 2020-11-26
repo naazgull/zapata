@@ -33,9 +33,7 @@ auto
 zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
-    if (_found != this->__channels.end()) {
-        _return = _found->second;
-    }
+    if (_found != this->__channels.end()) { _return = _found->second; }
     else {
         zpt::UPnP* _upnp = new zpt::UPnP(_options);
         _return = zpt::socket(_upnp);
@@ -74,6 +72,5 @@ _zpt_plugin_load_() {
     }
 
     _options["rest"] << "discoverable" << bool(_options["discoverable"]);
-    if (bool(_options["discoverable"])) {
-    }
+    if (bool(_options["discoverable"])) {}
 }

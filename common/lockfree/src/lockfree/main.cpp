@@ -116,8 +116,7 @@ test_queue() -> int {
           _i);
     }
 
-    for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i)
-        _threads[_i].join();
+    for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i) _threads[_i].join();
     auto _t2 = std::chrono::high_resolution_clock::now();
     auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
 
@@ -175,9 +174,7 @@ test_list() -> int {
                                   return _item == (_n_thread - 1) * N_ELEMENTS_LIST + _k;
 #endif
                                 });
-                              if (_it != _list.end()) {
-                                  ++_poped;
-                              }
+                              if (_it != _list.end()) { ++_poped; }
                               ++_k;
                           }
                           catch (zpt::NoMoreElementsException const& e) {
@@ -193,8 +190,7 @@ test_list() -> int {
           _i);
     }
 
-    for (int _i = 0; _i != MAX_THREADS_LIST; ++_i)
-        _threads[_i].join();
+    for (int _i = 0; _i != MAX_THREADS_LIST; ++_i) _threads[_i].join();
 
     auto _t2 = std::chrono::high_resolution_clock::now();
     auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
@@ -224,7 +220,7 @@ test_hazard_ptr() -> void {
 
 auto
 test_aligned() -> void {
-    zpt::padded_atomic<bool> _atomic{false};
+    zpt::padded_atomic<bool> _atomic{ false };
     _atomic->store(true);
     std::cout << _atomic->load(std::memory_order_acquire) << std::endl << std::flush;
     (*_atomic) = false;

@@ -503,9 +503,7 @@ zpt::get_mime(std::string const& _in) {
     magic_close(myt);
 
     for (size_t _i = 0; _i != _MIMETYPE_LEN; _i++) {
-        if (_mime == std::string(zpt::mimetype_names[_i])) {
-            return (zpt::MIMEType)_i;
-        }
+        if (_mime == std::string(zpt::mimetype_names[_i])) { return (zpt::MIMEType)_i; }
     }
 
     return zpt::application_octet_stream;

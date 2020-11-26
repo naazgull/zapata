@@ -25,4 +25,5 @@ export projects=(
        storage/connector
        storage/mysqlx
        security/oauth2
+       storage/lmdb
 )

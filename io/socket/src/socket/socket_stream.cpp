@@ -49,9 +49,7 @@ zpt::ssl_error_print(SSL* _ssl, int _ret) -> std::string {
 
 auto
 zpt::ssl_error_print(unsigned long _error) -> std::string {
-    if (_error == 0) {
-        _error = ERR_get_error();
-    }
+    if (_error == 0) { _error = ERR_get_error(); }
     return std::string("SSL_ERROR_") + std::to_string(_error) + std::string(": ") +
            std::string(ERR_error_string(_error, nullptr));
 }
@@ -65,13 +63,9 @@ zpt::serversocketstream::serversocketstream(std::uint16_t _port)
 zpt::serversocketstream::serversocketstream(std::string const& _path)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<char>>(_path) } {}
 
-zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs) {
-    (*this) = _rhs;
-}
+zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs) { (*this) = _rhs; }
 
-zpt::serversocketstream::serversocketstream(zpt::serversocketstream&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::serversocketstream::serversocketstream(zpt::serversocketstream&& _rhs) { (*this) = _rhs; }
 
 auto
 zpt::serversocketstream::operator=(const zpt::serversocketstream& _rhs)
@@ -86,11 +80,13 @@ zpt::serversocketstream::operator=(zpt::serversocketstream&& _rhs) -> zpt::serve
     return (*this);
 }
 
-auto zpt::serversocketstream::operator-> () -> zpt::basic_serversocketstream<char>* {
+auto
+zpt::serversocketstream::operator->() -> zpt::basic_serversocketstream<char>* {
     return this->__underlying.get();
 }
 
-auto zpt::serversocketstream::operator*() -> zpt::basic_serversocketstream<char>& {
+auto
+zpt::serversocketstream::operator*() -> zpt::basic_serversocketstream<char>& {
     return *this->__underlying.get();
 }
 
@@ -107,9 +103,7 @@ zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _r
     (*this) = _rhs;
 }
 
-zpt::wserversocketstream::wserversocketstream(zpt::wserversocketstream&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::wserversocketstream::wserversocketstream(zpt::wserversocketstream&& _rhs) { (*this) = _rhs; }
 
 auto
 zpt::wserversocketstream::operator=(const zpt::wserversocketstream& _rhs)
@@ -124,10 +118,12 @@ zpt::wserversocketstream::operator=(zpt::wserversocketstream&& _rhs) -> zpt::wse
     return (*this);
 }
 
-auto zpt::wserversocketstream::operator-> () -> zpt::basic_serversocketstream<wchar_t>* {
+auto
+zpt::wserversocketstream::operator->() -> zpt::basic_serversocketstream<wchar_t>* {
     return this->__underlying.get();
 }
 
-auto zpt::wserversocketstream::operator*() -> zpt::basic_serversocketstream<wchar_t>& {
+auto
+zpt::wserversocketstream::operator*() -> zpt::basic_serversocketstream<wchar_t>& {
     return *this->__underlying.get();
 }

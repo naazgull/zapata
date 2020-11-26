@@ -34,8 +34,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
     _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
-        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
-                                                                          _config["path"]->string());
+        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
+          zpt::UNIX_SERVER_SOCKET(), _config["path"]->string());
 
         _boot.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());

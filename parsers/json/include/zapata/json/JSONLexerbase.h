@@ -251,9 +251,7 @@ class JSONLexerBase {
     static bool constexpr available(size_t value);
 };
 
-inline JSONLexerBase::~JSONLexerBase() {
-    d_input.close();
-}
+inline JSONLexerBase::~JSONLexerBase() { d_input.close(); }
 
 template<typename ReturnType, typename ArgType>
 inline ReturnType constexpr JSONLexerBase::as(ArgType value) {
@@ -265,9 +263,7 @@ inline JSONLexerBase::StartCondition_ constexpr JSONLexerBase::SC(int sc) {
     return as<StartCondition_>(sc);
 }
 
-inline int constexpr JSONLexerBase::SC(StartCondition_ sc) {
-    return as<int>(sc);
-}
+inline int constexpr JSONLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
 inline JSONLexerBase::StartCondition_
 JSONLexerBase::startCondition() const {

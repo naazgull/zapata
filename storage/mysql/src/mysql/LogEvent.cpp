@@ -28,12 +28,8 @@ auto
 zpt::mysql::arr2str(char* _arr, size_t _arr_len) -> std::string {
     std::ostringstream _oss;
     size_t _c = 0;
-    while (_arr[_c] == 0x0) {
-        _c++;
-    }
-    for (; _c != _arr_len; _c++) {
-        _oss << _arr[_c] << std::flush;
-    }
+    while (_arr[_c] == 0x0) { _c++; }
+    for (; _c != _arr_len; _c++) { _oss << _arr[_c] << std::flush; }
     _oss << std::flush;
     return _oss.str();
 }
@@ -230,7 +226,8 @@ zpt::mysql::QueryEvent::consume(zpt::mysql::event_header _header, std::istream& 
                     _in.read((char*)&_var_value_2, sizeof(std::uint16_t));
                     std::uint16_t _var_value_3 = 0;
                     _in.read((char*)&_var_value_3, sizeof(std::uint16_t));
-                    new (&_q_var.__charset_code) std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
+                    new (&_q_var.__charset_code)
+                      std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>;
                     std::get<0>(_q_var.__charset_code) = _var_value_1;
                     std::get<1>(_q_var.__charset_code) = _var_value_2;
                     std::get<2>(_q_var.__charset_code) = _var_value_3;
@@ -421,7 +418,8 @@ zpt::mysql::RotateEvent::consume(zpt::mysql::event_header _header, std::istream&
     if (_header->__event_length) {
         _in.read((char*)&_event->__position_next_event, sizeof(std::uint64_t));
 
-        size_t _next_binlog_filename_size = _event->header()->__event_length - sizeof(std::uint64_t);
+        size_t _next_binlog_filename_size =
+          _event->header()->__event_length - sizeof(std::uint64_t);
         char _next_binlog_filename[_next_binlog_filename_size] = { 0 };
         _in.read(_next_binlog_filename, _next_binlog_filename_size);
         _event->__next_binlog_filename =
@@ -441,8 +439,7 @@ zpt::mysql::IntvarEvent::consume(zpt::mysql::event_header _header, std::istream&
   -> zpt::mysql::event {
     zpt::mysql::IntvarEvent* _event = new zpt::mysql::IntvarEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -457,8 +454,7 @@ zpt::mysql::LoadEvent::consume(zpt::mysql::event_header _header, std::istream& _
   -> zpt::mysql::event {
     zpt::mysql::LoadEvent* _event = new zpt::mysql::LoadEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -473,8 +469,7 @@ zpt::mysql::SlaveEvent::consume(zpt::mysql::event_header _header, std::istream& 
   -> zpt::mysql::event {
     zpt::mysql::SlaveEvent* _event = new zpt::mysql::SlaveEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -489,8 +484,7 @@ zpt::mysql::CreateFileEvent::consume(zpt::mysql::event_header _header, std::istr
   -> zpt::mysql::event {
     zpt::mysql::CreateFileEvent* _event = new zpt::mysql::CreateFileEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -505,8 +499,7 @@ zpt::mysql::AppendBlockEvent::consume(zpt::mysql::event_header _header, std::ist
   -> zpt::mysql::event {
     zpt::mysql::AppendBlockEvent* _event = new zpt::mysql::AppendBlockEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -521,8 +514,7 @@ zpt::mysql::ExecLoadEvent::consume(zpt::mysql::event_header _header, std::istrea
   -> zpt::mysql::event {
     zpt::mysql::ExecLoadEvent* _event = new zpt::mysql::ExecLoadEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -537,8 +529,7 @@ zpt::mysql::DeleteFileEvent::consume(zpt::mysql::event_header _header, std::istr
   -> zpt::mysql::event {
     zpt::mysql::DeleteFileEvent* _event = new zpt::mysql::DeleteFileEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -553,8 +544,7 @@ zpt::mysql::NewLoadEvent::consume(zpt::mysql::event_header _header, std::istream
   -> zpt::mysql::event {
     zpt::mysql::NewLoadEvent* _event = new zpt::mysql::NewLoadEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -569,8 +559,7 @@ zpt::mysql::RandEvent::consume(zpt::mysql::event_header _header, std::istream& _
   -> zpt::mysql::event {
     zpt::mysql::RandEvent* _event = new zpt::mysql::RandEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -585,8 +574,7 @@ zpt::mysql::UserVarEvent::consume(zpt::mysql::event_header _header, std::istream
   -> zpt::mysql::event {
     zpt::mysql::UserVarEvent* _event = new zpt::mysql::UserVarEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -641,8 +629,7 @@ zpt::mysql::XidEvent::consume(zpt::mysql::event_header _header, std::istream& _i
   -> zpt::mysql::event {
     zpt::mysql::XidEvent* _event = new zpt::mysql::XidEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -657,8 +644,7 @@ zpt::mysql::BeginLoadQueryEvent::consume(zpt::mysql::event_header _header, std::
   -> zpt::mysql::event {
     zpt::mysql::BeginLoadQueryEvent* _event = new zpt::mysql::BeginLoadQueryEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -673,8 +659,7 @@ zpt::mysql::ExecuteLoadQueryEvent::consume(zpt::mysql::event_header _header, std
   -> zpt::mysql::event {
     zpt::mysql::ExecuteLoadQueryEvent* _event = new zpt::mysql::ExecuteLoadQueryEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -689,8 +674,7 @@ zpt::mysql::TableMapEvent::consume(zpt::mysql::event_header _header, std::istrea
   -> zpt::mysql::event {
     zpt::mysql::TableMapEvent* _event = new zpt::mysql::TableMapEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -705,8 +689,7 @@ zpt::mysql::PreGAWriteRowsEvent::consume(zpt::mysql::event_header _header, std::
   -> zpt::mysql::event {
     zpt::mysql::PreGAWriteRowsEvent* _event = new zpt::mysql::PreGAWriteRowsEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -721,8 +704,7 @@ zpt::mysql::PreGAUpdateRowsEvent::consume(zpt::mysql::event_header _header, std:
   -> zpt::mysql::event {
     zpt::mysql::PreGAUpdateRowsEvent* _event = new zpt::mysql::PreGAUpdateRowsEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -744,9 +726,7 @@ zpt::mysql::PreGADeleteRowsEvent::consume(zpt::mysql::event_header _header, std:
 
         char _pi_0 = 0x0;
         _in.read(&_pi_0, 1);
-        if (_pi_0 <= 250) {
-            _event->__number_of_columns = (std::uint64_t)_pi_0;
-        }
+        if (_pi_0 <= 250) { _event->__number_of_columns = (std::uint64_t)_pi_0; }
         else if (_pi_0 == 252) {
             _in.read((char*)&_event->__number_of_columns, 2);
         }
@@ -771,8 +751,7 @@ zpt::mysql::WriteRowsEvent::consume(zpt::mysql::event_header _header, std::istre
   -> zpt::mysql::event {
     zpt::mysql::WriteRowsEvent* _event = new zpt::mysql::WriteRowsEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -787,8 +766,7 @@ zpt::mysql::UpdateRowsEvent::consume(zpt::mysql::event_header _header, std::istr
   -> zpt::mysql::event {
     zpt::mysql::UpdateRowsEvent* _event = new zpt::mysql::UpdateRowsEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -810,9 +788,7 @@ zpt::mysql::DeleteRowsEvent::consume(zpt::mysql::event_header _header, std::istr
 
         char _pi_0 = 0x0;
         _in.read(&_pi_0, 1);
-        if (_pi_0 <= 250) {
-            _event->__number_of_columns = (std::uint64_t)_pi_0;
-        }
+        if (_pi_0 <= 250) { _event->__number_of_columns = (std::uint64_t)_pi_0; }
         else if (_pi_0 == 252) {
             _in.read((char*)&_event->__number_of_columns, 2);
         }
@@ -837,8 +813,7 @@ zpt::mysql::IncidentEvent::consume(zpt::mysql::event_header _header, std::istrea
   -> zpt::mysql::event {
     zpt::mysql::IncidentEvent* _event = new zpt::mysql::IncidentEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -853,8 +828,7 @@ zpt::mysql::HeartbeatLogEvent::consume(zpt::mysql::event_header _header, std::is
   -> zpt::mysql::event {
     zpt::mysql::HeartbeatLogEvent* _event = new zpt::mysql::HeartbeatLogEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -869,8 +843,7 @@ zpt::mysql::IgnorableLogEvent::consume(zpt::mysql::event_header _header, std::is
   -> zpt::mysql::event {
     zpt::mysql::IgnorableLogEvent* _event = new zpt::mysql::IgnorableLogEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -885,8 +858,7 @@ zpt::mysql::RowsQueryLogEvent::consume(zpt::mysql::event_header _header, std::is
   -> zpt::mysql::event {
     zpt::mysql::RowsQueryLogEvent* _event = new zpt::mysql::RowsQueryLogEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 
@@ -901,8 +873,7 @@ zpt::mysql::GTIDLogEvent::consume(zpt::mysql::event_header _header, std::istream
   -> zpt::mysql::event {
     zpt::mysql::GTIDLogEvent* _event = new zpt::mysql::GTIDLogEvent();
     _event->header(_header);
-    if (_header->__event_length) {
-    }
+    if (_header->__event_length) {}
     return zpt::mysql::event(_event);
 }
 

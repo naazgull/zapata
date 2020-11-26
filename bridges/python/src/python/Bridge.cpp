@@ -152,13 +152,9 @@ zpt::python::Bridge::boot(zpt::json _options) -> void {
     expect(PyImport_ExtendInittab(_initt) != -1, std::string("could not import modules"), 500, 0);
 
     Py_Initialize();
-    if (!PyEval_ThreadsInitialized()) {
-        PyEval_InitThreads();
-    }
+    if (!PyEval_ThreadsInitialized()) { PyEval_InitThreads(); }
 
-    for (auto _module : (*zpt::python::__modules)) {
-        PyImport_ImportModule(_module.first.data());
-    }
+    for (auto _module : (*zpt::python::__modules)) { PyImport_ImportModule(_module.first.data()); }
     // PyDateTime_IMPORT;
 
     zpt::json _new_sys_path =
@@ -192,9 +188,7 @@ zpt::python::Type::Type()
   : __target(nullptr) {}
 
 zpt::python::Type::~Type() {
-    if (this->__target != nullptr) {
-        Py_DECREF(this->__target);
-    }
+    if (this->__target != nullptr) { Py_DECREF(this->__target); }
 }
 
 auto
@@ -261,9 +255,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 
                   PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
                   PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
-                  if (_py_error_type == nullptr) {
-                      return;
-                  }
+                  if (_py_error_type == nullptr) { return; }
 
                   zpt::json _e_type =
                     _bridge->from<zpt::python::object>(zpt::python::object(_py_error_type));
@@ -314,9 +306,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
                   PyObject* _func = zpt::python::from_ref(_lambda);
                   PyObject* _args = nullptr;
                   PyObject* _context = Py_None;
-                  if (_instance->ok()) {
-                      _context = zpt::python::from_ref(_instance);
-                  }
+                  if (_instance->ok()) { _context = zpt::python::from_ref(_instance); }
                   _args = PyTuple_Pack(4,
                                        PyUnicode_DecodeFSDefault(_s_performative.data()),
                                        PyUnicode_DecodeFSDefault(_resource.data()),
@@ -335,9 +325,7 @@ zpt::python::module::on(PyObject* _self, PyObject* _args) -> PyObject* {
 
                   PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
                   PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
-                  if (_py_error_type == nullptr) {
-                      return;
-                  }
+                  if (_py_error_type == nullptr) { return; }
 
                   zpt::json _e_type =
                     _bridge->from<zpt::python::object>(zpt::python::object(_py_error_type));
@@ -396,9 +384,7 @@ zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject* {
               PyObject* _func = zpt::python::from_ref(_lambda);
               PyObject* _ctx = Py_None;
               if (_context->ok()) {
-                  if (_context->is_object()) {
-                      _ctx = zpt::python::to_python(_context);
-                  }
+                  if (_context->is_object()) { _ctx = zpt::python::to_python(_context); }
                   else {
                       _ctx = zpt::python::from_ref(_context);
                   }
@@ -418,9 +404,7 @@ zpt::python::module::route(PyObject* _self, zpt::json _params) -> PyObject* {
 
               PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
               PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
-              if (_py_error_type == nullptr) {
-                  return;
-              }
+              if (_py_error_type == nullptr) { return; }
 
               zpt::json _e_type =
                 _bridge->from<zpt::python::object>(zpt::python::object(_py_error_type));
@@ -509,9 +493,7 @@ zpt::python::module::hook(PyObject* _self, PyObject* _args) -> PyObject* {
 
         PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
         PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
-        if (_py_error_type == nullptr) {
-            return;
-        }
+        if (_py_error_type == nullptr) { return; }
 
         zpt::json _e_type = _bridge->from<zpt::python::object>(zpt::python::object(_py_error_type));
         zpt::json _e_message = _bridge->from<zpt::python::object>(zpt::python::object(_py_error));

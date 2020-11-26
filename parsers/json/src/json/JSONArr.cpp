@@ -87,18 +87,14 @@ zpt::JSONArrT::get_path(std::string const& _path, std::string const& _separator)
             zpt::json _return = zpt::json::array();
             for (auto _a : this->__underlying) {
                 _current = _a->get_path(_remainder, _separator);
-                if (_current->ok()) {
-                    _return << _current;
-                }
+                if (_current->ok()) { _return << _current; }
             }
             return _return;
         }
         return zpt::undefined;
     }
 
-    if (_remainder.length() == 0) {
-        return _current;
-    }
+    if (_remainder.length() == 0) { return _current; }
     return _current->get_path(_remainder, _separator);
 }
 
@@ -139,16 +135,12 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
 
     getline(_iss, _part, _separator[0]);
     zpt::json _current = (*this)[_part];
-    if (!_current->ok()) {
-        return (*this);
-    }
+    if (!_current->ok()) { return (*this); }
 
     while (_iss.good()) {
         getline(_iss, _part, _separator[0]);
         if (_current[_part]->ok()) {
-            if (_iss.good()) {
-                _current = _current[_part];
-            }
+            if (_iss.good()) { _current = _current[_part]; }
             else {
                 _current->array()->pop(_part);
             }
@@ -163,26 +155,24 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
 auto
 zpt::JSONArrT::clone() -> zpt::json {
     zpt::json _return = zpt::json::array();
-    for (auto _f : this->__underlying) {
-        _return << _f->clone();
-    }
+    for (auto _f : this->__underlying) { _return << _f->clone(); }
     return _return;
 }
 
-auto zpt::JSONArrT::operator-> () -> std::vector<zpt::json>* {
+auto
+zpt::JSONArrT::operator->() -> std::vector<zpt::json>* {
     return &this->__underlying;
 }
 
-auto zpt::JSONArrT::operator*() -> std::vector<zpt::json>& {
+auto
+zpt::JSONArrT::operator*() -> std::vector<zpt::json>& {
     return this->__underlying;
 }
 
 auto
 zpt::JSONArrT::operator==(zpt::JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] == _rhs[_f]) {
-            continue;
-        }
+        if ((*this)[_f] == _rhs[_f]) { continue; }
         return false;
     }
     return true;
@@ -196,9 +186,7 @@ zpt::JSONArrT::operator==(zpt::JSONArr& _rhs) -> bool {
 auto
 zpt::JSONArrT::operator!=(JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] != _rhs[_f]) {
-            return true;
-        }
+        if ((*this)[_f] != _rhs[_f]) { return true; }
     }
     return false;
 }
@@ -211,9 +199,7 @@ zpt::JSONArrT::operator!=(zpt::JSONArr& _rhs) -> bool {
 auto
 zpt::JSONArrT::operator<(zpt::JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] < _rhs[_f]) {
-            continue;
-        }
+        if ((*this)[_f] < _rhs[_f]) { continue; }
         return false;
     }
     return true;
@@ -227,9 +213,7 @@ zpt::JSONArrT::operator<(zpt::JSONArr& _rhs) -> bool {
 auto
 zpt::JSONArrT::operator>(zpt::JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] > _rhs[_f]) {
-            continue;
-        }
+        if ((*this)[_f] > _rhs[_f]) { continue; }
         return false;
     }
     return true;
@@ -243,9 +227,7 @@ zpt::JSONArrT::operator>(zpt::JSONArr& _rhs) -> bool {
 auto
 zpt::JSONArrT::operator<=(zpt::JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] <= _rhs[_f]) {
-            continue;
-        }
+        if ((*this)[_f] <= _rhs[_f]) { continue; }
         return false;
     }
     return true;
@@ -259,9 +241,7 @@ zpt::JSONArrT::operator<=(zpt::JSONArr& _rhs) -> bool {
 auto
 zpt::JSONArrT::operator>=(zpt::JSONArrT& _rhs) -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
-        if ((*this)[_f] >= _rhs[_f]) {
-            continue;
-        }
+        if ((*this)[_f] >= _rhs[_f]) { continue; }
         return false;
     }
     return true;
@@ -272,28 +252,28 @@ zpt::JSONArrT::operator>=(zpt::JSONArr& _rhs) -> bool {
     return *this >= *_rhs;
 }
 
-auto zpt::JSONArrT::operator[](int _idx) -> zpt::json {
+auto
+zpt::JSONArrT::operator[](int _idx) -> zpt::json {
     return (*this)[(size_t)_idx];
 }
 
-auto zpt::JSONArrT::operator[](size_t _idx) -> zpt::json {
-    if (_idx < 0 || _idx >= this->__underlying.size()) {
-        return zpt::undefined;
-    }
+auto
+zpt::JSONArrT::operator[](size_t _idx) -> zpt::json {
+    if (_idx < 0 || _idx >= this->__underlying.size()) { return zpt::undefined; }
     return this->__underlying.at(_idx);
 }
 
-auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json {
+auto
+zpt::JSONArrT::operator[](const char* _idx) -> zpt::json {
     return (*this)[std::string(_idx)];
 }
 
-auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
+auto
+zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
 
-    if (_i < 0 || _i >= (long)this->__underlying.size()) {
-        return zpt::undefined;
-    }
+    if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }
 
     return this->__underlying.at((size_t)_i);
 }
@@ -303,9 +283,7 @@ zpt::JSONArrT::stringify(std::string& _out) -> JSONArrT& {
     _out.insert(_out.length(), "[");
     bool _first = true;
     for (auto _i : this->__underlying) {
-        if (!_first) {
-            _out.insert(_out.length(), ",");
-        }
+        if (!_first) { _out.insert(_out.length(), ","); }
         _first = false;
         _i->stringify(_out);
     }
@@ -318,9 +296,7 @@ zpt::JSONArrT::stringify(std::ostream& _out) -> JSONArrT& {
     _out << "[" << std::flush;
     bool _first = true;
     for (auto _i : this->__underlying) {
-        if (!_first) {
-            _out << ",";
-        }
+        if (!_first) { _out << ","; }
         _first = false;
         _i->stringify(_out);
     }
@@ -333,9 +309,7 @@ zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) -> JSONArrT& {
     _out.insert(_out.length(), "[");
     bool _first = true;
     for (auto _i : this->__underlying) {
-        if (!_first) {
-            _out.insert(_out.length(), ",");
-        }
+        if (!_first) { _out.insert(_out.length(), ","); }
         _out.insert(_out.length(), "\n");
         _first = false;
         _out.insert(_out.length(), std::string(_n_tabs + 1, '\t'));
@@ -354,17 +328,13 @@ zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
     _out << "[" << std::flush;
     bool _first = true;
     for (auto _i : this->__underlying) {
-        if (!_first) {
-            _out << ",";
-        }
+        if (!_first) { _out << ","; }
         _out << "\n ";
         _first = false;
         _out << std::string(_n_tabs + 1, '\t') << std::flush;
         _i->prettify(_out, _n_tabs + 1);
     }
-    if (!_first) {
-        _out << "\n" << std::string(_n_tabs, '\t');
-    }
+    if (!_first) { _out << "\n" << std::string(_n_tabs, '\t'); }
     _out << "]" << std::flush;
     return (*this);
 }
@@ -373,13 +343,9 @@ zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
 zpt::JSONArr::JSONArr()
   : __underlying{ std::make_shared<zpt::JSONArrT>() } {}
 
-zpt::JSONArr::JSONArr(const JSONArr& _rhs) {
-    (*this) = _rhs;
-}
+zpt::JSONArr::JSONArr(const JSONArr& _rhs) { (*this) = _rhs; }
 
-zpt::JSONArr::JSONArr(JSONArr&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::JSONArr::JSONArr(JSONArr&& _rhs) { (*this) = _rhs; }
 
 zpt::JSONArr::JSONArr(zpt::JSONArrT* _target)
   : __underlying{ _target } {}
@@ -398,27 +364,25 @@ zpt::JSONArr::operator=(zpt::JSONArr&& _rhs) -> zpt::JSONArr& {
     return (*this);
 }
 
-auto zpt::JSONArr::operator-> () -> zpt::JSONArrT* {
+auto
+zpt::JSONArr::operator->() -> zpt::JSONArrT* {
     return this->__underlying.get();
 }
 
-auto zpt::JSONArr::operator*() -> zpt::JSONArrT& {
+auto
+zpt::JSONArr::operator*() -> zpt::JSONArrT& {
     return *this->__underlying.get();
 }
 
 zpt::JSONArr::operator std::string() {
-    if (this->__underlying.get() == nullptr) {
-        return "";
-    }
+    if (this->__underlying.get() == nullptr) { return ""; }
     std::string _out;
     (*this)->stringify(_out);
     return _out;
 }
 
 zpt::JSONArr::operator zpt::pretty() {
-    if (this->__underlying.get() == nullptr) {
-        return "";
-    }
+    if (this->__underlying.get() == nullptr) { return ""; }
     std::string _out;
     (*this)->prettify(_out);
     return _out;

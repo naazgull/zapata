@@ -81,7 +81,7 @@ class stream {
     template<typename T>
     auto operator<<(T _in) -> zpt::stream&;
     auto operator<<(ostream_manipulator _in) -> zpt::stream&;
-    auto operator-> () -> std::iostream*;
+    auto operator->() -> std::iostream*;
     auto operator*() -> std::iostream&;
 
     operator int();

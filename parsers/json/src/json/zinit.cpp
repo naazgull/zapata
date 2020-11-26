@@ -104,9 +104,7 @@ main(int _argc, char* _argv[]) {
         std::getline(std::cin, _input, '\n');
         _path_prefix.assign(_input.data());
     }
-    if (_path_prefix.back() == '/') {
-        _path_prefix.erase(_path_prefix.length() - 1, 1);
-    }
+    if (_path_prefix.back() == '/') { _path_prefix.erase(_path_prefix.length() - 1, 1); }
 
     std::string _dev_name;
     if (_options["developer"]["name"]->type() == zpt::JSString) {

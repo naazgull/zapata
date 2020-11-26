@@ -63,9 +63,7 @@ zpt::trim(std::string& _in_out) {
 
 auto
 zpt::replace(std::string& str, std::string find, std::string replace) -> void {
-    if (str.length() == 0) {
-        return;
-    }
+    if (str.length() == 0) { return; }
 
     size_t start = 0;
 
@@ -78,14 +76,10 @@ zpt::replace(std::string& str, std::string find, std::string replace) -> void {
 void
 zpt::normalize_path(std::string& _in_out, bool _with_trailing) {
     if (_with_trailing) {
-        if (_in_out[_in_out.length() - 1] != '/') {
-            _in_out.insert(_in_out.length(), "/");
-        }
+        if (_in_out[_in_out.length() - 1] != '/') { _in_out.insert(_in_out.length(), "/"); }
     }
     else {
-        if (_in_out[_in_out.length() - 1] == '/') {
-            _in_out.erase(_in_out.length() - 1, 1);
-        }
+        if (_in_out[_in_out.length() - 1] == '/') { _in_out.erase(_in_out.length() - 1, 1); }
     }
 }
 
@@ -96,9 +90,7 @@ zpt::cipher(std::string const& _in, std::string const& _key, std::string& _out) 
 
     for (unsigned int i = 0; i < iIn; i++) {
         _s_encrypted[i] = _in[i] ^ (_key[x] & 10);
-        if (++x == _ikey) {
-            x = 0;
-        }
+        if (++x == _ikey) { x = 0; }
     }
     _out.assign(_s_encrypted);
 }
@@ -114,16 +106,12 @@ zpt::encrypt(std::string& _out, std::string const& _in, std::string const& _key)
     size_t destLen = (size_t)(_in.length() * 1.1 + 12);
     Bytef* dest = new Bytef[destLen];
 
-    for (size_t i = 0; i != _in.length(); i++) {
-        src[i] = (Bytef)_in[i];
-    }
+    for (size_t i = 0; i != _in.length(); i++) { src[i] = (Bytef)_in[i]; }
 
     compress(dest, &destLen, src, _in.length());
 
     std::ostringstream cos;
-    for (size_t i = 0; i != destLen; i++) {
-        cos << dest[i];
-    }
+    for (size_t i = 0; i != destLen; i++) { cos << dest[i]; }
     cos << std::flush;
 
     std::string _encrypted;
@@ -145,9 +133,7 @@ zpt::decrypt(std::string& _out, std::string const& _in, std::string const& _key)
     std::string _length(_in.substr(0, _idx));
     size_t _size = 0;
     zpt::fromstr(_length, &_size);
-    if (_size == 0) {
-        return;
-    }
+    if (_size == 0) { return; }
 
     std::string _encrypted = _in.substr(_idx + 1);
     zpt::base64::decode(_encrypted);
@@ -159,16 +145,12 @@ zpt::decrypt(std::string& _out, std::string const& _in, std::string const& _key)
     size_t destLen = _size;
     Bytef* dest = new Bytef[destLen];
 
-    for (size_t i = 0; i != _decrypted.length(); i++) {
-        src[i] = (Bytef)_decrypted[i];
-    }
+    for (size_t i = 0; i != _decrypted.length(); i++) { src[i] = (Bytef)_decrypted[i]; }
 
     uncompress(dest, &destLen, src, _decrypted.length());
 
     std::ostringstream cos;
-    for (size_t i = 0; i != destLen; i++) {
-        cos << dest[i];
-    }
+    for (size_t i = 0; i != destLen; i++) { cos << dest[i]; }
     cos << std::flush;
 
     delete[] src;
@@ -226,9 +208,7 @@ std::string
 zpt::r_replace(std::string str, std::string find, std::string replace) {
     std::string _return(str.data());
     try {
-        if (_return.length() == 0) {
-            return _return;
-        }
+        if (_return.length() == 0) { return _return; }
 
         size_t start = 0;
 
@@ -247,14 +227,10 @@ std::string
 zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) {
     std::string _return(_in_out.data());
     if (_with_trailing) {
-        if (_return[_return.length() - 1] != '/') {
-            _return.insert(_return.length(), "/");
-        }
+        if (_return[_return.length() - 1] != '/') { _return.insert(_return.length(), "/"); }
     }
     else {
-        if (_return[_return.length() - 1] == '/') {
-            _return.erase(_return.length() - 1, 1);
-        }
+        if (_return[_return.length() - 1] == '/') { _return.erase(_return.length() - 1, 1); }
     }
     return _return;
 }
@@ -267,9 +243,7 @@ zpt::r_cipher(std::string const& _in, std::string const& _key) {
 
     for (unsigned int i = 0; i < iIn; i++) {
         _s_encrypted[i] = _in[i] ^ (_key[x] & 10);
-        if (++x == _ikey) {
-            x = 0;
-        }
+        if (++x == _ikey) { x = 0; }
     }
     _out.assign(_s_encrypted);
     return _out;
@@ -287,16 +261,12 @@ zpt::r_encrypt(std::string const& _in, std::string const& _key) {
     size_t destLen = (size_t)(_in.length() * 1.1 + 12);
     Bytef* dest = new Bytef[destLen];
 
-    for (size_t i = 0; i != _in.length(); i++) {
-        src[i] = (Bytef)_in[i];
-    }
+    for (size_t i = 0; i != _in.length(); i++) { src[i] = (Bytef)_in[i]; }
 
     compress(dest, &destLen, src, _in.length());
 
     std::ostringstream cos;
-    for (size_t i = 0; i != destLen; i++) {
-        cos << dest[i];
-    }
+    for (size_t i = 0; i != destLen; i++) { cos << dest[i]; }
     cos << std::flush;
 
     std::string _encrypted;
@@ -320,9 +290,7 @@ zpt::r_decrypt(std::string const& _in, std::string const& _key) {
     std::string _length(_in.substr(0, _idx));
     size_t _size = 0;
     zpt::fromstr(_length, &_size);
-    if (_size == 0) {
-        return "";
-    }
+    if (_size == 0) { return ""; }
 
     std::string _encrypted = _in.substr(_idx + 1);
     zpt::base64::decode(_encrypted);
@@ -334,16 +302,12 @@ zpt::r_decrypt(std::string const& _in, std::string const& _key) {
     size_t destLen = _size;
     Bytef* dest = new Bytef[destLen];
 
-    for (size_t i = 0; i != _decrypted.length(); i++) {
-        src[i] = (Bytef)_decrypted[i];
-    }
+    for (size_t i = 0; i != _decrypted.length(); i++) { src[i] = (Bytef)_decrypted[i]; }
 
     uncompress(dest, &destLen, src, _decrypted.length());
 
     std::ostringstream cos;
-    for (size_t i = 0; i != destLen; i++) {
-        cos << dest[i];
-    }
+    for (size_t i = 0; i != destLen; i++) { cos << dest[i]; }
     cos << std::flush;
 
     delete[] src;

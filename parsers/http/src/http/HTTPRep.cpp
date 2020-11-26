@@ -26,13 +26,9 @@ auto
 zpt::HTTPRepT::stringify(std::ostream& _out) -> void {
     zpt::performative _status = this->__status > 99 ? this->__status : 100;
     _out << "HTTP/" << this->version() << " " << std::to_string(_status);
-    if (this->version()[0] != '2') {
-        _out << " " << zpt::http::status_names[_status];
-    }
+    if (this->version()[0] != '2') { _out << " " << zpt::http::status_names[_status]; }
     _out << CRLF;
-    for (auto i : this->__headers) {
-        _out << i.first << ": " << i.second << CRLF;
-    }
+    for (auto i : this->__headers) { _out << i.first << ": " << i.second << CRLF; }
     _out << CRLF << this->__body;
 }
 
@@ -49,17 +45,17 @@ zpt::HTTPRep::HTTPRep()
 
 zpt::HTTPRep::~HTTPRep() {}
 
-auto zpt::HTTPRep::operator*() -> zpt::HTTPRepT& {
+auto
+zpt::HTTPRep::operator*() -> zpt::HTTPRepT& {
     return *this->__underlying.get();
 }
 
-auto zpt::HTTPRep::operator-> () -> zpt::HTTPRepT* {
+auto
+zpt::HTTPRep::operator->() -> zpt::HTTPRepT* {
     return this->__underlying.get();
 }
 
-zpt::HTTPRep::operator std::string() {
-    return (*this)->to_string();
-}
+zpt::HTTPRep::operator std::string() { return (*this)->to_string(); }
 
 auto
 zpt::HTTPRep::parse(std::istream& _in) -> void {

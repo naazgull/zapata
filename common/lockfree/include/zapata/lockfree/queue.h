@@ -53,12 +53,10 @@ class forward_node {
     virtual ~forward_node() = default;
 
     auto operator=(forward_node const&) -> forward_node& = delete;
-    auto operator=(forward_node &&) -> forward_node& = delete;
+    auto operator=(forward_node&&) -> forward_node& = delete;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::forward_node<T>& _in) -> std::ostream& {
-        if constexpr (std::is_pointer<T>::value) {
-            _out << *(_in.__value) << std::flush;
-        }
+        if constexpr (std::is_pointer<T>::value) { _out << *(_in.__value) << std::flush; }
         else {
             _out << _in.__value << std::flush;
         }
@@ -98,7 +96,7 @@ class queue {
 
         // INPUT ITERATOR METHODS //
         auto operator++(int) -> iterator;
-        auto operator-> () -> pointer;
+        auto operator->() -> pointer;
         auto operator==(iterator const& _rhs) const -> bool;
         auto operator!=(iterator const& _rhs) const -> bool;
         // END / INPUT ITERATOR METHODS //
@@ -168,8 +166,7 @@ class queue {
         _out << std::endl << std::endl << "  #items -> [" << std::flush;
         try {
             for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
-                if (_it.node()->__is_null->load())
-                    continue;
+                if (_it.node()->__is_null->load()) continue;
                 _out << (_count % 5 == 0 ? "\n\t" : ", ") << *_it.node() << std::flush;
                 _count++;
             }
@@ -225,9 +222,7 @@ zpt::lf::queue<T>::head() -> zpt::lf::forward_node<T>* {
                                                                     this->__hazard_domain };
     if (_front_sentry.is_acquired()) {
         zpt::lf::forward_node<T>* _front = _front_sentry.target();
-        if (_front != nullptr && !_front->__is_null->load()) {
-            return _front;
-        }
+        if (_front != nullptr && !_front->__is_null->load()) { return _front; }
     }
     throw zpt::NoMoreElementsException("there is no element in the front");
 }
@@ -239,9 +234,7 @@ zpt::lf::queue<T>::tail() -> zpt::lf::forward_node<T>* {
                                                                    this->__hazard_domain };
     if (_back_sentry.is_acquired()) {
         zpt::lf::forward_node<T>* _back = _back_sentry.target();
-        if (_back != nullptr && !_back->__is_null->load()) {
-            return _back;
-        }
+        if (_back != nullptr && !_back->__is_null->load()) { return _back; }
     }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
@@ -265,9 +258,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
                 return (*this);
             }
         }
-        if (this->__spin_sleep <= 0) {
-            std::this_thread::yield();
-        }
+        if (this->__spin_sleep <= 0) { std::this_thread::yield(); }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
               std::chrono::duration<int, std::micro>{ this->__spin_sleep });
@@ -285,9 +276,7 @@ zpt::lf::queue<T>::pop() -> T {
                                                                        this->__hazard_domain };
         if (_head_sentry.is_acquired()) {
             auto _head = _head_sentry.target();
-            if (_head->__is_null->load()) {
-                break;
-            }
+            if (_head->__is_null->load()) { break; }
             else {
                 try {
                     auto _next = _head->__next->load(std::memory_order_acquire);
@@ -305,9 +294,7 @@ zpt::lf::queue<T>::pop() -> T {
                 }
             }
         }
-        if (this->__spin_sleep < 0) {
-            std::this_thread::yield();
-        }
+        if (this->__spin_sleep < 0) { std::this_thread::yield(); }
         else if (this->__spin_sleep != 0) {
             std::this_thread::sleep_for(
               std::chrono::duration<int, std::micro>{ this->__spin_sleep });
@@ -332,9 +319,7 @@ template<typename T>
 auto
 zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
     try {
-        while (true) {
-            this->pop();
-        }
+        while (true) { this->pop(); }
     }
     catch (zpt::NoMoreElementsException const& e) {
     }
@@ -395,14 +380,13 @@ zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
 template<typename T>
 auto
 zpt::lf::queue<T>::iterator::operator++() -> zpt::lf::queue<T>::iterator& {
-    if (this->__current != nullptr) {
-        this->__current = this->__current->__next->load();
-    }
+    if (this->__current != nullptr) { this->__current = this->__current->__next->load(); }
     return (*this);
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::iterator::operator*() -> zpt::lf::queue<T>::iterator::reference {
+auto
+zpt::lf::queue<T>::iterator::operator*() -> zpt::lf::queue<T>::iterator::reference {
     return this->__current->__value;
 }
 
@@ -415,7 +399,8 @@ zpt::lf::queue<T>::iterator::operator++(int) {
 }
 
 template<typename T>
-auto zpt::lf::queue<T>::iterator::operator-> () -> zpt::lf::queue<T>::iterator::pointer {
+auto
+zpt::lf::queue<T>::iterator::operator->() -> zpt::lf::queue<T>::iterator::pointer {
     return this->__current->__value;
 }
 

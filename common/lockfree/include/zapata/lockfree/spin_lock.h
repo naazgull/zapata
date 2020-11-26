@@ -24,7 +24,7 @@ class spin_lock {
         virtual ~guard();
 
         auto operator=(zpt::lf::spin_lock::guard const&) -> zpt::lf::spin_lock::guard& = delete;
-        auto operator=(zpt::lf::spin_lock::guard &&) -> zpt::lf::spin_lock::guard& = delete;
+        auto operator=(zpt::lf::spin_lock::guard&&) -> zpt::lf::spin_lock::guard& = delete;
 
         auto release() -> zpt::lf::spin_lock::guard&;
         auto exclusivity() -> zpt::lf::spin_lock::guard&;

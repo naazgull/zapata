@@ -58,16 +58,18 @@ char const author[] = "Frank B. Brokken (f.b.brokken@rug.nl)";
 
 enum Reserved_ { UNDETERMINED_ = -2, EOF_ = -1, errTok_ = 256 };
 enum StateType // modify statetype/data.cc when this enum changes
-{ NORMAL,
-  ERR_ITEM,
-  REQ_TOKEN,
-  ERR_REQ,    // ERR_ITEM | REQ_TOKEN
-  DEF_RED,    // state having default reduction
-  ERR_DEF,    // ERR_ITEM | DEF_RED
-  REQ_DEF,    // REQ_TOKEN | DEF_RED
-  ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
+{
+    NORMAL,
+    ERR_ITEM,
+    REQ_TOKEN,
+    ERR_REQ,    // ERR_ITEM | REQ_TOKEN
+    DEF_RED,    // state having default reduction
+    ERR_DEF,    // ERR_ITEM | DEF_RED
+    REQ_DEF,    // REQ_TOKEN | DEF_RED
+    ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
 };
-inline bool operator&(StateType lhs, StateType rhs) {
+inline bool
+operator&(StateType lhs, StateType rhs) {
     return (static_cast<int>(lhs) & rhs) != 0;
 }
 enum StateTransition {
@@ -568,8 +570,7 @@ void
 URITokenizerBase::lex_(int token) {
     d_token = token;
 
-    if (d_token <= 0)
-        d_token = Reserved_::EOF_;
+    if (d_token <= 0) d_token = Reserved_::EOF_;
 
     d_terminalToken = true;
 }
@@ -585,8 +586,7 @@ URITokenizerBase::lookup_() const {
 
     for (; ++sr != last;) // visit all but the last SR entries
     {
-        if (sr->d_token == d_token)
-            return sr->d_action;
+        if (sr->d_token == d_token) return sr->d_action;
     }
 
     if (sr == last) // reached the last element
@@ -611,9 +611,7 @@ URITokenizerBase::lookup_() const {
 // base/pop
 void
 URITokenizerBase::pop_(size_t count) {
-    if (d_stackIdx < static_cast<int>(count)) {
-        ABORT();
-    }
+    if (d_stackIdx < static_cast<int>(count)) { ABORT(); }
 
     d_stackIdx -= count;
     d_state = d_stateStack[d_stackIdx].first;
@@ -643,8 +641,7 @@ URITokenizerBase::push_(size_t state) {
 
     d_vsp = &d_stateStack[d_stackIdx];
 
-    if (d_stackIdx == 0) {
-    }
+    if (d_stackIdx == 0) {}
     else {
     }
 }
@@ -659,8 +656,7 @@ URITokenizerBase::pushToken_(int token) {
 // base/redotoken
 void
 URITokenizerBase::redoToken_() {
-    if (d_token != Reserved_::UNDETERMINED_)
-        pushToken_(d_token);
+    if (d_token != Reserved_::UNDETERMINED_) pushToken_(d_token);
 }
 
 // base/reduce
@@ -727,9 +723,7 @@ URITokenizer::errorRecovery_() {
     }
 
     // get the error state
-    while (not(s_state[top_()][0].d_type & ERR_ITEM)) {
-        pop_();
-    }
+    while (not(s_state[top_()][0].d_type & ERR_ITEM)) { pop_(); }
 
     // In the error state, looking up a token allows us to proceed.
     // Continuation may be require multiple reductions, but eventually a
@@ -828,9 +822,7 @@ URITokenizer::executeAction_(int production) try {
             std::istringstream _iss;
             _iss.str(d_scanner.matched());
             _iss >> _port;
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner) << "port" << _port;
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner) << "port" << _port; }
             else {
                 (*d_scanner) << _port;
             }
@@ -989,8 +981,7 @@ catch (std::exception const& exc) {
 // derived/nextcycle
 void
 URITokenizer::nextCycle_() try {
-    if (s_state[state_()]->d_type & REQ_TOKEN)
-        nextToken_(); // obtain next token
+    if (s_state[state_()]->d_type & REQ_TOKEN) nextToken_(); // obtain next token
 
     int action = lookup_(); // lookup d_token in d_state
 
@@ -1021,8 +1012,7 @@ catch (ErrorRecovery_) {
     if (not recovery_())
         errorRecovery_();
     else {
-        if (token_() == Reserved_::EOF_)
-            ABORT();
+        if (token_() == Reserved_::EOF_) ABORT();
         popToken_(); // skip the failing token
     }
 }
@@ -1035,9 +1025,7 @@ URITokenizer::nextToken_() {
     // savedToken_() is assigned to d_token.
 
     // no need for a token: got one already
-    if (token_() != Reserved_::UNDETERMINED_) {
-        return;
-    }
+    if (token_() != Reserved_::UNDETERMINED_) { return; }
 
     if (savedToken_() != Reserved_::UNDETERMINED_) {
         popToken_(); // consume pending token

@@ -161,7 +161,7 @@ class HTTPReq {
     virtual ~HTTPReq();
 
     auto operator*() -> zpt::HTTPReqT&;
-    auto operator-> () -> zpt::HTTPReqT*;
+    auto operator->() -> zpt::HTTPReqT*;
     operator std::string();
 
     virtual auto parse(std::istream& _in) -> void;
@@ -185,7 +185,7 @@ class HTTPRep {
     virtual ~HTTPRep();
 
     auto operator*() -> zpt::HTTPRepT&;
-    auto operator-> () -> zpt::HTTPRepT*;
+    auto operator->() -> zpt::HTTPRepT*;
     operator std::string();
 
     virtual void parse(std::istream& _in);

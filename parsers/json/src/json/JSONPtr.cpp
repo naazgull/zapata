@@ -18,13 +18,9 @@ zpt::pretty::pretty(std::string const& _rhs)
 zpt::pretty::pretty(const char* _rhs)
   : __underlying{ _rhs } {}
 
-zpt::pretty::pretty(const pretty& _rhs) {
-    (*this) = _rhs;
-}
+zpt::pretty::pretty(const pretty& _rhs) { (*this) = _rhs; }
 
-zpt::pretty::pretty(pretty&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::pretty::pretty(pretty&& _rhs) { (*this) = _rhs; }
 
 auto
 zpt::pretty::operator=(const pretty& _rhs) -> pretty& {
@@ -38,17 +34,17 @@ zpt::pretty::operator=(pretty&& _rhs) -> pretty& {
     return (*this);
 }
 
-auto zpt::pretty::operator-> () -> std::string* {
+auto
+zpt::pretty::operator->() -> std::string* {
     return &this->__underlying;
 }
 
-auto zpt::pretty::operator*() -> std::string& {
+auto
+zpt::pretty::operator*() -> std::string& {
     return this->__underlying;
 }
 
-zpt::pretty::operator std::string() {
-    return this->__underlying;
-}
+zpt::pretty::operator std::string() { return this->__underlying; }
 
 /*JSON POINTER TO ELEMENT*/
 zpt::json::json()
@@ -57,32 +53,22 @@ zpt::json::json()
 zpt::json::json(std::nullptr_t)
   : __underlying{ nullptr } {}
 
-zpt::json::json(const zpt::json& _rhs) {
-    (*this) = _rhs;
-}
+zpt::json::json(const zpt::json& _rhs) { (*this) = _rhs; }
 
-zpt::json::json(zpt::json&& _rhs) {
-    (*this) = _rhs;
-}
+zpt::json::json(zpt::json&& _rhs) { (*this) = _rhs; }
 
 zpt::json::json(std::unique_ptr<zpt::JSONElementT> _target)
   : __underlying{ _target.release() } {}
 
-zpt::json::json(std::initializer_list<zpt::json> _init) {
-    (*this) = _init;
-}
+zpt::json::json(std::initializer_list<zpt::json> _init) { (*this) = _init; }
 
-zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) {
-    (*this) = _rhs;
-}
+zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) { (*this) = _rhs; }
 
 zpt::json::~json() {}
 
 auto
 zpt::json::value() -> zpt::JSONElementT& {
-    if (this->__underlying.get() == nullptr) {
-        return *(zpt::undefined.__underlying.get());
-    }
+    if (this->__underlying.get() == nullptr) { return *(zpt::undefined.__underlying.get()); }
     return *(this->__underlying.get());
 }
 
@@ -106,9 +92,7 @@ zpt::json::operator=(std::tuple<size_t, std::string, zpt::json> _rhs) -> zpt::js
 
 auto
 zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
-    if (_list.size() == 0) {
-        return (*this);
-    }
+    if (_list.size() == 0) { return (*this); }
 
     zpt::json _head = *_list.begin();
     if (_list.size() == 1) {
@@ -139,9 +123,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
             continue;
         }
 
-        if (_is_array) {
-            this->__underlying->array()->push(_element);
-        }
+        if (_is_array) { this->__underlying->array()->push(_element); }
         else {
             this->__underlying->object()->push(_element);
         }
@@ -150,11 +132,13 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
     return (*this);
 }
 
-auto zpt::json::operator-> () -> zpt::JSONElementT* {
+auto
+zpt::json::operator->() -> zpt::JSONElementT* {
     return this->__underlying.get();
 }
 
-auto zpt::json::operator*() -> zpt::JSONElementT& {
+auto
+zpt::json::operator*() -> zpt::JSONElementT& {
     return *this->__underlying.get();
 }
 
@@ -183,71 +167,41 @@ zpt::json::operator<<(std::initializer_list<zpt::json> _in) -> zpt::json& {
     return (*this);
 }
 
-zpt::json::operator std::string() {
-    return this->__underlying.get()->operator std::string();
-}
+zpt::json::operator std::string() { return this->__underlying.get()->operator std::string(); }
 
-zpt::json::operator bool() {
-    return this->__underlying.get()->operator bool();
-}
+zpt::json::operator bool() { return this->__underlying.get()->operator bool(); }
 
-zpt::json::operator int() {
-    return this->__underlying.get()->operator int();
-}
+zpt::json::operator int() { return this->__underlying.get()->operator int(); }
 
-zpt::json::operator long() {
-    return this->__underlying.get()->operator long();
-}
+zpt::json::operator long() { return this->__underlying.get()->operator long(); }
 
-zpt::json::operator long long() {
-    return this->__underlying.get()->operator long long();
-}
+zpt::json::operator long long() { return this->__underlying.get()->operator long long(); }
 
-zpt::json::operator size_t() {
-    return this->__underlying.get()->operator size_t();
-}
+zpt::json::operator size_t() { return this->__underlying.get()->operator size_t(); }
 
-zpt::json::operator double() {
-    return this->__underlying.get()->operator double();
-}
+zpt::json::operator double() { return this->__underlying.get()->operator double(); }
 
 #ifdef __LP64__
-zpt::json::operator unsigned int() {
-    return this->__underlying.get()->operator unsigned int();
-}
+zpt::json::operator unsigned int() { return this->__underlying.get()->operator unsigned int(); }
 
 #endif
 zpt::json::operator zpt::timestamp_t() {
     return this->__underlying.get()->operator zpt::timestamp_t();
 }
 
-zpt::json::operator zpt::JSONObj() {
-    return this->__underlying.get()->operator zpt::JSONObj();
-}
+zpt::json::operator zpt::JSONObj() { return this->__underlying.get()->operator zpt::JSONObj(); }
 
-zpt::json::operator zpt::JSONArr() {
-    return this->__underlying.get()->operator zpt::JSONArr();
-}
+zpt::json::operator zpt::JSONArr() { return this->__underlying.get()->operator zpt::JSONArr(); }
 
-zpt::json::operator zpt::JSONObj&() {
-    return this->__underlying.get()->operator zpt::JSONObj&();
-}
+zpt::json::operator zpt::JSONObj&() { return this->__underlying.get()->operator zpt::JSONObj&(); }
 
-zpt::json::operator zpt::JSONArr&() {
-    return this->__underlying.get()->operator zpt::JSONArr&();
-}
+zpt::json::operator zpt::JSONArr&() { return this->__underlying.get()->operator zpt::JSONArr&(); }
 
-zpt::json::operator zpt::lambda() {
-    return this->__underlying.get()->operator zpt::lambda();
-}
+zpt::json::operator zpt::lambda() { return this->__underlying.get()->operator zpt::lambda(); }
 
-zpt::json::operator zpt::regex() {
-    return this->__underlying.get()->operator zpt::regex();
-}
+zpt::json::operator zpt::regex() { return this->__underlying.get()->operator zpt::regex(); }
 
-zpt::json::operator zpt::regex&() {
-    return this->__underlying.get()->operator zpt::regex&();
-}
+zpt::json::operator zpt::regex&() { return this->__underlying.get()->operator zpt::regex&(); }
 
 zpt::json::operator std::regex&() {
     return this->__underlying.get()->regex().operator std::regex&();
@@ -285,12 +239,8 @@ zpt::json::operator|(std::initializer_list<zpt::json> _rhs) -> zpt::json {
 
 auto
 zpt::json::operator+(zpt::json _rhs) -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) {
-        return _rhs->clone();
-    }
-    if (_rhs->type() == zpt::JSNil) {
-        return this->__underlying->clone();
-    }
+    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
+    if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             zpt::json _lhs = this->__underlying->clone();
@@ -307,25 +257,19 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = this->__underlying->clone();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << _e;
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << _e; }
                 return _lhs;
             }
             else {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : *this) {
-                    _lhs << (_e + _rhs);
-                }
+                for (auto [_idx, _key, _e] : *this) { _lhs << (_e + _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) + _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -336,9 +280,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) + _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -348,9 +290,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) + _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -360,9 +300,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) + _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -375,9 +313,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) + _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
             else {
@@ -401,15 +337,11 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
         (*this) = _rhs->clone();
         return (*this);
     }
-    if (_rhs->type() == zpt::JSNil) {
-        return (*this);
-    }
+    if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             for (auto [_, _key, _e] : _rhs) {
-                if ((*this)[_key]->ok()) {
-                    (*this)[_key] += _e;
-                }
+                if ((*this)[_key]->ok()) { (*this)[_key] += _e; }
                 else {
                     (*this) << _key << _e;
                 }
@@ -417,9 +349,7 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
             return (*this);
         }
         case zpt::JSArray: {
-            for (auto [_, __, _e] : _rhs) {
-                (*this) << _e;
-            }
+            for (auto [_, __, _e] : _rhs) { (*this) << _e; }
             return (*this);
         }
         case zpt::JSString: {
@@ -458,42 +388,30 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
 
 auto
 zpt::json::operator-(zpt::json _rhs) -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) {
-        return _rhs->clone();
-    }
-    if (_rhs->type() == zpt::JSNil) {
-        return this->__underlying->clone();
-    }
+    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
+    if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             zpt::json _lhs = this->__underlying->clone();
-            for (auto [_idx, _key, _e] : _rhs) {
-                _lhs->object()->pop(_key);
-            }
+            for (auto [_idx, _key, _e] : _rhs) { _lhs->object()->pop(_key); }
             return _lhs;
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << (this[_idx] - _rhs[_idx]);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] - _rhs[_idx]); }
                 return _lhs;
             }
             else {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << (_e - _rhs);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << (_e - _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) - _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -509,9 +427,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) - _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -521,9 +437,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) - _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -533,9 +447,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) - _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -548,9 +460,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) - _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
             else {
@@ -573,20 +483,14 @@ zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
         (*this) = _rhs->clone();
         return (*this);
     }
-    if (_rhs->type() == zpt::JSNil) {
-        return (*this);
-    }
+    if (_rhs->type() == zpt::JSNil) { return (*this); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
-            for (auto [_, _key, __] : _rhs) {
-                (**this).object()->pop(_key);
-            }
+            for (auto [_, _key, __] : _rhs) { (**this).object()->pop(_key); }
             return (*this);
         }
         case zpt::JSArray: {
-            for (auto [_idx, _, __] : _rhs) {
-                (**this).array()->pop(_idx);
-            }
+            for (auto [_idx, _, __] : _rhs) { (**this).array()->pop(_idx); }
             return (*this);
         }
         case zpt::JSString: {
@@ -624,12 +528,8 @@ zpt::json::operator-=(zpt::json _rhs) -> zpt::json& {
 
 auto
 zpt::json::operator/(zpt::json _rhs) -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) {
-        return _rhs->clone();
-    }
-    if (_rhs->type() == zpt::JSNil) {
-        return this->__underlying->clone();
-    }
+    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
+    if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             expect(
@@ -638,25 +538,19 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << (this[_idx] / _rhs[_idx]);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << (this[_idx] / _rhs[_idx]); }
                 return _lhs;
             }
             else {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << (_e / _rhs);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << (_e / _rhs); }
                 return _lhs;
             }
         }
         case zpt::JSString: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) / _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -672,9 +566,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
         case zpt::JSInteger: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) / _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -684,9 +576,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) / _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -696,9 +586,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) / _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -711,9 +599,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
         case zpt::JSDate: {
             if (_rhs->type() == zpt::JSArray) {
                 zpt::json _lhs = zpt::json::array();
-                for (auto [_idx, _key, _e] : _rhs) {
-                    _lhs << ((*this) / _e);
-                }
+                for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
             else {
@@ -732,19 +618,13 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
 
 auto
 zpt::json::operator|(zpt::json _rhs) -> zpt::json {
-    if (this->__underlying->type() == zpt::JSNil) {
-        return _rhs->clone();
-    }
-    if (_rhs->type() == zpt::JSNil) {
-        return this->__underlying->clone();
-    }
+    if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
+    if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             zpt::json _lhs = this->__underlying->clone();
             for (auto [_idx, _key, _e] : _rhs) {
-                if (_lhs[_key]->type() == zpt::JSObject) {
-                    _lhs << _key << (_lhs[_key] | _e);
-                }
+                if (_lhs[_key]->type() == zpt::JSObject) { _lhs << _key << (_lhs[_key] | _e); }
                 else {
                     _lhs << _key << _e;
                 }
@@ -985,9 +865,7 @@ auto
 zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
   -> zpt::json::iterator {
     for (zpt::json::iterator _to_return = _begin; _to_return != _end; ++_to_return) {
-        if (std::get<2>(*_to_return) == _to_find) {
-            return _to_return;
-        }
+        if (std::get<2>(*_to_return) == _to_find) { return _to_return; }
     }
     return _end;
 }
@@ -1042,13 +920,12 @@ zpt::JSONIterator::operator=(const JSONIterator& _rhs) -> JSONIterator& {
 auto
 zpt::JSONIterator::operator++() -> JSONIterator& {
     ++this->__index;
-    if (this->__target->type() == zpt::JSObject) {
-        ++this->__iterator;
-    }
+    if (this->__target->type() == zpt::JSObject) { ++this->__iterator; }
     return (*this);
 }
 
-auto zpt::JSONIterator::operator*() -> reference {
+auto
+zpt::JSONIterator::operator*() -> reference {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(
@@ -1071,7 +948,8 @@ zpt::JSONIterator::operator++(int) -> JSONIterator {
     return _to_return;
 }
 
-auto zpt::JSONIterator::operator-> () -> pointer {
+auto
+zpt::JSONIterator::operator->() -> pointer {
     switch (this->__target->type()) {
         case zpt::JSObject: {
             return std::make_tuple(
@@ -1101,9 +979,7 @@ zpt::JSONIterator::operator!=(JSONIterator _rhs) const -> bool {
 auto
 zpt::JSONIterator::operator--() -> JSONIterator& {
     --this->__index;
-    if (this->__target->type() == zpt::JSObject) {
-        --this->__iterator;
-    }
+    if (this->__target->type() == zpt::JSObject) { --this->__iterator; }
     return (*this);
 }
 
@@ -1137,14 +1013,10 @@ zpt::timestamp(std::string const& _json_date) {
             _mss.push_back(_s[_idx + 1]);
             _prev_is_zero = false;
         }
-        if (!_prev_is_zero || _s[_idx + 2] != '0') {
-            _mss.push_back(_s[_idx + 2]);
-        }
+        if (!_prev_is_zero || _s[_idx + 2] != '0') { _mss.push_back(_s[_idx + 2]); }
         _mss.push_back(_s[_idx + 3]);
         _s.erase(_idx, 4);
-        if (_s.length() < 20) {
-            zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true);
-        }
+        if (_s.length() < 20) { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S", true); }
         else if (_s[_idx] == '+' || _s[_idx] == '-') {
             zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
         }
@@ -1168,9 +1040,7 @@ zpt::timestamp(zpt::timestamp_t _timestamp) {
     size_t _remainder = _timestamp % 1000;
     if (_remainder < 100) {
         _date.insert(_date.length(), "0");
-        if (_remainder < 10) {
-            _date.insert(_date.length(), "0");
-        }
+        if (_remainder < 10) { _date.insert(_date.length(), "0"); }
     }
     zpt::tostr(_date, _remainder);
     size_t _time_offset = (size_t)(_timestamp / 1000);
