@@ -358,6 +358,7 @@ class result : public zpt::storage::result::type {
     virtual auto count() -> size_t override;
     virtual auto status() -> zpt::status override;
     virtual auto message() -> std::string override;
+    virtual auto to_json() -> zpt::json override;
 
   private:
     bool __is_doc_result{ false };

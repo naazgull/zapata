@@ -1057,3 +1057,8 @@ zpt::storage::mysqlx::result::message() -> std::string {
         return this->__result.getWarning(0).getMessage();
     }
 }
+
+auto
+zpt::storage::mysqlx::result::to_json() -> zpt::json {
+    return { "state", { "code", this->status(), "message", this->message() } };
+}

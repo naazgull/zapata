@@ -39,7 +39,7 @@ class ref_ptr {
     auto operator*() -> T&;
 
     auto get() -> T*;
-    auto reset() -> T&;
+    auto reset() -> T*;
 
   private:
     T* __underlying{ nullptr };
@@ -95,8 +95,8 @@ zpt::ref_ptr<T>::get() -> T* {
 
 template<typename T>
 auto
-zpt::ref_ptr<T>::reset() -> T& {
-    auto& _return = this->__underlying;
+zpt::ref_ptr<T>::reset() -> T* {
+    auto _return = this->__underlying;
     this->__underlying = nullptr;
     return _return;
 }

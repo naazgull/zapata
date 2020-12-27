@@ -216,6 +216,7 @@ class result {
         virtual auto count() -> size_t = 0;
         virtual auto status() -> zpt::status = 0;
         virtual auto message() -> std::string = 0;
+        virtual auto to_json() -> zpt::json = 0;
     };
 
     result() = default;

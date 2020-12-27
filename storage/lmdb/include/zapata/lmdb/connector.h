@@ -80,20 +80,16 @@ class session : public zpt::storage::session::type {
     session(zpt::storage::lmdb::connection& _connection);
     session(const zpt::storage::lmdb::session& _rhs) = delete;
     session(zpt::storage::lmdb::session&& _rhs) = delete;
-    virtual ~session() override;
+    virtual ~session() override = default;
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
 
-    virtual auto operator->() -> ::lmdb::env*;
-    virtual auto operator*() -> ::lmdb::env&;
-
     virtual auto is_to_commit() -> bool&;
 
   private:
     zpt::json __options;
-    ::lmdb::env __underlying;
     bool __commit{ true };
 };
 class database : public zpt::storage::database::type {
@@ -104,13 +100,11 @@ class database : public zpt::storage::database::type {
     virtual ~database() override = default;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
-    virtual auto operator->() -> ::lmdb::env*;
-    virtual auto operator*() -> ::lmdb::env&;
-
     virtual auto is_to_commit() -> bool&;
+    auto path() -> std::string&;
 
   private:
-    zpt::ref_ptr<::lmdb::env> __underlying;
+    std::string __path;
     zpt::ref_ptr<bool> __commit;
 };
 class collection : public zpt::storage::collection::type {
@@ -125,14 +119,14 @@ class collection : public zpt::storage::collection::type {
     virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
-    virtual auto operator->() -> ::lmdb::env*;
-    virtual auto operator*() -> ::lmdb::env&;
-
+    virtual auto file() -> std::string&;
+    virtual auto env() -> ::lmdb::env&;
     virtual auto is_to_commit() -> bool&;
-
+    
   private:
+    ::lmdb::env __underlying;
     std::string __collection_name;
-    zpt::ref_ptr<::lmdb::env> __underlying;
+    std::string __collection_file;
     zpt::ref_ptr<bool> __commit;
 };
 class action : public zpt::storage::action::type {
@@ -141,10 +135,14 @@ class action : public zpt::storage::action::type {
     virtual ~action() override = default;
 
     virtual auto is_to_commit() -> bool&;
+    auto set_state(::lmdb::error const& _e) -> void;
+    auto get_state() -> zpt::json;
+    auto is_filtered_out(zpt::json _search, zpt::json _to_filter) -> bool;
+    auto trim(zpt::json _fields, zpt::json _to_trim) -> zpt::json;
 
   protected:
-    zpt::ref_ptr<::lmdb::env> __underlying;
-    zpt::ref_ptr<bool> __commit;
+    zpt::ref_ptr<zpt::storage::lmdb::collection> __underlying;
+    zpt::json __state{ "code", 0, "message", "Success" };
 };
 class action_add : public zpt::storage::lmdb::action {
   public:
@@ -167,12 +165,9 @@ class action_add : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator->() -> ::lmdb::txn*;
-    virtual auto operator*() -> ::lmdb::txn&;
-
   private:
-    ::lmdb::txn __underlying;
-    ::lmdb::dbi __stub;
+    zpt::json __to_add{ zpt::json::array() };
+    zpt::json __generated_uuid{ zpt::json::array() };
 };
 class action_modify : public zpt::storage::lmdb::action {
   public:
@@ -195,12 +190,7 @@ class action_modify : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator->() -> ::lmdb::txn*;
-    virtual auto operator*() -> ::lmdb::txn&;
-
   private:
-    ::lmdb::txn __underlying;
-    ::lmdb::dbi __stub;
     zpt::json __search;
     zpt::json __set;
     zpt::json __unset;
@@ -226,12 +216,7 @@ class action_remove : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator->() -> ::lmdb::txn*;
-    virtual auto operator*() -> ::lmdb::txn&;
-
   private:
-    ::lmdb::txn __underlying;
-    ::lmdb::dbi __stub;
     zpt::json __search;
 };
 class action_replace : public zpt::storage::lmdb::action {
@@ -258,12 +243,7 @@ class action_replace : public zpt::storage::lmdb::action {
     virtual auto execute() -> zpt::storage::result override;
     virtual auto replace_one() -> void;
 
-    virtual auto operator->() -> ::lmdb::txn*;
-    virtual auto operator*() -> ::lmdb::txn&;
-
   private:
-    ::lmdb::txn __underlying;
-    ::lmdb::dbi __stub;
     std::string __id;
     zpt::json __set;
 };
@@ -289,12 +269,7 @@ class action_find : public zpt::storage::lmdb::action {
     virtual auto bind(zpt::json _map) -> zpt::storage::action::type* override;
     virtual auto execute() -> zpt::storage::result override;
 
-    virtual auto operator->() -> ::lmdb::txn*;
-    virtual auto operator*() -> ::lmdb::txn&;
-
   private:
-    ::lmdb::txn __underlying;
-    ::lmdb::dbi __stub;
     zpt::json __search;
     zpt::json __sort;
     zpt::json __fields;
@@ -303,23 +278,18 @@ class action_find : public zpt::storage::lmdb::action {
 };
 class result : public zpt::storage::result::type {
   public:
-    result(zpt::storage::lmdb::action_add& _action);
-    result(zpt::storage::lmdb::action_modify& _action);
-    result(zpt::storage::lmdb::action_remove& _action);
-    result(zpt::storage::lmdb::action_replace& _action);
-    result(zpt::storage::lmdb::action_find& _action);
+    result(zpt::json _result);
     virtual ~result() override = default;
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
     virtual auto generated_id() -> zpt::json override;
     virtual auto count() -> size_t override;
     virtual auto status() -> zpt::status override;
     virtual auto message() -> std::string override;
-
-    virtual auto operator->() -> ::lmdb::cursor*;
-    virtual auto operator*() -> ::lmdb::cursor&;
+    virtual auto to_json() -> zpt::json override;
 
   private:
-    ::lmdb::cursor __underlying;
+    zpt::json __result;
+    zpt::json::iterator __current;
 };
 } // namespace lmdb
 } // namespace storage
