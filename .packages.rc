@@ -22,6 +22,7 @@ export projects=(
        engines/pipeline
        engines/rest
        engines/dom
+       engines/fsm
        storage/connector
        storage/mysqlx
        security/oauth2
