@@ -132,6 +132,8 @@ zpt::rest::engine::on_error(zpt::json& _path,
                             int _error,
                             int _status) -> bool {
     auto& _channel = _event->content();
+    _channel->stream().state() = zpt::stream_state::PROCESSING;
+    _channel->version().assign("1.1");
     _channel->to_send() = {
         "status", _status, "body", { "error", _error, "message", std::string{ _what } }
     };
