@@ -1,25 +1,23 @@
 /*
-The MIT License (MIT)
+  This is free and unencumbered software released into the public domain.
 
-Copyright (c) 2017 n@zgul <n@zgul.me>
+  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+  this software, either in source code form or as a compiled binary, for any
+  purpose, commercial or non-commercial, and by any means.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+  In jurisdictions that recognize copyright laws, the author or authors of this
+  software dedicate any and all copyright interest in the software to the public
+  domain. We make this dedication for the benefit of the public at large and to
+  the detriment of our heirs and successors. We intend this dedication to be an
+  overt act of relinquishment in perpetuity of all present and future rights to
+  this software under copyright law.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #pragma once
@@ -30,7 +28,6 @@ SOFTWARE.
 #include <string>
 #include <unistd.h>
 #include <memory>
-#include <zapata/base/config.h>
 #include <thread>
 #include <sstream>
 
@@ -88,7 +85,7 @@ char*
 log_hostname();
 
 namespace this_thread {
-template<typename T>
+template<typename T, int Step>
 class adaptive_timer {
     static_assert(std::is_integral<T>::value,
                   "Type `T` in `zpt::this_thread::adaptive_timer` must be an integral type.");
@@ -97,37 +94,32 @@ class adaptive_timer {
     adaptive_timer() = default;
     virtual ~adaptive_timer() = default;
 
-    auto operator=(T _rhs) -> zpt::this_thread::adaptive_timer<T>&;
-    auto reset() -> zpt::this_thread::adaptive_timer<T>&;
+    auto reset() -> zpt::this_thread::adaptive_timer<T, Step>&;
     auto sleep_for(T _upper_limit) -> T;
 
   private:
-    T __sleep_tics{ 0 };
+    T __sleep_tics{ 1 };
 };
 
 } // namespace this_thread
 } // namespace zpt
 
-template<typename T>
+template<typename T, int Step>
 auto
-zpt::this_thread::adaptive_timer<T>::operator=(T _rhs) -> zpt::this_thread::adaptive_timer<T>& {
-    this->__sleep_tics = _rhs;
+zpt::this_thread::adaptive_timer<T, Step>::reset() -> zpt::this_thread::adaptive_timer<T, Step>& {
+    this->__sleep_tics = 1;
     return (*this);
 }
 
-template<typename T>
+template<typename T, int Step>
 auto
-zpt::this_thread::adaptive_timer<T>::reset() -> zpt::this_thread::adaptive_timer<T>& {
-    this->__sleep_tics = 0;
-    return (*this);
-}
-
-template<typename T>
-auto
-zpt::this_thread::adaptive_timer<T>::sleep_for(T _upper_limit) -> T {
+zpt::this_thread::adaptive_timer<T, Step>::sleep_for(T _upper_limit) -> T {
     static constexpr T _max{ std::numeric_limits<T>::max() - 1 };
-    if (this->__sleep_tics != _max) { ++this->__sleep_tics; }
-    std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{
-      _upper_limit > 0 ? std::min(this->__sleep_tics, _upper_limit) : this->__sleep_tics });
+    this->__sleep_tics += Step;
+    if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
+    if (this->__sleep_tics == 0) { std::this_thread::yield(); }
+    else {
+        std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{ this->__sleep_tics });
+    }
     return this->__sleep_tics;
 }

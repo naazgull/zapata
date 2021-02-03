@@ -67,6 +67,16 @@ zpt::json::json(std::tuple<size_t, std::string, zpt::json> _rhs) { (*this) = _rh
 zpt::json::~json() {}
 
 auto
+zpt::json::size() const -> size_t {
+    return this->__underlying->size();
+}
+
+auto
+zpt::json::hash() const -> size_t {
+    return this->__underlying->hash();
+}
+
+auto
 zpt::json::value() -> zpt::JSONElementT& {
     if (this->__underlying.get() == nullptr) { return *(zpt::undefined.__underlying.get()); }
     return *(this->__underlying.get());
@@ -139,6 +149,16 @@ zpt::json::operator->() -> zpt::JSONElementT* {
 
 auto
 zpt::json::operator*() -> zpt::JSONElementT& {
+    return *this->__underlying.get();
+}
+
+auto
+zpt::json::operator->() const -> zpt::JSONElementT const* {
+    return this->__underlying.get();
+}
+
+auto
+zpt::json::operator*() const -> zpt::JSONElementT const& {
     return *this->__underlying.get();
 }
 
@@ -665,13 +685,26 @@ zpt::json::load_from(std::istream& _in) -> zpt::json& {
 
 auto
 zpt::json::stringify(std::ostream& _out) -> zpt::json& {
+    static_cast<zpt::json const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::json::stringify(std::string& _out) -> zpt::json& {
+    static_cast<zpt::json const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::json::stringify(std::ostream& _out) const -> zpt::json const& {
     this->__underlying->stringify(_out);
     return (*this);
 }
 
 auto
-zpt::json::stringify(std::string& _str) -> void {
-    zpt::utf8::encode(_str, true);
+zpt::json::stringify(std::string& _out) const -> zpt::json const& {
+    this->__underlying->stringify(_out);
+    return (*this);
 }
 
 auto
@@ -685,10 +718,25 @@ zpt::json::end() -> zpt::json::iterator {
 }
 
 auto
+zpt::json::begin() const -> zpt::json::const_iterator {
+    return zpt::json::const_iterator{ *this, 0 };
+}
+
+auto
+zpt::json::end() const -> zpt::json::const_iterator {
+    return zpt::json::const_iterator{ *this, std::numeric_limits<size_t>::max() };
+}
+
+auto
 zpt::json::parse_json_str(std::string const& _in) -> zpt::json {
     zpt::json _to_return;
     _to_return.load_from(_in);
     return _to_return;
+}
+
+auto
+zpt::json::to_unicode(std::string& _str) -> void {
+    zpt::utf8::encode(_str, true);
 }
 
 auto
@@ -870,7 +918,7 @@ zpt::json::find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json 
     return _end;
 }
 
-zpt::JSONIterator::JSONIterator(zpt::json& _target, size_t _pos)
+zpt::JSONIterator::JSONIterator(zpt::json const& _target, size_t _pos)
   : __target{ _target }
   , __index{ _pos } {
     switch (_target->type()) {
@@ -904,18 +952,10 @@ zpt::JSONIterator::JSONIterator(zpt::json& _target, size_t _pos)
     }
 }
 
-zpt::JSONIterator::JSONIterator(const JSONIterator& _rhs)
+zpt::JSONIterator::JSONIterator(JSONIterator const& _rhs)
   : __target{ _rhs.__target }
   , __index{ _rhs.__index }
   , __iterator{ _rhs.__iterator } {}
-
-auto
-zpt::JSONIterator::operator=(const JSONIterator& _rhs) -> JSONIterator& {
-    this->__target = _rhs.__target;
-    this->__index = _rhs.__index;
-    this->__iterator = _rhs.__iterator;
-    return (*this);
-}
 
 auto
 zpt::JSONIterator::operator++() -> JSONIterator& {
@@ -1052,4 +1092,9 @@ auto operator"" _JSON(const char* _string, size_t _length) -> zpt::json {
     zpt::json _to_return;
     _to_return.load_from(std::string{ _string, _length });
     return _to_return;
+}
+
+auto
+std::hash<zpt::json>::operator()(zpt::json const& _json) const noexcept -> std::size_t {
+    return _json->hash();
 }

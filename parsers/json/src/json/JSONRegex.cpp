@@ -41,6 +41,16 @@ zpt::JSONRegex::operator*() -> std::regex& {
     return *this->__underlying.get();
 }
 
+auto
+zpt::JSONRegex::operator->() const -> std::regex const* {
+    return this->__underlying.get();
+}
+
+auto
+zpt::JSONRegex::operator*() const -> std::regex const& {
+    return *this->__underlying.get();
+}
+
 zpt::JSONRegex::operator std::regex&() { return (*this->__underlying.get()); }
 
 auto
@@ -77,6 +87,6 @@ zpt::JSONRegex::JSONRegex::operator!=(std::string const& _rhs) -> bool {
 }
 
 auto
-zpt::JSONRegex::JSONRegex::to_string() -> std::string& {
+zpt::JSONRegex::JSONRegex::to_string() const -> std::string const& {
     return this->__underlying_original;
 }

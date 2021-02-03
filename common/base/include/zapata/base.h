@@ -18,6 +18,7 @@
 #include <utility>
 
 #include <zapata/base/expect.h>
+#include <zapata/base/sentry.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/html.h>
 #include <zapata/text/manip.h>

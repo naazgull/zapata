@@ -72,7 +72,7 @@ class dispatcher : public factory {
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
                                              long _max_pop_wait_micro)
-  : __queue{ _hazard_domain, 0 }
+  : __queue{ _hazard_domain }
   , __max_pop_wait{ _max_pop_wait_micro } {}
 
 template<typename C, typename E, typename V>
@@ -160,11 +160,11 @@ zpt::events::dispatcher<C, E, V>::is_shutdown_ongoing() -> bool {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::loop() -> void {
-    zpt::this_thread::adaptive_timer<long> _timer;
+    zpt::this_thread::adaptive_timer<long, 5> _timer;
     do {
         try {
             this->trap();
-            _timer = 0;
+            _timer.reset();
         }
         catch (zpt::NoMoreElementsException const& e) {
             if (this->__shutdown.load()) {
