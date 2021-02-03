@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <type_traits>
 
+#include <zapata/base/sentry.h>
 #include <zapata/lockfree/atomics.h>
 #include <zapata/lockfree/hazard_ptr.h>
 #include <zapata/exceptions/exceptions.h>
@@ -117,7 +118,7 @@ class queue {
         zpt::lf::forward_node<T>* __current{ nullptr };
     };
 
-    queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain, long _spin_sleep_micros = -1);
+    queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain);
     queue(zpt::lf::queue<T> const& _rhs) = delete;
     queue(zpt::lf::queue<T>&& _rhs) = delete;
     virtual ~queue();
@@ -184,7 +185,6 @@ class queue {
     zpt::padded_atomic<zpt::lf::forward_node<T>*> __head{ nullptr };
     zpt::padded_atomic<zpt::lf::forward_node<T>*> __tail{ nullptr };
     zpt::lf::queue<T>::hazard_domain& __hazard_domain;
-    long __spin_sleep;
 };
 
 template<typename T>
@@ -192,9 +192,8 @@ zpt::lf::forward_node<T>::forward_node(T _value)
   : __value{ _value } {}
 
 template<typename T>
-zpt::lf::queue<T>::queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain, long _spin_sleep_micros)
-  : __hazard_domain{ _hazard_domain }
-  , __spin_sleep{ _spin_sleep_micros } {
+zpt::lf::queue<T>::queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain)
+  : __hazard_domain{ _hazard_domain } {
     auto _initial = new zpt::lf::forward_node<T>();
     this->__head->store(_initial);
     this->__tail->store(_initial);
@@ -258,11 +257,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
                 return (*this);
             }
         }
-        if (this->__spin_sleep <= 0) { std::this_thread::yield(); }
-        else if (this->__spin_sleep != 0) {
-            std::this_thread::sleep_for(
-              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
-        }
+        std::this_thread::yield();
     } while (true);
 
     return (*this); // never reached
@@ -294,11 +289,7 @@ zpt::lf::queue<T>::pop() -> T {
                 }
             }
         }
-        if (this->__spin_sleep < 0) { std::this_thread::yield(); }
-        else if (this->__spin_sleep != 0) {
-            std::this_thread::sleep_for(
-              std::chrono::duration<int, std::micro>{ this->__spin_sleep });
-        }
+        std::this_thread::yield();
     } while (true);
     throw NoMoreElementsException("no element to pop");
 }

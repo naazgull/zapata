@@ -125,7 +125,7 @@ zpt::stream::polling::polling(long _max_stream_readers, long _poll_wait_timeout)
   : __epoll_fd{ epoll_create(1) }
   , __poll_wait_timeout{ _poll_wait_timeout }
   , __hazard_domain{ _max_stream_readers, 8 }
-  , __alive_streams{ __hazard_domain, 0 } {}
+  , __alive_streams{ __hazard_domain } {}
 
 zpt::stream::polling::~polling() { ::close(this->__epoll_fd); }
 

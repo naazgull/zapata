@@ -22,5 +22,5 @@
 
 #pragma once
 
-#include <zapata/dom/dom.h>
-#include <zapata/dom/config.h>
+#include <zapata/fsm/fsm.h>
+#include <zapata/fsm/config.h>

@@ -52,7 +52,7 @@ zpt::lf::list<std::shared_ptr<std::string>> _list{ _l_hazard_domain };
 #else
 zpt::lf::queue<int>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE, PER_THREAD };
 zpt::lf::list<int>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST, PER_THREAD };
-zpt::lf::queue<int> _queue{ _q_hazard_domain, SPIN_WAIT_MICROS };
+zpt::lf::queue<int> _queue{ _q_hazard_domain };
 zpt::lf::list<int> _list{ _l_hazard_domain };
 #endif
 

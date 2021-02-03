@@ -88,6 +88,7 @@ class json {
     using map = std::map<std::string, zpt::json>;
     using element = std::tuple<size_t, std::string, zpt::json>;
     using iterator = zpt::JSONIterator;
+    using const_iterator = const zpt::JSONIterator;
 
     using traverse_callback =
       std::function<void(std::string const&, zpt::json, std::string const&)>;
@@ -102,14 +103,20 @@ class json {
     json(T const& _rhs);
     virtual ~json();
 
-    auto size() -> size_t;
+    auto size() const -> size_t;
+    auto hash() const -> size_t;
     auto value() -> zpt::JSONElementT&;
     auto load_from(std::string const& _in) -> zpt::json&;
     auto load_from(std::istream& _in) -> zpt::json&;
     auto stringify(std::ostream& _out) -> zpt::json&;
+    auto stringify(std::string& _out) -> zpt::json&;
+    auto stringify(std::ostream& _out) const -> zpt::json const&;
+    auto stringify(std::string& _out) const -> zpt::json const&;
 
     auto begin() -> zpt::json::iterator;
     auto end() -> zpt::json::iterator;
+    auto begin() const -> zpt::json::const_iterator;
+    auto end() const -> zpt::json::const_iterator;
 
     auto operator=(zpt::json const& _rhs) -> zpt::json&;
     auto operator=(zpt::json&& _rhs) -> zpt::json&;
@@ -120,6 +127,8 @@ class json {
 
     auto operator->() -> zpt::JSONElementT*;
     auto operator*() -> zpt::JSONElementT&;
+    auto operator->() const -> zpt::JSONElementT const*;
+    auto operator*() const -> zpt::JSONElementT const&;
 
     auto operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
     auto operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool;
@@ -191,7 +200,7 @@ class json {
     template<typename T>
     static auto data(const T _delegate) -> zpt::json;
     static auto parse_json_str(std::string const& _in) -> zpt::json;
-    static auto stringify(std::string& _str) -> void;
+    static auto to_unicode(std::string& _str) -> void;
     static auto object() -> zpt::json;
     static auto array() -> zpt::json;
     template<typename T>
@@ -264,12 +273,11 @@ class JSONIterator {
     using reference = zpt::json::element;
     using iterator_category = std::bidirectional_iterator_tag;
 
-    explicit JSONIterator(zpt::json& _target, size_t _pos);
-    JSONIterator(const JSONIterator& _rhs);
+    explicit JSONIterator(zpt::json const& _target, size_t _pos);
+    JSONIterator(JSONIterator const& _rhs);
     virtual ~JSONIterator() = default;
 
     // BASIC ITERATOR METHODS //
-    auto operator=(const JSONIterator& _rhs) -> JSONIterator&;
     auto operator++() -> JSONIterator&;
     auto operator*() -> reference;
     // END / BASIC ITERATOR METHODS //
@@ -301,9 +309,9 @@ class JSONIterator {
     }
 
   private:
-    zpt::json& __target;
+    zpt::json const& __target;
     size_t __index;
-    zpt::json::map::iterator __iterator;
+    zpt::json::map::const_iterator __iterator;
 };
 }
 
@@ -321,9 +329,13 @@ class JSONObjT {
 
     virtual auto stringify(std::string& _out) -> zpt::JSONObjT&;
     virtual auto stringify(std::ostream& _out) -> zpt::JSONObjT&;
+    virtual auto stringify(std::string& _out) const -> zpt::JSONObjT const&;
+    virtual auto stringify(std::ostream& _out) const -> zpt::JSONObjT const&;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONObjT&;
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) const -> zpt::JSONObjT const&;
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) const -> zpt::JSONObjT const&;
 
     virtual auto push(std::string const& _name) -> zpt::JSONObjT&;
     virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT&;
@@ -334,17 +346,19 @@ class JSONObjT {
     virtual auto pop(const char* _idx) -> zpt::JSONObjT&;
     virtual auto pop(std::string const& _idx) -> zpt::JSONObjT&;
 
-    virtual auto key_for(size_t _idx) -> std::string;
+    virtual auto key_for(size_t _idx) const -> std::string;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
     auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
       -> zpt::JSONObjT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> JSONObjT&;
 
-    auto clone() -> zpt::json;
+    auto clone() const -> zpt::json;
 
     auto operator->() -> zpt::json::map*;
     auto operator*() -> zpt::json::map&;
+    auto operator->() const -> zpt::json::map const*;
+    auto operator*() const -> zpt::json::map const&;
 
     auto operator==(zpt::JSONObjT& _in) -> bool;
     auto operator==(zpt::JSONObj& _in) -> bool;
@@ -395,9 +409,13 @@ class JSONArrT {
 
     virtual auto stringify(std::string& _out) -> zpt::JSONArrT&;
     virtual auto stringify(std::ostream& _out) -> zpt::JSONArrT&;
+    virtual auto stringify(std::string& _out) const -> zpt::JSONArrT const&;
+    virtual auto stringify(std::ostream& _out) const -> zpt::JSONArrT const&;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> zpt::JSONArrT&;
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) const -> zpt::JSONArrT const&;
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) const -> zpt::JSONArrT const&;
 
     virtual auto push(std::unique_ptr<zpt::JSONElementT> _value) -> zpt::JSONArrT&;
     virtual auto push(zpt::json const& _value) -> zpt::JSONArrT&;
@@ -415,10 +433,12 @@ class JSONArrT {
       -> zpt::JSONArrT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> zpt::JSONArrT&;
 
-    auto clone() -> zpt::json;
+    auto clone() const -> zpt::json;
 
     auto operator->() -> std::vector<zpt::json>*;
     auto operator*() -> std::vector<zpt::json>&;
+    auto operator->() const -> std::vector<zpt::json> const*;
+    auto operator*() const -> std::vector<zpt::json> const&;
 
     auto operator==(zpt::JSONArrT& _in) -> bool;
     auto operator==(zpt::JSONArr& _in) -> bool;
@@ -469,11 +489,15 @@ class JSONObj {
     JSONObj(zpt::JSONObjT* _target);
     virtual ~JSONObj();
 
+    auto hash() const -> size_t;
+    
     auto operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj&;
     auto operator=(zpt::JSONObj&& _rhs) -> zpt::JSONObj&;
 
     auto operator->() -> zpt::JSONObjT*;
     auto operator*() -> zpt::JSONObjT&;
+    auto operator->() const -> zpt::JSONObjT const*;
+    auto operator*() const -> zpt::JSONObjT const&;
 
     operator std::string();
     operator zpt::pretty();
@@ -489,15 +513,15 @@ class JSONObj {
     auto operator<=(T _rhs) -> bool;
     template<typename T>
     auto operator>=(T _rhs) -> bool;
-    auto operator<<(std::string const& _in) -> JSONObj&;
-    auto operator<<(const char* _in) -> JSONObj&;
-    auto operator<<(std::initializer_list<zpt::json> _list) -> JSONObj&;
+    auto operator<<(std::string const& _in) -> zpt::JSONObj&;
+    auto operator<<(const char* _in) -> zpt::JSONObj&;
+    auto operator<<(std::initializer_list<zpt::json> _list) -> zpt::JSONObj&;
     template<typename T>
-    auto operator<<(T _in) -> JSONObj&;
+    auto operator<<(T _in) -> zpt::JSONObj&;
     // template<typename T>
-    // auto operator>>(T _in) -> JSONObj&;
+    // auto operator>>(T _in) -> zpt::JSONObj&;
     template<typename T>
-    auto operator[](T _idx) -> json;
+    auto operator[](T _idx) -> zpt::json;
 
     friend auto operator<<(std::ostream& _out, JSONObj& _in) -> std::ostream& {
         _in.__underlying->stringify(_out);
@@ -518,6 +542,8 @@ class JSONArr {
     JSONArr(zpt::JSONArrT* _target);
     virtual ~JSONArr();
 
+    auto hash() const -> size_t;
+    
     operator std::string();
     operator zpt::pretty();
 
@@ -526,6 +552,8 @@ class JSONArr {
 
     auto operator->() -> zpt::JSONArrT*;
     auto operator*() -> zpt::JSONArrT&;
+    auto operator->() const -> zpt::JSONArrT const*;
+    auto operator*() const -> zpt::JSONArrT const&;
 
     template<typename T>
     auto operator==(T _rhs) -> bool;
@@ -575,6 +603,8 @@ class JSONRegex {
 
     auto operator->() -> std::regex*;
     auto operator*() -> std::regex&;
+    auto operator->() const -> std::regex const*;
+    auto operator*() const -> std::regex const&;
 
     operator zpt::pretty();
     operator std::regex&();
@@ -590,7 +620,7 @@ class JSONRegex {
         return _out;
     }
 
-    auto to_string() -> std::string&;
+    auto to_string() const -> std::string const&;
 
   private:
     std::string __underlying_original{ "" };
@@ -621,6 +651,8 @@ class context {
 
     auto operator->() -> zpt::JSONContext*;
     auto operator*() -> zpt::JSONContext&;
+    auto operator->() const -> zpt::JSONContext const*;
+    auto operator*() const -> zpt::JSONContext const&;
 
     auto operator=(const zpt::context& _rhs) -> zpt::context&;
     auto operator=(zpt::context&& _rhs) -> zpt::context&;
@@ -649,6 +681,8 @@ class lambda : public std::shared_ptr<zpt::JSONLambda> {
     lambda(std::string const& _name, unsigned short _n_args);
     virtual ~lambda();
 
+    auto hash() const -> size_t;
+    
     virtual auto operator()(zpt::json _args, zpt::context _ctx) -> zpt::json;
 
     static auto add(std::string const& _signature, zpt::symbol _lambda) -> void;
@@ -675,9 +709,9 @@ class JSONLambda {
 
     virtual auto call(zpt::json _args, zpt::context _ctx) -> zpt::json;
 
-    virtual auto name() -> std::string;
-    virtual auto n_args() -> unsigned short;
-    virtual auto signature() -> std::string;
+    virtual auto name() const -> std::string;
+    virtual auto n_args() const -> unsigned short;
+    virtual auto signature() const -> std::string;
 
   private:
     std::string __name{ "" };
@@ -763,20 +797,21 @@ class JSONElementT {
     JSONElementT(zpt::regex _value);
     virtual ~JSONElementT();
 
-    virtual auto type() -> JSONType;
-    virtual auto demangle() -> std::string;
+    virtual auto type() const -> JSONType;
+    virtual auto demangle() const -> std::string;
     virtual auto type(JSONType _in) -> JSONElementT&;
     virtual auto value() -> JSONUnion&;
-    virtual auto ok() -> bool;
-    virtual auto empty() -> bool;
-    virtual auto nil() -> bool;
+    virtual auto ok() const -> bool;
+    virtual auto empty() const -> bool;
+    virtual auto nil() const -> bool;
 
-    virtual auto size() -> size_t;
+    virtual auto size() const -> size_t;
+    virtual auto hash() const -> size_t;
 
     auto parent() -> JSONElementT*;
     auto parent(JSONElementT* _parent) -> JSONElementT&;
 
-    auto clone() -> zpt::json;
+    virtual auto clone() const -> zpt::json;
 
     virtual auto is_object() -> bool;
     virtual auto is_array() -> bool;
@@ -801,6 +836,16 @@ class JSONElementT {
     virtual auto lambda() -> zpt::lambda&;
     virtual auto regex() -> zpt::regex&;
     virtual auto number() -> double;
+    virtual auto object() const -> JSONObj const&;
+    virtual auto array() const -> JSONArr const&;
+    virtual auto string() const -> std::string const&;
+    virtual auto integer() const -> long long const&;
+    virtual auto floating() const -> double const&;
+    virtual auto boolean() const -> bool const&;
+    virtual auto date() const -> zpt::timestamp_t const&;
+    virtual auto lambda() const -> zpt::lambda const&;
+    virtual auto regex() const -> zpt::regex const&;
+    virtual auto number() const -> double const;
 
     auto operator=(const JSONElementT& _rhs) -> JSONElementT&;
     auto operator=(JSONElementT&& _rhs) -> JSONElementT&;
@@ -887,11 +932,15 @@ class JSONElementT {
 
     virtual auto stringify(std::string& _out) -> JSONElementT&;
     virtual auto stringify(std::ostream& _out) -> JSONElementT&;
-    virtual auto stringify() -> std::string;
+    virtual auto stringify(std::string& _out) const -> JSONElementT const&;
+    virtual auto stringify(std::ostream& _out) const -> JSONElementT const&;
+    virtual auto stringify() const -> std::string;
 
     virtual auto prettify(std::string& _out, uint _n_tabs = 0) -> JSONElementT&;
     virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) -> JSONElementT&;
-    virtual auto prettify() -> std::string;
+    virtual auto prettify(std::string& _out, uint _n_tabs = 0) const -> JSONElementT const&;
+    virtual auto prettify(std::ostream& _out, uint _n_tabs = 0) const -> JSONElementT const&;
+    virtual auto prettify() const -> std::string;
 
     virtual auto element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json>;
 
@@ -917,6 +966,13 @@ timestamp(zpt::json _json_date) -> zpt::timestamp_t;
 
 auto
 timestamp(zpt::timestamp_t _timestamp) -> std::string;
+}
+
+namespace std {
+template<>
+struct hash<zpt::json> {
+    auto operator()(zpt::json const& _json) const noexcept -> std::size_t;
+};
 }
 
 /// Class `zpt::pretty` methods

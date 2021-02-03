@@ -26,17 +26,13 @@ SOFTWARE.
 
 #include <exception>
 #include <string>
+#include <zapata/exceptions/Exception.h>
 
 namespace zpt {
 
-class NoHeaderNameException : public std::exception {
-  private:
-    std::string __what;
-
+class NoHeaderNameException : public zpt::exception {
   public:
     NoHeaderNameException(std::string const& _what);
     virtual ~NoHeaderNameException() throw();
-
-    const char* what();
 };
 } // namespace zpt
