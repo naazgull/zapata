@@ -1,4 +1,4 @@
-![zapata](http://dfz.pt/logo_zapata.png)
+![zapata](https://media.zgul.me/logo_zapata_color_white_1000x600.png)
 ================================
 
 Zapata is a RESTful API development framework for **C++**, built upon the **&#216;mq**
@@ -9,10 +9,6 @@ including _lambda_ functions, _promisses_ and _assync_ programming. It delivers
 encapsulated and abstracted by the RESTful pattern. It has built-in support
 for MongoDB, Redis, Oauth2.0 user authorization and authentication. Finally,
 it has a really neat JSON support. It still lacks documentation, that's a work in progress.
-
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/naazgull/zapata?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
-[![Trello](http://dfz.pt/img/trello_board.png)](https://trello.com/b/wD0PvV0H/github-com-naazgull-zapata)
 
 # INSTALLATION
 
