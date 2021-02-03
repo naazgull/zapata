@@ -12,6 +12,7 @@
 #pragma once
 
 #include <zapata/base/expect.h>
+#include <zapata/exceptions/Exception.h>
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/ClosedException.h>
 #include <zapata/exceptions/InterruptedException.h>

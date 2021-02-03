@@ -67,7 +67,7 @@ zpt::JSONObjT::pop(std::string const& _name) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::key_for(size_t _idx) -> std::string {
+zpt::JSONObjT::key_for(size_t _idx) const -> std::string {
     expect(this->__underlying.size() > _idx, "no such index", 500, 0);
     std::string _name{ "" };
     size_t _pos{ 0 };
@@ -163,7 +163,7 @@ zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator)
 }
 
 auto
-zpt::JSONObjT::clone() -> zpt::json {
+zpt::JSONObjT::clone() const -> zpt::json {
     zpt::json _return = zpt::json::object();
     for (auto _f : this->__underlying) { _return << _f.first << _f.second->clone(); }
     return _return;
@@ -176,6 +176,16 @@ zpt::JSONObjT::operator->() -> zpt::json::map* {
 
 auto
 zpt::JSONObjT::operator*() -> zpt::json::map& {
+    return this->__underlying;
+}
+
+auto
+zpt::JSONObjT::operator->() const -> zpt::json::map const* {
+    return &this->__underlying;
+}
+
+auto
+zpt::JSONObjT::operator*() const -> zpt::json::map const& {
     return this->__underlying;
 }
 
@@ -299,7 +309,19 @@ zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json {
 }
 
 auto
-zpt::JSONObjT::stringify(std::string& _out) -> JSONObjT& {
+zpt::JSONObjT::stringify(std::string& _out) -> zpt::JSONObjT& {
+    static_cast<zpt::JSONObjT const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::JSONObjT::stringify(std::ostream& _out) -> zpt::JSONObjT& {
+    static_cast<zpt::JSONObjT const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::JSONObjT::stringify(std::string& _out) const -> zpt::JSONObjT const& {
     _out.insert(_out.length(), "{");
     bool _first = true;
     for (auto _element : this->__underlying) {
@@ -315,7 +337,7 @@ zpt::JSONObjT::stringify(std::string& _out) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::stringify(std::ostream& _out) -> JSONObjT& {
+zpt::JSONObjT::stringify(std::ostream& _out) const -> zpt::JSONObjT const& {
     _out << "{" << std::flush;
     bool _first = true;
     for (auto _element : this->__underlying) {
@@ -327,9 +349,20 @@ zpt::JSONObjT::stringify(std::ostream& _out) -> JSONObjT& {
     _out << "}" << std::flush;
     return (*this);
 }
+auto
+zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONObjT& {
+    static_cast<zpt::JSONObjT const&>(*this).prettify(_out, _n_tabs);
+    return (*this);
+}
 
 auto
-zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> JSONObjT& {
+zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) -> zpt::JSONObjT& {
+    static_cast<zpt::JSONObjT const&>(*this).prettify(_out, _n_tabs);
+    return (*this);
+}
+
+auto
+zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
     _out.insert(_out.length(), "{");
     bool _first = true;
     for (auto _element : this->__underlying) {
@@ -351,7 +384,7 @@ zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) -> JSONObjT& {
 }
 
 auto
-zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) -> JSONObjT& {
+zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
     _out << "{" << std::flush;
     bool _first = true;
     for (auto _element : this->__underlying) {
@@ -380,6 +413,11 @@ zpt::JSONObj::JSONObj(JSONObjT* _target)
 zpt::JSONObj::~JSONObj() {}
 
 auto
+zpt::JSONObj::hash() const -> size_t {
+    return reinterpret_cast<size_t>(this->__underlying.get());
+}
+
+auto
 zpt::JSONObj::operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj& {
     this->__underlying = _rhs.__underlying;
     return (*this);
@@ -398,6 +436,16 @@ zpt::JSONObj::operator->() -> zpt::JSONObjT* {
 
 auto
 zpt::JSONObj::operator*() -> zpt::JSONObjT& {
+    return *this->__underlying.get();
+}
+
+auto
+zpt::JSONObj::operator->() const -> zpt::JSONObjT const* {
+    return this->__underlying.get();
+}
+
+auto
+zpt::JSONObj::operator*() const -> zpt::JSONObjT const& {
     return *this->__underlying.get();
 }
 

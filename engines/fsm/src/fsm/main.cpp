@@ -1,106 +1,63 @@
-#include <zapata/dom.h>
-
-zpt::json _document = R"({
-    "stand-alone" : {
-        "enabled" : false,
-        "host" : "localhost",
-        "domain" : "localhost",
-        "rest" : {
-            "version" : "v3",
-            "credentials" : { "client_id" : "{client-id}", "client_secret" : "{client-secret}", "server" : "{oauth2-server-address}", "grant" : "{type-of-grant}", "scope" : "{scope}" },
-            "modules" : [
-                "example-lib"
-            ]
-        },
-        "mqtt" : { "connect" : "mqtts://localhost:1883" },
-        "http" : { "bind" : "http://localhost:9000" },
-        "zmq" : [{ "bind" : "@tcp://*:*", "type" : "rep" }],
-        "log" : { "level" : 8 }
-    },
-    "router" : {
-        "enabled" : false,
-        "host" : "localhost",
-        "domain" : "localhost",
-        "rest" : {
-            "version" : "v3",
-            "credentials" : { "client_id" : "{client-id}", "client_secret" : "{client-secret}", "server" : "{oauth2-server-address}", "grant" : "{type-of-grant}", "scope" : "{scope}" }
-        },
-        "http" : { "bind" : "http://localhost:9000" },
-        "zmq" : [{ "bind" : "@tcp://*:*,@tcp://*:9001", "type" : "router/dealer" }],
-        "log" : { "level" : 8 }
-    },
-    "worker" : {
-        "enabled" : false,
-        "spawn" : 2,
-        "host" : "localhost",
-        "domain" : "localhost",
-        "rest" : {
-            "version" : "v3",
-            "credentials" : { "client_id" : "{client-id}", "client_secret" : "{client-secret}", "server" : "{oauth2-server-address}", "grant" : "{type-of-grant}", "scope" : "{scope}" },
-            "modules" : [
-                "example-lib"
-            ]
-        },
-        "http" : { "bind" : "http://localhost:9000" },
-        "zmq" : [{ "bind" : ">tcp://*:9001", "type" : "rep" }],
-        "log" : { "level" : 8 }
-    }
-})"_JSON;
+#include <zapata/fsm.h>
+#include <random>
 
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::dom::engine _dom;
-    _dom.start_threads();
+    zpt::fsm::machine<int, std::string> _sm{ 2,
+                                             { "transitions",
+                                               {
+                                                 zpt::array,
+                                                 { zpt::array, 0, { zpt::array, 1 } },    //
+                                                 { zpt::array, 1, { zpt::array, 2, 3 } }, //
+                                                 { zpt::array, 2, { zpt::array, 1, 3 } }     //
+                                               },
+                                               "begin",
+                                               0,
+                                               "undefined",
+                                               -1 } };
+    _sm->add_transition(0, [](int& _current, std::string& _data) -> int {
+        std::ostringstream oss;
+        oss << " -> S(" << _current << ")" << std::flush;
+        _data.append(oss.str());
+        return 1;
+    });
+    _sm->add_transition(1, [](int& _current, std::string& _data) -> int {
+        std::ostringstream oss;
+        oss << " -> S(" << _current << ")" << std::flush;
+        _data.append(oss.str());
+        if (_data.find("p1") != std::string::npos) { return 2; }
+        else {
+            return 3;
+        }
+    });
+    _sm->add_transition(2, [](int& _current, std::string& _data) -> int {
+        std::ostringstream oss;
+        oss << " -> S(" << _current << ")" << std::flush;
+        _data.append(oss.str());
 
-    _dom.add_listener(
-      0, "/router/rest/credentials", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto& _element = _event->content();
-          std::cout << "----------------------------------------------------" << std::endl
-                    << "xpath: " << _element.xpath() << std::endl
-                    << "name: " << _element.name() << std::endl
-                    << "content: " << _element.content() << std::endl
-                    << "parent: " << _element.parent() << std::endl
-                    << std::flush;
-      });
-    _dom.add_listener(
-      0, "/router/rest/version", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto& _element = _event->content();
-          std::cout << "----------------------------------------------------" << std::endl
-                    << "xpath: " << _element.xpath() << std::endl
-                    << "name: " << _element.name() << std::endl
-                    << "content: " << _element.content() << std::endl
-                    << "parent: " << _element.parent() << std::endl
-                    << std::flush;
-      });
-    _dom.add_listener(
-      0, "/stand-alone/zmq/{([^/]+)}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-          auto _element = _event->content();
-          std::cout << "----------------------------------------------------" << std::endl
-                    << "xpath: " << _element.xpath() << std::endl
-                    << "name: " << _element.name() << std::endl
-                    << "content: " << _element.content() << std::endl
-                    << "parent: " << _element.parent() << std::endl
-                    << std::flush;
-      });
-    _dom.add_listener(0, "/worker/http/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-        auto& _element = _event->content();
-        std::cout << "----------------------------------------------------" << std::endl
-                  << "xpath: " << _element.xpath() << std::endl
-                  << "name: " << _element.name() << std::endl
-                  << "content: " << _element.content() << std::endl
-                  << "parent: " << _element.parent() << std::endl
-                  << std::flush;
+        std::random_device _rd;
+        std::mt19937 _gen(_rd());
+        std::uniform_int_distribution<> _distrib(1, 100);
+        if (_distrib(_gen) % 3) {
+            return 1;
+        }
+        
+        return 3;
     });
-    _dom.add_listener(0, "/worker/zmq/0/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-        auto _element = _event->content();
-        std::cout << "----------------------------------------------------" << std::endl
-                  << "xpath: " << _element.xpath() << std::endl
-                  << "name: " << _element.name() << std::endl
-                  << "content: " << _element.content() << std::endl
-                  << "parent: " << _element.parent() << std::endl
-                  << std::flush;
+    _sm->add_transition(3, [](int& _current, std::string& _data) -> int {
+        _data.append(" -> o\n");
+        std::cout << _data << std::flush;
+        return -1;
     });
-    _dom.traverse(_document);
-    _dom.shutdown();
+
+    unsigned long _c{ 0 };
+    do {
+        std::string _d{ "(N" + std::to_string(_c) + "/p" + std::string{ _c % 2 ? "1" : "2" } +
+                        ") ·" };
+        _sm->begin(_d);
+        ++_c;
+        std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 10 });
+    } while (true);
+
     return 0;
 }

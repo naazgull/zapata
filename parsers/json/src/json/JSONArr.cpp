@@ -153,7 +153,7 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
 }
 
 auto
-zpt::JSONArrT::clone() -> zpt::json {
+zpt::JSONArrT::clone() const -> zpt::json {
     zpt::json _return = zpt::json::array();
     for (auto _f : this->__underlying) { _return << _f->clone(); }
     return _return;
@@ -166,6 +166,16 @@ zpt::JSONArrT::operator->() -> std::vector<zpt::json>* {
 
 auto
 zpt::JSONArrT::operator*() -> std::vector<zpt::json>& {
+    return this->__underlying;
+}
+
+auto
+zpt::JSONArrT::operator->() const -> std::vector<zpt::json> const* {
+    return &this->__underlying;
+}
+
+auto
+zpt::JSONArrT::operator*() const -> std::vector<zpt::json> const& {
     return this->__underlying;
 }
 
@@ -279,7 +289,19 @@ zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
 }
 
 auto
-zpt::JSONArrT::stringify(std::string& _out) -> JSONArrT& {
+zpt::JSONArrT::stringify(std::string& _out) -> zpt::JSONArrT& {
+    static_cast<zpt::JSONArrT const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::JSONArrT::stringify(std::ostream& _out) -> zpt::JSONArrT& {
+    static_cast<zpt::JSONArrT const&>(*this).stringify(_out);
+    return (*this);
+}
+
+auto
+zpt::JSONArrT::stringify(std::string& _out) const -> zpt::JSONArrT const& {
     _out.insert(_out.length(), "[");
     bool _first = true;
     for (auto _i : this->__underlying) {
@@ -292,7 +314,7 @@ zpt::JSONArrT::stringify(std::string& _out) -> JSONArrT& {
 }
 
 auto
-zpt::JSONArrT::stringify(std::ostream& _out) -> JSONArrT& {
+zpt::JSONArrT::stringify(std::ostream& _out) const -> zpt::JSONArrT const& {
     _out << "[" << std::flush;
     bool _first = true;
     for (auto _i : this->__underlying) {
@@ -306,6 +328,18 @@ zpt::JSONArrT::stringify(std::ostream& _out) -> JSONArrT& {
 
 auto
 zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) -> JSONArrT& {
+    static_cast<zpt::JSONArrT const&>(*this).prettify(_out, _n_tabs);
+    return (*this);
+}
+
+auto
+zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
+    static_cast<zpt::JSONArrT const&>(*this).prettify(_out, _n_tabs);
+    return (*this);
+}
+
+auto
+zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) const -> JSONArrT const& {
     _out.insert(_out.length(), "[");
     bool _first = true;
     for (auto _i : this->__underlying) {
@@ -324,7 +358,7 @@ zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) -> JSONArrT& {
 }
 
 auto
-zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
+zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONArrT const& {
     _out << "[" << std::flush;
     bool _first = true;
     for (auto _i : this->__underlying) {
@@ -353,6 +387,11 @@ zpt::JSONArr::JSONArr(zpt::JSONArrT* _target)
 zpt::JSONArr::~JSONArr() {}
 
 auto
+zpt::JSONArr::hash() const -> size_t {
+    return reinterpret_cast<size_t>(this->__underlying.get());
+}
+
+auto
 zpt::JSONArr::operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr& {
     this->__underlying = _rhs.__underlying;
     return (*this);
@@ -371,6 +410,16 @@ zpt::JSONArr::operator->() -> zpt::JSONArrT* {
 
 auto
 zpt::JSONArr::operator*() -> zpt::JSONArrT& {
+    return *this->__underlying.get();
+}
+
+auto
+zpt::JSONArr::operator->() const -> zpt::JSONArrT const* {
+    return this->__underlying.get();
+}
+
+auto
+zpt::JSONArr::operator*() const -> zpt::JSONArrT const& {
     return *this->__underlying.get();
 }
 

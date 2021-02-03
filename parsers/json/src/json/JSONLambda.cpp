@@ -34,6 +34,16 @@ zpt::context::operator*() -> zpt::JSONContext& {
 }
 
 auto
+zpt::context::operator->() const -> zpt::JSONContext const* {
+    return this->__underlying.get();
+}
+
+auto
+zpt::context::operator*() const -> zpt::JSONContext const& {
+    return *this->__underlying.get();
+}
+
+auto
 zpt::context::operator=(const zpt::context& _rhs) -> zpt::context& {
     this->__underlying = _rhs.__underlying;
     return (*this);
@@ -63,17 +73,17 @@ zpt::JSONLambda::JSONLambda(std::string const& _name, unsigned short _n_args)
 zpt::JSONLambda::~JSONLambda() {}
 
 auto
-zpt::JSONLambda::name() -> std::string {
+zpt::JSONLambda::name() const -> std::string {
     return this->__name;
 }
 
 auto
-zpt::JSONLambda::n_args() -> unsigned short {
+zpt::JSONLambda::n_args() const -> unsigned short {
     return this->__n_args;
 }
 
 auto
-zpt::JSONLambda::signature() -> std::string {
+zpt::JSONLambda::signature() const -> std::string {
     return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 

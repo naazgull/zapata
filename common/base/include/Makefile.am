@@ -1,9 +1,11 @@
 
 nobase_include_HEADERS = \
 ./zapata/base/expect.h \
+./zapata/base/sentry.h \
 ./zapata/base/config.h \
 ./zapata/base/unconfig.h \
 ./zapata/exceptions/exceptions.h \
+./zapata/exceptions/Exception.h \
 ./zapata/exceptions/ExpectationException.h \
 ./zapata/exceptions/CastException.h \
 ./zapata/exceptions/ClosedException.h \

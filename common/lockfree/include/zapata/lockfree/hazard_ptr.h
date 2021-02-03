@@ -375,7 +375,7 @@ zpt::lf::hazard_ptr<T>::get_next_available_idx() -> int {
         bool _acquired{ false };
         if (this->__next_thr_idx[_idx]->compare_exchange_strong(_acquired, true)) { return _idx; }
     }
-    expect(_idx != this->P,
+    expect(_idx == this->P,
            "No more thread space available for " << std::this_thread::get_id() << " in domain "
                                                  << typeid(T).name() << " and instance " << std::hex
                                                  << this,

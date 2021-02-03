@@ -7,6 +7,7 @@ libzapata_base_la_CPPFLAGS = -O3 -std=c++17 -I../../../include -I../../include
 libzapata_base_la_SOURCES = \
 ./expect.cpp \
 ./ascii.cpp \
+./Exception.cpp \
 ./ExpectationException.cpp \
 ./base64.cpp \
 ./CastException.cpp \
