@@ -42,16 +42,11 @@ const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARN
 } // namespace zpt
 
 auto
-zpt::to_string(const char* _in) -> std::string {
-    return std::string(_in);
-}
-
-int
 zpt::log(std::string const& _text,
          zpt::LogLevel _level,
          std::string const& _host,
          int _line,
-         std::string const& _file) {
+         std::string const& _file) -> int {
     if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
@@ -63,7 +58,6 @@ zpt::log(std::string const& _text,
     struct timeval _tp;
     gettimeofday(&_tp, nullptr);
 
-    std::string _log;
     if (zpt::log_format == 1) {
         std::ostringstream _oss;
         _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
@@ -88,8 +82,8 @@ zpt::log(std::string const& _text,
     return 0;
 }
 
-char*
-zpt::log_hostname() {
+auto
+zpt::log_hostname() -> char* {
     if (zpt::log_hname == nullptr) {
         zpt::log_hname = new char[65];
         bzero(zpt::log_hname, 65);

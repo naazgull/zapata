@@ -191,7 +191,7 @@ auto
 zpt::fromstr(std::string s, int* i) -> void {
     size_t sz = 0;
     try {
-        int r = std::stoi(s, &sz);
+        auto r = std::stoi(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -204,7 +204,7 @@ auto
 zpt::fromstr(std::string s, unsigned int* i) -> void {
     size_t sz = 0;
     try {
-        unsigned int r = std::stoul(s, &sz);
+        auto r = std::stoul(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -217,7 +217,7 @@ auto
 zpt::fromstr(std::string s, size_t* i) -> void {
     size_t sz = 0;
     try {
-        size_t r = std::stoull(s, &sz);
+        auto r = std::stoull(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -229,7 +229,7 @@ auto
 zpt::fromstr(std::string s, long* i) -> void {
     size_t sz = 0;
     try {
-        long r = std::stol(s, &sz);
+        auto r = std::stol(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -253,7 +253,7 @@ auto
 zpt::fromstr(std::string s, float* i) -> void {
     size_t sz = 0;
     try {
-        float r = std::stof(s, &sz);
+        auto r = std::stof(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -265,7 +265,7 @@ auto
 zpt::fromstr(std::string s, double* i) -> void {
     size_t sz = 0;
     try {
-        double r = std::stod(s, &sz);
+        auto r = std::stod(s, &sz);
         if (sz != s.length()) { return; }
         *i = r;
     }
@@ -292,30 +292,30 @@ zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void
       tzset();
     */
     if (_no_timezone) {
-        time_t _localtime = time(nullptr);
+        auto _localtime = time(nullptr);
         struct tm* local_tm = std::localtime(&_localtime);
         struct tm tm[1] = { { 0 } };
         strptime(s.data(), f, tm);
         *i = std::mktime(tm) - (local_tm->tm_isdst ? 3600 : 0);
     }
     else {
-        time_t _localtime = time(nullptr);
+        auto _localtime = time(nullptr);
         struct tm* local_tm = std::localtime(&_localtime);
         struct tm tm[1] = { { 0 } };
         strptime(s.data(), f, tm);
-        time_t _local_offset = local_tm->tm_gmtoff - (local_tm->tm_isdst ? 3600 : 0);
-        time_t _target_offset = tm->tm_gmtoff - (tm->tm_isdst ? 3600 : 0);
+        auto _local_offset = local_tm->tm_gmtoff - (local_tm->tm_isdst ? 3600 : 0);
+        auto _target_offset = tm->tm_gmtoff - (tm->tm_isdst ? 3600 : 0);
         *i = std::mktime(tm) - (_target_offset - _local_offset);
     }
 }
 
 auto
 zpt::timezone_offset() -> time_t {
-    time_t t;
-    tm* ptr;
-    int day;
+    time_t t{0};
+    tm* ptr{nullptr};
+    int day{0};
     unsigned long num[2];
-    t = time(NULL);
+    t = time(nullptr);
     ptr = gmtime(&t); // Standard UTC time
     // Get difference in seconds
     num[0] = (ptr->tm_hour * 3600) + (ptr->tm_min * 60);

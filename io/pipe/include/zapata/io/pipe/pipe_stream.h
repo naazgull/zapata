@@ -67,26 +67,9 @@ class basic_pipebuf : public std::basic_streambuf<Char> {
     virtual auto input_fd() -> int;
 
   protected:
-    // virtual std::streamsize xsputn(const char_type *to_put,
-    //                                std::streamsize count) override;
     virtual auto overflow(int_type c) -> int_type override;
     virtual auto underflow() -> int_type override;
     virtual auto sync() -> int override;
-    // virtual traits_pos_type seekoff(
-    //     traits_off_type off, std::ios_base::seekdir dir,
-    //     std::ios_base::openmode which = std::ios_base::in |
-    //                                     std::ios_base::out) override;
-    // virtual pos_type seekoff(off_type off, std::ios_base::seekdir dir,
-    //                          std::ios_base::openmode which = std::ios_base::in |
-    //                                                          std::ios_base::out);
-    // virtual traits_pos_type seekpos(
-    //     traits_pos_type pos,
-    //     std::ios_base::openmode which = std::ios_base::in |
-    //                                     std::ios_base::out) override;
-    // virtual pos_type seekpos(pos_type pos,
-    //                          std::ios_base::openmode which = std::ios_base::in |
-    //                                                          std::ios_base::out);
-    // virtual basic_pipebuf<Char> &pbump(pos_type to_bump, int direction);
 
   private:
     char_type __obuf[1024] = { 0 };

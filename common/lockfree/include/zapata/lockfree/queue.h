@@ -163,7 +163,7 @@ class queue {
         catch (zpt::NoMoreElementsException const& e) {
             _out << "0x0" << std::flush;
         }
-        size_t _count = 0;
+        auto _count = 0;
         _out << std::endl << std::endl << "  #items -> [" << std::flush;
         try {
             for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
@@ -220,7 +220,7 @@ zpt::lf::queue<T>::head() -> zpt::lf::forward_node<T>* {
     typename zpt::lf::queue<T>::hazard_domain::guard _front_sentry{ *this->__head,
                                                                     this->__hazard_domain };
     if (_front_sentry.is_acquired()) {
-        zpt::lf::forward_node<T>* _front = _front_sentry.target();
+        auto _front = _front_sentry.target();
         if (_front != nullptr && !_front->__is_null->load()) { return _front; }
     }
     throw zpt::NoMoreElementsException("there is no element in the front");
@@ -232,7 +232,7 @@ zpt::lf::queue<T>::tail() -> zpt::lf::forward_node<T>* {
     typename zpt::lf::queue<T>::hazard_domain::guard _back_sentry{ *this->__tail,
                                                                    this->__hazard_domain };
     if (_back_sentry.is_acquired()) {
-        zpt::lf::forward_node<T>* _back = _back_sentry.target();
+        auto _back = _back_sentry.target();
         if (_back != nullptr && !_back->__is_null->load()) { return _back; }
     }
     throw zpt::NoMoreElementsException("there is no element in the back");
@@ -384,7 +384,7 @@ zpt::lf::queue<T>::iterator::operator*() -> zpt::lf::queue<T>::iterator::referen
 template<typename T>
 typename zpt::lf::queue<T>::iterator
 zpt::lf::queue<T>::iterator::operator++(int) {
-    zpt::lf::queue<T>::iterator _to_return = (*this);
+    auto _to_return = (*this);
     ++(*this);
     return _to_return;
 }

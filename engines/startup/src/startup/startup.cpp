@@ -220,9 +220,9 @@ zpt::startup::engine::report_error(zpt::json& _event,
 
 auto
 zpt::startup::engine::to_string() -> std::string {
-    zpt::json _callbacks = zpt::json::object();
+    auto _callbacks = zpt::json::object();
     for (auto [_key, _callback] : this->__callbacks) { _callbacks << _key << _callback.size(); }
-    zpt::json _plugins = zpt::json::object();
+    auto _plugins = zpt::json::object();
     for (auto [_key, _plugin] : this->__plugins) {
         _plugins << _key
                  << zpt::json{ "name",     _plugin->name(),        "source", _plugin->source(),
@@ -244,7 +244,7 @@ zpt::startup::engine::load(zpt::json _plugin_options, zpt::json _plugin_config) 
 
     auto [_it, _inserted] = this->__plugins.emplace(_plugin_options["name"],
                                                     zpt::plugin{ _plugin_options, _plugin_config });
-    zpt::plugin& _plugin = _it->second;
+    auto& _plugin = _it->second;
 
     if (!_inserted) { return _plugin; }
 
@@ -326,8 +326,8 @@ zpt::startup::engine::hash(zpt::json& _event) -> std::string {
 auto
 zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<void(bool)> _callback)
   -> bool {
-    bool _fullfilled{ true };
-    zpt::json _reqs = _plugin->requirements();
+    auto _fullfilled{ true };
+    auto _reqs = _plugin->requirements();
     zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
     for (auto [_, _key, _loaded] : _reqs) {
         if (!static_cast<bool>(_loaded)) {
@@ -349,10 +349,10 @@ auto
 zpt::startup::engine::load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
     zlog("Loading plugin " << _plugin->name(), zpt::trace);
     zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
-    std::string& _lib = _plugin->source();
-    size_t _idx{ _lib.find(".") };
+    auto& _lib = _plugin->source();
+    auto _idx{ _lib.find(".") };
     if (_idx != std::string::npos) {
-        std::string _extension{ _lib.substr(_idx) };
+        auto _extension{ _lib.substr(_idx) };
         if (_extension.length() != 0) {
             auto _provider = this->__plugins.find(_extension);
             if (_provider != this->__plugins.end()) { _provider->second->load_plugin(_plugin); }
@@ -377,10 +377,10 @@ auto
 zpt::startup::engine::unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
     zlog("Unloading plugin " << _plugin->name(), zpt::trace);
     zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
-    std::string& _lib = _plugin->source();
-    size_t _idx{ _lib.find(".") };
+    auto& _lib = _plugin->source();
+    auto _idx{ _lib.find(".") };
     if (_idx != std::string::npos) {
-        std::string _extension{ _lib.substr(_idx) };
+        auto _extension{ _lib.substr(_idx) };
         if (_extension.length() != 0) {
             auto _provider = this->__plugins.find(_extension);
             if (_provider != this->__plugins.end()) { _provider->second->unload_plugin(_plugin); }
@@ -392,8 +392,8 @@ zpt::startup::engine::unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engin
 auto
 zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     zpt::startup::engine& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    std::string& _lib = _plugin->name();
-    std::string& _lib_file = _plugin->source();
+    auto& _lib = _plugin->name();
+    auto& _lib_file = _plugin->source();
 
     void* _hndl = dlopen(_lib_file.data(), RTLD_NOW);
     if (_hndl == nullptr) {
@@ -406,11 +406,11 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     void (*_populate)(zpt::plugin&);
     _populate = (void (*)(zpt::plugin&))dlsym(_hndl, "_zpt_load_");
 
-    bool _load{ _populate != nullptr };
+    auto _load{ _populate != nullptr };
     _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::LOAD }, _load);
     if (!_load) { return false; }
 
-    bool _config{ true };
+    auto _config{ true };
     try {
         _populate(_plugin);
     }
@@ -434,10 +434,10 @@ zpt::startup::dynlib::unload_plugin(zpt::plugin& _plugin) -> bool {
     void (*_unpopulate)(zpt::plugin&);
     _unpopulate = (void (*)(zpt::plugin&))dlsym(_plugin->handler(), "_zpt_unload_");
 
-    bool _unload{ _unpopulate != nullptr };
+    auto _unload{ _unpopulate != nullptr };
     if (!_unload) { return false; }
 
-    bool _unconfig{ true };
+    auto _unconfig{ true };
     try {
         _unpopulate(_plugin);
     }

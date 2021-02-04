@@ -30,8 +30,8 @@ SOFTWARE.
 
 auto
 zpt::ascii::encode(std::string& _out, bool quote) -> void {
-    wchar_t* wc = zpt::utf8::utf8_to_wstring(_out);
-    std::wstring ws(wc);
+    auto wc = zpt::utf8::utf8_to_wstring(_out);
+    std::wstring ws{ wc };
 
     for (size_t i = 0; i != iso.length(); i++) {
         std::replace(ws.begin(), ws.end(), iso[i], plain[i]);
@@ -51,7 +51,7 @@ zpt::ascii::encode(std::string& _out, bool quote) -> void {
 auto
 zpt::generate::key(std::string& _out, size_t _size) -> void {
     static std::string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-    timeval _tv;
+    timeval _tv = { 0 };
 
     for (size_t _idx = 0; _idx != _size; _idx++) {
         gettimeofday(&_tv, nullptr);
