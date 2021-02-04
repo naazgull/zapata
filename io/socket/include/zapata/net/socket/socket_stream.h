@@ -281,7 +281,7 @@ auto
 zpt::basic_socketbuf<Char>::set_socket(int _sock) -> void {
     this->__sock = _sock;
     if (_sock != 0) {
-        int iOption = 1;
+        auto iOption = 1;
         setsockopt(this->__sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&iOption, sizeof(int));
         struct linger a;
         a.l_onoff = 1;
@@ -459,8 +459,8 @@ zpt::basic_socketbuf<Char>::underflow() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::output_buffer_ip() -> __int_type {
-    int _num = __buf_type::pptr() - __buf_type::pbase();
-    int _actually_written = -1;
+    auto _num = __buf_type::pptr() - __buf_type::pbase();
+    auto _actually_written = -1;
     if ((_actually_written =
            ::send(__sock, reinterpret_cast<char*>(obuf), _num * char_size, MSG_NOSIGNAL)) < 0) {
         ::shutdown(this->__sock, SHUT_RDWR);
@@ -477,8 +477,8 @@ zpt::basic_socketbuf<Char>::output_buffer_ip() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
-    int _num = __buf_type::pptr() - __buf_type::pbase();
-    int _actually_written = -1;
+    auto _num = __buf_type::pptr() - __buf_type::pbase();
+    auto _actually_written = -1;
     if ((_actually_written = ::sendto(__sock,
                                       reinterpret_cast<char*>(obuf),
                                       _num * char_size,
@@ -501,8 +501,8 @@ zpt::basic_socketbuf<Char>::output_buffer_udp() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::output_buffer_ssl() -> __int_type {
-    int _num = __buf_type::pptr() - __buf_type::pbase();
-    int _actually_written = 0;
+    auto _num = __buf_type::pptr() - __buf_type::pbase();
+    auto _actually_written = 0;
     do {
         if ((_actually_written =
                SSL_write(this->__sslstream, reinterpret_cast<char*>(obuf), _num * char_size)) < 0) {
@@ -527,7 +527,7 @@ zpt::basic_socketbuf<Char>::output_buffer_ssl() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::underflow_ip() -> __int_type {
-    int _actually_read = -1;
+    auto _actually_read = -1;
     if ((_actually_read = ::recv(__sock, reinterpret_cast<char*>(ibuf), SIZE * char_size, 0)) < 0) {
         ::shutdown(this->__sock, SHUT_RDWR);
         ::close(this->__sock);
@@ -544,7 +544,7 @@ zpt::basic_socketbuf<Char>::underflow_ip() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::underflow_udp() -> __int_type {
-    int _actually_read = -1;
+    auto _actually_read = -1;
     socklen_t _peer_addr_len = sizeof __peer;
     if ((_actually_read = ::recvfrom(__sock,
                                      reinterpret_cast<char*>(ibuf),
@@ -567,7 +567,7 @@ zpt::basic_socketbuf<Char>::underflow_udp() -> __int_type {
 template<typename Char>
 auto
 zpt::basic_socketbuf<Char>::underflow_ssl() -> __int_type {
-    int _actually_read = -1;
+    auto _actually_read = -1;
     do {
         if ((_actually_read =
                SSL_read(this->__sslstream, reinterpret_cast<char*>(ibuf), SIZE * char_size)) < 0) {
@@ -792,7 +792,7 @@ zpt::basic_socketstream<Char>::open(std::string const& _host,
     if (_he == nullptr) { return false; }
 
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(__buf.address());
-    std::string _addr(reinterpret_cast<char*>(_he->h_addr), _he->h_length);
+    std::string _addr{ reinterpret_cast<char*>(_he->h_addr), static_cast<size_t>(_he->h_length) };
     std::copy(_addr.c_str(),
               _addr.c_str() + _addr.length(),
               reinterpret_cast<char*>(&_in_address.sin_addr.s_addr));
@@ -834,7 +834,7 @@ zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
     strncpy(_in_address.sun_path, _path.data(), sizeof _in_address.sun_path);
 #pragma GCC diagnostic pop
 
-    int _sd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    auto _sd = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (::connect(_sd, &__buf.address(), sizeof __buf.address()) < 0) {
         __stream_type::setstate(std::ios::failbit);
         __buf.set_socket(0);
@@ -852,7 +852,7 @@ zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
 template<typename Char>
 auto
 zpt::basic_socketstream<Char>::open_ip() -> bool {
-    int _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    auto _sd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (::connect(_sd, &__buf.address(), sizeof __buf.address()) < 0) {
         __stream_type::setstate(std::ios::failbit);
         __buf.set_socket(0);
@@ -871,17 +871,17 @@ template<typename Char>
 auto
 zpt::basic_socketstream<Char>::open_udp() -> bool {
     auto& _in_address = reinterpret_cast<zpt::sockaddrin_t&>(__buf.address());
-    int _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    int _reuse = 1;
+    auto _sd = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    auto _reuse = 1;
     setsockopt(_sd, SOL_SOCKET, SO_REUSEADDR, (char*)&_reuse, sizeof _reuse);
-    int _ret = inet_aton(__buf.host().c_str(), &_in_address.sin_addr);
+    auto _ret = inet_aton(__buf.host().c_str(), &_in_address.sin_addr);
     if (_ret == 0) {
-        struct addrinfo _hints, *_result = NULL;
+        struct addrinfo _hints, *_result = nullptr;
         std::memset(&_hints, 0, sizeof _hints);
         _hints.ai_family = AF_INET;
         _hints.ai_socktype = SOCK_DGRAM;
 
-        _ret = getaddrinfo(__buf.host().c_str(), NULL, &_hints, &_result);
+        _ret = getaddrinfo(__buf.host().c_str(), nullptr, &_hints, &_result);
         if (_ret) {
             __stream_type::setstate(std::ios::failbit);
             __buf.set_socket(0);
@@ -901,7 +901,7 @@ zpt::basic_socketstream<Char>::open_udp() -> bool {
 template<typename Char>
 auto
 zpt::basic_socketstream<Char>::open_ssl() -> bool {
-    int _sd = ::socket(AF_INET, SOCK_STREAM, 0);
+    auto _sd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (::connect(_sd, reinterpret_cast<sockaddr*>(&__buf.address()), sizeof __buf.address()) < 0) {
         __stream_type::setstate(std::ios::failbit);
         __buf.set_socket(0);
@@ -982,7 +982,7 @@ zpt::basic_serversocketstream<Char>::bind(std::uint16_t _port) -> bool {
     this->__sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (this->__sockfd < 0) { return false; }
 
-    int _opt = 1;
+    auto _opt = 1;
     if (setsockopt(this->__sockfd, SOL_SOCKET, SO_REUSEADDR, (char*)&_opt, sizeof _opt) ==
         SO_ERROR) {
         ::shutdown(this->__sockfd, SHUT_RDWR);
@@ -1038,7 +1038,7 @@ zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
         case IPPROTO_TCP: {
             zpt::sockaddrin_t _cli_addr{};
             socklen_t _clilen = sizeof(zpt::sockaddrin_t);
-            int _newsockfd =
+            auto _newsockfd =
               ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
 
             expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
@@ -1054,7 +1054,7 @@ zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
             bzero((char*)&_cli_addr, sizeof _cli_addr);
             _cli_addr.sun_family = AF_UNIX;
             strncpy(_cli_addr.sun_path, this->__path.data(), (sizeof _cli_addr.sun_path) - 1);
-            int _newsockfd = ::accept(this->__sockfd, nullptr, nullptr);
+            auto _newsockfd = ::accept(this->__sockfd, nullptr, nullptr);
 
             expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
 

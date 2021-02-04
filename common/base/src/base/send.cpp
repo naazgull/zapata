@@ -24,13 +24,13 @@ SOFTWARE.
 
 #include <zapata/mail/manip.h>
 
-bool
+auto
 zpt::sendmail(std::string const& _to,
               std::string _from,
               std::string _subject,
               std::string _message,
-              std::string _replyto) {
-    bool _retval = false;
+              std::string _replyto) -> bool {
+    bool _retval{ false };
     FILE* _mailpipe = popen("/usr/sbin/sendmail -t", "w");
     if (_mailpipe != nullptr) {
         fprintf(_mailpipe, "To: %s\n", _to.data());

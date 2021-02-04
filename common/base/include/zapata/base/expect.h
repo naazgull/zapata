@@ -578,26 +578,22 @@ to_string(zpt::JSONType _type) -> std::string;
 using performative = unsigned short;
 using status = unsigned short;
 
-extern std::string* tz;
-std::string
-get_tz();
+auto
+get_tz() -> std::string const&;
 
-typedef std::shared_ptr<std::tm> tm_ptr;
+using tm_ptr = std::shared_ptr<std::tm>;
 
-zpt::tm_ptr
-get_time(time_t _t);
+auto
+get_time(time_t _t) -> zpt::tm_ptr;
+
+inline auto
+non_static_cache_line_size() -> size_t {
+    return sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+}
 
 inline auto
 cache_line_size() -> size_t {
-    static size_t _cache_line_size{ 0 };
-    if (_cache_line_size == 0) {
-        FILE* _p = 0;
-        _p = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
-        if (_p) {
-            if (fscanf(_p, "%ld", &_cache_line_size)) {}
-            fclose(_p);
-        }
-    }
+    static size_t _cache_line_size = zpt::non_static_cache_line_size();
     return _cache_line_size;
 }
 

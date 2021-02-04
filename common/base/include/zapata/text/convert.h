@@ -132,7 +132,7 @@ fromstr(T _in) -> std::string;
 
 const char encodeCharacterTable[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-const char decodeCharacterTable[256] = {
+const signed char decodeCharacterTable[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,
@@ -147,7 +147,7 @@ const char decodeCharacterTable[256] = {
 };
 const char encodeCharacterTableUrl[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-const char decodeCharacterTableUrl[256] = {
+const signed char decodeCharacterTableUrl[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,
@@ -320,16 +320,16 @@ type
 HMAC_SHA256(const type& input, k_type key) {
     unsigned char hash[EVP_MAX_MD_SIZE];
 
-    HMAC_CTX* hmac = HMAC_CTX_new();
+    auto hmac = HMAC_CTX_new();
     HMAC_Init_ex(hmac, &key[0], key.length(), EVP_sha256(), NULL);
     HMAC_Update(hmac, (unsigned char*)&input[0], input.length());
-    unsigned int len = EVP_MAX_MD_SIZE;
+    auto len = EVP_MAX_MD_SIZE;
     HMAC_Final(hmac, hash, &len);
     HMAC_CTX_free(hmac);
 
     std::stringstream ss;
     ss << std::setfill('0');
-    for (unsigned int i = 0; i < len; i++) { ss << hash[i]; }
+    for (auto i = 0; i < len; i++) { ss << hash[i]; }
     ss << std::flush;
 
     return (ss.str());

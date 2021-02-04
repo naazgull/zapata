@@ -10,12 +10,12 @@
 
 auto
 zpt::lf::spin_lock::count_shared() -> long {
-    return this->__shared_access.load();
+    return this->__shared_access->load();
 }
 
 auto
 zpt::lf::spin_lock::count_exclusive() -> long {
-    return this->__exclusive_access.load();
+    return this->__exclusive_access->load();
 }
 
 auto
@@ -46,7 +46,7 @@ zpt::lf::spin_lock::release_shared() -> zpt::lf::spin_lock& {
     --_found->second;
     if (_found->second == 0) {
         zpt::lf::spin_lock::__acquired_spins.erase(_found);
-        this->__shared_access.fetch_sub(1, std::memory_order_release);
+        this->__shared_access->fetch_sub(1, std::memory_order_release);
     }
     return (*this);
 }
@@ -61,7 +61,7 @@ zpt::lf::spin_lock::release_exclusive() -> zpt::lf::spin_lock& {
     ++_found->second;
     if (_found->second == 0) {
         zpt::lf::spin_lock::__acquired_spins.erase(_found);
-        this->__exclusive_access.store(false, std::memory_order_release);
+        this->__exclusive_access->store(false, std::memory_order_release);
     }
     return (*this);
 }
@@ -69,15 +69,15 @@ zpt::lf::spin_lock::release_exclusive() -> zpt::lf::spin_lock& {
 auto
 zpt::lf::spin_lock::spin_shared_lock() -> void {
     do {
-        if (this->__exclusive_access.load(std::memory_order_seq_cst)) {
+        if (this->__exclusive_access->load(std::memory_order_seq_cst)) {
             std::this_thread::yield();
             continue;
         }
 
-        this->__shared_access.fetch_add(1, std::memory_order_acquire);
+        this->__shared_access->fetch_add(1, std::memory_order_acquire);
 
-        if (this->__exclusive_access.load(std::memory_order_seq_cst)) {
-            this->__shared_access.fetch_sub(1, std::memory_order_release);
+        if (this->__exclusive_access->load(std::memory_order_seq_cst)) {
+            this->__shared_access->fetch_sub(1, std::memory_order_release);
             std::this_thread::yield();
             continue;
         }
@@ -88,10 +88,10 @@ zpt::lf::spin_lock::spin_shared_lock() -> void {
 
 auto
 zpt::lf::spin_lock::spin_exclusive_lock() -> void {
-    while (this->__exclusive_access.exchange(true, std::memory_order_acquire)) {
+    while (this->__exclusive_access->exchange(true, std::memory_order_acquire)) {
         std::this_thread::yield();
     }
-    while (this->__shared_access.load(std::memory_order_seq_cst) != 0) {
+    while (this->__shared_access->load(std::memory_order_seq_cst) != 0) {
         std::this_thread::yield();
     }
 }

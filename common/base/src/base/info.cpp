@@ -493,24 +493,24 @@ const char* mimetype_extensions[] = {
 };
 } // namespace zpt
 
-zpt::MIMEType
-zpt::get_mime(std::string const& _in) {
-    magic_t myt = magic_open(MAGIC_CONTINUE | MAGIC_ERROR | MAGIC_MIME);
+auto
+zpt::get_mime(std::string const& _in) -> zpt::MIMEType {
+    auto myt = magic_open(MAGIC_CONTINUE | MAGIC_ERROR | MAGIC_MIME);
     magic_load(myt, nullptr);
 
-    std::string _mime(magic_file(myt, _in.data()));
+    std::string _mime{ magic_file(myt, _in.data()) };
     _mime.assign(_mime.substr(0, _mime.find(";")));
     magic_close(myt);
 
-    for (size_t _i = 0; _i != _MIMETYPE_LEN; _i++) {
+    for (auto _i = 0; _i != _MIMETYPE_LEN; _i++) {
         if (_mime == std::string(zpt::mimetype_names[_i])) { return (zpt::MIMEType)_i; }
     }
 
     return zpt::application_octet_stream;
 }
 
-bool
-zpt::path_exists(std::string const& _in) {
+auto
+zpt::path_exists(std::string const& _in) -> bool {
     struct stat _buffer;
     return (stat(_in.data(), &_buffer) == 0);
 }

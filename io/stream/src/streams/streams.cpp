@@ -132,7 +132,7 @@ zpt::stream::polling::~polling() { ::close(this->__epoll_fd); }
 auto
 zpt::stream::polling::listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling& {
     if (!this->__shutdown.load()) {
-        zpt::stream* _new_stream = _stream.release();
+        auto _new_stream = _stream.release();
 
         zpt::epoll_event_t _new_event;
         _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -152,24 +152,24 @@ zpt::stream::polling::mute(zpt::stream& _stream) -> zpt::stream::polling& {
 auto
 zpt::stream::polling::pool() -> void {
     std::uint64_t _sd_watchdog_usec = 100000;
-    bool _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
-    long long _poll_timeout =
-      _sd_watchdog_enabled ? this->__poll_wait_timeout > 0
+    auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
+    auto _poll_timeout = _sd_watchdog_enabled
+                           ? this->__poll_wait_timeout > 0
                                ? std::min(this->__poll_wait_timeout / 1000,
                                           static_cast<long long>(_sd_watchdog_usec / 1000 / 2))
                                : static_cast<long long>(_sd_watchdog_usec / 1000 / 2)
                            : std::min(this->__poll_wait_timeout / 1000, this->__poll_wait_timeout);
 
     do {
-        int _n_alive =
+        auto _n_alive =
           epoll_wait(this->__epoll_fd, this->__epoll_events, MAX_EVENT_PER_POLL, _poll_timeout);
         if (this->__shutdown.load()) { return; }
         if (_n_alive < 0) { continue; }
 
         if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
 
-        for (int _k = 0; _k != _n_alive; ++_k) {
-            zpt::stream* _stream = static_cast<zpt::stream*>(this->__epoll_events[_k].data.ptr);
+        for (auto _k = 0; _k != _n_alive; ++_k) {
+            auto _stream = static_cast<zpt::stream*>(this->__epoll_events[_k].data.ptr);
 
             if (((this->__epoll_events[_k].events & EPOLLPRI) == EPOLLPRI) ||
                 ((this->__epoll_events[_k].events & EPOLLHUP) == EPOLLHUP) ||
