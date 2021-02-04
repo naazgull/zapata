@@ -25,10 +25,6 @@ SOFTWARE.
 #include <fstream>
 #include <zapata/base/expect.h>
 
-namespace zpt {
-std::string* tz = nullptr;
-}
-
 auto
 zpt::to_string(zpt::JSONType _type) -> std::string {
     switch (_type) {
@@ -66,25 +62,29 @@ zpt::to_string(zpt::JSONType _type) -> std::string {
     return "undefined";
 }
 
-std::string
-zpt::get_tz() {
-    if (zpt::tz == nullptr) {
-        zpt::tz = new std::string();
-        std::ifstream _tzf;
-        _tzf.open("/etc/timezone");
-        if (_tzf.is_open()) {
-            _tzf >> (*zpt::tz);
-            _tzf.close();
-        }
-        else {
-            zpt::tz->assign("UTC");
-        }
+auto
+non_static_get_tz() -> std::string {
+    std::string _to_return;
+    std::ifstream _tzf;
+    _tzf.open("/etc/timezone");
+    if (_tzf.is_open()) {
+        _tzf >> _to_return;
+        _tzf.close();
     }
-    return *zpt::tz;
+    else {
+        _to_return.assign("UTC");
+    }
+    return _to_return;
 }
 
-zpt::tm_ptr
-zpt::get_time(time_t _t) {
+auto
+zpt::get_tz() -> std::string const& {
+    static std::string tz = non_static_get_tz();
+    return tz;
+}
+
+auto
+zpt::get_time(time_t _t) -> zpt::tm_ptr {
     std::tm* _tm = new std::tm();
     std::memcpy(_tm, localtime(&_t), sizeof(std::tm));
     return zpt::tm_ptr(_tm);

@@ -1,9 +1,10 @@
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <map>
 #include <type_traits>
+
+#include <zapata/lockfree/atomics.h>
 
 namespace zpt {
 namespace lf {
@@ -48,8 +49,8 @@ class spin_lock {
     auto release_exclusive() -> zpt::lf::spin_lock&;
 
   private:
-    std::atomic<long> __shared_access{ 0 };
-    std::atomic<bool> __exclusive_access{ false };
+    zpt::padded_atomic<long> __shared_access{ 0 };
+    zpt::padded_atomic<bool> __exclusive_access{ false };
 
     static inline thread_local std::map<zpt::lf::spin_lock*, long> __acquired_spins;
 

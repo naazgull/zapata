@@ -65,24 +65,21 @@ enum LogLevel {
     verbose = 9
 };
 
-using std::to_string;
-
 auto
-to_string(const char* _in) -> std::string;
-
-int
 log(std::string const& _text,
     zpt::LogLevel _level,
     std::string const& _host,
     int _line,
-    std::string const& _file);
+    std::string const& _file) -> int;
+
 template<typename T>
-int
-log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file) {
+auto
+log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file)
+  -> int {
     return zpt::log(to_string(_text), _level, _host, _line, _file);
 }
-char*
-log_hostname();
+auto
+log_hostname() -> char*;
 
 namespace this_thread {
 template<typename T, int Step>

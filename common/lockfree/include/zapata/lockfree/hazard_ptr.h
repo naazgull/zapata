@@ -43,7 +43,6 @@ template<typename T>
 class hazard_ptr {
   public:
     using size_type = size_t;
-    static constexpr size_t element_size = sizeof(std::atomic<T*>);
     static inline std::atomic_flag __initialized = ATOMIC_FLAG_INIT;
 
     class pending_list {
@@ -224,9 +223,9 @@ zpt::lf::hazard_ptr<T>::at(size_t _idx) -> zpt::padded_atomic<T*>& {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
-    size_t _idx = this->get_this_thread_idx();
+    auto _idx = this->get_this_thread_idx();
 
-    for (size_t _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
         auto& _current = this->__hp[_k];
         if (_current->load(std::memory_order_acquire) == nullptr) {
             T* _exchange = _ptr;
@@ -262,8 +261,8 @@ auto
 zpt::lf::hazard_ptr<T>::release(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
     if (_ptr == nullptr) { return (*this); }
 
-    size_t _idx = this->get_this_thread_idx();
-    for (size_t _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    auto _idx = this->get_this_thread_idx();
+    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
         T* _exchange = _ptr;
         if (this->__hp[_k]->compare_exchange_strong(_exchange, nullptr)) { return (*this); }
     }
@@ -286,7 +285,7 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
     auto& _retired = zpt::lf::hazard_ptr<T>::get_retired();
 
     std::map<T*, bool> _to_process;
-    for (long _idx = 0; _idx != this->N; ++_idx) {
+    for (auto _idx = 0; _idx != this->N; ++_idx) {
         auto& _item = this->__hp[_idx];
         T* _ptr = _item->load();
         if (_ptr != nullptr) { _to_process.insert(std::make_pair(_ptr, true)); }
@@ -309,7 +308,7 @@ template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::clear() -> zpt::lf::hazard_ptr<T>& {
     std::map<T*, bool> _to_process;
-    for (long _idx = 0; _idx != this->N; ++_idx) {
+    for (auto _idx = 0; _idx != this->N; ++_idx) {
         auto& _item = this->__hp[_idx];
         T* _ptr = _item->load();
         if (_ptr != nullptr) {
@@ -333,9 +332,9 @@ zpt::lf::hazard_ptr<T>::get_thread_dangling_count() -> size_t {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::get_thread_held_count() -> size_t {
-    int _idx = this->get_this_thread_idx();
-    size_t _held{ 0 };
-    for (long _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    auto _idx = this->get_this_thread_idx();
+    auto _held{ 0 };
+    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
         if (this->__hp[_k]->load() != nullptr) { ++_held; }
     }
     return _held;
@@ -346,7 +345,7 @@ auto
 zpt::lf::hazard_ptr<T>::release_thread_idx() -> zpt::lf::hazard_ptr<T>& {
     int _idx = this->get_this_thread_idx();
 
-    for (long _k = _idx * K; _k != ((_idx + 1) * K); ++_k) { this->__hp[_k]->store(nullptr); }
+    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) { this->__hp[_k]->store(nullptr); }
     this->__next_thr_idx[_idx] = false;
 
     return (*this);
@@ -355,8 +354,8 @@ zpt::lf::hazard_ptr<T>::release_thread_idx() -> zpt::lf::hazard_ptr<T>& {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::init() -> zpt::lf::hazard_ptr<T>& {
-    for (long _idx = 0; _idx != this->N; ++_idx) { this->__hp[_idx]->store(nullptr); }
-    for (long _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_idx[_idx]->store(false); }
+    for (auto _idx = 0; _idx != this->N; ++_idx) { this->__hp[_idx]->store(nullptr); }
+    for (auto _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_idx[_idx]->store(false); }
     return (*this);
 }
 
@@ -370,9 +369,9 @@ zpt::lf::hazard_ptr<T>::get_retired() -> zpt::lf::hazard_ptr<T>::pending_list& {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::get_next_available_idx() -> int {
-    long _idx{ 0 };
+    auto _idx{ 0 };
     for (; _idx != this->P; ++_idx) {
-        bool _acquired{ false };
+        auto _acquired{ false };
         if (this->__next_thr_idx[_idx]->compare_exchange_strong(_acquired, true)) { return _idx; }
     }
     expect(_idx == this->P,

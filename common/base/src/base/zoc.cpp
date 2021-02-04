@@ -40,8 +40,8 @@ SOFTWARE.
 #define CODE 3
 #define PARAGRAPH 4
 
-int
-main(int _argc, char* _argv[]) {
+auto
+main(int _argc, char* _argv[]) -> int {
     for (int _idx = 1; _idx != _argc; _idx++) {
         std::string _input_file_name{ _argv[_idx] };
         std::ifstream _iss;

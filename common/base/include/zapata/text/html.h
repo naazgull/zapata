@@ -41,13 +41,13 @@ SOFTWARE.
 
 namespace zpt {
 namespace html {
-void
-entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false);
-void
-entities_encode(std::string& out, bool quote = true, bool tags = false);
-void
-entities_decode(std::string& out);
-void
-content_boundary(std::string& _in, std::string& _out);
+auto
+entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false) -> void;
+auto
+entities_encode(std::string& out, bool quote = true, bool tags = false) -> void;
+auto
+entities_decode(std::string& out) -> void;
+auto
+content_boundary(std::string& _in, std::string& _out) -> void;
 } // namespace html
 } // namespace zpt

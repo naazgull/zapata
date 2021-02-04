@@ -33,13 +33,12 @@ zpt::quoted_printable::encode(std::string const& _quote,
                               std::string& _out) -> void {
     std::ostringstream _oss;
     _oss << "=?" << _charset << "?Q?" << std::flush;
-    std::string _s(_quote);
-    for (size_t _i = 0; _i != _s.length(); _i++) {
-        if (((unsigned char)_s[_i]) > 127) {
-            _oss << "=" << std::uppercase << std::hex << ((int)((unsigned char)_s[_i]));
+    for (size_t _i = 0; _i != _quote.length(); _i++) {
+        if (((unsigned char)_quote[_i]) > 127) {
+            _oss << "=" << std::uppercase << std::hex << ((int)((unsigned char)_quote[_i]));
         }
         else {
-            _oss << _s[_i];
+            _oss << _quote[_i];
         }
     }
     _oss << "?=" << std::flush;
