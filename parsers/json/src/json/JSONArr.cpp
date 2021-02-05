@@ -81,10 +81,10 @@ zpt::JSONArrT::get_path(std::string const& _path, std::string const& _separator)
     getline(_iss, _part, _separator[0]);
     getline(_iss, _remainder);
     zpt::trim(_remainder);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) {
         if (_part == "*" && _remainder.length() != 0) {
-            zpt::json _return = zpt::json::array();
+            auto _return = zpt::json::array();
             for (auto _a : this->__underlying) {
                 _current = _a->get_path(_remainder, _separator);
                 if (_current->ok()) { _return << _current; }
@@ -105,7 +105,7 @@ zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::string 
     std::string _part;
 
     getline(_iss, _part, _separator[0]);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) {
         if (_iss.good()) {
             _current = zpt::json::object();
@@ -134,7 +134,7 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
     std::string _part;
 
     getline(_iss, _part, _separator[0]);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) { return (*this); }
 
     while (_iss.good()) {
@@ -154,7 +154,7 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
 
 auto
 zpt::JSONArrT::clone() const -> zpt::json {
-    zpt::json _return = zpt::json::array();
+    auto _return = zpt::json::array();
     for (auto _f : this->__underlying) { _return << _f->clone(); }
     return _return;
 }
@@ -282,9 +282,7 @@ auto
 zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
-
     if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }
-
     return this->__underlying.at((size_t)_i);
 }
 
@@ -303,7 +301,7 @@ zpt::JSONArrT::stringify(std::ostream& _out) -> zpt::JSONArrT& {
 auto
 zpt::JSONArrT::stringify(std::string& _out) const -> zpt::JSONArrT const& {
     _out.insert(_out.length(), "[");
-    bool _first = true;
+    auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out.insert(_out.length(), ","); }
         _first = false;
@@ -316,7 +314,7 @@ zpt::JSONArrT::stringify(std::string& _out) const -> zpt::JSONArrT const& {
 auto
 zpt::JSONArrT::stringify(std::ostream& _out) const -> zpt::JSONArrT const& {
     _out << "[" << std::flush;
-    bool _first = true;
+    auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out << ","; }
         _first = false;
@@ -341,7 +339,7 @@ zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) -> JSONArrT& {
 auto
 zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) const -> JSONArrT const& {
     _out.insert(_out.length(), "[");
-    bool _first = true;
+    auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out.insert(_out.length(), ","); }
         _out.insert(_out.length(), "\n");
@@ -360,7 +358,7 @@ zpt::JSONArrT::prettify(std::string& _out, uint _n_tabs) const -> JSONArrT const
 auto
 zpt::JSONArrT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONArrT const& {
     _out << "[" << std::flush;
-    bool _first = true;
+    auto _first = true;
     for (auto _i : this->__underlying) {
         if (!_first) { _out << ","; }
         _out << "\n ";
