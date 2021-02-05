@@ -57,7 +57,7 @@ zpt::HTTPObj::HTTPObj() {}
 zpt::HTTPObj::~HTTPObj() {}
 
 auto
-zpt::HTTPObj::body() -> std::string& {
+zpt::HTTPObj::body() const -> std::string const& {
     return this->__body;
 }
 
@@ -68,12 +68,12 @@ zpt::HTTPObj::body(std::string const& _body) -> void {
 }
 
 auto
-zpt::HTTPObj::headers() -> zpt::http::header_map& {
+zpt::HTTPObj::headers() const -> zpt::http::header_map const& {
     return this->__headers;
 }
 
 auto
-zpt::HTTPObj::header(std::string const& _idx) -> std::string const& {
+zpt::HTTPObj::header(std::string const& _idx) const -> std::string const& {
     static std::string const _empty{ "" };
     auto _found = this->__headers.find(zpt::r_prettify_header_name(_idx));
     if (_found != this->__headers.end()) { return _found->second; }
@@ -86,7 +86,7 @@ zpt::HTTPObj::header(std::string const& _name, std::string const& _value) -> voi
 }
 
 auto
-zpt::HTTPObj::version() -> std::string& {
+zpt::HTTPObj::version() const -> std::string const& {
     return this->__version;
 }
 
@@ -98,7 +98,7 @@ zpt::HTTPObj::version(std::string const& _version) -> void {
 zpt::HTTPObj::operator std::string() { return this->to_string(); }
 
 auto
-zpt::HTTPObj::to_string() -> std::string {
+zpt::HTTPObj::to_string() const -> std::string {
     std::string _return;
     this->stringify(_return);
     return _return;
