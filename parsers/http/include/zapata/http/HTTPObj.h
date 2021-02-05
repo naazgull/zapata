@@ -93,19 +93,19 @@ class HTTPObj {
     HTTPObj();
     virtual ~HTTPObj();
 
-    auto body() -> std::string&;
+    auto body() const -> std::string const&;
     auto body(std::string const& _body) -> void;
-    auto headers() -> zpt::http::header_map&;
-    auto header(std::string const& _name) -> std::string const&;
+    auto headers() const -> zpt::http::header_map const&;
+    auto header(std::string const& _name) const -> std::string const&;
     auto header(std::string const& _name, std::string const& _value) -> void;
-    auto version() -> std::string&;
+    auto version() const -> std::string const&;
     auto version(std::string const& _version) -> void;
 
     operator std::string();
 
-    virtual auto to_string() -> std::string;
-    virtual auto stringify(std::string& _out) -> void = 0;
-    virtual auto stringify(std::ostream& _out) -> void = 0;
+    virtual auto to_string() const -> std::string;
+    virtual auto stringify(std::string& _out) const -> void = 0;
+    virtual auto stringify(std::ostream& _out) const -> void = 0;
 
   protected:
     std::string __body{ "" };
@@ -127,11 +127,11 @@ class HTTPReqT : public HTTPObj {
     auto query() const -> std::string const&;
     auto query(std::string const&) -> void;
     auto params() const -> zpt::http::parameter_map const&;
-    auto param(std::string const& _name) -> std::string const&;
+    auto param(std::string const& _name) const -> std::string const&;
     auto param(std::string const& _name, std::string const& _value) -> void;
 
-    virtual auto stringify(std::string& _out) -> void;
-    virtual auto stringify(std::ostream& _out) -> void;
+    virtual auto stringify(std::string& _out) const -> void override;
+    virtual auto stringify(std::ostream& _out) const -> void override;
 
   private:
     std::string __url{ "" };
@@ -145,11 +145,11 @@ class HTTPRepT : public HTTPObj {
     HTTPRepT();
     virtual ~HTTPRepT();
 
-    auto status() -> zpt::http::status;
+    auto status() const -> zpt::http::status;
     auto status(zpt::http::status) -> void;
 
-    virtual auto stringify(std::string& _out) -> void;
-    virtual auto stringify(std::ostream& _out) -> void;
+    virtual auto stringify(std::string& _out) const -> void override;
+    virtual auto stringify(std::ostream& _out) const -> void override;
 
   private:
     zpt::http::status __status{ zpt::http::HTTP100 };

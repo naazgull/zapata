@@ -13,7 +13,7 @@ zpt::HTTPRepT::HTTPRepT()
 zpt::HTTPRepT::~HTTPRepT() {}
 
 auto
-zpt::HTTPRepT::status() -> zpt::http::status {
+zpt::HTTPRepT::status() const -> zpt::http::status {
     return this->__status;
 }
 
@@ -23,7 +23,7 @@ zpt::HTTPRepT::status(zpt::http::status _in) -> void {
 }
 
 auto
-zpt::HTTPRepT::stringify(std::ostream& _out) -> void {
+zpt::HTTPRepT::stringify(std::ostream& _out) const -> void {
     zpt::performative _status = this->__status > 99 ? this->__status : 100;
     _out << "HTTP/" << this->version() << " " << std::to_string(_status);
     if (this->version()[0] != '2') { _out << " " << zpt::http::status_names[_status]; }
@@ -33,7 +33,7 @@ zpt::HTTPRepT::stringify(std::ostream& _out) -> void {
 }
 
 auto
-zpt::HTTPRepT::stringify(std::string& _out) -> void {
+zpt::HTTPRepT::stringify(std::string& _out) const -> void {
     std::ostringstream _oss;
     this->stringify(_oss);
     _oss << std::flush;
