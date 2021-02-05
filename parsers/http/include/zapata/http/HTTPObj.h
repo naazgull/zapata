@@ -120,13 +120,13 @@ class HTTPReqT : public HTTPObj {
     HTTPReqT();
     virtual ~HTTPReqT();
 
-    auto method() -> zpt::performative;
+    auto method() const -> zpt::performative;
     auto method(zpt::performative) -> void;
-    auto url() -> std::string&;
+    auto url() const -> std::string const&;
     auto url(std::string const&) -> void;
-    auto query() -> std::string&;
+    auto query() const -> std::string const&;
     auto query(std::string const&) -> void;
-    auto params() -> zpt::http::parameter_map&;
+    auto params() const -> zpt::http::parameter_map const&;
     auto param(std::string const& _name) -> std::string const&;
     auto param(std::string const& _name, std::string const& _value) -> void;
 

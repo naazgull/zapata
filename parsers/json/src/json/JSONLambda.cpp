@@ -119,17 +119,17 @@ zpt::lambda::operator()(zpt::json _args, zpt::context _ctx) -> zpt::json {
 
 auto
 zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, unsigned short> {
-    size_t _lpar = _signature.find("(");
-    size_t _rpar = _signature.find(")");
-    size_t _comma = _signature.find(",");
+    auto _lpar = _signature.find("(");
+    auto _rpar = _signature.find(")");
+    auto _comma = _signature.find(",");
 
     expect(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
            "lambda signature format not recognized",
            412,
            0);
 
-    std::string _name(_signature.substr(_lpar + 1, _comma - _lpar - 1));
-    std::string _args(_signature.substr(_comma + 1, _rpar - _comma - 1));
+    std::string _name{ _signature.substr(_lpar + 1, _comma - _lpar - 1) };
+    std::string _args{ _signature.substr(_comma + 1, _rpar - _comma - 1) };
     zpt::replace(_name, "\"", "");
     zpt::trim(_name);
     zpt::trim(_args);
@@ -151,7 +151,7 @@ zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
     }
     catch (zpt::failed_expectation const& _e) {
     }
-    std::tuple<std::string, unsigned short> _parsed = zpt::lambda::parse(_signature);
+    auto _parsed = zpt::lambda::parse(_signature);
     zpt::__lambdas->insert(std::make_pair(
       _signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
@@ -164,7 +164,7 @@ zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _
     }
     catch (zpt::failed_expectation const& _e) {
     }
-    std::string _signature(zpt::lambda::stringify(_name, _n_args));
+    std::string _signature{ zpt::lambda::stringify(_name, _n_args) };
     zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }
 
@@ -187,6 +187,6 @@ zpt::lambda::find(std::string const& _signature) -> zpt::symbol {
 
 auto
 zpt::lambda::find(std::string const& _name, unsigned short _n_args) -> zpt::symbol {
-    std::string _signature = zpt::lambda::stringify(_name, _n_args);
+    auto _signature = zpt::lambda::stringify(_name, _n_args);
     return zpt::lambda::find(_signature);
 }
