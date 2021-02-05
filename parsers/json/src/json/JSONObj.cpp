@@ -91,7 +91,7 @@ zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separator)
     std::getline(_iss, _part, _separator[0]);
     std::getline(_iss, _remainder);
     zpt::trim(_remainder);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) {
         if (_part == "*" && _remainder.length() != 0) {
             for (auto _a : this->__underlying) {
@@ -113,7 +113,7 @@ zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string 
     std::string _part;
 
     getline(_iss, _part, _separator[0]);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) {
         if (_iss.good()) {
             _current = zpt::json::object();
@@ -144,7 +144,7 @@ zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator)
     std::string _part;
 
     getline(_iss, _part, _separator[0]);
-    zpt::json _current = (*this)[_part];
+    auto _current = (*this)[_part];
     if (!_current->ok()) { return (*this); }
 
     while (_iss.good()) {
@@ -323,7 +323,7 @@ zpt::JSONObjT::stringify(std::ostream& _out) -> zpt::JSONObjT& {
 auto
 zpt::JSONObjT::stringify(std::string& _out) const -> zpt::JSONObjT const& {
     _out.insert(_out.length(), "{");
-    bool _first = true;
+    auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out.insert(_out.length(), ","); }
         _first = false;
@@ -339,7 +339,7 @@ zpt::JSONObjT::stringify(std::string& _out) const -> zpt::JSONObjT const& {
 auto
 zpt::JSONObjT::stringify(std::ostream& _out) const -> zpt::JSONObjT const& {
     _out << "{" << std::flush;
-    bool _first = true;
+    auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out << ","; }
         _first = false;
@@ -364,7 +364,7 @@ zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) -> zpt::JSONObjT& {
 auto
 zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
     _out.insert(_out.length(), "{");
-    bool _first = true;
+    auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out.insert(_out.length(), ","); }
         _out.insert(_out.length(), "\n");
@@ -386,7 +386,7 @@ zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSONObjT 
 auto
 zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
     _out << "{" << std::flush;
-    bool _first = true;
+    auto _first = true;
     for (auto _element : this->__underlying) {
         if (!_first) { _out << ","; }
         _out << "\n ";

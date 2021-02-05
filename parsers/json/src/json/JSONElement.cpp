@@ -260,7 +260,7 @@ zpt::JSONElementT::hash() const -> size_t {
             return std::hash<bool>{}(this->__target.__boolean);
         }
         case zpt::JSNil: {
-            return std::hash<std::nullptr_t>{}(nullptr);
+            return reinterpret_cast<size_t>(&zpt::undefined);
         }
         case zpt::JSDate: {
             return std::hash<unsigned long long>{}(this->__target.__date);
@@ -847,7 +847,7 @@ zpt::JSONElementT::operator int() {
         }
         case zpt::JSString: {
             int _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -886,7 +886,7 @@ zpt::JSONElementT::operator long() {
         }
         case zpt::JSString: {
             long _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -925,7 +925,7 @@ zpt::JSONElementT::operator long long() {
         }
         case zpt::JSString: {
             long long _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -965,7 +965,7 @@ zpt::JSONElementT::operator unsigned int() {
         }
         case zpt::JSString: {
             unsigned int _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -1005,7 +1005,7 @@ zpt::JSONElementT::operator size_t() {
         }
         case zpt::JSString: {
             size_t _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -1044,7 +1044,7 @@ zpt::JSONElementT::operator double() {
         }
         case zpt::JSString: {
             double _n = 0;
-            std::string _s(this->string().data());
+            std::string _s{ this->string().data() };
             zpt::fromstr(_s, &_n);
             return _n;
         }
@@ -1709,7 +1709,7 @@ zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT cons
             break;
         }
         case zpt::JSString: {
-            std::string _str(this->string());
+            std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
             _out << "\"" << _str << "\"" << std::flush;
             break;
@@ -1758,7 +1758,7 @@ zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const& {
             break;
         }
         case zpt::JSString: {
-            std::string _str(this->string());
+            std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
             _out.insert(_out.length(), "\"");
             _out.insert(_out.length(), _str);
@@ -1832,7 +1832,7 @@ zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONEleme
             break;
         }
         case zpt::JSString: {
-            std::string _str(this->string());
+            std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
             _out << "\"" << _str << "\"" << std::flush;
             break;
@@ -1882,7 +1882,7 @@ zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONElemen
             break;
         }
         case zpt::JSString: {
-            std::string _str(this->string());
+            std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
             _out.insert(_out.length(), "\"");
             _out.insert(_out.length(), _str);
