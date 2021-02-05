@@ -12,7 +12,7 @@ zpt::HTTPReqT::HTTPReqT()
 zpt::HTTPReqT::~HTTPReqT() {}
 
 auto
-zpt::HTTPReqT::method() -> zpt::performative {
+zpt::HTTPReqT::method() const -> zpt::performative {
     return this->__method;
 }
 
@@ -22,7 +22,7 @@ zpt::HTTPReqT::method(zpt::performative _method) -> void {
 }
 
 auto
-zpt::HTTPReqT::url() -> std::string& {
+zpt::HTTPReqT::url() const -> std::string const& {
     return this->__url;
 }
 
@@ -32,7 +32,7 @@ zpt::HTTPReqT::url(std::string const& _url) -> void {
 }
 
 auto
-zpt::HTTPReqT::query() -> std::string& {
+zpt::HTTPReqT::query() const -> std::string const& {
     return this->__query;
 }
 
@@ -42,12 +42,12 @@ zpt::HTTPReqT::query(std::string const& _query) -> void {
 }
 
 auto
-zpt::HTTPReqT::params() -> zpt::http::parameter_map& {
+zpt::HTTPReqT::params() const -> zpt::http::parameter_map const& {
     return this->__params;
 }
 
 auto
-zpt::HTTPReqT::param(std::string const& _idx) -> std::string const& {
+zpt::HTTPReqT::param(std::string const& _idx) const -> std::string const& {
     static std::string const _empty{ "" };
     auto _found = this->__params.find(_idx);
     if (_found != this->__params.end()) { return _found->second; }
@@ -64,7 +64,7 @@ zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> voi
 }
 
 auto
-zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
+zpt::HTTPReqT::stringify(std::ostream& _out) const -> void {
     _out << zpt::http::method_names[this->__method] << " " << this->__url;
     if (this->__query.length() != 0) { _out << "?" << this->__query; }
     else if (this->__params.size() != 0) {
@@ -87,7 +87,7 @@ zpt::HTTPReqT::stringify(std::ostream& _out) -> void {
 }
 
 auto
-zpt::HTTPReqT::stringify(std::string& _out) -> void {
+zpt::HTTPReqT::stringify(std::string& _out) const -> void {
     std::ostringstream _oss;
     this->stringify(_oss);
     _oss << std::flush;
