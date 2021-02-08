@@ -29,7 +29,7 @@
 
 zpt::exception::exception(std::string const& _what, bool _with_stack)
   : std::exception()
-  , __what(_what) {
+  , __what{ _what } {
     zpt::replace(this->__what, "\"", "");
     if (_with_stack) {
         void* _backtrace_array[30];
