@@ -122,7 +122,7 @@ class collection : public zpt::storage::collection::type {
     virtual auto file() -> std::string&;
     virtual auto env() -> ::lmdb::env&;
     virtual auto is_to_commit() -> bool&;
-    
+
   private:
     ::lmdb::env __underlying;
     std::string __collection_name;

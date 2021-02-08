@@ -27,4 +27,5 @@ export projects=(
        security/oauth2
        storage/lmdb
        engines/fsm
+       engines/automaton
 )

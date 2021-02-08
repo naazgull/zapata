@@ -28,28 +28,41 @@
 namespace zpt {
 namespace fsm {
 
+template<typename D, typename I>
+using payload = std::tuple<D, I>;
+
 template<typename S, typename D, typename I>
 class machine {
   public:
-    class engine_t : public zpt::events::dispatcher<engine_t, S, D> {
+    class engine_t : public zpt::events::dispatcher<engine_t, S, zpt::fsm::payload<D, I>> {
       public:
-        using hazard_domain = typename zpt::events::dispatcher<engine_t, S, D>::hazard_domain;
+        using hazard_domain =
+          typename zpt::events::dispatcher<engine_t, S, zpt::fsm::payload<D, I>>::hazard_domain;
         using callback = std::function<S(S&, D&)>;
         using callback_list = std::vector<std::tuple<zpt::padded_atomic<bool>, callback>>;
         using state_list = std::map<S, bool>;
+        using error_callback = std::function<bool(S const& _event,
+                                                  D const& _content,
+                                                  I const& _id,
+                                                  const char* _what,
+                                                  const char* _description,
+                                                  const char* _backtrace,
+                                                  int _error,
+                                                  int status)>;
 
         engine_t(hazard_domain& _hazard_domain, zpt::json _config);
         virtual ~engine_t() = default;
 
-        auto begin(D _content, I _id) -> void;
-        auto resume(I _id) -> void;
-        auto add_transition(S _event, callback _callback) -> void;
+        auto begin(D _content, I _id) -> engine_t&;
+        auto resume(I _id, S _state) -> engine_t&;
+        auto add_transition(S _event, callback _callback) -> engine_t&;
+        auto set_error_callback(error_callback _error_callback) -> engine_t&;
 
-        auto trapped(S _current_state, D _content) -> void;
+        auto trapped(S _current_state, zpt::fsm::payload<D, I> _content) -> void;
         auto listen_to(S _event, callback _callback) -> void;
-        auto mute_from(int _event, callback _callback) -> void;
-        auto report_error(int _event,
-                          zpt::json _content,
+        auto mute_from(S _event, callback _callback) -> void;
+        auto report_error(S const& _event,
+                          zpt::fsm::payload<D, I> const& _content,
                           const char* _what,
                           const char* _description = nullptr,
                           const char* _backtrace = nullptr,
@@ -66,12 +79,15 @@ class machine {
         zpt::lf::spin_lock __stalled_lock;
         std::map<S, callback_list> __callbacks;
         std::map<S, state_list> __transitions;
-        std::map<I, D> __stalled;
+        std::map<I, std::tuple<S, D>> __stalled;
         S __undefined;
         S __begin;
+        S __end;
+        error_callback __error_callback{ nullptr };
 
         auto initialize(zpt::json& _config) -> void;
         auto coalesce(S _current, S _potential) -> S;
+        auto pause(S _current, zpt::fsm::payload<D, I> _content) -> void;
     };
 
     machine(long _max_threads, zpt::json _config);
@@ -92,32 +108,60 @@ class machine {
 
 template<typename S, typename D, typename I>
 zpt::fsm::machine<S, D, I>::engine_t::engine_t(hazard_domain& _hazard_domain, zpt::json _config)
-  : zpt::events::dispatcher<zpt::fsm::machine<S, D, I>::engine_t, S, D>{ _hazard_domain } {
+  : zpt::events::dispatcher<zpt::fsm::machine<S, D, I>::engine_t, S, zpt::fsm::payload<D, I>>{
+      _hazard_domain
+  } {
     expect(_config["undefined"]->ok(),
            "JSON configuration must include 'undefined' state value",
            500,
            0);
     expect(_config["begin"]->ok(), "JSON configuration must include 'begin' state value", 500, 0);
+    expect(_config["end"]->ok(), "JSON configuration must include 'end' state value", 500, 0);
     this->__undefined = static_cast<S>(_config["undefined"]);
     this->__begin = static_cast<S>(_config["begin"]);
+    this->__end = static_cast<S>(_config["end"]);
     this->initialize(_config);
 }
 
 template<typename S, typename D, typename I>
 auto
-zpt::fsm::machine<S, D, I>::engine_t::begin(D _content) -> void {
-    this->trigger(this->__begin, _content);
+zpt::fsm::machine<S, D, I>::engine_t::begin(D _content, I _id) -> engine_t& {
+    this->trigger(this->__begin, zpt::fsm::payload<D, I>{ std::make_tuple(_content, _id) });
+    return (*this);
 }
 
 template<typename S, typename D, typename I>
 auto
-zpt::fsm::machine<S, D, I>::engine_t::add_transition(S _source, callback _callback) -> void {
+zpt::fsm::machine<S, D, I>::engine_t::resume(I _id, S _state) -> engine_t& {
+    auto _found = this->__stalled.find(_id);
+    expect(_found != this->__stalled.end(), "no such payload identified by " << _id, 500, 0);
+    S _next_state = this->coalesce(std::get<0>(_found->second), _state);
+    std::cout << _next_state << std::endl << std::flush;
+    this->trigger(
+      _next_state,
+      zpt::fsm::payload<D, I>{ std::make_tuple(std::get<1>(_found->second), _found->first) });
+    return (*this);
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::engine_t::add_transition(S _source, callback _callback) -> engine_t& {
     this->listen(_source, _callback);
+    return (*this);
 }
 
 template<typename S, typename D, typename I>
 auto
-zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, D _content) -> void {
+zpt::fsm::machine<S, D, I>::engine_t::set_error_callback(error_callback _error_callback)
+  -> engine_t& {
+    this->__error_callback = _error_callback;
+    return (*this);
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, zpt::fsm::payload<D, I> _content)
+  -> void {
     auto _it = this->__callbacks.find(_current_state);
     if (_it != this->__callbacks.end()) {
         S _next_state = this->__undefined;
@@ -125,7 +169,7 @@ zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, D _content) -> v
         for (auto _callback = _it->second.begin(); _callback != _it->second.end(); ++_callback) {
             try {
                 if (std::get<0>(*_callback)->load()) {
-                    S _potential = std::get<1>(*_callback)(_current_state, _content);
+                    S _potential = std::get<1>(*_callback)(_current_state, std::get<0>(_content));
                     expect(_next_state == this->__undefined || _potential == this->__undefined ||
                              _next_state == _potential,
                            "state '" << _potential
@@ -143,6 +187,9 @@ zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, D _content) -> v
         }
 
         if (_next_state != this->__undefined) { this->trigger(_next_state, _content); }
+        else if (_current_state != this->__end) {
+            this->pause(_current_state, _content);
+        }
     }
 }
 
@@ -165,13 +212,23 @@ zpt::fsm::machine<S, D, I>::engine_t::mute_from(S _event, callback _callback) ->
 
 template<typename S, typename D, typename I>
 auto
-zpt::fsm::machine<S, D, I>::engine_t::report_error(int _event,
-                                                   zpt::json _content,
+zpt::fsm::machine<S, D, I>::engine_t::report_error(S const& _event,
+                                                   zpt::fsm::payload<D, I> const& _content,
                                                    const char* _what,
                                                    const char* _description,
                                                    const char* _backtrace,
                                                    int _error,
                                                    int _status) -> bool {
+    if (this->__error_callback != nullptr) {
+        return this->__error_callback(_event,
+                                      std::get<0>(_content),
+                                      std::get<1>(_content),
+                                      _what,
+                                      _description,
+                                      _backtrace,
+                                      _error,
+                                      _status);
+    }
     return false;
 }
 
@@ -216,6 +273,13 @@ zpt::fsm::machine<S, D, I>::engine_t::coalesce(S _current, S _potential) -> S {
                0);
     }
     return _potential;
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::engine_t::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
+    this->__stalled.insert(
+      std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
 }
 
 template<typename S, typename D, typename I>

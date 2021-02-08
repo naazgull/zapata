@@ -22,6 +22,6 @@
 #include <zapata/exceptions/NoMoreElementsException.h>
 
 zpt::NoMoreElementsException::NoMoreElementsException(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::NoMoreElementsException::~NoMoreElementsException() throw() {}

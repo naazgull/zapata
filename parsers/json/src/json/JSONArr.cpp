@@ -180,7 +180,7 @@ zpt::JSONArrT::operator*() const -> std::vector<zpt::json> const& {
 }
 
 auto
-zpt::JSONArrT::operator==(zpt::JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator==(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] == _rhs[_f]) { continue; }
         return false;
@@ -189,12 +189,12 @@ zpt::JSONArrT::operator==(zpt::JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator==(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator==(zpt::JSONArr const& _rhs) const -> bool {
     return *this == *_rhs;
 }
 
 auto
-zpt::JSONArrT::operator!=(JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator!=(JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] != _rhs[_f]) { return true; }
     }
@@ -202,12 +202,12 @@ zpt::JSONArrT::operator!=(JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator!=(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator!=(zpt::JSONArr const& _rhs) const -> bool {
     return *this != *_rhs;
 }
 
 auto
-zpt::JSONArrT::operator<(zpt::JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator<(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] < _rhs[_f]) { continue; }
         return false;
@@ -216,12 +216,12 @@ zpt::JSONArrT::operator<(zpt::JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator<(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator<(zpt::JSONArr const& _rhs) const -> bool {
     return *this < *_rhs;
 }
 
 auto
-zpt::JSONArrT::operator>(zpt::JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator>(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] > _rhs[_f]) { continue; }
         return false;
@@ -230,12 +230,12 @@ zpt::JSONArrT::operator>(zpt::JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator>(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator>(zpt::JSONArr const& _rhs) const -> bool {
     return *this > *_rhs;
 }
 
 auto
-zpt::JSONArrT::operator<=(zpt::JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator<=(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] <= _rhs[_f]) { continue; }
         return false;
@@ -244,12 +244,12 @@ zpt::JSONArrT::operator<=(zpt::JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator<=(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator<=(zpt::JSONArr const& _rhs) const -> bool {
     return *this <= *_rhs;
 }
 
 auto
-zpt::JSONArrT::operator>=(zpt::JSONArrT& _rhs) -> bool {
+zpt::JSONArrT::operator>=(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
         if ((*this)[_f] >= _rhs[_f]) { continue; }
         return false;
@@ -258,7 +258,7 @@ zpt::JSONArrT::operator>=(zpt::JSONArrT& _rhs) -> bool {
 }
 
 auto
-zpt::JSONArrT::operator>=(zpt::JSONArr& _rhs) -> bool {
+zpt::JSONArrT::operator>=(zpt::JSONArr const& _rhs) const -> bool {
     return *this >= *_rhs;
 }
 
@@ -280,6 +280,30 @@ zpt::JSONArrT::operator[](const char* _idx) -> zpt::json {
 
 auto
 zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
+    long _i = -1;
+    zpt::fromstr(_idx, &_i);
+    if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }
+    return this->__underlying.at((size_t)_i);
+}
+
+auto
+zpt::JSONArrT::operator[](int _idx) const -> zpt::json const& {
+    return (*this)[(size_t)_idx];
+}
+
+auto
+zpt::JSONArrT::operator[](size_t _idx) const -> zpt::json const& {
+    if (_idx < 0 || _idx >= this->__underlying.size()) { return zpt::undefined; }
+    return this->__underlying.at(_idx);
+}
+
+auto
+zpt::JSONArrT::operator[](const char* _idx) const -> zpt::json const& {
+    return (*this)[std::string(_idx)];
+}
+
+auto
+zpt::JSONArrT::operator[](std::string const& _idx) const -> zpt::json const& {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
     if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }

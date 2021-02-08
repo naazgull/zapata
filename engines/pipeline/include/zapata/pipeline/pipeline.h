@@ -183,7 +183,7 @@ class engine {
                                               int status)>;
 
     engine(size_t _pipeline_size = 1,
-           zpt::json _stage_queue_configuration = { "max_stage_threads",
+           zpt::json _stage_queue_configuration = { "max_queue_threads",
                                                     1,
                                                     "max_producer_threads",
                                                     1,
@@ -446,7 +446,7 @@ zpt::pipeline::stage<T>::set_error_callback(error_callback _error_callback)
 
 template<typename T>
 zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _stage_queue_configuration)
-  : __hazard_domain{ std::max(static_cast<long>(_stage_queue_configuration["max_stage_threads"]),
+  : __hazard_domain{ std::max(static_cast<long>(_stage_queue_configuration["max_queue_threads"]),
                               1L) *
                          (signed)_pipeline_size +
                        std::max(
@@ -456,12 +456,12 @@ zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _stage_queue_c
                      4 }
   , __pipeline_size{ _pipeline_size }
   , __threads_per_stage{
-      std::max(static_cast<long>(_stage_queue_configuration["max_stage_threads"]), 1L)
+      std::max(static_cast<long>(_stage_queue_configuration["max_queue_threads"]), 1L)
   } {
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__stages.push_back(std::make_shared<zpt::pipeline::stage<T>>(
           this->__hazard_domain,
-          std::max(static_cast<long>(_stage_queue_configuration["max_queue_spin_sleep"]), 5000L)));
+          std::max(static_cast<long>(_stage_queue_configuration["max_queue_spin_sleep"]), 50000L)));
     }
 }
 

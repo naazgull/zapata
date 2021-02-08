@@ -25,7 +25,7 @@
 auto
 main(int argc, char* argv[]) -> int {
     zpt::pipeline::engine<zpt::json> _engine{ 3,
-                                              { "max_stage_threads",
+                                              { "max_queue_threads",
                                                 3,
                                                 "max_producer_threads",
                                                 1,

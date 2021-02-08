@@ -92,8 +92,8 @@ main(int _argc, char* _argv[]) -> int {
         auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
         zpt::globals::alloc<zpt::stream::polling>(
           zpt::STREAM_POLLING(),
-          static_cast<int>(_config["limits"]["max_producer_threads"]) + 1,
-          _config["limits"]["max_queue_spin_sleep"]);
+          std::max(static_cast<int>(_config["limits"]["max_producer_threads"]), 6) + 1,
+          std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L));
         zpt::globals::alloc<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         _boot //
           .add_thread(

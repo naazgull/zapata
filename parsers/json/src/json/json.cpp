@@ -122,29 +122,46 @@ zpt::conf::setup(zpt::json _options) -> void {
 }
 
 auto
-zpt::conf::file(std::string const& _file, zpt::json _options) -> void {
-    zpt::json _conf;
-    std::ifstream _ifs;
-    _ifs.open(_file.data());
-    try {
-        _ifs >> _conf;
-    }
-    catch (zpt::SyntaxErrorException const& _e) {
-        _conf = zpt::undefined;
-        expect(_conf->ok(),
-               std::string("syntax error parsing file: ") + _file + std::string(": ") + _e.what(),
-               500,
-               0);
-    }
-    _ifs.close();
-
-    for (auto [_idx, _key, _new_field] : _conf) {
-        _options << _key << (_options[_key] + _new_field);
+zpt::conf::evaluate_ref(zpt::json _options, std::string const& _parent_key, zpt::json _parent)
+  -> void {
+    for (auto [_, _key, _value] : _options) {
+        if (_key == "$ref") {
+            std::string _href = _value->string();
+            zpt::json _other;
+            zpt::conf::file(_href, _other);
+            if (_parent->is_object()) { _parent << _parent_key << _other; }
+            else {
+                _parent << _other;
+            }
+        }
+        else {
+            zpt::conf::evaluate_ref(_value, _key, _options);
+        }
     }
 }
 
 auto
-zpt::conf::dirs(std::string const& _dir, zpt::json _options) -> void {
+zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
+    zpt::json _conf;
+    std::ifstream _ifs;
+    _ifs.open(_file.data());
+    expect(_ifs.is_open(), "no such file '" << _file << "'", 500, 0);
+
+    try {
+        _ifs >> _conf;
+        zpt::conf::evaluate_ref(_conf, "", _conf);
+        _options |= _conf;
+    }
+    catch (zpt::SyntaxErrorException const& _e) {
+        _conf = zpt::undefined;
+        expect(_conf->ok(), "syntax error parsing file: " << _file << ": " << _e.what(), 500, 0);
+    }
+
+    _ifs.close();
+}
+
+auto
+zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     std::vector<std::string> _non_positional;
     if (zpt::is_dir(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
     else {
@@ -152,10 +169,7 @@ zpt::conf::dirs(std::string const& _dir, zpt::json _options) -> void {
     }
     std::sort(_non_positional.begin(), _non_positional.end());
     for (auto _file : _non_positional) {
-        expect(zpt::file_exists(_file),
-               std::string("'") + _file + std::string("' can't be found."),
-               500,
-               0);
+        expect(zpt::file_exists(_file), "'" << _file << "' can't be found.", 500, 0);
         if (zpt::is_dir(_file)) { zpt::conf::dirs(_file, _options); }
         else {
             zpt::conf::file(static_cast<std::string>(_file), _options);
@@ -164,7 +178,7 @@ zpt::conf::dirs(std::string const& _dir, zpt::json _options) -> void {
 }
 
 auto
-zpt::conf::dirs(zpt::json _options) -> void {
+zpt::conf::dirs(zpt::json& _options) -> void {
     bool* _redo = new bool(false);
     do {
         *_redo = false;
@@ -193,7 +207,7 @@ zpt::conf::dirs(zpt::json _options) -> void {
 }
 
 auto
-zpt::conf::env(zpt::json _options) -> void {
+zpt::conf::env(zpt::json& _options) -> void {
     zpt::json _traversable = _options->clone();
     zpt::json::traverse(
       _traversable,

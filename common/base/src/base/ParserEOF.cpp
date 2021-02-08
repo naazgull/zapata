@@ -23,6 +23,6 @@
 #include <zapata/exceptions/ParserEOF.h>
 
 zpt::ParserEOF::ParserEOF(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::ParserEOF::~ParserEOF() throw() {}

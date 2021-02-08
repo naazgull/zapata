@@ -33,19 +33,23 @@ auto
 AUTOMATON_ENGINE() -> ssize_t&;
 
 namespace automaton {
-class engine : public zpt::fsm::machine<zpt::json, zpt::exchange> {
+class engine : public zpt::fsm::machine<zpt::json, zpt::exchange, zpt::json> {
   public:
-    engine(size_t _threads, zpt::json _configuration);
+    engine(long _threads, zpt::json _configuration);
     virtual ~engine() = default;
 
-    static auto on_error(zpt::json& _state,
-                         zpt::exchange& _event,
+    static auto on_error(zpt::json const& _state,
+                         zpt::exchange const& _channel,
+                         zpt::json const& _id,
                          const char* _what,
                          const char* _description = nullptr,
                          const char* _backtrace = nullptr,
                          int _error = -1,
                          int _status = 500) -> bool;
+    static auto receive() -> zpt::json;
 
+  private:
+    zpt::json __configuration;
 };
 
 } // namespace automaton

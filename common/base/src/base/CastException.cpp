@@ -23,6 +23,6 @@
 #include <zapata/exceptions/CastException.h>
 
 zpt::CastException::CastException(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::CastException::~CastException() throw() {}

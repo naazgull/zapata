@@ -2,8 +2,20 @@
 
 source .packages.rc
 
+if [[ "$1" == "config" || "$1" == "debug" ]]
+then
+    echo "exclude_list=()" > .exclude.rc
+fi
+source .exclude.rc
+
 if [[ "$1" == "one" ]]
 then
+    title="Processing '${2}'"
+    underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
+    echo
+    echo ${title}
+    echo ${underlines}
+
 	make -s -j4 -C ${2}/build && sudo make -s -C ${2}/build install
 	if [[ $? != 0 ]]
 	then
@@ -12,17 +24,54 @@ then
     exit 0
 fi
 
+if [[ "${1}" != "one" && "${1}" != "from" ]]
+then
+    if [[ "${@:2}" != "" ]]
+    then
+        exclude_list=(${@:2} ${exclude_list})
+    fi
+else
+    if [[ "${@:3}" != "" ]]
+    then
+        exclude_list=(${@:3} ${exclude_list})
+    fi
+fi
+
 distro=$(lsb_release -c -s)
-goahead="false"
+goahead="no"
 for package in ${projects[@]}
 do
+    skip=0
+    for exc in ${exclude_list[@]}
+    do
+        if [[ "${exc}" == "${package}" ]]
+        then
+            skip=1
+        fi
+    done
+    if [[ "${skip}" == "1" ]]
+    then
+        continue
+    fi
+
+    if [[ "${1}" == "from" ]]
+    then
+        if [[ "${2}" == "${package}" ]]
+        then
+            goahead="yes"
+        elif [[ "${goahead}" == "no" ]]
+        then
+            continue
+        fi
+    fi
+
     title="Processing '${package}'"
     underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
     echo
     echo ${title}
     echo ${underlines}
-    
-    case "$1" in
+
+    case "${1}" in
 	all)
 	    make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
@@ -31,18 +80,11 @@ do
 	    fi
 	    ;;
     from)
-        if [[ "$2" == "${package}" ]]
-        then
-            goahead="yes"
-        fi
-        if [[ "${goahead}" == "yes" ]]
-        then
-	        make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
-	        if [[ $? != 0 ]]
-	        then
-		        exit -1
-	        fi
-        fi
+	    make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
         ;;
 	single)
 	    make -s -C ${package}/build && sudo make -s -C ${package}/build install
@@ -77,6 +119,7 @@ do
 	    sudo make -s -C ${package}/build distclean
 	    ;;
 	config)
+        echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
 	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
@@ -86,6 +129,7 @@ do
         popd > /dev/null
 	    ;;
 	debug)
+        echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
 	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]

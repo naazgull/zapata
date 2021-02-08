@@ -23,6 +23,6 @@
 #include <zapata/exceptions/NoAttributeNameException.h>
 
 zpt::NoAttributeNameException::NoAttributeNameException(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::NoAttributeNameException::~NoAttributeNameException() throw() {}

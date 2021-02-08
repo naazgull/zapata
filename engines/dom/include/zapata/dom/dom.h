@@ -65,7 +65,7 @@ class element {
 class engine : public zpt::pipeline::engine<zpt::dom::element> {
   public:
     engine(size_t _pipeline_size = 1,
-           zpt::json _configuration = { "max_stage_threads",
+           zpt::json _configuration = { "max_queue_threads",
                                         1,
                                         "max_producer_threads",
                                         1,

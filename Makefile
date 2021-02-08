@@ -1,48 +1,45 @@
 all:
-	./.build all
-
-single:
-	./.build single
+	./.build all ${exclude}
 
 clean:
-	./.build clean
+	./.build clean ${exclude}
 
 install:
-	./.build install
+	./.build install ${exclude}
 
 uninstall:
-	./.build uninstall
+	./.build uninstall ${exclude}
 
 distcheck:
-	./.build distcheck
+	./.build distcheck ${exclude}
 
 distclean:
-	./.build distclean
+	./.build distclean ${exclude}
 
 config:
-	./.build config
+	./.build config ${exclude}
 
 asan:
-	./.build asan
+	./.build asan ${exclude}
 
-debug:
-	./.build debug
+config_debug:
+	./.build debug ${exclude}
 
 bump:
 	./.repo bump minor
 
 deb:
 	sudo rm -rfv upstream/*
-	./.build package
+	./.build package ${exclude}
 
 format:
-	./.build format
+	./.build format ${exclude}
 
 tidy:
-	./.build tidy
+	./.build tidy ${exclude}
 
 from:
-	./.build from ${module}
+	./.build from ${module} ${exclude}
 
 one:
 	./.build one ${module}
