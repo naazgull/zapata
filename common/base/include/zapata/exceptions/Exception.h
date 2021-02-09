@@ -31,8 +31,7 @@ namespace zpt {
 
 class exception : public std::exception {
   public:
-    exception(std::string const& _what);
-    exception(std::string const& _what, char** _backtrace, size_t _backtrace_size);
+    exception(std::string const& _what, bool _with_stack = false);
     virtual ~exception() throw();
 
     virtual auto what() const noexcept -> const char* override;
@@ -40,7 +39,9 @@ class exception : public std::exception {
 
     friend auto operator<<(std::ostream& _out, zpt::exception const& _in) -> std::ostream& {
         _out << _in.what() << std::flush;
-        if (zpt::log_lvl >= zpt::debug) { _out << std::endl << _in.backtrace() << std::flush; }
+        if (zpt::log_lvl >= zpt::debug && _in.backtrace() != nullptr) {
+            _out << std::endl << _in.backtrace() << std::flush;
+        }
         return _out;
     }
 

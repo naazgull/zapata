@@ -46,7 +46,7 @@ class ExpectationException : public zpt::exception {
     friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
       -> std::ostream& {
         _out << _in.what() << ": " << _in.description() << " ERROR(" << _in.code() << ")";
-        if (zpt::log_lvl >= zpt::debug) {
+        if (zpt::log_lvl >= zpt::debug && _in.backtrace() != nullptr) {
             _out << std::endl << _in.backtrace() << std::flush;
         }
         return _out;

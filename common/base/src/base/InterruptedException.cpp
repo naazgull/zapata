@@ -23,6 +23,6 @@
 #include <zapata/exceptions/InterruptedException.h>
 
 zpt::InterruptedException::InterruptedException(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::InterruptedException::~InterruptedException() throw() {}

@@ -31,7 +31,7 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
                                                 std::string _desc,
                                                 int _line,
                                                 std::string _file)
-  : zpt::exception(_what)
+  : zpt::exception{ _what, true }
   , __http_code(_http_code)
   , __code(_code)
   , __description(_desc)

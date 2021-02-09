@@ -1,3 +1,25 @@
+/*
+  This is free and unencumbered software released into the public domain.
+
+  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+  this software, either in source code form or as a compiled binary, for any
+  purpose, commercial or non-commercial, and by any means.
+
+  In jurisdictions that recognize copyright laws, the author or authors of this
+  software dedicate any and all copyright interest in the software to the public
+  domain. We make this dedication for the benefit of the public at large and to
+  the detriment of our heirs and successors. We intend this dedication to be an
+  overt act of relinquishment in perpetuity of all present and future rights to
+  this software under copyright law.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include <cstdarg>
 #include <ostream>
 #include <regex>
@@ -1272,7 +1294,7 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
 }
 
 auto
-zpt::JSONElementT::operator==(zpt::JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1327,35 +1349,31 @@ zpt::JSONElementT::operator==(zpt::JSONElementT& _in) -> bool {
             if (this->__target.__type != _in.type() && _in.type() != zpt::JSString) {
                 return false;
             }
-            if (_in.type() == zpt::JSRegex) {
-                return this->__target.__regex == _in.__target.__regex;
-            }
-            if (_in.type() == zpt::JSString) {
-                return this->__target.__regex == (*_in.__target.__string.get());
-            }
+            if (_in.type() == zpt::JSRegex) { return this->__target.__regex == _in.regex(); }
+            if (_in.type() == zpt::JSString) { return this->__target.__regex == _in.string(); }
         }
     }
     return false;
 }
 
 auto
-zpt::JSONElementT::operator==(zpt::json _rhs) -> bool {
+zpt::JSONElementT::operator==(zpt::json _rhs) const -> bool {
     return *this == *_rhs;
 }
 
 auto
-zpt::JSONElementT::operator!=(JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     return !(*this == _in);
 }
 
 auto
-zpt::JSONElementT::operator!=(zpt::json _rhs) -> bool {
+zpt::JSONElementT::operator!=(zpt::json _rhs) const -> bool {
     return *this != (*_rhs);
 }
 
 auto
-zpt::JSONElementT::operator<(zpt::JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1413,12 +1431,12 @@ zpt::JSONElementT::operator<(zpt::JSONElementT& _in) -> bool {
 }
 
 auto
-zpt::JSONElementT::operator<(zpt::json _rhs) -> bool {
-    return *this < _rhs;
+zpt::JSONElementT::operator<(zpt::json _rhs) const -> bool {
+    return *this < *_rhs;
 }
 
 auto
-zpt::JSONElementT::operator>(zpt::JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1476,12 +1494,12 @@ zpt::JSONElementT::operator>(zpt::JSONElementT& _in) -> bool {
 }
 
 auto
-zpt::JSONElementT::operator>(zpt::json _rhs) -> bool {
+zpt::JSONElementT::operator>(zpt::json _rhs) const -> bool {
     return *this > _rhs;
 }
 
 auto
-zpt::JSONElementT::operator<=(zpt::JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator<=(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1539,12 +1557,12 @@ zpt::JSONElementT::operator<=(zpt::JSONElementT& _in) -> bool {
 }
 
 auto
-zpt::JSONElementT::operator<=(zpt::json _rhs) -> bool {
+zpt::JSONElementT::operator<=(zpt::json _rhs) const -> bool {
     return *this <= _rhs;
 }
 
 auto
-zpt::JSONElementT::operator>=(zpt::JSONElementT& _in) -> bool {
+zpt::JSONElementT::operator>=(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1602,7 +1620,7 @@ zpt::JSONElementT::operator>=(zpt::JSONElementT& _in) -> bool {
 }
 
 auto
-zpt::JSONElementT::operator>=(zpt::json _rhs) -> bool {
+zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool {
     return *this >= _rhs;
 }
 

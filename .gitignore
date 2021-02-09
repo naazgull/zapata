@@ -21,6 +21,7 @@ install-sh
 ltmain.sh
 missing
 .emacs.desktop*
+.exclude.rc
 *.deps
 *.dirstamp
 */**/Makefile

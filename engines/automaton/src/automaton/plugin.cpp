@@ -29,29 +29,30 @@ extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
-    size_t _stages = std::max(static_cast<size_t>(_plugin->config()["pipeline"]["n_stages"]), 1UL);
+    long _threads = std::max(static_cast<long>(_config["limits"]["max_queue_threads"]), 1L);
     long _max_queue_spin_sleep =
-      std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 5000L);
-    zpt::globals::alloc<zpt::automaton::engine>(zpt::REST_ENGINE(), _stages, _config["limits"]);
+      std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
+    zpt::globals::alloc<zpt::automaton::engine>(
+      zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
 
     _boot.add_thread([_max_queue_spin_sleep]() -> void {
-        zlog("Starting REST engine", zpt::info);
+        zlog("Starting AUTOMATON engine", zpt::info);
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-        auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::REST_ENGINE());
-        _automaton.start_threads();
+        auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
 
         zpt::this_thread::adaptive_timer<long, 5> _timer;
+        unsigned long long _serial{ 0 };
         do {
             try {
                 auto _stream = _polling.pop();
                 std::string _scheme{ _stream->transport() };
                 zpt::exchange _channel{ _stream };
-                _automaton.trigger(_scheme + std::string(":"), _channel);
+                _automaton->begin(_channel, zpt::json{ ++_serial });
                 _timer.reset();
             }
             catch (zpt::NoMoreElementsException const& _e) {
-                if (_automaton.is_shutdown_ongoing()) {
-                    zlog("Exiting REST router", zpt::trace);
+                if (_automaton->is_shutdown_ongoing()) {
+                    zlog("Exiting AUTOMATON router", zpt::trace);
                     return;
                 }
                 _timer.sleep_for(_max_queue_spin_sleep);
@@ -62,7 +63,6 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping REST engine", zpt::info);
-    zpt::globals::get<zpt::automaton::engine>(zpt::REST_ENGINE()).shutdown();
-    zpt::globals::dealloc<zpt::automaton::engine>(zpt::REST_ENGINE());
+    zlog("Stopping AUTOMATON engine", zpt::info);
+    zpt::globals::dealloc<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
 }

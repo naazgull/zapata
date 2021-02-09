@@ -24,23 +24,24 @@
 
 #include <sstream>
 #include <execinfo.h>
-#include <cstring>
 #include <ctime>
 #include <zapata/text/convert.h>
 
-zpt::exception::exception(std::string const& _what)
+zpt::exception::exception(std::string const& _what, bool _with_stack)
   : std::exception()
-  , __what(_what) {
+  , __what{ _what } {
     zpt::replace(this->__what, "\"", "");
-    void* _backtrace_array[10];
-    size_t _backtrace_size = ::backtrace(_backtrace_array, 10);
-    char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
-    for (size_t _i = 0; _i != _backtrace_size; _i++) {
-        this->__backtrace.insert(this->__backtrace.length(), "\t");
-        this->__backtrace.insert(this->__backtrace.length(), std::string(_backtrace[_i]));
-        this->__backtrace.insert(this->__backtrace.length(), "\n");
+    if (_with_stack) {
+        void* _backtrace_array[30];
+        size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
+        char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
+        for (size_t _i = 0; _i != _backtrace_size; _i++) {
+            this->__backtrace.insert(this->__backtrace.length(), "\t");
+            this->__backtrace.insert(this->__backtrace.length(), std::string{ _backtrace[_i] });
+            this->__backtrace.insert(this->__backtrace.length(), "\n");
+        }
+        free(_backtrace);
     }
-    free(_backtrace);
 }
 
 zpt::exception::~exception() throw() {}
@@ -52,5 +53,5 @@ zpt::exception::what() const noexcept -> const char* {
 
 auto
 zpt::exception::backtrace() const -> const char* {
-    return this->__backtrace.data();
+    return this->__backtrace.length() == 0 ? nullptr : this->__backtrace.data();
 }

@@ -25,10 +25,20 @@
 auto
 zpt::startup::configuration::load(zpt::json _parameters, zpt::json& _output) -> void {
     for (auto [_, __, _conf_file] : _parameters["--conf-file"]) {
-        zpt::conf::file(static_cast<std::string>(_conf_file), _output);
+        try {
+            zpt::conf::file(static_cast<std::string>(_conf_file), _output);
+        }
+        catch (zpt::failed_expectation const& _e) {
+            zlog("Found " << _e, zpt::emergency);
+        }
     }
     for (auto [_, __, _conf_dir] : _parameters["--conf-dir"]) {
-        zpt::conf::dirs(static_cast<std::string>(_conf_dir), _output);
+        try {
+            zpt::conf::dirs(static_cast<std::string>(_conf_dir), _output);
+        }
+        catch (zpt::failed_expectation const& _e) {
+            zlog("Found " << _e, zpt::emergency);
+        }
     }
     zpt::conf::dirs(_output);
     zpt::conf::env(_output);

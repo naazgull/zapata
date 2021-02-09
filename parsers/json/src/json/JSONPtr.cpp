@@ -1,3 +1,25 @@
+/*
+  This is free and unencumbered software released into the public domain.
+
+  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+  this software, either in source code form or as a compiled binary, for any
+  purpose, commercial or non-commercial, and by any means.
+
+  In jurisdictions that recognize copyright laws, the author or authors of this
+  software dedicate any and all copyright interest in the software to the public
+  domain. We make this dedication for the benefit of the public at large and to
+  the detriment of our heirs and successors. We intend this dedication to be an
+  overt act of relinquishment in perpetuity of all present and future rights to
+  this software under copyright law.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include <cstdarg>
 #include <ostream>
 #include <regex>
@@ -163,22 +185,22 @@ zpt::json::operator*() const -> zpt::JSONElementT const& {
 }
 
 auto
-zpt::json::operator==(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool {
+zpt::json::operator==(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool {
     return (*this) == std::get<2>(_rhs);
 }
 
 auto
-zpt::json::operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) -> bool {
+zpt::json::operator!=(std::tuple<size_t, std::string, zpt::json> _rhs) const -> bool {
     return (*this) != std::get<2>(_rhs);
 }
 
 auto
-zpt::json::operator==(std::nullptr_t _rhs) -> bool {
+zpt::json::operator==(std::nullptr_t _rhs) const -> bool {
     return this->__underlying->type() == zpt::JSNil;
 }
 
 auto
-zpt::json::operator!=(std::nullptr_t _rhs) -> bool {
+zpt::json::operator!=(std::nullptr_t _rhs) const -> bool {
     return this->__underlying->type() != zpt::JSNil;
 }
 
@@ -641,17 +663,114 @@ zpt::json::operator|(zpt::json _rhs) -> zpt::json {
     if (this->__underlying->type() == zpt::JSNil) { return _rhs->clone(); }
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
-        case zpt::JSObject: {
+        case zpt::JSObject:
+        case zpt::JSArray: {
             auto _lhs = this->__underlying->clone();
-            for (auto [_idx, _key, _e] : _rhs) {
-                if (_lhs[_key]->type() == zpt::JSObject) { _lhs << _key << (_lhs[_key] | _e); }
-                else {
-                    _lhs << _key << _e;
-                }
-            }
+            _lhs.strict_union(_rhs);
             return _lhs;
         }
-        case zpt::JSArray:
+        case zpt::JSString: {
+            if (_rhs->type() == zpt::JSString) {
+                return zpt::json{ this->__underlying->string() + _rhs->string() };
+            }
+            else {
+                return zpt::json{ this->__underlying->string() + static_cast<std::string>(_rhs) };
+            }
+        }
+        case zpt::JSInteger: {
+            return zpt::json{ this->__underlying->integer() | static_cast<long>(_rhs) };
+        }
+        case zpt::JSDouble: {
+            return zpt::json{ static_cast<unsigned long long>(*this) |
+                              static_cast<unsigned long long>(_rhs) };
+        }
+        case zpt::JSBoolean: {
+            return zpt::json{ this->__underlying->boolean() | static_cast<bool>(_rhs) };
+        }
+        case zpt::JSDate: {
+            return zpt::json{ static_cast<unsigned long long>(*this) |
+                              static_cast<unsigned long long>(_rhs) };
+        }
+        case zpt::JSNil:
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
+            return zpt::undefined;
+        }
+    }
+    return zpt::undefined;
+}
+
+auto
+zpt::json::operator|=(zpt::json _rhs) -> zpt::json& {
+    if (this->__underlying->type() == zpt::JSNil) {
+        (*this) = _rhs->clone();
+        return (*this);
+    }
+    if (_rhs->type() == zpt::JSNil) { return (*this); }
+    switch (this->__underlying->type()) {
+        case zpt::JSObject:
+        case zpt::JSArray: {
+            this->strict_union(_rhs);
+            return (*this);
+        }
+        case zpt::JSString: {
+            if (_rhs->type() == zpt::JSString) {
+                (*this) = this->__underlying->string() + _rhs->string();
+            }
+            else {
+                (*this) = this->__underlying->string() + static_cast<std::string>(_rhs);
+            }
+            return (*this);
+        }
+        case zpt::JSInteger: {
+            (*this) = this->__underlying->integer() | static_cast<long>(_rhs);
+            return (*this);
+        }
+        case zpt::JSDouble: {
+            (*this) = static_cast<unsigned long long>(this->__underlying->floating()) |
+                      static_cast<unsigned long long>(_rhs);
+            return (*this);
+        }
+        case zpt::JSBoolean: {
+            (*this) = this->__underlying->boolean() | static_cast<bool>(_rhs);
+            return (*this);
+        }
+        case zpt::JSDate: {
+            (*this) = static_cast<unsigned long long>(this->__underlying->date()) |
+                      static_cast<unsigned long long>(_rhs);
+            return (*this);
+        }
+        case zpt::JSNil:
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
+            return (*this);
+        }
+    }
+    return (*this);
+}
+
+auto
+zpt::json::strict_union(zpt::json _rhs) -> void {
+    if (this->__underlying->type() == zpt::JSNil) { return; }
+    if (_rhs->type() == zpt::JSNil) { return; }
+    switch (this->__underlying->type()) {
+        case zpt::JSObject: {
+            if (_rhs->type() == zpt::JSObject) {
+                for (auto [_, _key, _e] : _rhs) {
+                    if ((*this)[_key]->type() == zpt::JSObject) { (*this)[_key].strict_union(_e); }
+                    else if (!(*this)[_key]->ok()) {
+                        (*this) << _key << _e;
+                    }
+                }
+            }
+            return;
+        }
+        case zpt::JSArray: {
+            if (_rhs->type() == zpt::JSArray) {
+                for (auto [_, __, _e] : _rhs) { (*this) << _e; }
+            }
+            return;
+        }
         case zpt::JSString:
         case zpt::JSInteger:
         case zpt::JSDouble:
@@ -660,10 +779,8 @@ zpt::json::operator|(zpt::json _rhs) -> zpt::json {
         case zpt::JSDate:
         case zpt::JSLambda:
         case zpt::JSRegex: {
-            return zpt::undefined;
         }
     }
-    return zpt::undefined;
 }
 
 auto

@@ -23,6 +23,6 @@
 #include <zapata/exceptions/ClosedException.h>
 
 zpt::ClosedException::ClosedException(std::string const& _what)
-  : zpt::exception(_what) {}
+  : zpt::exception{ _what } {}
 
 zpt::ClosedException::~ClosedException() throw() {}

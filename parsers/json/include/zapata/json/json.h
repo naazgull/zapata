@@ -106,13 +106,15 @@ getopt(int _argc, char* _argv[]) -> zpt::json;
 auto
 setup(zpt::json _options) -> void;
 auto
-file(std::string const& _file, zpt::json _options) -> void;
+evaluate_ref(zpt::json _options, std::string const& _parent_key, zpt::json _parent) -> void;
 auto
-dirs(std::string const& _dir, zpt::json _options) -> void;
+file(std::string const& _file, zpt::json& _options) -> void;
 auto
-dirs(zpt::json _options) -> void;
+dirs(std::string const& _dir, zpt::json& _options) -> void;
 auto
-env(zpt::json _options) -> void;
+dirs(zpt::json& _options) -> void;
+auto
+env(zpt::json& _options) -> void;
 } // namespace conf
 
 namespace parameters {

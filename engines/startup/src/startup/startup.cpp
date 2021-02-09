@@ -153,7 +153,7 @@ zpt::plugin::plugin_t::unload_plugin(zpt::plugin& _other) -> zpt::plugin::plugin
 }
 
 zpt::startup::engine::engine()
-  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ __hazard_domain, 50000 }
+  : zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>{ __hazard_domain, 50000L }
   , __configuration{ zpt::globals::alloc<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object()) } {}
 
 zpt::startup::engine::engine(zpt::json _args)
@@ -167,10 +167,12 @@ zpt::startup::engine::~engine() {
 
 auto
 zpt::startup::engine::initialize(zpt::json _args) -> zpt::startup::engine& {
+    zpt::log_lvl = 8;
+    zpt::log_format = 0;
     zpt::startup::configuration::load(_args, this->__configuration);
     zpt::log_lvl = this->__configuration["log"]["level"]->ok()
                      ? static_cast<int>(this->__configuration["log"]["level"])
-                     : 8;
+                     : 7;
     zpt::log_format = this->__configuration["log"]["format"]->ok()
                         ? static_cast<int>(this->__configuration["log"]["format"])
                         : 0;
