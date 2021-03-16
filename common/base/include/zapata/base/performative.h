@@ -6,7 +6,7 @@
   purpose, commercial or non-commercial, and by any means.
 
   In jurisdictions that recognize copyright laws, the author or authors of this
-  software dedicate any and all copyright inteautomaton in the software to the public
+  software dedicate any and all copyright interest in the software to the public
   domain. We make this dedication for the benefit of the public at large and to
   the detriment of our heirs and successors. We intend this dedication to be an
   overt act of relinquishment in perpetuity of all present and future rights to
@@ -22,34 +22,30 @@
 
 #pragma once
 
-#include <zapata/startup.h>
-#include <zapata/fsm.h>
-#include <zapata/transport.h>
-
-#define URI_PART_ANY "{([^/?]+)}"
+#include <string>
 
 namespace zpt {
+using performative = unsigned short;
+using status = unsigned short;
+
+static inline const zpt::performative Get = 0;
+static inline const zpt::performative Put = 1;
+static inline const zpt::performative Post = 2;
+static inline const zpt::performative Delete = 3;
+static inline const zpt::performative Head = 4;
+static inline const zpt::performative Options = 5;
+static inline const zpt::performative Patch = 6;
+static inline const zpt::performative Reply = 7;
+static inline const zpt::performative Msearch = 8;
+static inline const zpt::performative Notify = 9;
+static inline const zpt::performative Trace = 10;
+static inline const zpt::performative Connect = 11;
+
+namespace ontology {
 auto
-AUTOMATON_ENGINE() -> ssize_t&;
+to_str(zpt::performative _performative) -> std::string;
+auto
+from_str(std::string _performative) -> zpt::performative;
+} // namespace ontology
 
-namespace automaton {
-class engine : public zpt::fsm::machine<zp     t::json, zpt::exchange> {
-  public:
-    engine(size_t _threads, zpt::json _configuration);
-    virtual ~engine() = default;
-
-    static auto on_error(zpt::json& _state,
-                         zpt::exchange& _event,
-                         const char* _what,
-                         const char* _description = nullptr,
-                         const char* _backtrace = nullptr,
-                         int _error = -1,
-                         int _status = 500) -> bool;
-
-  private:
-    zpt::lf::spin_lock __pending_lock;
-    std::map<std::string, zpt::exchange> > __pending;
-};
-
-} // namespace automaton
-} // nanespace zpt
+} // namespace zpt

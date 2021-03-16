@@ -41,7 +41,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
 
         zpt::this_thread::adaptive_timer<long, 5> _timer;
-        unsigned long long _serial{ 0 };
+        size_t _serial{ 0 };
         do {
             try {
                 auto _stream = _polling.pop();

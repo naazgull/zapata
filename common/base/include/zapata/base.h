@@ -17,6 +17,7 @@
 #include <thread>
 #include <utility>
 
+#include <zapata/base/performative.h>
 #include <zapata/base/expect.h>
 #include <zapata/base/sentry.h>
 #include <zapata/text/convert.h>

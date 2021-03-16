@@ -32,25 +32,75 @@ zpt::automaton::engine::engine(long _threads, zpt::json _configuration)
   : zpt::fsm::machine<zpt::json, zpt::exchange, zpt::json>{ _threads, _configuration }
   , __configuration{ _configuration } {
 
-    (*this) //
-      ->set_error_callback(zpt::automaton::engine::on_error)
-      .add_transition(zpt::automaton::engine::receive(),
-                      [=](zpt::json _state, zpt::exchange& _channel) -> zpt::json {
-                          auto& _layer =
-                            zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-                          auto& _transport = _layer.get(_channel->scheme());
-                          _transport->receive(_channel);
-                          return this->__configuration["begin"];
-                      }) //
+    zpt::json _extra{ "begin", zpt::automaton::engine::receive(),
+                      "end",   zpt::automaton::engine::send(),
+                      "pause", zpt::automaton::engine::pause() };
+    this                                                      //
+      ->set_states((this->__configuration - _extra) | _extra) //
+      .set_error_callback(zpt::automaton::engine::on_error)   //
+      .add_allowed_transitions({ zpt::array,
+                                 { zpt::array,
+                                   zpt::automaton::engine::receive(),
+                                   { zpt::array, this->__configuration["begin"] } },
+                                 { zpt::array,
+                                   this->__configuration["end"],
+                                   { zpt::array, zpt::automaton::engine::send() } } }) //
       .add_transition(
-        _configuration["end"], [=](zpt::json _state, zpt::exchange& _channel) -> zpt::json {
+        zpt::automaton::engine::receive(),
+        [this](
+          zpt::json _state, zpt::exchange& _channel, zpt::json const& _id) mutable -> zpt::json {
+            auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+            auto& _transport = _layer.get(_channel->scheme());
+            _transport->receive(_channel);
+            if (_channel->received()["performative"] == zpt::Patch) {
+                expect(_channel->received()["state"]->ok(),
+                       "a `state` must be provided to the CONTINUE directive",
+                       412,
+                       0);
+                expect(_channel->received()["id"]->ok(),
+                       "an `id` must be provided to the CONTINUE directive",
+                       412,
+                       0);
+                (*this)->resume(_channel->received()["id"], _channel->received()["state"]);
+                return zpt::automaton::engine::pause();
+            }
+            return this->__configuration["begin"];
+        }) //
+      .add_transition(
+        this->__configuration["end"],
+        [](zpt::json _state, zpt::exchange& _channel, zpt::json const& _id) -> zpt::json {
+            return zpt::automaton::engine::send();
+        }) //
+      .add_transition(
+        zpt::automaton::engine::send(),
+        [this](
+          zpt::json _state, zpt::exchange& _channel, zpt::json const& _id) mutable -> zpt::json {
             auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
             auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
             auto& _transport = _layer.get(_channel->scheme());
+            _channel->to_send() = {
+                "status",
+                200,
+                "body",
+                { "id", _id, "state", this->__configuration["end"], "data", _channel->to_send() }
+            };
             _transport->send(_channel);
             std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
             if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
             return this->__configuration["undefined"];
+        }) //
+      .add_transition(
+        zpt::automaton::engine::pause(),
+        [](zpt::json _state, zpt::exchange& _channel, zpt::json const& _id) -> zpt::json {
+            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+            auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+            auto& _transport = _layer.get(_channel->scheme());
+            _channel->to_send() = { "status", 202, "body", { "id", _id, "state", "PAUSED" } };
+            _transport->send(_channel);
+            std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
+            if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
+            return zpt::automaton::engine::pause();
+            ;
         });
 }
 
@@ -81,7 +131,27 @@ zpt::automaton::engine::on_error(zpt::json const& _state,
 }
 
 auto
+zpt::automaton::engine::to_string() -> std::string {
+    std::ostringstream _oss;
+    _oss << static_cast<zpt::fsm::machine<zpt::json, zpt::exchange, zpt::json>&>(*this)->to_string()
+         << std::flush;
+    return _oss.str();
+}
+
+auto
 zpt::automaton::engine::receive() -> zpt::json {
-    static zpt::json _receive_state{ "AUTOMATON_RECEIVE" };
+    static zpt::json _receive_state{ std::numeric_limits<long long>::max() };
     return _receive_state;
+}
+
+auto
+zpt::automaton::engine::send() -> zpt::json {
+    static zpt::json _send_state{ std::numeric_limits<long long>::max() - 1 };
+    return _send_state;
+}
+
+auto
+zpt::automaton::engine::pause() -> zpt::json {
+    static zpt::json _pause_state{ std::numeric_limits<long long>::max() - 2 };
+    return _pause_state;
 }

@@ -25,7 +25,7 @@ zpt::init(zpt::HTTPReq& _req) -> void {
         _req->url(_path);
     }
 
-    _req->method(zpt::http::Get);
+    _req->method(zpt::Get);
     _req->header("User-Agent", "zapata rest-ful server");
     _req->header("Cache-Control", "max-age=3600");
     _req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");

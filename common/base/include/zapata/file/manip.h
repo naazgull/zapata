@@ -475,6 +475,8 @@ auto
 is_dir(std::string const& _path) -> bool;
 auto
 file_exists(std::string const& _path) -> bool;
+auto
+dirname(std::string const& _path) -> std::string;
 
 auto
 globRegexp(std::string& dir,

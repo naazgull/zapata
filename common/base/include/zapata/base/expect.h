@@ -27,6 +27,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
+#include <zapata/base/performative.h>
 #include <zapata/exceptions/ExpectationException.h>
 
 /**
@@ -574,9 +575,6 @@ enum JSONType {
 };
 auto
 to_string(zpt::JSONType _type) -> std::string;
-
-using performative = unsigned short;
-using status = unsigned short;
 
 auto
 get_tz() -> std::string const&;

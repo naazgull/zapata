@@ -1,5 +1,6 @@
 
 nobase_include_HEADERS = \
+./zapata/base/performative.h \
 ./zapata/base/expect.h \
 ./zapata/base/sentry.h \
 ./zapata/base/config.h \

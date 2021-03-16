@@ -26,8 +26,6 @@
 #include <zapata/fsm.h>
 #include <zapata/transport.h>
 
-#define URI_PART_ANY "{([^/?]+)}"
-
 namespace zpt {
 auto
 AUTOMATON_ENGINE() -> ssize_t&;
@@ -46,10 +44,19 @@ class engine : public zpt::fsm::machine<zpt::json, zpt::exchange, zpt::json> {
                          const char* _backtrace = nullptr,
                          int _error = -1,
                          int _status = 500) -> bool;
-    static auto receive() -> zpt::json;
+
+    auto to_string() -> std::string;
+    friend auto operator<<(std::ostream& _out, engine& _in) -> std::ostream& {
+        _out << _in.to_string() << std::flush;
+        return _out;
+    }
 
   private:
     zpt::json __configuration;
+
+    static auto receive() -> zpt::json;
+    static auto send() -> zpt::json;
+    static auto pause() -> zpt::json;
 };
 
 } // namespace automaton

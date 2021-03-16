@@ -32,7 +32,7 @@ zpt::HTTPTokenizerLexer::init(zpt::http::message_type _in_type) -> void {
     switch (_in_type) {
         case zpt::http::message_type::request: {
             std::string _ms(this->matched());
-            zpt::performative _m = zpt::http::from_str(_ms);
+            zpt::performative _m = zpt::ontology::from_str(_ms);
             this->__root_req->method(_m);
             break;
         }
