@@ -265,13 +265,7 @@ auto zpt::RESTEmitter::reply(zpt::json _request, zpt::json _reply) -> void {
 		auto _callback = _exists->second;
 		this->__pending.erase(_exists);
 		if (_reply->ok()) {
-			try {
-				_callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
-			} catch(zpt::assertion& _e) {
-				_callback(zpt::ev::Reply, std::string(_request["resource"]), { "status", _e.status(), "payload", { "text", _e.what(), "assertion_failed", _e.description(), "code", _e.code() } }, this->self());
-			} catch(std::exception& _e) {
-				_callback(zpt::ev::Reply, std::string(_request["resource"]), { "status", 500, "payload", { "text", _e.what(), "code", 0 } }, this->self());
-			}
+            _callback(zpt::ev::Reply, std::string(_request["resource"]), _reply, this->self());
 		} else {
 			_callback(zpt::ev::Reply, std::string(_request["resource"]), { "status", 408, "payload", { "text", "No response object available for this request", "code", 0 } }, this->self());
 		}
