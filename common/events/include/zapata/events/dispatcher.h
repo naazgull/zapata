@@ -45,7 +45,7 @@ class dispatcher : public factory {
   public:
     using hazard_domain = typename zpt::lf::queue<std::tuple<E, V>>::hazard_domain;
 
-    dispatcher(hazard_domain& _hazard_domain, long _max_pop_wait_micro = 0);
+    dispatcher(hazard_domain& _hazard_domain, long _max_pop_wait_micro = 50000L);
     virtual ~dispatcher();
 
     auto add_consumer() -> C&;
@@ -61,7 +61,7 @@ class dispatcher : public factory {
 
   public:
     zpt::lf::queue<std::tuple<E, V>> __queue;
-    long __max_pop_wait{ 0 };
+    long __max_pop_wait{ 50000L };
     std::vector<std::thread> __consumers;
     std::atomic<bool> __shutdown{ false };
 };
@@ -83,7 +83,7 @@ zpt::events::dispatcher<C, E, V>::~dispatcher() {
 template<typename C, typename E, typename V>
 auto
 zpt::events::dispatcher<C, E, V>::add_consumer() -> C& {
-    this->__consumers.emplace_back([=]() mutable -> void { this->loop(); });
+    this->__consumers.emplace_back([this]() mutable -> void { this->loop(); });
     return (*static_cast<C*>(this));
 }
 

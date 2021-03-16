@@ -95,7 +95,7 @@ class adaptive_timer {
     auto sleep_for(T _upper_limit) -> T;
 
   private:
-    T __sleep_tics{ 1 };
+    T __sleep_tics{ 0 };
 };
 
 } // namespace this_thread
@@ -104,16 +104,17 @@ class adaptive_timer {
 template<typename T, int Step>
 auto
 zpt::this_thread::adaptive_timer<T, Step>::reset() -> zpt::this_thread::adaptive_timer<T, Step>& {
-    this->__sleep_tics = 1;
+    this->__sleep_tics = 0;
     return (*this);
 }
 
 template<typename T, int Step>
 auto
 zpt::this_thread::adaptive_timer<T, Step>::sleep_for(T _upper_limit) -> T {
-    static constexpr T _max{ std::numeric_limits<T>::max() - 1 };
-    this->__sleep_tics += Step;
     if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
+    else {
+        this->__sleep_tics += Step;
+    }
     if (this->__sleep_tics == 0) { std::this_thread::yield(); }
     else {
         std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{ this->__sleep_tics });

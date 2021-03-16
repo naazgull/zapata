@@ -61,7 +61,7 @@ zpt::auth::oauth2::server::authorize(zpt::performative _performative,
                                      zpt::json _envelope,
                                      zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) { _param.assign("body"); }
+    if (_performative == zpt::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -120,7 +120,7 @@ zpt::auth::oauth2::server::token(zpt::performative _performative,
                                  zpt::json _envelope,
                                  zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) { _param.assign("body"); }
+    if (_performative == zpt::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -138,7 +138,7 @@ zpt::auth::oauth2::server::refresh(zpt::performative _performative,
                                    zpt::json _envelope,
                                    zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
-    if (_performative == zpt::rest::Post) { _param.assign("body"); }
+    if (_performative == zpt::Post) { _param.assign("body"); }
     else {
         _param.assign("params");
     }
@@ -196,7 +196,7 @@ zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
         zpt::url::encode(_l_state);
         auto _login_url = _opts["login_url"]->string();
         return { "status",
-                 (_performative == zpt::rest::Post ? 303 : 307),
+                 (_performative == zpt::Post ? 303 : 307),
                  "headers",
                  { "Set-Cookie",
                    (std::string("deleted; name=oauth_session; domain=") +
@@ -213,7 +213,7 @@ zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
     }
     catch (zpt::failed_expectation const& _e) {
         return { "status",
-                 (_performative == zpt::rest::Post ? 303 : 307),
+                 (_performative == zpt::Post ? 303 : 307),
                  "headers",
                  { "Location",
                    (_redirect_uri->string() +
@@ -232,7 +232,7 @@ zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
                                          _owner["id"] });
     this->__token_provider->store_token(_token);
     return { "status",
-             (_performative == zpt::rest::Post ? 303 : 307),
+             (_performative == zpt::Post ? 303 : 307),
              "headers",
              { "Location",
                ((_redirect_uri->string() +
@@ -278,7 +278,7 @@ zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performati
             zpt::url::encode(_l_state);
             auto _login_url = _opts["login_url"]->string();
             return { "status",
-                     (_performative == zpt::rest::Post ? 303 : 307),
+                     (_performative == zpt::Post ? 303 : 307),
                      "headers",
                      { "Set-Cookie",
                        (std::string("deleted; name=oauth_session; domain=") +
@@ -298,7 +298,7 @@ zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performati
     catch (zpt::failed_expectation const& _e) {
         if (_redirect_uri->is_string()) {
             return { "status",
-                     (_performative == zpt::rest::Post ? 303 : 307),
+                     (_performative == zpt::Post ? 303 : 307),
                      "headers",
                      { "Location",
                        (_redirect_uri->string() +
@@ -321,7 +321,7 @@ zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performati
     this->__token_provider->store_token(_token);
     if (_redirect_uri->is_string()) {
         return { "status",
-                 (_performative == zpt::rest::Post ? 303 : 307),
+                 (_performative == zpt::Post ? 303 : 307),
                  "headers",
                  { "Set-Cookie",
                    (_token["access_token"]->string() + std::string("; owner=") +
@@ -368,7 +368,7 @@ zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _
     catch (zpt::failed_expectation const& _e) {
         if (_redirect_uri->is_string()) {
             return { "status",
-                     (_performative == zpt::rest::Post ? 303 : 307),
+                     (_performative == zpt::Post ? 303 : 307),
                      "headers",
                      { "Location",
                        (_redirect_uri->string() +
@@ -391,7 +391,7 @@ zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _
     this->__token_provider->store_token(_token);
     if (_redirect_uri->is_string()) {
         return { "status",
-                 (_performative == zpt::rest::Post ? 303 : 307),
+                 (_performative == zpt::Post ? 303 : 307),
                  "headers",
                  { "Location",
                    ((_redirect_uri->string() +

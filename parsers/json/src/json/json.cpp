@@ -122,11 +122,15 @@ zpt::conf::setup(zpt::json _options) -> void {
 }
 
 auto
-zpt::conf::evaluate_ref(zpt::json _options, std::string const& _parent_key, zpt::json _parent)
-  -> void {
+zpt::conf::evaluate_ref(zpt::json _options,
+                        std::string const& _parent_key,
+                        zpt::json _parent,
+                        std::string const& _file_context) -> void {
     for (auto [_, _key, _value] : _options) {
         if (_key == "$ref") {
-            std::string _href = _value->string();
+            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context)
+                                                           : std::string{ "" }) +
+                               _value->string() };
             zpt::json _other;
             zpt::conf::file(_href, _other);
             if (_parent->is_object()) { _parent << _parent_key << _other; }
@@ -135,7 +139,7 @@ zpt::conf::evaluate_ref(zpt::json _options, std::string const& _parent_key, zpt:
             }
         }
         else {
-            zpt::conf::evaluate_ref(_value, _key, _options);
+            zpt::conf::evaluate_ref(_value, _key, _options, _file_context);
         }
     }
 }
@@ -149,7 +153,7 @@ zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
 
     try {
         _ifs >> _conf;
-        zpt::conf::evaluate_ref(_conf, "", _conf);
+        zpt::conf::evaluate_ref(_conf, "", _conf, _file);
         _options |= _conf;
     }
     catch (zpt::SyntaxErrorException const& _e) {

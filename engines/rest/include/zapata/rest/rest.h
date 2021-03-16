@@ -32,19 +32,6 @@ namespace zpt {
 auto
 REST_ENGINE() -> ssize_t&;
 namespace rest {
-static inline const zpt::performative Get = 0;
-static inline const zpt::performative Put = 1;
-static inline const zpt::performative Post = 2;
-static inline const zpt::performative Delete = 3;
-static inline const zpt::performative Head = 4;
-static inline const zpt::performative Options = 5;
-static inline const zpt::performative Patch = 6;
-static inline const zpt::performative Reply = 7;
-static inline const zpt::performative Msearch = 8;
-static inline const zpt::performative Notify = 9;
-static inline const zpt::performative Trace = 10;
-static inline const zpt::performative Connect = 11;
-
 class engine : public zpt::pipeline::engine<zpt::exchange> {
   public:
     engine(size_t _pipeline_size, zpt::json _configuration);
@@ -73,12 +60,6 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
     zpt::lf::spin_lock __pending_lock;
     std::map<std::string, std::function<void(zpt::pipeline::event<zpt::exchange>&)>> __pending;
 };
-
-auto
-to_str(zpt::performative _performative) -> std::string;
-
-auto
-from_str(std::string const& _performative) -> zpt::performative;
 
 } // namespace rest
 } // nanespace zpt

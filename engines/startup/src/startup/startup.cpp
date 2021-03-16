@@ -250,7 +250,7 @@ zpt::startup::engine::load(zpt::json _plugin_options, zpt::json _plugin_config) 
 
     if (!_inserted) { return _plugin; }
 
-    auto _finish = [=](bool _success) mutable -> void {
+    auto _finish = [this, _plugin, _plugin_options](bool _success) mutable -> void {
         if (!_success) return;
         if (_plugin->is_running()) { throw zpt::events::unregister(); }
         if (!this->check_requirements(_plugin)) { return; }

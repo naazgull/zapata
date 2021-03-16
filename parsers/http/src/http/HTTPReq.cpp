@@ -7,7 +7,7 @@
 #include <zapata/http/HTTPParser.h>
 
 zpt::HTTPReqT::HTTPReqT()
-  : __method(zpt::http::Get) {}
+  : __method(zpt::Get) {}
 
 zpt::HTTPReqT::~HTTPReqT() {}
 

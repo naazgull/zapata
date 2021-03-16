@@ -3,51 +3,48 @@
 
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::fsm::machine<int, std::string, size_t> _sm{ 2,
-                                                     { "transitions",
-                                                       {
-                                                         zpt::array,
-                                                         { zpt::array, 0, { zpt::array, 1 } },    //
-                                                         { zpt::array, 1, { zpt::array, 2, 3 } }, //
-                                                         { zpt::array, 2, { zpt::array, 1, 3 } }, //
-                                                         { zpt::array, 3, { zpt::array, 1 } }     //
-                                                       },
-                                                       "begin",
-                                                       0,
-                                                       "end",
-                                                       3,
-                                                       "undefined",
-                                                       -1 } };
-    _sm->add_transition(0, [](int& _current, std::string& _data) -> int {
-        std::ostringstream oss;
-        oss << " -> S(" << _current << ")" << std::flush;
-        _data.append(oss.str());
-        return 1;
-    });
-    _sm->add_transition(1, [](int& _current, std::string& _data) -> int {
-        std::ostringstream oss;
-        oss << " -> S(" << _current << ")" << std::flush;
-        _data.append(oss.str());
-        if (_data.find("p1") != std::string::npos) { return 2; }
-        else {
-            return 3;
-        }
-    });
-    _sm->add_transition(2, [](int& _current, std::string& _data) -> int {
-        std::ostringstream oss;
-        oss << " -> S(" << _current << ")" << std::flush;
-        _data.append(oss.str());
-        std::random_device _rd;
-        std::mt19937 _gen(_rd());
-        std::uniform_int_distribution<> _distrib(1, 100);
-        if (_distrib(_gen) % 3) { return 1; }
-        return 3;
-    });
-    _sm->add_transition(3, [](int& _current, std::string& _data) -> int {
-        _data.append(" -> o");
-        std::cout << _data << std::endl << std::flush;
-        return -1;
-    });
+    zpt::fsm::machine<int, std::string, size_t> _sm{ 2, { "begin", 0, "end", 3, "undefined", -1 } };
+    _sm //
+      ->add_allowed_transitions({
+        zpt::array,
+        { zpt::array, 0, { zpt::array, 1 } },    //
+        { zpt::array, 1, { zpt::array, 2, 3 } }, //
+        { zpt::array, 2, { zpt::array, 1, 3 } }, //
+        { zpt::array, 3, { zpt::array, 1 } }     //
+      })                                         //
+      .add_transition(0,
+                      [](int& _current, std::string& _data, size_t const& _id) -> int {
+                          std::ostringstream oss;
+                          oss << " -> S(" << _current << ")" << std::flush;
+                          _data.append(oss.str());
+                          return 1;
+                      }) //
+      .add_transition(1,
+                      [](int& _current, std::string& _data, size_t const& _id) -> int {
+                          std::ostringstream oss;
+                          oss << " -> S(" << _current << ")" << std::flush;
+                          _data.append(oss.str());
+                          if (_data.find("p1") != std::string::npos) { return 2; }
+                          else {
+                              return 3;
+                          }
+                      }) //
+      .add_transition(2,
+                      [](int& _current, std::string& _data, size_t const& _id) -> int {
+                          std::ostringstream oss;
+                          oss << " -> S(" << _current << ")" << std::flush;
+                          _data.append(oss.str());
+                          std::random_device _rd;
+                          std::mt19937 _gen(_rd());
+                          std::uniform_int_distribution<> _distrib(1, 100);
+                          if (_distrib(_gen) % 3) { return 1; }
+                          return 3;
+                      }) //
+      .add_transition(3, [](int& _current, std::string& _data, size_t const& _id) -> int {
+          _data.append(" -> o");
+          std::cout << _data << std::endl << std::flush;
+          return -1;
+      });
 
     size_t _c{ 0 };
     do {

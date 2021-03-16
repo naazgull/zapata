@@ -209,19 +209,6 @@ extern std::string nil_header;
 extern const char* method_names[];
 extern const char* status_names[];
 
-static inline const unsigned short Get = 0;
-static inline const unsigned short Put = 1;
-static inline const unsigned short Post = 2;
-static inline const unsigned short Delete = 3;
-static inline const unsigned short Head = 4;
-static inline const unsigned short Options = 5;
-static inline const unsigned short Patch = 6;
-static inline const unsigned short Reply = 7;
-static inline const unsigned short Msearch = 8;
-static inline const unsigned short Notify = 9;
-static inline const unsigned short Trace = 10;
-static inline const unsigned short Connect = 11;
-
 using req = zpt::HTTPReq;
 using rep = zpt::HTTPRep;
 } // namespace http

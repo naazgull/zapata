@@ -192,3 +192,14 @@ zpt::file_exists(std::string const& _path) -> bool {
     if (::stat(_path.data(), &_s) == 0) { return true; }
     return false;
 }
+
+auto
+zpt::dirname(std::string const& _path) -> std::string {
+    if (zpt::is_dir(_path)) { return _path; }
+
+    auto _idx = _path.rfind("/");
+    if (_idx == std::string::npos) {
+        return "./";
+    }
+    return _path.substr(0, _idx + 1);
+}

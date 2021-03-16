@@ -36,9 +36,11 @@ class machine {
   public:
     class engine_t : public zpt::events::dispatcher<engine_t, S, zpt::fsm::payload<D, I>> {
       public:
+        friend class machine;
+
         using hazard_domain =
           typename zpt::events::dispatcher<engine_t, S, zpt::fsm::payload<D, I>>::hazard_domain;
-        using callback = std::function<S(S&, D&)>;
+        using callback = std::function<S(S&, D&, I const&)>;
         using callback_list = std::vector<std::tuple<zpt::padded_atomic<bool>, callback>>;
         using state_list = std::map<S, bool>;
         using error_callback = std::function<bool(S const& _event,
@@ -52,6 +54,8 @@ class machine {
 
         engine_t(hazard_domain& _hazard_domain, zpt::json _config);
         virtual ~engine_t() = default;
+
+        auto add_allowed_transitions(zpt::json _states) -> engine_t&;
 
         auto begin(D _content, I _id) -> engine_t&;
         auto resume(I _id, S _state) -> engine_t&;
@@ -83,11 +87,12 @@ class machine {
         S __undefined;
         S __begin;
         S __end;
+        S __pause;
         error_callback __error_callback{ nullptr };
 
-        auto initialize(zpt::json& _config) -> void;
         auto coalesce(S _current, S _potential) -> S;
         auto pause(S _current, zpt::fsm::payload<D, I> _content) -> void;
+        auto set_states(zpt::json _states) -> engine_t&;
     };
 
     machine(long _max_threads, zpt::json _config);
@@ -101,6 +106,9 @@ class machine {
         return _out;
     }
 
+  protected:
+    auto set_states(zpt::json _states) -> engine_t&;
+
   private:
     typename engine_t::hazard_domain __hazard_domain;
     engine_t __underlying;
@@ -111,16 +119,40 @@ zpt::fsm::machine<S, D, I>::engine_t::engine_t(hazard_domain& _hazard_domain, zp
   : zpt::events::dispatcher<zpt::fsm::machine<S, D, I>::engine_t, S, zpt::fsm::payload<D, I>>{
       _hazard_domain
   } {
-    expect(_config["undefined"]->ok(),
-           "JSON configuration must include 'undefined' state value",
+    this->set_states(_config);
+    if (_config["transitions"]->ok()) { this->add_allowed_transitions(_config["transitions"]); }
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::engine_t::set_states(zpt::json _states) -> engine_t& {
+    this->__undefined = static_cast<S>(_states["undefined"]);
+    this->__begin = static_cast<S>(_states["begin"]);
+    this->__end = static_cast<S>(_states["end"]);
+    this->__pause = static_cast<S>(_states["pause"]);
+    return (*this);
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::engine_t::add_allowed_transitions(zpt::json _states) -> engine_t& {
+    expect(_states->ok() && _states->is_array(),
+           "states JSON configuration must be a JSON array",
            500,
            0);
-    expect(_config["begin"]->ok(), "JSON configuration must include 'begin' state value", 500, 0);
-    expect(_config["end"]->ok(), "JSON configuration must include 'end' state value", 500, 0);
-    this->__undefined = static_cast<S>(_config["undefined"]);
-    this->__begin = static_cast<S>(_config["begin"]);
-    this->__end = static_cast<S>(_config["end"]);
-    this->initialize(_config);
+
+    for (auto [_, __, _potential] : _states) {
+        expect(_potential[1]->is_array(),
+               "each state allowed states member value must be an array",
+               500,
+               0);
+        for (auto [_, __, _target] : _potential[1]) {
+            std::cout << "adding transition " << _potential[0] << " -> " << _target << std::endl
+                      << std::flush;
+            this->__transitions[static_cast<S>(_potential[0])][static_cast<S>(_target)] = true;
+        }
+    }
+    return (*this);
 }
 
 template<typename S, typename D, typename I>
@@ -136,7 +168,6 @@ zpt::fsm::machine<S, D, I>::engine_t::resume(I _id, S _state) -> engine_t& {
     auto _found = this->__stalled.find(_id);
     expect(_found != this->__stalled.end(), "no such payload identified by " << _id, 500, 0);
     S _next_state = this->coalesce(std::get<0>(_found->second), _state);
-    std::cout << _next_state << std::endl << std::flush;
     this->trigger(
       _next_state,
       zpt::fsm::payload<D, I>{ std::make_tuple(std::get<1>(_found->second), _found->first) });
@@ -169,7 +200,8 @@ zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, zpt::fsm::payloa
         for (auto _callback = _it->second.begin(); _callback != _it->second.end(); ++_callback) {
             try {
                 if (std::get<0>(*_callback)->load()) {
-                    S _potential = std::get<1>(*_callback)(_current_state, std::get<0>(_content));
+                    S _potential = std::get<1>(*_callback)(
+                      _current_state, std::get<0>(_content), std::get<1>(_content));
                     expect(_next_state == this->__undefined || _potential == this->__undefined ||
                              _next_state == _potential,
                            "state '" << _potential
@@ -178,14 +210,16 @@ zpt::fsm::machine<S, D, I>::engine_t::trapped(S _current_state, zpt::fsm::payloa
                                      << _next_state << "'",
                            500,
                            0);
-                    _next_state = this->coalesce(_current_state, _potential);
+                    if (_potential != this->__undefined) {
+                        _next_state = this->coalesce(_current_state, _potential);
+                    }
                 }
             }
             catch (zpt::events::unregister const& _e) {
                 this->mute(_current_state, std::get<1>(*_callback));
             }
         }
-
+        if (_next_state == this->__pause) { return; }
         if (_next_state != this->__undefined) { this->trigger(_next_state, _content); }
         else if (_current_state != this->__end) {
             this->pause(_current_state, _content);
@@ -236,8 +270,13 @@ template<typename S, typename D, typename I>
 auto
 zpt::fsm::machine<S, D, I>::engine_t::to_string() -> std::string {
     std::ostringstream _return;
+    _return << "> begin: " << this->__begin << std::endl
+            << "> end: " << this->__end << std::endl
+            << "> undefined: " << this->__undefined << std::endl
+            << "> pause: " << this->__pause << std::endl
+            << "> transitions: " << std::endl;
     for (auto [_source, _potential] : this->__transitions) {
-        _return << "S(" << _source << ")" << std::endl << std::flush;
+        _return << "  S(" << _source << ")" << std::endl << std::flush;
         for (auto [_target, _] : _potential) {
             _return << "\t-> S(" << _target << ")" << std::endl << std::flush;
         }
@@ -247,24 +286,8 @@ zpt::fsm::machine<S, D, I>::engine_t::to_string() -> std::string {
 
 template<typename S, typename D, typename I>
 auto
-zpt::fsm::machine<S, D, I>::engine_t::initialize(zpt::json& _config) -> void {
-    expect(_config["transitions"]->ok() && _config["transitions"]->is_array(),
-           "JSON configuration must include a 'transitions' array",
-           500,
-           0);
-
-    for (auto [_, __, _potential] : _config["transitions"]) {
-        expect(_potential[1]->is_array(), "each transition member value must be an array", 500, 0);
-        for (auto [_, __, _target] : _potential[1]) {
-            this->__transitions[static_cast<S>(_potential[0])][static_cast<S>(_target)] = true;
-        }
-    }
-}
-
-template<typename S, typename D, typename I>
-auto
 zpt::fsm::machine<S, D, I>::engine_t::coalesce(S _current, S _potential) -> S {
-    if (_potential != this->__undefined) {
+    if (_potential != this->__undefined && _potential != this->__pause) {
         auto _possible = this->__transitions[_current];
         expect(_possible.find(_potential) != _possible.end(),
                "state '" << _potential << "' not found in possible transitions from '" << _current
@@ -280,6 +303,7 @@ auto
 zpt::fsm::machine<S, D, I>::engine_t::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
     this->__stalled.insert(
       std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
+    this->trigger(this->__pause, _content);
 }
 
 template<typename S, typename D, typename I>
@@ -304,6 +328,12 @@ template<typename S, typename D, typename I>
 auto
 zpt::fsm::machine<S, D, I>::operator->() -> zpt::fsm::machine<S, D, I>::engine_t* {
     return &this->__underlying;
+}
+
+template<typename S, typename D, typename I>
+auto
+zpt::fsm::machine<S, D, I>::set_states(zpt::json _states) -> zpt::fsm::machine<S, D, I>::engine_t& {
+    return this->__underlying.set_states(_states);
 }
 
 } // currentspace fsm

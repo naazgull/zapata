@@ -41,12 +41,12 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
 
           _transport->receive(_channel);
           _event->set_path(std::string("/ROOT/") +
-                           zpt::rest::to_str(_channel->received()["performative"]->integer()) +
+                           zpt::ontology::to_str(_channel->received()["performative"]->integer()) +
                            _channel->uri());
       });
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      1, "/ROOT/REPLY/{(.*)}", [=](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
+      1, "/ROOT/REPLY/{(.*)}", [this](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
           auto& _channel = _event->content();
           std::string _key{ "/REPLY" };
           _key.append(_channel->uri());
@@ -144,64 +144,4 @@ zpt::rest::engine::on_error(zpt::json& _path,
         _channel->to_send()["body"] << "backtrace" << zpt::split(std::string{ _backtrace }, "\n");
     }
     return true;
-}
-
-auto
-zpt::rest::to_str(zpt::performative _performative) -> std::string {
-    switch (_performative) {
-        case zpt::rest::Get: {
-            return "GET";
-        }
-        case zpt::rest::Put: {
-            return "PUT";
-        }
-        case zpt::rest::Post: {
-            return "POST";
-        }
-        case zpt::rest::Delete: {
-            return "DELETE";
-        }
-        case zpt::rest::Head: {
-            return "HEAD";
-        }
-        case zpt::rest::Options: {
-            return "OPTIONS";
-        }
-        case zpt::rest::Patch: {
-            return "PATCH";
-        }
-        case zpt::rest::Reply: {
-            return "REPLY";
-        }
-        case zpt::rest::Msearch: {
-            return "M-SEARCH";
-        }
-        case zpt::rest::Notify: {
-            return "NOTIFY";
-        }
-        case zpt::rest::Trace: {
-            return "TRACE";
-        }
-        case zpt::rest::Connect: {
-            return "CONNECT";
-        }
-    }
-    return "HEAD";
-}
-
-auto
-zpt::rest::from_str(std::string const& _performative) -> zpt::performative {
-    if (_performative == "GET" || _performative == "get") { return zpt::rest::Get; }
-    if (_performative == "PUT" || _performative == "put") { return zpt::rest::Put; }
-    if (_performative == "POST" || _performative == "post") { return zpt::rest::Post; }
-    if (_performative == "DELETE" || _performative == "delete") { return zpt::rest::Delete; }
-    if (_performative == "HEAD" || _performative == "head") { return zpt::rest::Head; }
-    if (_performative == "OPTIONS" || _performative == "options") { return zpt::rest::Options; }
-    if (_performative == "PATCH" || _performative == "patch") { return zpt::rest::Patch; }
-    if (_performative == "REPLY" || _performative == "reply") { return zpt::rest::Reply; }
-    if (_performative == "M-SEARCH" || _performative == "m-search") { return zpt::rest::Msearch; }
-    if (_performative == "NOTIFY" || _performative == "notify") { return zpt::rest::Notify; }
-    if (_performative == "TRACE" || _performative == "trace") { return zpt::rest::Msearch; }
-    if (_performative == "CONNECT" || _performative == "connect") { return zpt::rest::Connect; }
-    return 0;
 }

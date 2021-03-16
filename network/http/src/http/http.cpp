@@ -92,7 +92,7 @@ auto
 zpt::net::transport::http::set_method(zpt::exchange& _channel, zpt::http::rep& _response) const
   -> const zpt::net::transport::http& {
     if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
-    _channel->received() << "performative" << zpt::http::Reply;
+    _channel->received() << "performative" << zpt::Reply;
     return (*this);
 }
 

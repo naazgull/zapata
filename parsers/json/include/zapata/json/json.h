@@ -106,7 +106,10 @@ getopt(int _argc, char* _argv[]) -> zpt::json;
 auto
 setup(zpt::json _options) -> void;
 auto
-evaluate_ref(zpt::json _options, std::string const& _parent_key, zpt::json _parent) -> void;
+evaluate_ref(zpt::json _options,
+             std::string const& _parent_key,
+             zpt::json _parent,
+             std::string const& _file_config) -> void;
 auto
 file(std::string const& _file, zpt::json& _options) -> void;
 auto
