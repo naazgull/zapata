@@ -14,21 +14,21 @@ libzapata_json_la_SOURCES = \
 
 bin_PROGRAMS = zat zjson zinit
 
-zat_LDADD = -lpthread -lzapata-base -lzapata-json
+zat_LDADD = -lpthread -lzapata-base libzapata-json.la
 zat_LDFLAGS=
 zat_CPPFLAGS = -std=c++11 -Wall -I../../include
 
 zat_SOURCES = \
 zat.cpp
 
-zjson_LDADD = -lpthread -lzapata-base -lzapata-json
+zjson_LDADD = -lpthread -lzapata-base libzapata-json.la
 zjson_LDFLAGS=
 zjson_CPPFLAGS = -std=c++11 -Wall -I../../include
 
 zjson_SOURCES = \
 parser.cpp
 
-zinit_LDADD = -lpthread -lzapata-base -lzapata-json
+zinit_LDADD = -lpthread -lzapata-base libzapata-json.la
 zinit_LDFLAGS=
 zinit_CPPFLAGS = -std=c++11 -Wall -I../../include
 

@@ -18,8 +18,8 @@ libzapata_mysql_binlog_stream_la_SOURCES = \
 
 bin_PROGRAMS = zblreader
 
-zblreader_LDADD = -lpthread -lzapata-base -lzapata-json -lzapata-mysql-binlog-stream
-zblreader_LDFLAGS =  -L./.libs
+zblreader_LDADD = -lpthread -lzapata-base libzapata-mysql.la libzapata-mysql-binlog-stream.la
+zblreader_LDFLAGS =
 zblreader_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 zblreader_SOURCES = \

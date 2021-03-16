@@ -29,7 +29,7 @@ libzapata_base_la_SOURCES = \
 
 bin_PROGRAMS = zoc
 
-zoc_LDADD = -lpthread -lzapata-base
+zoc_LDADD = -lpthread libzapata-base.la
 zoc_LDFLAGS=
 zoc_CPPFLAGS = -std=c++11 -Wall -I../../include
 

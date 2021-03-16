@@ -9,8 +9,8 @@ libzapata_gen_la_SOURCES = \
 
 bin_PROGRAMS = zgen
 
-zgen_LDADD = -lpthread -lmagic -lzapata-json -lzapata-gen
-zgen_LDFLAGS =  -L../gen/.libs
+zgen_LDADD = -lpthread -lmagic -lzapata-json libzapata-gen.la
+zgen_LDFLAGS =
 zgen_CPPFLAGS = -O3 -std=c++11 -I../../include
 
 zgen_SOURCES = \
