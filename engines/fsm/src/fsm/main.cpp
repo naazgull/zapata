@@ -1,11 +1,27 @@
 #include <zapata/fsm.h>
 #include <random>
 
+class my_machine : public zpt::fsm::machine<my_machine, int, std::string, size_t> {
+  public:
+    my_machine()
+      : zpt::fsm::machine<my_machine, int, std::string, size_t>{
+          1,
+          __hazard_domain,
+          { "begin", 0, "end", 3, "undefined", -1, "pause", -2 }
+      } {}
+
+    auto verify_allowed_transition(int _from, int _to) -> void {}
+    auto verify_transition(int _current) -> void {}
+
+  private:
+    zpt::fsm::machine<my_machine, int, std::string, size_t>::hazard_domain __hazard_domain{ 2, 4 };
+};
+
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::fsm::machine<int, std::string, size_t> _sm{ 2, { "begin", 0, "end", 3, "undefined", -1 } };
+    my_machine _sm{};
     _sm //
-      ->add_allowed_transitions({
+      .add_allowed_transitions({
         zpt::array,
         { zpt::array, 0, { zpt::array, 1 } },    //
         { zpt::array, 1, { zpt::array, 2, 3 } }, //
@@ -45,12 +61,13 @@ main(int argc, char* argv[]) -> int {
           std::cout << _data << std::endl << std::flush;
           return -1;
       });
+    _sm.start_threads();
 
     size_t _c{ 0 };
     do {
         std::string _d{ "(N" + std::to_string(_c) + "/p" + std::string{ _c % 2 ? "1" : "2" } +
                         ") ·" };
-        _sm->begin(_d, _c);
+        _sm.begin(_d, _c);
         ++_c;
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 10 });
     } while (true);

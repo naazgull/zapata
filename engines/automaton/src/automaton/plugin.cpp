@@ -39,6 +39,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         zlog("Starting AUTOMATON engine", zpt::info);
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
         auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
+        _automaton.start_threads();
 
         zpt::this_thread::adaptive_timer<long, 5> _timer;
         size_t _serial{ 0 };
@@ -47,11 +48,11 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                 auto _stream = _polling.pop();
                 std::string _scheme{ _stream->transport() };
                 zpt::exchange _channel{ _stream };
-                _automaton->begin(_channel, zpt::json{ ++_serial });
+                _automaton.begin(_channel, zpt::json{ ++_serial });
                 _timer.reset();
             }
             catch (zpt::NoMoreElementsException const& _e) {
-                if (_automaton->is_shutdown_ongoing()) {
+                if (_automaton.is_shutdown_ongoing()) {
                     zlog("Exiting AUTOMATON router", zpt::trace);
                     return;
                 }

@@ -78,10 +78,13 @@ class hazard_ptr {
         bool __retire{ false };
     };
 
+    hazard_ptr();
     hazard_ptr(long _max_threads, long _ptr_per_thread);
     hazard_ptr(const hazard_ptr<T>& _rhs) = delete;
     hazard_ptr(hazard_ptr<T>&& _rhs) = delete;
     virtual ~hazard_ptr();
+
+    auto set_limits(long _max_threads, long _ptr_per_thread) -> hazard_ptr<T>&;
 
     auto operator=(const hazard_ptr<T>& _rhs) -> hazard_ptr<T>& = delete;
     auto operator=(hazard_ptr<T>&& _rhs) -> hazard_ptr<T>& = delete;
@@ -184,11 +187,25 @@ zpt::lf::hazard_ptr<T>::guard::target() const -> T* {
 }
 
 template<typename T>
-zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
-  : P{ _max_threads }
-  , K{ _ptr_per_thread }
-  , N{ P * K }
-  , R{ N } {
+zpt::lf::hazard_ptr<T>::hazard_ptr()
+  : P{ 0 }
+  , K{ 0 }
+  , N{ 0 }
+  , R{ 0 } {}
+
+template<typename T>
+zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread) {
+    this->set_limits(_max_threads, _ptr_per_thread);
+}
+
+template<typename T>
+zpt::lf::hazard_ptr<T>::~hazard_ptr() {
+    this->clear();
+}
+
+template<typename T>
+auto
+zpt::lf::hazard_ptr<T>::set_limits(long _max_threads, long _ptr_per_thread) -> hazard_ptr<T>& {
     expect(!zpt::lf::hazard_ptr<T>::__initialized.test_and_set(),
            "Hazard domain for type `" << typeid(T).name() << "` already initialized",
            500,
@@ -198,14 +215,14 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
            500,
            0);
     expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
+    this->P = _max_threads;
+    this->K = _ptr_per_thread;
+    this->N = this->P * this->K;
+    this->R = this->N;
     this->__hp = std::make_unique<zpt::padded_atomic<T*>[]>(this->N);
     this->__next_thr_idx = std::make_unique<zpt::padded_atomic<bool>[]>(this->P);
     this->init();
-}
-
-template<typename T>
-zpt::lf::hazard_ptr<T>::~hazard_ptr() {
-    this->clear();
+    return (*this);
 }
 
 template<typename T>
