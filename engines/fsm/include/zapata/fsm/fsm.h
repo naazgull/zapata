@@ -336,11 +336,5 @@ zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _conten
     this->trigger(this->__pause, _content);
 }
 
-template<typename S, typename D, typename I>
-auto
-zpt::fsm::machine<S, D, I>::set_states(zpt::json _states) -> zpt::fsm::machine<S, D, I>::engine_t& {
-    return this->__underlying.set_states(_states);
-}
-
 } // currentspace fsm
 } // nanespace zpt

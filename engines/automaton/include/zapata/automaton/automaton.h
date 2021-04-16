@@ -57,6 +57,7 @@ class engine : public zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::j
                          const char* _backtrace = nullptr,
                          int _error = -1,
                          int _status = 500) -> bool;
+
   private:
     zpt::json __configuration;
     hazard_domain __hazard_domain;

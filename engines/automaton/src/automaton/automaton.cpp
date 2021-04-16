@@ -99,15 +99,6 @@ zpt::automaton::engine::engine(long _processor_threads, zpt::json _configuration
 }
 
 auto
-zpt::automaton::engine::to_string() -> std::string {
-    std::ostringstream _oss;
-    _oss << static_cast<zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::json>*>(this)
-              ->to_string()
-         << std::flush;
-    return _oss.str();
-}
-
-auto
 zpt::automaton::engine::verify_allowed_transition(zpt::json _from, zpt::json _to) -> void {
     if (!this->__initialized) { return; }
     expect(_from != zpt::automaton::engine::receive() && _to != zpt::automaton::engine::send() &&
