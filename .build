@@ -8,6 +8,8 @@ then
 fi
 source .exclude.rc
 
+threads=$(grep -c ^processor /proc/cpuinfo)
+
 if [[ "$1" == "one" ]]
 then
     title="Processing '${2}'"
@@ -16,7 +18,7 @@ then
     echo ${title}
     echo ${underlines}
 
-	make -s -j4 -C ${2}/build && sudo make -s -C ${2}/build install
+	make -s -j$threads -C ${2}/build && sudo make -s -C ${2}/build install
 	if [[ $? != 0 ]]
 	then
 		exit -1
@@ -73,14 +75,14 @@ do
 
     case "${1}" in
 	all)
-	    make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
+	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
     from)
-	    make -s -j4 -C ${package}/build && sudo make -s -C ${package}/build install
+	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -108,7 +110,7 @@ do
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package}/build -j4 distcheck && sudo make -s -C ${package}/build install
+	    sudo make -s -C ${package}/build -j$threads distcheck && sudo make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
