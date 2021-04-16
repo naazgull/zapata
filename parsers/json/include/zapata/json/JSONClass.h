@@ -995,7 +995,7 @@ struct hash<zpt::json> {
 
 namespace zpt {
 struct compare {
-    auto operator() (zpt::json const& _lhs, zpt::json const& _rhs) const -> bool;
+    auto operator()(zpt::json const& _lhs, zpt::json const& _rhs) const -> bool;
 };
 }
 

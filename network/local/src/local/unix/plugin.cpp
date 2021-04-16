@@ -34,6 +34,11 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
     _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
+        expect(!zpt::file_exists(_config["path"]->string()),
+               "Unix socket '" << _config["path"]
+                               << "' already exists. Please, remove before reloading the plugin.",
+               500,
+               0);
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
           zpt::UNIX_SERVER_SOCKET(), _config["path"]->string());
 
@@ -50,7 +55,6 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
             }
             catch (zpt::failed_expectation const& _e) {
             }
-            unlink(_config["path"]->string().data());
             zlog("Stopping UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
         });
     }
@@ -62,5 +66,6 @@ _zpt_unload_(zpt::plugin& _plugin) {
     if (_config["path"]->ok()) {
         zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
         zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
+        unlink(_config["path"]->string().data());
     }
 }

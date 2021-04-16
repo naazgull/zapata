@@ -106,7 +106,7 @@ zpt::generate::r_uuid() -> std::string {
     uuid_gen.make(UUID_MAKE_V1);
     auto _generated = uuid_gen.string();
     std::string _return{ _generated };
-    free(_generated);
+    delete _generated;
     return _return;
 }
 
