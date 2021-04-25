@@ -88,6 +88,14 @@ class transport {
   public:
     class transport_t {
       public:
+        transport_t() = default;
+        transport_t(transport_t const&) = delete;
+        transport_t(transport_t&&) = delete;
+        virtual ~transport_t() = default;
+        
+        auto operator=(transport_t const&) -> transport_t& = delete;
+        auto operator=(transport_t&&) -> transport_t& = delete;
+
         virtual auto receive(zpt::exchange& _channel) const -> void = 0;
         virtual auto send(zpt::exchange& _channel) const -> void = 0;
         virtual auto resolve(zpt::json _uri) const -> zpt::exchange = 0;

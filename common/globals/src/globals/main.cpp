@@ -22,58 +22,58 @@
 
 #include <vector>
 #include <string>
-
-namespace zpt {
-auto
-copy(std::vector<std::string> const& _from, std::vector<std::string>& _to) -> void {
-    _to.clear();
-    for (auto _e : _from) { _to.push_back(_e); }
-}
-auto
-copy(std::string const& _from, std::string& _to) -> void {
-    _to.clear();
-    for (auto _e : _from) { _to.push_back(_e); }
-}
-}
-
 #include <zapata/globals.h>
-zpt::globals::cached<std::vector<std::string>> _global;
 
 auto
 main(int argc, char* argv[]) -> int {
+    zpt::cached<std::vector<std::string>> _global;
+    zpt::cached<std::vector<std::string>> _global2;
     _global->push_back("a");
     _global->push_back("b");
     _global->push_back("c");
+    _global2->push_back("1");
+    _global2->push_back("2");
+    _global2->push_back("3");
 
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
+        for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
     } };
     _thread1.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
-    _global.invalidate();
+    _global.commit();
+    _global2.commit();
 
     std::thread _thread2{ [&]() -> void {
         _global->push_back("d");
+        _global2->push_back("4");
         std::cout << "Thread2:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
+        for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
     } };
     _thread2.detach();
 
     std::thread _thread3{ [&]() -> void {
         _global->push_back("e");
-        _global.invalidate();
+        _global.commit();
         _global->push_back("f");
+        _global2->push_back("5");
+        _global2.commit();
+        _global2->push_back("6");
         std::cout << "Thread3:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
+        for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
     } };
     _thread3.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
 
     std::thread _thread4{ [&]() -> void {
         _global->push_back("g");
+        _global2->push_back("7");
         std::cout << "Thread4:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
+        for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
     } };
 
     _thread4.join();

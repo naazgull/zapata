@@ -1215,10 +1215,3 @@ auto
 std::hash<zpt::json>::operator()(zpt::json const& _json) const noexcept -> std::size_t {
     return _json->hash();
 }
-
-auto
-zpt::compare::operator()(zpt::json const& _lhs, zpt::json const& _rhs) const -> bool {
-    std::cout << _lhs << " < " << _rhs << " > " << std::boolalpha << (_lhs < _rhs) << std::endl
-              << std::flush;
-    return _lhs < _rhs;
-}

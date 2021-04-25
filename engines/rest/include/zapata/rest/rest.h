@@ -23,8 +23,8 @@
 #pragma once
 
 #include <zapata/startup.h>
-#include <zapata/pipeline.h>
 #include <zapata/transport.h>
+#include <zapata/pipeline.h>
 
 #define URI_PART_ANY "{([^/?]+)}"
 

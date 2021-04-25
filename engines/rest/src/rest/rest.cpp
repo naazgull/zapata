@@ -75,9 +75,17 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _channel = _event->content();
           auto& _transport = _layer.get(_channel->scheme());
-          _transport->send(_channel);
-          std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
-          if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
+          try {
+              _transport->send(_channel);
+              std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };
+              if (_channel->keep_alive()) { _polling.listen_on(_give_back); }
+          }
+          catch (zpt::failed_expectation const& _e) {
+              zlog(_e, zpt::emergency);
+          }
+          catch (std::exception const& _e) {
+              zlog(_e.what(), zpt::emergency);
+          }
       });
 }
 

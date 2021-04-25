@@ -19,6 +19,18 @@ zpt::lf::spin_lock::count_exclusive() -> long {
 }
 
 auto
+zpt::lf::spin_lock::count_shared_acquired_by_thread() -> long {
+    auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
+    return _count > 0 ? _count : 0;
+}
+
+auto
+zpt::lf::spin_lock::count_exclusive_acquired_by_thread() -> long {
+    auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
+    return _count < 0 ? -_count : 0;
+}
+
+auto
 zpt::lf::spin_lock::acquire_shared() -> zpt::lf::spin_lock& {
     auto& _count = zpt::lf::spin_lock::__acquired_spins[this];
     if (_count == 0) { this->spin_shared_lock(); }
