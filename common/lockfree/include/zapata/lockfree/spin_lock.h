@@ -39,10 +39,17 @@ class spin_lock {
     friend class zpt::lf::spin_lock::guard;
 
     spin_lock() = default;
+    spin_lock(zpt::lf::spin_lock const&) = delete;
+    spin_lock(zpt::lf::spin_lock&&) = delete;
     virtual ~spin_lock() = default;
+
+    auto operator=(zpt::lf::spin_lock const&) -> zpt::lf::spin_lock& = delete;
+    auto operator=(zpt::lf::spin_lock&&) -> zpt::lf::spin_lock& = delete;
 
     auto count_shared() -> long;
     auto count_exclusive() -> long;
+    auto count_shared_acquired_by_thread() -> long;
+    auto count_exclusive_acquired_by_thread() -> long;
     auto acquire_shared() -> zpt::lf::spin_lock&;
     auto acquire_exclusive() -> zpt::lf::spin_lock&;
     auto release_shared() -> zpt::lf::spin_lock&;

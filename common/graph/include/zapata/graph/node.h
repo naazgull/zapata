@@ -36,20 +36,22 @@ class node {
   public:
     node() = default;
     node(node const& _rhs);
-    node(node&& _rhs) = delete;
+    node(node&& _rhs);
     virtual ~node() = default;
 
     auto operator=(node const& _rhs) -> node&;
-    auto operator=(node&& _rhs) -> node& = delete;
+    auto operator=(node&& _rhs) -> node&;
+
+    auto clear() -> node&;
 
     template<typename I, typename M, typename... Types>
     auto eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool;
     template<typename I>
     auto merge(I _sequence, I _end, P _path, C _callback) -> bool;
 
-    auto to_string(uint _n_tabs = 0) -> std::string;
+    auto to_string(uint _n_tabs = 0) const -> std::string;
 
-    friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C>& _in) -> std::ostream& {
+    friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in) -> std::ostream& {
         _out << _in.to_string();
         return _out;
     }
@@ -71,12 +73,41 @@ zpt::tree::node<T, P, C>::node(zpt::tree::node<T, P, C> const& _rhs)
   , __callbacks{ _rhs.__callbacks } {}
 
 template<typename T, typename P, typename C>
+zpt::tree::node<T, P, C>::node(zpt::tree::node<T, P, C>&& _rhs)
+  : __children{ std::move(_rhs.__children) }
+  , __value{ std::move(_rhs.__value) }
+  , __path{ std::move(_rhs.__path) }
+  , __callbacks{ std::move(_rhs.__callbacks) } {
+    _rhs.clear();
+}
+
+template<typename T, typename P, typename C>
 auto
-zpt::tree::node<T, P, C>::operator=(node const& _rhs) -> zpt::tree::node<T, P, C>& {
+zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs)
+  -> zpt::tree::node<T, P, C>& {
     this->__children = _rhs.__children;
     this->__value = _rhs.__value;
     this->__path = _rhs.__path;
     this->__callbacks = _rhs.__callbacks;
+    return (*this);
+}
+
+template<typename T, typename P, typename C>
+auto
+zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs) -> zpt::tree::node<T, P, C>& {
+    this->__children = std::move(_rhs.__children);
+    this->__value = std::move(_rhs.__value);
+    this->__path = std::move(_rhs.__path);
+    this->__callbacks = std::move(_rhs.__callbacks);
+    _rhs.clear();
+    return (*this);
+}
+
+template<typename T, typename P, typename C>
+auto
+zpt::tree::node<T, P, C>::clear() -> zpt::tree::node<T, P, C>& {
+    this->__children.clear();
+    this->__callbacks.clear();
     return (*this);
 }
 
@@ -132,15 +163,11 @@ zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bo
 
 template<typename T, typename P, typename C>
 auto
-zpt::tree::node<T, P, C>::to_string(uint _n_tabs) -> std::string {
-    std::string _to_return{ _n_tabs, '\t' };
-    if (_n_tabs != 0) { _to_return.insert(_to_return.length(), "|"); }
-    _to_return.insert(_to_return.length(), "_ ");
-    _to_return.insert(_to_return.length(), this->__value);
-    _to_return.insert(_to_return.length(), "\n");
-    for (auto& _child : this->__children) {
-        std::string _child_str = _child.to_string(_n_tabs + 1);
-        _to_return.insert(_to_return.length(), _child_str);
-    }
-    return _to_return;
+zpt::tree::node<T, P, C>::to_string(uint _n_tabs) const -> std::string {
+    std::ostringstream _oss;
+    _oss << std::string(static_cast<size_t>(_n_tabs), '\t');
+    if (_n_tabs != 0) { _oss << "|"; }
+    _oss << "_ " << this->__value << std::endl << std::flush;
+    for (auto& _child : this->__children) { _oss << _child.to_string(_n_tabs + 1); }
+    return _oss.str();
 }

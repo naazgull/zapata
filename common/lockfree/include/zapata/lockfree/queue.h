@@ -339,18 +339,21 @@ zpt::lf::queue<T>::operator std::string() {
 
 template<typename T>
 zpt::lf::queue<T>::iterator::iterator(zpt::lf::forward_node<T>* _current)
-  : __initial(_current)
-  , __current(_current) {}
+  : __initial{ _current }
+  , __current{ _current } {}
 
 template<typename T>
 zpt::lf::queue<T>::iterator::iterator(const iterator& _rhs)
-  : __initial(_rhs.__initial)
-  , __current(_rhs.__current) {}
+  : __initial{ _rhs.__initial }
+  , __current{ _rhs.__current } {}
 
 template<typename T>
 zpt::lf::queue<T>::iterator::iterator(iterator&& _rhs)
-  : __initial(_rhs.__initial)
-  , __current(_rhs.__current) {}
+  : __initial{ _rhs.__initial }
+  , __current{ _rhs.__current } {
+    _rhs.__initial = nullptr;
+    _rhs.__current = nullptr;
+}
 
 template<typename T>
 typename zpt::lf::queue<T>::iterator&
@@ -365,6 +368,8 @@ typename zpt::lf::queue<T>::iterator&
 zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
     this->__initial = _rhs.__initial;
     this->__current = _rhs.__current;
+    _rhs.__initial = nullptr;
+    _rhs.__current = nullptr;
     return (*this);
 }
 

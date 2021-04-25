@@ -993,12 +993,6 @@ struct hash<zpt::json> {
 };
 }
 
-namespace zpt {
-struct compare {
-    auto operator()(zpt::json const& _lhs, zpt::json const& _rhs) const -> bool;
-};
-}
-
 /// Class `zpt::pretty` methods
 template<typename T>
 zpt::pretty::pretty(T _rhs) {

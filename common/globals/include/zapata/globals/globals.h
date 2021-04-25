@@ -27,55 +27,17 @@
 #include <typeinfo>
 
 namespace zpt {
-template<typename T>
-auto
-copy(T const& _from, T& _to) -> void;
-
 class globals {
   public:
     template<typename T, typename... Args>
     static auto alloc(ssize_t& _variable, Args... _args) -> T&;
     template<typename T, typename C = T>
-    static auto global_cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T&;
+    static auto cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T&;
     template<typename T>
     static auto get(ssize_t _variable) -> T&;
     template<typename T>
     static auto dealloc(ssize_t _variable) -> void;
     static inline auto to_string() -> std::string;
-
-    template<typename T>
-    class cached {
-      public:
-        template<typename... Args>
-        cached(Args... _args);
-        virtual ~cached();
-
-        auto invalidate() -> cached<T>&;
-        auto invalidate(T const& _new_value) -> cached<T>&;
-
-        auto operator->() -> T*;
-        auto operator*() -> T&;
-
-      private:
-        T __underlying;
-        zpt::lf::spin_lock __cache_guard{};
-        std::map<std::atomic<bool>*, bool> __cache_validation{};
-        zpt::lf::spin_lock __cache_validation_guard{};
-
-        auto instance() -> T&;
-
-        class thread_exit_guard {
-          public:
-            friend class zpt::globals::cached<T>;
-
-            thread_exit_guard(zpt::globals::cached<T>& _parent);
-            virtual ~thread_exit_guard();
-
-            zpt::globals::cached<T>& __parent;
-            std::atomic<bool> __cache_invalid{ true };
-        };
-        friend class zpt::globals::cached<T>::thread_exit_guard;
-    };
 
   private:
     static inline std::map<size_t, std::vector<void*>> __variables{};
@@ -103,7 +65,7 @@ zpt::globals::alloc(ssize_t& _variable, Args... _args) -> T& {
 
 template<typename T, typename C>
 auto
-zpt::globals::global_cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T& {
+zpt::globals::cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T& {
     expect(_variable == -1,
            "variable already assigned with identifier " << _variable << " for " << typeid(T).name(),
            500,
@@ -163,74 +125,4 @@ zpt::globals::to_string() -> std::string {
         for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
     }
     return _out.str();
-}
-
-template<typename T>
-template<typename... Args>
-zpt::globals::cached<T>::cached(Args... _args)
-  : __underlying{ _args... } {}
-
-template<typename T>
-zpt::globals::cached<T>::~cached() {}
-
-template<typename T>
-auto
-zpt::globals::cached<T>::invalidate() -> zpt::globals::cached<T>& {
-    return this->invalidate(this->instance());
-}
-
-template<typename T>
-auto
-zpt::globals::cached<T>::invalidate(T const& _new_value) -> zpt::globals::cached<T>& {
-    {
-        zpt::lf::spin_lock::guard _sentry{ this->__cache_guard, zpt::lf::spin_lock::exclusive };
-        zpt::copy(_new_value, this->__underlying);
-    }
-    {
-        zpt::lf::spin_lock::guard _sentry{ this->__cache_validation_guard,
-                                           zpt::lf::spin_lock::shared };
-        for (auto [_atomic, _] : this->__cache_validation) { _atomic->store(true); }
-    }
-    return (*this);
-}
-
-template<typename T>
-auto
-zpt::globals::cached<T>::operator->() -> T* {
-    return &this->instance();
-}
-
-template<typename T>
-auto
-zpt::globals::cached<T>::operator*() -> T& {
-    return this->instance();
-}
-
-template<typename T>
-auto
-zpt::globals::cached<T>::instance() -> T& {
-    static thread_local zpt::globals::cached<T>::thread_exit_guard _invalidate_cache{ *this };
-    static thread_local T _local_copy;
-    if (_invalidate_cache.__cache_invalid.exchange(false)) {
-        zpt::lf::spin_lock::guard _sentry{ this->__cache_guard, zpt::lf::spin_lock::shared };
-        zpt::copy(this->__underlying, _local_copy);
-    }
-    return _local_copy;
-}
-
-template<typename T>
-zpt::globals::cached<T>::thread_exit_guard::thread_exit_guard(zpt::globals::cached<T>& _parent)
-  : __parent{ _parent } {
-    zpt::lf::spin_lock::guard _sentry{ this->__parent.__cache_validation_guard,
-                                       zpt::lf::spin_lock::exclusive };
-    if (!this->__parent.__cache_validation[&this->__cache_invalid]) {
-        this->__parent.__cache_validation[&this->__cache_invalid] = true;
-    }
-}
-
-template<typename T>
-zpt::globals::cached<T>::thread_exit_guard::~thread_exit_guard() {
-    zpt::lf::spin_lock::guard _sentry{ this->__parent.__cache_validation_guard,
-                                       zpt::lf::spin_lock::exclusive };
-    this->__parent.__cache_validation.erase(&this->__cache_invalid);
 }
