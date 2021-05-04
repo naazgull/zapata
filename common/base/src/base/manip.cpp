@@ -344,8 +344,12 @@ zpt::crypto::gcm::aes::encrypt(std::string& _out,
     try {
 
         CryptoPP::GCM<CryptoPP::AES>::Encryption _enc;
+#ifdef CRYPTOPP_NO_GLOBAL_BYTE
+        _enc.SetKeyWithIV(
+          (const CryptoPP::byte*)_key.data(), _key.size(), (const CryptoPP::byte*)_iv.data());
+#else
         _enc.SetKeyWithIV((const byte*)_key.data(), _key.size(), (const byte*)_iv.data());
-
+#endif
         _out.clear();
 
         CryptoPP::StringSource(_in,
@@ -375,7 +379,12 @@ zpt::crypto::gcm::aes::decrypt(std::string& _out,
     try {
 
         CryptoPP::GCM<CryptoPP::AES>::Decryption _dec;
+#ifdef CRYPTOPP_NO_GLOBAL_BYTE
+        _dec.SetKeyWithIV(
+          (const CryptoPP::byte*)_key.data(), _key.size(), (const CryptoPP::byte*)_iv.data());
+#else
         _dec.SetKeyWithIV((const byte*)_key.data(), _key.size(), (const byte*)_iv.data());
+#endif
 
         _out.clear();
 

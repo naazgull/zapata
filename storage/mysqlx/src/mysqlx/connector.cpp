@@ -21,6 +21,7 @@
 */
 
 #include <zapata/mysqlx/connector.h>
+#include <zapata/mysqlx/translate.h>
 #include <algorithm>
 
 auto
@@ -363,7 +364,7 @@ zpt::storage::mysqlx::to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc {
 }
 
 auto
-zpt::storage::mysqlx::from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json {
+zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json {
     if (!_document.isNull()) {
         std::stringstream _ss;
         _document.print(_ss);

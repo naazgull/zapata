@@ -25,7 +25,7 @@
 #include <zapata/json.h>
 #include <zapata/connector.h>
 #include <zapata/mem/ref_ptr.h>
-#include <lmdb++.h>
+#include <lmdb.h>
 
 namespace zpt {
 namespace storage {
@@ -37,22 +37,6 @@ class collection;
 class action;
 class result;
 
-// auto
-// expression_operators() -> std::map<std::string, std::function<zpt::json(zpt::json,
-// std::string)>>&; auto bind_operators() -> std::map<std::string,
-// std::function<zpt::json(zpt::json)>>&; auto cast(zpt::json _expression) -> zpt::json; auto
-// cast(zpt::json _expression, std::string _cast) -> zpt::json;
-// auto
-// cast_to_db_value(zpt::json _value) -> ::lmdb::Value;
-
-// auto
-// evaluate_expression(zpt::json _expression, std::string _attribute) -> zpt::json;
-// auto
-// evaluate_bind(zpt::json _expression) -> zpt::json;
-// auto
-// to_search_str(zpt::json _search) -> std::string;
-// auto
-// to_binded_object(zpt::json _binded) -> zpt::json;
 auto
 to_db_key(zpt::json _document) -> std::string;
 auto
@@ -110,7 +94,7 @@ class database : public zpt::storage::database::type {
 class collection : public zpt::storage::collection::type {
   public:
     collection(zpt::storage::lmdb::database& _database, std::string const& _collection);
-    virtual ~collection() override = default;
+    virtual ~collection() override;
     virtual auto add(zpt::json _document) -> zpt::storage::action override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action override;
@@ -120,11 +104,11 @@ class collection : public zpt::storage::collection::type {
     virtual auto count() -> size_t override;
 
     virtual auto file() -> std::string&;
-    virtual auto env() -> ::lmdb::env&;
+    virtual auto env() -> MDB_env*;
     virtual auto is_to_commit() -> bool&;
 
   private:
-    ::lmdb::env __underlying;
+    MDB_env* __underlying;
     std::string __collection_name;
     std::string __collection_file;
     zpt::ref_ptr<bool> __commit;
@@ -135,7 +119,7 @@ class action : public zpt::storage::action::type {
     virtual ~action() override = default;
 
     virtual auto is_to_commit() -> bool&;
-    auto set_state(::lmdb::error const& _e) -> void;
+    auto set_state(int _error) -> void;
     auto get_state() -> zpt::json;
     auto is_filtered_out(zpt::json _search, zpt::json _to_filter) -> bool;
     auto trim(zpt::json _fields, zpt::json _to_trim) -> zpt::json;

@@ -142,7 +142,7 @@ to_binded_object(zpt::json _binded) -> zpt::json;
 auto
 to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
 auto
-from_db_doc(const ::mysqlx::DbDoc& _document) -> zpt::json;
+from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
 
 class connection : public zpt::storage::connection::type {
   public:

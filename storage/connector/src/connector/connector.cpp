@@ -235,6 +235,10 @@ zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _para
               ->limit(_params["page_size"])
               ->offset(_params["page_start_index"]);
         }
+        if (_params["page_start_index"]->ok()) {
+            _find //
+              ->offset(_params["page_start_index"]);
+        }
         return _find;
     }
     return _collection->find({});

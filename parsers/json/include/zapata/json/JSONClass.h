@@ -279,9 +279,12 @@ class JSONIterator {
 
     explicit JSONIterator(zpt::json const& _target, size_t _pos);
     JSONIterator(JSONIterator const& _rhs);
+    JSONIterator(JSONIterator&& _rhs);
     virtual ~JSONIterator() = default;
 
     // BASIC ITERATOR METHODS //
+    auto operator=(JSONIterator const& _rhs) -> JSONIterator&;
+    auto operator=(JSONIterator&& _rhs) -> JSONIterator&;
     auto operator++() -> JSONIterator&;
     auto operator*() -> reference;
     // END / BASIC ITERATOR METHODS //
@@ -313,7 +316,7 @@ class JSONIterator {
     }
 
   private:
-    zpt::json const& __target;
+    zpt::json __target;
     size_t __index;
     zpt::json::map::const_iterator __iterator;
 };

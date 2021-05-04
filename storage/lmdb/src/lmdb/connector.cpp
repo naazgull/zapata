@@ -23,6 +23,46 @@
 #include <zapata/lmdb/connector.h>
 #include <algorithm>
 
+#define mdb_expect(_error, _message)                                                               \
+    expect(_error == 0,                                                                            \
+           std::get<0>(__messages[_error])                                                         \
+             << ": " << _message << " due to: " << std::get<1>(__messages[_error]),                \
+           500,                                                                                    \
+           _error);
+
+std::map<int, std::tuple<std::string, std::string>> __messages = {
+    { MDB_PANIC,
+      { "MDB_PANIC", "a fatal error occurred earlier and the environment must be shut down." } },
+    { MDB_MAP_RESIZED,
+      { "MDB_MAP_RESIZED",
+        "another process wrote data beyond this MDB_env's mapsize and this environment's map must "
+        "be resized as well. See mdb_env_set_mapsize()." } },
+    { MDB_READERS_FULL,
+      { "MDB_READERS_FULL",
+        "a read-only transaction was requested and the reader lock table is full. See "
+        "mdb_env_set_maxreaders()." } },
+    { MDB_NOTFOUND,
+      { "MDB_NOTFOUND",
+        "the specified database doesn't exist in the environment and MDB_CREATE was not "
+        "specified." } },
+    { MDB_DBS_FULL,
+      { "MDB_DBS_FULL", "too many databases have been opened. See mdb_env_set_maxdbs()." } },
+    { MDB_MAP_FULL, { "MDB_MAP_FULL", "the database is full, see mdb_env_set_mapsize()." } },
+    { MDB_TXN_FULL, { "MDB_TXN_FULL", "the transaction has too many dirty pages." } },
+    { MDB_VERSION_MISMATCH,
+      { "MDB_VERSION_MISMATCH",
+        "the version of the LMDB library doesn't match the version that created the database "
+        "environment." } },
+    { MDB_INVALID, { "MDB_INVALID", "the environment file headers are corrupted." } },
+    { ENOENT, { "ENOENT", "the directory specified by the path parameter doesn't exist." } },
+    { EAGAIN, { "EAGAIN", "the environment was locked by another process." } },
+    { ENOSPC, { "ENOSPC", "no more disk space." } },
+    { EIO, { "EIO", "a low-level I/O error occurred while writing. " } },
+    { EACCES, { "EACCES", "an attempt was made to write in a read-only transaction." } },
+    { EINVAL, { "EINVAL", "an invalid parameter was specified." } },
+    { ENOMEM, { "ENOMEM", "out of memory." } }
+};
+
 auto
 zpt::storage::lmdb::to_db_key(zpt::json _document) -> std::string {
     return _document["_id"]->string();
@@ -115,13 +155,19 @@ zpt::storage::lmdb::database::collection(std::string const& _collection)
 
 zpt::storage::lmdb::collection::collection(zpt::storage::lmdb::database& _database,
                                            std::string const& _collection)
-  : __underlying{ ::lmdb::env::create() }
+  : __underlying{ nullptr }
   , __collection_name{ _collection }
   , __collection_file{ _database.path() + std::string{ "/" } + _collection + std::string{ ".mdb" } }
   , __commit{ _database.is_to_commit() } {
-    this->__underlying.set_mapsize(1UL * 1024UL * 1024UL * 1024UL); /* 1 GiB */
-    this->__underlying.open(this->__collection_file.data(), MDB_NOSUBDIR, 0664);
+    auto _error = mdb_env_create(&this->__underlying);
+    mdb_expect(_error, "unable to create environment");
+    _error = mdb_env_set_mapsize(this->__underlying, 1UL * 1024UL * 1024UL * 1024UL); /* 1 GiB */
+    mdb_expect(_error, "unable to set map size");
+    _error = mdb_env_open(this->__underlying, this->__collection_file.data(), MDB_NOSUBDIR, 0664);
+    mdb_expect(_error, "unable to open environment");
 }
+
+zpt::storage::lmdb::collection::~collection() { mdb_env_close(this->__underlying); }
 
 auto
 zpt::storage::lmdb::collection::add(zpt::json _document) -> zpt::storage::action {
@@ -151,16 +197,23 @@ zpt::storage::lmdb::collection::find(zpt::json _search) -> zpt::storage::action 
 
 auto
 zpt::storage::lmdb::collection::count() -> size_t {
-    try {
-        auto _read_trx = ::lmdb::txn::begin(this->__underlying.handle(), nullptr, MDB_RDONLY);
-        auto _dbi = ::lmdb::dbi::open(_read_trx, nullptr);
-        auto _count = _dbi.size(_read_trx);
-        _read_trx.abort();
-        return _count;
-    }
-    catch (...) {
-    }
-    return 0;
+    MDB_txn* _read_trx{ nullptr };
+    auto _error = mdb_txn_begin(this->__underlying, nullptr, MDB_RDONLY, &_read_trx);
+    mdb_expect(_error, "unable to create transaction");
+
+    MDB_dbi _dbi;
+    _error = mdb_dbi_open(_read_trx, nullptr, 0, &_dbi);
+    mdb_expect(_error, "unable to create db handle");
+
+    MDB_stat _stat;
+    _error = mdb_stat(_read_trx, _dbi, &_stat);
+    expect(_error == 0, "unable to retrieve statistics from database", 500, _error);
+
+    auto _count = _stat.ms_entries;
+
+    mdb_dbi_close(this->__underlying, _dbi);
+    mdb_txn_abort(_read_trx);
+    return _count;
 }
 
 auto
@@ -169,7 +222,7 @@ zpt::storage::lmdb::collection::file() -> std::string& {
 }
 
 auto
-zpt::storage::lmdb::collection::env() -> ::lmdb::env& {
+zpt::storage::lmdb::collection::env() -> MDB_env* {
     return this->__underlying;
 }
 
@@ -187,11 +240,14 @@ zpt::storage::lmdb::action::is_to_commit() -> bool& {
 }
 
 auto
-zpt::storage::lmdb::action::set_state(::lmdb::error const& _e) -> void {
-    this->__state = { "code",
-                      _e.code(),
-                      "message",
-                      std::string{ _e.origin() } + std::string{ ": " } + std::string{ _e.what() } };
+zpt::storage::lmdb::action::set_state(int _error) -> void {
+    if (_error != 0) {
+        this->__state = { "code",
+                          _error,
+                          "message",
+                          std::get<0>(__messages[_error]) + std::string{ ": " } +
+                            std::get<1>(__messages[_error]) };
+    }
 }
 
 auto
@@ -306,20 +362,33 @@ zpt::storage::lmdb::action_add::bind(zpt::json _map) -> zpt::storage::action::ty
 
 auto
 zpt::storage::lmdb::action_add::execute() -> zpt::storage::result {
+    MDB_txn* _trx{ nullptr };
+    MDB_dbi _dbi{ 0 };
     try {
-        auto _transaction = ::lmdb::txn::begin(this->__underlying->env().handle());
-        auto _dbi = ::lmdb::dbi::open(_transaction);
+        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, 0, &_trx);
+        mdb_expect(_error, "unable to create transaction");
+
+        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
+        mdb_expect(_error, "unable to create db handle");
+
         for (auto [_, __, _doc] : this->__to_add) {
-            ::lmdb::dbi_put(_transaction,
-                            _dbi,
-                            ::lmdb::val{ zpt::storage::lmdb::to_db_key(_doc).data() },
-                            ::lmdb::val{ zpt::storage::lmdb::to_db_doc(_doc).data() });
+            auto _key = zpt::storage::lmdb::to_db_key(_doc);
+            auto _value = zpt::storage::lmdb::to_db_doc(_doc);
+            MDB_val _key_v{ _key.length(), _key.data() };
+            MDB_val _value_v{ _value.length(), _value.data() };
+            _error = mdb_put(_trx, _dbi, &_key_v, &_value_v, 0);
+            mdb_expect(_error, "unable to store record in the database");
         }
-        _transaction.commit();
+
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        _error = mdb_txn_commit(_trx);
+        mdb_expect(_error, "unable to commit transaction");
     }
-    catch (::lmdb::error const& _e) {
-        this->set_state(_e);
-        this->__generated_uuid = zpt::json::array();
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
+        throw;
     }
     zpt::json _result{ "state", this->get_state(), "generated", this->__generated_uuid };
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
@@ -421,47 +490,70 @@ zpt::storage::lmdb::action_modify::bind(zpt::json _map) -> zpt::storage::action:
 auto
 zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
     size_t _count{ 0 };
-    try {
-        auto _transaction = ::lmdb::txn::begin(this->__underlying->env().handle());
-        auto _dbi = ::lmdb::dbi::open(_transaction);
-        auto _cursor = ::lmdb::cursor::open(_transaction, _dbi);
+    MDB_txn* _trx{ nullptr };
+    MDB_dbi _dbi{ 0 };
+    MDB_cursor* _cursor{ nullptr };
 
-        try {
+    try {
+        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, 0, &_trx);
+        mdb_expect(_error, "unable to create transaction");
+
+        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
+        mdb_expect(_error, "unable to create db handle");
+
+        if (this->__search["_id"]->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
-            ::lmdb::val _key{ _document_key };
-            ::lmdb::val _value;
-            if (::lmdb::dbi_get(_transaction.handle(), _dbi.handle(), _key, _value)) {
-                auto _doc =
-                  zpt::storage::lmdb::from_db_doc(_value.data()) + this->__set - this->__unset;
-                ::lmdb::dbi_put(_transaction,
-                                _dbi,
-                                ::lmdb::val{ zpt::storage::lmdb::to_db_key(_doc).data() },
-                                ::lmdb::val{ zpt::storage::lmdb::to_db_doc(_doc).data() });
-                ++_count;
-            }
-            _transaction.commit();
+            MDB_val _key{ _document_key.length(), _document_key.data() };
+            MDB_val _value_f;
+            _error = mdb_get(_trx, _dbi, &_key, &_value_f);
+            mdb_expect(_error, "unable to find the record");
+
+            auto _doc = zpt::storage::lmdb::from_db_doc(
+                          std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size }) +
+                        this->__set - this->__unset;
+            auto _value = zpt::storage::lmdb::to_db_doc(_doc);
+            MDB_val _value_v{ _value.length(), _value.data() };
+            _error = mdb_put(_trx, _dbi, &_key, &_value_v, 0);
+            mdb_expect(_error, "unable to store record in the database");
+            ++_count;
         }
-        catch (zpt::failed_expectation& _) {
-            std::string _key;
-            std::string _value;
-            while (_cursor.get(_key, _value, MDB_NEXT)) {
-                auto _object = zpt::storage::lmdb::from_db_doc(_value);
+        else {
+            _error = mdb_cursor_open(_trx, _dbi, &_cursor);
+            mdb_expect(_error, "unable to open cursor");
+
+            do {
+                MDB_val _key;
+                MDB_val _value_f;
+                _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
+                if (_error != 0 && _error != MDB_NOTFOUND) {
+                    mdb_expect(_error, "unable to retrieve from cursor");
+                }
+
+                auto _object = zpt::storage::lmdb::from_db_doc(
+                  std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
                 if (!this->is_filtered_out(this->__search, _object)) {
                     auto _doc = _object + this->__set - this->__unset;
-                    ::lmdb::dbi_put(_transaction,
-                                    _dbi,
-                                    ::lmdb::val{ zpt::storage::lmdb::to_db_key(_doc).data() },
-                                    ::lmdb::val{ zpt::storage::lmdb::to_db_doc(_doc).data() });
+
+                    auto _value = zpt::storage::lmdb::to_db_doc(_doc);
+                    MDB_val _value_v{ _value.length(), _value.data() };
+                    _error = mdb_put(_trx, _dbi, &_key, &_value_v, 0);
+                    mdb_expect(_error, "unable to store record in the database");
                     ++_count;
                 }
-            }
-            _cursor.close();
-            _transaction.commit();
+            } while (_error != MDB_NOTFOUND);
+            mdb_cursor_close(_cursor);
         }
+
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        _error = mdb_txn_commit(_trx);
+        mdb_expect(_error, "unable to commit transaction");
     }
-    catch (::lmdb::error const& _e) {
-        this->set_state(_e);
-        _count = 0;
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        mdb_cursor_close(_cursor);
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
+        throw;
     }
     zpt::json _result{ "state", this->get_state(), "modified", _count };
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
@@ -557,38 +649,65 @@ zpt::storage::lmdb::action_remove::bind(zpt::json _map) -> zpt::storage::action:
 auto
 zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
     size_t _count{ 0 };
-    try {
-        auto _transaction = ::lmdb::txn::begin(this->__underlying->env().handle());
-        auto _dbi = ::lmdb::dbi::open(_transaction);
-        auto _cursor = ::lmdb::cursor::open(_transaction, _dbi);
+    MDB_txn* _trx{ nullptr };
+    MDB_dbi _dbi{ 0 };
+    MDB_cursor* _cursor{ nullptr };
 
-        try {
+    try {
+        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, 0, &_trx);
+        mdb_expect(_error, "unable to create transaction");
+
+        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
+        mdb_expect(_error, "unable to create db handle");
+
+        if (this->__search["_id"]->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
-            ::lmdb::val _key{ _document_key };
-            if (::lmdb::dbi_del(_transaction.handle(), _dbi.handle(), _key)) { ++_count; }
-            _transaction.commit();
+            MDB_val _key{ _document_key.length(), _document_key.data() };
+            _error = mdb_del(_trx, _dbi, &_key, nullptr);
+            if (_error != 0 && _error != MDB_NOTFOUND) {
+                mdb_expect(_error, "unable to remove the record");
+            }
+            else if (_error == 0) {
+                ++_count;
+            }
         }
-        catch (zpt::failed_expectation& _) {
-            std::string _key;
-            std::string _value;
-            while (_cursor.get(_key, _value, MDB_NEXT)) {
-                auto _doc = zpt::storage::lmdb::from_db_doc(_value);
-                if (!this->is_filtered_out(this->__search, _doc)) {
-                    if (::lmdb::dbi_del(
-                          _transaction.handle(),
-                          _dbi.handle(),
-                          ::lmdb::val{ zpt::storage::lmdb::to_db_key(_doc).data() })) {
+        else {
+            _error = mdb_cursor_open(_trx, _dbi, &_cursor);
+            mdb_expect(_error, "unable to open cursor");
+
+            do {
+                MDB_val _key;
+                MDB_val _value_f;
+
+                _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
+                if (_error != 0 && _error != MDB_NOTFOUND) {
+                    mdb_expect(_error, "unable to retrieve from cursor");
+                }
+                auto _object = zpt::storage::lmdb::from_db_doc(
+                  std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
+                if (!this->is_filtered_out(this->__search, _object)) {
+                    _error = mdb_del(_trx, _dbi, &_key, nullptr);
+                    if (_error != 0 && _error != MDB_NOTFOUND) {
+                        mdb_expect(_error, "unable to remove the record");
+                    }
+                    else if (_error == 0) {
                         ++_count;
                     }
                 }
-            }
-            _cursor.close();
-            _transaction.commit();
+            } while (_error != MDB_NOTFOUND);
+            mdb_cursor_close(_cursor);
         }
+
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        _error = mdb_txn_commit(_trx);
+        mdb_expect(_error, "unable to commit transaction");
     }
-    catch (::lmdb::error const& _e) {
-        this->set_state(_e);
-        _count = 0;
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        mdb_cursor_close(_cursor);
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
+        throw;
     }
     zpt::json _result{ "state", this->get_state(), "removed", _count };
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
@@ -686,20 +805,31 @@ zpt::storage::lmdb::action_replace::bind(zpt::json _map) -> zpt::storage::action
 auto
 zpt::storage::lmdb::action_replace::execute() -> zpt::storage::result {
     size_t _count{ 0 };
-    try {
-        auto _transaction = ::lmdb::txn::begin(this->__underlying->env().handle());
-        auto _dbi = ::lmdb::dbi::open(_transaction);
+    MDB_txn* _trx{ nullptr };
+    MDB_dbi _dbi{ 0 };
 
-        ::lmdb::dbi_put(_transaction,
-                        _dbi,
-                        ::lmdb::val{ this->__id.data() },
-                        ::lmdb::val{ zpt::storage::lmdb::to_db_doc(this->__set).data() });
-        _transaction.commit();
-        ++_count;
+    try {
+        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, 0, &_trx);
+        mdb_expect(_error, "unable to create transaction");
+
+        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
+        mdb_expect(_error, "unable to create db handle");
+
+        auto _value = zpt::storage::lmdb::to_db_doc(this->__set);
+        MDB_val _key_v{ this->__id.length(), this->__id.data() };
+        MDB_val _value_v{ _value.length(), _value.data() };
+        _error = mdb_put(_trx, _dbi, &_key_v, &_value_v, 0);
+        mdb_expect(_error, "unable to store record in the database");
+
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        _error = mdb_txn_commit(_trx);
+        mdb_expect(_error, "unable to commit transaction");
     }
-    catch (::lmdb::error const& _e) {
-        this->set_state(_e);
-        _count = 0;
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
+        throw;
     }
     zpt::json _result{ "state", this->get_state(), "replaced", _count };
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
@@ -812,38 +942,60 @@ zpt::storage::lmdb::action_find::bind(zpt::json _map) -> zpt::storage::action::t
 auto
 zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
     auto _found = zpt::json::array();
-    try {
-        auto _transaction =
-          ::lmdb::txn::begin(this->__underlying->env().handle(), nullptr, MDB_RDONLY);
-        auto _dbi = ::lmdb::dbi::open(_transaction);
-        auto _cursor = ::lmdb::cursor::open(_transaction, _dbi);
+    MDB_txn* _trx{ nullptr };
+    MDB_dbi _dbi{ 0 };
+    MDB_cursor* _cursor{ nullptr };
 
-        try {
+    MDB_envinfo _stat;
+    mdb_env_info(this->__underlying->env(), &_stat);
+    try {
+        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, MDB_RDONLY, &_trx);
+        mdb_expect(_error, "unable to create transaction");
+
+        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
+        mdb_expect(_error, "unable to create db handle");
+
+        if (this->__search["_id"]->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
-            ::lmdb::val _key{ _document_key };
-            ::lmdb::val _value;
-            if (::lmdb::dbi_get(_transaction.handle(), _dbi.handle(), _key, _value)) {
-                _found << zpt::storage::lmdb::from_db_doc(_value.data());
-            }
+            MDB_val _key{ _document_key.length(), _document_key.data() };
+            MDB_val _value_f;
+            _error = mdb_get(_trx, _dbi, &_key, &_value_f);
+            mdb_expect(_error, "unable to find the record");
+
+            _found << zpt::storage::lmdb::from_db_doc(
+              std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
         }
-        catch (zpt::failed_expectation& _) {
-            std::string _key;
-            std::string _value;
-            size_t _offset{ 0 };
-            while (_cursor.get(_key, _value, MDB_NEXT)) {
-                auto _object = zpt::storage::lmdb::from_db_doc(_value);
-                if (!this->is_filtered_out(this->__search, _object)) {
-                    ++_offset;
-                    if (_offset > this->__offset) { _found << this->trim(this->__fields, _object); }
+        else {
+            _error = mdb_cursor_open(_trx, _dbi, &_cursor);
+            mdb_expect(_error, "unable to open cursor");
+            mdb_cursor_get(_cursor, nullptr, nullptr, MDB_FIRST);
+
+            size_t _consumed{ 0 };
+            do {
+                MDB_val _key;
+                MDB_val _value_f;
+                _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
+                if (_error != 0 && _error != MDB_NOTFOUND) {
+                    mdb_expect(_error, "unable to retrieve from cursor");
                 }
-                if (_found->size() >= this->__limit) { break; }
-            }
+                ++_consumed;
+                if (_error == 0 && _consumed > this->__offset) {
+                    _found << zpt::storage::lmdb::from_db_doc(
+                      std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
+                }
+            } while (_error == 0 && _found->size() != this->__limit);
+            mdb_cursor_close(_cursor);
         }
-        _cursor.close();
-        _transaction.abort();
+
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
     }
-    catch (::lmdb::error const& _e) {
-        this->set_state(_e);
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        mdb_cursor_close(_cursor);
+        mdb_dbi_close(this->__underlying->env(), _dbi);
+        mdb_txn_abort(_trx);
+        throw;
     }
     zpt::json _result{ "state", this->get_state(), "cursor", _found };
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
@@ -859,7 +1011,7 @@ zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
     for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
          ++this->__current, ++_fetched) {
         _result << std::get<2>(*this->__current);
-        if (_fetched == _amount) { break; }
+        if (_amount != 0 && _fetched == _amount) { break; }
     }
     return _result;
 }

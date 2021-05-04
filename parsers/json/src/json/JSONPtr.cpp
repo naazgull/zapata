@@ -1074,6 +1074,30 @@ zpt::JSONIterator::JSONIterator(JSONIterator const& _rhs)
   , __index{ _rhs.__index }
   , __iterator{ _rhs.__iterator } {}
 
+zpt::JSONIterator::JSONIterator(JSONIterator&& _rhs)
+  : __target{ std::move(_rhs.__target) }
+  , __index{ _rhs.__index }
+  , __iterator{ std::move(_rhs.__iterator) } {
+    _rhs.__index = 0;
+}
+
+auto
+zpt::JSONIterator::operator=(JSONIterator const& _rhs) -> JSONIterator& {
+    this->__target = _rhs.__target;
+    this->__index = _rhs.__index;
+    this->__iterator = _rhs.__iterator;
+    return (*this);
+}
+
+auto
+zpt::JSONIterator::operator=(JSONIterator&& _rhs) -> JSONIterator& {
+    this->__target = std::move(_rhs.__target);
+    this->__index = _rhs.__index;
+    this->__iterator = std::move(_rhs.__iterator);
+    _rhs.__index = 0;
+    return (*this);
+}
+
 auto
 zpt::JSONIterator::operator++() -> JSONIterator& {
     ++this->__index;

@@ -54,8 +54,13 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
             for (auto [_, _key, _value] : _uri["params"]) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
-                _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
-                     << std::flush;
+                if (_value->is_object() && _value["name"]->ok()) {
+                    _oss << _key << "=" << zpt::uri::function::to_string(_value) << std::flush;
+                }
+                else {
+                    _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
+                         << std::flush;
+                }
             }
         }
         if (_uri["anchor"]->ok()) { _oss << "#" << _uri["anchor"]->string() << std::flush; }
@@ -134,132 +139,24 @@ zpt::uri::path::to_string(zpt::json _uri) -> std::string {
     return _oss.str();
 }
 
-// auto
-// zpt::uri::parse(std::string const& _uri) -> zpt::json {
-//     if (_uri.find("://") == std::string::npos) {
-//         if (_uri[0] == '/') {
-//             _uri = std::string("zpt://127.0.0.1") + _uri;
-//         }
-//         else {
-//             _uri = std::string("zpt://") + _uri;
-//         }
-//     }
-//     static const std::regex _uri_rgx("([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]*):" // scheme:
-//                                      "([/]{1,2})([^/]+)"                     // authority
-//                                      "([^?#]*)"                              // path
-//                                      "(?:\\?([^#]*))?"                       // ?query
-//                                      "(?:#(.*))?"                            // #fragment
-//     );
-
-//     std::smatch _uri_matches;
-//     std::regex_match(_uri, _uri_matches, _uri_rgx);
-
-//     std::string _q_str = (std::string)_uri_matches[6];
-//     zpt::json _query = zpt::uri::query::parse(_q_str);
-//     zpt::json _authority = zpt::uri::authority::parse((std::string)_uri_matches[4]);
-//     std::string _scheme = (std::string)_uri_matches[2];
-
-//     return { "type",
-//              (((std::string)_uri_matches[1]).length() == 0
-//                 ? zpt::undefined
-//                 : zpt::json::string((std::string)_uri_matches[1])),
-//              "scheme",
-//              _scheme,
-//              "scheme_parts",
-//              zpt::split(_scheme, "+"),
-//              "authority",
-//              (std::string)_uri_matches[4],
-//              "domain",
-//              _authority["domain"],
-//              "port",
-//              _authority["port"],
-//              "user",
-//              _authority["user"],
-//              "password",
-//              _authority["password"],
-//              "path",
-//              (std::string)_uri_matches[5],
-//              "query",
-//              (_query->size() != 0 ? _query : zpt::undefined),
-//              "fragment",
-//              zpt::url::r_decode((std::string)_uri_matches[7]) };
-// }
-
-// auto
-// zpt::uri::query::parse(std::string const& _query) -> zpt::json {
-//     static const std::regex _rgx("(^|&)"      // start of query or start of parameter "&"
-//                                  "([^=&]*)=?" // parameter name and "=" if value is expected
-//                                  "([^=&]*)"   // parameter value
-//                                  "(?=(&|$))"  // forward reference, next should be end of query
-//                                  or
-//                                               // start of next parameter
-//     );
-
-//     zpt::json _return = zpt::json::object();
-//     auto _begin = std::sregex_iterator(_query.begin(), _query.end(), _rgx);
-//     auto _end = std::sregex_iterator();
-//     for (auto _i = _begin; _i != _end; ++_i) {
-//         std::smatch _match = *_i;
-//         _return << (std::string)_match[2] << zpt::url::r_decode((std::string)_match[3]);
-//     }
-
-//     return _return;
-// }
-
-// auto
-// zpt::uri::authority::parse(std::string const& _authority) -> zpt::json {
-//     static const std::regex _auth_rgx("(([^:]+):([^@]+)@)?" // username and password
-//                                       "([^:]+):?"           // domain
-//                                       "(.*)"                // port
-//     );
-
-//     std::smatch _match;
-//     std::regex_match(_authority, _match, _auth_rgx);
-//     std::string _port = ((std::string)_match[5]);
-//     std::string _user = ((std::string)_match[2]);
-//     std::string _password = ((std::string)_match[3]);
-
-//     zpt::json _return{
-//         "domain",   ((std::string)_match[4]),
-//         "port",     (_port.length() != 0 ? zpt::json::string(_port) : zpt::undefined),
-//         "user",     (_user.length() != 0 ? zpt::json::string(_user) : zpt::undefined),
-//         "password", (_password.length() != 0 ? zpt::json::string(_password) : zpt::undefined)
-//     };
-//     return _return;
-// }
-
-// auto
-// zpt::uri::to_str(zpt::json _uri, zpt::json _opts) -> std::string {
-//     std::string _authority =
-//       ((_uri["authority"]->ok()
-//           ? std::string(_uri["authority"])
-//           : (((!_opts["user"]->ok() || bool(_opts["user"])) && _uri["user"]->ok()
-//                 ? std::string(_uri["user"]) +
-//                     ((!_opts["password"]->ok() || bool(_opts["password"])) &&
-//                     _uri["password"]->ok()
-//                        ? std::string(":") + std::string(_uri["password"])
-//                        : std::string("")) +
-//                     std::string("@")
-//                 : std::string("")) +
-//              std::string(_uri["address"]) +
-//              ((!_opts["port"]->ok() || bool(_opts["port"])) && _uri["port"]->ok()
-//                 ? std::string(":") + std::string(_uri["port"])
-//                 : std::string("")))));
-//     std::string _query;
-//     if ((!_opts["query"]->ok() || bool(_opts["query"])) && _uri["query"]->is_object() &&
-//         _uri["query"]->size() != 0) {
-//         _query += std::string("?");
-//         for (auto [_idx, _key, _p] : _uri["query"]) {
-//             if (_query.length() != 1) {
-//                 _query += std::string("&");
-//             }
-//             _query += _key + std::string("=") + zpt::url::r_encode(_p);
-//         }
-//     }
-//     std::string _fragment;
-//     if ((!_opts["fragment"]->ok() || bool(_opts["fragment"])) && _uri["fragment"]->is_string()) {
-//         _fragment += std::string("#") + std::string(_uri["fragment"]);
-//     }
-//     return std::string(_uri["scheme"]) + std::string("://") + _authority +
-//            std::string(_uri["path"]) + _query + _fragment;
-// }
+auto
+zpt::uri::function::to_string(zpt::json _function) -> std::string {
+    expect(_function->is_object() && _function["name"]->ok(),
+           "not a valid URI parameter function representation",
+           412,
+           0);
+    std::ostringstream _oss;
+    _oss << _function["name"]->string() << "(" << std::flush;
+    auto _first{ true };
+    for (auto [_, __, _arg] : _function["args"]) {
+        if (!_first) { _oss << ","; }
+        if (_arg->is_object() && _arg["name"]->ok()) {
+            _oss << zpt::uri::function::to_string(_arg);
+        }
+        else {
+            _oss << static_cast<std::string>(_arg);
+        }
+    }
+    _oss << ")" << std::flush;
+    return _oss.str();
+}
