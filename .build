@@ -118,7 +118,8 @@ do
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package}/build -j$threads distcheck && sudo make -s -C ${package}/build install
+        export CPP_STD_VERSION=${cxx_std_version}
+	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build -j$threads distcheck && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
