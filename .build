@@ -9,6 +9,14 @@ fi
 source .exclude.rc
 
 threads=$(grep -c ^processor /proc/cpuinfo)
+cxx_compiler=g++
+cxx_version=$(${cxx_compiler} --version | head -n 1 | tr " " "\n" | tail -n 1 | tr "." "\n" | head -n 1)
+if [ ${cxx_version} -lt 10 ]
+then
+    cxx_std_version="-std=c++17"
+else
+    cxx_std_version="-std=c++20"
+fi
 
 if [[ "$1" == "one" ]]
 then
@@ -123,7 +131,7 @@ do
 	config)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -133,7 +141,7 @@ do
 	debug)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1

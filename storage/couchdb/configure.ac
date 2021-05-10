@@ -43,6 +43,8 @@ dnl Check if Libtool is present
 dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
+AC_SUBST([CPP_STD_VERSION])
+
 AC_CONFIG_FILES(Makefile
         debian/Makefile
         include/Makefile

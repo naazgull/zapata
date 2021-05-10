@@ -21,6 +21,7 @@
 */
 
 #include <zapata/base/performative.h>
+#include <algorithm>
 
 auto
 zpt::ontology::to_str(zpt::performative _performative) -> std::string {

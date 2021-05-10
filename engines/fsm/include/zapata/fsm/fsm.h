@@ -28,11 +28,13 @@
 namespace zpt {
 namespace fsm {
 
+#if __GNUC__ >= 10
 template<typename C, typename S>
 concept machine_override = requires(C _c, S _s) {
     { _c.verify_allowed_transition(_s, _s) };
     { _c.verify_transition(_s) };
 };
+#endif
 
 template<typename D, typename I>
 using payload = std::tuple<D, I>;
