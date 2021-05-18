@@ -30,11 +30,12 @@ class memory_pool {
     memory_pool(size_t _memory_size);
     virtual ~memory_pool();
 
-    auto allocate(size_t _bytes) -> unsigned char*;
-    auto dispose(unsigned char* _ptr, size_t bytes);
+    auto acquire(size_t _bytes) -> unsigned char*;
+    auto restore(unsigned char* _ptr, size_t bytes);
 
   private:
     unsigned char* __underlying{ nullptr };
+    std::atomic<size_t> __
 };
 template<typename T>
 class allocator {

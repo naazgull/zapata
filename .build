@@ -18,6 +18,8 @@ else
     cxx_std_version="-std=c++20"
 fi
 
+env_variables="CPP_STD_VERSION=${cxx_std_version}"
+
 if [[ "$1" == "one" ]]
 then
     title="Processing '${2}'"
@@ -83,43 +85,43 @@ do
 
     case "${1}" in
 	all)
-	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
+	    ${env_variables} make -s -j$threads -C ${package}/build && sudo ${env_variables} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
     from)
-	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
+	    ${env_variables} make -s -j$threads -C ${package}/build && sudo ${env_variables} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
         ;;
 	single)
-	    make -s -C ${package}/build && sudo make -s -C ${package}/build install
+	    ${env_variables} make -s -C ${package}/build && sudo ${env_variables} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	clean)
-	    make -s -C ${package}/build clean
+	    ${env_variables} make -s -C ${package}/build clean
 	    ;;
 	install)
-	    sudo make -s -C ${package}/build install
+	    sudo ${env_variables} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make -s -C ${package}/build uninstall
+	    sudo ${env_variables} make -s -C ${package}/build uninstall
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
         export CPP_STD_VERSION=${cxx_std_version}
-	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build -j$threads distcheck && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+	    sudo ${env_variables} make -s -C ${package}/build -j$threads distcheck && sudo ${env_variables} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -127,12 +129,12 @@ do
 	    ;;
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package}/build distclean
+	    sudo ${env_variables} make -s -C ${package}/build distclean
 	    ;;
 	config)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ${env_variables} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -142,7 +144,7 @@ do
 	debug)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    rm -rf build && autoreconf -vfi && mkdir build && cd build && ${env_variables} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -151,7 +153,7 @@ do
 	    ;;
 	package)
         pushd ${package} > /dev/null
-	    ./make_deb
+	    ${env_variables} ./make_deb
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
