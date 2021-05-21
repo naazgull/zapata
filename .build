@@ -83,38 +83,38 @@ do
 
     case "${1}" in
 	all)
-	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} make -s -j$threads -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
     from)
-	    make -s -j$threads -C ${package}/build && sudo make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} make -s -j$threads -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
         ;;
 	single)
-	    make -s -C ${package}/build && sudo make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	clean)
-	    make -s -C ${package}/build clean
+	    CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build clean
 	    ;;
 	install)
-	    sudo make -s -C ${package}/build install
+	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo make -s -C ${package}/build uninstall
+	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build uninstall
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
@@ -127,7 +127,7 @@ do
 	    ;;
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo make -s -C ${package}/build distclean
+	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build distclean
 	    ;;
 	config)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
@@ -151,7 +151,8 @@ do
 	    ;;
 	package)
         pushd ${package} > /dev/null
-	    ./make_deb
+        export CPP_STD_VERSION=${cxx_std_version}
+        ./make_deb
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
