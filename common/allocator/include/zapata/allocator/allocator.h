@@ -23,6 +23,7 @@
 
 #include <stddef.h>
 #include <map>
+#include <atomic>
 
 namespace zpt {
 class memory_pool {
@@ -35,8 +36,9 @@ class memory_pool {
 
   private:
     unsigned char* __underlying{ nullptr };
-    std::atomic<size_t> __
+    // std::atomic<size_t> __
 };
+
 template<typename T>
 class allocator {
   public:
