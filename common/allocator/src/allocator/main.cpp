@@ -21,7 +21,49 @@
 */
 #include <zapata/allocator/allocator.h>
 
+#include <string>
+#include <memory>
+
 auto
 main(int argc, char* argv[]) -> int {
+    zpt::allocator<std::string> _alloc{ 128 };
+
+    std::shared_ptr<std::string> _shr_ptr =
+      std::allocate_shared<std::string, zpt::allocator<std::string>>(_alloc);
+    _shr_ptr->assign("hello world");
+
+    using traits_t = std::allocator_traits<decltype(_alloc)>;
+
+    std::string* _ptr1 = traits_t::allocate(_alloc, 2);
+    traits_t::construct(_alloc, _ptr1, "foo");
+    traits_t::construct(_alloc, _ptr1 + 1, "bar");
+
+    std::string* _ptr2 = traits_t::allocate(_alloc, 1);
+    traits_t::construct(_alloc, _ptr2, "hello!");
+
+    std::cout << _alloc << std::endl << std::endl;
+    std::cout << _ptr1[0] << ' ' << _ptr1[1] << std::endl << std::endl;
+    std::cout << *_ptr2 << std::endl << std::endl;
+
+    std::string* _ptr3{ nullptr };
+    do {
+        try {
+            _ptr3 = traits_t::allocate(_alloc, 1);
+            traits_t::construct(_alloc, _ptr3, "hello!");
+            break;
+        }
+        catch (std::bad_alloc const& _e) {
+            traits_t::destroy(_alloc, _ptr2);
+            traits_t::deallocate(_alloc, _ptr2, 1);
+        }
+    } while (true);
+    std::cout << _alloc << std::endl << std::endl;
+
+    traits_t::destroy(_alloc, _ptr1 + 1);
+    traits_t::destroy(_alloc, _ptr1);
+    traits_t::deallocate(_alloc, _ptr1, 2);
+    traits_t::destroy(_alloc, _ptr3);
+    traits_t::deallocate(_alloc, _ptr3, 1);
+    std::cout << _alloc << std::endl << std::endl;
     return 0;
 }

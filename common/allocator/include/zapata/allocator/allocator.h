@@ -22,21 +22,36 @@
 #pragma once
 
 #include <stddef.h>
+#include <vector>
 #include <map>
 #include <atomic>
+#include <memory>
+
+#include <zapata/base/expect.h>
 
 namespace zpt {
-class memory_pool {
+template<typename T>
+class object_pool {
   public:
-    memory_pool(size_t _memory_size);
-    virtual ~memory_pool();
+    using pointer_type = unsigned char*;
 
-    auto acquire(size_t _bytes) -> unsigned char*;
-    auto restore(unsigned char* _ptr, size_t bytes);
+    object_pool(size_t _max_memory);
+    virtual ~object_pool();
+
+    auto acquire(size_t _n = 1) -> pointer_type;
+    auto restore(pointer_type _ptr, size_t _n = 1) -> void;
+    auto restore(T* _ptr) -> void;
+    auto count() const -> unsigned long long;
+    auto to_string() const -> std::string;
 
   private:
-    unsigned char* __underlying{ nullptr };
-    // std::atomic<size_t> __
+    std::map<size_t, size_t> __available;
+    alignas(T) std::unique_ptr<unsigned char[]> __underlying{ nullptr };
+    size_t __max_size{ 0 };
+    size_t __current_addr{ 0 };
+    std::atomic<unsigned long long> __object_count{ 0 };
+
+    auto normalize(std::map<size_t, size_t>::iterator& _added) -> void;
 };
 
 template<typename T>
@@ -44,9 +59,12 @@ class allocator {
   public:
     using value_type = T;
     using pointer = value_type*;
+    using const_pointer = value_type const*;
     using size_type = size_t;
 
-    allocator(zpt::memory_pool& _mem);
+    allocator(size_t _max_memory);
+    template<class U>
+    constexpr allocator(zpt::allocator<U> const&) noexcept;
     allocator(zpt::allocator<T> const& _rhs);
     allocator(zpt::allocator<T>&& _rhs);
     virtual ~allocator() = default;
@@ -60,90 +78,204 @@ class allocator {
      */
     auto allocate(size_type _n) -> pointer;
     /**
-      Same as a.allocate(n), but may use cvp (nullptr or a pointer obtained
-      from a.allocate()) in unspecified manner to aid locality.
-    */
-    auto allocate(size_type _n, pointer const _adjacent_to) -> pointer;
-    /**
       Deallocates storage pointed to p, which must be a value returned by a
       previous call to allocate that has not been invalidated by an intervening
       call to deallocate. n must match the value previously passed to
       allocate. Does not throw exceptions.
      */
     auto deallocate(pointer _to_deallocate, size_type _n) -> void;
-    /**
-      The largest value that can be passed to allocate().
-     */
-    auto max_size() -> size_type;
-    /**
-      Constructs an object of type X in previously-allocated storage at the
-      address pointed to by xp, using args as the constructor arguments.
-     */
-    template<class C, typename... Args>
-    auto construct(C* _object, Args... _args) -> void;
-    /**
-      Destructs an object of type X pointed to by xp, but does not
-      deallocate any storage.
-     */
-    template<class C>
-    auto destroy(C* _object) -> void;
+    auto max_memory_size() const -> size_type;
+    auto to_string() const -> std::string;
+
+    friend auto operator<<(std::ostream& _out, zpt::allocator<T> const& _in) -> std::ostream& {
+        _out << _in.to_string() << std::flush;
+        return _out;
+    }
 
   private:
-    // std::map<T*, size_t> __allocated;
-    zpt::memory_pool& __memory_pool;
+    size_t __max_size{ 0 };
+
+    auto get_pool() -> zpt::object_pool<T>&;
+    auto get_pool() const -> zpt::object_pool<T> const&;
+    static auto get_pool(size_t _max_memory) -> zpt::object_pool<T>&;
 };
 } // namespace zpt
 
 template<typename T>
-zpt::allocator<T>::allocator(zpt::memory_pool& _mem)
-  : __memory_pool{ _mem } {}
+zpt::object_pool<T>::object_pool(size_t _max_memory)
+  : __underlying{ std::make_unique<unsigned char[]>(_max_memory) }
+  , __max_size{ _max_memory }
+  , __current_addr{ 0 }
+  , __object_count{ 0 } {}
 
 template<typename T>
-zpt::allocator<T>::allocator(zpt::allocator<T> const& _rhs) {}
+zpt::object_pool<T>::~object_pool() {}
 
 template<typename T>
-zpt::allocator<T>::allocator(zpt::allocator<T>&& _rhs) {}
+auto
+zpt::object_pool<T>::acquire(size_t _n) -> pointer_type {
+    size_t _byte_size = _n * sizeof(T);
+    if (this->__available.size() != 0) {
+        for (auto [_addr, _size] : this->__available) {
+            if (_size >= _byte_size) {
+                auto _return = &this->__underlying[_addr];
+                this->__available.erase(_addr);
+                if (_size - _byte_size != 0) {
+                    this->__available.insert(std::make_pair(_addr + _byte_size, _size - _byte_size));
+                }
+                this->__object_count += _n;
+                return _return;
+            }
+        }
+    }
+    expect(
+      this->__current_addr + _byte_size < this->__max_size, "no more memory available", 500, 0);
+    auto _return = &this->__underlying[this->__current_addr];
+    this->__current_addr += _byte_size;
+    this->__object_count += _n;
+    return _return;
+}
+
+template<typename T>
+auto
+zpt::object_pool<T>::restore(pointer_type _ptr, size_t _n) -> void {
+    size_t _addr = _ptr - &this->__underlying[0];
+    auto [_iterator, _inserted] = this->__available.insert(std::make_pair(_addr, _n * sizeof(T)));
+    if (_inserted) { this->normalize(_iterator); }
+    this->__object_count -= _n;
+}
+
+template<typename T>
+auto
+zpt::object_pool<T>::count() const -> unsigned long long {
+    return this->__object_count.load();
+}
+
+template<typename T>
+auto
+zpt::object_pool<T>::to_string() const -> std::string {
+    std::ostringstream _oss;
+    _oss << "- main chunk: (" << this->__current_addr << "/" << this->__max_size << ")";
+    if (this->__available.size() != 0) {
+        _oss << std::endl << "- previously allocated and available chunks:";
+        for (auto [_addr, _size] : this->__available) {
+            _oss << " (" << _addr << ", " << _size << ")" << std::flush;
+        }
+    }
+    return _oss.str();
+}
+
+template<typename T>
+auto
+zpt::object_pool<T>::normalize(std::map<size_t, size_t>::iterator& _added) -> void {
+    auto _prev = _added;
+    --_prev;
+    if (_prev != _added) {
+        if (_prev->first + _prev->second == _added->first) {
+            _prev->second += _added->second;
+            this->__available.erase(_added);
+            _added = _prev;
+        }
+    }
+    auto _next = _added;
+    ++_next;
+    if (_next != this->__available.end()) {
+        if (_added->first + _added->second == _next->first) {
+            _added->second += _next->second;
+            this->__available.erase(_next);
+        }
+    }
+}
+
+template<typename T>
+zpt::allocator<T>::allocator(size_t _max_memory)
+  : __max_size{ _max_memory } {}
+
+template<typename T>
+template<class U>
+constexpr zpt::allocator<T>::allocator(zpt::allocator<U> const& _rhs) noexcept
+  : __max_size{ _rhs.max_memory_size() } {}
+
+template<typename T>
+zpt::allocator<T>::allocator(zpt::allocator<T> const& _rhs)
+  : __max_size{ _rhs.__max_size } {}
+
+template<typename T>
+zpt::allocator<T>::allocator(zpt::allocator<T>&& _rhs)
+  : __max_size{ _rhs.__max_size } {
+    _rhs.__max_size = 0;
+}
 
 template<typename T>
 auto
 zpt::allocator<T>::operator=(zpt::allocator<T> const& _rhs) -> zpt::allocator<T>& {
+    this->__max_size = _rhs.__max_size;
     return (*this);
 }
 
 template<typename T>
 auto
 zpt::allocator<T>::operator=(zpt::allocator<T>&& _rhs) -> zpt::allocator<T>& {
+    this->__max_size = _rhs.__max_size;
+    _rhs.__max_size = 0;
     return (*this);
 }
 
 template<typename T>
 auto
 zpt::allocator<T>::allocate(size_type _n) -> pointer {
-    return nullptr;
+    try {
+        return reinterpret_cast<pointer>(this->get_pool().acquire(_n));
+    }
+    catch (zpt::failed_expectation const& _e) {
+    }
+    throw std::bad_alloc{};
 }
 
 template<typename T>
 auto
-zpt::allocator<T>::allocate(size_type _n, pointer const _adjacent_to) -> pointer {
-    return nullptr;
+zpt::allocator<T>::deallocate(pointer _to_deallocate, size_type _n) -> void {
+    this->get_pool().restore(reinterpret_cast<zpt::object_pool<T>::pointer_type>(_to_deallocate),
+                             _n);
 }
 
 template<typename T>
 auto
-zpt::allocator<T>::deallocate(pointer _to_deallocate, size_type _n) -> void {}
-
-template<typename T>
-auto
-zpt::allocator<T>::max_size() -> size_type {
-    return 0;
+zpt::allocator<T>::max_memory_size() const -> size_type {
+    return this->__max_size;
 }
 
 template<typename T>
-template<class C, typename... Args>
 auto
-zpt::allocator<T>::construct(C* _object, Args... _args) -> void {}
+zpt::allocator<T>::to_string() const -> std::string {
+    unsigned long long _count = this->get_pool().count();
+    std::ostringstream _oss;
+    _oss << "zpt::allocator<" << typeid(T).name() << ">:" << std::endl
+         << "- max of " << this->__max_size << " bytes of allocatable memory per thread"
+         << std::endl
+         << "- holds " << _count << " objects in a total of " << (_count * sizeof(T))
+         << " bytes allocated by the current thread" << std::endl
+         << this->get_pool().to_string() << std::flush;
+    return _oss.str();
+}
 
 template<typename T>
-template<class C>
 auto
-zpt::allocator<T>::destroy(C* _object) -> void {}
+zpt::allocator<T>::get_pool() -> zpt::object_pool<T>& {
+    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes", 500, 0);
+    return zpt::allocator<T>::get_pool(this->__max_size);
+}
+
+template<typename T>
+auto
+zpt::allocator<T>::get_pool() const -> zpt::object_pool<T> const& {
+    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes", 500, 0);
+    return zpt::allocator<T>::get_pool(this->__max_size);
+}
+
+template<typename T>
+auto
+zpt::allocator<T>::get_pool(size_t _max_memory) -> zpt::object_pool<T>& {
+    static thread_local zpt::object_pool<T> _object_pool{ _max_memory };
+    return _object_pool;
+}
