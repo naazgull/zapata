@@ -9,7 +9,7 @@ libzapata_common_allocator_la_SOURCES = \
 
 bin_PROGRAMS = zallocator
 
-zallocator_LDADD = -lpthread libzapata-common-allocator.la
+zallocator_LDADD = -lpthread -lzapata-base libzapata-common-allocator.la
 zallocator_LDFLAGS =
 zallocator_CPPFLAGS = -O3 -std=c++20 -I../../../include -I../../include
 
