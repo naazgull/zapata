@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libzapata-common-allocator.la
 
-libzapata_common_allocator_la_LIBADD = -lpthread -lzapata-base -lzapata-common-lockfree
+libzapata_common_allocator_la_LIBADD = -lpthread -lzapata-base
 libzapata_common_allocator_la_LDFLAGS = -version-info 2:0:0 -shared
 libzapata_common_allocator_la_CPPFLAGS = -O3 -std=c++20 -I../../../include -I../../include
 
