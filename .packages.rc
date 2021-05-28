@@ -11,6 +11,7 @@ export projects=(
        parsers/json
        parsers/http
        parsers/uri
+       bridges/base
        common/graph
        common/events
        network/transport
