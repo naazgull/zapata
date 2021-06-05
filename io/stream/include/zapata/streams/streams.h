@@ -91,7 +91,7 @@ class stream {
     auto transport() -> std::string&;
     auto uri(const std::string& _rhs) -> zpt::stream&;
     auto uri() -> std::string&;
-    auto state() -> zpt::stream_state&;
+    auto state() const -> zpt::stream_state&;
 
     auto swap(std::ios& _rhs) -> zpt::stream&;
     auto swap(zpt::stream& _rhs) -> zpt::stream&;

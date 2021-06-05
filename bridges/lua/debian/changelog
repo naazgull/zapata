@@ -1,4 +1,4 @@
-zapata-bridge-python (2.0.0-1) trusty; urgency=medium
+zapata-bridge-lua (2.0.0-1) trusty; urgency=medium
 
   * Initial release.
 

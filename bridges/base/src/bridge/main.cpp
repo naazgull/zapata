@@ -23,20 +23,13 @@
 #include <zapata/bridge/bridge.h>
 #include <zapata/base.h>
 
-class cpp_bridge
-  : public zpt::bridge<cpp_bridge, zpt::json> {
+class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
   public:
+    using lambda_type = std::function<object_type(object_type, class_type&)>;
+
     cpp_bridge() { this->__modules.insert(std::make_pair("::", zpt::undefined)); }
 
-    auto setup_configuration(zpt::json _conf) -> cpp_bridge& {
-        zlog(_conf, zpt::info);
-        return (*this);
-    }
-    auto setup_module(zpt::json _conf, std::string _module_path) -> cpp_bridge& {
-        this->__modules.insert(std::make_pair(_conf["name"]->string() + std::string{ "::" },
-                                              _conf + zpt::json{ "load_path", _module_path }));
-        return (*this);
-    }
+    auto name() const -> std::string { return "cpp_example"; }
 
     auto setup_module(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
         auto [_it, _] = this->__modules.insert(
@@ -55,14 +48,15 @@ class cpp_bridge
         return (*this);
     }
 
-    auto evaluate(std::string _to_evaluate, zpt::json _conf) -> zpt::json {
+    auto execute(std::string _to_evaluate, object_type _arg, class_type& _bridge) -> zpt::json {
         auto _found = this->__lambdas.find(_to_evaluate);
         expect(
           _found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'", 500, 0);
-        return _found->second(_conf, *this);
+        return _found->second(_arg, *this);
     }
 
-    auto to_json(zpt::json _to_convert) -> zpt::json { return _to_convert; }
+    auto to_object(zpt::json _to_convert) const -> object_type { return _to_convert; }
+    auto to_json(object_type _to_convert) const -> zpt::json { return _to_convert; }
 
   private:
     std::map<std::string, lambda_type> __lambdas;
@@ -70,9 +64,9 @@ class cpp_bridge
 };
 
 auto
-init_module_x(zpt::json _conf, cpp_bridge& _bridge) -> zpt::json {
+init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::json {
     _bridge.add_lambda(
-      [](zpt::json _a, cpp_bridge&) -> zpt::json {
+      [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json {
           return { "a", _a };
       },
       { "module", "x", "name", "to_a" });
@@ -83,9 +77,10 @@ auto
 main(int argc, char* argv[]) -> int {
     cpp_bridge _bridge;
     auto _result = _bridge                                       //
-                     .set_config({ "flags", "SFGT" })            //
+                     .set_options({ "flags", "SFGT" })           //
                      .add_module(init_module_x, { "name", "x" }) //
-                     .eval("x::to_a", zpt::json{ "field", "xpto" });
+                     .call<std::string, zpt::json, cpp_bridge&>(
+                       "x::to_a", zpt::json{ "field", "xpto" }, _bridge);
     zlog(_result, zpt::info);
     return 0;
 }

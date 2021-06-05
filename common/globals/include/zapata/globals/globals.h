@@ -118,9 +118,10 @@ zpt::globals::dealloc(ssize_t _variable) -> void {
 
 auto
 zpt::globals::to_string() -> std::string {
+    zpt::lf::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::lf::spin_lock::shared };
     std::ostringstream _out;
     _out << "Global variables:" << std::endl;
-    for (auto [_key, _value] : __variables) {
+    for (auto [_key, _value] : zpt::globals::__variables) {
         _out << _key << ":" << std::endl << std::flush;
         for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
     }
