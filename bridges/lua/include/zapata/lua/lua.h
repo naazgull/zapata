@@ -22,6 +22,3 @@
 
 #pragma once
 
-#include <zapata/python/python.h>
-#include <zapata/python/config.h>
-

@@ -20,12 +20,5 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <zapata/lua/lua.h>
 
-#include <stddef.h>
-#include <string>
-
-namespace zpt {
-
-namespace python {}
-} // namespace zpt

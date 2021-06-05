@@ -12,6 +12,8 @@ export projects=(
        parsers/http
        parsers/uri
        bridges/base
+       bridges/python
+       bridges/lua
        common/graph
        common/events
        network/transport

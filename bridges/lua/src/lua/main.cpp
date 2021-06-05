@@ -20,8 +20,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#include <zapata/lua.h>
 
-#include <zapata/python/python.h>
-#include <zapata/python/config.h>
+auto
+main(int argc, char* argv[]) -> int {
+    return 0;
+}
 
