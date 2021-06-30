@@ -55,7 +55,7 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
   public:
     using underlying_type = PyObject*;
     using callback_type = underlying_type (*)();
-    using lambda_type = std::function<object_type(object_type, class_type&)>;
+    using lambda_type = std::function<underlying_type(underlying_type, underlying_type)>;
 
     bridge() = default;
     virtual ~bridge();

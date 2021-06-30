@@ -16,7 +16,6 @@ AC_HAVE_LIBRARY(magic)
 AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
-AC_HAVE_LIBRARY(zapata-base)
 
 AC_CANONICAL_SYSTEM
 
@@ -37,6 +36,9 @@ LT_INIT
 dnl Check if Libtool is present
 dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
+
+AC_SUBST([CPP_STD_VERSION])
+AC_SUBST([PYTHON_VERSION])
 
 AC_CONFIG_FILES(Makefile
 		debian/Makefile

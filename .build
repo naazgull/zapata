@@ -17,21 +17,19 @@ then
 else
     cxx_std_version="-std=c++20"
 fi
+python3_version=$(python3 -V | awk '{print $2}' | cut -c-3)
+lua5_version=$(lua -v | awk '{print $2}' | cut -c-3)
 
-if [[ "$1" == "one" ]]
+if [[ "${1}" == "one" ]]
 then
-    title="Processing '${2}'"
-    underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
-    echo
-    echo ${title}
-    echo ${underlines}
-
-	make -s -j$threads -C ${2}/build && sudo make -s -C ${2}/build install
-	if [[ $? != 0 ]]
-	then
-		exit -1
-	fi
-    exit 0
+    if [[ "${3}" == "" ]]
+    then
+        action=all
+    else
+        action=${3}
+    fi
+else
+    action=${1}
 fi
 
 if [[ "${1}" != "one" && "${1}" != "from" ]]
@@ -75,51 +73,63 @@ do
         fi
     fi
 
+    if [[ "${1}" == "one" ]]
+    then
+        if [[ "${2}" != "${package}" ]]
+        then
+            continue
+        fi
+    fi
+
     title="Processing '${package}'"
     underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
     echo
     echo ${title}
     echo ${underlines}
 
-    case "${1}" in
+    case "${action}" in
 	all)
-	    CPP_STD_VERSION=${cxx_std_version} make -s -j$threads -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build &&\
+            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
     from)
-	    CPP_STD_VERSION=${cxx_std_version} make -s -j$threads -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build &&\
+            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
         ;;
 	single)
-	    CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build &&\
+            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	clean)
-	    CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build clean
+	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build clean
 	    ;;
 	install)
-	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build uninstall
+	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build uninstall
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-        export CPP_STD_VERSION=${cxx_std_version}
-	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build -j$threads distcheck && sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build install
+        export CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version}
+	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build -j$threads distcheck &&\
+            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -127,22 +137,30 @@ do
 	    ;;
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo CPP_STD_VERSION=${cxx_std_version} make -s -C ${package}/build distclean
+	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build distclean
 	    ;;
 	config)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
+	    rm -rf build &&\
+            autoreconf -vfi &&\
+            mkdir build &&\
+            cd build &&\
+            CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
         popd > /dev/null
 	    ;;
-	debug)
+	config_debug)
         echo "exclude_list=(${exclude_list})" > .exclude.rc
         pushd ${package} > /dev/null
-	    rm -rf build && autoreconf -vfi && mkdir build && cd build && CPP_STD_VERSION=${cxx_std_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
+	    rm -rf build &&\
+            autoreconf -vfi &&\
+            mkdir build &&\
+            cd build &&\
+            CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -151,7 +169,7 @@ do
 	    ;;
 	package)
         pushd ${package} > /dev/null
-        export CPP_STD_VERSION=${cxx_std_version}
+        export CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version}
         ./make_deb
 	    if [[ $? != 0 ]]
 	    then
@@ -185,4 +203,9 @@ do
         popd > /dev/null
         ;;
     esac
+
+    if [[ "${1}" == "one" ]]
+    then
+        exit 0
+    fi
 done
