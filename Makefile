@@ -23,7 +23,7 @@ asan:
 	./.build asan ${exclude}
 
 config_debug:
-	./.build debug ${exclude}
+	./.build config_debug ${exclude}
 
 bump:
 	./.repo bump minor
@@ -42,4 +42,4 @@ from:
 	./.build from ${module} ${exclude}
 
 one:
-	./.build one ${module}
+	./.build one ${module} ${action}

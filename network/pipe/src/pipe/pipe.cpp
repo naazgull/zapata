@@ -33,9 +33,6 @@ zpt::net::transport::pipe_stream::send(zpt::exchange& _channel) const -> void {
         auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
         auto _client =
           zpt::stream::alloc<zpt::pipestream>(static_cast<zpt::pipestream&>(*_channel->stream()));
-        zlog(static_cast<std::string>(static_cast<zpt::pipestream&>(*_channel->stream())),
-             zpt::info);
-        zlog(static_cast<std::string>(static_cast<zpt::pipestream&>(**_client)), zpt::info);
         _polling.listen_on(_client);
         _channel->stream() << _channel->to_send();
     }
@@ -80,7 +77,6 @@ zpt::net::transport::pipe_stream::resolve(zpt::json _uri) const -> zpt::exchange
     expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
     expect(_uri["scheme"] == "pipe", "scheme must be 'pipe'", 500, 0);
     std::string _path{ zpt::uri::path::to_string(_uri) };
-    zlog(_path, zpt::debug);
     auto _stream = zpt::stream::alloc<zpt::pipestream>(zpt::generate::r_uuid());
     _stream->transport("pipe");
     zpt::exchange _to_return{ _stream.release() };
