@@ -39,7 +39,7 @@ tidy:
 	./.build tidy ${exclude}
 
 from:
-	./.build from ${module} ${exclude}
+	./.build from ${module} ${action}
 
 one:
 	./.build one ${module} ${action}

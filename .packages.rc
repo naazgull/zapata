@@ -12,12 +12,12 @@ export projects=(
        parsers/http
        parsers/uri
        bridges/base
-       bridges/python
-       bridges/lua
        common/graph
        common/events
        network/transport
        engines/startup
+       bridges/python
+       bridges/lua
        network/websocket
        network/http
        network/local
