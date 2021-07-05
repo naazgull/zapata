@@ -75,7 +75,7 @@ class engine : public zpt::pipeline::engine<zpt::dom::element> {
                                         5000 });
     virtual ~engine() override = default;
 
-    auto add_listener(size_t _stage,
+    auto add_listener(size_t _step,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback)
       -> zpt::dom::engine&;

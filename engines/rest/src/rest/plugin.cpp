@@ -29,10 +29,10 @@ extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
-    size_t _stages = std::max(static_cast<size_t>(_plugin->config()["pipeline"]["n_stages"]), 1UL);
+    size_t _steps = std::max(static_cast<size_t>(_plugin->config()["pipeline"]["n_steps"]), 1UL);
     long _max_queue_spin_sleep =
       std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
-    zpt::globals::alloc<zpt::rest::engine>(zpt::REST_ENGINE(), _stages, _config["limits"]);
+    zpt::globals::alloc<zpt::rest::engine>(zpt::REST_ENGINE(), _steps, _config["limits"]);
 
     _boot.add_thread([_max_queue_spin_sleep]() -> void {
         zlog("Starting REST engine", zpt::info);

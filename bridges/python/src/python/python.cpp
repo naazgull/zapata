@@ -257,97 +257,127 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         }
     }
     else if (Py_TYPE(_exp) == &PyFilter_Type) {
-        expect(Py_TYPE(_exp) != &PyFilter_Type, "unmanaged python type PyFilter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyFilter_Type, "Python: unmanaged python type PyFilter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyMap_Type) {
-        expect(Py_TYPE(_exp) != &PyMap_Type, "unmanaged python type PyMap", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMap_Type, "Python: unmanaged python type PyMap", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyZip_Type) {
-        expect(Py_TYPE(_exp) != &PyZip_Type, "unmanaged python type PyZip", 500, 0);
+        expect(Py_TYPE(_exp) != &PyZip_Type, "Python: unmanaged python type PyZip", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyByteArrayIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyByteArrayIter_Type, "unmanaged python type PyByteArrayIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyByteArrayIter_Type,
+               "Python: unmanaged python type PyByteArrayIter",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyBytesIter_Type) {
-        expect(Py_TYPE(_exp) != &PyBytesIter_Type, "unmanaged python type PyBytesIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyBytesIter_Type, "Python: unmanaged python type PyBytesIter", 500, 0);
     }
     else if (PyCell_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCell_Type, "unmanaged python type PyCell", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCell_Type, "Python: unmanaged python type PyCell", 500, 0);
     }
     else if (PyMethod_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyMethod_Type, "unmanaged python type PyMethod", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMethod_Type, "Python: unmanaged python type PyMethod", 500, 0);
     }
     else if (PyInstanceMethod_Check(_exp)) {
         expect(Py_TYPE(_exp) != &PyInstanceMethod_Type,
-               "unmanaged python type PyInstanceMethod",
+               "Python: unmanaged python type PyInstanceMethod",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &PyClassMethodDescr_Type) {
         expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-               "unmanaged python type PyClassMethodDescr",
+               "Python: unmanaged python type PyClassMethodDescr",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &PyGetSetDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyGetSetDescr_Type, "unmanaged python type PyGetSetDescr", 500, 0);
-    }
-    else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyMemberDescr_Type, "unmanaged python type PyMemberDescr", 500, 0);
-    }
-    else if (Py_TYPE(_exp) == &PyMethodDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-               "unmanaged python type PyClassMethodDescr",
+        expect(Py_TYPE(_exp) != &PyGetSetDescr_Type,
+               "Python: unmanaged python type PyGetSetDescr",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyMemberDescr_Type, "unmanaged python type PyMemberDescr", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
+               "Python: unmanaged python type PyMemberDescr",
+               500,
+               0);
+    }
+    else if (Py_TYPE(_exp) == &PyMethodDescr_Type) {
+        expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
+               "Python: unmanaged python type PyClassMethodDescr",
+               500,
+               0);
+    }
+    else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
+        expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
+               "Python: unmanaged python type PyMemberDescr",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyDictProxy_Type) {
-        expect(Py_TYPE(_exp) != &PyDictProxy_Type, "unmanaged python type PyDictProxy", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyDictProxy_Type, "Python: unmanaged python type PyDictProxy", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyMethodWrapper_Type) {
         expect(Py_TYPE(_exp) != &_PyMethodWrapper_Type,
-               "unmanaged python type _PyMethodWrapper",
+               "Python: unmanaged python type _PyMethodWrapper",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &PyProperty_Type) {
-        expect(Py_TYPE(_exp) != &PyProperty_Type, "unmanaged python type PyProperty", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyProperty_Type, "Python: unmanaged python type PyProperty", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyDictIterKey_Type) {
-        expect(Py_TYPE(_exp) != &PyDictIterKey_Type, "unmanaged python type PyDictIterKey", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictIterKey_Type,
+               "Python: unmanaged python type PyDictIterKey",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyDictIterValue_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyDictIterValue_Type, "unmanaged python type PyDictIterValue", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictIterValue_Type,
+               "Python: unmanaged python type PyDictIterValue",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyDictIterItem_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyDictIterItem_Type, "unmanaged python type PyDictIterItem", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictIterItem_Type,
+               "Python: unmanaged python type PyDictIterItem",
+               500,
+               0);
     }
     else if (PyDictKeys_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyDictKeys_Type, "unmanaged python type PyDictKeys", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyDictKeys_Type, "Python: unmanaged python type PyDictKeys", 500, 0);
     }
     else if (PyDictItems_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyDictItems_Type, "unmanaged python type PyDictItems", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyDictItems_Type, "Python: unmanaged python type PyDictItems", 500, 0);
     }
     else if (PyDictValues_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyDictValues_Type, "unmanaged python type PyDictValues", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictValues_Type,
+               "Python: unmanaged python type PyDictValues",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyEnum_Type) {
-        expect(Py_TYPE(_exp) != &PyEnum_Type, "unmanaged python type PyEnum", 500, 0);
+        expect(Py_TYPE(_exp) != &PyEnum_Type, "Python: unmanaged python type PyEnum", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyReversed_Type) {
-        expect(Py_TYPE(_exp) != &PyReversed_Type, "unmanaged python type PyReversed", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyReversed_Type, "Python: unmanaged python type PyReversed", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyStdPrinter_Type) {
-        expect(Py_TYPE(_exp) != &PyStdPrinter_Type, "unmanaged python type PyStdPrinter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyStdPrinter_Type,
+               "Python: unmanaged python type PyStdPrinter",
+               500,
+               0);
     }
     else if (PyCode_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCode_Type, "unmanaged python type PyCode", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCode_Type, "Python: unmanaged python type PyCode", 500, 0);
     }
     else if (PyFunction_Check(_exp)) {
         // zdbg("Py_Function");
@@ -360,75 +390,96 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         }
     }
     else if (Py_TYPE(_exp) == &PyClassMethod_Type) {
-        expect(Py_TYPE(_exp) != &PyClassMethod_Type, "unmanaged python type PyClassMethod", 500, 0);
+        expect(Py_TYPE(_exp) != &PyClassMethod_Type,
+               "Python: unmanaged python type PyClassMethod",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyStaticMethod_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyStaticMethod_Type, "unmanaged python type PyStaticMethod", 500, 0);
+        expect(Py_TYPE(_exp) != &PyStaticMethod_Type,
+               "Python: unmanaged python type PyStaticMethod",
+               500,
+               0);
     }
     else if (PyGen_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyGen_Type, "unmanaged python type PyGen", 500, 0);
+        expect(Py_TYPE(_exp) != &PyGen_Type, "Python: unmanaged python type PyGen", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyCoro_Type) {
-        expect(Py_TYPE(_exp) != &PyCoro_Type, "unmanaged python type PyCoro", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCoro_Type, "Python: unmanaged python type PyCoro", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyCoroWrapper_Type) {
-        expect(
-          Py_TYPE(_exp) != &_PyCoroWrapper_Type, "unmanaged python type _PyCoroWrapper", 500, 0);
+        expect(Py_TYPE(_exp) != &_PyCoroWrapper_Type,
+               "Python: unmanaged python type _PyCoroWrapper",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyAsyncGen_Type) {
-        expect(Py_TYPE(_exp) != &PyAsyncGen_Type, "unmanaged python type PyAsyncGen", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyAsyncGen_Type, "Python: unmanaged python type PyAsyncGen", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenASend_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenASend_Type,
-               "unmanaged python type _PyAsyncGenASend",
+               "Python: unmanaged python type _PyAsyncGenASend",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenWrappedValue_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenWrappedValue_Type,
-               "unmanaged python type _PyAsyncGenWrappedValue",
+               "Python: unmanaged python type _PyAsyncGenWrappedValue",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenAThrow_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenAThrow_Type,
-               "unmanaged python type _PyAsyncGenAThrow",
+               "Python: unmanaged python type _PyAsyncGenAThrow",
                500,
                0);
     }
     else if (PySeqIter_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySeqIter_Type, "unmanaged python type PySeqIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PySeqIter_Type, "Python: unmanaged python type PySeqIter", 500, 0);
     }
     else if (PyCallIter_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCallIter_Type, "unmanaged python type PyCallIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyCallIter_Type, "Python: unmanaged python type PyCallIter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyListIter_Type) {
-        expect(Py_TYPE(_exp) != &PyListIter_Type, "unmanaged python type PyListIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyListIter_Type, "Python: unmanaged python type PyListIter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyListRevIter_Type) {
-        expect(Py_TYPE(_exp) != &PyListRevIter_Type, "unmanaged python type PyListRevIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyListRevIter_Type,
+               "Python: unmanaged python type PyListRevIter",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &_PyManagedBuffer_Type) {
         expect(Py_TYPE(_exp) != &_PyManagedBuffer_Type,
-               "unmanaged python type _PyManagedBuffer",
+               "Python: unmanaged python type _PyManagedBuffer",
                500,
                0);
     }
     else if (PyMemoryView_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyMemoryView_Type, "unmanaged python type PyMemoryView", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMemoryView_Type,
+               "Python: unmanaged python type PyMemoryView",
+               500,
+               0);
     }
     else if (PyCFunction_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCFunction_Type, "unmanaged python type PyCFunction", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyCFunction_Type, "Python: unmanaged python type PyCFunction", 500, 0);
     }
     else if (PyModule_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyModule_Type, "unmanaged python type PyModule", 500, 0);
+        expect(Py_TYPE(_exp) != &PyModule_Type, "Python: unmanaged python type PyModule", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyModuleDef_Type) {
-        expect(Py_TYPE(_exp) != &PyModuleDef_Type, "unmanaged python type PyModuleDef", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyModuleDef_Type, "Python: unmanaged python type PyModuleDef", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyNamespace_Type) {
-        expect(Py_TYPE(_exp) != &_PyNamespace_Type, "unmanaged python type _PyNamespace", 500, 0);
+        expect(Py_TYPE(_exp) != &_PyNamespace_Type,
+               "Python: unmanaged python type _PyNamespace",
+               500,
+               0);
     }
     else if (PyType_Check(_exp)) {
         zpt::json _value = zpt::json::string(((PyTypeObject*)_exp.get())->tp_name);
@@ -438,68 +489,89 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         }
     }
     else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
-        expect(Py_TYPE(_exp) != &PyBaseObject_Type, "unmanaged python type PyBaseObject", 500, 0);
+        expect(Py_TYPE(_exp) != &PyBaseObject_Type,
+               "Python: unmanaged python type PyBaseObject",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PySuper_Type) {
-        expect(Py_TYPE(_exp) != &PySuper_Type, "unmanaged python type PySuper", 500, 0);
+        expect(Py_TYPE(_exp) != &PySuper_Type, "Python: unmanaged python type PySuper", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyNone_Type) {
-        expect(Py_TYPE(_exp) != &_PyNone_Type, "unmanaged python type _PyNone", 500, 0);
+        expect(Py_TYPE(_exp) != &_PyNone_Type, "Python: unmanaged python type _PyNone", 500, 0);
     }
     else if (Py_TYPE(_exp) == &_PyNotImplemented_Type) {
         expect(Py_TYPE(_exp) != &_PyNotImplemented_Type,
-               "unmanaged python type _PyNotImplemented",
+               "Python: unmanaged python type _PyNotImplemented",
                500,
                0);
     }
     else if (Py_TYPE(_exp) == &PyODictIter_Type) {
-        expect(Py_TYPE(_exp) != &PyODictIter_Type, "unmanaged python type PyODictIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyODictIter_Type, "Python: unmanaged python type PyODictIter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyODictKeys_Type) {
-        expect(Py_TYPE(_exp) != &PyODictKeys_Type, "unmanaged python type PyODictKeys", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyODictKeys_Type, "Python: unmanaged python type PyODictKeys", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyODictItems_Type) {
-        expect(Py_TYPE(_exp) != &PyODictItems_Type, "unmanaged python type PyODictItems", 500, 0);
+        expect(Py_TYPE(_exp) != &PyODictItems_Type,
+               "Python: unmanaged python type PyODictItems",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyODictValues_Type) {
-        expect(Py_TYPE(_exp) != &PyODictValues_Type, "unmanaged python type PyODictValues", 500, 0);
+        expect(Py_TYPE(_exp) != &PyODictValues_Type,
+               "Python: unmanaged python type PyODictValues",
+               500,
+               0);
     }
     else if (Py_TYPE(_exp) == &PyCapsule_Type) {
-        expect(Py_TYPE(_exp) != &PyCapsule_Type, "unmanaged python type PyCapsule", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCapsule_Type, "Python: unmanaged python type PyCapsule", 500, 0);
     }
     else if (PyRange_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyRange_Type, "unmanaged python type PyRange", 500, 0);
+        expect(Py_TYPE(_exp) != &PyRange_Type, "Python: unmanaged python type PyRange", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyRangeIter_Type) {
-        expect(Py_TYPE(_exp) != &PyRangeIter_Type, "unmanaged python type PyRangeIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyRangeIter_Type, "Python: unmanaged python type PyRangeIter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyLongRangeIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyLongRangeIter_Type, "unmanaged python type PyLongRangeIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyLongRangeIter_Type,
+               "Python: unmanaged python type PyLongRangeIter",
+               500,
+               0);
     }
     else if (PySet_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySet_Type, "unmanaged python type PySet", 500, 0);
+        expect(Py_TYPE(_exp) != &PySet_Type, "Python: unmanaged python type PySet", 500, 0);
     }
     else if (PyFrozenSet_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyFrozenSet_Type, "unmanaged python type PyFrozenSet", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyFrozenSet_Type, "Python: unmanaged python type PyFrozenSet", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PySetIter_Type) {
-        expect(Py_TYPE(_exp) != &PySetIter_Type, "unmanaged python type PySetIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PySetIter_Type, "Python: unmanaged python type PySetIter", 500, 0);
     }
     else if (PySlice_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySlice_Type, "unmanaged python type PySlice", 500, 0);
+        expect(Py_TYPE(_exp) != &PySlice_Type, "Python: unmanaged python type PySlice", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyEllipsis_Type) {
-        expect(Py_TYPE(_exp) != &PyEllipsis_Type, "unmanaged python type PyEllipsis", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyEllipsis_Type, "Python: unmanaged python type PyEllipsis", 500, 0);
     }
     else if (PyTraceBack_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyTraceBack_Type, "unmanaged python type PyTraceBack", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyTraceBack_Type, "Python: unmanaged python type PyTraceBack", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyTupleIter_Type) {
-        expect(Py_TYPE(_exp) != &PyTupleIter_Type, "unmanaged python type PyTupleIter", 500, 0);
+        expect(
+          Py_TYPE(_exp) != &PyTupleIter_Type, "Python: unmanaged python type PyTupleIter", 500, 0);
     }
     else if (Py_TYPE(_exp) == &PyUnicodeIter_Type) {
-        expect(Py_TYPE(_exp) != &PyUnicodeIter_Type, "unmanaged python type PyUnicodeIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyUnicodeIter_Type,
+               "Python: unmanaged python type PyUnicodeIter",
+               500,
+               0);
     }
     else {
         // zdbg("SOME OTHER Py THINGY");
@@ -541,11 +613,9 @@ zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
         }
         case zpt::JSArray: {
             _ret = PyList_New(_to_convert->size());
-            size_t _idx = 0;
-            for (auto [_, __, _json_value] : _to_convert) {
+            for (auto [_idx, _, _json_value] : _to_convert) {
                 object_type _value = this->to_object(_json_value);
                 PyList_SET_ITEM(_ret.get(), _idx, _value.get());
-                ++_idx;
             }
             break;
         }

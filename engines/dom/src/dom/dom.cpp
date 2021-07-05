@@ -88,11 +88,11 @@ zpt::dom::engine::engine(size_t _pipeline_size, zpt::json _config)
 
 auto
 zpt::dom::engine::add_listener(
-  size_t _stage,
+  size_t _step,
   std::string _pattern,
   std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback) -> zpt::dom::engine& {
     _pattern.insert(0, "/ROOT");
-    zpt::pipeline::engine<zpt::dom::element>::add_listener(_stage, _pattern, _callback);
+    zpt::pipeline::engine<zpt::dom::element>::add_listener(_step, _pattern, _callback);
     return (*this);
 }
 

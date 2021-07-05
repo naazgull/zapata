@@ -40,7 +40,7 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
     auto add_listener(std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
       -> zpt::rest::engine&;
-    auto add_listener(size_t _stage,
+    auto add_listener(size_t _step,
                       std::string _pattern,
                       std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
       -> zpt::rest::engine&;

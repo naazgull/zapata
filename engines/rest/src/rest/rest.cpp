@@ -97,7 +97,7 @@ zpt::rest::engine::add_listener(std::string _pattern,
 }
 
 auto
-zpt::rest::engine::add_listener(size_t _stage,
+zpt::rest::engine::add_listener(size_t _step,
                                 std::string _pattern,
                                 std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
   -> zpt::rest::engine& {
@@ -109,7 +109,7 @@ zpt::rest::engine::add_listener(size_t _stage,
     }
     else {
         _pattern.insert(0, "/ROOT");
-        zpt::pipeline::engine<zpt::exchange>::add_listener(_stage + 1, _pattern, _callback);
+        zpt::pipeline::engine<zpt::exchange>::add_listener(_step + 1, _pattern, _callback);
     }
     return (*this);
 }

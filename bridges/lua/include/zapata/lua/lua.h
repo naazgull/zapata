@@ -70,9 +70,10 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
     auto setup_module(zpt::json _conf, callback_type _callback) -> zpt::lua::bridge&;
 
     auto to_json(object_type _to_convert) -> zpt::json;
-    auto to_ref(object_type _to_convert) -> zpt::json;
-    auto to_object(zpt::json _to_convert) -> object_type;
-    auto from_ref(zpt::json _to_convert) -> object_type;
+    auto to_json(object_type _to_convert, int _index) -> zpt::json;
+    auto to_ref(object_type _to_convert, int _index = 1) -> zpt::json;
+    auto to_object(zpt::json _to_convert, object_type _return = {}) -> object_type;
+    auto from_ref(zpt::json _to_convert, object_type _return = {}) -> object_type;
 
     auto execute(zpt::json _func, zpt::json _args) -> zpt::lua::bridge::object_type;
     auto execute() -> zpt::lua::bridge::object_type;
