@@ -103,7 +103,7 @@ auto
 zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self->ok(), "cannot call a function over a null instance", 500, 0);
+    expect(_self->ok(), "Python: cannot call a function over a null instance", 500, 0);
     return this->execute(this->to_object(_self), _func_name, this->to_object(_args).get()...);
 }
 
@@ -112,7 +112,7 @@ auto
 zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self != nullptr, "cannot call a function over a null instance", 500, 0);
+    expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
     auto _func = this->to_object(_func_name);
 
     PyErr_Clear();

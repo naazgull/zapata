@@ -20,16 +20,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/lua.h>
+#pragma once
 
-auto
-main(int argc, char* argv[]) -> int {
-    zpt::lua::bridge _bridge;
-    _bridge.add_module("/home/pf/Void/test1.lua", zpt::undefined);
-    _bridge.add_module("/home/pf/Void/test2.lua", zpt::undefined);
+#include <zapata/prolog/prolog.h>
+#include <zapata/prolog/config.h>
 
-    zlog(_bridge.call("to_a", zpt::json{ zpt::array, 1, "testing", false }), zpt::info);
-    _bridge.call("to_b", zpt::undefined);
-
-    return 0;
-}

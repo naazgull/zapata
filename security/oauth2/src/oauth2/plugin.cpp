@@ -35,18 +35,18 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
       zpt::globals::get<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
     zpt::globals::alloc<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER(), _token_provider, _config);
 
-    size_t _stage = _plugin->config()["add_to_stage"]->integer();
+    size_t _step = _plugin->config()["add_to_step"]->integer();
 
-    _rest.add_listener(_stage,
+    _rest.add_listener(_step,
                        std::string{ "/GET" } + _config["authorize_url"]->string(),
                        zpt::auth::oauth2::authorize_listener);
-    _rest.add_listener(_stage,
+    _rest.add_listener(_step,
                        std::string{ "/GET" } + _config["token_url"]->string(),
                        zpt::auth::oauth2::token_listener);
-    _rest.add_listener(_stage,
+    _rest.add_listener(_step,
                        std::string{ "/GET" } + _config["refresh_url"]->string(),
                        zpt::auth::oauth2::refresh_listener);
-    _rest.add_listener(_stage,
+    _rest.add_listener(_step,
                        std::string{ "/GET" } + _config["validate_url"]->string(),
                        zpt::auth::oauth2::validate_listener);
 

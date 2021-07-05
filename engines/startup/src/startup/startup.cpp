@@ -322,7 +322,7 @@ zpt::startup::engine::load() -> zpt::startup::engine& {
 auto
 zpt::startup::engine::hash(zpt::json& _event) -> std::string {
     return static_cast<std::string>(_event["plugin"]) + std::string("/") +
-           std::to_string(static_cast<int>(_event["stage"]));
+           std::to_string(static_cast<int>(_event["step"]));
 }
 
 auto
@@ -336,7 +336,7 @@ zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<voi
             if (this->__plugins.find(_key) == this->__plugins.end()) {
                 _fullfilled = false;
                 if (_callback != nullptr) {
-                    this->listen({ "plugin", _key, "stage", zpt::startup::stages::RUN }, _callback);
+                    this->listen({ "plugin", _key, "step", zpt::startup::steps::RUN }, _callback);
                 }
             }
             else {
@@ -404,12 +404,12 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
     }
     _plugin->set_handler(_hndl);
 
-    _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::SEARCH }, true);
+    _boot.trigger({ "plugin", _lib, "step", zpt::startup::steps::SEARCH }, true);
     void (*_populate)(zpt::plugin&);
     _populate = (void (*)(zpt::plugin&))dlsym(_hndl, "_zpt_load_");
 
     auto _load{ _populate != nullptr };
-    _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::LOAD }, _load);
+    _boot.trigger({ "plugin", _lib, "step", zpt::startup::steps::LOAD }, _load);
     if (!_load) { return false; }
 
     auto _config{ true };
@@ -422,8 +422,8 @@ zpt::startup::dynlib::load_plugin(zpt::plugin& _plugin) -> bool {
         _plugin->set_handler(nullptr);
         _config = false;
     }
-    _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::CONFIGURATION }, _config);
-    _boot.trigger({ "plugin", _lib, "stage", zpt::startup::stages::RUN }, true);
+    _boot.trigger({ "plugin", _lib, "step", zpt::startup::steps::CONFIGURATION }, _config);
+    _boot.trigger({ "plugin", _lib, "step", zpt::startup::steps::RUN }, true);
     return _config;
 }
 

@@ -100,7 +100,7 @@ class plugin {
 };
 
 namespace startup {
-enum stages { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, RUN = 3, UNLOAD = 4 };
+enum steps { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, RUN = 3, UNLOAD = 4 };
 
 class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool> {
   public:

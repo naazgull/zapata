@@ -18,6 +18,7 @@ export projects=(
        engines/startup
        bridges/python
        bridges/lua
+       bridges/prolog
        network/websocket
        network/http
        network/local
