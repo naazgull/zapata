@@ -21,6 +21,7 @@
 */
 
 #include <zapata/python/python.h>
+#include <zapata/base/sentry.h>
 #include <datetime.h>
 
 auto
@@ -689,13 +690,18 @@ auto
 zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_func_name->is_object(), "cannot call a null function", 500, 0);
+    auto _state = PyGILState_Ensure();
+    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
+
+    expect(_func_name->is_object(), "Python: cannot call a null function", 500, 0);
+
     object_type _func = this->locate(_func_name);
     object_type _tuple = PyTuple_New(_args->size());
     for (auto [_k, __, _arg] : _args) {
         auto _value = this->to_object(_arg);
         PyTuple_SET_ITEM(_tuple.get(), _k, _value.get());
     }
+
     return this->execute(_func, _tuple);
 }
 
@@ -703,10 +709,15 @@ auto
 zpt::python::bridge::execute(object_type _func, object_type _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_func.get() != nullptr, "cannot call a null function", 500, 0);
-    expect(
-      PyCallable_Check(_func.get()) == 1, "first argument isnnot a callable python object", 500, 0);
-    expect(PyTuple_Check(_args.get()) == 1, "arguments must be a tuple", 500, 0);
+    auto _state = PyGILState_Ensure();
+    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
+
+    expect(_func.get() != nullptr, "Python: cannot call a null function", 500, 0);
+    expect(PyCallable_Check(_func.get()) == 1,
+           "Python: first argument isnnot a callable python object",
+           500,
+           0);
+    expect(PyTuple_Check(_args.get()) == 1, "Python: arguments must be a tuple", 500, 0);
 
     PyErr_Clear();
     object_type _ret = PyObject_CallObject(_func.get(), _args.get());
@@ -724,7 +735,7 @@ auto
 zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self->ok(), "cannot call a function over a null instance", 500, 0);
+    expect(_self->ok(), "Python: cannot call a function over a null instance", 500, 0);
     return this->execute(this->to_object(_self), _func_name, nullptr);
 }
 
@@ -732,7 +743,10 @@ auto
 zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self != nullptr, "cannot call a function over a null instance", 500, 0);
+    auto _state = PyGILState_Ensure();
+    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
+
+    expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
     auto _func = this->to_object(_func_name);
 
     PyErr_Clear();
@@ -746,11 +760,6 @@ zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nul
            500,
            0);
     return _ret;
-}
-
-auto
-zpt::python::bridge::is_initialized() const -> bool {
-    return this->__initialized.load();
 }
 
 auto
@@ -798,4 +807,9 @@ zpt::python::bridge::initialize() -> zpt::python::bridge& {
         }
     }
     return (*this);
+}
+
+auto
+zpt::python::bridge::is_initialized() const -> bool {
+    return this->__initialized.load();
 }

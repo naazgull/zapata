@@ -22,14 +22,58 @@
 
 #include <zapata/lua.h>
 
+zpt::lua::bridge _bridge;
+
+auto
+to_c(lua_State* _state) -> int {
+    zlog(lua_gettop(_state), zpt::debug);
+    auto& _instance = _bridge.thread_instance();
+    auto _json = _instance.object_to_json(_state);
+    zlog(_json, zpt::debug);
+    _instance.json_to_object({ "a", _json, "b", { zpt::array, 1, 2, 3, 4, 10 } });
+    return 1;
+}
+
+struct luaL_Reg _lib[] = { { "to_c", to_c } };
+
+auto
+init_x(lua_State* _state) -> void {
+    zlog("Lua: init callback called", zpt::info);
+    lua_newtable(_state);
+    luaL_setfuncs(_state, _lib, 0);
+    lua_setglobal(_state, "builtin");
+}
+
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::lua::bridge _bridge;
-    _bridge.add_module("/home/pf/Void/test1.lua", zpt::undefined);
-    _bridge.add_module("/home/pf/Void/test2.lua", zpt::undefined);
+    _bridge                                                  //
+      .add_module(init_x, { "module", "builtin" })           //
+      .add_module("/home/pf/Void/test1.lua", { "module", "builtin2" }) //
+      .add_module("/home/pf/Void/test2.lua", { "module", "builtin3" });
 
-    zlog(_bridge.call("to_a", zpt::json{ zpt::array, 1, "testing", false }), zpt::info);
-    _bridge.call("to_b", zpt::undefined);
+    std::thread _thread1{ [&]() -> void {
+        std::cout << "Thread1:" << std::endl << std::flush;
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
+                                            zpt::json{ zpt::array, 1, "testing", false }),
+             zpt::info);
+        _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
+        zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
+                                            zpt::json{ zpt::array, 1, "testing", false }),
+             zpt::info);
+    } };
 
+    std::thread _thread2{ [&]() -> void {
+        std::cout << "Thread2:" << std::endl << std::flush;
+        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
+                                            zpt::json{ zpt::array, 1, "testing", false }),
+             zpt::info);
+        _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
+        zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
+                                            zpt::json{ zpt::array, 1, "testing", false }),
+             zpt::info);
+    } };
+
+    _thread1.join();
+    _thread2.join();
     return 0;
 }
