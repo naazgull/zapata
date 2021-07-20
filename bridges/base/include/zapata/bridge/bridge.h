@@ -57,6 +57,7 @@ class bridge : public zpt::programming::integration {
     auto add_module(Callback _callback, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
     template<typename Lambda>
     auto add_lambda(Lambda _lambda, zpt::json _conf = zpt::undefined) -> bridge<C, O>&;
+    auto init() -> bridge<C, O>&;
 
     auto locate(zpt::json _to_locate) -> object_type;
 
@@ -113,6 +114,13 @@ zpt::programming::bridge<C, O>::add_lambda(Lambda _lambda, zpt::json _conf)
 
 template<typename C, typename O>
 auto
+zpt::programming::bridge<C, O>::init() -> zpt::programming::bridge<C, O>& {
+    static_cast<C*>(this)->initialize();
+    return (*this);
+}
+
+template<typename C, typename O>
+auto
 zpt::programming::bridge<C, O>::locate(zpt::json _to_locate) -> object_type {
     return static_cast<C*>(this)->find(_to_locate);
 }
@@ -134,5 +142,6 @@ template<typename Term, typename... Args>
 auto
 zpt::programming::bridge<C, O>::call(Term _to_call, Args... _arg) -> zpt::json {
     O _ret = static_cast<C*>(this)->execute(_to_call, _arg...);
-    return static_cast<C*>(this)->to_json(_ret);
+    auto _json_ret = static_cast<C*>(this)->to_json(_ret);
+    return _json_ret;
 }

@@ -85,6 +85,7 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
     auto execute(object_type _self, std::string _func, Args... _arg)
       -> zpt::python::bridge::object_type;
 
+    auto initialize() -> zpt::python::bridge&;
     auto is_initialized() const -> bool;
 
   private:
@@ -92,8 +93,6 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
     std::map<std::string, object_type> __modules;
     std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load;
     std::map<std::string, zpt::json> __external_to_load;
-
-    auto initialize() -> zpt::python::bridge&;
 };
 } // namespace python
 } // namespace zpt

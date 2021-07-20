@@ -61,26 +61,42 @@ class bridge : public zpt::programming::bridge<zpt::lua::bridge, zpt::lua_object
     using lambda_type = std::function<int(underlying_type)>;
 
     bridge();
+    bridge(bridge&& _rhs) = delete;
     virtual ~bridge();
+
+    auto operator=(bridge const& _rhs) -> zpt::lua::bridge& = delete;
+    auto operator=(bridge&& _rhs) -> zpt::lua::bridge& = delete;
 
     auto name() const -> std::string;
     auto state() -> lua_State*;
+    auto thread_instance() -> bridge&;
 
-    auto setup_module(zpt::json _conf, std::string _external_path) -> zpt::lua::bridge&;
-    auto setup_module(zpt::json _conf, callback_type _callback) -> zpt::lua::bridge&;
+    auto setup_module(zpt::json _conf, std::string _external_path, bool _persist = true)
+      -> zpt::lua::bridge&;
+    auto setup_module(zpt::json _conf, callback_type _callback, bool _persist = true)
+      -> zpt::lua::bridge&;
+    auto find(zpt::json _to_locate) -> object_type;
+
+    auto clear_stack() -> zpt::lua::bridge&;
 
     auto to_json(object_type _to_convert) -> zpt::json;
     auto to_json(object_type _to_convert, int _index) -> zpt::json;
     auto to_ref(object_type _to_convert, int _index = 1) -> zpt::json;
-    auto to_object(zpt::json _to_convert, object_type _return = {}) -> object_type;
-    auto from_ref(zpt::json _to_convert, object_type _return = {}) -> object_type;
+    auto to_object(zpt::json _to_convert) -> object_type;
+    auto to_object(zpt::json _to_convert, object_type _return) -> object_type;
+    auto from_ref(zpt::json _to_convert, object_type _return) -> object_type;
 
     auto execute(zpt::json _func, zpt::json _args) -> zpt::lua::bridge::object_type;
-    auto execute() -> zpt::lua::bridge::object_type;
+
+    auto initialize() -> zpt::lua::bridge&;
 
   private:
     lua_State* __underlying{ nullptr };
+    std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load;
+    std::map<std::string, zpt::json> __external_to_load;
 
+    bridge(bridge const& _rhs);
+    auto execute() -> zpt::lua::bridge::object_type;
     auto to_args(zpt::json _to_convert) -> zpt::lua::bridge&;
 };
 } // namespace lua

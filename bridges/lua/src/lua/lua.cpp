@@ -38,11 +38,14 @@ zpt::lua_object::lua_object(lua_State* _rhs)
   : __underlying{ _rhs } {}
 
 zpt::lua_object::lua_object(lua_object const& _rhs)
-  : __underlying{ _rhs.__underlying } {}
+  : __underlying{ _rhs.__underlying }
+  , __initialized_internally{ false } {}
 
 zpt::lua_object::lua_object(lua_object&& _rhs)
-  : __underlying{ _rhs.__underlying } {
+  : __underlying{ _rhs.__underlying }
+  , __initialized_internally{ _rhs.__initialized_internally } {
     _rhs.__underlying = nullptr;
+    _rhs.__initialized_internally = false;
 }
 
 zpt::lua_object::~lua_object() {
@@ -52,20 +55,27 @@ zpt::lua_object::~lua_object() {
 
 auto
 zpt::lua_object::operator=(lua_object const& _rhs) -> lua_object& {
+    if (this->__initialized_internally) { lua_close(this->__underlying); }
     this->__underlying = _rhs.__underlying;
+    this->__initialized_internally = false;
     return (*this);
 }
 
 auto
 zpt::lua_object::operator=(lua_object&& _rhs) -> lua_object& {
+    if (this->__initialized_internally) { lua_close(this->__underlying); }
     this->__underlying = _rhs.__underlying;
+    this->__initialized_internally = _rhs.__initialized_internally;
     _rhs.__underlying = nullptr;
+    _rhs.__initialized_internally = false;
     return (*this);
 }
 
 auto
 zpt::lua_object::operator=(lua_State* _rhs) -> lua_object& {
+    if (this->__initialized_internally) { lua_close(this->__underlying); }
     this->__underlying = _rhs;
+    this->__initialized_internally = false;
     return (*this);
 }
 
@@ -91,7 +101,9 @@ zpt::lua::bridge::bridge()
     luaL_openlibs(this->__underlying);
 }
 
-zpt::lua::bridge::~bridge() { lua_close(this->__underlying); }
+zpt::lua::bridge::~bridge() {
+    if (this->__underlying != nullptr) { lua_close(this->__underlying); }
+}
 
 auto
 zpt::lua::bridge::name() const -> std::string {
@@ -104,7 +116,15 @@ zpt::lua::bridge::state() -> lua_State* {
 }
 
 auto
-zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path) -> zpt::lua::bridge& {
+zpt::lua::bridge::thread_instance() -> bridge& {
+    static thread_local zpt::lua::bridge _return{ *this };
+    return _return;
+}
+
+auto
+zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
+  -> zpt::lua::bridge& {
+    expect(_conf["module"]->is_string(), "Lua: module name must be provided", 500, 0);
     expect(!luaL_loadfile(this->__underlying, _external_path.data()),
            "Lua: error loading module '" << _external_path
                                          << "': " << lua_tostring(this->__underlying, -1),
@@ -114,13 +134,57 @@ zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path) -> z
            "Lua: error invoking function: " << lua_tostring(this->__underlying, -1),
            500,
            0);
-    zlog("Lua: loading " << _external_path, zpt::info);
+    zlog("Lua: loading module " << _conf["module"] << " from " << _external_path, zpt::info);
+    if (_persist) { this->__external_to_load.insert(std::make_pair(_external_path, _conf)); }
     return (*this);
 }
 
 auto
-zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback) -> zpt::lua::bridge& {
+zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
+  -> zpt::lua::bridge& {
+    expect(_conf["module"]->is_string(), "Lua: module name must be provided", 500, 0);
+    zlog("Lua: loading builtin module " << _conf["module"], zpt::info);
     _callback(this->__underlying);
+    if (_persist) {
+        this->__builtin_to_load.insert(
+          std::make_pair(_conf["module"]->string(), std::make_tuple(_callback, _conf)));
+    }
+    return (*this);
+}
+
+auto
+zpt::lua::bridge::find(zpt::json _to_locate) -> object_type {
+    expect(_to_locate["function"]->is_string(), "Lua: function name must be provided", 500, 0);
+    lua_pop(this->__underlying, lua_gettop(this->__underlying));
+
+    if (!_to_locate["module"]->ok()) {
+        lua_getglobal(this->__underlying, _to_locate["function"]->string().data());
+        expect(lua_isfunction(this->__underlying, -1),
+               "Lua: couldn't locate `" << _to_locate["function"] << "`",
+               500,
+               0);
+        lua_xmove(this->__underlying, this->__underlying, 1);
+        return this->__underlying;
+    }
+
+    lua_getglobal(this->__underlying, _to_locate["module"]->string().data());
+    expect(lua_gettop(this->__underlying) == 1,
+           "Lua: couldn't locate `" << _to_locate["module"] << "`",
+           500,
+           0);
+    lua_pushstring(this->__underlying, _to_locate["function"]->string().data());
+    lua_gettable(this->__underlying, 1);
+    expect(lua_isfunction(this->__underlying, -1),
+           "Lua: couldn't locate `" << _to_locate["module"] << "." << _to_locate["function"] << "`",
+           500,
+           0);
+    lua_remove(this->__underlying, 1);
+    return this->__underlying;
+}
+
+auto
+zpt::lua::bridge::clear_stack() -> zpt::lua::bridge& {
+    lua_pop(this->__underlying, lua_gettop(this->__underlying));
     return (*this);
 }
 
@@ -135,7 +199,6 @@ zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert) -> zpt::jso
     zpt::json _return = zpt::json::array();
     for (int _idx = 0; _idx != _size; ++_idx) { _return << this->to_json(_to_convert, _idx + 1); }
 
-    if (_to_convert.get() == this->__underlying) { lua_pop(_to_convert, _size); }
     return _return;
 }
 
@@ -199,6 +262,11 @@ zpt::lua::bridge::to_ref(zpt::lua::bridge::object_type _to_convert, int _index) 
 }
 
 auto
+zpt::lua::bridge::to_object(zpt::json _to_convert) -> zpt::lua::bridge::object_type {
+    return this->to_object(_to_convert, this->__underlying);
+}
+
+auto
 zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
   -> zpt::lua::bridge::object_type {
     switch (_to_convert->type()) {
@@ -216,7 +284,7 @@ zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
             lua_newtable(_return);
             int _index = lua_gettop(_return);
             for (auto [_idx, _, _value] : _to_convert) {
-                lua_pushinteger(_return, _idx);
+                lua_pushinteger(_return, _idx + 1);
                 this->to_object(_value, _return);
                 lua_settable(_return, _index);
             }
@@ -282,18 +350,25 @@ zpt::lua::bridge::from_ref(zpt::json _to_convert, object_type _return)
 
 auto
 zpt::lua::bridge::execute(zpt::json _func, zpt::json _args) -> zpt::lua::bridge::object_type {
-    lua_pop(this->__underlying, lua_gettop(this->__underlying));
-    lua_getglobal(this->__underlying, _func->string().data());
+    expect(_func["function"]->is_string(), "Lua: need a function", 500, 0);
+    this->clear_stack();
+    this->locate(_func);
     if (_args->is_array()) { this->to_args(_args); }
     return this->execute();
 }
 
+zpt::lua::bridge::bridge(bridge const& _rhs)
+  : __underlying{ luaL_newstate() }
+  , __builtin_to_load{ _rhs.__builtin_to_load }
+  , __external_to_load{ _rhs.__external_to_load } {
+    luaL_openlibs(this->__underlying);
+    this->initialize();
+}
+
 auto
 zpt::lua::bridge::execute() -> zpt::lua::bridge::object_type {
-    expect(lua_isfunction(this->__underlying, -lua_gettop(this->__underlying)),
-           "Lua: there is no callable item in the stack",
-           500,
-           0);
+    expect(
+      lua_isfunction(this->__underlying, 1), "Lua: there is no callable item in the stack", 500, 0);
     expect(!lua_pcall(this->__underlying, lua_gettop(this->__underlying) - 1, LUA_MULTRET, 0),
            "Lua: error invoking function: " << lua_tostring(this->__underlying, -1),
            500,
@@ -305,5 +380,17 @@ auto
 zpt::lua::bridge::to_args(zpt::json _args) -> zpt::lua::bridge& {
     expect(_args->is_array(), "Lua: `to_args` parameter `_args` must be an array", 500, 0);
     for (auto [_, __, _arg] : _args) { this->to_object(_arg, this->__underlying); }
+    return (*this);
+}
+
+auto
+zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
+    for (auto [_file, _conf] : this->__external_to_load) {
+        this->setup_module(_conf, _file, false);
+    }
+    for (auto [_, _pair] : this->__builtin_to_load) {
+        auto [_callback, _conf] = _pair;
+        this->setup_module(_conf, _callback, false);
+    }
     return (*this);
 }
