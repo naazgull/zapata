@@ -23,5 +23,5 @@
 #pragma once
 
 #include <zapata/lua/lua.h>
-#include <zapata/lua/config.h>
+
 

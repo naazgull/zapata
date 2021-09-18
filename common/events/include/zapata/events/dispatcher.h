@@ -77,7 +77,9 @@ zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
 
 template<typename C, typename E, typename V>
 zpt::events::dispatcher<C, E, V>::~dispatcher() {
-    expect(this->__shutdown.load(), "dispatcher has not been shutdown", 500, 0);
+    if (!this->__shutdown.load()) {
+        zlog("dispatcher has not been shutdown", zpt::error);
+    }
 }
 
 template<typename C, typename E, typename V>

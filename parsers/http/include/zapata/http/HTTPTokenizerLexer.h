@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zapata/http/config.h>
+
 
 #include <zapata/http/HTTPLexer.h>
 #include <zapata/http/HTTPObj.h>

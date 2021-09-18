@@ -19,24 +19,14 @@ distclean:
 config:
 	./.build config ${exclude}
 
-asan:
-	./.build asan ${exclude}
-
 config_debug:
 	./.build config_debug ${exclude}
 
 bump:
 	./.repo bump minor
 
-deb:
-	sudo rm -rfv upstream/*
-	./.build package ${exclude}
-
 format:
 	./.build format ${exclude}
-
-tidy:
-	./.build tidy ${exclude}
 
 from:
 	./.build from ${module} ${action}

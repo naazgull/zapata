@@ -2,4 +2,4 @@
 #pragma once
 
 #include <zapata/events/dispatcher.h>
-#include <zapata/events/config.h>
+

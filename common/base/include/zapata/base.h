@@ -28,4 +28,3 @@
 #include <zapata/file/manip.h>
 #include <zapata/mail/manip.h>
 #include <zapata/net/manip.h>
-#include <zapata/base/config.h>

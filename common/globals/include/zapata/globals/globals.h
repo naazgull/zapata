@@ -89,7 +89,7 @@ zpt::globals::get(ssize_t _variable) -> T& {
            "no such global variable for " << typeid(T).name(),
            500,
            0);
-    expect(_found->second.size() > _variable,
+    expect(static_cast<ssize_t>(_found->second.size()) > _variable,
            "no such global variable for " << typeid(T).name(),
            500,
            0);
@@ -107,7 +107,7 @@ zpt::globals::dealloc(ssize_t _variable) -> void {
            "no such global variable for " << typeid(T).name(),
            500,
            0);
-    expect(_found->second.size() > _variable,
+    expect(static_cast<ssize_t>(_found->second.size()) > _variable,
            "no such global variable for " << typeid(T).name(),
            500,
            0);

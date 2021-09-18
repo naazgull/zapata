@@ -6,4 +6,4 @@ Copyright (c) 2016
 
 #include <zapata/globals/globals.h>
 #include <zapata/globals/cached.h>
-#include <zapata/globals/config.h>
+

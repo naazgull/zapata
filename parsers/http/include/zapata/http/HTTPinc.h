@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <zapata/http/config.h>
+
 
 #include <zapata/http/HTTPObj.h>
 #include <zapata/exceptions/SyntaxErrorException.h>

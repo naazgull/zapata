@@ -23,4 +23,4 @@
 #pragma once
 
 #include <zapata/rest/rest.h>
-#include <zapata/rest/config.h>
+

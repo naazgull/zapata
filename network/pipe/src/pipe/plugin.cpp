@@ -23,7 +23,6 @@
 #include <iostream>
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/net/socket.h>
 #include <zapata/net/transport/pipe.h>
 
 extern "C" auto
