@@ -36,5 +36,5 @@
 
 #include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONParser.h>
-#include <zapata/json/config.h>
+
 #include <zapata/json/json.h>

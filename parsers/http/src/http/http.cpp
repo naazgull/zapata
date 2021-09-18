@@ -1,4 +1,4 @@
-#include <zapata/http/config.h>
+
 #include <zapata/http/http.h>
 
 auto

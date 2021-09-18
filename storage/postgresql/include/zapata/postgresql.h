@@ -23,5 +23,5 @@
 #pragma once
 
 #include <zapata/postgresql/Client.h>
-#include <zapata/postgresql/config.h>
+
 #include <zapata/postgresql/convert_sql.h>

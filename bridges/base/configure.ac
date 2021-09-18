@@ -38,9 +38,10 @@ dnl Libtool is used for building share libraries
 AC_PROG_LIBTOOL
 
 AC_SUBST([CPP_STD_VERSION])
+AC_SUBST([INCLUDE_DIR])
+AC_SUBST([PROJECT_DIR])
 
 AC_CONFIG_FILES(Makefile
-		debian/Makefile
 		include/Makefile
 		src/bridge/Makefile)
 AC_OUTPUT

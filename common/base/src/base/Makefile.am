@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libzapata-base.la
 
 libzapata_base_la_LIBADD = -lpthread -lmagic -lossp-uuid++ -lcrypto++
 libzapata_base_la_LDFLAGS = -version-info 2:0:0 -shared
-libzapata_base_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ -I../../../include -I../../include
+libzapata_base_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ @INCLUDE_DIR@
 
 libzapata_base_la_SOURCES = \
 ./performative.cpp \
@@ -34,8 +34,8 @@ libzapata_base_la_SOURCES = \
 bin_PROGRAMS = zoc
 
 zoc_LDADD = -lpthread libzapata-base.la
-zoc_LDFLAGS=
-zoc_CPPFLAGS = @CPP_STD_VERSION@ -Wall -I../../../include -I../../include
+zoc_LDFLAGS =
+zoc_CPPFLAGS = -O3 @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@
 
 zoc_SOURCES = \
 zoc.cpp

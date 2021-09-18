@@ -23,4 +23,4 @@
 #pragma once
 
 #include <zapata/automaton/automaton.h>
-#include <zapata/automaton/config.h>
+

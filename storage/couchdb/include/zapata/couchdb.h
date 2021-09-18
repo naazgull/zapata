@@ -23,5 +23,5 @@
 #pragma once
 
 #include <zapata/couchdb/Client.h>
-#include <zapata/couchdb/config.h>
+
 #include <zapata/json.h>

@@ -1,8 +1,10 @@
 lib_LTLIBRARIES = libzapata-lex-json.la
 
 libzapata_lex_json_la_LIBADD = -lpthread -lmagic -lzapata-base
-libzapata_lex_json_la_LDFLAGS = -version-info 2:0:0 -shared
-libzapata_lex_json_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ -I../../../include -I../../include
+libzapata_lex_json_la_LDFLAGS = -version-info 2:0:0 -shared	\
+-L@PROJECT_DIR@/common/base/build/src/base/.libs
+libzapata_lex_json_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ @INCLUDE_DIR@	\
+-I@PROJECT_DIR@/common/base/include
 
 libzapata_lex_json_la_SOURCES = \
 ./JSONArr.cpp \
@@ -20,22 +22,25 @@ libzapata_lex_json_la_SOURCES = \
 bin_PROGRAMS = zat zjson zinit
 
 zat_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
-zat_LDFLAGS=
-zat_CPPFLAGS = @CPP_STD_VERSION@ -Wall -I../../../include -I../../include
+zat_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs
+zat_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
+-I@PROJECT_DIR@/common/base/include
 
 zat_SOURCES = \
 zat.cpp
 
 zjson_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
-zjson_LDFLAGS=
-zjson_CPPFLAGS = @CPP_STD_VERSION@ -Wall -I../../../include -I../../include
+zjson_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs
+zjson_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
+-I@PROJECT_DIR@/common/base/include
 
 zjson_SOURCES = \
 main.cpp
 
 zinit_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
-zinit_LDFLAGS=
-zinit_CPPFLAGS = @CPP_STD_VERSION@ -Wall -I../../../include -I../../include
+zinit_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs
+zinit_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
+-I@PROJECT_DIR@/common/base/include
 
 zinit_SOURCES = \
 zinit.cpp

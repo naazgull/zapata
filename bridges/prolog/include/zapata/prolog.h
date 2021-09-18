@@ -23,5 +23,5 @@
 #pragma once
 
 #include <zapata/prolog/prolog.h>
-#include <zapata/prolog/config.h>
+
 

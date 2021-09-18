@@ -9,4 +9,4 @@ Copyright (c) 2016
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/list.h>
 #include <zapata/lockfree/hazard_ptr.h>
-#include <zapata/lockfree/config.h>
+

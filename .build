@@ -47,8 +47,12 @@ fi
 
 distro=$(lsb_release -c -s)
 goahead="no"
+project_dir=${PWD}
+
 for package in ${projects[@]}
 do
+    include_dir="-I${project_dir}/${package}/include"
+
     if [[ "${1}" == "from" ]]
     then
         if [[ "${2}" == "${package}" ]]
@@ -81,56 +85,52 @@ do
     then
         continue
     fi
-    
+
     title="Processing '${package}'"
     underlines=$(printf %s "${title}" | tr -c '-' '[-*]')
     echo
     echo ${title}
     echo ${underlines}
+    # echo ${link_modules}
 
     case "${action}" in
 	all)
-	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build &&\
-            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
     from)
-	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build &&\
-            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
         ;;
 	single)
-	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build &&\
-            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	clean)
-	    CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build clean
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build clean
 	    ;;
 	install)
-	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build install
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
 	    fi
 	    ;;
 	uninstall)
-	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build uninstall
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build uninstall
 	    ;;
 	distcheck)
 	    rm -rfv ${package}/*.tar.gz
-        export CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version}
-	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build -j$threads distcheck &&\
-            sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build install
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build -j$threads distcheck
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -138,7 +138,7 @@ do
 	    ;;
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
-	    sudo CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -C ${package}/build distclean
+	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build distclean
 	    ;;
 	config)
         pushd ${package} > /dev/null
@@ -146,7 +146,7 @@ do
             autoreconf -vfi &&\
             mkdir build &&\
             cd build &&\
-            CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
+            CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O3 -Wall -fno-stack-protector"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -159,17 +159,7 @@ do
             autoreconf -vfi &&\
             mkdir build &&\
             cd build &&\
-            CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
-        popd > /dev/null
-	    ;;
-	package)
-        pushd ${package} > /dev/null
-        export CPP_STD_VERSION=${cxx_std_version} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version}
-        ./make_deb
+            CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} ../configure  --prefix=/usr --sysconf=/etc --libdir=/usr/lib --libexecdir=/usr/lib "CXXFLAGS=-O0 -ggdb3 -Wall"
 	    if [[ $? != 0 ]]
 	    then
 		    exit -1
@@ -189,17 +179,6 @@ do
 		        exit -1
 	        fi
         done
-        ;;
-    tidy)
-        pushd ${package} > /dev/null
-        # clang-tidy --format-style=file --config= $(find . -name "*.cpp")
-        #  --fix-errors --fix
-        # '-*,cppcoreguidelines*,clang-analyzer-cplusplus*,modernize*,bugprone*,-cppcoreguidelines-pro-*,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-init-variables'
-	    if [[ $? != 0 ]]
-	    then
-		    exit -1
-	    fi
-        popd > /dev/null
         ;;
     esac
 

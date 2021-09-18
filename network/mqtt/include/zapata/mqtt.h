@@ -23,4 +23,4 @@
 #pragma once
 
 #include <zapata/mqtt/MQTT.h>
-#include <zapata/mqtt/config.h>
+

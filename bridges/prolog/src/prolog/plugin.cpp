@@ -26,14 +26,14 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _bridge = zpt::globals::alloc<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
+    // auto& _bridge = zpt::globals::alloc<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
 
-    _bridge.set_options(_plugin->config());
-    if (_bridge.options()["modules"]->is_array()) {
-        for (auto [_, __, _module] : _bridge.options()["modules"]) {
-            _bridge.add_module(_module["file"]->string(), _module);
-        }
-    }
+    // _bridge.set_options(_plugin->config());
+    // if (_bridge.options()["modules"]->is_array()) {
+    //     for (auto [_, __, _module] : _bridge.options()["modules"]) {
+    //         _bridge.add_module(_module["file"]->string(), _module);
+    //     }
+    // }
 
     zlog("Starting PROLOG bridge", zpt::info);
 }
@@ -41,5 +41,5 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Stopping PROLOG bridge", zpt::info);
-    zpt::globals::dealloc<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
+    // zpt::globals::dealloc<zpt::prolog::bridge>(zpt::PROLOG_BRIDGE());
 }
