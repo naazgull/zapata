@@ -48,7 +48,7 @@ main(int argc, char* argv[]) -> int {
       .add_module("py_external", { "name", "external" })             //
       .init();
 
-    std::thread _thread1{ [&]() -> void {
+    // std::thread _thread1{ [&]() -> void {
         auto _result = _bridge.call(zpt::json{ "module", "builtin", "function", "to_a" },
                                     zpt::json{ zpt::array, { "field", "xpto" } });
         zlog(_result, zpt::info);
@@ -58,21 +58,21 @@ main(int argc, char* argv[]) -> int {
         _bridge.call(_instance, "set", zpt::json{ "field", "xpto" });
         _result = _bridge.call(_instance, "get", nullptr);
         zlog(_result, zpt::info);
-    } };
+    // } };
 
-    std::thread _thread2{ [&]() -> void {
-        auto _result = _bridge.call(zpt::json{ "module", "builtin", "function", "to_a" },
-                                    zpt::json{ zpt::array, { "field", "xpto" } });
-        zlog(_result, zpt::info);
+    // std::thread _thread2{ [&]() -> void {
+    //     auto _result = _bridge.call(zpt::json{ "module", "builtin", "function", "to_a" },
+    //                                 zpt::json{ zpt::array, { "field", "xpto" } });
+    //     zlog(_result, zpt::info);
 
-        auto _instance =
-          _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
-        _bridge.call(_instance, "set", zpt::json{ "field", "xpto" });
-        _result = _bridge.call(_instance, "get", nullptr);
-        zlog(_result, zpt::info);
-    } };
+    //     auto _instance =
+    //       _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
+    //     _bridge.call(_instance, "set", zpt::json{ "field", "xpto" });
+    //     _result = _bridge.call(_instance, "get", nullptr);
+    //     zlog(_result, zpt::info);
+    // } };
 
-    _thread1.join();
-    _thread2.join();
+    // _thread1.join();
+    // _thread2.join();
     return 0;
 }
