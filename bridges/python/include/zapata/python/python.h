@@ -24,6 +24,7 @@
 
 #include <zapata/bridge.h>
 #include <Python.h>
+#include <zapata/lockfree/spin_lock.h>
 
 namespace zpt {
 auto
@@ -93,6 +94,7 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
     std::map<std::string, object_type> __modules;
     std::map<std::string, std::tuple<callback_type, zpt::json>> __builtin_to_load;
     std::map<std::string, zpt::json> __external_to_load;
+    zpt::lf::spin_lock __engine_lock;
 };
 } // namespace python
 } // namespace zpt

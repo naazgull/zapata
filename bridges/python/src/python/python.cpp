@@ -690,9 +690,8 @@ auto
 zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    auto _state = PyGILState_Ensure();
-    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
-
+    zpt::lf::spin_lock::guard _sentry{ this->__engine_lock, zpt::lf::spin_lock::exclusive };
+    
     expect(_func_name->is_object(), "Python: cannot call a null function", 500, 0);
 
     object_type _func = this->locate(_func_name);
@@ -709,8 +708,7 @@ auto
 zpt::python::bridge::execute(object_type _func, object_type _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    auto _state = PyGILState_Ensure();
-    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
+    zpt::lf::spin_lock::guard _sentry{ this->__engine_lock, zpt::lf::spin_lock::exclusive };
 
     expect(_func.get() != nullptr, "Python: cannot call a null function", 500, 0);
     expect(PyCallable_Check(_func.get()) == 1,
@@ -743,8 +741,7 @@ auto
 zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    auto _state = PyGILState_Ensure();
-    zpt::sentry<>{ [&_state]() { PyGILState_Release(_state); } };
+    zpt::lf::spin_lock::guard _sentry{ this->__engine_lock, zpt::lf::spin_lock::exclusive };
 
     expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
     auto _func = this->to_object(_func_name);
