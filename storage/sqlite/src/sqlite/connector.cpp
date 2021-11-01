@@ -24,7 +24,7 @@
 #include <algorithm>
 
 #define sqlite_expect(_error, _message)                                                            \
-    expect(_error == 0,                                                                            \
+    expect(_error == SQLITE_OK || _error == SQLITE_DONE || error == SQLITE_ROW,                    \
            std::get<0>(__messages[_error])                                                         \
              << ": " << _message << " due to: " << std::get<1>(__messages[_error]),                \
            500,                                                                                    \
@@ -77,6 +77,12 @@ zpt::storage::sqlite::to_db_doc(zpt::json _document) -> std::string {
 auto
 zpt::storage::sqlite::from_db_doc(std::string const& _document) -> zpt::json {
     return zpt::json::parse_json_str(_document);
+}
+
+auto
+zpt::storage::sqlite::prepare_insert(prepared_list _prepared,
+                                     std::string const& _table_name,
+                                     zpt::json _document) -> void {
 }
 
 zpt::storage::sqlite::connection::connection(zpt::json _options)
@@ -148,12 +154,12 @@ zpt::storage::sqlite::session::database(std::string const& _db) -> zpt::storage:
 
 zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session,
                                          std::string const& _db)
-  : __path{ _session.__options["path"]->string() + std::string{ "/" } + _db }
-  , __commit{ _session.is_to_commit() } {}
-
-auto
-zpt::storage::sqlite::database::is_to_commit() -> bool& {
-    return *this->__commit;
+  : __path{ _session.__options["path"]->string() + std::string{ "/" } + _db } {
+    sqlite3* _underlying{ nullptr };
+    sqlite_expect(sqlite3_open(this->__path.data(), &_underlying),
+                  "couldn't open collection at " << this->__path);
+    this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
+    _session.__underlying = this->__underlying;
 }
 
 auto
@@ -167,27 +173,10 @@ zpt::storage::sqlite::database::collection(std::string const& _collection)
     return zpt::storage::collection::alloc<zpt::storage::sqlite::collection>(*this, _collection);
 }
 
-auto
-zpt::storage::sqlite::database::set_conn(sqlite3_ptr _underlying) -> void {
-    this->__underlying = _underlying;
-    this->__connection->__underlying = _underlying;
-}
-
 zpt::storage::sqlite::collection::collection(zpt::storage::sqlite::database& _database,
                                              std::string const& _collection)
-  : __underlying{ nullptr }
-  , __collection_name{ _collection }
-  , __collection_file{ _database.path() + std::string{ "/" } + _collection +
-                       std::string{ ".sqlite" } }
-  , __commit{ _database.is_to_commit() } {
-    sqlite3* _underlying{ nullptr };
-    sqlite_expect(sqlite3_open(this->__colletion_file.data(), &_underlying),
-                  "couldn't open collection at " << this->__colletion_file);
-    this->__underlying.reset(_underlying, zpt::storage::sqlite::close_connection{});
-    _database.set_conn(this->__underlying);
-}
-
-zpt::storage::sqlite::collection::~collection() { mdb_env_close(this->__underlying); }
+  : __underlying{ _database.__underlying }
+  , __collection_name{ _collection } {}
 
 auto
 zpt::storage::sqlite::collection::add(zpt::json _document) -> zpt::storage::action {
@@ -217,47 +206,14 @@ zpt::storage::sqlite::collection::find(zpt::json _search) -> zpt::storage::actio
 
 auto
 zpt::storage::sqlite::collection::count() -> size_t {
-    MDB_txn* _read_trx{ nullptr };
-    auto _error = mdb_txn_begin(this->__underlying, nullptr, MDB_RDONLY, &_read_trx);
-    mdb_expect(_error, "unable to create transaction");
-
-    MDB_dbi _dbi;
-    _error = mdb_dbi_open(_read_trx, nullptr, 0, &_dbi);
-    mdb_expect(_error, "unable to create db handle");
-
-    MDB_stat _stat;
-    _error = mdb_stat(_read_trx, _dbi, &_stat);
-    expect(_error == 0, "unable to retrieve statistics from database", 500, _error);
-
-    auto _count = _stat.ms_entries;
-
-    mdb_dbi_close(this->__underlying, _dbi);
-    mdb_txn_abort(_read_trx);
+    auto _count{ 0 };
     return _count;
 }
 
 auto
-zpt::storage::sqlite::collection::file() -> std::string& {
-    return this->__collection_file;
-}
-
-auto
-zpt::storage::sqlite::collection::env() -> MDB_env* {
-    return this->__underlying;
-}
-
-auto
-zpt::storage::sqlite::collection::is_to_commit() -> bool& {
-    return *this->__commit;
-}
-
 zpt::storage::sqlite::action::action(zpt::storage::sqlite::collection& _collection)
-  : __underlying{ _collection } {}
-
-auto
-zpt::storage::sqlite::action::is_to_commit() -> bool& {
-    return this->__underlying->is_to_commit();
-}
+  : __underlying{ _collection.__underlying }
+  , __collection_name{ _collection.__collection_name } {}
 
 auto
 zpt::storage::sqlite::action::set_state(int _error) -> void {
@@ -275,24 +231,6 @@ zpt::storage::sqlite::action::get_state() -> zpt::json {
     return this->__state;
 }
 
-auto
-zpt::storage::sqlite::action::is_filtered_out(zpt::json _search, zpt::json _to_filter) -> bool {
-    if (_search->size() != 0) {
-        for (auto [_, _key, _value] : _search) {
-            if (_value != _to_filter[_key]) { return true; }
-        }
-    }
-    return false;
-}
-
-auto
-zpt::storage::sqlite::action::trim(zpt::json _fields, zpt::json _to_trim) -> zpt::json {
-    if (_fields->size() != 0) {
-        for (auto [_, __, _field] : _fields) { _to_trim->object()->pop(_field->string()); }
-    }
-    return _to_trim;
-}
-
 zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection& _collection,
                                              zpt::json _document)
   : zpt::storage::sqlite::action::action{ _collection } {
@@ -303,10 +241,11 @@ auto
 zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
     if (!_document["_id"]->ok()) {
         std::string _id{ zpt::generate::r_uuid() };
-        this->__generated_uuid << zpt::json{ "_id", _id };
         _document << "_id" << _id;
+        this->__generated_uuid << _id;
     }
     this->__to_add << _document;
+    zpt::storage::sqlite::prepare_insert(this->__prepared, this->__collection_name, _document);
     return this;
 }
 
@@ -383,32 +322,13 @@ zpt::storage::sqlite::action_add::bind(zpt::json _map) -> zpt::storage::action::
 
 auto
 zpt::storage::sqlite::action_add::execute() -> zpt::storage::result {
-    MDB_txn* _trx{ nullptr };
-    MDB_dbi _dbi{ 0 };
     try {
-        auto _error = mdb_txn_begin(this->__underlying->env(), nullptr, 0, &_trx);
-        mdb_expect(_error, "unable to create transaction");
-
-        _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
-        mdb_expect(_error, "unable to create db handle");
-
-        for (auto [_, __, _doc] : this->__to_add) {
-            auto _key = zpt::storage::sqlite::to_db_key(_doc);
-            auto _value = zpt::storage::sqlite::to_db_doc(_doc);
-            MDB_val _key_v{ _key.length(), _key.data() };
-            MDB_val _value_v{ _value.length(), _value.data() };
-            _error = mdb_put(_trx, _dbi, &_key_v, &_value_v, 0);
-            mdb_expect(_error, "unable to store record in the database");
+        for (auto _stmt : this->__prepared) {
+            sqlite_expect(sqlite3_step(_stmt), "unable to execute prepared statement for '...'");
         }
-
-        mdb_dbi_close(this->__underlying->env(), _dbi);
-        _error = mdb_txn_commit(_trx);
-        mdb_expect(_error, "unable to commit transaction");
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(_e.code());
-        mdb_dbi_close(this->__underlying->env(), _dbi);
-        mdb_txn_abort(_trx);
         throw;
     }
     zpt::json _result{ "state", this->get_state(), "generated", this->__generated_uuid };

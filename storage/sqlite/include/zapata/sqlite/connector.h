@@ -44,6 +44,7 @@ struct close_connection {
 };
 
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
+using prepared_list = std::vector<sqlite3_stmt*>;
 
 auto
 to_db_key(zpt::json _document) -> std::string;
@@ -51,6 +52,9 @@ auto
 to_db_doc(zpt::json _document) -> std::string;
 auto
 from_db_doc(std::string const& _document) -> zpt::json;
+auto
+prepare_insert(prepared_list _prepared, std::string const& _table_name, zpt::json _document)
+  -> void;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -69,6 +73,8 @@ class connection : public zpt::storage::connection::type {
 };
 class session : public zpt::storage::session::type {
   public:
+    friend class session;
+
     session(zpt::storage::sqlite::connection& _connection);
     session(const zpt::storage::sqlite::session& _rhs) = delete;
     session(zpt::storage::sqlite::session&& _rhs) = delete;
@@ -83,26 +89,26 @@ class session : public zpt::storage::session::type {
 };
 class database : public zpt::storage::database::type {
   public:
+    friend class collection;
+
     database(zpt::storage::sqlite::session& _session, std::string const& _db);
     database(const zpt::storage::sqlite::database& _rhs) = delete;
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
-    virtual auto is_to_commit() -> bool&;
     auto path() -> std::string&;
 
   private:
     std::string __path;
     sqlite3_ptr __underlying{ nullptr };
-    zpt::ref_ptr<zpt::storage::sqlite::connection> __connection;
-
-    auto set_conn(sqlite3_ptr _underlying) -> void;
 };
 class collection : public zpt::storage::collection::type {
   public:
+    friend class action;
+
     collection(zpt::storage::sqlite::database& _database, std::string const& _collection);
-    virtual ~collection() override;
+    virtual ~collection() override = default;
     virtual auto add(zpt::json _document) -> zpt::storage::action override;
     virtual auto modify(zpt::json _search) -> zpt::storage::action override;
     virtual auto remove(zpt::json _search) -> zpt::storage::action override;
@@ -111,29 +117,23 @@ class collection : public zpt::storage::collection::type {
     virtual auto find(zpt::json _search) -> zpt::storage::action override;
     virtual auto count() -> size_t override;
 
-    virtual auto file() -> std::string&;
-    virtual auto env() -> MDB_env*;
-    virtual auto is_to_commit() -> bool&;
-
   private:
     sqlite3_ptr __underlying{ nullptr };
     std::string __collection_name;
-    std::string __collection_file;
-    zpt::ref_ptr<bool> __commit;
 };
 class action : public zpt::storage::action::type {
   public:
     action(zpt::storage::sqlite::collection& _collection);
     virtual ~action() override = default;
 
-    virtual auto is_to_commit() -> bool&;
     auto set_state(int _error) -> void;
     auto get_state() -> zpt::json;
-    auto is_filtered_out(zpt::json _search, zpt::json _to_filter) -> bool;
-    auto trim(zpt::json _fields, zpt::json _to_trim) -> zpt::json;
 
   protected:
-    zpt::ref_ptr<zpt::storage::sqlite::collection> __underlying;
+    sqlite3_ptr __underlying{ nullptr };
+    std::string& __collection_name;
+    prepared_list __prepared;
+    zpt::json __to_bind{ zpt::json::object() };
     zpt::json __state{ "code", 0, "message", "Success" };
 };
 class action_add : public zpt::storage::sqlite::action {
