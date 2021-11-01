@@ -12,11 +12,11 @@ jobs:
     - name: Update OS
       run: sudo apt update
     - name: Install dependencies (1)
-      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev g++-10 cmake liblmdb++-dev
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev g++ cmake liblmdb-dev libsqlite3-dev libpython3-dev liblua5.4-dev
     - name: Install dependencies (2)
       run: git clone https://github.com/mysql/mysql-connector-cpp.git && cd mysql-connector-cpp && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/share/mysql/connector-c++ && cmake --build . --config Release && sudo cmake --build . --target install --config Release && sudo ln -s /usr/local/share/mysql/connector-c++/include/mysqlx /usr/local/include && sudo ln -s /usr/local/share/mysql/connector-c++/lib64/debug/* /usr/local/lib/
-    - name: Setup compiler
-      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 700 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+#    - name: Setup compiler
+#      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 700 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Configure modules
       run: make config
     - name: Build modules
