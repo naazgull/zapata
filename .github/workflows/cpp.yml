@@ -22,4 +22,4 @@ jobs:
     - name: Build modules
       run: make
     - name: Check distribution packages
-      run: make distcheck
+      run: sudo make distcheck
