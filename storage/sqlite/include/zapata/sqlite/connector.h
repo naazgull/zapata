@@ -38,9 +38,7 @@ class action;
 class result;
 
 struct close_connection {
-    void operator()(sqlite3* connection) const {
-        sqlite_expect(sqlite3_close(connection), "unable to properly close database handle");
-    }
+    void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
 };
 
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
@@ -53,8 +51,11 @@ to_db_doc(zpt::json _document) -> std::string;
 auto
 from_db_doc(std::string const& _document) -> zpt::json;
 auto
-prepare_insert(prepared_list _prepared, std::string const& _table_name, zpt::json _document)
-  -> void;
+to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
+auto
+free_byte_array(void* _to_delete) -> void;
+auto
+bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -73,7 +74,7 @@ class connection : public zpt::storage::connection::type {
 };
 class session : public zpt::storage::session::type {
   public:
-    friend class session;
+    friend class database;
 
     session(zpt::storage::sqlite::connection& _connection);
     session(const zpt::storage::sqlite::session& _rhs) = delete;
@@ -83,9 +84,11 @@ class session : public zpt::storage::session::type {
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
+    auto add_database_connection(sqlite3_ptr _database) -> void;
 
   private:
-    sqlite3_ptr __underlying{ nullptr };
+    std::vector<sqlite3_ptr> __underlying;
+    zpt::json __options;
 };
 class database : public zpt::storage::database::type {
   public:
@@ -160,6 +163,8 @@ class action_add : public zpt::storage::sqlite::action {
   private:
     zpt::json __to_add{ zpt::json::array() };
     zpt::json __generated_uuid{ zpt::json::array() };
+
+    auto prepare_insert(zpt::json _document) -> void;
 };
 class action_modify : public zpt::storage::sqlite::action {
   public:

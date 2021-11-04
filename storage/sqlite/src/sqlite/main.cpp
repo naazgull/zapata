@@ -22,69 +22,69 @@ main(int _argc, char* _argv[]) -> int {
                   << std::endl
                   << std::flush;
     }
-    {
-        auto _result = _collection //
-                         ->find({})
-                         ->execute();
+    // {
+    //     auto _result = _collection //
+    //                      ->find({})
+    //                      ->execute();
 
-        std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->find({ "_id", _id1 })
-                         ->execute();
+    //     std::cout << "Collection elements: " << std::endl
+    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->find({ "_id", _id1 })
+    //                      ->execute();
 
-        std::cout << "First record: " << std::endl
-                  << zpt::pretty(_result->to_json()) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->find({ "_id", _id2 })
-                         ->execute();
+    //     std::cout << "First record: " << std::endl
+    //               << zpt::pretty(_result->to_json()) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->find({ "_id", _id2 })
+    //                      ->execute();
 
-        std::cout << "Second record: " << std::endl
-                  << zpt::pretty(_result->to_json()) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->modify({ "_id", _id1 })
-                         ->set("nick", "fin")
-                         ->execute();
+    //     std::cout << "Second record: " << std::endl
+    //               << zpt::pretty(_result->to_json()) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->modify({ "_id", _id1 })
+    //                      ->set("nick", "fin")
+    //                      ->execute();
 
-        std::cout << "First record modified: " << std::endl
-                  << zpt::pretty(_result->to_json()) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->find({})
-                         ->execute();
+    //     std::cout << "First record modified: " << std::endl
+    //               << zpt::pretty(_result->to_json()) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->find({})
+    //                      ->execute();
 
-        std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->remove({})
-                         ->execute();
+    //     std::cout << "Collection elements: " << std::endl
+    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->remove({})
+    //                      ->execute();
 
-        std::cout << "Removed elements: " << std::endl
-                  << zpt::pretty(_result->to_json()) << std::endl
-                  << std::flush;
-    }
-    {
-        auto _result = _collection //
-                         ->find({})
-                         ->execute();
+    //     std::cout << "Removed elements: " << std::endl
+    //               << zpt::pretty(_result->to_json()) << std::endl
+    //               << std::flush;
+    // }
+    // {
+    //     auto _result = _collection //
+    //                      ->find({})
+    //                      ->execute();
 
-        std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-                  << std::flush;
-    }
+    //     std::cout << "Collection elements: " << std::endl
+    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+    //               << std::flush;
+    // }
     return 0;
 }
