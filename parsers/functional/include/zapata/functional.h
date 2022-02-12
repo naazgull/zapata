@@ -20,22 +20,19 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/pipeline/pipeline.h>
+#pragma once
 
-auto
-zpt::pipeline::to_pattern(std::string const& _path) -> zpt::json {
-    zpt::regex _regex{ zpt::r_replace(zpt::r_replace(_path, "{:", ""), ":}", "") };
-    try {
-        zpt::json _splitted = zpt::uri::to_regex(zpt::uri::parse(_path, zpt::JSArray));
-        return { "splitted", _splitted, "regex", _regex };
-    }
-    catch (zpt::SyntaxErrorException const& _e) {
-        return { "splitted", { zpt::array, _regex }, "regex", _regex };
-    }
-}
+#include <zapata/exceptions/NoHeaderNameException.h>
 
-auto
-zpt::pipeline::to_path(std::string const& _path) -> zpt::json {
-    zpt::json _uri = zpt::uri::parse(_path, zpt::JSArray);
-    return { "splitted", _uri, "raw", _path };
-}
+
+#include <zapata/uri/URITokenizerimpl.h>
+#include <zapata/uri/URITokenizerLexer.h>
+#include <zapata/uri/URITokenizer.h>
+#include <zapata/uri/unconfig.h>
+#include <zapata/uri/URIParser.h>
+#include <zapata/uri/URIinc.h>
+#include <zapata/uri/URITokenizerbase.h>
+#include <zapata/uri/URILexerbase.h>
+#include <zapata/uri/URILexer.h>
+#include <zapata/uri/URILexerimpl.h>
+#include <zapata/uri/uri.h>

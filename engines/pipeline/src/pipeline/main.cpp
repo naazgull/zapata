@@ -34,7 +34,7 @@ main(int argc, char* argv[]) -> int {
                                                 "max_queue_spin_sleep",
                                                 5000 } };
 
-    _engine.add_listener(0, "http:/{(.*)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
+    _engine.add_listener(0, "http:/{:(.*):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         _in->set_path(zpt::r_replace(static_cast<std::string>(_in->path()["raw"]), "http:", ""));
         zpt::json _content = _in->content();
         std::cout << std::this_thread::get_id() << ": " << _content << std::endl << std::flush;

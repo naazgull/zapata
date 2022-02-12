@@ -244,6 +244,8 @@ auto
 reply_find(zpt::json& _reply, zpt::json _params) -> void;
 auto
 filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+auto
+parse_params(std::string& _param) -> zpt::json;
 } // namespace storage
 } // namespace zpt
 

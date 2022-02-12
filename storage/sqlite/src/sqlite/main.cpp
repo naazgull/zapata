@@ -7,17 +7,18 @@ main(int _argc, char* _argv[]) -> int {
     auto _session = _connection->session();
     auto _database = _session->database("zapata");
     auto _collection = _database->collection("users");
-    auto _id1 = zpt::generate::r_key(64);
+    auto _id1 = zpt::generate::r_key(16);
     std::string _id2;
 
     {
         _collection //
           ->add({ "_id", _id1, "nick", "fimber", "email", "address@host" })
+          ->add({ "nick", "fizz", "email", "address@ping" })
           ->execute();
         auto _result = _collection //
                          ->add({ "nick", "jaster", "email", "address@kicker" })
                          ->execute();
-        _id2.assign(_result->to_json()["generated"][0]["_id"]->string());
+        _id2.assign(_result->to_json()["generated"][0]->string());
         std::cout << "There are " << _collection->count() << " records in the collection."
                   << std::endl
                   << std::flush;
@@ -49,16 +50,16 @@ main(int _argc, char* _argv[]) -> int {
     //               << zpt::pretty(_result->to_json()) << std::endl
     //               << std::flush;
     // }
-    // {
-    //     auto _result = _collection //
-    //                      ->modify({ "_id", _id1 })
-    //                      ->set("nick", "fin")
-    //                      ->execute();
+    {
+        auto _result = _collection //
+                         ->modify({ "_id", _id1 })
+                         ->set("nick", "fin")
+                         ->execute();
 
-    //     std::cout << "First record modified: " << std::endl
-    //               << zpt::pretty(_result->to_json()) << std::endl
-    //               << std::flush;
-    // }
+        std::cout << "First record modified: " << std::endl
+                  << zpt::pretty(_result->to_json()) << std::endl
+                  << std::flush;
+    }
     // {
     //     auto _result = _collection //
     //                      ->find({})

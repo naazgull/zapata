@@ -23,12 +23,15 @@
 #include <zapata/lmdb/connector.h>
 #include <algorithm>
 
-#define mdb_expect(_error, _message)                                                               \
-    expect(_error == 0,                                                                            \
-           std::get<0>(__messages[_error])                                                         \
-             << ": " << _message << " due to: " << std::get<1>(__messages[_error]),                \
-           500,                                                                                    \
-           _error);
+#define mdb_expect(_error, _message)                                                            \
+    {                                                                                              \
+        auto __error__ = _error;                                                                   \
+        expect(__error__ == 0,                                                                     \
+               std::get<0>(__messages[__error__])                                                  \
+                 << ": " << _message << " due to: " << std::get<1>(__messages[__error__]),         \
+               500,                                                                                \
+               __error__);                                                                         \
+    }
 
 std::map<int, std::tuple<std::string, std::string>> __messages = {
     { MDB_PANIC,

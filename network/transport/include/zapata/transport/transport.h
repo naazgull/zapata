@@ -50,6 +50,7 @@ class exchange {
         auto received() -> zpt::json&;
         auto to_send() -> zpt::json&;
         auto keep_alive() -> bool&;
+        auto content_type() -> zpt::json;
 
       private:
         zpt::stream* __stream{ nullptr };
@@ -92,7 +93,7 @@ class transport {
         transport_t(transport_t const&) = delete;
         transport_t(transport_t&&) = delete;
         virtual ~transport_t() = default;
-        
+
         auto operator=(transport_t const&) -> transport_t& = delete;
         auto operator=(transport_t&&) -> transport_t& = delete;
 
@@ -116,6 +117,9 @@ class transport {
 
     class layer {
       public:
+        using translate_from_func = std::function<zpt::json(std::istream&)>;
+        using translate_to_func = std::function<std::string(std::ostream&, zpt::json)>;
+
         layer();
         virtual ~layer() = default;
 
@@ -123,6 +127,8 @@ class transport {
         auto get(std::string const& _scheme) const -> const zpt::transport&;
 
         auto translate(std::istream& _io, std::string _mime = "*/*") const -> zpt::json;
+        auto translate(std::ostream& _io, std::string _mime, zpt::json _content) const
+          -> std::string;
 
         auto begin() const -> std::map<std::string, zpt::transport>::const_iterator;
         auto end() const -> std::map<std::string, zpt::transport>::const_iterator;
@@ -131,14 +137,18 @@ class transport {
 
       private:
         std::map<std::string, zpt::transport> __underlying;
-        std::map<std::string, std::function<zpt::json(std::istream&)>> __content_providers;
+        std::map<std::string, std::tuple<translate_from_func, translate_to_func>>
+          __content_providers;
 
-        auto add_content_provider(std::string const& _scheme,
-                                  std::function<zpt::json(std::istream&)> _callback)
-          -> zpt::transport::layer&;
+        auto add_content_provider(std::string const& _mime,
+                                  translate_from_func _callback_from,
+                                  translate_to_func _callback_to) -> zpt::transport::layer&;
         static auto translate_from_default(std::istream& _io) -> zpt::json;
         static auto translate_from_json(std::istream& _io) -> zpt::json;
         static auto translate_from_raw(std::istream& _io) -> zpt::json;
+        static auto translate_to_default(std::ostream& _io, zpt::json _content) -> std::string;
+        static auto translate_to_json(std::ostream& _io, zpt::json _content) -> std::string;
+        static auto translate_to_raw(std::ostream& _io, zpt::json _content) -> std::string;
     };
 
   private:

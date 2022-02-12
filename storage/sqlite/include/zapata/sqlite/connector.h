@@ -38,18 +38,133 @@ class action;
 class result;
 
 struct close_connection {
-    void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
+    void operator()(sqlite3* _connection) const {
+        zlog("Closing connection to db.", zpt::info);
+        sqlite3_close(_connection);
+    }
+};
+
+struct finalize_statement {
+    void operator()(sqlite3_stmt* _statement) const {
+        zlog("Finalizing statement.", zpt::info);
+        sqlite3_finalize(_statement);
+    }
 };
 
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
-using prepared_list = std::vector<sqlite3_stmt*>;
+using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
 
+auto
+expression_operators() -> std::map<std::string, std::function<zpt::json(zpt::json, std::string)>>&;
+auto
+bind_operators() -> std::map<std::string, std::function<zpt::json(zpt::json)>>&;
+auto
+cast(zpt::json _expression) -> zpt::json;
+auto
+cast(zpt::json _expression, std::string _cast) -> zpt::json;
+auto
+cast_to_db_value(zpt::json _value) -> void;
+
+class lower {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class upper {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class boolean {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class date {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class integer {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class floating {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class regex {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class string {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class ne {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class gt {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class gte {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class lt {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class lte {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+class between {
+  public:
+    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
+    auto operator()(zpt::json _expression) -> zpt::json;
+};
+
+auto
+evaluate_expression(zpt::json _expression, std::string _attribute) -> zpt::json;
+auto
+evaluate_bind(zpt::json _expression) -> zpt::json;
+auto
+to_search_str(zpt::json _search) -> std::string;
+auto
+to_binded_object(zpt::json _binded) -> zpt::json;
+auto
+is_error(long _error) -> bool;
 auto
 to_db_key(zpt::json _document) -> std::string;
 auto
 to_db_doc(zpt::json _document) -> std::string;
 auto
-from_db_doc(std::string const& _document) -> zpt::json;
+from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
 auto
 to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
 auto
@@ -133,11 +248,12 @@ class action : public zpt::storage::action::type {
     auto get_state() -> zpt::json;
 
   protected:
-    sqlite3_ptr __underlying{ nullptr };
     std::string& __collection_name;
-    prepared_list __prepared;
-    zpt::json __to_bind{ zpt::json::object() };
+    sqlite3_ptr __underlying{ nullptr };
+    std::vector<sqlite3_stmt_ptr> __prepared;
     zpt::json __state{ "code", 0, "message", "Success" };
+
+    virtual auto prepare(std::string const& _statement) -> void;
 };
 class action_add : public zpt::storage::sqlite::action {
   public:
@@ -161,10 +277,9 @@ class action_add : public zpt::storage::sqlite::action {
     virtual auto execute() -> zpt::storage::result override;
 
   private:
-    zpt::json __to_add{ zpt::json::array() };
     zpt::json __generated_uuid{ zpt::json::array() };
 
-    auto prepare_insert(zpt::json _document) -> void;
+    auto add_insert(zpt::json _document) -> void;
 };
 class action_modify : public zpt::storage::sqlite::action {
   public:
@@ -191,6 +306,8 @@ class action_modify : public zpt::storage::sqlite::action {
     zpt::json __search;
     zpt::json __set;
     zpt::json __unset;
+
+    auto add_update() -> void;
 };
 class action_remove : public zpt::storage::sqlite::action {
   public:

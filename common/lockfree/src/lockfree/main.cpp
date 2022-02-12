@@ -33,7 +33,7 @@ constexpr int MAX_THREADS_QUEUE = 1000;
 constexpr int N_ELEMENTS_LIST = 1000;
 constexpr int MAX_THREADS_LIST = 50;
 
-constexpr int PER_THREAD = 2;
+constexpr int PER_THREAD = 8;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
@@ -43,7 +43,7 @@ std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
-zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE,
+zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE * 10,
                                                                               PER_THREAD };
 zpt::lf::list<std::shared_ptr<std::string>>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST,
                                                                              PER_THREAD };
@@ -118,14 +118,14 @@ test_queue() -> int {
 
     for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i) _threads[_i].join();
     auto _t2 = std::chrono::high_resolution_clock::now();
-    auto _duration = std::chrono::duration_cast<std::chrono::seconds>(_t2 - _t1).count();
+    auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
 
     std::cout << _queue << std::endl << std::endl << std::flush;
     std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
     std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
     std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
-    std::cout << std::endl << "total time: " << _duration << "s" << std::endl << std::flush;
+    std::cout << std::endl << "total time: " << _duration << "ms" << std::endl << std::flush;
     return 0;
 }
 

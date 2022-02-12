@@ -3,6 +3,7 @@
 auto
 main(int argc, char* argv[]) -> int {
     zpt::pipestream _pss;
+    _pss.open("pipe");
     _pss << "abc fgh" << std::flush;
     std::cout << "wrote to pipe" << std::endl << std::flush;
     std::string _out;

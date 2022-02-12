@@ -303,32 +303,31 @@ zpt::storage::mysqlx::to_search_str(zpt::json _search) -> std::string {
 
             if (!_first) { _oss << " and " << std::flush; }
             _first = false;
-            if (_value->type() == zpt::JSObject) {
-                try {
-                    auto _expression = zpt::storage::mysqlx::evaluate_expression(_value, _key);
-                    _oss << _expression->string() << std::flush;
-                }
-                catch (zpt::failed_expectation const& _e) {
-                    _oss << _key << " = :" << _key << std::flush;
-                }
+            std::string _vstr = _value->str();
+            if (_vstr.find("{.") == 0) {
+                auto _expression = zpt::storage::parse_params(_vstr);
+                
+                // try {
+                //     auto _expression = zpt::storage::mysqlx::evaluate_expression(_value, _key);
+                //     _oss << _expression->string() << std::flush;
+                // }
+                // catch (zpt::failed_expectation const& _e) {
+                //     _oss << _key << " = " << _value << std::flush;
+                // }
             }
             else {
-                _oss << _key << " = :" << _key << std::flush;
+                _oss << _key << " = " << _value << std::flush;
             }
         }
-        zlog("Search for mysqlx connector is: " << _oss.str(), zpt::trace);
         return _oss.str();
     }
     else if (_search->is_string()) {
-        zlog("Search for mysqlx connector is: " << _search->string(), zpt::trace);
         return _search->string();
     }
     else if (_search->is_nil()) {
-        zlog("Search for mysqlx connector is empty ", zpt::trace);
         return "";
     }
     else {
-        zlog("Search for mysqlx connector is: " << static_cast<std::string>(_search), zpt::trace);
         return static_cast<std::string>(_search);
     }
 }
@@ -894,9 +893,10 @@ zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection&
 zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection& _collection,
                                                zpt::json _search)
   : zpt::storage::mysqlx::action::action(_collection)
-  , __find_criteria(zpt::storage::mysqlx::to_search_str(_search))
+  , __find_criteria{zpt::storage::mysqlx::to_search_str(_search)}
   , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
-                                                : _collection->find() } {}
+                                                : _collection->find() } {
+}
 
 auto
 zpt::storage::mysqlx::action_find::add(zpt::json _document) -> zpt::storage::action::type* {

@@ -137,7 +137,7 @@ zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
         std::istringstream _is;
         _is.str(_body);
 
-        std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
+        std::string _content_type = _channel->content_type()[1];
         _channel->received() =
           _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 

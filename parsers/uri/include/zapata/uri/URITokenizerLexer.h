@@ -16,6 +16,8 @@ class URITokenizerLexer : public URILexer {
     auto operator->() -> zpt::json&;
     auto operator*() -> zpt::json&;
 
+    auto parse_param(std::string const& _param) -> zpt::json;
+
   private:
     zpt::json __root;
 };
