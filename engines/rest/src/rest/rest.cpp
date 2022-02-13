@@ -46,7 +46,9 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
       });
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      1, "/ROOT/REPLY/{:(.*):}", [this](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
+      1,
+      "/ROOT/REPLY/{:(.*):}",
+      [this](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
           auto& _channel = _event->content();
           std::string _key{ "/REPLY" };
           _key.append(_channel->uri());

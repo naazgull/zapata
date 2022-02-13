@@ -23,4 +23,3 @@
 #pragma once
 
 #include <zapata/automaton/automaton.h>
-

@@ -1,17 +1,17 @@
-#include <zapata/uri/URIParser.h>
+#include <zapata/functional/FunctionalParser.h>
 
-zpt::URIParser::URIParser(std::istream& _in, std::ostream& _out) {
+zpt::FunctionalParser::FunctionalParser(std::istream& _in, std::ostream& _out) {
     this->d_scanner.switchStreams(_in, _out);
 }
 
-zpt::URIParser::~URIParser() {}
+zpt::FunctionalParser::~FunctionalParser() {}
 
 void
-zpt::URIParser::switchRoots(zpt::json& _root) {
+zpt::FunctionalParser::switchRoots(zpt::json& _root) {
     this->d_scanner.switchRoots(_root);
 }
 
 void
-zpt::URIParser::switchStreams(std::istream& _in, std::ostream& _out) {
+zpt::FunctionalParser::switchStreams(std::istream& _in, std::ostream& _out) {
     this->d_scanner.switchStreams(_in, _out);
 }

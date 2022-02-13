@@ -1,170 +1,43 @@
-%baseclass-header = "URILexerbase.h"
-%class-header = "URILexer.h"
-%implementation-header = "URILexerimpl.h"
-%class-name = "URILexer"
-%lex-source = "URILexer.cpp"
+%baseclass-header = "FunctionalLexerbase.h"
+%class-header = "FunctionalLexer.h"
+%implementation-header = "FunctionalLexerimpl.h"
+%class-name = "FunctionalLexer"
+%lex-source = "FunctionalLexer.cpp"
 
 %namespace = "zpt"
 
 //%debug
 %no-lines
 
-%x scheme server_path server path params placeholder function anchor
+%x quoted
 %%
 
-([^{:/?#.]+) {
-	begin(StartCondition_::scheme);
-	d_part_is_placeholder = false;
-    return zpt::uri::lex::STRING;
+([^()", \n\r\f\t]+) {
+    return zpt::functional::lex::TOKEN;
 }
-"{" {
-    d_path_helper.assign("{");
-    d_intermediate_state = StartCondition_::scheme;
-    begin(StartCondition_::placeholder);
+"(" {
+    return zpt::functional::lex::LPAREN;
 }
-"/" {
-    begin(StartCondition_::path);
-    return zpt::uri::lex::SLASH;
+")" {
+    return zpt::functional::lex::RPAREN;
 }
-"." {
-    begin(StartCondition_::path);
-    return zpt::uri::lex::DOT;
+"," {
+    return zpt::functional::lex::COMMA;
 }
-".." {
-    begin(StartCondition_::path);
-    return zpt::uri::lex::DOT_DOT;
+"\"" {
+	begin(StartCondition_::quoted);
 }
-"?" {
-    begin(StartCondition_::params);
-    return zpt::uri::lex::QMARK;
-}
-"#" {
-    begin(StartCondition_::anchor);
-    return zpt::uri::lex::CARDINAL;
+[ \n\r\f\t] {
 }
 
-<scheme> {
-    ":" {
-        return zpt::uri::lex::DOUBLE_DOT;
+<quoted> {
+    "\"" {
+        std::string _content = matched();
+        setMatched(_content.substr(0, _content.length() - 1));
+    	begin(StartCondition_::INITIAL);
+        return zpt::functional::lex::TOKEN;
     }
-    "." {
-        begin(StartCondition_::path);
-        return zpt::uri::lex::DOT;
+    ([^"]+) {
+        more();
     }
-    ".." {
-        begin(StartCondition_::path);
-        return zpt::uri::lex::DOT_DOT;
-    }
-    "/" {
-        begin(StartCondition_::server_path);
-        return zpt::uri::lex::SLASH;
-    }
-}
-
-<server_path> {
-    [^/] {
-        d_path_helper.assign(matched());
-        begin(StartCondition_::path);
-    }
-    "/" {
-        begin(StartCondition_::server);
-        return zpt::uri::lex::SLASH;
-    }
-}
-
-<server> {
-    ([^:@/{]+) {
-        d_server_part.assign(matched());
-    	d_part_is_placeholder = false;
-        return zpt::uri::lex::STRING;
-    }
-    "/" {
-        setMatched(d_server_part);
-        begin(StartCondition_::path);
-        return zpt::uri::lex::SLASH;
-    }
-    ":" {
-        setMatched(d_server_part);
-        return zpt::uri::lex::DOUBLE_DOT;
-    }
-    "@" {
-        setMatched(d_server_part);
-        return zpt::uri::lex::AT;
-    }
-    "{" {
-        d_path_helper.assign("{");
-        d_intermediate_state = StartCondition_::server;
-        begin(StartCondition_::placeholder);
-    }
-}
-
-<path> {
-    "/" {
-        d_path_helper.assign("");
-        return zpt::uri::lex::SLASH;
-    }
-    "{" {
-        d_path_helper.assign("{");
-		d_intermediate_state = StartCondition_::path;
-        begin(StartCondition_::placeholder);
-    }
-    "?" {
-        begin(StartCondition_::params);
-        return zpt::uri::lex::QMARK;
-    }
-    "#" {
-	    begin(StartCondition_::anchor);
-        return zpt::uri::lex::CARDINAL;
-    }
-    ([^{/?#]+) {
-        std::string _matched{matched()};
-        _matched.insert(0, d_path_helper);
-        d_path_helper.assign("");
-        setMatched(_matched);
-	    d_part_is_placeholder = false;
-        return zpt::uri::lex::STRING;
-    }
-}
-
-<params> {
-	"=" {
-		return zpt::uri::lex::EQ;
-	}
-	"&"   {
-		return zpt::uri::lex::E;
-	}
-    "{" {
-        d_path_helper.assign("{");
-        d_intermediate_state = StartCondition_::params;
-        begin(StartCondition_::placeholder);
-    }
-    "#" {
-	    begin(StartCondition_::anchor);
-        return zpt::uri::lex::CARDINAL;
-    }
-	([^=&{#]+) {
-	    d_part_is_placeholder = false;
-        return zpt::uri::lex::STRING;
-    }
-}
-
-<placeholder> {
-    ([^}]+) {
-        d_path_helper += matched();
-    }
-    "}" {
-        d_path_helper += matched();
-        setMatched(d_path_helper);
-        d_path_helper.assign("");
-        begin(d_intermediate_state);
-		d_part_is_placeholder = true;
-        return zpt::uri::lex::STRING;
-    }
-}
-
-<anchor> {
-	(.+) {
-	    d_part_is_placeholder = false;
-        return zpt::uri::lex::STRING;
-    }
-}
+}	  

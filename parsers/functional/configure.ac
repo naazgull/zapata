@@ -1,7 +1,6 @@
-dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(zapata-uri, 2.0.0-1, n@zgul <n@zgul.me>)
+AC_INIT(zapata-lex-functional, 2.0.0-1, n@zgul.me)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.])
@@ -12,18 +11,18 @@ AC_ENABLE_STATIC(yes)
 
 dnl Check for libraries
 AC_HAVE_LIBRARY(dl)
+AC_HAVE_LIBRARY(pthread)
 AC_HAVE_LIBRARY(magic)
 AC_HAVE_LIBRARY(z)
 AC_HAVE_LIBRARY(ssl)
 AC_HAVE_LIBRARY(crypto)
-AC_CHECK_LIB(zapata-base, zpt_base)
-AC_CHECK_LIB(zapata-lex-json, zpt_lex_json)
+AC_HAVE_LIBRARY(zapata-base)
 
 AC_CANONICAL_SYSTEM
 
 dnl Create config.h header file
-AH_TOP([#include <zapata/http/unconfig.h>])
-AC_CONFIG_HEADERS([include/zapata/uri/config.h])
+AH_TOP([#include <zapata/functional/unconfig.h>])
+AC_CONFIG_HEADERS([include/zapata/functional/config.h])
 
 dnl Initialize automake
 AM_INIT_AUTOMAKE([subdir-objects tar-pax])
@@ -44,7 +43,6 @@ AC_SUBST([INCLUDE_DIR])
 AC_SUBST([PROJECT_DIR])
 
 AC_CONFIG_FILES(Makefile
-        include/Makefile
-        src/uri/Makefile)
-
+		include/Makefile
+		src/functional/Makefile)
 AC_OUTPUT

@@ -144,11 +144,13 @@ class transport {
                                   translate_from_func _callback_from,
                                   translate_to_func _callback_to) -> zpt::transport::layer&;
         static auto translate_from_default(std::istream& _io) -> zpt::json;
-        static auto translate_from_json(std::istream& _io) -> zpt::json;
-        static auto translate_from_raw(std::istream& _io) -> zpt::json;
         static auto translate_to_default(std::ostream& _io, zpt::json _content) -> std::string;
+        static auto translate_from_json(std::istream& _io) -> zpt::json;
         static auto translate_to_json(std::ostream& _io, zpt::json _content) -> std::string;
+        static auto translate_from_raw(std::istream& _io) -> zpt::json;
         static auto translate_to_raw(std::ostream& _io, zpt::json _content) -> std::string;
+        static auto translate_from_xml(std::istream& _io) -> zpt::json;
+        static auto translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string;
     };
 
   private:

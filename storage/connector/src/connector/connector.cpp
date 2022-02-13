@@ -267,5 +267,5 @@ zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _pa
 
 auto
 zpt::storage::parse_params(std::string& _param) -> zpt::json {
-    
+    return zpt::undefined;
 }

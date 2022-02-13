@@ -1,5 +1,4 @@
-/* include/zapata/http/config.h.in.  Generated from configure.ac by autoheader.
- */
+
 #pragma once
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
@@ -50,8 +49,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
- */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */

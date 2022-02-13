@@ -23,7 +23,7 @@
 #include <zapata/lmdb/connector.h>
 #include <algorithm>
 
-#define mdb_expect(_error, _message)                                                            \
+#define mdb_expect(_error, _message)                                                               \
     {                                                                                              \
         auto __error__ = _error;                                                                   \
         expect(__error__ == 0,                                                                     \

@@ -1,15 +1,15 @@
 
 nobase_include_HEADERS = \
-./zapata/uri/config.h \
-./zapata/uri/URITokenizerimpl.h \
-./zapata/uri/URITokenizerLexer.h \
-./zapata/uri/URITokenizer.h \
-./zapata/uri/unconfig.h \
-./zapata/uri/URIParser.h \
-./zapata/uri/URIinc.h \
-./zapata/uri/URITokenizerbase.h \
-./zapata/uri/URILexerbase.h \
-./zapata/uri/URILexer.h \
-./zapata/uri/URILexerimpl.h \
-./zapata/uri/uri.h \
-./zapata/uri.h
+./zapata/functional/config.h \
+./zapata/functional/FunctionalTokenizerimpl.h \
+./zapata/functional/FunctionalTokenizerLexer.h \
+./zapata/functional/FunctionalTokenizer.h \
+./zapata/functional/unconfig.h \
+./zapata/functional/FunctionalParser.h \
+./zapata/functional/Functionalinc.h \
+./zapata/functional/FunctionalTokenizerbase.h \
+./zapata/functional/FunctionalLexerbase.h \
+./zapata/functional/FunctionalLexer.h \
+./zapata/functional/FunctionalLexerimpl.h \
+./zapata/functional/functional.h \
+./zapata/functional.h

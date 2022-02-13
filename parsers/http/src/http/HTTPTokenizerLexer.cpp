@@ -1,7 +1,6 @@
 #include <zapata/http/http.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
-
 zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream& _in, std::ostream& _out)
   : zpt::HTTPLexer(_in, _out) {}
 

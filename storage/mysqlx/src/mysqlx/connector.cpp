@@ -303,10 +303,10 @@ zpt::storage::mysqlx::to_search_str(zpt::json _search) -> std::string {
 
             if (!_first) { _oss << " and " << std::flush; }
             _first = false;
-            std::string _vstr = _value->str();
+            std::string _vstr = _value->string();
             if (_vstr.find("{.") == 0) {
                 auto _expression = zpt::storage::parse_params(_vstr);
-                
+
                 // try {
                 //     auto _expression = zpt::storage::mysqlx::evaluate_expression(_value, _key);
                 //     _oss << _expression->string() << std::flush;
@@ -893,10 +893,9 @@ zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection&
 zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection& _collection,
                                                zpt::json _search)
   : zpt::storage::mysqlx::action::action(_collection)
-  , __find_criteria{zpt::storage::mysqlx::to_search_str(_search)}
+  , __find_criteria{ zpt::storage::mysqlx::to_search_str(_search) }
   , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
-                                                : _collection->find() } {
-}
+                                                : _collection->find() } {}
 
 auto
 zpt::storage::mysqlx::action_find::add(zpt::json _document) -> zpt::storage::action::type* {

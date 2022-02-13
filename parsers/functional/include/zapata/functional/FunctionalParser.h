@@ -22,4 +22,16 @@
 
 #pragma once
 
-#include <zapata/smtp/SMTP.h>
+#include <zapata/functional/FunctionalTokenizer.h>
+
+namespace zpt {
+
+class FunctionalParser : public FunctionalTokenizer {
+  public:
+    FunctionalParser(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+    virtual ~FunctionalParser();
+
+    void switchRoots(zpt::json& _root);
+    void switchStreams(std::istream& _in = std::cin, std::ostream& _out = std::cout);
+};
+} // namespace zpt

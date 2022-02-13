@@ -121,7 +121,8 @@ zpt::object_pool<T>::acquire(size_t _n) -> pointer_type {
                 auto _return = &this->__underlying[_addr];
                 this->__available.erase(_addr);
                 if (_size - _byte_size != 0) {
-                    this->__available.insert(std::make_pair(_addr + _byte_size, _size - _byte_size));
+                    this->__available.insert(
+                      std::make_pair(_addr + _byte_size, _size - _byte_size));
                 }
                 this->__object_count += _n;
                 return _return;

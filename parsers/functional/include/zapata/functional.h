@@ -22,17 +22,14 @@
 
 #pragma once
 
-#include <zapata/exceptions/NoHeaderNameException.h>
-
-
-#include <zapata/uri/URITokenizerimpl.h>
-#include <zapata/uri/URITokenizerLexer.h>
-#include <zapata/uri/URITokenizer.h>
-#include <zapata/uri/unconfig.h>
-#include <zapata/uri/URIParser.h>
-#include <zapata/uri/URIinc.h>
-#include <zapata/uri/URITokenizerbase.h>
-#include <zapata/uri/URILexerbase.h>
-#include <zapata/uri/URILexer.h>
-#include <zapata/uri/URILexerimpl.h>
-#include <zapata/uri/uri.h>
+#include <zapata/functional/FunctionalTokenizerimpl.h>
+#include <zapata/functional/FunctionalTokenizerLexer.h>
+#include <zapata/functional/FunctionalTokenizer.h>
+#include <zapata/functional/unconfig.h>
+#include <zapata/functional/FunctionalParser.h>
+#include <zapata/functional/Functionalinc.h>
+#include <zapata/functional/FunctionalTokenizerbase.h>
+#include <zapata/functional/FunctionalLexerbase.h>
+#include <zapata/functional/FunctionalLexer.h>
+#include <zapata/functional/FunctionalLexerimpl.h>
+#include <zapata/functional/functional.h>

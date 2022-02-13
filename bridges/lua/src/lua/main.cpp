@@ -46,8 +46,8 @@ init_x(lua_State* _state) -> void {
 
 auto
 main(int argc, char* argv[]) -> int {
-    _bridge                                                  //
-      .add_module(init_x, { "module", "builtin" })           //
+    _bridge                                                            //
+      .add_module(init_x, { "module", "builtin" })                     //
       .add_module("/home/pf/Void/test1.lua", { "module", "builtin2" }) //
       .add_module("/home/pf/Void/test2.lua", { "module", "builtin3" });
 

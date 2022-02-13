@@ -22,8 +22,6 @@
 
 #pragma once
 
-
-
 #include <string>
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPParser.h>

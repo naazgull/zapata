@@ -43,7 +43,8 @@ std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
-zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE * 10,
+zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE *
+                                                                                10,
                                                                               PER_THREAD };
 zpt::lf::list<std::shared_ptr<std::string>>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST,
                                                                              PER_THREAD };
