@@ -102,9 +102,10 @@ class hazard_ptr {
     auto get_thread_dangling_count() -> size_t;
     auto get_thread_held_count() -> size_t;
     auto get_retired() -> pending_list&;
-    auto get_this_thread_idx() -> int;
-    auto get_next_available_idx() -> int;
-    auto release_thread_idx() -> zpt::lf::hazard_ptr<T>&;
+    auto get_this_thread_slot() -> int;
+    auto get_next_available_thread_slot() -> int;
+    auto release_this_thread_slot() -> zpt::lf::hazard_ptr<T>&;
+    auto is_thread_slot_taken(size_t _slot) -> bool;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::hazard_ptr<T>& _in) -> std::ostream& {
         _out << "zpt::lf::hazard_ptr(" << std::hex << &_in << ") for `" << typeid(T).name() << "` "
@@ -117,7 +118,7 @@ class hazard_ptr {
 
   private:
     std::unique_ptr<zpt::padded_atomic<T*>[]> __hp { nullptr };
-    std::unique_ptr<zpt::padded_atomic<bool>[]> __next_thr_idx { nullptr };
+    std::unique_ptr<zpt::padded_atomic<bool>[]> __next_thr_slot { nullptr };
     long P{ 0 };
     long K{ 0 };
     long N{ 0 };
@@ -133,7 +134,7 @@ zpt::lf::hazard_ptr<T>::pending_list::pending_list(zpt::lf::hazard_ptr<T>& _pare
 template<typename T>
 zpt::lf::hazard_ptr<T>::pending_list::~pending_list() {
     this->__parent.clean();
-    this->__parent.release_thread_idx();
+    this->__parent.release_this_thread_slot();
 }
 
 template<typename T>
@@ -220,7 +221,7 @@ zpt::lf::hazard_ptr<T>::set_limits(long _max_threads, long _ptr_per_thread) -> h
     this->N = this->P * this->K;
     this->R = this->N;
     this->__hp = std::make_unique<zpt::padded_atomic<T*>[]>(this->N);
-    this->__next_thr_idx = std::make_unique<zpt::padded_atomic<bool>[]>(this->P);
+    this->__next_thr_slot = std::make_unique<zpt::padded_atomic<bool>[]>(this->P);
     this->init();
     return (*this);
 }
@@ -240,9 +241,9 @@ zpt::lf::hazard_ptr<T>::at(size_t _idx) -> zpt::padded_atomic<T*>& {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
-    auto _idx = this->get_this_thread_idx();
+    auto _idx = this->get_this_thread_slot();
 
-    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
         auto& _current = this->__hp[_k];
         if (_current->load(std::memory_order_acquire) == nullptr) {
             T* _exchange = _ptr;
@@ -278,8 +279,8 @@ auto
 zpt::lf::hazard_ptr<T>::release(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
     if (_ptr == nullptr) { return (*this); }
 
-    auto _idx = this->get_this_thread_idx();
-    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    auto _idx = this->get_this_thread_slot();
+    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
         T* _exchange = _ptr;
         if (this->__hp[_k]->compare_exchange_strong(_exchange, nullptr)) { return (*this); }
     }
@@ -302,10 +303,14 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
     auto& _retired = zpt::lf::hazard_ptr<T>::get_retired();
 
     std::map<T*, bool> _to_process;
-    for (auto _idx = 0; _idx != this->N; ++_idx) {
-        auto& _item = this->__hp[_idx];
-        T* _ptr = _item->load();
-        if (_ptr != nullptr) { _to_process.insert(std::make_pair(_ptr, true)); }
+    for (long _slot = 0; _slot != this->P; ++_slot) {
+        if (zpt::lf::hazard_ptr<T>::is_thread_slot_taken(_slot)) {
+            for (auto _idx = _slot * this->K; _idx != ((_slot + 1) * this->K); ++_idx) {
+                auto& _item = this->__hp[_idx];
+                T* _ptr = _item->load();
+                if (_ptr != nullptr) { _to_process.insert(std::make_pair(_ptr, true)); }
+            }
+        }
     }
 
     for (auto _it = _retired->begin(); _it != _retired->end();) {
@@ -349,9 +354,9 @@ zpt::lf::hazard_ptr<T>::get_thread_dangling_count() -> size_t {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::get_thread_held_count() -> size_t {
-    auto _idx = this->get_this_thread_idx();
+    auto _idx = this->get_this_thread_slot();
     auto _held{ 0 };
-    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) {
+    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
         if (this->__hp[_k]->load() != nullptr) { ++_held; }
     }
     return _held;
@@ -359,11 +364,13 @@ zpt::lf::hazard_ptr<T>::get_thread_held_count() -> size_t {
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::release_thread_idx() -> zpt::lf::hazard_ptr<T>& {
-    int _idx = this->get_this_thread_idx();
+zpt::lf::hazard_ptr<T>::release_this_thread_slot() -> zpt::lf::hazard_ptr<T>& {
+    int _idx = this->get_this_thread_slot();
 
-    for (auto _k = _idx * K; _k != ((_idx + 1) * K); ++_k) { this->__hp[_k]->store(nullptr); }
-    this->__next_thr_idx[_idx] = false;
+    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
+        this->__hp[_k]->store(nullptr);
+    }
+    this->__next_thr_slot[_idx] = false;
 
     return (*this);
 }
@@ -372,7 +379,7 @@ template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::init() -> zpt::lf::hazard_ptr<T>& {
     for (auto _idx = 0; _idx != this->N; ++_idx) { this->__hp[_idx]->store(nullptr); }
-    for (auto _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_idx[_idx]->store(false); }
+    for (auto _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_slot[_idx]->store(false); }
     return (*this);
 }
 
@@ -385,11 +392,11 @@ zpt::lf::hazard_ptr<T>::get_retired() -> zpt::lf::hazard_ptr<T>::pending_list& {
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::get_next_available_idx() -> int {
+zpt::lf::hazard_ptr<T>::get_next_available_thread_slot() -> int {
     auto _idx{ 0 };
     for (; _idx != this->P; ++_idx) {
         auto _acquired{ false };
-        if (this->__next_thr_idx[_idx]->compare_exchange_strong(_acquired, true)) { return _idx; }
+        if (this->__next_thr_slot[_idx]->compare_exchange_strong(_acquired, true)) { return _idx; }
     }
     expect(_idx == this->P,
            "No more thread space available for " << std::this_thread::get_id() << " in domain "
@@ -402,10 +409,16 @@ zpt::lf::hazard_ptr<T>::get_next_available_idx() -> int {
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::get_this_thread_idx() -> int {
+zpt::lf::hazard_ptr<T>::get_this_thread_slot() -> int {
     static thread_local int _idx{ -1 };
-    if (_idx == -1) { _idx = this->get_next_available_idx(); }
+    if (_idx == -1) { _idx = this->get_next_available_thread_slot(); }
     return _idx;
+}
+
+template<typename T>
+auto
+zpt::lf::hazard_ptr<T>::is_thread_slot_taken(size_t _slot) -> bool {
+    return this->__next_thr_slot[_slot]->load();
 }
 } // namespace lf
 } // namespace zpt

@@ -23,8 +23,6 @@
 #pragma once
 
 #include <zapata/exceptions/NoHeaderNameException.h>
-
-
 #include <zapata/uri/URITokenizerimpl.h>
 #include <zapata/uri/URITokenizerLexer.h>
 #include <zapata/uri/URITokenizer.h>

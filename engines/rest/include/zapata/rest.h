@@ -23,4 +23,3 @@
 #pragma once
 
 #include <zapata/rest/rest.h>
-

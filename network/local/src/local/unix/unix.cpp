@@ -41,7 +41,7 @@ zpt::net::transport::unix_socket::receive(zpt::exchange& _channel) const -> void
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
-    std::string _content_type = _channel->to_send()["headers"]["Content-Type"];
+    std::string _content_type = _channel->content_type()[1];
     _channel->received() =
       _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 

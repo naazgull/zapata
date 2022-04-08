@@ -824,6 +824,7 @@ class JSONElementT {
     virtual auto empty() const -> bool;
     virtual auto nil() const -> bool;
 
+    virtual auto clear() -> void;
     virtual auto size() const -> size_t;
     virtual auto hash() const -> size_t;
 

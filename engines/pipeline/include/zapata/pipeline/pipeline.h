@@ -184,13 +184,13 @@ class engine {
 
     engine(size_t _pipeline_size = 1,
            zpt::json _step_queue_configuration = { "max_queue_threads",
-                                                    1,
-                                                    "max_producer_threads",
-                                                    1,
-                                                    "max_consumer_threads",
-                                                    0,
-                                                    "max_queue_spin_sleep",
-                                                    5000 });
+                                                   1,
+                                                   "max_producer_threads",
+                                                   1,
+                                                   "max_consumer_threads",
+                                                   0,
+                                                   "max_queue_spin_sleep",
+                                                   5000 });
     engine(zpt::pipeline::engine<T> const&) = delete;
     engine(zpt::pipeline::engine<T>&&) = delete;
     virtual ~engine() = default;
@@ -393,7 +393,7 @@ zpt::pipeline::event<T>::send_to_next_step() -> void {
 
 template<typename T>
 zpt::pipeline::step<T>::step(zpt::pipeline::step<T>::hazard_domain& _hazard_domain,
-                               long _max_pop_wait_micro)
+                             long _max_pop_wait_micro)
   : zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>>{
       _hazard_domain,
       _max_pop_wait_micro
@@ -420,12 +420,12 @@ zpt::pipeline::step<T>::listen_to(zpt::json _path, event_callback _callback) -> 
 template<typename T>
 auto
 zpt::pipeline::step<T>::report_error(zpt::json& _event,
-                                      zpt::pipeline::event<T>& _content,
-                                      const char* _what,
-                                      const char* _description,
-                                      const char* _backtrace,
-                                      int _error,
-                                      int status) -> bool {
+                                     zpt::pipeline::event<T>& _content,
+                                     const char* _what,
+                                     const char* _description,
+                                     const char* _backtrace,
+                                     int _error,
+                                     int status) -> bool {
     bool _to_return{ true };
     if (this->__error_callback != nullptr) {
         _to_return =
@@ -455,9 +455,8 @@ zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _step_queue_co
                        static_cast<long>(_step_queue_configuration["max_consumer_threads"]),
                      4 }
   , __pipeline_size{ _pipeline_size }
-  , __threads_per_step{
-      std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]), 1L)
-  } {
+  , __threads_per_step{ std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]),
+                                 1L) } {
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__steps.push_back(std::make_shared<zpt::pipeline::step<T>>(
           this->__hazard_domain,
@@ -508,9 +507,8 @@ zpt::pipeline::engine<T>::is_shutdown_ongoing() -> bool {
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::add_listener(size_t _step,
-                                       std::string _pattern,
-                                       event_callback _callback) -> zpt::pipeline::engine<T>& {
+zpt::pipeline::engine<T>::add_listener(size_t _step, std::string _pattern, event_callback _callback)
+  -> zpt::pipeline::engine<T>& {
     expect(_step < this->__pipeline_size,
            std::string("invalid pipeline::step number, should be lower then ") +
              std::to_string(this->__pipeline_size),

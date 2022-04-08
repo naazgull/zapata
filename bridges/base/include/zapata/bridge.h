@@ -23,5 +23,3 @@
 #pragma once
 
 #include <zapata/bridge/bridge.h>
-
-

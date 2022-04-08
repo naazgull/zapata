@@ -22,8 +22,6 @@
 
 #pragma once
 
-
-
 #include <zapata/http/HTTPObj.h>
 #include <zapata/http/HTTPTokenizer.h>
 

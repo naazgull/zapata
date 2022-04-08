@@ -23,6 +23,5 @@
 #pragma once
 
 namespace zpt {
-namespace prolog {
-} // namespace prolog
+namespace prolog {} // namespace prolog
 } // namespace zpt

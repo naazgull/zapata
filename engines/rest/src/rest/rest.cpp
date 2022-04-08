@@ -34,7 +34,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
     this->set_error_callback(zpt::rest::engine::on_error);
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      0, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
+      0, "{:(.*):}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _channel = _event->content();
           auto& _transport = _layer.get(_channel->scheme());
@@ -46,7 +46,9 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
       });
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      1, "/ROOT/REPLY/{(.*)}", [this](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
+      1,
+      "/ROOT/REPLY/{:(.*):}",
+      [this](zpt::pipeline::event<zpt::exchange>& _event) mutable -> void {
           auto& _channel = _event->content();
           std::string _key{ "/REPLY" };
           _key.append(_channel->uri());
@@ -70,7 +72,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
       });
 
     zpt::pipeline::engine<zpt::exchange>::add_listener(
-      _pipeline_size + 1, "{(.*)}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
+      _pipeline_size + 1, "{:(.*):}", [](zpt::pipeline::event<zpt::exchange>& _event) -> void {
           auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
           auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
           auto& _channel = _event->content();

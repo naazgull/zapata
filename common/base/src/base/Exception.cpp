@@ -21,10 +21,6 @@
 */
 
 #include <zapata/exceptions/Exception.h>
-
-#include <sstream>
-#include <execinfo.h>
-#include <ctime>
 #include <zapata/text/convert.h>
 
 zpt::exception::exception(std::string const& _what, bool _with_stack)
@@ -32,15 +28,7 @@ zpt::exception::exception(std::string const& _what, bool _with_stack)
   , __what{ _what } {
     zpt::replace(this->__what, "\"", "");
     if (_with_stack) {
-        void* _backtrace_array[30];
-        size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
-        char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
-        for (size_t _i = 0; _i != _backtrace_size; _i++) {
-            this->__backtrace.insert(this->__backtrace.length(), "\t");
-            this->__backtrace.insert(this->__backtrace.length(), std::string{ _backtrace[_i] });
-            this->__backtrace.insert(this->__backtrace.length(), "\n");
-        }
-        free(_backtrace);
+        this->__backtrace.assign(zpt::get_backtrace());
     }
 }
 

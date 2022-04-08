@@ -43,9 +43,11 @@ namespace lf {
 template<typename T>
 class forward_node {
   public:
+    using ptr = zpt::padded_atomic<zpt::lf::forward_node<T>*>;
+
     T __value;
     zpt::padded_atomic<bool> __is_null{ true };
-    zpt::padded_atomic<zpt::lf::forward_node<T>*> __next{ nullptr };
+    zpt::lf::forward_node<T>::ptr __next{ nullptr };
 
     forward_node() = default;
     forward_node(T _value);
@@ -182,8 +184,8 @@ class queue {
     }
 
   private:
-    zpt::padded_atomic<zpt::lf::forward_node<T>*> __head{ nullptr };
-    zpt::padded_atomic<zpt::lf::forward_node<T>*> __tail{ nullptr };
+    zpt::lf::forward_node<T>::ptr __head{ nullptr };
+    zpt::lf::forward_node<T>::ptr __tail{ nullptr };
     zpt::lf::queue<T>::hazard_domain& __hazard_domain;
 };
 

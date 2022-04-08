@@ -24,7 +24,7 @@
 
 auto
 zpt::pipeline::to_pattern(std::string const& _path) -> zpt::json {
-    zpt::regex _regex{ zpt::r_replace(zpt::r_replace(_path, "{", ""), "}", "") };
+    zpt::regex _regex{ zpt::r_replace(zpt::r_replace(_path, "{:", ""), ":}", "") };
     try {
         zpt::json _splitted = zpt::uri::to_regex(zpt::uri::parse(_path, zpt::JSArray));
         return { "splitted", _splitted, "regex", _regex };

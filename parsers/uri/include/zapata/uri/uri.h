@@ -20,9 +20,5 @@ namespace path {
 auto
 to_string(zpt::json _uri) -> std::string;
 } // namespace path
-namespace function {
-auto
-to_string(zpt::json _function) -> std::string;
-} // namespace function
 } // namespace uri
 } // namespace zpt

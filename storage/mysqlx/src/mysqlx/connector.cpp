@@ -25,76 +25,6 @@
 #include <algorithm>
 
 auto
-zpt::storage::mysqlx::expression_operators()
-  -> std::map<std::string, std::function<zpt::json(zpt::json, std::string)>>& {
-    static std::map<std::string, std::function<zpt::json(zpt::json, std::string)>> _funcs = {
-        { "lower", zpt::storage::mysqlx::lower{} },
-        { "upper", zpt::storage::mysqlx::upper{} },
-        { "boolean", zpt::storage::mysqlx::boolean{} },
-        { "date", zpt::storage::mysqlx::date{} },
-        { "integer", zpt::storage::mysqlx::integer{} },
-        { "float", zpt::storage::mysqlx::floating{} },
-        { "double", zpt::storage::mysqlx::floating{} },
-        { "string", zpt::storage::mysqlx::string{} },
-        { "ne", zpt::storage::mysqlx::ne{} },
-        { "gt", zpt::storage::mysqlx::gt{} },
-        { "gte", zpt::storage::mysqlx::gte{} },
-        { "lt", zpt::storage::mysqlx::lt{} },
-        { "lte", zpt::storage::mysqlx::lte{} },
-        { "between", zpt::storage::mysqlx::between{} }
-    };
-    return _funcs;
-}
-
-auto
-zpt::storage::mysqlx::bind_operators()
-  -> std::map<std::string, std::function<zpt::json(zpt::json)>>& {
-    static std::map<std::string, std::function<zpt::json(zpt::json)>> _funcs = {
-        { "lower", zpt::storage::mysqlx::lower{} },
-        { "upper", zpt::storage::mysqlx::upper{} },
-        { "boolean", zpt::storage::mysqlx::boolean{} },
-        { "date", zpt::storage::mysqlx::date{} },
-        { "integer", zpt::storage::mysqlx::integer{} },
-        { "float", zpt::storage::mysqlx::floating{} },
-        { "double", zpt::storage::mysqlx::floating{} },
-        { "string", zpt::storage::mysqlx::string{} },
-        { "ne", zpt::storage::mysqlx::ne{} },
-        { "gt", zpt::storage::mysqlx::gt{} },
-        { "gte", zpt::storage::mysqlx::gte{} },
-        { "lt", zpt::storage::mysqlx::lt{} },
-        { "lte", zpt::storage::mysqlx::lte{} },
-        { "between", zpt::storage::mysqlx::between{} }
-    };
-    return _funcs;
-}
-
-auto
-zpt::storage::mysqlx::cast(zpt::json _expression) -> zpt::json {
-    auto _args = _expression["args"];
-    if (!_args->ok()) { return _expression; }
-    if (_args->size() == 1) { return _args[0]; }
-    auto _cast = _args[_args->size() - 1]->string();
-    if (_args->size() > 2) {
-        auto _arr = zpt::json::array();
-        for (size_t _idx = 0; _idx != _args->size() - 1; ++_idx) {
-            _arr << zpt::storage::mysqlx::cast(_args[_idx], _cast);
-        }
-        return _arr;
-    }
-    return zpt::storage::mysqlx::cast(_args[0], _cast);
-}
-
-auto
-zpt::storage::mysqlx::cast(zpt::json _expression, std::string _cast) -> zpt::json {
-    if (_cast == "boolean") { return static_cast<bool>(_expression); }
-    if (_cast == "date") { return static_cast<zpt::timestamp_t>(_expression); }
-    if (_cast == "integer") { return static_cast<long long>(_expression); }
-    if (_cast == "float" || _cast == "double") { return static_cast<double>(_expression); }
-    if (_cast == "string") { return static_cast<std::string>(_expression); }
-    return _expression;
-}
-
-auto
 zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value {
     switch (_value->type()) {
         case zpt::JSObject:
@@ -123,239 +53,6 @@ zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value {
         }
     }
     return ::mysqlx::Value{};
-}
-
-auto
-zpt::storage::mysqlx::lower::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return std::string{ "lower(" } + _attribute + std::string{ ") = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::lower::operator()(zpt::json _expression) -> zpt::json {
-    std::string _arg = _expression["args"][0]->string();
-    std::transform(_arg.begin(), _arg.end(), _arg.begin(), ::tolower);
-    return _arg;
-}
-
-auto
-zpt::storage::mysqlx::upper::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return std::string{ "upper(" } + _attribute + std::string{ ") = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::upper::operator()(zpt::json _expression) -> zpt::json {
-    std::string _arg = _expression["args"][0]->string();
-    std::transform(_arg.begin(), _arg.end(), _arg.begin(), ::toupper);
-    return _arg;
-}
-
-auto
-zpt::storage::mysqlx::boolean::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::boolean::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<bool>(_expression);
-}
-
-auto
-zpt::storage::mysqlx::date::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::date::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<zpt::timestamp_t>(_expression);
-}
-
-auto
-zpt::storage::mysqlx::integer::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::integer::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<long long>(_expression["args"][0]);
-}
-
-auto
-zpt::storage::mysqlx::floating::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::floating::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<double>(_expression["args"][0]);
-}
-
-auto
-zpt::storage::mysqlx::string::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::string::operator()(zpt::json _expression) -> zpt::json {
-    return _expression["args"][0]->string();
-}
-
-auto
-zpt::storage::mysqlx::ne::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " <> :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::ne::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::mysqlx::cast(_expression);
-}
-
-auto
-zpt::storage::mysqlx::gt::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " > :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::gt::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::mysqlx::cast(_expression);
-}
-
-auto
-zpt::storage::mysqlx::gte::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " >= :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::gte::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::mysqlx::cast(_expression);
-}
-
-auto
-zpt::storage::mysqlx::lt::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " < :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::lt::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::mysqlx::cast(_expression);
-}
-
-auto
-zpt::storage::mysqlx::lte::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " <= :" } + _attribute;
-}
-
-auto
-zpt::storage::mysqlx::lte::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::mysqlx::cast(_expression);
-}
-
-auto
-zpt::storage::mysqlx::between::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " >= :" } + _attribute + std::string{ "_lower_bound and " } +
-           _attribute + std::string{ " <= :" } + _attribute + std::string{ "_upper_bound" };
-}
-
-auto
-zpt::storage::mysqlx::between::operator()(zpt::json _expression) -> zpt::json {
-    auto _args = zpt::storage::mysqlx::cast(_expression);
-    return zpt::json{ "_lower_bound", _args[0], "_upper_bound", _args[1] };
-}
-
-auto
-zpt::storage::mysqlx::evaluate_expression(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    auto& _funcs = zpt::storage::mysqlx::expression_operators();
-    auto _func = _funcs.find(_expression["name"]->string());
-    expect(_func != _funcs.end(),
-           "operator 'zpt::storage::mysqlx::" << _expression["name"] << "' could not be found.",
-           500,
-           0);
-    return _func->second(_expression, _attribute);
-}
-
-auto
-zpt::storage::mysqlx::evaluate_bind(zpt::json _expression) -> zpt::json {
-    auto& _funcs = zpt::storage::mysqlx::bind_operators();
-    auto _func = _funcs.find(_expression["name"]->string());
-    expect(_func != _funcs.end(),
-           "operator 'zpt::storage::mysqlx::" << _expression["name"] << "' could not be found.",
-           500,
-           0);
-    return _func->second(_expression);
-}
-
-auto
-zpt::storage::mysqlx::to_search_str(zpt::json _search) -> std::string {
-    static const std::map<std::string, bool> _reserved = { { "page_size", true },
-                                                           { "page_start_index", true } };
-    if (_search->is_object()) {
-        std::ostringstream _oss;
-        bool _first{ true };
-        for (auto [_, _key, _value] : _search) {
-            if (_reserved.find(_key) != _reserved.end()) { continue; }
-
-            if (!_first) { _oss << " and " << std::flush; }
-            _first = false;
-            if (_value->type() == zpt::JSObject) {
-                try {
-                    auto _expression = zpt::storage::mysqlx::evaluate_expression(_value, _key);
-                    _oss << _expression->string() << std::flush;
-                }
-                catch (zpt::failed_expectation const& _e) {
-                    _oss << _key << " = :" << _key << std::flush;
-                }
-            }
-            else {
-                _oss << _key << " = :" << _key << std::flush;
-            }
-        }
-        zlog("Search for mysqlx connector is: " << _oss.str(), zpt::trace);
-        return _oss.str();
-    }
-    else if (_search->is_string()) {
-        zlog("Search for mysqlx connector is: " << _search->string(), zpt::trace);
-        return _search->string();
-    }
-    else if (_search->is_nil()) {
-        zlog("Search for mysqlx connector is empty ", zpt::trace);
-        return "";
-    }
-    else {
-        zlog("Search for mysqlx connector is: " << static_cast<std::string>(_search), zpt::trace);
-        return static_cast<std::string>(_search);
-    }
-}
-
-auto
-zpt::storage::mysqlx::to_binded_object(zpt::json _binded) -> zpt::json {
-    if (_binded->is_object()) {
-        auto _return = zpt::json::object();
-        for (auto [_, _key, _value] : _binded) {
-            if (_value->is_object()) {
-                auto _bind = zpt::storage::mysqlx::evaluate_bind(_value);
-                if (_bind->is_object()) {
-                    for (auto [_, _binded_key, _binded_value] : _bind) {
-                        _return << (_key + _binded_key) << _binded_value;
-                    }
-                }
-                else {
-                    _return << _key << _bind;
-                }
-            }
-            else {
-                _return << _key << _value;
-            }
-        }
-        return _return;
-    }
-    return _binded;
 }
 
 auto
@@ -595,7 +292,7 @@ zpt::storage::mysqlx::action_add::operator->() -> ::mysqlx::CollectionAdd* {
 zpt::storage::mysqlx::action_modify::action_modify(zpt::storage::mysqlx::collection& _collection,
                                                    zpt::json _search)
   : zpt::storage::mysqlx::action::action{ _collection }
-  , __underlying{ _collection->modify(zpt::storage::mysqlx::to_search_str(_search)) } {}
+  , __underlying{ _collection->modify(zpt::storage::extract_find(_search)) } {}
 
 auto
 zpt::storage::mysqlx::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -673,8 +370,7 @@ zpt::storage::mysqlx::action_modify::limit(size_t _number) -> zpt::storage::acti
 
 auto
 zpt::storage::mysqlx::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _binded = zpt::storage::mysqlx::to_binded_object(_map);
-    for (auto [_, _key, _value] : _binded) {
+    for (auto [_, _key, _value] : _map) {
         this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
     }
     return this;
@@ -695,7 +391,7 @@ zpt::storage::mysqlx::action_modify::operator->() -> ::mysqlx::CollectionModify*
 zpt::storage::mysqlx::action_remove::action_remove(zpt::storage::mysqlx::collection& _collection,
                                                    zpt::json _search)
   : zpt::storage::mysqlx::action::action(_collection)
-  , __underlying{ _collection->remove(zpt::storage::mysqlx::to_search_str(_search)) } {}
+  , __underlying{ _collection->remove(zpt::storage::extract_find(_search)) } {}
 
 auto
 zpt::storage::mysqlx::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -769,8 +465,7 @@ zpt::storage::mysqlx::action_remove::limit(size_t _number) -> zpt::storage::acti
 
 auto
 zpt::storage::mysqlx::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _binded = zpt::storage::mysqlx::to_binded_object(_map);
-    for (auto [_, _key, _value] : _binded) {
+    for (auto [_, _key, _value] : _map) {
         this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
     }
     return this;
@@ -894,7 +589,7 @@ zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection&
 zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection& _collection,
                                                zpt::json _search)
   : zpt::storage::mysqlx::action::action(_collection)
-  , __find_criteria(zpt::storage::mysqlx::to_search_str(_search))
+  , __find_criteria{ zpt::storage::extract_find(_search) }
   , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
                                                 : _collection->find() } {}
 
@@ -973,8 +668,7 @@ zpt::storage::mysqlx::action_find::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::mysqlx::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _binded = zpt::storage::mysqlx::to_binded_object(_map);
-    for (auto [_, _key, _value] : _binded) {
+    for (auto [_, _key, _value] : _map) {
         this->__underlying.bind(_key, zpt::storage::mysqlx::cast_to_db_value(_value)[0]);
     }
     return this;
@@ -1011,18 +705,16 @@ zpt::storage::mysqlx::result::result(zpt::storage::mysqlx::action_find& _action)
 auto
 zpt::storage::mysqlx::result::fetch(size_t _amount) -> zpt::json {
     if (this->__is_doc_result) {
-        zpt::json _to_return{ zpt::json::array() };
+        auto _to_return = zpt::json::array();
         if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
         for (size_t _idx = 0; _idx != _amount; ++_idx) {
             ::mysqlx::DbDoc _doc = this->__doc_result.fetchOne();
-            if (_doc.isNull()) {
-                if (_idx == 0) { return zpt::undefined; }
-                break;
-            }
-            _to_return << zpt::storage::mysqlx::from_db_doc(_doc);
+            if (_doc.isNull()) { break; }
+            auto _row = zpt::storage::mysqlx::from_db_doc(_doc);
+            if (_amount == 1) { return _row; }
+            _to_return << _row;
         }
-        if (_amount == 1 && _to_return->size() != 0) { return _to_return[0]; }
-        return _to_return;
+        return (_to_return->size() != 0 ? _to_return : zpt::undefined);
     }
     return zpt::undefined;
 }

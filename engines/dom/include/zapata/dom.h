@@ -23,4 +23,3 @@
 #pragma once
 
 #include <zapata/dom/dom.h>
-

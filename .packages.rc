@@ -11,6 +11,7 @@ export projects=(
        parsers/json
        parsers/http
        parsers/uri
+       parsers/functional
        bridges/base
        common/graph
        common/events
@@ -32,5 +33,6 @@ export projects=(
        storage/connector
        storage/mysqlx
        storage/lmdb
+       storage/sqlite
        security/oauth2
 )

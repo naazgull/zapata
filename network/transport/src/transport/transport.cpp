@@ -100,6 +100,27 @@ zpt::exchange::exchange_t::keep_alive() -> bool& {
     return this->__keep_alive;
 }
 
+auto
+zpt::exchange::exchange_t::content_type() -> zpt::json {
+    zpt::json _return = zpt::json::array();
+    if (this->__received["headers"]["Content-Type"]->ok()) {
+        _return << this->__received["headers"]["Content-Type"];
+    }
+    else {
+        _return << "application/json";
+    }
+    if (this->__received["headers"]["Accept"]->ok()) {
+        _return << this->__received["headers"]["Accept"];
+    }
+    else if (this->__received["headers"]["Content-Type"]->ok()) {
+        _return << this->__received["headers"]["Content-Type"];
+    }
+    else {
+        _return << "application/json";
+    }
+    return _return;
+}
+
 zpt::transport::transport(zpt::transport const& _rhs)
   : __underlying{ _rhs.__underlying } {}
 
@@ -132,12 +153,25 @@ zpt::transport::transport(std::unique_ptr<zpt::transport::transport_t> _underlyi
   : __underlying{ _underlying.release() } {}
 
 zpt::transport::layer::layer() {
-    this->add_content_provider("*/*", zpt::transport::layer::translate_from_default);
-    this->add_content_provider("text", zpt::transport::layer::translate_from_raw);
-    this->add_content_provider("text/plain", zpt::transport::layer::translate_from_raw);
-    this->add_content_provider("json", zpt::transport::layer::translate_from_json);
-    this->add_content_provider("application/json", zpt::transport::layer::translate_from_json);
-    this->add_content_provider("text/x-json", zpt::transport::layer::translate_from_json);
+    this->add_content_provider("*/*",
+                               zpt::transport::layer::translate_from_default,
+                               zpt::transport::layer::translate_to_default);
+    this->add_content_provider(
+      "text", zpt::transport::layer::translate_from_raw, zpt::transport::layer::translate_to_raw);
+    this->add_content_provider("text/plain",
+                               zpt::transport::layer::translate_from_raw,
+                               zpt::transport::layer::translate_to_raw);
+    this->add_content_provider(
+      "json", zpt::transport::layer::translate_from_json, zpt::transport::layer::translate_to_json);
+    this->add_content_provider("application/json",
+                               zpt::transport::layer::translate_from_json,
+                               zpt::transport::layer::translate_to_json);
+    this->add_content_provider("text/x-json",
+                               zpt::transport::layer::translate_from_json,
+                               zpt::transport::layer::translate_to_json);
+    this->add_content_provider("text/xml",
+                               zpt::transport::layer::translate_from_xml,
+                               zpt::transport::layer::translate_to_xml);
 }
 
 auto
@@ -159,8 +193,23 @@ zpt::transport::layer::get(std::string const& _scheme) const -> const zpt::trans
 auto
 zpt::transport::layer::translate(std::istream& _io, std::string _mime) const -> zpt::json {
     auto _found = this->__content_providers.find(_mime);
-    if (_found != this->__content_providers.end()) { return _found->second(_io); }
+    if (_found != this->__content_providers.end()) { return std::get<0>(_found->second)(_io); }
+    else {
+        return zpt::transport::layer::translate_from_default(_io);
+    }
     return zpt::undefined;
+}
+
+auto
+zpt::transport::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const
+  -> std::string {
+    auto _found = this->__content_providers.find(_mime);
+    if (_found != this->__content_providers.end()) {
+        return std::get<1>(_found->second)(_io, _content);
+    }
+    else {
+        return zpt::transport::layer::translate_to_json(_io, _content);
+    }
 }
 
 auto
@@ -181,9 +230,10 @@ zpt::transport::layer::resolve(std::string _uri) const -> zpt::exchange {
 
 auto
 zpt::transport::layer::add_content_provider(std::string const& _mime,
-                                            std::function<zpt::json(std::istream&)> _callback)
+                                            translate_from_func _callback_from,
+                                            translate_to_func _callback_to)
   -> zpt::transport::layer& {
-    this->__content_providers.insert(std::make_pair(_mime, _callback));
+    this->__content_providers.insert(std::pair(_mime, std::tuple(_callback_from, _callback_to)));
     return (*this);
 }
 
@@ -198,10 +248,26 @@ zpt::transport::layer::translate_from_default(std::istream& _io) -> zpt::json {
 }
 
 auto
+zpt::transport::layer::translate_to_default(std::ostream& _io, zpt::json _content) -> std::string {
+    try {
+        return zpt::transport::layer::translate_to_json(_io, _content);
+    }
+    catch (...) {
+    }
+    return zpt::transport::layer::translate_to_raw(_io, _content);
+}
+
+auto
 zpt::transport::layer::translate_from_json(std::istream& _io) -> zpt::json {
     zpt::json _to_return;
     _io >> _to_return;
     return _to_return;
+}
+
+auto
+zpt::transport::layer::translate_to_json(std::ostream& _io, zpt::json _content) -> std::string {
+    _io << _content << std::flush;
+    return "application/json";
 }
 
 auto
@@ -212,4 +278,26 @@ zpt::transport::layer::translate_from_raw(std::istream& _io) -> zpt::json {
     _io.seekg(0, std::ios::beg);
     _content.assign((std::istreambuf_iterator<char>(_io)), std::istreambuf_iterator<char>());
     return { _content };
+}
+
+auto
+zpt::transport::layer::translate_to_raw(std::ostream& _io, zpt::json _content) -> std::string {
+    _io << _content << std::flush;
+    return "text/plain";
+}
+
+auto
+zpt::transport::layer::translate_from_xml(std::istream& _io) -> zpt::json {
+    std::string _content;
+    _io.seekg(0, std::ios::end);
+    _content.reserve(_io.tellg());
+    _io.seekg(0, std::ios::beg);
+    _content.assign((std::istreambuf_iterator<char>(_io)), std::istreambuf_iterator<char>());
+    return { _content };
+}
+
+auto
+zpt::transport::layer::translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string {
+    _io << "" << std::flush;
+    return "text/xml";
 }

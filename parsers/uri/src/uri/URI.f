@@ -138,15 +138,11 @@
         d_intermediate_state = StartCondition_::params;
         begin(StartCondition_::placeholder);
     }
-    "(" {
-	    ++d_function_level;
-        begin(StartCondition_::function);
-    }
     "#" {
 	    begin(StartCondition_::anchor);
         return zpt::uri::lex::CARDINAL;
     }
-	([^=&{(#]+) {
+	([^=&{#]+) {
 	    d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
@@ -166,40 +162,9 @@
     }
 }
 
-<function> {
-	([^,)]+) {
-        if (matched().find("(") != std::string::npos) {
-		    ++d_function_level;
-		    d_function_helper = matched();
-		}
-	    else {
-		    return zpt::uri::lex::FUNCTION_PARAM;
-		}
-	}
-    "," {
-	    if (d_function_level != 1) {
-            d_function_helper += ",";
-		}
-	}
-	")" {
-	    --d_function_level;
-	    if (d_function_level == 0) {
-            begin(StartCondition_::params);
-		}
-	    else {
-            d_function_helper += ")";
-			if (d_function_level == 1) {
-			    setMatched(d_function_helper);
-				return zpt::uri::lex::FUNCTION_PARAM;
-			}
-		}
-	}
-}
-
 <anchor> {
 	(.+) {
 	    d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
 }
-	  

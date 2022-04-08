@@ -21,4 +21,3 @@
 */
 
 #include <zapata/prolog/prolog.h>
-

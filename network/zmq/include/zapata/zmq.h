@@ -26,4 +26,3 @@
 #include <zapata/zmq/socket_stream.h>
 #include <zapata/zmq/WebSocket.h>
 #include <zapata/zmq/ZMQFactory.h>
-

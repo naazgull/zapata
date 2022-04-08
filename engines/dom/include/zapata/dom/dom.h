@@ -24,7 +24,7 @@
 
 #include <zapata/pipeline.h>
 
-#define URI_PART_ANY "{([^/?]+)}"
+#define URI_PART_ANY "{:([^/?]+):}"
 
 namespace zpt {
 namespace dom {

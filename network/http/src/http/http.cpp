@@ -43,10 +43,7 @@ zpt::net::transport::http::set_headers(zpt::exchange& _channel, zpt::HTTPObj& _h
         _channel->received() << "headers" << _headers;
     }
     for (auto [_key, _value] : _http_message.headers()) { _headers << _key << _value; }
-    if (!_headers["Content-Type"]->ok()) {
-        _headers << "Content-Type"
-                 << "*/*";
-    }
+    _headers << "Content-Type" << _channel->content_type()[0];
     return (*this);
 }
 
@@ -55,14 +52,10 @@ zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http
   -> const zpt::net::transport::http& {
     if (_http_message.body().length() != 0) {
         if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
-
         auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         std::istringstream _is;
         _is.str(_http_message.body());
-
-        std::string _content_type = _channel->received()["headers"]["Content-Type"];
-        zpt::json _content = _layer.translate(_is, _content_type);
-
+        zpt::json _content = _layer.translate(_is, _channel->content_type()[0]);
         _channel->received() << "body" << _content;
     }
     return (*this);
@@ -125,8 +118,12 @@ zpt::net::transport::http::set_headers(zpt::http::rep& _reply, zpt::exchange& _c
 auto
 zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _channel) const
   -> const zpt::net::transport::http& {
-    if (_channel->to_send()["body"]->ok()) {
-        _request->body(static_cast<std::string>(_channel->to_send()["body"]));
+    auto _body = _channel->to_send()["body"];
+    if (_body->ok()) {
+        auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+        std::ostringstream _os;
+        _request->header("Content-Type", _layer.translate(_os, _channel->content_type()[0], _body));
+        _request->body(_os.str());
     }
     return (*this);
 }
@@ -134,8 +131,12 @@ zpt::net::transport::http::set_body(zpt::http::req& _request, zpt::exchange& _ch
 auto
 zpt::net::transport::http::set_body(zpt::http::rep& _reply, zpt::exchange& _channel) const
   -> const zpt::net::transport::http& {
-    if (_channel->to_send()["body"]->ok()) {
-        _reply->body(static_cast<std::string>(_channel->to_send()["body"]));
+    auto _body = _channel->to_send()["body"];
+    if (_body->ok()) {
+        auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+        std::ostringstream _os;
+        _reply->header("Content-Type", _layer.translate(_os, _channel->content_type()[1], _body));
+        _reply->body(_os.str());
     }
     return (*this);
 }

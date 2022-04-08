@@ -36,7 +36,7 @@ main(int argc, char* argv[]) {
         std::cout << zpt::uri::to_string(zpt::uri::parse("file:./users.json")) << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("{(.*)}:/{(.*)}") << std::endl << std::flush;
+        std::cout << zpt::uri::parse("{:(.*):}:/{:(.*):}") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("{(.*)}:/{(.*)}")) << std::endl
                   << std::endl
                   << std::flush;
@@ -122,12 +122,24 @@ main(int argc, char* argv[]) {
                   << std::endl
                   << std::endl
                   << std::flush;
+        std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/"
+                                     "me?a=2&b=3&c=&d={!ge(integer(0,2),float(1,2,3))!}")
+                  << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::to_string(
+                       zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/"
+                                       "me?a=2&b=3&c=&d={!ge(integer(0,2),float(1,2,3))!}"))
+                  << std::endl
+                  << std::endl
+                  << std::flush;
         std::cout << zpt::uri::parse(
-                       "http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=&d=ge(integer(0))")
+                       "http://pf@na.zgul.me/api/2.0/users/"
+                       "me?a=2&b=3&c=&d=integer(0,2)&e={!ge(integer(0,2),float(1,2,3))!}")
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse(
-                       "http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=&d=ge(integer(0))"))
+                       "http://pf@na.zgul.me/api/2.0/users/"
+                       "me?a=2&b=3&c=&d=integer(0,2)&e={!ge(integer(0,2),float(1,2,3))!}"))
                   << std::endl
                   << std::endl
                   << std::flush;

@@ -141,7 +141,7 @@ string	d_chunked;
 	"=" {
 		return 267;
 	}
-	"&"   {
+	"&" {
 		return 268;
 	}
 	[ ] {
@@ -150,7 +150,7 @@ string	d_chunked;
 	}
 	([^=& ]+) {
 		return 263;
-        }
+    }
 }
 
 <headers> {

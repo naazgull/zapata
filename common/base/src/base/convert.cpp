@@ -22,6 +22,10 @@
 
 #include <sys/time.h>
 #include <time.h>
+#include <sstream>
+#include <execinfo.h>
+#include <ctime>
+
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 
@@ -336,4 +340,18 @@ zpt::timezone_offset() -> time_t {
         return -((86400 - num[1]) + num[0]); // Opposite
     }
     return 0;
+}
+
+auto
+zpt::get_backtrace() -> std::string {
+    std::ostringstream _oss;
+    void* _backtrace_array[30];
+    size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
+    char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
+    for (size_t _i = 0; _i != _backtrace_size; _i++) {
+        _oss << "\t" << _backtrace[_i] << std::endl;
+    }
+    _oss << std::flush;
+    free(_backtrace);
+    return _oss.str();
 }

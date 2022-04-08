@@ -691,7 +691,7 @@ zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
     zpt::lf::spin_lock::guard _sentry{ this->__engine_lock, zpt::lf::spin_lock::exclusive };
-    
+
     expect(_func_name->is_object(), "Python: cannot call a null function", 500, 0);
 
     object_type _func = this->locate(_func_name);
