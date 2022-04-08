@@ -80,339 +80,6 @@ zpt::storage::sqlite::is_error(long _error) -> bool {
 }
 
 auto
-zpt::storage::sqlite::expression_operators()
-  -> std::map<std::string, std::function<zpt::json(zpt::json, std::string)>>& {
-    static std::map<std::string, std::function<zpt::json(zpt::json, std::string)>> _funcs = {
-        { "lower", zpt::storage::sqlite::lower{} },
-        { "upper", zpt::storage::sqlite::upper{} },
-        { "boolean", zpt::storage::sqlite::boolean{} },
-        { "date", zpt::storage::sqlite::date{} },
-        { "integer", zpt::storage::sqlite::integer{} },
-        { "float", zpt::storage::sqlite::floating{} },
-        { "double", zpt::storage::sqlite::floating{} },
-        { "string", zpt::storage::sqlite::string{} },
-        { "ne", zpt::storage::sqlite::ne{} },
-        { "gt", zpt::storage::sqlite::gt{} },
-        { "gte", zpt::storage::sqlite::gte{} },
-        { "lt", zpt::storage::sqlite::lt{} },
-        { "lte", zpt::storage::sqlite::lte{} },
-        { "between", zpt::storage::sqlite::between{} }
-    };
-    return _funcs;
-}
-
-auto
-zpt::storage::sqlite::bind_operators()
-  -> std::map<std::string, std::function<zpt::json(zpt::json)>>& {
-    static std::map<std::string, std::function<zpt::json(zpt::json)>> _funcs = {
-        { "lower", zpt::storage::sqlite::lower{} },
-        { "upper", zpt::storage::sqlite::upper{} },
-        { "boolean", zpt::storage::sqlite::boolean{} },
-        { "date", zpt::storage::sqlite::date{} },
-        { "integer", zpt::storage::sqlite::integer{} },
-        { "float", zpt::storage::sqlite::floating{} },
-        { "double", zpt::storage::sqlite::floating{} },
-        { "string", zpt::storage::sqlite::string{} },
-        { "ne", zpt::storage::sqlite::ne{} },
-        { "gt", zpt::storage::sqlite::gt{} },
-        { "gte", zpt::storage::sqlite::gte{} },
-        { "lt", zpt::storage::sqlite::lt{} },
-        { "lte", zpt::storage::sqlite::lte{} },
-        { "between", zpt::storage::sqlite::between{} }
-    };
-    return _funcs;
-}
-
-auto
-zpt::storage::sqlite::cast(zpt::json _expression) -> zpt::json {
-    auto _args = _expression["args"];
-    if (!_args->ok()) { return _expression; }
-    if (_args->size() == 1) { return _args[0]; }
-    auto _cast = _args[_args->size() - 1]->string();
-    if (_args->size() > 2) {
-        auto _arr = zpt::json::array();
-        for (size_t _idx = 0; _idx != _args->size() - 1; ++_idx) {
-            _arr << zpt::storage::sqlite::cast(_args[_idx], _cast);
-        }
-        return _arr;
-    }
-    return zpt::storage::sqlite::cast(_args[0], _cast);
-}
-
-auto
-zpt::storage::sqlite::cast(zpt::json _expression, std::string _cast) -> zpt::json {
-    if (_cast == "boolean") { return static_cast<bool>(_expression); }
-    if (_cast == "date") { return static_cast<zpt::timestamp_t>(_expression); }
-    if (_cast == "integer") { return static_cast<long long>(_expression); }
-    if (_cast == "float" || _cast == "double") { return static_cast<double>(_expression); }
-    if (_cast == "string") { return static_cast<std::string>(_expression); }
-    return _expression;
-}
-
-auto
-zpt::storage::sqlite::cast_to_db_value(zpt::json _value) -> void {
-    switch (_value->type()) {
-        case zpt::JSObject:
-        case zpt::JSArray: {
-        }
-        case zpt::JSString: {
-        }
-        case zpt::JSInteger: {
-        }
-        case zpt::JSDouble: {
-        }
-        case zpt::JSBoolean: {
-        }
-        case zpt::JSDate: {
-        }
-        case zpt::JSNil:
-        case zpt::JSLambda:
-        case zpt::JSRegex: {
-            break;
-        }
-    }
-}
-
-auto
-zpt::storage::sqlite::lower::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return std::string{ "lower(" } + _attribute + std::string{ ") = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::lower::operator()(zpt::json _expression) -> zpt::json {
-    std::string _arg = _expression["args"][0]->string();
-    std::transform(_arg.begin(), _arg.end(), _arg.begin(), ::tolower);
-    return _arg;
-}
-
-auto
-zpt::storage::sqlite::upper::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return std::string{ "upper(" } + _attribute + std::string{ ") = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::upper::operator()(zpt::json _expression) -> zpt::json {
-    std::string _arg = _expression["args"][0]->string();
-    std::transform(_arg.begin(), _arg.end(), _arg.begin(), ::toupper);
-    return _arg;
-}
-
-auto
-zpt::storage::sqlite::boolean::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::boolean::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<bool>(_expression);
-}
-
-auto
-zpt::storage::sqlite::date::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::date::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<zpt::timestamp_t>(_expression);
-}
-
-auto
-zpt::storage::sqlite::integer::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::integer::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<long long>(_expression["args"][0]);
-}
-
-auto
-zpt::storage::sqlite::floating::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::floating::operator()(zpt::json _expression) -> zpt::json {
-    return static_cast<double>(_expression["args"][0]);
-}
-
-auto
-zpt::storage::sqlite::string::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " = :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::string::operator()(zpt::json _expression) -> zpt::json {
-    return _expression["args"][0]->string();
-}
-
-auto
-zpt::storage::sqlite::ne::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " <> :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::ne::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::sqlite::cast(_expression);
-}
-
-auto
-zpt::storage::sqlite::gt::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " > :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::gt::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::sqlite::cast(_expression);
-}
-
-auto
-zpt::storage::sqlite::gte::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " >= :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::gte::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::sqlite::cast(_expression);
-}
-
-auto
-zpt::storage::sqlite::lt::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " < :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::lt::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::sqlite::cast(_expression);
-}
-
-auto
-zpt::storage::sqlite::lte::operator()(zpt::json _expression, std::string _attribute) -> zpt::json {
-    return _attribute + std::string{ " <= :" } + _attribute;
-}
-
-auto
-zpt::storage::sqlite::lte::operator()(zpt::json _expression) -> zpt::json {
-    return zpt::storage::sqlite::cast(_expression);
-}
-
-auto
-zpt::storage::sqlite::between::operator()(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    return _attribute + std::string{ " >= :" } + _attribute + std::string{ "_lower_bound and " } +
-           _attribute + std::string{ " <= :" } + _attribute + std::string{ "_upper_bound" };
-}
-
-auto
-zpt::storage::sqlite::between::operator()(zpt::json _expression) -> zpt::json {
-    auto _args = zpt::storage::sqlite::cast(_expression);
-    return zpt::json{ "_lower_bound", _args[0], "_upper_bound", _args[1] };
-}
-
-auto
-zpt::storage::sqlite::evaluate_expression(zpt::json _expression, std::string _attribute)
-  -> zpt::json {
-    auto& _funcs = zpt::storage::sqlite::expression_operators();
-    auto _func = _funcs.find(_expression["name"]->string());
-    expect(_func != _funcs.end(),
-           "operator 'zpt::storage::sqlite::" << _expression["name"] << "' could not be found.",
-           500,
-           0);
-    return _func->second(_expression, _attribute);
-}
-
-auto
-zpt::storage::sqlite::evaluate_bind(zpt::json _expression) -> zpt::json {
-    auto& _funcs = zpt::storage::sqlite::bind_operators();
-    auto _func = _funcs.find(_expression["name"]->string());
-    expect(_func != _funcs.end(),
-           "operator 'zpt::storage::sqlite::" << _expression["name"] << "' could not be found.",
-           500,
-           0);
-    return _func->second(_expression);
-}
-
-auto
-zpt::storage::sqlite::to_search_str(zpt::json _search) -> std::string {
-    static const std::map<std::string, bool> _reserved = { { "page_size", true },
-                                                           { "page_start_index", true } };
-    if (_search->is_object()) {
-        std::ostringstream _oss;
-        bool _first{ true };
-        for (auto [_, _key, _value] : _search) {
-            if (_reserved.find(_key) != _reserved.end()) { continue; }
-
-            if (!_first) { _oss << " and " << std::flush; }
-            _first = false;
-            if (_value->type() == zpt::JSObject) {
-                try {
-                    auto _expression = zpt::storage::sqlite::evaluate_expression(_value, _key);
-                    _oss << _expression->string() << std::flush;
-                }
-                catch (zpt::failed_expectation const& _e) {
-                    _oss << _key << " = " << _value << std::flush;
-                }
-            }
-            else {
-                _oss << _key << " = " << _value << std::flush;
-            }
-        }
-        return _oss.str();
-    }
-    else if (_search->is_string()) {
-        return _search->string();
-    }
-    else if (_search->is_nil()) {
-        return "";
-    }
-    else {
-        return static_cast<std::string>(_search);
-    }
-}
-
-auto
-zpt::storage::sqlite::to_binded_object(zpt::json _binded) -> zpt::json {
-    if (_binded->is_object()) {
-        auto _return = zpt::json::object();
-        for (auto [_, _key, _value] : _binded) {
-            if (_value->is_object()) {
-                auto _bind = zpt::storage::sqlite::evaluate_bind(_value);
-                if (_bind->is_object()) {
-                    for (auto [_, _binded_key, _binded_value] : _bind) {
-                        _return << (_key + _binded_key) << _binded_value;
-                    }
-                }
-                else {
-                    _return << _key << _bind;
-                }
-            }
-            else {
-                _return << _key << _value;
-            }
-        }
-        return _return;
-    }
-    return _binded;
-}
-
-auto
-zpt::storage::sqlite::to_db_key(zpt::json _document) -> std::string {
-    return _document["_id"]->string();
-}
-
-auto
-zpt::storage::sqlite::to_db_doc(zpt::json _document) -> std::string {
-    return static_cast<std::string>(_document);
-}
-
-auto
 zpt::storage::sqlite::from_db_doc(sqlite3_stmt* _stmt) -> zpt::json {
     zpt::json _to_return{ zpt::json::object() };
     int _count = sqlite3_column_count(_stmt);
@@ -464,44 +131,35 @@ zpt::storage::sqlite::free_byte_array(void* _to_delete) -> void {
 auto
 zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value)
   -> void {
+    auto _index = sqlite3_bind_parameter_index(_stmt, (std::string{ ":" } + _name).data());
+    expect(_index != 0, "No such parameter named :" << _name, 500, 0);
     switch (_value->type()) {
         case zpt::JSString:
         case zpt::JSObject:
         case zpt::JSArray: {
             auto [_bytes, _size] = zpt::storage::sqlite::to_byte_array(_value);
-            sqlite3_bind_text(_stmt,
-                              sqlite3_bind_parameter_index(_stmt, _name.data()),
-                              _bytes,
-                              _size,
-                              zpt::storage::sqlite::free_byte_array);
+            sqlite3_bind_text(_stmt, _index, _bytes, _size, zpt::storage::sqlite::free_byte_array);
             break;
         }
         case zpt::JSInteger: {
-            sqlite3_bind_int64(
-              _stmt, sqlite3_bind_parameter_index(_stmt, _name.data()), _value->integer());
+            sqlite3_bind_int64(_stmt, _index, _value->integer());
             break;
         }
         case zpt::JSDouble: {
-            sqlite3_bind_double(
-              _stmt, sqlite3_bind_parameter_index(_stmt, _name.data()), _value->floating());
+            sqlite3_bind_double(_stmt, _index, _value->floating());
             break;
         }
         case zpt::JSBoolean: {
-            sqlite3_bind_int64(
-              _stmt, sqlite3_bind_parameter_index(_stmt, _name.data()), _value->integer());
+            sqlite3_bind_int64(_stmt, _index, _value->integer());
             break;
         }
         case zpt::JSDate: {
             auto [_bytes, _size] = zpt::storage::sqlite::to_byte_array(_value);
-            sqlite3_bind_text(_stmt,
-                              sqlite3_bind_parameter_index(_stmt, _name.data()),
-                              _bytes,
-                              _size,
-                              zpt::storage::sqlite::free_byte_array);
+            sqlite3_bind_text(_stmt, _index, _bytes, _size, zpt::storage::sqlite::free_byte_array);
             break;
         }
         case zpt::JSNil: {
-            sqlite3_bind_null(_stmt, sqlite3_bind_parameter_index(_stmt, _name.data()));
+            sqlite3_bind_null(_stmt, _index);
             break;
         }
         case zpt::JSLambda:
@@ -546,7 +204,7 @@ zpt::storage::sqlite::session::is_open() -> bool {
 
 auto
 zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
-    std::string _to_execute{ "COMMIT" };
+    std::string _to_execute{ "commit" };
     for (auto _db : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         sqlite_expect(
@@ -562,7 +220,7 @@ zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
 
 auto
 zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
-    std::string _to_execute{ "ROLLBACK" };
+    std::string _to_execute{ "rollback" };
     for (auto _db : this->__underlying) {
         sqlite3_stmt* _stmt{ nullptr };
         sqlite_expect(
@@ -641,7 +299,7 @@ zpt::storage::sqlite::collection::find(zpt::json _search) -> zpt::storage::actio
 auto
 zpt::storage::sqlite::collection::count() -> size_t {
     std::ostringstream _oss;
-    _oss << "SELECT count(*) FROM \"" << this->__collection_name << "\"" << std::flush;
+    _oss << "select count(*) from \"" << this->__collection_name << "\"" << std::flush;
     std::string _to_execute{ _oss.str() };
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(
@@ -775,18 +433,6 @@ zpt::storage::sqlite::action_add::limit(size_t _number) -> zpt::storage::action:
 
 auto
 zpt::storage::sqlite::action_add::bind(zpt::json _map) -> zpt::storage::action::type* {
-    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
-    try {
-        for (auto _prepared : this->__prepared) {
-            for (auto [_, _name, _value] : _map) {
-                zpt::storage::sqlite::bind(_prepared.get(), _name, _value);
-            }
-        }
-    }
-    catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
-        throw;
-    }
     return this;
 }
 
@@ -813,8 +459,8 @@ zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
 
     std::ostringstream _names;
     std::ostringstream _values;
-    _names << "INSERT INTO \"" << this->__collection_name << "\" (" << std::flush;
-    _values << " VALUES (" << std::flush;
+    _names << "insert into \"" << this->__collection_name << "\" (" << std::flush;
+    _values << " values (" << std::flush;
     bool _first{ true };
     for (auto [_, _key, _value] : _document) {
         if (!_first) {
@@ -916,6 +562,7 @@ auto
 zpt::storage::sqlite::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
     expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
     try {
+        this->add_update();
         for (auto _prepared : this->__prepared) {
             for (auto [_, _name, _value] : _map) {
                 zpt::storage::sqlite::bind(_prepared.get(), _name, _value);
@@ -931,20 +578,23 @@ zpt::storage::sqlite::action_modify::bind(zpt::json _map) -> zpt::storage::actio
 
 auto
 zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
-    size_t _count{ 0 };
     try {
         this->add_update();
         for (auto _prepared : this->__prepared) {
+            auto _result = sqlite3_step(_prepared.get());
             sqlite_expect(
-              sqlite3_step(_prepared.get()),
+              _result,
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+            if (_result == SQLITE_ROW) {
+                zlog(zpt::storage::sqlite::from_db_doc(_prepared.get()), zpt::info);
+            }
         }
     }
     catch (zpt::failed_expectation const& _e) {
         this->set_state(_e.code());
         throw;
     }
-    zpt::json _result{ "state", this->get_state(), "modified", _count };
+    zpt::json _result{ "state", this->get_state() };
     return zpt::storage::result::alloc<zpt::storage::sqlite::result>(_result);
 }
 
@@ -953,7 +603,7 @@ zpt::storage::sqlite::action_modify::add_update() -> void {
     if (this->__set->size() == 0 && this->__unset->size() == 0) { return; }
 
     std::ostringstream _oss;
-    _oss << "UPDATE \"" << this->__collection_name << "\" SET " << std::flush;
+    _oss << "update \"" << this->__collection_name << "\" set " << std::flush;
     bool _first{ true };
     for (auto [_, _key, _value] : this->__set) {
         if (!_first) { _oss << ", "; }
@@ -962,6 +612,7 @@ zpt::storage::sqlite::action_modify::add_update() -> void {
         }
         _oss << "\"" << _key << "\" = " << _value << std::flush;
     }
+    this->__set->clear();
     for (auto [_, _key, _value] : this->__unset) {
         if (!_first) { _oss << ", "; }
         else {
@@ -969,7 +620,9 @@ zpt::storage::sqlite::action_modify::add_update() -> void {
         }
         _oss << "\"" << _key << "\" = NULL " << std::flush;
     }
-    _oss << " WHERE " << zpt::storage::sqlite::to_search_str(this->__search) << std::flush;
+    this->__unset->clear();
+    std::string _where = zpt::storage::extract_find(this->__search);
+    if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
     this->prepare(_oss.str());
 }
 
@@ -1049,22 +702,49 @@ zpt::storage::sqlite::action_remove::limit(size_t _number) -> zpt::storage::acti
 
 auto
 zpt::storage::sqlite::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-        if (_item->type() != zpt::JSString) { return; }
-        for (auto [_, _key, _value] : _map) {
-            if (_item == _key) { _item << _value; }
+    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
+    try {
+        this->add_delete();
+        for (auto _prepared : this->__prepared) {
+            for (auto [_, _name, _value] : _map) {
+                zpt::storage::sqlite::bind(_prepared.get(), _name, _value);
+            }
         }
-    };
-    zpt::json::traverse(this->__search, _transform);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        throw;
+    }
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_remove::execute() -> zpt::storage::result {
-    size_t _count{ 0 };
-    zpt::json _result{ "state", this->get_state(), "removed", _count };
+    try {
+        this->add_delete();
+        for (auto _prepared : this->__prepared) {
+            sqlite_expect(
+              sqlite3_step(_prepared.get()),
+              "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+        }
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        throw;
+    }
+    zpt::json _result{ "state", this->get_state() };
     return zpt::storage::result::alloc<zpt::storage::sqlite::result>(_result);
+}
+
+auto
+zpt::storage::sqlite::action_remove::add_delete() -> void {
+    if (this->__added) { return; }
+    std::ostringstream _oss;
+    _oss << "delete from \"" << this->__collection_name << "\"" << std::flush;
+    std::string _where = zpt::storage::extract_find(this->__search);
+    if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
+    this->prepare(_oss.str());
+    this->__added = true;
 }
 
 zpt::storage::sqlite::action_replace::action_replace(zpt::storage::sqlite::collection& _collection,
@@ -1072,7 +752,9 @@ zpt::storage::sqlite::action_replace::action_replace(zpt::storage::sqlite::colle
                                                      zpt::json _document)
   : zpt::storage::sqlite::action::action{ _collection }
   , __id{ _id }
-  , __set{ _document } {}
+  , __set{ _document } {
+    this->__set << "_id" << _id;
+}
 
 auto
 zpt::storage::sqlite::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
@@ -1145,22 +827,51 @@ zpt::storage::sqlite::action_replace::limit(size_t _number) -> zpt::storage::act
 
 auto
 zpt::storage::sqlite::action_replace::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-        if (_item->type() != zpt::JSString) { return; }
-        for (auto [_, _key, _value] : _map) {
-            if (_item == _key) { _item << _value; }
-        }
-    };
-    zpt::json::traverse(this->__set, _transform);
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_replace::execute() -> zpt::storage::result {
-    size_t _count{ 0 };
-    zpt::json _result{ "state", this->get_state(), "replaced", _count };
+    try {
+        this->add_replace();
+        for (auto _prepared : this->__prepared) {
+            sqlite_expect(
+              sqlite3_step(_prepared.get()),
+              "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+        }
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        throw;
+    }
+    zpt::json _result{ "state", this->get_state() };
     return zpt::storage::result::alloc<zpt::storage::sqlite::result>(_result);
+}
+
+auto
+zpt::storage::sqlite::action_replace::add_replace() -> void {
+    if (this->__set->size() == 0) { return; }
+
+    std::ostringstream _names;
+    std::ostringstream _values;
+    _names << "replace into \"" << this->__collection_name << "\" (" << std::flush;
+    _values << " values (" << std::flush;
+    bool _first{ true };
+    for (auto [_, _key, _value] : this->__set) {
+        if (!_first) {
+            _names << ", ";
+            _values << ", ";
+        }
+        else {
+            _first = false;
+        }
+        _names << "\"" << _key << "\"" << std::flush;
+        _values << _value << std::flush;
+    }
+    _names << ")" << std::flush;
+    _values << ")" << std::flush;
+    _names << _values.str() << ";" << std::flush;
+    this->prepare(_names.str());
 }
 
 auto
@@ -1256,37 +967,109 @@ zpt::storage::sqlite::action_find::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::sqlite::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-        if (_item->type() != zpt::JSString) { return; }
-        for (auto [_, _key, _value] : _map) {
-            if (_item == _key) { _item << _value; }
+    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
+    try {
+        this->add_select();
+        for (auto _prepared : this->__prepared) {
+            for (auto [_, _name, _value] : _map) {
+                zpt::storage::sqlite::bind(_prepared.get(), _name, _value);
+            }
         }
-    };
-    zpt::json::traverse(this->__search, _transform);
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        throw;
+    }
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_find::execute() -> zpt::storage::result {
+    try {
+        this->add_select();
+    }
+    catch (zpt::failed_expectation const& _e) {
+        this->set_state(_e.code());
+        throw;
+    }
     auto _found = zpt::json::array();
     zpt::json _result{ "state", this->get_state(), "cursor", _found };
-    return zpt::storage::result::alloc<zpt::storage::sqlite::result>(_result);
+    return zpt::storage::result::alloc<zpt::storage::sqlite::result>(_result, this->__prepared);
+}
+
+auto
+zpt::storage::sqlite::action_find::add_select() -> void {
+    if (this->__already_prepared) return;
+
+    std::ostringstream _oss;
+    _oss << "select ";
+
+    if (this->__fields->size() != 0 && this->__fields->is_array()) {
+        bool _first{ true };
+        for (auto [_, __, _value] : this->__fields) {
+            if (!_first) { _oss << ", "; }
+            else {
+                _first = false;
+            }
+            _oss << _value;
+        }
+    }
+    else {
+        _oss << "*";
+    }
+
+    _oss << " from \"" << this->__collection_name << "\"" << std::flush;
+
+    if (this->__search->ok()) {
+        std::string _where = zpt::storage::extract_find(this->__search);
+        if (_where.length() != 0) { _oss << " where " << _where << std::flush; }
+    }
+
+    if (this->__limit != std::numeric_limits<size_t>::max()) {
+        _oss << " limit " << this->__limit << std::flush;
+    }
+
+    if (this->__offset != 0) { _oss << " offset " << this->__offset << std::flush; }
+
+    if (this->__sort->size() != 0 && this->__sort->is_object()) {
+        _oss << " order by ";
+        bool _first{ true };
+        zpt::json _order;
+        for (auto [_, _key, _value] : this->__sort) {
+            if (!_first) { _oss << ", "; }
+            else {
+                _first = false;
+            }
+            _oss << "\"" << _key << "\"";
+            _order = _value;
+        }
+        _oss << " " << _order << std::flush;
+    }
+
+    this->prepare(_oss.str());
+    this->__already_prepared = true;
 }
 
 zpt::storage::sqlite::result::result(zpt::json _result)
+  : __result{ _result } {}
+
+zpt::storage::sqlite::result::result(zpt::json _result, std::vector<sqlite3_stmt_ptr> _prepared)
   : __result{ _result }
-  , __current{ __result["cursor"].begin() } {}
+  , __prepared{ _prepared } {}
 
 auto
 zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
-    auto _result = zpt::json::array();
-    for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
-         ++this->__current, ++_fetched) {
-        _result << std::get<2>(*this->__current);
-        if (_amount != 0 && _fetched == _amount) { break; }
+    if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
+    auto _return = zpt::json::array();
+    for (auto _prepared : this->__prepared) {
+        for (size_t _idx = 0; _idx != _amount; ++_idx) {
+            if (sqlite3_step(_prepared.get()) != SQLITE_ROW) { break; }
+            auto _row = zpt::storage::sqlite::from_db_doc(_prepared.get());
+            if (_amount == 1) { return _row; }
+            _return << _row;
+        }
     }
-    return _result;
+    return (_return->size() != 0 ? _return : zpt::undefined);
 }
 
 auto
@@ -1297,7 +1080,7 @@ zpt::storage::sqlite::result::generated_id() -> zpt::json {
 auto
 zpt::storage::sqlite::result::count() -> size_t {
     if (this->__result["generated"]->ok()) { return this->__result["generated"]->size(); }
-    return this->__result["cursor"]->size();
+    return 0;
 }
 
 auto

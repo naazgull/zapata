@@ -55,114 +55,7 @@ using sqlite3_ptr = std::shared_ptr<sqlite3>;
 using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
 
 auto
-expression_operators() -> std::map<std::string, std::function<zpt::json(zpt::json, std::string)>>&;
-auto
-bind_operators() -> std::map<std::string, std::function<zpt::json(zpt::json)>>&;
-auto
-cast(zpt::json _expression) -> zpt::json;
-auto
-cast(zpt::json _expression, std::string _cast) -> zpt::json;
-auto
-cast_to_db_value(zpt::json _value) -> void;
-
-class lower {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class upper {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class boolean {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class date {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class integer {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class floating {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class regex {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class string {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class ne {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class gt {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class gte {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class lt {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class lte {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-class between {
-  public:
-    auto operator()(zpt::json _expression, std::string _attribute) -> zpt::json;
-    auto operator()(zpt::json _expression) -> zpt::json;
-};
-
-auto
-evaluate_expression(zpt::json _expression, std::string _attribute) -> zpt::json;
-auto
-evaluate_bind(zpt::json _expression) -> zpt::json;
-auto
-to_search_str(zpt::json _search) -> std::string;
-auto
-to_binded_object(zpt::json _binded) -> zpt::json;
-auto
 is_error(long _error) -> bool;
-auto
-to_db_key(zpt::json _document) -> std::string;
-auto
-to_db_doc(zpt::json _document) -> std::string;
 auto
 from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
 auto
@@ -332,6 +225,9 @@ class action_remove : public zpt::storage::sqlite::action {
 
   private:
     zpt::json __search;
+    bool __added{ false };
+
+    auto add_delete() -> void;
 };
 class action_replace : public zpt::storage::sqlite::action {
   public:
@@ -360,6 +256,8 @@ class action_replace : public zpt::storage::sqlite::action {
   private:
     std::string __id;
     zpt::json __set;
+
+    auto add_replace() -> void;
 };
 class action_find : public zpt::storage::sqlite::action {
   public:
@@ -389,10 +287,14 @@ class action_find : public zpt::storage::sqlite::action {
     zpt::json __fields;
     size_t __limit{ std::numeric_limits<size_t>::max() };
     size_t __offset{ 0 };
+    bool __already_prepared{ false };
+
+    auto add_select() -> void;
 };
 class result : public zpt::storage::result::type {
   public:
     result(zpt::json _result);
+    result(zpt::json _result, std::vector<sqlite3_stmt_ptr> _prepared);
     virtual ~result() override = default;
     virtual auto fetch(size_t _amount = 0) -> zpt::json override;
     virtual auto generated_id() -> zpt::json override;
@@ -403,7 +305,7 @@ class result : public zpt::storage::result::type {
 
   private:
     zpt::json __result;
-    zpt::json::iterator __current;
+    std::vector<sqlite3_stmt_ptr> __prepared;
 };
 } // namespace sqlite
 } // namespace storage

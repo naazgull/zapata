@@ -33,6 +33,9 @@ class collection;
 class action;
 class result;
 
+using functor = std::function<void(zpt::json, std::ostream&)>;
+using string_output = std::function<void(zpt::json, std::ostream&)>;
+
 class connection {
   public:
     class type {
@@ -245,7 +248,12 @@ reply_find(zpt::json& _reply, zpt::json _params) -> void;
 auto
 filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
 auto
-parse_params(std::string& _param) -> zpt::json;
+extract_find(zpt::json _to_parse) -> std::string;
+auto
+functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output)
+  -> void;
+auto
+functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
 } // namespace storage
 } // namespace zpt
 

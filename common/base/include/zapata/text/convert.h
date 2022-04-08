@@ -170,6 +170,9 @@ const std::wstring plain = L"aaaaaeeeeeiiiiiooooouuuuucAAAAAEEEEEIIIIIOOOOOUUUUU
 time_t
 timezone_offset();
 
+auto
+get_backtrace() -> std::string;
+
 namespace base64 {
 void
 encode(std::string& _out);

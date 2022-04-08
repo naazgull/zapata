@@ -12,13 +12,16 @@ class FunctionalTokenizerLexer : public FunctionalLexer {
 
     auto switchRoots(zpt::json& _root) -> void;
     auto justLeave() -> void;
+    auto clear() -> void;
 
-    auto operator->() -> zpt::json&;
-    auto operator*() -> zpt::json&;
-
-    auto parse_param(std::string const& _param) -> zpt::json;
+    auto set_string() -> void;
+    auto set_number() -> void;
+    auto set_variable() -> void;
+    auto push_expression() -> void;
+    auto add_param() -> void;
 
   private:
     zpt::json __root;
+    std::stack<zpt::json> __stack;
 };
 } // namespace zpt

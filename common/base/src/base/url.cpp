@@ -80,8 +80,6 @@ zpt::url::encode(std::string& _out) -> void {
 
 auto
 zpt::url::decode(std::string& _out) -> void {
-    zpt::replace(_out, "+", "%20");
-
     const unsigned char* pSrc = (const unsigned char*)_out.c_str();
     const int SRC_LEN = _out.length();
     const unsigned char* const SRC_END = pSrc + SRC_LEN;

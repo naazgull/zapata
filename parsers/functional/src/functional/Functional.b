@@ -13,12 +13,12 @@
 //%debug
 %no-lines
 
-%left TOKEN LPAREN RPAREN COMMA
+%left STRING NUMBER VARIABLE LPAREN RPAREN COMMA
 
 %%
 
-exp :
-	TOKEN params
+exp:
+	token params
 ;
 
 params:
@@ -30,7 +30,32 @@ params:
 param_list:
 
 |
-    exp param_list
+    exp
+    {
+        d_scanner.add_param();
+    }
+    param_list
 |
-    COMMA exp param_list
+    COMMA exp
+    {
+        d_scanner.add_param();
+    }
+    param_list
+;
+
+token:
+    STRING
+    {
+        d_scanner.set_string();
+    }
+|
+    NUMBER
+    {
+        d_scanner.set_number();
+    }
+|
+    VARIABLE
+    {
+        d_scanner.set_variable();
+    }
 ;

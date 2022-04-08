@@ -1010,13 +1010,17 @@ zpt::storage::lmdb::result::result(zpt::json _result)
 
 auto
 zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
+    if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
     auto _result = zpt::json::array();
     for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
          ++this->__current, ++_fetched) {
+        if (_amount == 1) {
+            return std::get<2>(*this->__current);
+        }
         _result << std::get<2>(*this->__current);
-        if (_amount != 0 && _fetched == _amount) { break; }
+        if (_fetched == _amount) { break; }
     }
-    return _result;
+    return (_result->size() != 0 ? _result : zpt::undefined);
 }
 
 auto

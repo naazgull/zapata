@@ -19,73 +19,82 @@ main(int _argc, char* _argv[]) -> int {
                          ->add({ "nick", "jaster", "email", "address@kicker" })
                          ->execute();
         _id2.assign(_result->to_json()["generated"][0]->string());
-        std::cout << "There are " << _collection->count() << " records in the collection."
-                  << std::endl
-                  << std::flush;
+        zlog("---- There are " << _collection->count() << " records in the collection.", zpt::info);
     }
-    // {
-    //     auto _result = _collection //
-    //                      ->find({})
-    //                      ->execute();
-
-    //     std::cout << "Collection elements: " << std::endl
-    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-    //               << std::flush;
-    // }
-    // {
-    //     auto _result = _collection //
-    //                      ->find({ "_id", _id1 })
-    //                      ->execute();
-
-    //     std::cout << "First record: " << std::endl
-    //               << zpt::pretty(_result->to_json()) << std::endl
-    //               << std::flush;
-    // }
-    // {
-    //     auto _result = _collection //
-    //                      ->find({ "_id", _id2 })
-    //                      ->execute();
-
-    //     std::cout << "Second record: " << std::endl
-    //               << zpt::pretty(_result->to_json()) << std::endl
-    //               << std::flush;
-    // }
     {
         auto _result = _collection //
-                         ->modify({ "_id", _id1 })
-                         ->set("nick", "fin")
+                         ->find({})
                          ->execute();
-
-        std::cout << "First record modified: " << std::endl
-                  << zpt::pretty(_result->to_json()) << std::endl
-                  << std::flush;
+        zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
     }
-    // {
-    //     auto _result = _collection //
-    //                      ->find({})
-    //                      ->execute();
+    {
+        auto _result = _collection //
+                         ->find({ "_id", _id1 })
+                         ->execute();
+        zlog("---- First record: " << zpt::pretty(_result->to_json()), zpt::info)
+    }
+    {
+        auto _result = _collection //
+                         ->find({ "_id", _id2 })
+                         ->execute();
+        zlog("---- Second record: " << zpt::pretty(_result->to_json()), zpt::info);
+    }
+    {
 
-    //     std::cout << "Collection elements: " << std::endl
-    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-    //               << std::flush;
-    // }
-    // {
-    //     auto _result = _collection //
-    //                      ->remove({})
-    //                      ->execute();
-
-    //     std::cout << "Removed elements: " << std::endl
-    //               << zpt::pretty(_result->to_json()) << std::endl
-    //               << std::flush;
-    // }
-    // {
-    //     auto _result = _collection //
-    //                      ->find({})
-    //                      ->execute();
-
-    //     std::cout << "Collection elements: " << std::endl
-    //               << zpt::pretty(_result->to_json()["cursor"]) << std::endl
-    //               << std::flush;
-    // }
+        auto _result = _collection //
+                         ->modify("_id = :id")
+                         ->set("nick", "#########")
+                         ->bind({ "id", _id2 })
+                         ->execute();
+        zlog("---- First record modified: " << zpt::pretty(_result->to_json()), zpt::info);
+    }
+    {
+        auto _result =
+          _collection //
+            ->replace(_id1, { "nick", "fimber replace", "email", "address_replace@host" })
+            ->execute();
+        zlog("----- Replaced elements: " << zpt::pretty(_result->to_json()), zpt::info);
+    }
+    {
+        auto _result = _collection //
+                         ->find({})
+                         ->execute();
+        zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
+    }
+    {
+        zpt::json _search = { "nick", "{.lower(fizz).}" };
+        auto _result = _collection //
+                         ->find(_search)
+                         ->execute();
+        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()),
+             zpt::info);
+    }
+    {
+        auto _result = _collection //
+                         ->remove("nick = :nick")
+                         ->bind({ "nick", "fizz" })
+                         ->execute();
+        zlog("---- Removed elements: " << zpt::pretty(_result->to_json()), zpt::info);
+    }
+    {
+        auto _result = _collection //
+                         ->find("nick = :nick")
+                         ->bind({ "nick", "fizz" })
+                         ->execute();
+        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()),
+             zpt::info);
+    }
+    {
+        auto _result = _collection //
+                         ->remove({})
+                         ->execute();
+        zlog("---- Removed elements: " << zpt::pretty(_result->to_json()), zpt::info);
+    }
+    {
+        auto _result = _collection //
+                         ->find({})
+                         ->execute();
+        zlog("---- Collection elements: " << zpt::json::pretty(_result->fetch()), zpt::info);
+    }
     return 0;
 }

@@ -230,6 +230,34 @@ zpt::JSONElementT::nil() const -> bool {
 }
 
 auto
+zpt::JSONElementT::clear() -> void {
+    switch (this->__target.__type) {
+        case zpt::JSObject: {
+            if (this->__target.__object.operator->() != nullptr) {
+                (**this->__target.__object).clear();
+            }
+            break;
+        }
+        case zpt::JSArray: {
+            if (this->__target.__array.operator->() != nullptr) {
+                (**this->__target.__array).clear();
+            }
+            break;
+        }
+        case zpt::JSString:
+        case zpt::JSInteger:
+        case zpt::JSDouble:
+        case zpt::JSBoolean:
+        case zpt::JSNil:
+        case zpt::JSDate:
+        case zpt::JSLambda:
+        case zpt::JSRegex: {
+            break;
+        }
+    }
+}
+
+auto
 zpt::JSONElementT::size() const -> size_t {
     switch (this->__target.__type) {
         case zpt::JSObject: {

@@ -24,7 +24,10 @@
 
 auto
 main(int argc, char* argv[]) -> int {
-    std::cout << zpt::functional::parse("g(f(x, 1, 2), h(0, \"dlfjaskfljasçldfkj\", a))")
+    std::cout << zpt::functional::parse("gt(double(0.1))")
+              << std::endl
+              << std::flush;
+    std::cout << zpt::functional::parse("gt(double(0.1))")
               << std::endl
               << std::flush;
     return 0;

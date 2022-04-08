@@ -10,6 +10,8 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// #define WITH_ATOMIC_SHARED_PTR
+
 #include <signal.h>
 #include <unistd.h>
 #include <csignal>
@@ -42,13 +44,15 @@ constexpr int PER_THREAD = 8;
 std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 
+#ifndef WITH_ATOMIC_SHARED_PTR
+
 #ifdef QUEUE_USE_STRING
 zpt::lf::queue<std::shared_ptr<std::string>>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE *
                                                                                 10,
                                                                               PER_THREAD };
 zpt::lf::list<std::shared_ptr<std::string>>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST,
                                                                              PER_THREAD };
-zpt::lf::queue<std::shared_ptr<std::string>> _queue{ _q_hazard_domain, SPIN_WAIT_MICROS };
+zpt::lf::queue<std::shared_ptr<std::string>> _queue{ _q_hazard_domain };
 zpt::lf::list<std::shared_ptr<std::string>> _list{ _l_hazard_domain };
 #else
 zpt::lf::queue<int>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE, PER_THREAD };
@@ -218,6 +222,19 @@ test_hazard_ptr() -> void {
     _q1.push(1);
     _q1.pop();
 }
+#else
+zpt::lf::queue<int> _queue{};
+
+auto
+test_queue() -> int {
+    return 0;
+}
+
+auto
+test_list() -> int {
+    return 0;
+}
+#endif
 
 auto
 test_aligned() -> void {
