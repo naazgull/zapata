@@ -52,9 +52,11 @@ class token_provider {
     virtual auto retrieve_client(std::string const& _client_id, std::string const& _client_secret)
       -> zpt::json = 0;
     virtual auto store_token(zpt::json _token) -> std::string = 0;
-    virtual auto get_code(std::string const& _code) -> zpt::json = 0;
-    virtual auto get_token(std::string const& _access_token) -> zpt::json = 0;
-    virtual auto get_refresh_token(std::string const& _refresh_token) -> zpt::json = 0;
+    virtual auto exchange_code(std::string const& _code,
+                               std::string const& _id,
+                               std::string const& _secret) -> zpt::json = 0;
+    virtual auto get_data_from_token(std::string const& _access_token) -> zpt::json = 0;
+    virtual auto get_data_from_refresh_token(std::string const& _refresh_token) -> zpt::json = 0;
     virtual auto get_roles_permissions(zpt::json _token) -> zpt::json = 0;
     virtual auto validate_roles_permissions(zpt::json _envelope,
                                             std::string _topic,
@@ -79,7 +81,8 @@ class server {
       -> zpt::json;
     virtual auto refresh(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
       -> zpt::json;
-    virtual auto validate(std::string const& _access_token, zpt::json _opts) -> zpt::json;
+    virtual auto validate(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
+      -> zpt::json;
 
   private:
     zpt::auth::oauth2::token_provider_ptr __token_provider{ nullptr };

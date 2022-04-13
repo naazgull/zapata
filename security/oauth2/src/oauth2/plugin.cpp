@@ -38,16 +38,16 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     size_t _step = _plugin->config()["add_to_step"]->integer();
 
     _rest.add_listener(_step,
-                       std::string{ "/GET" } + _config["authorize_url"]->string(),
+                       std::string{ "/{:(GET|POST):}" } + _config["authorize_url"]->string(),
                        zpt::auth::oauth2::authorize_listener);
     _rest.add_listener(_step,
-                       std::string{ "/GET" } + _config["token_url"]->string(),
+                       std::string{ "/{:(GET|POST):}" } + _config["token_url"]->string(),
                        zpt::auth::oauth2::token_listener);
     _rest.add_listener(_step,
-                       std::string{ "/GET" } + _config["refresh_url"]->string(),
+                       std::string{ "/{:(GET|POST):}" } + _config["refresh_url"]->string(),
                        zpt::auth::oauth2::refresh_listener);
     _rest.add_listener(_step,
-                       std::string{ "/GET" } + _config["validate_url"]->string(),
+                       std::string{ "/{:(GET|POST):}" } + _config["validate_url"]->string(),
                        zpt::auth::oauth2::validate_listener);
 
     zlog("Registering listeners for oauth2.0", zpt::info);
