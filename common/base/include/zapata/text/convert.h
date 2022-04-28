@@ -40,12 +40,6 @@
 #include <wctype.h>
 #include <zapata/text/manip.h>
 
-#include <openssl/buffer.h>
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
-#include <openssl/md5.h>
-#include <openssl/sha.h>
-
 #include <ossp/uuid++.hh>
 
 namespace zpt {
@@ -243,99 +237,6 @@ namespace ascii {
 void
 encode(std::string& out, bool quote = true);
 }
-
-namespace hash {
-template<class type>
-void
-MD5(const type& input, type& hash) {
-    MD5_CTX context;
-    MD5_Init(&context);
-    MD5_Update(&context, &input[0], input.size());
-
-    hash.resize(128 / 8);
-    MD5_Final((unsigned char*)&hash[0], &context);
-}
-template<class type>
-type
-MD5(const type input) {
-    type hash;
-    MD5(input, hash);
-    return hash;
-}
-
-template<class type>
-void
-SHA1(const type& input, type& hash) {
-    SHA_CTX context;
-    SHA1_Init(&context);
-    SHA1_Update(&context, &input[0], input.size());
-
-    hash.resize(160 / 8);
-    SHA1_Final((unsigned char*)&hash[0], &context);
-}
-template<class type>
-type
-SHA1(const type input) {
-    type hash;
-    SHA1(input, hash);
-    return hash;
-}
-
-template<class type>
-void
-SHA256(const type& input, type& hash) {
-    SHA256_CTX context;
-    SHA256_Init(&context);
-    SHA256_Update(&context, &input[0], input.size());
-
-    hash.resize(256 / 8);
-    SHA256_Final((unsigned char*)&hash[0], &context);
-}
-template<class type>
-type
-SHA256(const type input) {
-    type hash;
-    SHA256(input, hash);
-    return hash;
-}
-
-template<class type>
-void
-SHA512(const type& input, type& hash) {
-    SHA512_CTX context;
-    SHA512_Init(&context);
-    SHA512_Update(&context, &input[0], input.size());
-
-    hash.resize(512 / 8);
-    SHA512_Final((unsigned char*)&hash[0], &context);
-}
-template<class type>
-type
-SHA512(const type input) {
-    type hash;
-    SHA512(input, hash);
-    return hash;
-}
-template<class type, class k_type>
-type
-HMAC_SHA256(const type& input, k_type key) {
-    unsigned char hash[EVP_MAX_MD_SIZE];
-
-    auto hmac = HMAC_CTX_new();
-    HMAC_Init_ex(hmac, &key[0], key.length(), EVP_sha256(), NULL);
-    HMAC_Update(hmac, (unsigned char*)&input[0], input.length());
-    auto len = EVP_MAX_MD_SIZE;
-    HMAC_Final(hmac, hash, &len);
-    HMAC_CTX_free(hmac);
-
-    std::stringstream ss;
-    ss << std::setfill('0');
-    for (auto i = 0; i < len; i++) { ss << hash[i]; }
-    ss << std::flush;
-
-    return (ss.str());
-}
-} // namespace hash
 
 namespace generate {
 auto

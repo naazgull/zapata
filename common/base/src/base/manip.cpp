@@ -38,19 +38,16 @@
 
 auto
 zpt::ltrim(std::string& _in_out) -> void {
-    _in_out.erase(_in_out.begin(),
-                  std::find_if(_in_out.begin(),
-                               _in_out.end(),
-                               std::not1(std::ptr_fun<int, int>(std::isspace))));
+    _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), [](char c) {
+                      return std::isspace(c);
+                  }));
 }
 
 auto
 zpt::rtrim(std::string& _in_out) -> void {
-    _in_out.erase(std::find_if(_in_out.rbegin(),
-                               _in_out.rend(),
-                               std::not1(std::ptr_fun<int, int>(std::isspace)))
-                    .base(),
-                  _in_out.end());
+    _in_out.erase(
+      std::find_if(_in_out.rbegin(), _in_out.rend(), [](char c) { return std::isspace(c); }).base(),
+      _in_out.end());
 }
 
 auto
@@ -116,7 +113,7 @@ zpt::encrypt(std::string& _out, std::string const& _in, std::string const& _key)
     zpt::cipher(cos.str(), _key, _encrypted);
 
     zpt::tostr(_out, _in.length());
-    _out.insert(_out.length(), ".");
+    _out.append(".");
     zpt::base64::encode(_encrypted);
 
     delete[] src;
@@ -176,21 +173,18 @@ zpt::prettify_header_name(std::string& name) -> void {
 auto
 zpt::r_ltrim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
-    _return.erase(_return.begin(),
-                  std::find_if(_return.begin(),
-                               _return.end(),
-                               std::not1(std::ptr_fun<int, int>(std::isspace))));
+    _return.erase(_return.begin(), std::find_if(_return.begin(), _return.end(), [](char c) {
+                      return std::isspace(c);
+                  }));
     return _return;
 }
 
 auto
 zpt::r_rtrim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
-    _return.erase(std::find_if(_return.rbegin(),
-                               _return.rend(),
-                               std::not1(std::ptr_fun<int, int>(std::isspace)))
-                    .base(),
-                  _return.end());
+    _return.erase(
+      std::find_if(_return.rbegin(), _return.rend(), [](char c) { return std::isspace(c); }).base(),
+      _return.end());
     return _return;
 }
 
@@ -271,7 +265,7 @@ zpt::r_encrypt(std::string const& _in, std::string const& _key) -> std::string {
     zpt::cipher(cos.str(), _key, _encrypted);
 
     zpt::tostr(_out, _in.length());
-    _out.insert(_out.length(), ".");
+    _out.append(".");
     zpt::base64::encode(_encrypted);
 
     delete[] src;

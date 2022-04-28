@@ -19,7 +19,7 @@ libzapata_lex_json_la_SOURCES = \
 ./JSONTokenizerLexer.cpp \
 ./json.cpp
 
-bin_PROGRAMS = zat zjson zinit
+bin_PROGRAMS = zat zjson
 
 zat_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
 zat_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs
@@ -36,11 +36,3 @@ zjson_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
 
 zjson_SOURCES = \
 main.cpp
-
-zinit_LDADD = -lpthread -lzapata-base libzapata-lex-json.la
-zinit_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs
-zinit_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
--I@PROJECT_DIR@/common/base/include
-
-zinit_SOURCES = \
-zinit.cpp

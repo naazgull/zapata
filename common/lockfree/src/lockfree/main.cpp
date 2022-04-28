@@ -35,7 +35,7 @@ constexpr int MAX_THREADS_QUEUE = 1000;
 constexpr int N_ELEMENTS_LIST = 1000;
 constexpr int MAX_THREADS_LIST = 50;
 
-constexpr int PER_THREAD = 8;
+constexpr int PER_THREAD = 2;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT

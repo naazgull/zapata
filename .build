@@ -10,7 +10,7 @@ source .exclude.rc
 
 threads=$(grep -c ^processor /proc/cpuinfo)
 cxx_compiler=g++
-cxx_version=$(${cxx_compiler} --version | head -n 1 | tr " " "\n" | tail -n 1 | tr "." "\n" | head -n 1)
+cxx_version=$(${cxx_compiler} --version | head -n 1 | sed -E 's/\(([^)]+)\)//g' | awk '{print $2}' | tr " " "\n" | tail -n 1 | tr "." "\n" | head -n 1)
 if [ ${cxx_version} -lt 10 ]
 then
     cxx_std_version="-std=c++17"
