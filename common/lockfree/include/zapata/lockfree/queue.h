@@ -60,9 +60,7 @@ class forward_node {
 
     friend auto operator<<(std::ostream& _out, zpt::lf::forward_node<T>& _in) -> std::ostream& {
         if constexpr (std::is_pointer<T>::value) { _out << *(_in.__value) << std::flush; }
-        else {
-            _out << _in.__value << std::flush;
-        }
+        else { _out << _in.__value << std::flush; }
         _out << std::flush;
         return _out;
     }

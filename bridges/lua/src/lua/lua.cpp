@@ -292,9 +292,7 @@ zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
         }
         case zpt::JSString: {
             if (_to_convert->string().find("ref(") == 0) { this->from_ref(_to_convert, _return); }
-            else {
-                lua_pushstring(_return, _to_convert->string().data());
-            }
+            else { lua_pushstring(_return, _to_convert->string().data()); }
             break;
         }
         case zpt::JSDate: {

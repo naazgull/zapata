@@ -11,24 +11,8 @@ zpt::init(zpt::HTTPReq& _req) -> void {
     localtime_r(&_rawtime, &_ptm);
     strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-    char _buffer_expires[80];
-    _ptm.tm_hour += 1;
-    strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
-
-    std::string _url(_req->url());
-    if (_url != "") {
-        size_t _b = _url.find("://") + 3;
-        size_t _e = _url.find("/", _b);
-        std::string _domain(_url.substr(_b, _e - _b));
-        std::string _path(_url.substr(_e));
-        _req->header("Host", _domain);
-        _req->url(_path);
-    }
-
     _req->method(zpt::Get);
-    _req->header("User-Agent", "zapata rest-ful server");
-    _req->header("Cache-Control", "max-age=3600");
-    _req->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
+    _req->header("User-Agent", "zapata");
     _req->header("Date", std::string(_buffer_date));
 }
 
@@ -40,16 +24,10 @@ zpt::init(zpt::HTTPRep& _rep) -> void {
     localtime_r(&_rawtime, &_ptm);
     strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-    char _buffer_expires[80];
-    _ptm.tm_hour += 1;
-    strftime(_buffer_expires, 80, "%a, %d %b %Y %X %Z", &_ptm);
-
     _rep->status(zpt::http::HTTP404);
     _rep->header("Server", "zapata");
-    _rep->header("Cache-Control", "max-age=3600");
     _rep->header("Vary", "Accept-Language,Accept-Encoding,X-Access-Token,Authorization,E-Tag");
     _rep->header("Date", std::string(_buffer_date));
-    _rep->header("Expires", std::string(_buffer_expires));
 }
 
 zpt::HTTPObj::HTTPObj() {}

@@ -62,9 +62,7 @@ zpt::auth::oauth2::server::authorize(zpt::performative _performative,
                                      zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
-    else {
-        _param.assign("params");
-    }
+    else { _param.assign("params"); }
 
     expect_mandatory(_envelope[_param], "scope", 412);
     expect_mandatory(_envelope[_param], "response_type", 412);
@@ -76,9 +74,7 @@ zpt::auth::oauth2::server::authorize(zpt::performative _performative,
     else if (_response_type == "password") {
         return this->authorize_with_password(_performative, _envelope[_param], _envelope, _opts);
     }
-    else if (_response_type == "implicit") {
-        return zpt::undefined;
-    }
+    else if (_response_type == "implicit") { return zpt::undefined; }
     else if (_response_type == "client_credentials") {
         return this->authorize_with_client_credentials(
           _performative, _envelope[_param], _envelope, _opts);
@@ -121,9 +117,7 @@ zpt::auth::oauth2::server::token(zpt::performative _performative,
                                  zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
-    else {
-        _param.assign("params");
-    }
+    else { _param.assign("params"); }
 
     expect_mandatory(_envelope[_param], "client_id", 412);
     expect_mandatory(_envelope[_param], "client_secret", 412);
@@ -145,9 +139,7 @@ zpt::auth::oauth2::server::token(zpt::performative _performative,
                     std::string("&refresh_token=") + _token["refresh_token"]->string() +
                     std::string("&expires=") + _token["expires"]->string()) } };
     }
-    else {
-        return { "status", 200, "body", _token };
-    }
+    else { return { "status", 200, "body", _token }; }
 }
 
 auto
@@ -156,9 +148,7 @@ zpt::auth::oauth2::server::refresh(zpt::performative _performative,
                                    zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
-    else {
-        _param.assign("params");
-    }
+    else { _param.assign("params"); }
 
     expect_mandatory(_envelope[_param], "grant_type", 412);
     expect_mandatory(_envelope[_param], "refresh_token", 412);
@@ -181,9 +171,7 @@ zpt::auth::oauth2::server::refresh(zpt::performative _performative,
                     std::string("&refresh_token=") + _token["refresh_token"]->string() +
                     std::string("&expires=") + _token["expires"]->string()) } };
     }
-    else {
-        return { "status", 200, "body", _token };
-    }
+    else { return { "status", 200, "body", _token }; }
 }
 
 auto
@@ -192,9 +180,7 @@ zpt::auth::oauth2::server::validate(zpt::performative _performative,
                                     zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
-    else {
-        _param.assign("params");
-    }
+    else { _param.assign("params"); }
 
     auto _access_token = zpt::auth::extract(_envelope);
     auto _token = this->__token_provider->get_data_from_token(_access_token);

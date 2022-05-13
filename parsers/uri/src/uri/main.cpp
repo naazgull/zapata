@@ -123,23 +123,23 @@ main(int argc, char* argv[]) {
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/"
-                                     "me?a=2&b=3&c=&d={!ge(integer(0,2),float(1,2,3))!}")
+                                     "me?a=2&b=3&c=&d={.ge(integer(0,2),float(1,2,3)).}")
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::to_string(
                        zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/"
-                                       "me?a=2&b=3&c=&d={!ge(integer(0,2),float(1,2,3))!}"))
+                                       "me?a=2&b=3&c=&d={.ge(integer(0,2),float(1,2,3)).}"))
                   << std::endl
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse(
                        "http://pf@na.zgul.me/api/2.0/users/"
-                       "me?a=2&b=3&c=&d=integer(0,2)&e={!ge(integer(0,2),float(1,2,3))!}")
+                       "me?a=2&b=3&c=&d=integer(0,2)&e={.ge(integer(0,2),float(1,2,3)).}")
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse(
                        "http://pf@na.zgul.me/api/2.0/users/"
-                       "me?a=2&b=3&c=&d=integer(0,2)&e={!ge(integer(0,2),float(1,2,3))!}"))
+                       "me?a=2&b=3&c=&d=integer(0,2)&e={.ge(integer(0,2),float(1,2,3)).}"))
                   << std::endl
                   << std::endl
                   << std::flush;
@@ -150,6 +150,14 @@ main(int argc, char* argv[]) {
                   << std::flush;
         std::cout << zpt::uri::parse("#some_point_in_doc") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("#some_point_in_doc")) << std::endl
+                  << std::endl
+                  << std::flush;
+
+        std::cout << zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}") << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::to_string(
+                       zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}"))
+                  << std::endl
                   << std::endl
                   << std::flush;
     }

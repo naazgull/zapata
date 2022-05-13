@@ -318,9 +318,7 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
             delete _it->first;
             _it = _retired->erase(_it);
         }
-        else {
-            ++_it;
-        }
+        else { ++_it; }
     }
 
     return (*this);

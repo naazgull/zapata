@@ -55,9 +55,7 @@ main(int _argc, char* _argv[]) -> int {
                         _state = PARAGRAPH;
                     }
                 }
-                else if (_line.find("***/") != std::string::npos) {
-                    _state = OUTSIDE;
-                }
+                else if (_line.find("***/") != std::string::npos) { _state = OUTSIDE; }
                 else {
                     if (_line.length() >= _to_trim) {
                         _line.assign(_line.substr(_to_trim));

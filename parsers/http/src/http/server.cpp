@@ -1,5 +1,5 @@
 #include <zapata/net/socket.h>
-#include <zapata/json.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/http.h>
 
 auto

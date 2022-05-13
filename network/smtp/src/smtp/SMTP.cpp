@@ -104,9 +104,7 @@ zpt::SMTP::compose(zpt::json _e_mail) -> std::string {
         zpt::json _sender = zpt::email::parse(std::string(_e_mail["Sender"]));
         _oss << "Sender: " << std::string(_sender["address"]) << CRLF << std::flush;
     }
-    else {
-        _oss << "Sender: " << std::string(_from["address"]) << CRLF << std::flush;
-    }
+    else { _oss << "Sender: " << std::string(_from["address"]) << CRLF << std::flush; }
     _oss << "Subject: " << zpt::quoted_printable::r_encode(std::string(_e_mail["Subject"]), "utf-8")
          << CRLF << std::flush;
     if (_e_mail["Reply-To"]->ok()) {

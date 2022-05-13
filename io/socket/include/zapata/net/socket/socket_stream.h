@@ -405,9 +405,7 @@ zpt::basic_socketbuf<Char>::output_buffer() -> __int_type {
             }
         }
     }
-    else {
-        return this->output_buffer_ssl();
-    }
+    else { return this->output_buffer_ssl(); }
     return __traits_type::eof();
 }
 
@@ -450,9 +448,7 @@ zpt::basic_socketbuf<Char>::underflow() -> __int_type {
             }
         }
     }
-    else {
-        return this->underflow_ssl();
-    }
+    else { return this->underflow_ssl(); }
     return __traits_type::eof();
 }
 
@@ -813,9 +809,7 @@ zpt::basic_socketstream<Char>::open(std::string const& _host,
         }
         return false;
     }
-    else {
-        return this->open_ssl();
-    }
+    else { return this->open_ssl(); }
 }
 
 template<typename Char>
@@ -843,9 +837,7 @@ zpt::basic_socketstream<Char>::open(std::string const& _path) -> bool {
         this->__buf.error_string() = std::strerror(errno);
         return false;
     }
-    else {
-        __buf.set_socket(_sd);
-    }
+    else { __buf.set_socket(_sd); }
     return true;
 }
 
@@ -861,9 +853,7 @@ zpt::basic_socketstream<Char>::open_ip() -> bool {
         this->__buf.error_string() = std::strerror(errno);
         return false;
     }
-    else {
-        __buf.set_socket(_sd);
-    }
+    else { __buf.set_socket(_sd); }
     return true;
 }
 
@@ -923,9 +913,7 @@ zpt::basic_socketstream<Char>::open_ssl() -> bool {
             this->__buf.error_string() = zpt::ssl_error_print(this->__buf.error_code());
             return false;
         }
-        else {
-            this->assign(_sd, _context);
-        }
+        else { this->assign(_sd, _context); }
     }
     return true;
 }

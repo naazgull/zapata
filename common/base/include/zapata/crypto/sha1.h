@@ -20,24 +20,36 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <zapata/exceptions/Exception.h>
-#include <zapata/text/convert.h>
+#pragma once
 
-zpt::exception::exception(std::string const& _what, bool _with_stack)
-  : std::exception()
-  , __what{ _what } {
-    zpt::replace(this->__what, "\"", "");
-    if (_with_stack) { this->__backtrace.assign(zpt::get_backtrace()); }
-}
+#include <iostream>
+#include <string>
 
-zpt::exception::~exception() throw() {}
+namespace zpt::crypto {
+class SHA1 {
+  public:
+    SHA1();
+    void update(const std::string& s);
+    void update(std::istream& is);
+    std::string finalize();
+    static std::string from_file(const std::string& filename);
 
-auto
-zpt::exception::what() const noexcept -> const char* {
-    return this->__what.data();
-}
+  private:
+    static constexpr unsigned int DIGEST_INTS = 5; /* number of 32bit integers per SHA1 digest */
+    static constexpr unsigned int BLOCK_INTS = 16; /* number of 32bit integers per SHA1 block */
+    static constexpr unsigned int BLOCK_BYTES = BLOCK_INTS * 4;
 
-auto
-zpt::exception::backtrace() const -> const char* {
-    return this->__backtrace.length() == 0 ? nullptr : this->__backtrace.data();
-}
+    std::uint32_t digest[DIGEST_INTS];
+    std::string buffer;
+    std::uint64_t transforms;
+
+    void reset();
+    void transform(std::uint32_t block[BLOCK_BYTES]);
+
+    static void buffer_to_block(const std::string& buffer, std::uint32_t block[BLOCK_BYTES]);
+    static void read(std::istream& is, std::string& s, int max);
+};
+
+std::string
+sha1(const std::string& string);
+} // namespace zpt::crypto

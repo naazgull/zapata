@@ -4,6 +4,7 @@
 #include <string>
 #include <unistd.h>
 #include <chrono>
+#include <zapata/json/json.h>
 #include <zapata/uri/URIParser.h>
 #include <zapata/uri/uri.h>
 
@@ -84,9 +85,7 @@ zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
                     _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
                     _parts << zpt::regex{ _casted };
                 }
-                else {
-                    _parts << _part;
-                }
+                else { _parts << _part; }
             }
             _to_return << "path" << _parts;
         }
@@ -98,9 +97,7 @@ zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
                 _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
                 _to_return << _key << zpt::regex{ _casted };
             }
-            else {
-                _to_return << _key << _item;
-            }
+            else { _to_return << _key << _item; }
         }
     }
     return _to_return;
@@ -117,9 +114,7 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
             _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
             _to_return << zpt::regex{ _casted };
         }
-        else {
-            _to_return << _item;
-        }
+        else { _to_return << _item; }
     }
     return _to_return;
 }

@@ -43,7 +43,7 @@ zpt::net::transport::pipe_stream::receive(zpt::exchange& _channel) const -> void
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
-    std::string _content_type = _channel->content_type()[1];
+    std::string _content_type = _channel->content_type()[0];
     _channel->received() =
       _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 
@@ -90,8 +90,6 @@ zpt::net::transport::pipe_stream::resolve(zpt::json _uri) const -> zpt::exchange
     if (_uri["scheme_options"]->ok()) {
         _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
     }
-    else {
-        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
-    }
+    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
     return _to_return;
 }

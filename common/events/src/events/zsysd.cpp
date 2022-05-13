@@ -103,23 +103,17 @@ generate(zpt::json _to_add, zpt::json _global_conf) -> void {
         if (_conf["boot"][0]["keep_alive"]->ok()) {
             zpt::replace(_sysd, "${keep_alive}", std::string(_conf["boot"][0]["keep_alive"]));
         }
-        else {
-            zpt::replace(_sysd, "${keep_alive}", "0");
-        }
+        else { zpt::replace(_sysd, "${keep_alive}", "0"); }
 
         if (_conf["boot"][0]["fd_max"]->ok()) {
             zpt::replace(_sysd, "${fd_max}", std::string(_conf["boot"][0]["fd_max"]));
         }
-        else {
-            zpt::replace(_sysd, "${fd_max}", "0");
-        }
+        else { zpt::replace(_sysd, "${fd_max}", "0"); }
 
         if (_conf["boot"][0]["restart_policy"]->ok()) {
             zpt::replace(_sysd, "${restart}", std::string(_conf["boot"][0]["restart_policy"]));
         }
-        else {
-            zpt::replace(_sysd, "${restart}", "no");
-        }
+        else { zpt::replace(_sysd, "${restart}", "no"); }
 
         std::ofstream _sfs;
         _sfs.open((std::string("/lib/systemd/system/") + std::string(_conf["boot"][0]["name"]) +

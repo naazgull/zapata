@@ -230,9 +230,7 @@ zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I>
         }
         if (_next_state == this->__pause) { return; }
         if (_next_state != this->__undefined) { this->trigger(_next_state, _content); }
-        else if (_current_state != this->__end) {
-            this->pause(_current_state, _content);
-        }
+        else if (_current_state != this->__end) { this->pause(_current_state, _content); }
     }
 }
 

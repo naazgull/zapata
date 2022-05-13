@@ -48,9 +48,7 @@ zpt::FunctionalTokenizerLexer::set_number() -> void {
 auto
 zpt::FunctionalTokenizerLexer::set_variable() -> void {
     if (this->__stack.size() == 0) { this->__stack.push(this->__root); }
-    else {
-        this->__stack.push(zpt::json::object());
-    }
+    else { this->__stack.push(zpt::json::object()); }
     this->__stack.top() << "functor" << this->matched();
 }
 

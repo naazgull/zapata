@@ -39,14 +39,17 @@
 auto
 zpt::ltrim(std::string& _in_out) -> void {
     _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), [](char c) {
-                      return std::isspace(c);
+                      return !std::isspace<char>(c, std::locale::classic());
                   }));
 }
 
 auto
 zpt::rtrim(std::string& _in_out) -> void {
     _in_out.erase(
-      std::find_if(_in_out.rbegin(), _in_out.rend(), [](char c) { return std::isspace(c); }).base(),
+      std::find_if(_in_out.rbegin(),
+                   _in_out.rend(),
+                   [](char c) { return !std::isspace<char>(c, std::locale::classic()); })
+        .base(),
       _in_out.end());
 }
 

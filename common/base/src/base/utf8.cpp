@@ -79,18 +79,12 @@ zpt::utf8::utf8_to_wstring(std::string s) {
     res[c] = 0;
     for (uchar* a = (uchar*)_str; *a; a++) {
         if (!(*a & 128)) { res[b] = *a; }
-        else if ((*a & 192) == 128) {
-            continue;
-        }
-        else if ((*a & 224) == 192) {
-            res[b] = ((*a & 31) << 6) | (a[1] & 63);
-        }
+        else if ((*a & 192) == 128) { continue; }
+        else if ((*a & 224) == 192) { res[b] = ((*a & 31) << 6) | (a[1] & 63); }
         else if ((*a & 240) == 224) {
             res[b] = ((*a & 15) << 12) | ((a[1] & 63) << 6) | (a[2] & 63);
         }
-        else if ((*a & 248) == 240) {
-            res[b] = '?';
-        }
+        else if ((*a & 248) == 240) { res[b] = '?'; }
         b++;
     }
     return res;
@@ -101,12 +95,8 @@ zpt::utf8::length(std::string s) {
     int size = 0;
     for (size_t i = 0; i != s.length(); i++) {
         if (((wchar_t)s[i]) < 0x80) { size++; }
-        else if (((wchar_t)s[i]) < 0x800) {
-            size += 2;
-        }
-        else {
-            size += 3;
-        }
+        else if (((wchar_t)s[i]) < 0x800) { size += 2; }
+        else { size += 3; }
     }
     return size;
 }
@@ -119,33 +109,15 @@ zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
         if (((int)s[i]) > 127) {
             oss << "\\u" << std::setfill('0') << std::setw(4) << std::hex << ((int)s.at(i));
         }
-        else if (quote && (s[i] == '"')) {
-            oss << "\\" << ((char)s.at(i));
-        }
-        else if (s[i] == '\n') {
-            oss << "\\n";
-        }
-        else if (s[i] == '\r') {
-            oss << "\\r";
-        }
-        else if (s[i] == '\f') {
-            oss << "\\f";
-        }
-        else if (s[i] == '\t') {
-            oss << "\\t";
-        }
-        else if (s[i] == '/') {
-            oss << "\\/";
-        }
-        else if (quote && s[i] == '\\') {
-            oss << "\\\\";
-        }
-        else if (((int)s[i]) <= 31) {
-            oss << "";
-        }
-        else {
-            oss << ((char)s.at(i));
-        }
+        else if (quote && (s[i] == '"')) { oss << "\\" << ((char)s.at(i)); }
+        else if (s[i] == '\n') { oss << "\\n"; }
+        else if (s[i] == '\r') { oss << "\\r"; }
+        else if (s[i] == '\f') { oss << "\\f"; }
+        else if (s[i] == '\t') { oss << "\\t"; }
+        else if (s[i] == '/') { oss << "\\/"; }
+        else if (quote && s[i] == '\\') { oss << "\\\\"; }
+        else if (((int)s[i]) <= 31) { oss << ""; }
+        else { oss << ((char)s.at(i)); }
     }
     oss << std::flush;
     _out.assign(oss.str().data(), oss.str().length());
@@ -167,18 +139,12 @@ zpt::utf8::encode(std::string& _out, bool quote) {
     res[c] = 0;
     for (uchar* a = (uchar*)_str; *a; a++) {
         if (!(*a & 128)) { res[b] = *a; }
-        else if ((*a & 192) == 128) {
-            continue;
-        }
-        else if ((*a & 224) == 192) {
-            res[b] = ((*a & 31) << 6) | (a[1] & 63);
-        }
+        else if ((*a & 192) == 128) { continue; }
+        else if ((*a & 224) == 192) { res[b] = ((*a & 31) << 6) | (a[1] & 63); }
         else if ((*a & 240) == 224) {
             res[b] = ((*a & 15) << 12) | ((a[1] & 63) << 6) | (a[2] & 63);
         }
-        else if ((*a & 248) == 240) {
-            res[b] = '?';
-        }
+        else if ((*a & 248) == 240) { res[b] = '?'; }
         b++;
     }
 
@@ -200,9 +166,7 @@ zpt::utf8::decode(std::string& _out) {
             oss << ((wchar_t)c);
             i += 5;
         }
-        else {
-            oss << ((wchar_t)_out[i]);
-        }
+        else { oss << ((wchar_t)_out[i]); }
     }
     oss << std::flush;
 
@@ -230,9 +194,7 @@ zpt::unicode::escape(std::string& _out) {
                     _oss << "\\u" << std::hex << std::setw(4) << std::setfill('0')
                          << (int)((uchar)c);
                 }
-                else {
-                    _oss << c;
-                }
+                else { _oss << c; }
         }
     }
     _out.assign(_oss.str());

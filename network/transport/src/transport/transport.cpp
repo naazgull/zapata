@@ -103,21 +103,16 @@ zpt::exchange::exchange_t::keep_alive() -> bool& {
 auto
 zpt::exchange::exchange_t::content_type() -> zpt::json {
     zpt::json _return = zpt::json::array();
+    if (this->__received["headers"]["Accept"]->ok()) {
+        auto _accept = this->__received["headers"]["Accept"]->string();
+        auto _mime_types = zpt::split(_accept, ",");
+        for (auto [_, __, _mime] : _mime_types)
+            _return << _mime->string().substr(0, _mime->string().find(";"));
+    }
     if (this->__received["headers"]["Content-Type"]->ok()) {
         _return << this->__received["headers"]["Content-Type"];
     }
-    else {
-        _return << "application/json";
-    }
-    if (this->__received["headers"]["Accept"]->ok()) {
-        _return << this->__received["headers"]["Accept"];
-    }
-    else if (this->__received["headers"]["Content-Type"]->ok()) {
-        _return << this->__received["headers"]["Content-Type"];
-    }
-    else {
-        _return << "application/json";
-    }
+    _return << "application/json";
     return _return;
 }
 
@@ -194,9 +189,7 @@ auto
 zpt::transport::layer::translate(std::istream& _io, std::string _mime) const -> zpt::json {
     auto _found = this->__content_providers.find(_mime);
     if (_found != this->__content_providers.end()) { return std::get<0>(_found->second)(_io); }
-    else {
-        return zpt::transport::layer::translate_from_default(_io);
-    }
+    else { return zpt::transport::layer::translate_from_default(_io); }
     return zpt::undefined;
 }
 
@@ -207,9 +200,7 @@ zpt::transport::layer::translate(std::ostream& _io, std::string _mime, zpt::json
     if (_found != this->__content_providers.end()) {
         return std::get<1>(_found->second)(_io, _content);
     }
-    else {
-        return zpt::transport::layer::translate_to_json(_io, _content);
-    }
+    else { return zpt::transport::layer::translate_to_json(_io, _content); }
 }
 
 auto

@@ -49,9 +49,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                     zpt::lisp::from_lisp(_item, _ret);
                 }
                 if (_parent->ok()) { _parent << _ret; }
-                else {
-                    _parent = _ret;
-                }
+                else { _parent = _ret; }
             }
             break;
         }
@@ -59,58 +57,44 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             char _o = (char)ECL_CHAR_CODE(_exp);
             std::string _s(&_o, 1);
             if (_parent->ok()) { _parent << _s; }
-            else {
-                _parent = zpt::json::string(_s);
-            }
+            else { _parent = zpt::json::string(_s); }
             return;
         }
         case t_fixnum: {
             int _o = (int)ecl_to_fixnum(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::integer(_o);
-            }
+            else { _parent = zpt::json::integer(_o); }
             return;
         }
         case t_bignum: {
             double _o = ecl_to_double(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::floating(_o);
-            }
+            else { _parent = zpt::json::floating(_o); }
             break;
         }
         case t_ratio: {
             double _o = ecl_to_double(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::floating(_o);
-            }
+            else { _parent = zpt::json::floating(_o); }
             break;
         }
         case t_singlefloat: {
             float _o = ecl_to_float(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::floating(_o);
-            }
+            else { _parent = zpt::json::floating(_o); }
             break;
         }
         case t_doublefloat: {
             double _o = ecl_to_double(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::floating(_o);
-            }
+            else { _parent = zpt::json::floating(_o); }
             break;
         }
 #ifdef ECL_LONG_FLOAT
         case t_longfloat: {
             double _o = (double)ecl_to_long_double(_exp);
             if (_parent->ok()) { _parent << _o; }
-            else {
-                _parent = zpt::json::floating(_o);
-            }
+            else { _parent = zpt::json::floating(_o); }
             break;
         }
 #endif
@@ -126,26 +110,18 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                     }
                     if (_str == "FALSE") {
                         if (_parent->ok()) { _parent << false; }
-                        else {
-                            _parent = zpt::json::boolean(false);
-                        }
+                        else { _parent = zpt::json::boolean(false); }
                     }
                     else if (_str == "ARRAY") {
                         if (_parent->ok()) { _parent << zpt::json::array(); }
-                        else {
-                            _parent = zpt::json::array();
-                        }
+                        else { _parent = zpt::json::array(); }
                     }
                     else {
                         if (_parent->ok()) { _parent << true; }
-                        else {
-                            _parent = zpt::json::boolean(true);
-                        }
+                        else { _parent = zpt::json::boolean(true); }
                     }
                 }
-                else {
-                    zpt::lisp::from_lisp(_exp->symbol.value, _parent);
-                }
+                else { zpt::lisp::from_lisp(_exp->symbol.value, _parent); }
             }
             else {
                 if (_parent->ok()) { _parent << zpt::undefined; }
@@ -169,9 +145,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                 }
             }
             if (_parent->ok()) { _parent << _ret; }
-            else {
-                _parent = _ret;
-            }
+            else { _parent = _ret; }
             break;
         }
         case t_array: {
@@ -181,9 +155,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                 zpt::lisp::from_lisp(ecl_aref1(_exp, _i), _ret);
             }
             if (_parent->ok()) { _parent << _ret; }
-            else {
-                _parent = _ret;
-            }
+            else { _parent = _ret; }
             break;
         }
         case t_vector: {
@@ -193,9 +165,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
                 zpt::lisp::from_lisp(ecl_aref1(_exp, _i), _ret);
             }
             if (_parent->ok()) { _parent << _ret; }
-            else {
-                _parent = _ret;
-            }
+            else { _parent = _ret; }
             break;
         }
 #ifdef ECL_UNICODE
@@ -207,9 +177,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             zpt::replace(_str, "[[*nl*]]", "\\n");
             zpt::replace(_str, "[*nl*]", "\n");
             if (_parent->ok()) { _parent << _str; }
-            else {
-                _parent = zpt::json::string(_str);
-            }
+            else { _parent = zpt::json::string(_str); }
             break;
         }
 #endif
@@ -221,9 +189,7 @@ zpt::lisp::from_lisp(cl_object _exp, zpt::json& _parent) -> void {
             zpt::replace(_str, "[[*nl*]]", "\\n");
             zpt::replace(_str, "[*nl*]", "\n");
             if (_parent->ok()) { _parent << _str; }
-            else {
-                _parent = zpt::json::string(_str);
-            }
+            else { _parent = zpt::json::string(_str); }
             break;
         }
         case t_bitvector: {

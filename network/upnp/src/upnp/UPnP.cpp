@@ -75,9 +75,7 @@ zpt::UPnP::UPnP(zpt::json _options)
         // 	_ip = "0.0.0.0";
         // }
     }
-    else {
-        _ip = "0.0.0.0";
-    }
+    else { _ip = "0.0.0.0"; }
 
     struct in_addr _local_interface;
     _local_interface.s_addr = inet_addr(_ip.data());

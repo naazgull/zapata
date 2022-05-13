@@ -156,9 +156,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
         }
 
         if (_is_array) { this->__underlying->array()->push(_element); }
-        else {
-            this->__underlying->object()->push(_element);
-        }
+        else { this->__underlying->object()->push(_element); }
         ++_idx;
     }
     return (*this);
@@ -249,6 +247,66 @@ zpt::json::operator std::regex&() {
     return this->__underlying.get()->regex().operator std::regex&();
 }
 
+zpt::json::operator const std::string() const {
+    return this->__underlying.get()->operator std::string();
+}
+
+zpt::json::operator const bool() const { return this->__underlying.get()->operator bool(); }
+
+zpt::json::operator const int() const { return this->__underlying.get()->operator int(); }
+
+zpt::json::operator const long() const { return this->__underlying.get()->operator long(); }
+
+zpt::json::operator const long long() const {
+    return this->__underlying.get()->operator long long();
+}
+
+zpt::json::operator const size_t() const { return this->__underlying.get()->operator size_t(); }
+
+zpt::json::operator const double() const { return this->__underlying.get()->operator double(); }
+
+#ifdef __LP64__
+zpt::json::operator const unsigned int() const {
+    return this->__underlying.get()->operator unsigned int();
+}
+
+#endif
+zpt::json::operator const zpt::timestamp_t() const {
+    return this->__underlying.get()->operator zpt::timestamp_t();
+}
+
+zpt::json::operator const zpt::JSONObj() const {
+    return this->__underlying.get()->operator zpt::JSONObj();
+}
+
+zpt::json::operator const zpt::JSONArr() const {
+    return this->__underlying.get()->operator zpt::JSONArr();
+}
+
+zpt::json::operator const zpt::JSONObj&() const {
+    return this->__underlying.get()->operator zpt::JSONObj&();
+}
+
+zpt::json::operator const zpt::JSONArr&() const {
+    return this->__underlying.get()->operator zpt::JSONArr&();
+}
+
+zpt::json::operator const zpt::lambda() const {
+    return this->__underlying.get()->operator zpt::lambda();
+}
+
+zpt::json::operator const zpt::regex() const {
+    return this->__underlying.get()->operator zpt::regex();
+}
+
+zpt::json::operator const zpt::regex&() const {
+    return this->__underlying.get()->operator zpt::regex&();
+}
+
+zpt::json::operator const std::regex&() const {
+    return this->__underlying.get()->regex().operator std::regex&();
+}
+
 auto
 zpt::json::operator+(std::initializer_list<zpt::json> _rhs) -> zpt::json {
     return this->operator+(zpt::json{ _rhs });
@@ -290,9 +348,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 if (_lhs[_key]->type() == zpt::JSObject || _lhs[_key]->type() == zpt::JSArray) {
                     _lhs << _key << (_lhs[_key] + _e);
                 }
-                else {
-                    _lhs << _key << _e;
-                }
+                else { _lhs << _key << _e; }
             }
             return _lhs;
         }
@@ -325,9 +381,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->integer() + _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->integer() + _rhs->number() }; }
         }
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
@@ -335,9 +389,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->floating() + _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->floating() + _rhs->number() }; }
         }
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
@@ -345,9 +397,7 @@ zpt::json::operator+(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) + _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->boolean() || _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->boolean() || _rhs->number() }; }
         }
         case zpt::JSNil: {
             return zpt::undefined;
@@ -384,9 +434,7 @@ zpt::json::operator+=(zpt::json _rhs) -> zpt::json& {
         case zpt::JSObject: {
             for (auto [_, _key, _e] : _rhs) {
                 if ((*this)[_key]->ok()) { (*this)[_key] += _e; }
-                else {
-                    (*this) << _key << _e;
-                }
+                else { (*this) << _key << _e; }
             }
             return (*this);
         }
@@ -472,9 +520,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->integer() - _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->integer() - _rhs->number() }; }
         }
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
@@ -482,9 +528,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->floating() - _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->floating() - _rhs->number() }; }
         }
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
@@ -492,9 +536,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->boolean() && _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->boolean() && _rhs->number() }; }
         }
         case zpt::JSNil: {
             return zpt::undefined;
@@ -505,9 +547,7 @@ zpt::json::operator-(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) - _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->date() - _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->date() - _rhs->number() }; }
         }
         case zpt::JSLambda: {
             return zpt::undefined;
@@ -611,9 +651,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->integer() / _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->integer() / _rhs->number() }; }
         }
         case zpt::JSDouble: {
             if (_rhs->type() == zpt::JSArray) {
@@ -621,9 +659,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->floating() / _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->floating() / _rhs->number() }; }
         }
         case zpt::JSBoolean: {
             if (_rhs->type() == zpt::JSArray) {
@@ -631,9 +667,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->boolean() / _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->boolean() / _rhs->number() }; }
         }
         case zpt::JSNil: {
             return zpt::undefined;
@@ -644,9 +678,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
                 for (auto [_idx, _key, _e] : _rhs) { _lhs << ((*this) / _e); }
                 return _lhs;
             }
-            else {
-                return zpt::json{ this->__underlying->date() / _rhs->number() };
-            }
+            else { return zpt::json{ this->__underlying->date() / _rhs->number() }; }
         }
         case zpt::JSLambda: {
             return zpt::undefined;
@@ -717,9 +749,7 @@ zpt::json::operator|=(zpt::json _rhs) -> zpt::json& {
             if (_rhs->type() == zpt::JSString) {
                 (*this) = this->__underlying->string() + _rhs->string();
             }
-            else {
-                (*this) = this->__underlying->string() + static_cast<std::string>(_rhs);
-            }
+            else { (*this) = this->__underlying->string() + static_cast<std::string>(_rhs); }
             return (*this);
         }
         case zpt::JSInteger: {
@@ -758,9 +788,7 @@ zpt::json::strict_union(zpt::json _rhs) -> void {
             if (_rhs->type() == zpt::JSObject) {
                 for (auto [_, _key, _e] : _rhs) {
                     if ((*this)[_key]->type() == zpt::JSObject) { (*this)[_key].strict_union(_e); }
-                    else if (!(*this)[_key]->ok()) {
-                        (*this) << _key << _e;
-                    }
+                    else if (!(*this)[_key]->ok()) { (*this) << _key << _e; }
                 }
             }
             return;
@@ -1201,9 +1229,7 @@ zpt::timestamp(std::string const& _json_date) -> zpt::timestamp_t {
         else if (_s[_idx] == '+' || _s[_idx] == '-') {
             zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%z");
         }
-        else {
-            zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z");
-        }
+        else { zpt::fromstr(_s, &_n, "%Y-%m-%dT%H:%M:%S%Z"); }
         zpt::fromstr(_mss, &_ms);
     }
     return _n * 1000 + _ms;

@@ -108,16 +108,12 @@ zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mut
         !zpt::test::uuid(std::string(_data->__message["channel"]))) {
         _envelope << "channel" << zpt::generate::r_uuid();
     }
-    else {
-        _envelope << "channel" << _data->__message["channel"];
-    }
+    else { _envelope << "channel" << _data->__message["channel"]; }
 
     _envelope << "resource" << _data->__topic;
 
     if (!_data->__message["payload"]->ok()) { _envelope << "payload" << _data->__message; }
-    else {
-        _envelope << "payload" << _data->__message["payload"];
-    }
+    else { _envelope << "payload" << _data->__message["payload"]; }
     if (_data->__message["headers"]->ok()) {
         _envelope << "headers" << _data->__message["headers"];
     }

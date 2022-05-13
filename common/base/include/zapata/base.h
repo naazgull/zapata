@@ -28,3 +28,6 @@
 #include <zapata/file/manip.h>
 #include <zapata/mail/manip.h>
 #include <zapata/net/manip.h>
+#include <zapata/crypto/sha1.h>
+#include <zapata/crypto/sha256.h>
+#include <zapata/crypto/sha512.h>

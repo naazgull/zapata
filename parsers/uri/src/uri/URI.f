@@ -13,8 +13,8 @@
 %%
 
 ([^{:/?#.]+) {
-	begin(StartCondition_::scheme);
-	d_part_is_placeholder = false;
+    begin(StartCondition_::scheme);
+    d_part_is_placeholder = false;
     return zpt::uri::lex::STRING;
 }
 "{" {
@@ -75,7 +75,7 @@
 <server> {
     ([^:@/{]+) {
         d_server_part.assign(matched());
-    	d_part_is_placeholder = false;
+        d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
     "/" {
@@ -105,7 +105,7 @@
     }
     "{" {
         d_path_helper.assign("{");
-		d_intermediate_state = StartCondition_::path;
+       d_intermediate_state = StartCondition_::path;
         begin(StartCondition_::placeholder);
     }
     "?" {
@@ -113,7 +113,7 @@
         return zpt::uri::lex::QMARK;
     }
     "#" {
-	    begin(StartCondition_::anchor);
+        begin(StartCondition_::anchor);
         return zpt::uri::lex::CARDINAL;
     }
     ([^{/?#]+) {
@@ -121,29 +121,24 @@
         _matched.insert(0, d_path_helper);
         d_path_helper.assign("");
         setMatched(_matched);
-	    d_part_is_placeholder = false;
+        d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
 }
 
 <params> {
-	"=" {
-		return zpt::uri::lex::EQ;
-	}
-	"&"   {
-		return zpt::uri::lex::E;
-	}
-    "{" {
-        d_path_helper.assign("{");
-        d_intermediate_state = StartCondition_::params;
-        begin(StartCondition_::placeholder);
+    "=" {
+        return zpt::uri::lex::EQ;
+    }
+    "&"   {
+        return zpt::uri::lex::E;
     }
     "#" {
-	    begin(StartCondition_::anchor);
+        begin(StartCondition_::anchor);
         return zpt::uri::lex::CARDINAL;
     }
-	([^=&{#]+) {
-	    d_part_is_placeholder = false;
+    ([^=&#]+) {
+        d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
 }
@@ -157,14 +152,14 @@
         setMatched(d_path_helper);
         d_path_helper.assign("");
         begin(d_intermediate_state);
-		d_part_is_placeholder = true;
+        d_part_is_placeholder = true;
         return zpt::uri::lex::STRING;
     }
 }
 
 <anchor> {
-	(.+) {
-	    d_part_is_placeholder = false;
+    (.+) {
+        d_part_is_placeholder = false;
         return zpt::uri::lex::STRING;
     }
 }

@@ -112,9 +112,7 @@ zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::string 
             this->__underlying.push_back(_current);
             _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
         }
-        else {
-            this->__underlying.push_back(_value);
-        }
+        else { this->__underlying.push_back(_value); }
     }
     else {
         if (_iss.good()) {
@@ -141,13 +139,9 @@ zpt::JSONArrT::del_path(std::string const& _path, std::string const& _separator)
         getline(_iss, _part, _separator[0]);
         if (_current[_part]->ok()) {
             if (_iss.good()) { _current = _current[_part]; }
-            else {
-                _current->array()->pop(_part);
-            }
+            else { _current->array()->pop(_part); }
         }
-        else {
-            return (*this);
-        }
+        else { return (*this); }
     }
     return (*this);
 }

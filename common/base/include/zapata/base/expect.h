@@ -47,30 +47,22 @@
 
 #define expect_mandatory(x, y, z)                                                                  \
     if (std::string(y).length() == 0) { expect(x->ok(), std::string(x), z, 1000) }                 \
-    else {                                                                                         \
-        expect(x[y]->ok(), std::string(y), z, 1000)                                                \
-    }
+    else { expect(x[y]->ok(), std::string(y), z, 1000) }
 #define expect_string(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001)                    \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001)              \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSString, std::string(y), z, 1001) }
 #define expect_integer(x, y, z)                                                                    \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1002)                   \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002)             \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1002) }
 #define expect_double(x, y, z)                                                                     \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == JSDouble, std::string(x), z, 1003)                         \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003)              \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSDouble, std::string(y), z, 1003) }
 #define expect_timestamp(x, y, z)                                                                  \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSDate ||                                             \
@@ -90,9 +82,7 @@
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSBoolean, std::string(x), z, 1005)                   \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005)             \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSBoolean, std::string(y), z, 1005) }
 #define expect_complex(x, y, z)                                                                    \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSObject || x->type() == zpt::JSArray,                \
@@ -110,23 +100,17 @@
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSObject, std::string(x), z, 1007)                    \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007)              \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSObject, std::string(y), z, 1007) }
 #define expect_array(x, y, z)                                                                      \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSArray, std::string(x), z, 1008)                     \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008)               \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSArray, std::string(y), z, 1008) }
 #define expect_int(x, y, z)                                                                        \
     if (std::string(y).length() == 0) {                                                            \
         expect(!x->ok() || x->type() == zpt::JSInteger, std::string(x), z, 1009)                   \
     }                                                                                              \
-    else {                                                                                         \
-        expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009)             \
-    }
+    else { expect(!x[y]->ok() || x[y]->type() == zpt::JSInteger, std::string(y), z, 1009) }
 
 #define expect_uuid(x, y, z)                                                                       \
     if (std::string(y).length() == 0) {                                                            \
@@ -286,9 +270,7 @@
 
 #define expect_mandatory_reply(x, y, z, e, r)                                                      \
     if (std::string(y).length() == 0) { expect_reply(x->ok(), std::string(x), z, 1000, e, r) }     \
-    else {                                                                                         \
-        expect_reply(x[y]->ok(), std::string(y), z, 1000, e, r)                                    \
-    }
+    else { expect_reply(x[y]->ok(), std::string(y), z, 1000, e, r) }
 #define expect_string_reply(x, y, z, e, r)                                                         \
     if (std::string(y).length() == 0) {                                                            \
         expect_reply(!x->ok() || x->type() == zpt::JSString, std::string(x), z, 1001, e, r)        \

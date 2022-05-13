@@ -17,8 +17,8 @@ then
 else
     cxx_std_version="-std=c++20"
 fi
-python3_version=$(python3 -V | awk '{print $2}' | cut -c-3)
-lua5_version=$(lua -v | awk '{print $2}' | cut -c-3)
+python3_version=$(python3 -V | head -n 1 | tr " " "\n" | head -n 2 | tail -n 1 | tr "." "\n" | head -n 2 | head -c -1 | tr -s "\n" ".")
+lua5_version=$(lua -v | head -n 1 | tr " " "\n" | head -n 2 | tail -n 1 | tr "." "\n" | head -n 2 | head -c -1 | tr -s "\n" ".")
 
 if [[ "${1}" == "one" || "${1}" == "from" ]]
 then
@@ -139,6 +139,16 @@ do
 	distclean)
 	    rm -rfv ${package}/*.tar.gz
 	    CPP_STD_VERSION=${cxx_std_version} PROJECT_DIR=${project_dir} INCLUDE_DIR=${include_dir} PYTHON_VERSION=${python3_version} LUA_VERSION=${lua5_version} make -s -j$threads -C ${package}/build distclean
+	    ;;
+	autoupdate)
+        pushd ${package} > /dev/null
+	    rm -rf build &&\
+            autoupdate
+	    if [[ $? != 0 ]]
+	    then
+		    exit -1
+	    fi
+        popd > /dev/null
 	    ;;
 	config)
         pushd ${package} > /dev/null

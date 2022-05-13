@@ -50,9 +50,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
             if (!_query["sort"]->is_array()) { _query << "sort" << zpt::json::array(); }
             zpt::json _splited;
             if (_value->is_string()) { _splited = zpt::split(std::string(_value), ",", true); }
-            else {
-                _splited = _value;
-            }
+            else { _splited = _value; }
             for (auto _field : _splited->array()) {
                 std::string _name = std::string(_field);
                 std::string _direction;
@@ -64,9 +62,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                     _direction.assign("asc");
                     _name = _name.substr(1);
                 }
-                else {
-                    _direction.assign("asc");
-                }
+                else { _direction.assign("asc"); }
                 _query["sort"] << zpt::json{ _name, _direction };
             }
             continue;
@@ -76,9 +72,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                    << (_value->is_string() ? zpt::split(_value->string(), ",", true) : _value);
             continue;
         }
-        else if (_key == "embed") {
-            continue;
-        }
+        else if (_key == "embed") { continue; }
 
         if (_value->type() != zpt::JSString) {
             _selector << std::string(_key) << _value;
@@ -117,9 +111,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                     _options = _part;
                     ++_bar_count;
                 }
-                else {
-                    ++_bar_count;
-                }
+                else { ++_bar_count; }
             }
 
             if (_command == "m") {
@@ -148,13 +140,9 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                                           << zpt::json::boolean(bexpr == "true");
                             }
                         }
-                        else {
-                            _selector << std::string(_key) << d;
-                        }
+                        else { _selector << std::string(_key) << d; }
                     }
-                    else {
-                        _selector << std::string(_key) << i;
-                    }
+                    else { _selector << std::string(_key) << i; }
                     continue;
                 }
             }
@@ -216,13 +204,9 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                                       << zpt::json{ comp, zpt::json::boolean(bexpr == "true") };
                                 }
                             }
-                            else {
-                                _selector << std::string(_key) << zpt::json{ comp, d };
-                            }
+                            else { _selector << std::string(_key) << zpt::json{ comp, d }; }
                         }
-                        else {
-                            _selector << std::string(_key) << zpt::json{ comp, i };
-                        }
+                        else { _selector << std::string(_key) << zpt::json{ comp, i }; }
                     }
                     else if (_options == "j") {
                         try {

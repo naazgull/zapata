@@ -112,9 +112,7 @@ template<typename T, int Step>
 auto
 zpt::this_thread::adaptive_timer<T, Step>::sleep_for(T _upper_limit) -> T {
     if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
-    else {
-        this->__sleep_tics += Step;
-    }
+    else { this->__sleep_tics += Step; }
     if (this->__sleep_tics == 0) { std::this_thread::yield(); }
     else {
         std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{ this->__sleep_tics });

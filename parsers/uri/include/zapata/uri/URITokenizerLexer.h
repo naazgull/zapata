@@ -1,6 +1,6 @@
 #pragma once
 
-#include <zapata/json.h>
+#include <zapata/json/JSONClass.h>
 #include <zapata/uri/URILexer.h>
 
 namespace zpt {

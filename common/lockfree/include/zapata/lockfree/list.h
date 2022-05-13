@@ -32,9 +32,7 @@ class bidirectional_node {
     friend auto operator<<(std::ostream& _out, zpt::lf::bidirectional_node<T>& _in)
       -> std::ostream& {
         if constexpr (std::is_pointer<T>::value) { _out << *(_in.__value) << std::flush; }
-        else {
-            _out << _in.__value << std::flush;
-        }
+        else { _out << _in.__value << std::flush; }
         _out << std::flush;
         return _out;
     }
@@ -419,9 +417,7 @@ zpt::lf::list<T>::erase(F _remove_if) -> zpt::lf::list<T>::iterator {
 
             if (!_node->__is_null.load() && _remove_if(_node->__value)) {
                 if (_prev == nullptr) { this->__head.store(_next); }
-                else {
-                    _prev->__next.store(_next);
-                }
+                else { _prev->__next.store(_next); }
                 _next->__prev.store(_prev);
                 _it = _next;
                 this->__hazard_domain.retire(_node);
@@ -443,9 +439,7 @@ zpt::lf::list<T>::erase(zpt::lf::list<T>::iterator& _to_remove) -> zpt::lf::list
     if (_node != nullptr && !_node->__is_null.load()) {
         auto _prev = _node->__prev.load();
         if (_prev == nullptr) { this->__head.store(_next); }
-        else {
-            _node->__prev.store(_next);
-        }
+        else { _node->__prev.store(_next); }
         _next->__prev.store(_prev);
     }
 

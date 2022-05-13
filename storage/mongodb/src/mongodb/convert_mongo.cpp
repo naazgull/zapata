@@ -402,9 +402,7 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                     options = part;
                     ++bar_count;
                 }
-                else {
-                    ++bar_count;
-                }
+                else { ++bar_count; }
             }
 
             if (command == "m") {
@@ -428,17 +426,11 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                             if (bexpr != "true" && bexpr != "false") {
                                 _queryr.append(key, expression);
                             }
-                            else {
-                                _queryr.append(key, bexpr == "true");
-                            }
+                            else { _queryr.append(key, bexpr == "true"); }
                         }
-                        else {
-                            _queryr.append(key, d);
-                        }
+                        else { _queryr.append(key, d); }
                     }
-                    else {
-                        _queryr.append(key, i);
-                    }
+                    else { _queryr.append(key, i); }
                     continue;
                 }
             }
@@ -463,17 +455,11 @@ zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                                 if (bexpr != "true" && bexpr != "false") {
                                     _queryr.append(key, BSON(comp << expression));
                                 }
-                                else {
-                                    _queryr.append(key, BSON(comp << (bexpr == "true")));
-                                }
+                                else { _queryr.append(key, BSON(comp << (bexpr == "true"))); }
                             }
-                            else {
-                                _queryr.append(key, BSON(comp << d));
-                            }
+                            else { _queryr.append(key, BSON(comp << d)); }
                         }
-                        else {
-                            _queryr.append(key, BSON(comp << i));
-                        }
+                        else { _queryr.append(key, BSON(comp << i)); }
                     }
                     else if (options == "j") {
                         istringstream iss(expression);

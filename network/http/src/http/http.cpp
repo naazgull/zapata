@@ -64,11 +64,10 @@ zpt::net::transport::http::set_body(zpt::exchange& _channel, zpt::HTTPObj& _http
 auto
 zpt::net::transport::http::set_params(zpt::exchange& _channel, zpt::http::req& _request) const
   -> const zpt::net::transport::http& {
-    auto& _query = _request->query();
-    if (_query.length() != 0) {
-        zpt::json _params = zpt::uri::parse(std::string{ "?" } + _query);
+    auto _params = _request->params();
+    if (_params->ok()) {
         if (!_channel->received()->ok()) { _channel->received() = zpt::json::object(); }
-        _channel->received() << "params" << _params["params"];
+        _channel->received() << "params" << _params;
     }
     return (*this);
 }
@@ -109,6 +108,12 @@ zpt::net::transport::http::set_headers(zpt::http::req& _request, zpt::exchange& 
 auto
 zpt::net::transport::http::set_headers(zpt::http::rep& _reply, zpt::exchange& _channel) const
   -> const zpt::net::transport::http& {
+    if (_channel->received()->ok()) {
+        auto _req_headers = _channel->received()["headers"];
+        if (_req_headers["Cache-Control"]->ok()) {
+            _reply->header("Cache-Control", _req_headers["Cache-Control"]->string());
+        }
+    }
     for (auto [_idx, _key, _value] : _channel->to_send()["headers"]) {
         _reply->header(_key, _value);
     }
@@ -135,7 +140,7 @@ zpt::net::transport::http::set_body(zpt::http::rep& _reply, zpt::exchange& _chan
     if (_body->ok()) {
         auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
         std::ostringstream _os;
-        _reply->header("Content-Type", _layer.translate(_os, _channel->content_type()[1], _body));
+        _reply->header("Content-Type", _layer.translate(_os, _channel->content_type()[0], _body));
         _reply->body(_os.str());
     }
     return (*this);
@@ -233,7 +238,7 @@ zpt::net::transport::http::receive_request(zpt::exchange& _channel) const -> voi
       .assign("http");
     _channel //
       ->uri()
-      .assign(_request->url());
+      .assign(_request->path());
     _channel->keep_alive() = (_request->header("Connection") == "keep-alive");
 }
 
@@ -287,9 +292,7 @@ zpt::net::transport::http::send_reply(zpt::exchange& _channel) const -> void {
           .set_headers(_response, _channel)
           .set_body(_response, _channel);
     }
-    else {
-        _response->status(zpt::http::HTTP404);
-    }
+    else { _response->status(zpt::http::HTTP404); }
     _response->version(_channel->version());
     zlog("Sending HTTP message:\n" << _response, zpt::trace);
     _channel->stream() << _response << std::flush;

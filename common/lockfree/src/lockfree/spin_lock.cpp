@@ -113,9 +113,7 @@ zpt::lf::spin_lock::guard::guard(zpt::lf::spin_lock& _target, bool _can_be_share
   , __can_be_shared(_can_be_shared) {
     try {
         if (this->__can_be_shared) { this->__target.acquire_shared(); }
-        else {
-            this->__target.acquire_exclusive();
-        }
+        else { this->__target.acquire_exclusive(); }
     }
     catch (zpt::failed_expectation const& _e) {
         this->__released = true;
@@ -129,9 +127,7 @@ auto
 zpt::lf::spin_lock::guard::release() -> zpt::lf::spin_lock::guard& {
     if (this->__released) { return (*this); }
     if (this->__can_be_shared) { this->__target.release_shared(); }
-    else {
-        this->__target.release_exclusive();
-    }
+    else { this->__target.release_exclusive(); }
     this->__released = true;
     return (*this);
 }

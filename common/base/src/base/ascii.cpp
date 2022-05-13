@@ -39,9 +39,7 @@ zpt::ascii::encode(std::string& _out, bool quote) -> void {
     delete[] wc;
     for (size_t i = 0; i != ws.length(); i++) {
         if (((int)ws[i]) <= 127) { _oss << ((char)ws[i]) << std::flush; }
-        else {
-            _oss << " " << std::flush;
-        }
+        else { _oss << " " << std::flush; }
     }
     _out.assign(_oss.str());
 }

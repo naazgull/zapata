@@ -467,9 +467,7 @@ zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
             _names << ", ";
             _values << ", ";
         }
-        else {
-            _first = false;
-        }
+        else { _first = false; }
         _names << "\"" << _key << "\"" << std::flush;
         _values << _value << std::flush;
     }
@@ -607,17 +605,13 @@ zpt::storage::sqlite::action_modify::add_update() -> void {
     bool _first{ true };
     for (auto [_, _key, _value] : this->__set) {
         if (!_first) { _oss << ", "; }
-        else {
-            _first = false;
-        }
+        else { _first = false; }
         _oss << "\"" << _key << "\" = " << _value << std::flush;
     }
     this->__set->clear();
     for (auto [_, _key, _value] : this->__unset) {
         if (!_first) { _oss << ", "; }
-        else {
-            _first = false;
-        }
+        else { _first = false; }
         _oss << "\"" << _key << "\" = NULL " << std::flush;
     }
     this->__unset->clear();
@@ -862,9 +856,7 @@ zpt::storage::sqlite::action_replace::add_replace() -> void {
             _names << ", ";
             _values << ", ";
         }
-        else {
-            _first = false;
-        }
+        else { _first = false; }
         _names << "\"" << _key << "\"" << std::flush;
         _values << _value << std::flush;
     }
@@ -1008,15 +1000,11 @@ zpt::storage::sqlite::action_find::add_select() -> void {
         bool _first{ true };
         for (auto [_, __, _value] : this->__fields) {
             if (!_first) { _oss << ", "; }
-            else {
-                _first = false;
-            }
+            else { _first = false; }
             _oss << _value;
         }
     }
-    else {
-        _oss << "*";
-    }
+    else { _oss << "*"; }
 
     _oss << " from \"" << this->__collection_name << "\"" << std::flush;
 
@@ -1037,9 +1025,7 @@ zpt::storage::sqlite::action_find::add_select() -> void {
         zpt::json _order;
         for (auto [_, _key, _value] : this->__sort) {
             if (!_first) { _oss << ", "; }
-            else {
-                _first = false;
-            }
+            else { _first = false; }
             _oss << "\"" << _key << "\"";
             _order = _value;
         }

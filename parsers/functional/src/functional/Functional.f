@@ -14,7 +14,7 @@
 
 [0-9] {
     more();
-	begin(StartCondition_::number);
+    begin(StartCondition_::number);
 }
 ([^()\", 0-9\n\r\f\t]+) {
     return zpt::functional::lex::VARIABLE;
@@ -29,7 +29,7 @@
     return zpt::functional::lex::COMMA;
 }
 "\"" {
-	begin(StartCondition_::quoted);
+    begin(StartCondition_::quoted);
 }
 [ \n\r\f\t] {
 }
@@ -38,16 +38,17 @@
     "\"" {
         std::string _content = matched();
         setMatched(_content.substr(0, _content.length() - 1));
-    	begin(StartCondition_::INITIAL);
+        begin(StartCondition_::INITIAL);
         return zpt::functional::lex::STRING;
     }
     ([^\"]+) {
         more();
     }
-}	  
+}
 
 <number> {
     ([0-9.]*) {
-    	begin(StartCondition_::INITIAL);
+        begin(StartCondition_::INITIAL);
+        return zpt::functional::lex::NUMBER;
     }
 }

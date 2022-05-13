@@ -33,7 +33,7 @@ zpt::net::transport::file::receive(zpt::exchange& _channel) const -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
-    zpt::json _content = _layer.translate(_is, _channel->content_type()[1]);
+    zpt::json _content = _layer.translate(_is, _channel->content_type()[0]);
     _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
     _channel->keep_alive() = true;
 }
@@ -56,8 +56,6 @@ zpt::net::transport::file::resolve(zpt::json _uri) const -> zpt::exchange {
     if (_uri["scheme_options"]->ok()) {
         _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
     }
-    else {
-        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
-    }
+    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
     return _to_return;
 }

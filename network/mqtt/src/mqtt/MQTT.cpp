@@ -181,9 +181,7 @@ zpt::MQTT::connect(std::string const& _host, bool _tls, int _port, int _keep_ali
         zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"),
              zpt::notice);
     }
-    else {
-        zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning);
-    }
+    else { zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning); }
 
     return this->__connected;
 }
@@ -223,9 +221,7 @@ zpt::MQTT::reconnect() -> bool {
         zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"),
              zpt::notice);
     }
-    else {
-        zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning);
-    }
+    else { zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning); }
 
     return this->__connected;
 }

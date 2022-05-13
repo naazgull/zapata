@@ -19,7 +19,6 @@
 %left COLON
 %left STRING SPACE
 %left BODY
-%left QMARK EQ E
 
 %%
 
@@ -33,7 +32,7 @@ exp :
 	{
 		d_scanner.url();
 	}
-	params SPACE HTTP_VERSION
+	SPACE HTTP_VERSION
     {
 		d_scanner.version();
     }
@@ -73,38 +72,6 @@ exp :
 			d_scanner.d_chunked.assign("");
 		}
 	}
-;
-
-params :
-
-|
-	QMARK paramslist
-;
-
-paramslist :
-	STRING
-	{
-		d_scanner.name();
-	}
-	EQ paramvalue
-	{
-		d_scanner.value();
-	}
-|
-	paramslist E STRING
-    {
-		d_scanner.name();
-	}
-    EQ paramvalue
-	{
-		d_scanner.value();
-	}
-;
-
-paramvalue:
-
-|
-    STRING
 ;
 
 status_description : | SPACE STRING;

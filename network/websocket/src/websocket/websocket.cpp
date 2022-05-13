@@ -44,7 +44,7 @@ zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     } while (_line != "");
 
     _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-    _key.assign(zpt::hash::SHA1(_key));
+    _key.assign(zpt::crypto::sha1(_key));
     zpt::base64::encode(_key);
 
     _stream << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF
@@ -99,9 +99,7 @@ zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
             _out.push_back(_masked[_i] ^ _masking[_i % 4]);
         }
     }
-    else {
-        _out.assign(_masked);
-    }
+    else { _out.assign(_masked); }
 
     return std::make_tuple(_out, _op_code);
 }
@@ -116,9 +114,7 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
         _stream << ((unsigned char)(_len >> 8));
         _stream << ((unsigned char)(_len & 0xFF));
     }
-    else {
-        _stream << (unsigned char)(0x80 | ((unsigned char)_len));
-    }
+    else { _stream << (unsigned char)(0x80 | ((unsigned char)_len)); }
     for (int _i = 0; _i != 4; _i++) { _stream << (unsigned char)0x00; }
 
     _stream << _in << std::flush;
@@ -137,7 +133,7 @@ zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
         std::istringstream _is;
         _is.str(_body);
 
-        std::string _content_type = _channel->content_type()[1];
+        std::string _content_type = _channel->content_type()[0];
         _channel->received() =
           _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 
@@ -186,8 +182,6 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) const -> zpt::exchange {
     if (_uri["scheme_options"]->ok()) {
         _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
     }
-    else {
-        _to_return->to_send() = { "headers", { "Content-Type", "*/*" } };
-    }
+    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
     return _to_return;
 }

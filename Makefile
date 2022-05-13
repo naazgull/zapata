@@ -16,6 +16,9 @@ distcheck:
 distclean:
 	./.build distclean ${exclude}
 
+autoupdate:
+	./.build autoupdate ${exclude}
+
 config:
 	./.build config ${exclude}
 

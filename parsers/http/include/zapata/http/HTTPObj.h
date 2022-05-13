@@ -9,6 +9,7 @@
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
+#include <zapata/json/JSONClass.h>
 
 #ifndef CRLF
 #define CRLF "\r\n"
@@ -85,7 +86,6 @@ enum status {
 };
 
 using header_map = std::map<std::string, std::string>;
-using parameter_map = std::map<std::string, std::string>;
 } // namespace http
 
 class HTTPObj {
@@ -122,22 +122,22 @@ class HTTPReqT : public HTTPObj {
 
     auto method() const -> zpt::performative;
     auto method(zpt::performative) -> void;
-    auto url() const -> std::string const&;
     auto url(std::string const&) -> void;
-    auto query() const -> std::string const&;
-    auto query(std::string const&) -> void;
-    auto params() const -> zpt::http::parameter_map const&;
-    auto param(std::string const& _name) const -> std::string const&;
-    auto param(std::string const& _name, std::string const& _value) -> void;
+    // auto url() const -> std::string const&;
+    auto scheme() const -> std::string const;
+    auto domain() const -> std::string const;
+    auto path() const -> std::string const&;
+    auto params() const -> zpt::json;
+    auto anchor() const -> std::string;
 
     virtual auto stringify(std::string& _out) const -> void override;
     virtual auto stringify(std::ostream& _out) const -> void override;
 
   private:
     std::string __url{ "" };
-    std::string __query{ "" };
     zpt::performative __method{ 0 };
-    zpt::http::parameter_map __params;
+    std::string __path{ "" };
+    zpt::json __url_parts;
 };
 
 class HTTPRepT : public HTTPObj {

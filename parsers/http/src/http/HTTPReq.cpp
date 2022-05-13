@@ -5,6 +5,8 @@
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 #include <zapata/http/HTTPParser.h>
+#include <zapata/json/json.h>
+#include <zapata/uri.h>
 
 zpt::HTTPReqT::HTTPReqT()
   : __method(zpt::Get) {}
@@ -22,64 +24,47 @@ zpt::HTTPReqT::method(zpt::performative _method) -> void {
 }
 
 auto
-zpt::HTTPReqT::url() const -> std::string const& {
-    return this->__url;
-}
-
-auto
 zpt::HTTPReqT::url(std::string const& _url) -> void {
+    this->__url_parts = zpt::uri::parse(_url);
     this->__url.assign(_url.data());
+    this->__path.assign("/" + zpt::join(this->__url_parts["path"], "/"));
+}
+
+// auto
+// zpt::HTTPReqT::url() const -> std::string const& {
+//     return this->__url;
+// }
+
+auto
+zpt::HTTPReqT::scheme() const -> std::string const {
+    if (this->__url_parts["scheme"]->ok()) { return this->__url_parts["scheme"]; }
+    return "http";
 }
 
 auto
-zpt::HTTPReqT::query() const -> std::string const& {
-    return this->__query;
+zpt::HTTPReqT::domain() const -> std::string const {
+    if (this->__url_parts["domain"]->ok()) { return this->__url_parts["domain"]; }
+    return "localhost";
 }
 
 auto
-zpt::HTTPReqT::query(std::string const& _query) -> void {
-    this->__query.assign(_query.data());
+zpt::HTTPReqT::path() const -> std::string const& {
+    return this->__path;
 }
 
 auto
-zpt::HTTPReqT::params() const -> zpt::http::parameter_map const& {
-    return this->__params;
+zpt::HTTPReqT::params() const -> zpt::json {
+    return this->__url_parts["params"];
 }
 
 auto
-zpt::HTTPReqT::param(std::string const& _idx) const -> std::string const& {
-    static std::string const _empty{ "" };
-    auto _found = this->__params.find(_idx);
-    if (_found != this->__params.end()) { return _found->second; }
-    return _empty;
-}
-
-auto
-zpt::HTTPReqT::param(std::string const& _name, std::string const& _value) -> void {
-    if (this->__query.length() != 0) { this->__query.insert(this->__query.length(), "&"); }
-    this->__query.insert(this->__query.length(), _name);
-    this->__query.insert(this->__query.length(), "=");
-    this->__query.insert(this->__query.length(), _value);
-    this->__params[_name] = _value;
+zpt::HTTPReqT::anchor() const -> std::string {
+    return this->__url_parts["anchor"];
 }
 
 auto
 zpt::HTTPReqT::stringify(std::ostream& _out) const -> void {
     _out << zpt::http::method_names[this->__method] << " " << this->__url;
-    if (this->__query.length() != 0) { _out << "?" << this->__query; }
-    else if (this->__params.size() != 0) {
-        _out << "?";
-        bool _first = true;
-        for (auto i : this->__params) {
-            if (!_first) { _out << "&"; }
-            _first = false;
-            std::string _n(i.first);
-            zpt::url::encode(_n);
-            std::string _v(i.second);
-            zpt::url::encode(_v);
-            _out << _n << "=" << _v;
-        }
-    }
     _out << " HTTP/" << this->version() << CRLF;
 
     for (auto h : this->__headers) { _out << h.first << ": " << h.second << CRLF; }

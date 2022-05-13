@@ -458,9 +458,7 @@ zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, 
                     _dir = -1;
                     _part.erase(0, 1);
                 }
-                else if (_part[0] == '+') {
-                    _part.erase(0, 1);
-                }
+                else if (_part[0] == '+') { _part.erase(0, 1); }
 
                 if (_part.length() > 0) {
                     ostringstream oss;
@@ -544,9 +542,7 @@ zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
                     _dir = -1;
                     _part.erase(0, 1);
                 }
-                else if (_part[0] == '+') {
-                    _part.erase(0, 1);
-                }
+                else if (_part[0] == '+') { _part.erase(0, 1); }
 
                 if (_part.length() > 0) {
                     ostringstream oss;

@@ -48,9 +48,7 @@ class csv : public std::string {
                         _escaped = false;
                         _value.push_back(_c);
                     }
-                    else {
-                        _commas = !_commas;
-                    }
+                    else { _commas = !_commas; }
                     break;
                 }
                 case '\\': {
@@ -62,9 +60,7 @@ class csv : public std::string {
                         _result << _value;
                         _value.clear();
                     }
-                    else {
-                        _value.push_back(_c);
-                    }
+                    else { _value.push_back(_c); }
                     break;
                 }
                 default: {

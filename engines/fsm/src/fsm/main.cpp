@@ -41,9 +41,7 @@ main(int argc, char* argv[]) -> int {
                           oss << " -> S(" << _current << ")" << std::flush;
                           _data.append(oss.str());
                           if (_data.find("p1") != std::string::npos) { return 2; }
-                          else {
-                              return 3;
-                          }
+                          else { return 3; }
                       }) //
       .add_transition(2,
                       [](int& _current, std::string& _data, size_t const& _id) -> int {

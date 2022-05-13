@@ -103,9 +103,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
                 _return[_last] << _arg;
                 _last.assign("");
             }
-            else {
-                _non_positional << _arg;
-            }
+            else { _non_positional << _arg; }
         }
     }
     if (_last.length() != 0) {
@@ -134,13 +132,9 @@ zpt::conf::evaluate_ref(zpt::json _options,
             zpt::json _other;
             zpt::conf::file(_href, _other);
             if (_parent->is_object()) { _parent << _parent_key << _other; }
-            else {
-                _parent << _other;
-            }
+            else { _parent << _other; }
         }
-        else {
-            zpt::conf::evaluate_ref(_value, _key, _options, _file_context);
-        }
+        else { zpt::conf::evaluate_ref(_value, _key, _options, _file_context); }
     }
 }
 
@@ -168,16 +162,12 @@ auto
 zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     std::vector<std::string> _non_positional;
     if (zpt::is_dir(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
-    else {
-        _non_positional.push_back(_dir);
-    }
+    else { _non_positional.push_back(_dir); }
     std::sort(_non_positional.begin(), _non_positional.end());
     for (auto _file : _non_positional) {
         expect(zpt::file_exists(_file), "'" << _file << "' can't be found.", 500, 0);
         if (zpt::is_dir(_file)) { zpt::conf::dirs(_file, _options); }
-        else {
-            zpt::conf::file(static_cast<std::string>(_file), _options);
-        }
+        else { zpt::conf::file(static_cast<std::string>(_file), _options); }
     }
 }
 
@@ -199,9 +189,7 @@ zpt::conf::dirs(zpt::json& _options) -> void {
                           zpt::conf::dirs((std::string)_file, _object);
                       }
                   }
-                  else {
-                      zpt::conf::dirs((std::string)_item, _object);
-                  }
+                  else { zpt::conf::dirs((std::string)_item, _object); }
                   _object->object()->pop("$include");
                   *_redo = true;
               }
@@ -285,9 +273,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
 
             _values = _return[_key];
             if (_values == zpt::undefined) { _return << _key << _value; }
-            else if (_values->type() == zpt::JSArray) {
-                _values << _value;
-            }
+            else if (_values->type() == zpt::JSArray) { _values << _value; }
             else {
                 zpt::json _old = _values;
                 _values = zpt::json::array();

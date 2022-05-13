@@ -994,10 +994,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                     _options = _part;
                     ++_bar_count;
                 }
-                else {
-
-                    ++_bar_count;
-                }
+                else { ++_bar_count; }
             }
 
             if (_command == "m") {
@@ -1089,19 +1086,14 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                     _queryr += zpt::pgsql::escape_name(_key) + _op +
                                                zpt::pgsql::escape(zpt::json::string(_expression));
                                 }
-                                else {
-                                    _queryr += zpt::pgsql::escape_name(_key) + _op + _bexpr;
-                                }
+                                else { _queryr += zpt::pgsql::escape_name(_key) + _op + _bexpr; }
                             }
                             else {
 
                                 _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(d);
                             }
                         }
-                        else {
-
-                            _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(i);
-                        }
+                        else { _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(i); }
                     }
                     else if (_options == "j") {
 

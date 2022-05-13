@@ -30,9 +30,7 @@ class some_protocol : public zpt::transport::transport_t {
             _response->body(_channel->received()["body"]);
             _response->header("Content-Type", "application/json");
         }
-        else {
-            _response->status(zpt::http::HTTP415);
-        }
+        else { _response->status(zpt::http::HTTP415); }
         (*_channel->stream()) << _response << std::flush;
     }
 

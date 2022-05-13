@@ -9,10 +9,7 @@
         COLON = 262,
         STRING = 263,
         SPACE = 264,
-        BODY = 265,
-        QMARK = 266,
-        EQ = 267,
-        E = 268,
+        BODY = 265
     };
 */
 
@@ -31,7 +28,7 @@ string	d_chunked;
 //%debug
 %no-lines
 
-%x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval params
+%x request reply headers headerval crlf plain_body chunked_body statustext contentlengthval transferencodingval trailerval
 %%
 
 //<<EOF>>
@@ -104,11 +101,7 @@ string	d_chunked;
 		begin(StartCondition_::headers);
 		return 261;
 	}
-	[?]   {
-		begin(StartCondition_::params);
-		return 266;
-	}
-	([^?\r\n ]+) {
+	([^\r\n ]+) {
 		return 259;
 	}
 	[ ] {
@@ -135,22 +128,6 @@ string	d_chunked;
         [ ] {
 		return 264;
 	}
-}
-
-<params> {
-	"=" {
-		return 267;
-	}
-	"&" {
-		return 268;
-	}
-	[ ] {
-		begin(StartCondition_::request);
-		return 264;
-	}
-	([^=& ]+) {
-		return 263;
-    }
 }
 
 <headers> {

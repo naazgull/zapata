@@ -284,9 +284,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) { _return[_key] << _payload; }
-                else {
-                    _return << _key << zpt::json{ zpt::array, _payload };
-                }
+                else { _return << _key << zpt::json{ zpt::array, _payload }; }
             }
             freeReplyObject(_reply);
             break;
@@ -415,9 +413,7 @@ zpt::redis::ZList::range(std::string const& _key,
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) { _return[_key] << _payload; }
-                else {
-                    _return << _key << zpt::json{ zpt::array, _payload };
-                }
+                else { _return << _key << zpt::json{ zpt::array, _payload }; }
             }
             freeReplyObject(_reply);
             break;
@@ -502,9 +498,7 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
                     _payload = zpt::json::string(_data);
                 }
                 if (_return[_key]->ok()) { _return[_key] << _payload; }
-                else {
-                    _return << _key << zpt::json{ zpt::array, _payload };
-                }
+                else { _return << _key << zpt::json{ zpt::array, _payload }; }
             }
             freeReplyObject(_reply);
             break;
@@ -601,9 +595,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
                         _payload = zpt::json::string(_data);
                     }
                     if (_return[_key]->ok()) { _return[_key] << _payload; }
-                    else {
-                        _return << _key << zpt::json{ zpt::array, _payload };
-                    }
+                    else { _return << _key << zpt::json{ zpt::array, _payload }; }
                 }
                 freeReplyObject(_reply);
                 break;

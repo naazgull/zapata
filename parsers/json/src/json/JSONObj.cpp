@@ -151,13 +151,9 @@ zpt::JSONObjT::del_path(std::string const& _path, std::string const& _separator)
         getline(_iss, _part, _separator[0]);
         if (_current[_part]->ok()) {
             if (_iss.good()) { _current = _current[_part]; }
-            else {
-                _current->object()->pop(_part);
-            }
+            else { _current->object()->pop(_part); }
         }
-        else {
-            return (*this);
-        }
+        else { return (*this); }
     }
     return (*this);
 }

@@ -154,7 +154,7 @@ class json {
     template<typename T>
     auto operator[](T _idx) -> json;
     template<typename T>
-    auto operator[](T _idx) const -> zpt::json const&;
+    auto operator[](T _idx) const -> zpt::json const;
 
     operator std::string();
     operator bool();
@@ -175,6 +175,26 @@ class json {
     operator zpt::regex();
     operator zpt::regex&();
     operator std::regex&();
+
+    operator const std::string() const;
+    operator const bool() const;
+    operator const int() const;
+    operator const long() const;
+    operator const long long() const;
+    operator const size_t() const;
+    operator const double() const;
+#ifdef __LP64__
+    operator const unsigned int() const;
+#endif
+    operator const zpt::timestamp_t() const;
+    operator const zpt::JSONObj() const;
+    operator const zpt::JSONArr() const;
+    operator const zpt::JSONObj&() const;
+    operator const zpt::JSONArr&() const;
+    operator const zpt::lambda() const;
+    operator const zpt::regex() const;
+    operator const zpt::regex&() const;
+    operator const std::regex&() const;
 
     auto operator+(std::initializer_list<zpt::json> _in) -> json;
     auto operator+=(std::initializer_list<zpt::json> _in) -> json&;
@@ -1068,7 +1088,7 @@ zpt::json::operator[](T _idx) -> zpt::json {
 }
 template<typename T>
 auto
-zpt::json::operator[](T _idx) const -> zpt::json const& {
+zpt::json::operator[](T _idx) const -> zpt::json const {
     return (*this->__underlying.get())[_idx];
 }
 template<typename T>
@@ -1346,9 +1366,7 @@ template<typename T>
 auto
 zpt::JSONElementT::operator[](T _idx) -> json {
     if (this->__target.__type == zpt::JSObject) { return this->__target.__object[_idx]; }
-    else if (this->__target.__type == zpt::JSArray) {
-        return this->__target.__array[_idx];
-    }
+    else if (this->__target.__type == zpt::JSArray) { return this->__target.__array[_idx]; }
     return zpt::undefined;
 }
 
@@ -1356,9 +1374,7 @@ template<typename T>
 auto
 zpt::JSONElementT::operator[](T _idx) const -> json const& {
     if (this->__target.__type == zpt::JSObject) { return this->__target.__object[_idx]; }
-    else if (this->__target.__type == zpt::JSArray) {
-        return this->__target.__array[_idx];
-    }
+    else if (this->__target.__type == zpt::JSArray) { return this->__target.__array[_idx]; }
     return zpt::undefined;
 }
 template<typename T>
@@ -1405,9 +1421,7 @@ auto
 zpt::set(std::string const& _path, T _value, zpt::json _target) -> zpt::json {
     zpt::json _return;
     if (_target->ok()) { _return = _target; }
-    else {
-        _return = zpt::json::object();
-    }
+    else { _return = zpt::json::object(); }
     _return->set_path(_path, zpt::json{ _value });
     return _return;
 }

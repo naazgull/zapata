@@ -187,13 +187,30 @@ func_between(zpt::json _params, std::ostream& _find) -> void {
     _find << ")" << std::flush;
 }
 auto
+func_like(zpt::json _params, std::ostream& _find) -> void {
+    if (_params[2] == "i") {
+        _find << "(lower(";
+        zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+        _find << ") like lower(";
+        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "))" << std::flush;
+    }
+    else {
+        _find << "(";
+        zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+        _find << " like ";
+        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << ")" << std::flush;
+    }
+}
+auto
 functors() -> std::map<std::string, zpt::storage::functor>& {
     static std::map<std::string, zpt::storage::functor> _funcs = {
         { "lower", ::func_lower },     { "upper", ::func_upper },     { "boolean", ::func_boolean },
         { "date", ::func_date },       { "integer", ::func_integer }, { "float", ::func_floating },
         { "double", ::func_floating }, { "string", ::func_string },   { "ne", ::func_ne },
         { "gt", ::func_gt },           { "gte", ::func_gte },         { "lt", ::func_lt },
-        { "lte", ::func_lte },         { "between", ::func_between }
+        { "lte", ::func_lte },         { "between", ::func_between }, { "like", ::func_like }
     };
     return _funcs;
 }
@@ -473,9 +490,7 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                         (**_params->array())
                           .insert((**_params->array()).begin(), zpt::json::string(_key));
                     }
-                    else {
-                        _function << "params" << _key;
-                    }
+                    else { _function << "params" << _key; }
                     zpt::storage::functional_to_sql(_function, _find, ::variable_name);
                     _functional = true;
                 }
@@ -486,7 +501,7 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
 
         if (!_functional) { _find << "(" << _key << " = " << _value << ")" << std::flush; }
     }
-    zlog("Extracted filtering condition: " << _find.str(), zpt::debug);
+    zlog("Extracted filtering condition: " << _find.str(), zpt::trace);
     return _find.str();
 }
 
@@ -507,7 +522,5 @@ zpt::storage::functor_to_sql(std::string const& _functor, zpt::json _params, std
   -> void {
     auto _found = ::functors().find(_functor);
     if (_found != ::functors().end()) { _found->second(_params, _find); }
-    else {
-        ::func_default(_functor, _params, _find);
-    }
+    else { ::func_default(_functor, _params, _find); }
 }

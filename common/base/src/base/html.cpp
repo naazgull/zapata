@@ -30,21 +30,11 @@ auto
 zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) -> void {
     for (size_t i = 0; i != s.length(); i++) {
         if (((unsigned char)s[i]) > 127) { out << "&#" << std::dec << ((int)s.at(i)) << ";"; }
-        else if (s[i] == '"' && quote) {
-            out << "&quot;";
-        }
-        else if (s[i] == '<' && tags) {
-            out << "&lt;";
-        }
-        else if (s[i] == '>' && tags) {
-            out << "&gt;";
-        }
-        else if (s[i] == '&') {
-            out << "&amp;";
-        }
-        else {
-            out << ((char)s.at(i));
-        }
+        else if (s[i] == '"' && quote) { out << "&quot;"; }
+        else if (s[i] == '<' && tags) { out << "&lt;"; }
+        else if (s[i] == '>' && tags) { out << "&gt;"; }
+        else if (s[i] == '&') { out << "&amp;"; }
+        else { out << ((char)s.at(i)); }
     }
     out << std::flush;
 }
@@ -75,9 +65,7 @@ zpt::html::entities_decode(std::string& _out) -> void {
             oss << ((wchar_t)c);
             i = j;
         }
-        else {
-            oss << ((wchar_t)_out[i]);
-        }
+        else { oss << ((wchar_t)_out[i]); }
     }
     oss << std::flush;
 

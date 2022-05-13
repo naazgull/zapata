@@ -21,11 +21,8 @@ class HTTPTokenizerLexer : public HTTPLexer {
     auto status() -> void;
 
     auto add() -> void;
-    auto name() -> void;
-    auto value() -> void;
 
     std::string __header_name;
-    std::string __param_name;
     HTTPReqT* __root_req;
     HTTPRepT* __root_rep;
     zpt::http::message_type __root_type;

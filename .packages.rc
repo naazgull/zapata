@@ -9,8 +9,8 @@ export projects=(
        io/socket
        io/pipe
        parsers/json
-       parsers/http
        parsers/uri
+       parsers/http
        parsers/functional
        bridges/base
        common/graph

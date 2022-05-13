@@ -670,9 +670,7 @@ zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
             if (_error != 0 && _error != MDB_NOTFOUND) {
                 mdb_expect(_error, "unable to remove the record");
             }
-            else if (_error == 0) {
-                ++_count;
-            }
+            else if (_error == 0) { ++_count; }
         }
         else {
             _error = mdb_cursor_open(_trx, _dbi, &_cursor);
@@ -693,9 +691,7 @@ zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
                     if (_error != 0 && _error != MDB_NOTFOUND) {
                         mdb_expect(_error, "unable to remove the record");
                     }
-                    else if (_error == 0) {
-                        ++_count;
-                    }
+                    else if (_error == 0) { ++_count; }
                 }
             } while (_error != MDB_NOTFOUND);
             mdb_cursor_close(_cursor);
@@ -1014,9 +1010,7 @@ zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
     auto _result = zpt::json::array();
     for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
          ++this->__current, ++_fetched) {
-        if (_amount == 1) {
-            return std::get<2>(*this->__current);
-        }
+        if (_amount == 1) { return std::get<2>(*this->__current); }
         _result << std::get<2>(*this->__current);
         if (_fetched == _amount) { break; }
     }

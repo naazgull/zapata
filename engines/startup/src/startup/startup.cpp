@@ -339,9 +339,7 @@ zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<voi
                     this->listen({ "plugin", _key, "step", zpt::startup::steps::RUN }, _callback);
                 }
             }
-            else {
-                _reqs[_key] = true;
-            }
+            else { _reqs[_key] = true; }
         }
     }
     return _fullfilled;

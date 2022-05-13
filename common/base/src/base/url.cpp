@@ -35,9 +35,7 @@ zpt::quoted_printable::encode(std::string const& _quote,
         if (((unsigned char)_quote[_i]) > 127) {
             _oss << "=" << std::uppercase << std::hex << ((int)((unsigned char)_quote[_i]));
         }
-        else {
-            _oss << _quote[_i];
-        }
+        else { _oss << _quote[_i]; }
     }
     _oss << "?=" << std::flush;
     _out.insert(_out.length(), _oss.str());
@@ -68,9 +66,7 @@ zpt::url::encode(std::string& _out) -> void {
             *pEnd++ = DEC2HEX[*pSrc >> 4];
             *pEnd++ = DEC2HEX[*pSrc & 0x0F];
         }
-        else {
-            *pEnd++ = *pSrc;
-        }
+        else { *pEnd++ = *pSrc; }
     }
 
     std::string sResult((char*)pStart, (char*)pEnd);

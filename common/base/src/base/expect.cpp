@@ -69,9 +69,7 @@ non_static_get_tz() -> std::string {
         _tzf >> _to_return;
         _tzf.close();
     }
-    else {
-        _to_return.assign("UTC");
-    }
+    else { _to_return.assign("UTC"); }
     return _to_return;
 }
 

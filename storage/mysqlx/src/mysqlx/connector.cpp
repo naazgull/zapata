@@ -738,17 +738,13 @@ zpt::storage::mysqlx::result::count() -> size_t {
 auto
 zpt::storage::mysqlx::result::status() -> zpt::status {
     if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getCode(); }
-    else {
-        return this->__result.getWarning(0).getCode();
-    }
+    else { return this->__result.getWarning(0).getCode(); }
 }
 
 auto
 zpt::storage::mysqlx::result::message() -> std::string {
     if (this->__is_doc_result) { return this->__doc_result.getWarning(0).getMessage(); }
-    else {
-        return this->__result.getWarning(0).getMessage();
-    }
+    else { return this->__result.getWarning(0).getMessage(); }
 }
 
 auto

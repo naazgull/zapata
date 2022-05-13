@@ -1485,9 +1485,7 @@ zpt::ZMQRouter::recv() -> zpt::json {
                     _uuid.assign(zpt::generate::r_uuid());
                     _envelope << "channel" << _uuid;
                 }
-                else {
-                    _uuid.assign(std::string(_envelope["channel"]));
-                }
+                else { _uuid.assign(std::string(_envelope["channel"])); }
                 this->__sock_id.insert(std::make_pair(_uuid, _frame1));
             }
 
