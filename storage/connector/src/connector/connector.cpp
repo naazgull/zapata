@@ -477,13 +477,12 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
         if (!_first) { _find << " and " << std::flush; }
         _first = false;
 
-        bool _functional{ false };
         if (_value->is_string()) {
-            std::string _string = _value->string();
+            auto _string = _value->string();
             zpt::url::decode(_string);
             if (_string.find("{.") == 0) {
                 try {
-                    std::string _to_eval = _string.substr(2, _string.length() - 4);
+                    auto _to_eval = _string.substr(2, _string.length() - 4);
                     auto _function = zpt::functional::parse(_to_eval);
                     auto _params = _function["params"];
                     if (_params->ok()) {
@@ -492,14 +491,13 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                     }
                     else { _function << "params" << _key; }
                     zpt::storage::functional_to_sql(_function, _find, ::variable_name);
-                    _functional = true;
                 }
                 catch (...) {
                 }
             }
+            else { _find << "(" << _key << " = \"" << _string << "\")" << std::flush; }
         }
-
-        if (!_functional) { _find << "(" << _key << " = " << _value << ")" << std::flush; }
+        else { _find << "(" << _key << " = " << _value << ")" << std::flush; }
     }
     zlog("Extracted filtering condition: " << _find.str(), zpt::trace);
     return _find.str();

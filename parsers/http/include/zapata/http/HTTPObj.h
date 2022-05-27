@@ -123,7 +123,7 @@ class HTTPReqT : public HTTPObj {
     auto method() const -> zpt::performative;
     auto method(zpt::performative) -> void;
     auto url(std::string const&) -> void;
-    // auto url() const -> std::string const&;
+    auto url() const -> std::string const&;
     auto scheme() const -> std::string const;
     auto domain() const -> std::string const;
     auto path() const -> std::string const&;

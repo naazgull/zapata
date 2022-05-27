@@ -30,10 +30,10 @@ zpt::HTTPReqT::url(std::string const& _url) -> void {
     this->__path.assign("/" + zpt::join(this->__url_parts["path"], "/"));
 }
 
-// auto
-// zpt::HTTPReqT::url() const -> std::string const& {
-//     return this->__url;
-// }
+auto
+zpt::HTTPReqT::url() const -> std::string const& {
+    return this->__url;
+}
 
 auto
 zpt::HTTPReqT::scheme() const -> std::string const {
