@@ -5,6 +5,9 @@
 *.so.*
 *.deb
 *.tar.gz
+*~
+#*
+cscope*
 autom4te.cache
 Makefile.in
 Makefile

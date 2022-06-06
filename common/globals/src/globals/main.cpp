@@ -35,10 +35,16 @@ main(int argc, char* argv[]) -> int {
     _global2->push_back("2");
     _global2->push_back("3");
 
+    zpt::thread_local_variable<std::string> _thread_local{"this is the default value"};
+
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
         for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
+        std::cout << "_thread_local: " << *_thread_local << std::endl << std::flush;
+        *_thread_local = "this is the thread1 value";
+        std::cout << "_thread_local_1: " << *_thread_local << std::endl << std::flush;
+        _thread_local.dispose_local_image();
     } };
     _thread1.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
@@ -51,6 +57,9 @@ main(int argc, char* argv[]) -> int {
         std::cout << "Thread2:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
         for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
+        _thread_local->assign("this is the thread2 value");
+        std::cout << "_thread_local_2: " << *_thread_local << std::endl << std::flush;
+        _thread_local.dispose_local_image();
     } };
     _thread2.detach();
 
@@ -64,6 +73,8 @@ main(int argc, char* argv[]) -> int {
         std::cout << "Thread3:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
         for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
+        std::cout << "_thread_local_3: " << *_thread_local << std::endl << std::flush;
+        _thread_local.dispose_local_image();
     } };
     _thread3.detach();
     std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 1000000 });
@@ -74,6 +85,9 @@ main(int argc, char* argv[]) -> int {
         std::cout << "Thread4:" << std::endl << std::flush;
         for (auto _e : *_global) { std::cout << _e << std::endl << std::flush; }
         for (auto _e : *_global2) { std::cout << _e << std::endl << std::flush; }
+        *_thread_local = "this is the thread4 value";
+        std::cout << "_thread_local_4: " << *_thread_local << std::endl << std::flush;
+        _thread_local.dispose_local_image();
     } };
 
     _thread4.join();

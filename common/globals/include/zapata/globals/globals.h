@@ -43,6 +43,19 @@ class globals {
     static inline std::map<size_t, std::vector<void*>> __variables{};
     static inline zpt::lf::spin_lock __variables_lock;
 };
+class thread_local_table {
+  public:
+    template<typename P, typename T, typename... Args>
+    static auto alloc(P const& _member_variable, Args... _args) -> T&;
+    template<typename P, typename T>
+    static auto get(P const& _member_variable) -> T&;
+    template<typename P, typename T>
+    static auto dealloc(P const& _member_variable) -> void;
+    static inline auto to_string() -> std::string;
+
+  private:
+    static thread_local inline std::map<std::uintptr_t, void*> __variables{};
+};
 } // namespace zpt
 
 template<typename T, typename... Args>
@@ -124,6 +137,51 @@ zpt::globals::to_string() -> std::string {
     for (auto [_key, _value] : zpt::globals::__variables) {
         _out << _key << ":" << std::endl << std::flush;
         for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
+    }
+    return _out.str();
+}
+
+template<typename P, typename T, typename... Args>
+auto
+zpt::thread_local_table::alloc(P const& _member_variable, Args... _args) -> T& {
+    T* _new = new T(_args...);
+    zpt::thread_local_table::__variables.insert(
+      std::pair{ reinterpret_cast<std::uintptr_t>(&_member_variable), static_cast<void*>(_new) });
+    return *_new;
+}
+
+template<typename P, typename T>
+auto
+zpt::thread_local_table::get(P const& _member_variable) -> T& {
+    auto _found = zpt::thread_local_table::__variables.find(
+      reinterpret_cast<std::uintptr_t>(&_member_variable));
+    expect(_found != zpt::thread_local_table::__variables.end(),
+           "no such global variable for " << reinterpret_cast<std::uintptr_t>(&_member_variable),
+           500,
+           0);
+    return *static_cast<T*>(_found->second);
+}
+
+template<typename P, typename T>
+auto
+zpt::thread_local_table::dealloc(P const& _member_variable) -> void {
+    auto _found = zpt::thread_local_table::__variables.find(
+      reinterpret_cast<std::uintptr_t>(&_member_variable));
+    expect(_found != zpt::thread_local_table::__variables.end(),
+           "no such global variable for " << reinterpret_cast<std::uintptr_t>(&_member_variable),
+           500,
+           0);
+    auto _ptr = static_cast<T*>(_found->second);
+    zpt::thread_local_table::__variables.erase(_found);
+    delete _ptr;
+}
+
+auto
+zpt::thread_local_table::to_string() -> std::string {
+    std::ostringstream _out;
+    _out << "Thread local members:" << std::endl;
+    for (auto [_key, _value] : zpt::thread_local_table::__variables) {
+        _out << _key << ": " << _value << std::endl << std::flush;
     }
     return _out.str();
 }

@@ -49,14 +49,14 @@ class padded_atomic {
     auto operator*() -> std::atomic<T>&;
 
   private:
-    alignas(std::atomic<T>) std::byte* __storage{ nullptr };
+    alignas(std::atomic<T>) unsigned char* __storage{ nullptr };
     std::atomic<T>* __underlying{ nullptr };
 };
 } // namespace zpt
 
 template<typename T>
 zpt::padded_atomic<T>::padded_atomic()
-  : __storage{ new std::byte[static_cast<size_t>(
+  : __storage{ new unsigned char[static_cast<size_t>(
       zpt::cache_line_size() * std::ceil(static_cast<double>(sizeof(std::atomic<T>)) /
                                          static_cast<double>(zpt::cache_line_size())))] }
   , __underlying{ new (this->__storage) std::atomic<T>() } {}

@@ -36,7 +36,9 @@ class ref_ptr {
     auto operator=(zpt::ref_ptr<T>&& _rhs) -> zpt::ref_ptr<T>&;
 
     auto operator->() -> T*;
+    auto operator->() const -> T const*;
     auto operator*() -> T&;
+    auto operator*() const -> T const&;
 
     auto get() -> T*;
     auto reset() -> T*;
@@ -83,7 +85,19 @@ zpt::ref_ptr<T>::operator->() -> T* {
 
 template<typename T>
 auto
+zpt::ref_ptr<T>::operator->() const -> T const* {
+    return this->__underlying;
+}
+
+template<typename T>
+auto
 zpt::ref_ptr<T>::operator*() -> T& {
+    return *this->__underlying;
+}
+
+template<typename T>
+auto
+zpt::ref_ptr<T>::operator*() const -> T const& {
     return *this->__underlying;
 }
 
