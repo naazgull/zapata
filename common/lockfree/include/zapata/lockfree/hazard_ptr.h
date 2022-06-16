@@ -328,6 +328,7 @@ template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::release_this_thread_slot() -> zpt::lf::hazard_ptr<T>& {
     auto& _idx = *this->__thread_idx;
+    if (_idx == -1) { return (*this); }
 
     for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
         this->__hp[_k]->store(nullptr);
