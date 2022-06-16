@@ -11,7 +11,7 @@
 #include <type_traits>
 
 #include <zapata/lockfree/hazard_ptr.h>
-#include <zapata/lockfree/spin_lock.h>
+#include <zapata/locks/spin_lock.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
 namespace zpt {
@@ -93,7 +93,7 @@ class list {
         zpt::lf::bidirectional_node<T> const* __initial{ nullptr };
         zpt::lf::bidirectional_node<T>* __current{ nullptr };
         zpt::lf::list<T>& __target;
-        std::unique_ptr<zpt::lf::spin_lock::guard> __shared_sentry;
+        std::unique_ptr<zpt::locks::spin_lock::guard> __shared_sentry;
     };
     friend class zpt::lf::list<T>::iterator;
 
@@ -161,7 +161,7 @@ class list {
     std::atomic<zpt::lf::bidirectional_node<T>*> __tail{ nullptr };
     zpt::lf::list<T>::hazard_domain& __hazard_domain;
     long __spin_sleep{ 0 };
-    zpt::lf::spin_lock __access_lock;
+    zpt::locks::spin_lock __access_lock;
 };
 
 template<typename T>
@@ -174,7 +174,7 @@ zpt::lf::list<T>::iterator::iterator(zpt::lf::bidirectional_node<T>* _current,
   : __initial{ _current }
   , __current{ _current }
   , __target{ _target }
-  , __shared_sentry{ std::make_unique<zpt::lf::spin_lock::guard>(_target.__access_lock, true) } {
+  , __shared_sentry{ std::make_unique<zpt::locks::spin_lock::guard>(_target.__access_lock, true) } {
     this->__target.__hazard_domain.acquire(this->__current);
 }
 
@@ -183,8 +183,8 @@ zpt::lf::list<T>::iterator::iterator(iterator const& _rhs)
   : __initial{ _rhs.__initial }
   , __current{ _rhs.__current }
   , __target{ _rhs.__target }
-  , __shared_sentry{ std::make_unique<zpt::lf::spin_lock::guard>(_rhs.__target.__access_lock,
-                                                                 true) } {
+  , __shared_sentry{ std::make_unique<zpt::locks::spin_lock::guard>(_rhs.__target.__access_lock,
+                                                                    true) } {
     this->__target.__hazard_domain.acquire(this->__current);
 }
 
@@ -209,7 +209,7 @@ zpt::lf::list<T>::iterator::operator=(iterator const& _rhs) -> zpt::lf::list<T>:
     this->__current = _rhs.__current;
     this->__target = _rhs.__target;
     this->__shared_sentry =
-      std::make_unique<zpt::lf::spin_lock::guard>(_rhs.__target.__access_lock, true);
+      std::make_unique<zpt::locks::spin_lock::guard>(_rhs.__target.__access_lock, true);
     this->__target.__hazard_domain.acquire(this->__current);
     return (*this);
 }
@@ -324,7 +324,8 @@ zpt::lf::list<T>::back() const -> T {
 template<typename T>
 auto
 zpt::lf::list<T>::head() const -> zpt::lf::bidirectional_node<T>* {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     auto _front = this->__head.load();
     if (_front != nullptr && !_front->__is_null.load()) { return _front; }
     throw zpt::NoMoreElementsException("there is no element in the back");
@@ -333,7 +334,8 @@ zpt::lf::list<T>::head() const -> zpt::lf::bidirectional_node<T>* {
 template<typename T>
 auto
 zpt::lf::list<T>::tail() const -> zpt::lf::bidirectional_node<T>* {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     auto _back = this->__tail.load();
     if (_back != nullptr && !_back->__is_null.load()) { return _back; }
     throw zpt::NoMoreElementsException("there is no element in the back");
@@ -342,7 +344,8 @@ zpt::lf::list<T>::tail() const -> zpt::lf::bidirectional_node<T>* {
 template<typename T>
 auto
 zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     auto _new{ new zpt::lf::bidirectional_node<T>{} };
     typename zpt::lf::list<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
 
@@ -372,7 +375,8 @@ zpt::lf::list<T>::push(T _value) -> zpt::lf::list<T>& {
 template<typename T>
 auto
 zpt::lf::list<T>::pop() -> T {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     do {
         zpt::lf::bidirectional_node<T>* _head = this->__head.load(std::memory_order_acquire);
         typename zpt::lf::list<T>::hazard_domain::guard _head_sentry{ _head,
@@ -408,8 +412,8 @@ auto
 zpt::lf::list<T>::erase(F _remove_if) -> zpt::lf::list<T>::iterator {
     zpt::lf::bidirectional_node<T>* _it{ nullptr };
     {
-        zpt::lf::spin_lock::guard _exclusive_sentry{ this->__access_lock,
-                                                     zpt::lf::spin_lock::exclusive };
+        zpt::locks::spin_lock::guard _exclusive_sentry{ this->__access_lock,
+                                                        zpt::locks::spin_lock::exclusive };
         auto _node = this->__head.load();
         while (_node != nullptr) {
             auto _next = _node->__next.load();
@@ -452,7 +456,8 @@ template<typename T>
 template<typename F>
 auto
 zpt::lf::list<T>::find_if(F _callback) -> zpt::lf::list<T>::iterator {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     for (auto _it = this->begin(); _it != this->end(); ++_it) {
         if (!_it.node()->__is_null.load() && _callback(_it.node()->__value)) {
             return zpt::lf::list<T>::iterator{ _it.node(), *this };
@@ -464,7 +469,8 @@ zpt::lf::list<T>::find_if(F _callback) -> zpt::lf::list<T>::iterator {
 template<typename T>
 auto
 zpt::lf::list<T>::at(size_t _idx) -> T {
-    zpt::lf::spin_lock::guard _shared_sentry{ this->__access_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _shared_sentry{ this->__access_lock,
+                                                 zpt::locks::spin_lock::shared };
     size_t _k{ 0 };
     auto _node = this->__head.load();
     while (_node != nullptr && _k != _idx) {

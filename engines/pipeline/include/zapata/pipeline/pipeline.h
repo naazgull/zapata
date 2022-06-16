@@ -165,7 +165,7 @@ class step
 
   private:
     zpt::tree::node<zpt::json, zpt::regex, event_callback> __callbacks;
-    zpt::lf::spin_lock __callback_lock;
+    zpt::locks::spin_lock __callback_lock;
     error_callback __error_callback;
 };
 
@@ -402,7 +402,7 @@ zpt::pipeline::step<T>::step(zpt::pipeline::step<T>::hazard_domain& _hazard_doma
 template<typename T>
 auto
 zpt::pipeline::step<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event) -> void {
-    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _sentry{ this->__callback_lock, zpt::locks::spin_lock::shared };
     this->__callbacks.eval(
       _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->string(), _event);
     if (_event->steps().marked() == _event->steps().current()) { _event->steps().next().mark(); }
@@ -412,7 +412,7 @@ zpt::pipeline::step<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event)
 template<typename T>
 auto
 zpt::pipeline::step<T>::listen_to(zpt::json _path, event_callback _callback) -> void {
-    zpt::lf::spin_lock::guard _sentry{ this->__callback_lock, zpt::lf::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__callback_lock, zpt::locks::spin_lock::exclusive };
     this->__callbacks.merge(
       _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->regex(), _callback);
 }

@@ -28,7 +28,7 @@
 #include <systemd/sd-daemon.h>
 #include <zapata/text/convert.h>
 #include <zapata/lockfree/queue.h>
-#include <zapata/lockfree/spin_lock.h>
+#include <zapata/locks/spin_lock.h>
 
 namespace zpt {
 
@@ -107,8 +107,8 @@ class stream {
     int __fd{ -1 };
     std::string __transport{ "" };
     std::string __uri{ "" };
-    zpt::lf::spin_lock __input_lock;
-    zpt::lf::spin_lock __output_lock;
+    zpt::locks::spin_lock __input_lock;
+    zpt::locks::spin_lock __output_lock;
     zpt::stream_state __state{ zpt::stream_state::IDLE };
 
     stream(std::unique_ptr<std::iostream> _underlying);
@@ -126,7 +126,7 @@ stream_cast(zpt::stream& _rhs) -> T& {
 template<typename T>
 auto
 zpt::stream::operator>>(T& _out) -> zpt::stream& {
-    zpt::lf::spin_lock::guard _sentry{ this->__input_lock, zpt::lf::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__input_lock, zpt::locks::spin_lock::exclusive };
     (*this->__underlying.get()) >> _out;
     return (*this);
 }
@@ -134,7 +134,7 @@ zpt::stream::operator>>(T& _out) -> zpt::stream& {
 template<typename T>
 auto
 zpt::stream::operator<<(T _in) -> zpt::stream& {
-    zpt::lf::spin_lock::guard _sentry{ this->__output_lock, zpt::lf::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__output_lock, zpt::locks::spin_lock::exclusive };
     (*this->__underlying.get()) << _in;
     return (*this);
 }

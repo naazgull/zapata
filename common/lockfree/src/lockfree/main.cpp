@@ -22,7 +22,7 @@
 #include <thread>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <zapata/lockfree/atomics.h>
+#include <zapata/atomics/padded_atomic.h>
 #include <zapata/lockfree/queue.h>
 #include <zapata/lockfree/list.h>
 #include <zapata/log/log.h>
@@ -117,6 +117,7 @@ test_queue() -> int {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
+              _q_hazard_domain.clear_thread_context();
           },
           _i);
     }
@@ -191,6 +192,7 @@ test_list() -> int {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
+              _l_hazard_domain.clear_thread_context();
           },
           _i);
     }
@@ -247,18 +249,9 @@ test_aligned() -> void {
 
 auto
 main(int _argc, char* _argv[]) -> int {
-    try {
-        test_queue();
-        // test_list();
-        // test_hazard_ptr();
-        // test_aligned();
-        return 0;
-    }
-    catch (zpt::failed_expectation const& _e) {
-        std::cout << _e.what() << std::endl
-                  << _e.description() << std::endl
-                  << _e.backtrace() << std::endl
-                  << std::flush;
-    }
-    return 1;
+    test_queue();
+    // test_list();
+    // test_hazard_ptr();
+    // test_aligned();
+    return 0;
 }

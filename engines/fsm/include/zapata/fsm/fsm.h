@@ -49,7 +49,7 @@ class machine
     using hazard_domain = typename zpt::events::
       dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>::hazard_domain;
     using callback = std::function<S(S&, D&, I const&)>;
-    using callback_list = std::vector<std::tuple<zpt::padded_atomic<bool>, callback>>;
+    using callback_list = std::vector<callback>;
     using state_list = std::map<S, bool>;
     using error_callback = std::function<bool(S const& _event,
                                               D& _content,
@@ -72,7 +72,6 @@ class machine
 
     auto trapped(S _current_state, zpt::fsm::payload<D, I> _content) -> void;
     auto listen_to(S _event, callback _callback) -> void;
-    auto mute_from(S _event, callback _callback) -> void;
     auto report_error(S const& _event,
                       zpt::fsm::payload<D, I>& _content,
                       const char* _what,
@@ -93,7 +92,7 @@ class machine
     auto set_states(zpt::json _states) -> machine&;
 
   private:
-    zpt::lf::spin_lock __stalled_lock;
+    zpt::locks::spin_lock __stalled_lock;
     std::map<S, callback_list> __callbacks;
     std::map<S, state_list> __transitions;
     std::map<I, std::tuple<S, D>> __stalled;
@@ -171,8 +170,8 @@ zpt::fsm::machine<C, S, D, I>::resume(I _id, S _state) -> machine& {
     S _next_state;
     D _data;
     {
-        zpt::lf::spin_lock::guard _shared_sentry{ this->__stalled_lock,
-                                                  zpt::lf::spin_lock::exclusive };
+        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock,
+                                                     zpt::locks::spin_lock::exclusive };
         auto _found = this->__stalled.find(_id);
         expect(_found != this->__stalled.end(), "no such payload identified by " << _id, 500, 0);
         _stalled_state = std::get<0>(_found->second);
@@ -206,26 +205,23 @@ zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I>
     if (_it != this->__callbacks.end()) {
         S _next_state = this->__undefined;
 
-        for (auto _callback = _it->second.begin(); _callback != _it->second.end(); ++_callback) {
+        for (auto _callback : _it->second) {
             try {
-                if (std::get<0>(*_callback)->load()) {
-                    S _potential = std::get<1>(*_callback)(
-                      _current_state, std::get<0>(_content), std::get<1>(_content));
-                    expect(_next_state == this->__undefined || _potential == this->__undefined ||
-                             _next_state == _potential,
-                           "state '" << _potential
-                                     << "' returned from transition callback isn't consistent with "
-                                        "previously returned state '"
-                                     << _next_state << "'",
-                           500,
-                           0);
-                    if (_potential != this->__undefined) {
-                        _next_state = this->coalesce(_current_state, _potential);
-                    }
+                S _potential =
+                  _callback(_current_state, std::get<0>(_content), std::get<1>(_content));
+                expect(_next_state == this->__undefined || _potential == this->__undefined ||
+                         _next_state == _potential,
+                       "state '" << _potential
+                                 << "' returned from transition callback isn't consistent with "
+                                    "previously returned state '"
+                                 << _next_state << "'",
+                       500,
+                       0);
+                if (_potential != this->__undefined) {
+                    _next_state = this->coalesce(_current_state, _potential);
                 }
             }
             catch (zpt::events::unregister const& _e) {
-                this->mute(_current_state, std::get<1>(*_callback));
             }
         }
         if (_next_state == this->__pause) { return; }
@@ -244,18 +240,7 @@ zpt::fsm::machine<C, S, D, I>::listen_to(S _event, callback _callback) -> void {
         expect(_was_inserted, "something wrong with the map key logic around typename 'S'", 500, 0);
         _found = _insert;
     }
-    _found->second.push_back(std::make_tuple(true, _callback));
-}
-
-template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::mute_from(S _event, callback _callback) -> void {
-    auto _found = this->__callbacks.find(_event);
-    if (_found != this->__callbacks.end()) {
-        for (auto _c = _found->second.begin(); _c != _found->second.end(); ++_c) {
-            std::get<0>(*_c) = false;
-        }
-    }
+    _found->second.push_back(_callback);
 }
 
 template<typename C, typename S, typename D, typename I>
@@ -328,8 +313,8 @@ template<typename C, typename S, typename D, typename I>
 auto
 zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
     {
-        zpt::lf::spin_lock::guard _shared_sentry{ this->__stalled_lock,
-                                                  zpt::lf::spin_lock::exclusive };
+        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock,
+                                                     zpt::locks::spin_lock::exclusive };
         this->__stalled.insert(
           std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
     }

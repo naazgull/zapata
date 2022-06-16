@@ -35,7 +35,7 @@ main(int argc, char* argv[]) -> int {
     _global2->push_back("2");
     _global2->push_back("3");
 
-    zpt::thread_local_variable<std::string> _thread_local{"this is the default value"};
+    zpt::thread_local_variable<std::string> _thread_local{ "this is the default value" };
 
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;

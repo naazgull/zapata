@@ -20,7 +20,7 @@ fi
 python3_version=$(python3 -V | head -n 1 | tr " " "\n" | head -n 2 | tail -n 1 | tr "." "\n" | head -n 2 | head -c -1 | tr -s "\n" ".")
 lua5_version=$(lua -v | head -n 1 | tr " " "\n" | head -n 2 | tail -n 1 | tr "." "\n" | head -n 2 | head -c -1 | tr -s "\n" ".")
 
-if [[ "${1}" == "one" || "${1}" == "from" ]]
+if [[ "${1}" == "one" || "${1}" == "from" || "${1}" == "to" ]]
 then
     if [[ "${3}" == "" ]]
     then
@@ -32,7 +32,7 @@ else
     action=${1}
 fi
 
-if [[ "${1}" != "one" && "${1}" != "from" ]]
+if [[ "${1}" != "one" && "${1}" != "from" && "${1}" != "to" ]]
 then
     if [[ "${@:2}" != "" ]]
     then
@@ -46,8 +46,12 @@ then
 fi
 
 distro=$(lsb_release -c -s)
-goahead="no"
 project_dir=${PWD}
+goahead="no"
+if [[ "${1}" == "to" ]]
+then
+    goahead="yes"
+fi
 
 for package in ${projects[@]}
 do
@@ -67,6 +71,17 @@ do
     if [[ "${1}" == "one" ]]
     then
         if [[ "${2}" != "${package}" ]]
+        then
+            continue
+        fi
+    fi
+
+    if [[ "${1}" == "to" ]]
+    then
+        if [[ "${2}" == "${package}" ]]
+        then
+            goahead="no"
+        elif [[ "${goahead}" == "no" ]]
         then
             continue
         fi

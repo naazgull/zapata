@@ -57,7 +57,7 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
                          int _status = 500) -> bool;
 
   private:
-    zpt::lf::spin_lock __pending_lock;
+    zpt::locks::spin_lock __pending_lock;
     std::map<std::string, std::function<void(zpt::pipeline::event<zpt::exchange>&)>> __pending;
 };
 

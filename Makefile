@@ -34,5 +34,8 @@ format:
 from:
 	./.build from ${module} ${action}
 
+to:
+	./.build to ${module} ${action}
+
 one:
 	./.build one ${module} ${action}

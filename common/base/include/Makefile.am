@@ -16,6 +16,8 @@ nobase_include_HEADERS = \
 ./zapata/exceptions/ParserEOF.h \
 ./zapata/exceptions/SyntaxErrorException.h \
 ./zapata/exceptions/NoMoreElementsException.h \
+./zapata/atomics/padded_atomic.h \
+./zapata/locks/spin_lock.h \
 ./zapata/file/manip.h \
 ./zapata/log/log.h \
 ./zapata/mail/manip.h \

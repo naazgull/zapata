@@ -33,7 +33,7 @@
 #include <type_traits>
 
 #include <zapata/base/sentry.h>
-#include <zapata/lockfree/atomics.h>
+#include <zapata/atomics/padded_atomic.h>
 #include <zapata/lockfree/hazard_ptr.h>
 #include <zapata/exceptions/exceptions.h>
 
@@ -141,30 +141,19 @@ class queue {
     auto clear() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
 
+    auto hazard_ptr() const -> hazard_domain&;
+
     std::string to_string() const __attribute__((noinline));
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
         _out << "* zpt::lf::queue(" << std::hex << &_in << "):" << std::dec << std::endl
-             << std::flush;
-        _out << "  #head -> " << std::flush;
-        try {
-            auto _head = _in.head();
-            _out << *_head << std::flush;
-        }
-        catch (zpt::NoMoreElementsException const& e) {
-            _out << "0x0" << std::flush;
-        }
-        _out << std::endl << "  #tail -> " << std::flush;
-        try {
-            auto _tail = _in.tail();
-            _out << *_tail << std::flush;
-        }
-        catch (zpt::NoMoreElementsException const& e) {
-            _out << "0x0" << std::flush;
-        }
+             << "  #head -> " << std::hex << *_in.head() << std::dec << std::endl
+             << "  #tail -> " << std::hex << *_in.tail() << std::dec << std::endl
+             << std::endl;
+
         auto _count = 0;
-        _out << std::endl << std::endl << "  #items -> [" << std::flush;
+        _out << "  #items -> [" << std::flush;
         try {
             for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
                 _out << (_count % 5 == 0 ? "\n\t" : ", ") << *_it.node() << std::flush;
@@ -174,9 +163,10 @@ class queue {
         catch (zpt::NoMoreElementsException const& e) {
             _count = 0;
         }
-        _out << (_count != 0 ? "  " : "") << "]" << std::flush;
-        _out << std::endl << "   (" << _count << " elements)" << std::flush;
-        _out << std::endl << std::endl << _in.__hazard_domain << std::flush;
+        _out << (_count != 0 ? "  " : "") << "]" << std::endl
+             << "   (" << _count << " elements)" << std::endl
+             << std::endl
+             << _in.__hazard_domain << std::flush;
         return _out;
     }
 
@@ -326,6 +316,12 @@ template<typename T>
 auto
 zpt::lf::queue<T>::get_thread_dangling_count() const -> size_t {
     return this->__hazard_domain.get_thread_dangling_count();
+}
+
+template<typename T>
+auto
+zpt::lf::queue<T>::hazard_ptr() const -> hazard_domain& {
+    return this->__hazard_domain;
 }
 
 template<typename T>

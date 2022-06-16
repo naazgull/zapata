@@ -168,6 +168,7 @@ zpt::events::dispatcher<C, E, V>::loop() -> void {
         }
         catch (zpt::NoMoreElementsException const& e) {
             if (this->__shutdown.load()) {
+                this->__queue.hazard_ptr().clear_thread_context();
                 zlog("Worker is exiting", zpt::trace);
                 return;
             }

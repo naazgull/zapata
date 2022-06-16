@@ -330,7 +330,7 @@ zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<voi
   -> bool {
     auto _fullfilled{ true };
     auto _reqs = _plugin->requirements();
-    zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::locks::spin_lock::shared };
     for (auto [_, _key, _loaded] : _reqs) {
         if (!static_cast<bool>(_loaded)) {
             if (this->__plugins.find(_key) == this->__plugins.end()) {
@@ -348,7 +348,7 @@ zpt::startup::engine::check_requirements(zpt::plugin& _plugin, std::function<voi
 auto
 zpt::startup::engine::load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
     zlog("Loading plugin " << _plugin->name(), zpt::trace);
-    zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::locks::spin_lock::shared };
     auto& _lib = _plugin->source();
     auto _idx{ _lib.find(".") };
     if (_idx != std::string::npos) {
@@ -364,7 +364,7 @@ zpt::startup::engine::load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&
 auto
 zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
   -> zpt::startup::engine& {
-    zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::locks::spin_lock::exclusive };
     for (auto [_, __, _handled] : _config["handles"]) {
         this->__plugins.insert(std::make_pair(static_cast<std::string>(_handled), _plugin));
     }
@@ -376,7 +376,7 @@ zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
 auto
 zpt::startup::engine::unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engine& {
     zlog("Unloading plugin " << _plugin->name(), zpt::trace);
-    zpt::lf::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::lf::spin_lock::shared };
+    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::locks::spin_lock::shared };
     auto& _lib = _plugin->source();
     auto _idx{ _lib.find(".") };
     if (_idx != std::string::npos) {

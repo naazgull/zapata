@@ -7,7 +7,7 @@ libzapata_io_pipe_la_LDFLAGS = -version-info 2:0:0 -shared	\
 -L@PROJECT_DIR@/common/lockfree/build/src/lockfree/.libs	\
 -L@PROJECT_DIR@/io/stream/build/src/streams/.libs
 libzapata_io_pipe_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@	\
--I@PROJECT_DIR@/common/base/include											\
+-I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/common/globals/include	\
 -I@PROJECT_DIR@/common/lockfree/include -I@PROJECT_DIR@/io/stream/include
 
 libzapata_io_pipe_la_SOURCES = \
@@ -21,7 +21,7 @@ zpipe_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs	\
 -L@PROJECT_DIR@/common/lockfree/build/src/lockfree/.libs			\
 -L@PROJECT_DIR@/io/stream/build/src/streams/.libs
 zpipe_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@						\
--I@PROJECT_DIR@/common/base/include											\
+-I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/common/globals/include	\
 -I@PROJECT_DIR@/common/lockfree/include -I@PROJECT_DIR@/io/stream/include
 
 zpipe_SOURCES = \

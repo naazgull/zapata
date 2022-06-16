@@ -10,6 +10,7 @@ libzapata_transport_la_LDFLAGS = -version-info 2:0:0 -shared	\
 -L@PROJECT_DIR@/parsers/uri/build/src/uri/.libs
 libzapata_transport_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ -Wall				\
 @INCLUDE_DIR@ -I@PROJECT_DIR@/common/base/include							\
+-I@PROJECT_DIR@/common/globals/include										\
 -I@PROJECT_DIR@/common/lockfree/include -I@PROJECT_DIR@/io/stream/include	\
 -I@PROJECT_DIR@/parsers/json/include -I@PROJECT_DIR@/parsers/uri/include
 
@@ -29,7 +30,7 @@ ztransport_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs	\
 -L@PROJECT_DIR@/parsers/http/build/src/http/.libs						\
 -L@PROJECT_DIR@/parsers/uri/build/src/uri/.libs
 ztransport_CPPFLAGS = -O3 @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@				\
--I@PROJECT_DIR@/common/base/include											\
+-I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/common/globals/include	\
 -I@PROJECT_DIR@/common/lockfree/include -I@PROJECT_DIR@/io/stream/include	\
 -I@PROJECT_DIR@/io/socket/include -I@PROJECT_DIR@/parsers/json/include		\
 -I@PROJECT_DIR@/parsers/http/include -I@PROJECT_DIR@/parsers/uri/include

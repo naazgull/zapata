@@ -69,9 +69,7 @@ zpt::thread_local_variable<T>::thread_local_variable(Args... _args)
   : __initial_value{ std::forward<Args>(_args)... } {}
 
 template<typename T>
-zpt::thread_local_variable<T>::~thread_local_variable() {
-    this->dispose_local_image();
-}
+zpt::thread_local_variable<T>::~thread_local_variable() {}
 
 template<typename T>
 zpt::thread_local_variable<T>::operator reference() {
@@ -112,12 +110,7 @@ zpt::thread_local_variable<T>::operator->() const -> const_pointer {
 template<typename T>
 auto
 zpt::thread_local_variable<T>::dispose_local_image() -> void {
-    try {
-        zpt::thread_local_table::get<zpt::thread_local_variable<T>, T>(*this);
-        zpt::thread_local_table::dealloc<zpt::thread_local_variable<T>, T>(*this);
-    }
-    catch (...) {
-    }
+    zpt::thread_local_table::dealloc<zpt::thread_local_variable<T>, T>(*this);
 }
 
 template<typename T>

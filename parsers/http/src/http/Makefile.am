@@ -7,8 +7,8 @@ libzapata_lex_http_la_LDFLAGS = -version-info 2:0:0 -shared	\
 -L@PROJECT_DIR@/parsers/json/build/src/json/.libs			\
 -L@PROJECT_DIR@/parsers/uri/build/src/uri/.libs
 libzapata_lex_http_la_CPPFLAGS = -O3 @CPP_STD_VERSION@ @INCLUDE_DIR@		\
--I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/parsers/json/include	\
--I@PROJECT_DIR@/parsers/uri/include
+-I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/common/globals/include	\
+-I@PROJECT_DIR@/parsers/json/include -I@PROJECT_DIR@/parsers/uri/include
 
 libzapata_lex_http_la_SOURCES = \
 ./http.cpp \
@@ -32,7 +32,7 @@ zhttps_LDFLAGS = -L@PROJECT_DIR@/common/base/build/src/base/.libs	\
 -L@PROJECT_DIR@/parsers/json/build/src/json/.libs					\
 -L@PROJECT_DIR@/parsers/uri/build/src/uri/.libs
 zhttps_CPPFLAGS = @CPP_STD_VERSION@ -Wall @INCLUDE_DIR@						\
--I@PROJECT_DIR@/common/base/include											\
+-I@PROJECT_DIR@/common/base/include -I@PROJECT_DIR@/common/globals/include	\
 -I@PROJECT_DIR@/common/lockfree/include -I@PROJECT_DIR@/io/stream/include	\
 -I@PROJECT_DIR@/io/socket/include -I@PROJECT_DIR@/parsers/json/include		\
 -I@PROJECT_DIR@/parsers/uri/include
