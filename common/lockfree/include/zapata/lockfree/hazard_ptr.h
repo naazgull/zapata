@@ -22,17 +22,6 @@
 
 #pragma once
 
-#include <atomic>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <math.h>
-#include <memory>
-#include <unistd.h>
-#include <vector>
-#include <algorithm>
-#include <iomanip>
-
 #include <zapata/base/expect.h>
 #include <zapata/log/log.h>
 #include <zapata/globals/thread_local_variable.h>
@@ -44,6 +33,8 @@ template<typename T>
 class hazard_ptr {
   public:
     using size_type = size_t;
+    using hp_type = zpt::padded_atomic<T*>;
+    using thr_slot_type = zpt::padded_atomic<bool>;
     using pending_list = std::map<T*, T*>;
 
     class guard {
@@ -51,36 +42,31 @@ class hazard_ptr {
         friend class zpt::lf::hazard_ptr<T>;
 
         guard(T* _target, zpt::lf::hazard_ptr<T>& _parent);
-        guard(std::atomic<T*>& _target, zpt::lf::hazard_ptr<T>& _parent);
         virtual ~guard();
 
-        auto is_acquired() -> bool;
         auto retire() -> guard&;
         auto target() const -> T*;
 
       private:
         T* __target{ nullptr };
+        long __target_idx{ -1 };
         zpt::lf::hazard_ptr<T>& __parent;
         bool __retire{ false };
     };
 
-    hazard_ptr();
     hazard_ptr(long _max_threads, long _ptr_per_thread = 2);
     hazard_ptr(const hazard_ptr<T>& _rhs) = delete;
     hazard_ptr(hazard_ptr<T>&& _rhs) = delete;
     virtual ~hazard_ptr();
 
-    auto set_limits(long _max_threads, long _ptr_per_thread = 2) -> hazard_ptr<T>&;
-
     auto operator=(const hazard_ptr<T>& _rhs) -> hazard_ptr<T>& = delete;
     auto operator=(hazard_ptr<T>&& _rhs) -> hazard_ptr<T>& = delete;
 
-    auto operator[](size_t _idx) -> zpt::padded_atomic<T*>&;
-    auto at(size_t _idx) -> zpt::padded_atomic<T*>&;
+    auto operator[](size_t _idx) -> hp_type&;
+    auto at(size_t _idx) -> hp_type&;
 
-    auto acquire(T* _ptr) -> T*;
-    auto acquire(std::atomic<T*>& _ptr) -> T*;
-    auto release(T* _ptr) -> hazard_ptr<T>&;
+    auto acquire(T* _ptr) -> long;
+    auto release(long _idx) -> hazard_ptr<T>&;
     auto retire(T* _ptr) -> hazard_ptr<T>&;
     auto clean() -> hazard_ptr<T>&;
     auto clear() -> hazard_ptr<T>&;
@@ -99,12 +85,12 @@ class hazard_ptr {
     friend class guard;
 
   private:
-    std::unique_ptr<zpt::padded_atomic<T*>[]> __hp { nullptr };
-    std::unique_ptr<zpt::padded_atomic<bool>[]> __next_thr_slot { nullptr };
     long P{ 0 };
     long K{ 0 };
     long N{ 0 };
     long R{ 0 };
+    hp_type* __hp{ nullptr };
+    thr_slot_type* __next_thr_slot{ nullptr };
     zpt::thread_local_variable<pending_list> __thread_retired;
     zpt::thread_local_variable<int> __thread_idx{ -1 };
 
@@ -120,25 +106,13 @@ template<typename T>
 zpt::lf::hazard_ptr<T>::guard::guard(T* _ptr, zpt::lf::hazard_ptr<T>& _parent)
   : __target{ _ptr }
   , __parent{ _parent } {
-    this->__parent.acquire(this->__target);
-}
-
-template<typename T>
-zpt::lf::hazard_ptr<T>::guard::guard(std::atomic<T*>& _atomic, zpt::lf::hazard_ptr<T>& _parent)
-  : __parent{ _parent } {
-    this->__target = this->__parent.acquire(_atomic);
+    this->__target_idx = this->__parent.acquire(this->__target);
 }
 
 template<typename T>
 zpt::lf::hazard_ptr<T>::guard::~guard() {
-    this->__parent.release(this->__target);
+    this->__parent.release(this->__target_idx);
     if (this->__retire) this->__parent.retire(this->__target);
-}
-
-template<typename T>
-auto
-zpt::lf::hazard_ptr<T>::guard::is_acquired() -> bool {
-    return this->__target != nullptr;
 }
 
 template<typename T>
@@ -155,60 +129,45 @@ zpt::lf::hazard_ptr<T>::guard::target() const -> T* {
 }
 
 template<typename T>
-zpt::lf::hazard_ptr<T>::hazard_ptr()
-  : P{ 0 }
-  , K{ 0 }
-  , N{ 0 }
-  , R{ 0 } {}
-
-template<typename T>
-zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread) {
-    this->set_limits(_max_threads, _ptr_per_thread);
+zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
+  : P{ _max_threads }
+  , K{ std::max(2L, _ptr_per_thread) }
+  , N{ P * K }
+  , R{ N * 2 }
+  , __hp{ new hp_type[N] }
+  , __next_thr_slot{ new thr_slot_type[P] } {
+    expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
+    this->init();
 }
 
 template<typename T>
 zpt::lf::hazard_ptr<T>::~hazard_ptr() {
     this->clear();
+    delete[] this->__hp;
+    delete[] this->__next_thr_slot;
 }
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::set_limits(long _max_threads, long _ptr_per_thread) -> hazard_ptr<T>& {
-    expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
-    this->P = _max_threads;
-    this->K = std::max(2L, _ptr_per_thread);
-    this->N = this->P * this->K;
-    this->R = this->N;
-    this->__hp = std::make_unique<zpt::padded_atomic<T*>[]>(this->N);
-    this->__next_thr_slot = std::make_unique<zpt::padded_atomic<bool>[]>(this->P);
-    this->init();
-    return (*this);
-}
-
-template<typename T>
-auto
-zpt::lf::hazard_ptr<T>::operator[](size_t _idx) -> zpt::padded_atomic<T*>& {
+zpt::lf::hazard_ptr<T>::operator[](size_t _idx) -> hp_type& {
     return this->__hp[_idx];
 }
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::at(size_t _idx) -> zpt::padded_atomic<T*>& {
+zpt::lf::hazard_ptr<T>::at(size_t _idx) -> hp_type& {
     return this->__hp[_idx];
 }
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
+zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> long {
     auto _idx = this->get_this_thread_slot();
 
     for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
-        auto& _current = this->__hp[_k];
-        if (_current->load(std::memory_order_acquire) == nullptr) {
-            T* _null{ nullptr };
-            if (_current->compare_exchange_strong(_null, _ptr, std::memory_order_release)) {
-                return _ptr;
-            }
+        T* _null{ nullptr };
+        if (this->__hp[_k]->compare_exchange_strong(_null, _ptr, std::memory_order_release)) {
+            return _k;
         }
     }
 
@@ -217,32 +176,14 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> T* {
       "No more hazard-pointer slots available for this thread, release some before continuing.",
       500,
       0);
-    return nullptr;
+    return -1;
 }
 
 template<typename T>
 auto
-zpt::lf::hazard_ptr<T>::acquire(std::atomic<T*>& _atomic) -> T* {
-    auto _ptr = _atomic.load();
-    this->acquire(_ptr);
-    if (_ptr != _atomic.load(std::memory_order_acquire)) {
-        this->release(_ptr);
-        return nullptr;
-    }
-    return _ptr;
-}
-
-template<typename T>
-auto
-zpt::lf::hazard_ptr<T>::release(T* _ptr) -> zpt::lf::hazard_ptr<T>& {
-    if (_ptr == nullptr) { return (*this); }
-
-    auto _idx = this->get_this_thread_slot();
-    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
-        T* _exchange = _ptr;
-        if (this->__hp[_k]->compare_exchange_strong(_exchange, nullptr)) { return (*this); }
-    }
-    expect(false, "Pointer not found in this thread's list.", 500, 0);
+zpt::lf::hazard_ptr<T>::release(long _idx) -> zpt::lf::hazard_ptr<T>& {
+    if (_idx == -1) { return (*this); }
+    this->__hp[_idx] = nullptr;
     return (*this);
 }
 
@@ -264,8 +205,7 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
     for (long _slot = 0; _slot != this->P; ++_slot) {
         if (this->is_thread_slot_taken(_slot)) {
             for (auto _idx = _slot * this->K; _idx != ((_slot + 1) * this->K); ++_idx) {
-                auto& _item = this->__hp[_idx];
-                T* _ptr = _item->load();
+                T* _ptr = this->__hp[_idx]->load();
                 if (_ptr != nullptr) { _to_process.insert(std::make_pair(_ptr, true)); }
             }
         }
@@ -287,10 +227,9 @@ auto
 zpt::lf::hazard_ptr<T>::clear() -> zpt::lf::hazard_ptr<T>& {
     std::map<T*, bool> _to_process;
     for (auto _idx = 0; _idx != this->N; ++_idx) {
-        auto& _item = this->__hp[_idx];
-        T* _ptr = _item->load();
+        T* _ptr = this->__hp[_idx]->load();
         if (_ptr != nullptr) {
-            _item->store(nullptr);
+            this->__hp[_idx] = nullptr;
             _to_process.insert(std::make_pair(_ptr, true));
         }
     }
@@ -319,7 +258,7 @@ zpt::lf::hazard_ptr<T>::get_thread_held_count() -> size_t {
     auto _idx = this->get_this_thread_slot();
     auto _held{ 0 };
     for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
-        if (this->__hp[_k]->load() != nullptr) { ++_held; }
+        if (this->__hp[_k] != nullptr) { ++_held; }
     }
     return _held;
 }
@@ -330,9 +269,7 @@ zpt::lf::hazard_ptr<T>::release_this_thread_slot() -> zpt::lf::hazard_ptr<T>& {
     auto& _idx = *this->__thread_idx;
     if (_idx == -1) { return (*this); }
 
-    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
-        this->__hp[_k]->store(nullptr);
-    }
+    for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) { this->__hp[_k] = nullptr; }
     this->__next_thr_slot[_idx] = false;
 
     return (*this);
@@ -372,14 +309,14 @@ zpt::lf::hazard_ptr<T>::get_this_thread_slot() -> int {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::is_thread_slot_taken(size_t _slot) -> bool {
-    return this->__next_thr_slot[_slot]->load();
+    return this->__next_thr_slot[_slot];
 }
 
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::init() -> zpt::lf::hazard_ptr<T>& {
-    for (auto _idx = 0; _idx != this->N; ++_idx) { this->__hp[_idx]->store(nullptr); }
-    for (auto _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_slot[_idx]->store(false); }
+    for (auto _idx = 0; _idx != this->N; ++_idx) { this->__hp[_idx] = nullptr; }
+    for (auto _idx = 0; _idx != this->P; ++_idx) { this->__next_thr_slot[_idx] = false; }
     return (*this);
 }
 } // namespace lf

@@ -25,7 +25,16 @@
 #include <atomic>
 #include <cstddef>
 #include <cmath>
+#include <new>
 #include <zapata/base/expect.h>
+
+#ifdef __cpp_lib_hardware_interference_size
+using std::hardware_constructive_interference_size;
+using std::hardware_destructive_interference_size;
+#else
+constexpr std::size_t hardware_constructive_interference_size = 64;
+constexpr std::size_t hardware_destructive_interference_size = 64;
+#endif
 
 namespace zpt {
 template<typename T>
@@ -38,67 +47,41 @@ class padded_atomic {
     virtual ~padded_atomic();
 
     auto operator=(zpt::padded_atomic<T> const& _rhs) -> zpt::padded_atomic<T>& = delete;
-    auto operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>&;
+    auto operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>& = delete;
 
     auto operator==(T const& _rhs) -> bool;
     auto operator!=(T const& _rhs) -> bool;
 
     operator T();
+    auto operator=(T const& _rhs) -> zpt::padded_atomic<T>&;
 
     auto operator->() -> std::atomic<T>*;
     auto operator*() -> std::atomic<T>&;
 
   private:
-    alignas(std::atomic<T>) std::byte* __storage{ nullptr };
-    std::atomic<T>* __underlying{ nullptr };
+    alignas(hardware_destructive_interference_size) std::atomic<T> __underlying;
 };
 } // namespace zpt
 
 template<typename T>
 zpt::padded_atomic<T>::padded_atomic()
-  : __storage{ new std::byte[static_cast<size_t>(
-      zpt::cache_line_size() * std::ceil(static_cast<double>(sizeof(std::atomic<T>)) /
-                                         static_cast<double>(zpt::cache_line_size())))] }
-  , __underlying{ new (this->__storage) std::atomic<T>() } {}
+  : __underlying{} {}
 
 template<typename T>
 zpt::padded_atomic<T>::padded_atomic(T _value)
-  : zpt::padded_atomic<T>() {
-    this->__underlying->store(_value);
-}
+  : __underlying{ _value } {}
 
 template<typename T>
 zpt::padded_atomic<T>::padded_atomic(zpt::padded_atomic<T>&& _rhs)
-  : __storage{ _rhs.__storage }
-  , __underlying{ _rhs.__underlying } {
-    _rhs.__storage = nullptr;
-    _rhs.__underlying = nullptr;
-}
+  : __underlying{ std::move(_rhs.__underlying) } {}
 
 template<typename T>
-zpt::padded_atomic<T>::~padded_atomic() {
-    if (this->__underlying != nullptr) {
-        this->__underlying->~atomic();
-        this->__underlying = nullptr;
-    }
-    delete[] this->__storage;
-    this->__storage = nullptr;
-}
-
-template<typename T>
-auto
-zpt::padded_atomic<T>::operator=(zpt::padded_atomic<T>&& _rhs) -> zpt::padded_atomic<T>& {
-    this->__storage = _rhs.__storage;
-    this->__underlying = _rhs.__underlying;
-    _rhs.__storage = nullptr;
-    _rhs.__underlying = nullptr;
-    return (*this);
-}
+zpt::padded_atomic<T>::~padded_atomic() {}
 
 template<typename T>
 auto
 zpt::padded_atomic<T>::operator==(T const& _rhs) -> bool {
-    return (this->__underlying->load()) == _rhs;
+    return (this->__underlying.load(std::memory_order_relaxed)) == _rhs;
 }
 
 template<typename T>
@@ -109,19 +92,24 @@ zpt::padded_atomic<T>::operator!=(T const& _rhs) -> bool {
 
 template<typename T>
 zpt::padded_atomic<T>::operator T() {
-    return this->__underlying->load();
+    return this->__underlying.load(std::memory_order_relaxed);
+}
+
+template<typename T>
+auto
+zpt::padded_atomic<T>::operator=(T const& _rhs) -> zpt::padded_atomic<T>& {
+    this->__underlying.store(_rhs);
+    return (*this);
 }
 
 template<typename T>
 auto
 zpt::padded_atomic<T>::operator->() -> std::atomic<T>* {
-    expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
-    return this->__underlying;
+    return &this->__underlying;
 }
 
 template<typename T>
 auto
 zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
-    expect(this->__underlying != nullptr, "there is no underlying memory allocated", 500, 0);
-    return *this->__underlying;
+    return this->__underlying;
 }

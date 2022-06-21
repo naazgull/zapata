@@ -22,16 +22,6 @@
 
 #pragma once
 
-#include <atomic>
-#include <iostream>
-#include <iterator>
-#include <math.h>
-#include <memory>
-#include <sstream>
-#include <thread>
-#include <unistd.h>
-#include <type_traits>
-
 #include <zapata/base/sentry.h>
 #include <zapata/atomics/padded_atomic.h>
 #include <zapata/lockfree/hazard_ptr.h>
@@ -212,25 +202,13 @@ zpt::lf::queue<T>::back() -> T {
 template<typename T>
 auto
 zpt::lf::queue<T>::head() -> zpt::lf::forward_node<T>* {
-    typename zpt::lf::queue<T>::hazard_domain::guard _front_sentry{ *this->__head,
-                                                                    this->__hazard_domain };
-    if (_front_sentry.is_acquired()) {
-        auto _front = _front_sentry.target();
-        if (_front != nullptr) { return _front; }
-    }
-    return nullptr;
+    return this->__head->load();
 }
 
 template<typename T>
 auto
 zpt::lf::queue<T>::tail() -> zpt::lf::forward_node<T>* {
-    typename zpt::lf::queue<T>::hazard_domain::guard _back_sentry{ *this->__tail,
-                                                                   this->__hazard_domain };
-    if (_back_sentry.is_acquired()) {
-        auto _back = _back_sentry.target();
-        if (_back != nullptr) { return _back; }
-    }
-    return nullptr;
+    return this->__tail->load();
 }
 
 template<typename T>
@@ -242,17 +220,14 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     do {
         typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail,
                                                                        this->__hazard_domain };
-        if (_tail_sentry.is_acquired()) {
-            auto _tail = _tail_sentry.target();
-            zpt::lf::forward_node<T>* _null{ nullptr };
-            if (_tail->__next->compare_exchange_strong(_null, _new)) {
-                _tail->__value = _value;
-                _tail->__is_null->store(false);
-                this->__tail->store(_new, std::memory_order_release);
-                return (*this);
-            }
+        auto _tail = _tail_sentry.target();
+        zpt::lf::forward_node<T>* _null{ nullptr };
+        if (_tail->__next->compare_exchange_strong(_null, _new)) {
+            _tail->__value = _value;
+            _tail->__is_null = false;
+            this->__tail->store(_new, std::memory_order_release);
+            return (*this);
         }
-        std::this_thread::yield();
     } while (true);
 
     return (*this); // never reached
@@ -264,26 +239,17 @@ zpt::lf::queue<T>::pop() -> T {
     do {
         typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head,
                                                                        this->__hazard_domain };
-        if (_head_sentry.is_acquired()) {
-            auto _head = _head_sentry.target();
-            auto _next = _head->__next->load(std::memory_order_acquire);
-            if (_next == nullptr) { break; }
-            try {
-                if (this->__head->compare_exchange_strong(
-                      _head, _next, std::memory_order_release)) {
-                    while (_head->__is_null->load()) { std::this_thread::yield(); }
-                    _head->__is_null->store(true);
-                    T _value = _head->__value;
-                    _head_sentry.retire();
-                    return _value;
-                }
-            }
-            catch (zpt::failed_expectation const& _e) {
-                std::cout << std::hex << _head << std::endl << std::flush;
-                exit(0);
-            }
+        auto _head = _head_sentry.target();
+        auto _next = _head->__next->load(std::memory_order_acquire);
+        if (_next == nullptr) { break; }
+
+        if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
+            while (_head->__is_null)
+                ;
+            _head->__is_null = true;
+            _head_sentry.retire();
+            return _head->__value;
         }
-        std::this_thread::yield();
     } while (true);
     throw NoMoreElementsException("no element to pop");
 }

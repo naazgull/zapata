@@ -566,15 +566,4 @@ using tm_ptr = std::shared_ptr<std::tm>;
 auto
 get_time(time_t _t) -> zpt::tm_ptr;
 
-inline auto
-non_static_cache_line_size() -> size_t {
-    return sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-}
-
-inline auto
-cache_line_size() -> size_t {
-    static size_t _cache_line_size = zpt::non_static_cache_line_size();
-    return _cache_line_size;
-}
-
 } // namespace zpt
