@@ -31,12 +31,11 @@
 #include <zapata/events.h>
 
 class event_engine;
-using event_engine_domain = zpt::events::dispatcher<event_engine, int, zpt::json>::hazard_domain;
 
 class event_engine : public zpt::events::dispatcher<event_engine, int, zpt::json> {
   public:
-    event_engine(event_engine_domain& _domain)
-      : zpt::events::dispatcher<event_engine, int, zpt::json>{ _domain } {}
+    event_engine(long _max_threads)
+      : zpt::events::dispatcher<event_engine, int, zpt::json>{ _max_threads } {}
     virtual ~event_engine() = default;
 
     auto trapped(int _event, zpt::json _content) -> void {
@@ -77,8 +76,7 @@ constexpr int SLEEP_FOR{ 1 };
 auto
 main(int _argc, char* _argv[]) -> int {
     try {
-        event_engine_domain _eed{ 4, 4 };
-        event_engine _ee{ _eed };
+        event_engine _ee{ 4 };
         _ee.listen(0, [](zpt::json _content) -> void {
             static thread_local long _counter{ 0 };
             ++_counter;

@@ -103,10 +103,7 @@ namespace startup {
 enum steps { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, RUN = 3, UNLOAD = 4 };
 
 class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool> {
-  public:
-    using hazard_domain =
-      zpt::events::dispatcher<zpt::startup::engine, zpt::json, bool>::hazard_domain;
-    
+  public:    
     engine();
     engine(zpt::json _args);
     virtual ~engine();
@@ -140,7 +137,6 @@ class engine : public zpt::events::dispatcher<zpt::startup::engine, zpt::json, b
     }
 
   private:
-    hazard_domain __hazard_domain{ 2, 2 };
     zpt::json& __configuration;
     std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
     std::map<std::string, zpt::plugin> __plugins;

@@ -138,12 +138,10 @@ class step
   public:
     friend class zpt::pipeline::event<T>;
 
-    using hazard_domain = typename zpt::events::
-      dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>>::hazard_domain;
     using event_callback = typename zpt::pipeline::engine<T>::event_callback;
     using error_callback = typename zpt::pipeline::engine<T>::error_callback;
 
-    step(zpt::pipeline::step<T>::hazard_domain& _hazard_domain, long _max_pop_wait_micro = -1);
+    step(long _max_threads, long _max_pop_wait_micro = -1);
     step(zpt::pipeline::step<T> const&) = delete;
     step(zpt::pipeline::step<T>&&) = delete;
     virtual ~step() override = default;
@@ -212,7 +210,6 @@ class engine {
     auto set_error_callback(error_callback _error_callback) -> zpt::pipeline::engine<T>&;
 
   private:
-    typename zpt::pipeline::step<T>::hazard_domain __hazard_domain;
     std::vector<std::shared_ptr<zpt::pipeline::step<T>>> __steps;
     size_t __pipeline_size{ 1 };
     long __threads_per_step{ 1 };
@@ -392,10 +389,9 @@ zpt::pipeline::event<T>::send_to_next_step() -> void {
 }
 
 template<typename T>
-zpt::pipeline::step<T>::step(zpt::pipeline::step<T>::hazard_domain& _hazard_domain,
-                             long _max_pop_wait_micro)
+zpt::pipeline::step<T>::step(long _max_threads, long _max_pop_wait_micro)
   : zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>>{
-      _hazard_domain,
+      _max_threads,
       _max_pop_wait_micro
   } {}
 
@@ -446,20 +442,18 @@ zpt::pipeline::step<T>::set_error_callback(error_callback _error_callback)
 
 template<typename T>
 zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _step_queue_configuration)
-  : __hazard_domain{ std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]),
-                              1L) *
-                         (signed)_pipeline_size +
-                       std::max(
-                         static_cast<long>(_step_queue_configuration["max_producer_threads"]),
-                         1L) +
-                       static_cast<long>(_step_queue_configuration["max_consumer_threads"]),
-                     4 }
-  , __pipeline_size{ _pipeline_size }
+  : __pipeline_size{ _pipeline_size }
   , __threads_per_step{ std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]),
                                  1L) } {
+    long _max_threads =
+      std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]), 1L) *
+        (signed)_pipeline_size +
+      std::max(static_cast<long>(_step_queue_configuration["max_producer_threads"]), 1L) +
+      static_cast<long>(_step_queue_configuration["max_consumer_threads"]);
+
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__steps.push_back(std::make_shared<zpt::pipeline::step<T>>(
-          this->__hazard_domain,
+          _max_threads,
           std::max(static_cast<long>(_step_queue_configuration["max_queue_spin_sleep"]), 50000L)));
     }
 }

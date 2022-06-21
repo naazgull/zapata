@@ -46,8 +46,6 @@ template<typename C, typename S, typename D, typename I>
 class machine
   : public zpt::events::dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>> {
   public:
-    using hazard_domain = typename zpt::events::
-      dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>::hazard_domain;
     using callback = std::function<S(S&, D&, I const&)>;
     using callback_list = std::vector<callback>;
     using state_list = std::map<S, bool>;
@@ -60,7 +58,7 @@ class machine
                                               int _error,
                                               int status)>;
 
-    machine(long _processor_threads, hazard_domain& _hazard_domain, zpt::json _config);
+    machine(long _processor_threads, long _max_threads, zpt::json _config);
     virtual ~machine();
 
     auto add_allowed_transitions(zpt::json _states) -> machine&;
@@ -109,10 +107,10 @@ class machine
 
 template<typename C, typename S, typename D, typename I>
 zpt::fsm::machine<C, S, D, I>::machine(long _processor_threads,
-                                       hazard_domain& _hazard_domain,
+                                       long _max_threads,
                                        zpt::json _config)
   : zpt::events::
-      dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>{ _hazard_domain }
+      dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>{ _max_threads }
   , __processor_threads{ _processor_threads } {
     this->set_states(_config);
     if (_config["transitions"]->ok()) { this->add_allowed_transitions(_config["transitions"]); }

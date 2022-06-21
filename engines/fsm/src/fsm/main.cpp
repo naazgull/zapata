@@ -6,15 +6,12 @@ class my_machine : public zpt::fsm::machine<my_machine, int, std::string, size_t
     my_machine()
       : zpt::fsm::machine<my_machine, int, std::string, size_t>{
           1,
-          __hazard_domain,
+          2,
           { "begin", 0, "end", 3, "undefined", -1, "pause", -2 }
       } {}
 
     auto verify_allowed_transition(int _from, int _to) -> void {}
     auto verify_transition(int _current) -> void {}
-
-  private:
-    zpt::fsm::machine<my_machine, int, std::string, size_t>::hazard_domain __hazard_domain{ 2, 4 };
 };
 
 auto

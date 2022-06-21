@@ -124,8 +124,7 @@ zpt::stream::stream(std::unique_ptr<std::iostream> _underlying)
 zpt::stream::polling::polling(long _max_stream_readers, long _poll_wait_timeout)
   : __epoll_fd{ epoll_create(1) }
   , __poll_wait_timeout{ _poll_wait_timeout }
-  , __hazard_domain{ _max_stream_readers, 8 }
-  , __alive_streams{ __hazard_domain } {}
+  , __alive_streams{ _max_stream_readers } {}
 
 zpt::stream::polling::~polling() {
     if (!this->__shutdown.load()) { zlog("stream polling has not been shutdown", zpt::error); }

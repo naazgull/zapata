@@ -30,11 +30,9 @@ zpt::AUTOMATON_ENGINE() -> ssize_t& {
 
 zpt::automaton::engine::engine(long _processor_threads, zpt::json _configuration)
   : zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::json>{ _processor_threads,
-                                                                    __hazard_domain,
+                                                                    _processor_threads + 2,
                                                                     _configuration }
   , __configuration{ _configuration } {
-    this->__hazard_domain.set_limits(_processor_threads + 2, 4);
-
     zpt::json _extra{ "begin", zpt::automaton::engine::receive(),
                       "end",   zpt::automaton::engine::send(),
                       "pause", zpt::automaton::engine::pause() };

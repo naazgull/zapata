@@ -43,9 +43,7 @@ class factory {
 template<typename C, typename E, typename V>
 class dispatcher : public factory {
   public:
-    using hazard_domain = typename zpt::lf::queue<std::tuple<E, V>>::hazard_domain;
-
-    dispatcher(hazard_domain& _hazard_domain, long _max_pop_wait_micro = 50000L);
+    dispatcher(long _max_threads, long _max_pop_wait_micro = 50000L);
     virtual ~dispatcher();
 
     auto add_consumer() -> C&;
@@ -70,9 +68,8 @@ class dispatcher : public factory {
 } // namespace zpt
 
 template<typename C, typename E, typename V>
-zpt::events::dispatcher<C, E, V>::dispatcher(hazard_domain& _hazard_domain,
-                                             long _max_pop_wait_micro)
-  : __queue{ _hazard_domain }
+zpt::events::dispatcher<C, E, V>::dispatcher(long _max_threads, long _max_pop_wait_micro)
+  : __queue{ _max_threads }
   , __max_pop_wait{ _max_pop_wait_micro } {}
 
 template<typename C, typename E, typename V>
@@ -168,7 +165,7 @@ zpt::events::dispatcher<C, E, V>::loop() -> void {
         }
         catch (zpt::NoMoreElementsException const& e) {
             if (this->__shutdown.load()) {
-                this->__queue.hazard_ptr().clear_thread_context();
+                this->__queue.clear_thread_context();
                 zlog("Worker is exiting", zpt::trace);
                 return;
             }

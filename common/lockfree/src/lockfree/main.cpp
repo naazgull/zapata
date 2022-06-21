@@ -55,9 +55,8 @@ zpt::lf::list<std::shared_ptr<std::string>>::hazard_domain _l_hazard_domain{ MAX
 zpt::lf::queue<std::shared_ptr<std::string>> _queue{ _q_hazard_domain };
 zpt::lf::list<std::shared_ptr<std::string>> _list{ _l_hazard_domain };
 #else
-zpt::lf::queue<int>::hazard_domain _q_hazard_domain{ MAX_THREADS_QUEUE, PER_THREAD };
 zpt::lf::list<int>::hazard_domain _l_hazard_domain{ MAX_THREADS_LIST, PER_THREAD };
-zpt::lf::queue<int> _queue{ _q_hazard_domain };
+zpt::lf::queue<int> _queue{ MAX_THREADS_QUEUE };
 zpt::lf::list<int> _list{ _l_hazard_domain };
 #endif
 
@@ -117,7 +116,7 @@ test_queue() -> int {
                       std::cout << "ERROR: " << _e.what() << std::endl << std::flush;
                   }
               }
-              _q_hazard_domain.clear_thread_context();
+              _queue.clear_thread_context();
           },
           _i);
     }
@@ -215,9 +214,8 @@ test_list() -> int {
 
 auto
 test_hazard_ptr() -> void {
-    zpt::lf::queue<long>::hazard_domain _domain{ 2, 2 };
-    zpt::lf::queue<long> _q1{ _domain };
-    zpt::lf::queue<long> _q2{ _domain };
+    zpt::lf::queue<long> _q1{ 2 };
+    zpt::lf::queue<long> _q2{ 2 };
 
     _q1.push(1);
     _q1.pop();

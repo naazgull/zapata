@@ -118,7 +118,7 @@ class queue {
         zpt::lf::forward_node<T>* __current{ nullptr };
     };
 
-    queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain);
+    queue(long _max_threads);
     queue(zpt::lf::queue<T> const& _rhs) = delete;
     queue(zpt::lf::queue<T>&& _rhs) = delete;
     virtual ~queue();
@@ -139,9 +139,9 @@ class queue {
     auto end() -> zpt::lf::queue<T>::iterator;
 
     auto clear() -> zpt::lf::queue<T>&;
-    auto get_thread_dangling_count() const -> size_t;
 
-    auto hazard_ptr() const -> hazard_domain&;
+    auto clear_thread_context() -> zpt::lf::queue<T>&;
+    auto get_thread_dangling_count() const -> size_t;
 
     std::string to_string() const __attribute__((noinline));
     operator std::string();
@@ -173,7 +173,7 @@ class queue {
   private:
     zpt::lf::forward_node<T>::ptr __head{ nullptr };
     zpt::lf::forward_node<T>::ptr __tail{ nullptr };
-    zpt::lf::queue<T>::hazard_domain& __hazard_domain;
+    zpt::lf::queue<T>::hazard_domain __hazard_domain;
 };
 
 template<typename T>
@@ -181,8 +181,8 @@ zpt::lf::forward_node<T>::forward_node(T _value)
   : __value{ _value } {}
 
 template<typename T>
-zpt::lf::queue<T>::queue(zpt::lf::queue<T>::hazard_domain& _hazard_domain)
-  : __hazard_domain{ _hazard_domain } {
+zpt::lf::queue<T>::queue(long _max_threads)
+  : __hazard_domain{ _max_threads, 2 } {
     auto _initial = new zpt::lf::forward_node<T>();
     this->__head->store(_initial);
     this->__tail->store(_initial);
@@ -320,8 +320,9 @@ zpt::lf::queue<T>::get_thread_dangling_count() const -> size_t {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::hazard_ptr() const -> hazard_domain& {
-    return this->__hazard_domain;
+zpt::lf::queue<T>::clear_thread_context() -> queue<T>& {
+    this->__hazard_domain.clear_thread_context();
+    return (*this);
 }
 
 template<typename T>

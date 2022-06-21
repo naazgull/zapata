@@ -33,9 +33,6 @@ AUTOMATON_ENGINE() -> ssize_t&;
 namespace automaton {
 class engine : public zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::json> {
   public:
-    using hazard_domain =
-      zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::json>::hazard_domain;
-
     engine(long _processor_threads, zpt::json _configuration);
     virtual ~engine() = default;
 
@@ -60,7 +57,6 @@ class engine : public zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::j
 
   private:
     zpt::json __configuration;
-    hazard_domain __hazard_domain;
     bool __initialized{ false };
 
     static auto receive() -> zpt::json;

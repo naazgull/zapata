@@ -25,7 +25,6 @@ export projects=(
        network/local
        network/tcp
        network/pipe
-       engines/jobs
        engines/pipeline
        engines/rest
        engines/dom
