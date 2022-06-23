@@ -129,6 +129,7 @@ class queue {
     auto end() -> zpt::lf::queue<T>::iterator;
 
     auto clear() -> zpt::lf::queue<T>&;
+    auto size() -> size_t;
 
     auto clear_thread_context() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
@@ -164,7 +165,10 @@ class queue {
     zpt::lf::forward_node<T>::ptr __head{ nullptr };
     zpt::lf::forward_node<T>::ptr __tail{ nullptr };
     zpt::lf::queue<T>::hazard_domain __hazard_domain;
+    zpt::padded_atomic<std::uint64_t> __size;
 };
+} // namespace lf
+} // namespace zpt
 
 template<typename T>
 zpt::lf::forward_node<T>::forward_node(T _value)
@@ -225,6 +229,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
         if (_tail->__next->compare_exchange_strong(_null, _new)) {
             _tail->__value = _value;
             _tail->__is_null = false;
+            ++(*this->__size);
             this->__tail->store(_new, std::memory_order_release);
             return (*this);
         }
@@ -244,11 +249,12 @@ zpt::lf::queue<T>::pop() -> T {
         if (_next == nullptr) { break; }
 
         if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
+            --(*this->__size);
             while (_head->__is_null)
                 ;
             _head->__is_null = true;
             _head_sentry.retire();
-            return _head->__value;
+            return std::move(_head->__value);
         }
     } while (true);
     throw NoMoreElementsException("no element to pop");
@@ -276,6 +282,12 @@ zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
     }
     this->__hazard_domain.clear();
     return (*this);
+}
+
+template<typename T>
+auto
+zpt::lf::queue<T>::size() -> size_t {
+    return this->__size->load(std::memory_order_relaxed);
 }
 
 template<typename T>
@@ -384,6 +396,3 @@ auto
 zpt::lf::queue<T>::iterator::node() const -> zpt::lf::forward_node<T>* {
     return this->__current;
 }
-
-} // namespace lf
-} // namespace zpt

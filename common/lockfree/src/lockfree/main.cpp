@@ -41,7 +41,7 @@ std::atomic<int> _pushed{ 0 };
 std::atomic<int> _poped{ 0 };
 
 #ifdef QUEUE_USE_STRING
-using item_type = std::share_ptr<std::string>;
+using item_type = std::shared_ptr<std::string>;
 #else
 using item_type = int;
 #endif

@@ -13,6 +13,7 @@ DerivePointerAlignment: false
 PointerAlignment: Left
 BreakBeforeBraces: Custom
 IncludeBlocks: Regroup
+FixNamespaceComments: true
 BraceWrapping:
     AfterClass: false
     AfterControlStatement: false
