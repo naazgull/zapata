@@ -127,14 +127,22 @@ test_hazard_ptr() -> void {
     zpt::lf::queue<long> _q2{ 2 };
 
     _q1.push(1);
-    _q1.push(1);
-    _q1.push(1);
-    _q1.push(1);
-    _q1.push(1);
-    _q1.push(1);
+    _q1.push(2);
+    _q1.push(3);
+    _q1.push(4);
+    _q1.push(5);
+    _q1.push(6);
     _q1.pop();
-    _q1.push(1);
+    _q1.push(7);
     _q1.pop();
+    _q1.push(8);
+    _q1.push(9);
+    _q1.push(10);
+    _q1.push(11);
+    _q1.push(12);
+    _q1.push(13);
+
+    std::cout << _q1 << std::endl << "front: " << _q1.front() << std::endl << std::flush;
 }
 
 auto

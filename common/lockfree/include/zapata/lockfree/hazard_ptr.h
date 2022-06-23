@@ -76,9 +76,9 @@ class hazard_ptr {
     auto get_thread_held_count() -> size_t;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::hazard_ptr<T>& _in) -> std::ostream& {
-        _out << "zpt::lf::hazard_ptr(" << std::hex << &_in << ") for `" << typeid(T).name() << "` "
-             << std::dec << " -> P = " << _in.P << " | K = " << _in.K << " | N = " << _in.N
-             << " | R = " << _in.R << std::dec << std::flush;
+        _out << "hazard_ptr(" << std::hex << &_in << std::dec << ") -> P = " << _in.P
+             << " | K = " << _in.K << " | N = " << _in.N << " | R = " << _in.R << std::dec
+             << std::flush;
         return _out;
     }
 

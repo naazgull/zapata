@@ -56,7 +56,9 @@ class padded_atomic {
     auto operator=(T const& _rhs) -> zpt::padded_atomic<T>&;
 
     auto operator->() -> std::atomic<T>*;
+    auto operator->() const -> std::atomic<T> const*;
     auto operator*() -> std::atomic<T>&;
+    auto operator*() const -> std::atomic<T> const&;
 
   private:
     alignas(hardware_destructive_interference_size) std::atomic<T> __underlying;
@@ -110,6 +112,18 @@ zpt::padded_atomic<T>::operator->() -> std::atomic<T>* {
 
 template<typename T>
 auto
+zpt::padded_atomic<T>::operator->() const -> std::atomic<T> const* {
+    return &this->__underlying;
+}
+
+template<typename T>
+auto
 zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
+    return this->__underlying;
+}
+
+template<typename T>
+auto
+zpt::padded_atomic<T>::operator*() const -> std::atomic<T> const& {
     return this->__underlying;
 }

@@ -116,20 +116,20 @@ class queue {
     auto operator=(zpt::lf::queue<T> const& _rhs) -> zpt::lf::queue<T>& = delete;
     auto operator=(zpt::lf::queue<T>&& _rhs) -> zpt::lf::queue<T>& = delete;
 
-    auto front() -> T;
-    auto back() -> T;
+    auto front() const -> T;
+    auto back() const -> T;
 
-    auto head() -> zpt::lf::forward_node<T>*;
-    auto tail() -> zpt::lf::forward_node<T>*;
+    auto head() const -> zpt::lf::forward_node<T>*;
+    auto tail() const -> zpt::lf::forward_node<T>*;
 
     auto push(T value) -> zpt::lf::queue<T>&;
     auto pop() -> T;
 
-    auto begin() -> zpt::lf::queue<T>::iterator;
-    auto end() -> zpt::lf::queue<T>::iterator;
+    auto begin() const -> zpt::lf::queue<T>::iterator;
+    auto end() const -> zpt::lf::queue<T>::iterator;
 
     auto clear() -> zpt::lf::queue<T>&;
-    auto size() -> size_t;
+    auto size() const -> size_t;
 
     auto clear_thread_context() -> zpt::lf::queue<T>&;
     auto get_thread_dangling_count() const -> size_t;
@@ -138,26 +138,25 @@ class queue {
     operator std::string();
 
     friend auto operator<<(std::ostream& _out, zpt::lf::queue<T>& _in) -> std::ostream& {
-        _out << "* zpt::lf::queue(" << std::hex << &_in << "):" << std::dec << std::endl
-             << "  #head -> " << std::hex << *_in.head() << std::dec << std::endl
-             << "  #tail -> " << std::hex << *_in.tail() << std::dec << std::endl
+        _out << "queue(" << std::hex << &_in << "):" << std::dec << std::endl
+             << "  #head -> " << std::hex << _in.head() << std::dec << " is_null(" << std::boolalpha
+             << _in.head()->__is_null->load(std::memory_order_relaxed) << ")" << std::endl
+             << "  #tail -> " << std::hex << _in.tail() << std::dec << " is_null(" << std::boolalpha
+             << _in.tail()->__is_null->load(std::memory_order_relaxed) << ")" << std::endl
              << std::endl;
 
-        auto _count = 0;
-        _out << "  #items -> [" << std::flush;
+        _out << "  #items ->\n     [ " << std::flush;
         try {
-            for (auto _it = _in.begin(); _it != _in.end(); ++_it) {
-                _out << (_count % 5 == 0 ? "\n\t" : ", ") << *_it.node() << std::flush;
-                _count++;
+            size_t _count{ 0 };
+            for (auto _it = _in.begin(); _it != _in.end(); ++_it, ++_count) {
+                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", ")) << *_it.node()
+                     << std::flush;
             }
         }
         catch (zpt::NoMoreElementsException const& e) {
-            _count = 0;
         }
-        _out << (_count != 0 ? "  " : "") << "]" << std::endl
-             << "   (" << _count << " elements)" << std::endl
-             << std::endl
-             << _in.__hazard_domain << std::flush;
+        _out << (_in.size() != 0 ? " " : "") << "]" << std::endl
+             << "   (" << _in.size() << " elements) " << _in.__hazard_domain << std::flush;
         return _out;
     }
 
@@ -189,7 +188,7 @@ zpt::lf::queue<T>::~queue() {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::front() -> T {
+zpt::lf::queue<T>::front() const -> T {
     auto _front = this->head();
     if (_front != nullptr && _front->__next->load() != nullptr) { return _front->__value; }
     throw zpt::NoMoreElementsException("there is no element in the front");
@@ -197,22 +196,24 @@ zpt::lf::queue<T>::front() -> T {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::back() -> T {
+zpt::lf::queue<T>::back() const -> T {
     auto _tail = this->tail();
-    if (_tail != nullptr && _tail->__next->load() != nullptr) { return _tail->__value; }
+    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) {
+        return _tail->__value;
+    }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::head() -> zpt::lf::forward_node<T>* {
-    return this->__head->load();
+zpt::lf::queue<T>::head() const -> zpt::lf::forward_node<T>* {
+    return this->__head->load(std::memory_order_relaxed);
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::tail() -> zpt::lf::forward_node<T>* {
-    return this->__tail->load();
+zpt::lf::queue<T>::tail() const -> zpt::lf::forward_node<T>* {
+    return this->__tail->load(std::memory_order_relaxed);
 }
 
 template<typename T>
@@ -262,13 +263,13 @@ zpt::lf::queue<T>::pop() -> T {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::begin() -> zpt::lf::queue<T>::iterator {
+zpt::lf::queue<T>::begin() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{ (*this->__head).load() };
 }
 
 template<typename T>
 auto
-zpt::lf::queue<T>::end() -> zpt::lf::queue<T>::iterator {
+zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{ (*this->__tail).load() };
 }
 
@@ -286,7 +287,7 @@ zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
 
 template<typename T>
 auto
-zpt::lf::queue<T>::size() -> size_t {
+zpt::lf::queue<T>::size() const -> size_t {
     return this->__size->load(std::memory_order_relaxed);
 }
 
