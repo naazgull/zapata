@@ -128,7 +128,6 @@ class queue {
     auto begin() const -> zpt::lf::queue<T>::iterator;
     auto end() const -> zpt::lf::queue<T>::iterator;
 
-    auto clear() -> zpt::lf::queue<T>&;
     auto size() const -> size_t;
 
     auto clear_thread_context() -> zpt::lf::queue<T>&;
@@ -183,6 +182,11 @@ zpt::lf::queue<T>::queue(long _max_threads)
 
 template<typename T>
 zpt::lf::queue<T>::~queue() {
+    for (auto _it = this->__head->load(); _it != this->__tail->load();) {
+        auto _current = _it;
+        _it = _it->__next;
+        delete _current;
+    }
     delete this->__tail->load();
 }
 
@@ -271,18 +275,6 @@ template<typename T>
 auto
 zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{ (*this->__tail).load() };
-}
-
-template<typename T>
-auto
-zpt::lf::queue<T>::clear() -> zpt::lf::queue<T>& {
-    try {
-        while (true) { this->pop(); }
-    }
-    catch (zpt::NoMoreElementsException const& e) {
-    }
-    this->__hazard_domain.clear();
-    return (*this);
 }
 
 template<typename T>

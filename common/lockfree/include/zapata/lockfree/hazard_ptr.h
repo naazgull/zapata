@@ -69,7 +69,6 @@ class hazard_ptr {
     auto release(long _idx) -> hazard_ptr<T>&;
     auto retire(T* _ptr) -> hazard_ptr<T>&;
     auto clean() -> hazard_ptr<T>&;
-    auto clear() -> hazard_ptr<T>&;
     auto clear_thread_context() -> hazard_ptr<T>&;
 
     auto get_thread_dangling_count() -> size_t;
@@ -142,7 +141,6 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
 
 template<typename T>
 zpt::lf::hazard_ptr<T>::~hazard_ptr() {
-    this->clear();
     delete[] this->__hp;
     delete[] this->__next_thr_slot;
 }
@@ -219,23 +217,6 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
         else { ++_it; }
     }
 
-    return (*this);
-}
-
-template<typename T>
-auto
-zpt::lf::hazard_ptr<T>::clear() -> zpt::lf::hazard_ptr<T>& {
-    std::map<T*, bool> _to_process;
-    for (auto _idx = 0; _idx != this->N; ++_idx) {
-        T* _ptr = this->__hp[_idx]->load();
-        if (_ptr != nullptr) {
-            this->__hp[_idx] = nullptr;
-            _to_process.insert(std::make_pair(_ptr, true));
-        }
-    }
-    std::for_each(_to_process.begin(),
-                  _to_process.end(),
-                  [&](const std::pair<T*, bool>& _item) -> void { delete _item.first; });
     return (*this);
 }
 

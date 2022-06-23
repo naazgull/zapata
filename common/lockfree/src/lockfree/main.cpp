@@ -28,10 +28,8 @@
 #include <zapata/text/manip.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-constexpr int N_ELEMENTS_QUEUE = 1;
-constexpr int MAX_THREADS_QUEUE = 2;
-
-constexpr int PER_THREAD = 2;
+constexpr int N_ELEMENTS_QUEUE = 100000;
+constexpr int MAX_THREADS_QUEUE = 12;
 
 // #define QUEUE_USE_STRING
 // #define INTERCEPT_SIGINT
@@ -109,15 +107,15 @@ test_queue() -> int {
     }
 
     for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i) _threads[_i].join();
-    // auto _t2 = std::chrono::high_resolution_clock::now();
-    // auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+    auto _t2 = std::chrono::high_resolution_clock::now();
+    auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
 
-    // std::cout << _queue << std::endl << std::endl << std::flush;
-    // std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
-    // std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
-    // std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
+    std::cout << "> " << _queue << std::endl << std::endl << std::flush;
+    std::cout << "  #threads -> " << MAX_THREADS_QUEUE << std::endl << std::flush;
+    std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
+    std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
-    // std::cout << std::endl << "total time: " << _duration << "ms" << std::endl << std::flush;
+    std::cout << std::endl << "total time: " << _duration << "ms" << std::endl << std::flush;
     return 0;
 }
 
@@ -142,25 +140,29 @@ test_hazard_ptr() -> void {
     _q1.push(12);
     _q1.push(13);
 
-    std::cout << _q1 << std::endl << "front: " << _q1.front() << std::endl << std::flush;
+    std::cout << std::endl
+              << "> " << _q1 << std::endl
+              << std::endl
+              << "  #front: " << _q1.front() << std::endl
+              << std::flush;
 }
 
 auto
 test_aligned() -> void {
     zpt::padded_atomic<bool> _atomic{ false };
     _atomic->store(true);
-    std::cout << alignof(std::atomic<bool>) << " " << alignof(zpt::padded_atomic<bool>)
-              << " with value of " << std::boolalpha << _atomic->load(std::memory_order_acquire)
-              << std::endl
+    std::cout << std::endl
+              << "> padded_atomic -> alignof(std::atomic<bool>) -> "
+              << alignof(zpt::padded_atomic<bool>) << " with value of " << std::boolalpha
+              << _atomic->load(std::memory_order_acquire) << std::endl
               << std::flush;
     (*_atomic) = false;
-    std::cout << _atomic->load(std::memory_order_acquire) << std::endl << std::flush;
 }
 
 auto
 main(int _argc, char* _argv[]) -> int {
     test_queue();
-    // test_hazard_ptr();
-    // test_aligned();
+    test_hazard_ptr();
+    test_aligned();
     return 0;
 }
