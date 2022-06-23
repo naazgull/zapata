@@ -28,8 +28,8 @@
 #include <zapata/text/manip.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-constexpr int N_ELEMENTS_QUEUE = 10000000;
-constexpr int MAX_THREADS_QUEUE = 12;
+constexpr int N_ELEMENTS_QUEUE = 1;
+constexpr int MAX_THREADS_QUEUE = 2;
 
 constexpr int PER_THREAD = 2;
 
@@ -109,15 +109,15 @@ test_queue() -> int {
     }
 
     for (int _i = 0; _i != MAX_THREADS_QUEUE; ++_i) _threads[_i].join();
-    auto _t2 = std::chrono::high_resolution_clock::now();
-    auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
+    // auto _t2 = std::chrono::high_resolution_clock::now();
+    // auto _duration = std::chrono::duration_cast<std::chrono::milliseconds>(_t2 - _t1).count();
 
-    std::cout << _queue << std::endl << std::endl << std::flush;
-    std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
-    std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
-    std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
+    // std::cout << _queue << std::endl << std::endl << std::flush;
+    // std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
+    // std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
+    // std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 
-    std::cout << std::endl << "total time: " << _duration << "ms" << std::endl << std::flush;
+    // std::cout << std::endl << "total time: " << _duration << "ms" << std::endl << std::flush;
     return 0;
 }
 
@@ -160,8 +160,7 @@ test_aligned() -> void {
 auto
 main(int _argc, char* _argv[]) -> int {
     test_queue();
-    test_hazard_ptr();
-    test_aligned();
-    std::cout << sizeof(std::uintptr_t) << std::endl << std::flush;
+    // test_hazard_ptr();
+    // test_aligned();
     return 0;
 }
