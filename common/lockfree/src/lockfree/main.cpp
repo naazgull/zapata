@@ -28,7 +28,7 @@
 #include <zapata/text/manip.h>
 #include <zapata/exceptions/NoMoreElementsException.h>
 
-constexpr int N_ELEMENTS_QUEUE = 1000000;
+constexpr int N_ELEMENTS_QUEUE = 10000000;
 constexpr int MAX_THREADS_QUEUE = 12;
 
 constexpr int PER_THREAD = 2;
@@ -78,7 +78,7 @@ test_queue() -> int {
 #else
                           int _value = _n_thread * N_ELEMENTS_QUEUE + _k + 1;
 #endif
-                          _queue.push(_value);
+                          _queue.push(std::move(_value));
                           ++_pushed;
                       }
                   }
