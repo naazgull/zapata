@@ -122,7 +122,6 @@ test_queue() -> int {
 auto
 test_hazard_ptr() -> void {
     zpt::lf::queue<long> _q1{ 2 };
-    zpt::lf::queue<long> _q2{ 2 };
 
     _q1.push(1);
     _q1.push(2);
@@ -145,6 +144,7 @@ test_hazard_ptr() -> void {
               << std::endl
               << "  #front: " << _q1.front() << std::endl
               << std::flush;
+    _q1.clear_thread_context();
 }
 
 auto

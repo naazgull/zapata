@@ -98,6 +98,7 @@ class hazard_ptr {
     auto get_this_thread_slot() -> int;
     auto get_next_available_thread_slot() -> int;
     auto release_this_thread_slot() -> zpt::lf::hazard_ptr<T>&;
+    auto clean_this_thread_retired() -> zpt::lf::hazard_ptr<T>&;
     auto is_thread_slot_taken(size_t _slot) -> bool;
 };
 
@@ -223,7 +224,9 @@ zpt::lf::hazard_ptr<T>::clean() -> zpt::lf::hazard_ptr<T>& {
 template<typename T>
 auto
 zpt::lf::hazard_ptr<T>::clear_thread_context() -> zpt::lf::hazard_ptr<T>& {
-    this->release_this_thread_slot();
+    this //
+      ->release_this_thread_slot()
+      .clean_this_thread_retired();
     return (*this);
 }
 
@@ -253,6 +256,14 @@ zpt::lf::hazard_ptr<T>::release_this_thread_slot() -> zpt::lf::hazard_ptr<T>& {
     for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) { this->__hp[_k] = nullptr; }
     this->__next_thr_slot[_idx] = false;
 
+    return (*this);
+}
+
+template<typename T>
+auto
+zpt::lf::hazard_ptr<T>::clean_this_thread_retired() -> zpt::lf::hazard_ptr<T>& {
+    auto& _retired = this->get_retired();
+    for (auto [key, _] : _retired) { delete key; }
     return (*this);
 }
 
