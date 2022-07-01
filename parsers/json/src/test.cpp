@@ -35,7 +35,7 @@ main(int argc, char* argv[]) {
     try {
         if (argc > 1) {
             auto _parameters = zpt::parameters::parse(
-              argc, argv, { "--print", { zpt::array, "optional", "single" } });
+              argc, argv, { "--print", { "options", { zpt::array, "optional", "single" } } });
 
             auto _init = "null"_JSON;
 
