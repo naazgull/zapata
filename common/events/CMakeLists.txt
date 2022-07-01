@@ -2,24 +2,24 @@ set(COMMON_EVENTS_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_library(libzapata-events INTERFACE)
+add_library(zapata-events INTERFACE)
 
-target_sources(libzapata-events
+target_sources(zapata-events
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/dispatcher.h
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events.h
 )
-target_include_directories(libzapata-events
+target_include_directories(zapata-events
   INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}
 )
-target_link_libraries(libzapata-events
+target_link_libraries(zapata-events
   INTERFACE
-    $<TARGET_OBJECTS:libzapata-base>
+    zapata-base
 )
 
 include(GNUInstallDirs)
-install(TARGETS libzapata-events
+install(TARGETS zapata-events
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

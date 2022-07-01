@@ -2,38 +2,38 @@ set(COMMON_BASE_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_library(libzapata-base SHARED)
+add_library(zapata-base SHARED)
 
-target_sources(libzapata-base
+target_sources(zapata-base
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/spin_lock.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/filesystem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/ExpectationException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/sha512.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/expect.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/Exception.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/info.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/url.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/html.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/usage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/sha1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/utf8.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/NoAttributeNameException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/manip.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/log.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/convert.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/performative.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/base64.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/InterruptedException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/ParserEOF.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/net.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/ClosedException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/ascii.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/SyntaxErrorException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/send.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/CastException.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/sha256.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/base/NoMoreElementsException.cpp    
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_lock.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ExpectationException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sha512.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/expect.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Exception.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/info.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/url.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/html.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/usage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sha1.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utf8.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoAttributeNameException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/manip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/convert.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/performative.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/base64.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/InterruptedException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ParserEOF.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ClosedException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ascii.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SyntaxErrorException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/send.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp    
   INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
@@ -50,7 +50,6 @@ target_sources(libzapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoHeaderNameException.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/sentry.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/performative.h
-    ${COMMON_BASE_INCLUDE_DIR}/zapata/base/unconfig.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/base/expect.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/text/html.h
@@ -66,16 +65,17 @@ target_sources(libzapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/crypto/sha256.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/atomics/padded_atomic.h
 )
-target_include_directories(libzapata-base
+target_include_directories(zapata-base
   PUBLIC
     ${COMMON_BASE_INCLUDE_DIR}
 )
-target_link_libraries(libzapata-base
+target_link_libraries(zapata-base
   PUBLIC
-    magic ossp-uuid++ crypto++
+    magic
+    ossp-uuid++
 )
   
-set_target_properties(libzapata-base
+set_target_properties(zapata-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -84,7 +84,7 @@ set_target_properties(libzapata-base
 )
 
 include(GNUInstallDirs)
-install(TARGETS libzapata-base
+install(TARGETS zapata-base
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

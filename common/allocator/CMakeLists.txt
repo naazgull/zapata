@@ -2,24 +2,24 @@ set(COMMON_ALLOCATOR_INCLUDE_DIR
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_library(libzapata-allocator INTERFACE)
+add_library(zapata-allocator INTERFACE)
 
-target_sources(libzapata-allocator
+target_sources(zapata-allocator
   INTERFACE
     ${COMMON_ALLOCATOR_INCLUDE_DIR}/zapata/allocator/allocator.h
     ${COMMON_ALLOCATOR_INCLUDE_DIR}/zapata/allocator.h
 )
-target_include_directories(libzapata-allocator
+target_include_directories(zapata-allocator
   INTERFACE
     ${COMMON_ALLOCATOR_INCLUDE_DIR}
 )
-target_link_libraries(libzapata-allocator
+target_link_libraries(zapata-allocator
   INTERFACE
-    $<TARGET_OBJECTS:libzapata-base>
+    zapata-base
 )
 
 include(GNUInstallDirs)
-install(TARGETS libzapata-allocator
+install(TARGETS zapata-allocator
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
