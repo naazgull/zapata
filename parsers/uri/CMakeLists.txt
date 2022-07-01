@@ -35,6 +35,14 @@ target_link_libraries(zapata-parser-uri
     zapata-parser-uri
 )
 
+set_target_properties(zapata-parser-uri
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
+    LINK_FLAGS ""
+)
+
 include(GNUInstallDirs)
 install(TARGETS zapata-parser-uri
   LIBRARY

@@ -35,6 +35,14 @@ target_link_libraries(zapata-parser-functional
 )
 
 include(GNUInstallDirs)
+set_target_properties(zapata-parser-functional
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
+    LINK_FLAGS ""
+)
+
 install(TARGETS zapata-parser-functional
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}

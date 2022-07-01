@@ -21,6 +21,14 @@ target_link_libraries(zapata-io-stream
     zapata-base
 )
 
+set_target_properties(zapata-io-stream
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
+    LINK_FLAGS ""
+)
+
 include(GNUInstallDirs)
 install(TARGETS zapata-io-stream
   LIBRARY

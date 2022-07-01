@@ -28,6 +28,14 @@ target_link_libraries(zapata-engine-startup
     zapata-net-transport
 )
 
+set_target_properties(zapata-engine-startup
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
+    LINK_FLAGS ""
+)
+
 add_executable(zpt)
 
 target_sources(zpt
