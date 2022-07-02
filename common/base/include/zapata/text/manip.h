@@ -46,15 +46,6 @@ void
 normalize_path(std::string& _in_out, bool _with_trailing);
 
 void
-cipher(std::string const& _in, std::string const& _key, std::string& _out);
-void
-decipher(std::string const& _in, std::string const& _key, std::string& _out);
-void
-encrypt(std::string& _out, std::string const& _in, std::string const& _key);
-void
-decrypt(std::string& _out, std::string const& _in, std::string const& _key);
-
-void
 prettify_header_name(std::string& name);
 
 std::string
@@ -70,43 +61,6 @@ std::string
 r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
 std::string
-r_cipher(std::string const& _in, std::string const& _key);
-std::string
-r_decipher(std::string const& _in, std::string const& _key);
-std::string
-r_encrypt(std::string const& _in, std::string const& _key);
-std::string
-r_decrypt(std::string const& _in, std::string const& _key);
-
-std::string
 r_prettify_header_name(std::string name);
 
-namespace crypto {
-
-namespace gcm {
-
-namespace aes {
-
-void
-encrypt(std::string& _out,
-        const std::string& _in,
-        const std::string& _key,
-        const std::string& _iv,
-        int _tag_size);
-void
-decrypt(std::string& _out,
-        const std::string& _in,
-        const std::string& _key,
-        const std::string& _iv,
-        int _tag_size);
-
-auto
-r_encrypt(const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size)
-  -> std::string;
-auto
-r_decrypt(const std::string& _in, const std::string& _key, const std::string& _iv, int _tag_size)
-  -> std::string;
-} // namespace aes
-} // namespace gcm
-} // namespace crypto
 } // namespace zpt

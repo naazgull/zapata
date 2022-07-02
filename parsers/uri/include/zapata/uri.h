@@ -26,7 +26,6 @@
 #include <zapata/uri/URITokenizerimpl.h>
 #include <zapata/uri/URITokenizerLexer.h>
 #include <zapata/uri/URITokenizer.h>
-#include <zapata/uri/unconfig.h>
 #include <zapata/uri/URIParser.h>
 #include <zapata/uri/URIinc.h>
 #include <zapata/uri/URITokenizerbase.h>
