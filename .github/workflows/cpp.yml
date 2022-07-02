@@ -11,15 +11,11 @@ jobs:
     - uses: actions/checkout@v1
     - name: Update OS
       run: sudo apt update
-    - name: Install dependencies (1)
-      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libmagic-dev libossp-uuid-dev g++-10 cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
-    - name: Install dependencies (2)
-      run: git clone https://github.com/mysql/mysql-connector-cpp.git && cd mysql-connector-cpp && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/share/mysql/connector-c++ && cmake --build . --config Release && sudo cmake --build . --target install --config Release && sudo ln -s /usr/local/share/mysql/connector-c++/include/mysqlx /usr/local/include && sudo ln -s /usr/local/share/mysql/connector-c++/lib64/debug/* /usr/local/lib/
+    - name: Install dependencies
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev libossp-uuid-dev g++-10 cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
     - name: Setup compiler
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 700 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-    - name: Configure modules
-      run: make config
+    - name: Configure
+      run: mkdir build && cd build && cmake ..
     - name: Build modules
-      run: make
-    - name: Check distribution packages
-      run: sudo make distcheck
+      run: cd build && make -j4
