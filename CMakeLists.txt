@@ -8,10 +8,24 @@ set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3")
 
 find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Lua)
+find_package(OpenSSL)
+find_package(SQLite3)
+find_library(LMDB_LIBS NAMES lmdb
+  PATHS
+    /usr/lib
+    /usr/lib64
+    /usr/lib//x86_64-linux-gnu/
+    /usr/local/lib
+    /usr/local/lib64
+)
+
+include(third_party/third_party.cmake)
 
 include_directories(
   ${Python3_INCLUDE_DIRS}
   ${LUA_INCLUDE_DIR}
+  ${SQLite3_INCLUDE_DIRS}
+  ${MYSQL_XDEVAPI_INCLUDEDIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/common/globals/include
   ${CMAKE_CURRENT_SOURCE_DIR}/common/base/include
   ${CMAKE_CURRENT_SOURCE_DIR}/common/events/include
@@ -79,28 +93,28 @@ add_subdirectory(bridges/prolog)
 add_subdirectory(bridges/python)
 add_subdirectory(network/http)
 add_subdirectory(network/local)
-# add_subdirectory(network/pipe)
-# add_subdirectory(network/tcp)
-# add_subdirectory(network/websocket)
-# add_subdirectory(network/mqtt)
-# add_subdirectory(network/smtp)
-# add_subdirectory(network/upnp)
-# add_subdirectory(network/zmq)
+add_subdirectory(network/pipe)
+add_subdirectory(network/tcp)
+add_subdirectory(network/websocket)
+add_subdirectory(storage/connector)
+add_subdirectory(storage/mysqlx)
+add_subdirectory(storage/lmdb)
+add_subdirectory(storage/sqlite)
+add_subdirectory(engines/pipeline)
+add_subdirectory(engines/rest)
+# add_subdirectory(engines/fsm)
 # add_subdirectory(engines/automaton)
 # add_subdirectory(engines/dom)
 # add_subdirectory(engines/drops)
-# add_subdirectory(engines/fsm)
-# add_subdirectory(engines/pipeline)
-# add_subdirectory(engines/rest)
 # add_subdirectory(security/oauth2)
-# add_subdirectory(storage/connector)
+
+# add_subdirectory(network/mqtt)
+# add_subdirectory(network/smtp)
+# add_subdirectory(network/upnp)
 # add_subdirectory(storage/couchdb)
-# add_subdirectory(storage/lmdb)
 # add_subdirectory(storage/mongodb)
-# add_subdirectory(storage/mysqlx)
 # add_subdirectory(storage/postgresql)
 # add_subdirectory(storage/redis)
-# add_subdirectory(storage/sqlite)
 
 # ------------------------------------------------------------------------
 # TARGET: uninstall

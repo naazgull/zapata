@@ -41,13 +41,13 @@ main(int argc, char* argv[]) -> int {
         _in->set_content({ "a", _content["k"], "b", _content["l"], "c", _content["m"] });
     });
 
-    _engine.add_listener(1, "/users/{([^/]+)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
+    _engine.add_listener(1, "/users/{:([^/]+):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         zpt::json _content = _in->content();
         std::cout << std::this_thread::get_id() << ": " << _content << std::endl << std::flush;
         _in->set_content({ "x", _content["a"], "z", _content["b"], "y", _content["c"] });
     });
 
-    _engine.add_listener(2, "/users/{([^/]+)}", [](zpt::pipeline::event<zpt::json> _in) -> void {
+    _engine.add_listener(2, "/users/{:([^/]+):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         std::cout << std::this_thread::get_id() << ": " << _in->content() << std::endl
                   << std::flush;
     });
