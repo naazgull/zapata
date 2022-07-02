@@ -73,7 +73,7 @@ main(int argc, char* argv[]) -> int {
                     << std::flush;
       });
     _dom.add_listener(
-      0, "/stand-alone/zmq/{([^/]+)}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
+      0, "/stand-alone/zmq/{:([^/]+):}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
           auto _element = _event->content();
           std::cout << "----------------------------------------------------" << std::endl
                     << "xpath: " << _element.xpath() << std::endl
