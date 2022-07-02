@@ -32,6 +32,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
 
+    _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
     _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
         expect(!zpt::file_exists(_config["path"]->string()),

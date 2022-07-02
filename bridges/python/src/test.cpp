@@ -42,10 +42,10 @@ init_module_x() -> zpt::python::bridge::underlying_type {
 
 auto
 main(int argc, char* argv[]) -> int {
-    _bridge                                                          //
-      .set_options({ "sys_path", { zpt::array, "/home/pf/Void/" } }) //
-      .add_module(init_module_x, { "name", "builtin" })              //
-      .add_module("py_external", { "name", "external" })             //
+    _bridge //
+      .set_options({ "sys_path", { zpt::array, "/home/pf/Void/" } })
+      .add_module(init_module_x, { "name", "builtin" })
+      .add_module("py_external", { "name", "external" })
       .init();
 
     std::thread _thread1{ [&]() -> void {

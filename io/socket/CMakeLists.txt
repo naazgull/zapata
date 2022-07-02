@@ -18,6 +18,7 @@ target_include_directories(zapata-io-socket
 target_link_libraries(zapata-io-socket
   INTERFACE
     ssl
+    crypto
     zapata-base
     zapata-io-stream
 )
@@ -53,6 +54,7 @@ target_include_directories(zapata_test_io_socket_client
 target_link_libraries(zapata_test_io_socket_client
   PUBLIC
     ssl
+    crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket
@@ -77,6 +79,7 @@ target_include_directories(zapata_test_io_socket_server
 target_link_libraries(zapata_test_io_socket_server
   PUBLIC
     ssl
+    crypto
     zapata-base
     zapata-io-stream
     zapata-io-socket

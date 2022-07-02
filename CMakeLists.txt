@@ -1,12 +1,17 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.18)
 
 project(zapata VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(ZAPATA_COMPILE_FLAGS "-O3")
+set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3")
+
+find_package(Python3 COMPONENTS Interpreter Development)
+find_package(Lua)
 
 include_directories(
+  ${Python3_INCLUDE_DIRS}
+  ${LUA_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/common/globals/include
   ${CMAKE_CURRENT_SOURCE_DIR}/common/base/include
   ${CMAKE_CURRENT_SOURCE_DIR}/common/events/include
@@ -69,8 +74,11 @@ add_subdirectory(parsers/http)
 add_subdirectory(network/transport)
 add_subdirectory(engines/startup)
 add_subdirectory(bridges/base)
-# add_subdirectory(network/http)
-# add_subdirectory(network/local)
+add_subdirectory(bridges/lua)
+add_subdirectory(bridges/prolog)
+add_subdirectory(bridges/python)
+add_subdirectory(network/http)
+add_subdirectory(network/local)
 # add_subdirectory(network/pipe)
 # add_subdirectory(network/tcp)
 # add_subdirectory(network/websocket)
@@ -78,10 +86,6 @@ add_subdirectory(bridges/base)
 # add_subdirectory(network/smtp)
 # add_subdirectory(network/upnp)
 # add_subdirectory(network/zmq)
-# add_subdirectory(bridges/lisp)
-# add_subdirectory(bridges/lua)
-# add_subdirectory(bridges/prolog)
-# add_subdirectory(bridges/python)
 # add_subdirectory(engines/automaton)
 # add_subdirectory(engines/dom)
 # add_subdirectory(engines/drops)

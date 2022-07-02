@@ -88,7 +88,7 @@ zpt::py_object::get() -> PyObject* {
 }
 
 zpt::python::bridge::~bridge() {
-    if (this->is_initialized()) { Py_Finalize(); }
+    // if (this->is_initialized()) { Py_Finalize(); }
 }
 
 auto
@@ -125,7 +125,7 @@ zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
     this->initialize();
     auto _found = this->__modules.find(_to_locate["module"]->string());
     if (_found != this->__modules.end()) {
-        auto _module = _found->second;
+        auto& _module = _found->second;
         auto _dictionary = PyModule_GetDict(_module);
         auto _func = PyDict_GetItemString(_dictionary, _to_locate["function"]->string().data());
         return _func;
@@ -656,7 +656,6 @@ auto
 zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    zpt::locks::spin_lock::guard _sentry{ this->__engine_lock, zpt::locks::spin_lock::exclusive };
 
     expect(_func_name->is_object(), "Python: cannot call a null function", 500, 0);
 
@@ -674,7 +673,6 @@ auto
 zpt::python::bridge::execute(object_type _func, object_type _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    zpt::locks::spin_lock::guard _sentry{ this->__engine_lock, zpt::locks::spin_lock::exclusive };
 
     expect(_func.get() != nullptr, "Python: cannot call a null function", 500, 0);
     expect(PyCallable_Check(_func.get()) == 1,
@@ -707,7 +705,6 @@ auto
 zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    zpt::locks::spin_lock::guard _sentry{ this->__engine_lock, zpt::locks::spin_lock::exclusive };
 
     expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
     auto _func = this->to_object(_func_name);
