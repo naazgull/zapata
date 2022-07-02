@@ -25,7 +25,6 @@
 #include <zapata/functional/FunctionalTokenizerimpl.h>
 #include <zapata/functional/FunctionalTokenizerLexer.h>
 #include <zapata/functional/FunctionalTokenizer.h>
-#include <zapata/functional/unconfig.h>
 #include <zapata/functional/FunctionalParser.h>
 #include <zapata/functional/Functionalinc.h>
 #include <zapata/functional/FunctionalTokenizerbase.h>
