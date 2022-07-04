@@ -19,5 +19,5 @@ enum Tokens_ {
     COMMA,
 };
 }
-}
-}
+} // namespace functional
+} // namespace zpt

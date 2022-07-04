@@ -54,7 +54,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
           _key.append(_channel->uri());
           {
               zpt::locks::spin_lock::guard _shared_sentry{ this->__pending_lock,
-                                                        zpt::locks::spin_lock::shared };
+                                                           zpt::locks::spin_lock::shared };
               auto _found = this->__pending.find(_key);
               if (_found != this->__pending.end()) {
                   _found->second(_event);
@@ -66,7 +66,7 @@ zpt::rest::engine::engine(size_t _pipeline_size, zpt::json _configuration)
           }
           {
               zpt::locks::spin_lock::guard _shared_sentry{ this->__pending_lock,
-                                                        zpt::locks::spin_lock::exclusive };
+                                                           zpt::locks::spin_lock::exclusive };
               this->__pending.erase(_key);
           }
       });
@@ -106,7 +106,7 @@ zpt::rest::engine::add_listener(size_t _step,
     zlog("Registering " << _pattern, zpt::trace);
     if (_pattern.find("/REPLY/") == 0) {
         zpt::locks::spin_lock::guard _shared_sentry{ this->__pending_lock,
-                                                  zpt::locks::spin_lock::exclusive };
+                                                     zpt::locks::spin_lock::exclusive };
         this->__pending.insert(std::make_pair(_pattern, _callback));
     }
     else {

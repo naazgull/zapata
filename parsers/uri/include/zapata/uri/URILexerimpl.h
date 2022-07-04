@@ -12,5 +12,5 @@ namespace uri {
 namespace lex {
 enum Tokens_ { STRING = 257, DOUBLE_DOT, SLASH, AT, QMARK, EQ, E, CARDINAL, DOT, DOT_DOT };
 }
-}
-}
+} // namespace uri
+} // namespace zpt

@@ -93,4 +93,4 @@ class engine : public zpt::pipeline::engine<zpt::dom::element> {
 };
 
 } // namespace dom
-} // nanespace zpt
+} // namespace zpt

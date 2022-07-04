@@ -176,6 +176,6 @@ FunctionalTokenizerBase::vs_(int idx) {
 #define FunctionalTokenizer FunctionalTokenizerBase
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

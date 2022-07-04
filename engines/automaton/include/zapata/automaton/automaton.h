@@ -67,4 +67,4 @@ class engine : public zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::j
 };
 
 } // namespace automaton
-} // nanespace zpt
+} // namespace zpt

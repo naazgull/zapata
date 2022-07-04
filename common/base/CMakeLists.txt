@@ -79,8 +79,8 @@ set_target_properties(zapata-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)

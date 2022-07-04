@@ -30,7 +30,10 @@ variable_name(zpt::json _variable, std::ostream& _find) -> void {
 }
 auto
 value_output(zpt::json _value, std::ostream& _find) -> void {
-    _find << _value << std::flush;
+    if (_value->is_string() || _value->is_object() || _value->is_array()) {
+        _find << "'" << static_cast<std::string>(_value) << "'" << std::flush;
+    }
+    else { _find << _value << std::flush; }
 }
 auto
 func_default(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void {
@@ -214,7 +217,7 @@ functors() -> std::map<std::string, zpt::storage::functor>& {
     };
     return _funcs;
 }
-}
+} // namespace
 
 zpt::storage::connection::connection(zpt::storage::connection const& _rhs)
   : __underlying{ _rhs.__underlying } {}
@@ -479,7 +482,6 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
 
         if (_value->is_string()) {
             auto _string = _value->string();
-            zpt::url::decode(_string);
             if (_string.find("{.") == 0) {
                 try {
                     auto _to_eval = _string.substr(2, _string.length() - 4);
@@ -495,11 +497,16 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                 catch (...) {
                 }
             }
-            else { _find << "(" << _key << " = \"" << _string << "\")" << std::flush; }
+            else { _find << "(" << _key << " = '" << _string << "')" << std::flush; }
         }
-        else { _find << "(" << _key << " = " << _value << ")" << std::flush; }
+        else {
+            _find << "(" << _key << " = ";
+            if (_value->is_string() || _value->is_object() || _value->is_array()) {
+                _find << "'" << static_cast<std::string>(_value) << "'" << std::flush;
+            }
+            else { _find << ")" << std::flush; }
+        }
     }
-    zlog("Extracted filtering condition: " << _find.str(), zpt::trace);
     return _find.str();
 }
 

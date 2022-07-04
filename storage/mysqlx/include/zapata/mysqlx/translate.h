@@ -35,6 +35,6 @@ auto
 translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json;
 auto
 translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json;
-}
-}
-}
+} // namespace mysqlx
+} // namespace storage
+} // namespace zpt

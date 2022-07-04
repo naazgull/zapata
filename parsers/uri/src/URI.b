@@ -115,10 +115,10 @@ path :
                 (*d_scanner) << "path" << zpt::json::array();
                 (*d_scanner) << "is_relative" << false;
             }
-            (*d_scanner)["path"] << d_scanner.matched();
+            (*d_scanner)["path"] << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
     path
@@ -203,10 +203,10 @@ paramvalue :
     {
         auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner)["params"] << __name << d_scanner.matched();
+            (*d_scanner)["params"] << __name << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
 ;
@@ -217,10 +217,10 @@ anchor :
 	CARDINAL STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner) << "anchor" << d_scanner.matched();
+            (*d_scanner) << "anchor" << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
 ;

@@ -390,6 +390,6 @@ JSONLexerBase::noReturn_() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif //  JSONLexerBASE_H_INCLUDED

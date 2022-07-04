@@ -222,8 +222,8 @@ to_pattern(std::string const& _path) -> zpt::json;
 auto
 to_path(std::string const& _path) -> zpt::json;
 
-} // namepsace pipeline
-} // namepsace zpt
+} // namespace pipeline
+} // namespace zpt
 
 template<typename T>
 auto

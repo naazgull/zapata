@@ -43,6 +43,6 @@ class JSONTokenizer : public JSONTokenizerBase {
 };
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

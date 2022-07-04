@@ -150,7 +150,6 @@ zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) -> std::s
     return _return;
 }
 
-
 auto
 zpt::r_prettify_header_name(std::string name) -> std::string {
     std::string _return{ name.data() };

@@ -25,8 +25,8 @@ set_target_properties(zapata-io-pipe
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)
@@ -34,7 +34,7 @@ install(TARGETS zapata-io-pipe
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(DIRECTORY ${IO_PIPE_INCLUDE_DIR}/zapata
+install(DIRECTORY ${COMMON_EVENTS_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
 )
@@ -58,6 +58,6 @@ target_link_libraries(zapata_test_io_pipe
 
 set_target_properties(zapata_test_io_pipe
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

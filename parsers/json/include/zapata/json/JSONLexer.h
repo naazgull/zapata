@@ -63,6 +63,6 @@ JSONLexer::print() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // JSONLexer_H_INCLUDED_

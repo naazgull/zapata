@@ -63,6 +63,6 @@ HTTPLexer::print() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // HTTPLexer_H_INCLUDED_

@@ -20,7 +20,7 @@ target_link_libraries(zapata-engine-dom
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-engine-pipeline
 )
 
@@ -28,8 +28,8 @@ set_target_properties(zapata-engine-dom
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)
@@ -57,13 +57,13 @@ target_link_libraries(zapata_test_engine_dom
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-engine-pipeline
     zapata-engine-dom
 )
 
 set_target_properties(zapata_test_engine_dom
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

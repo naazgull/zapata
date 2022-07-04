@@ -32,7 +32,7 @@ short int log_lvl = 8;
 std::ostream* log_fd = &std::cout;
 long log_pid = 0;
 std::unique_ptr<std::string> log_pname = nullptr;
-char* log_hname = nullptr;
+std::string log_hname;
 short log_format = 0;
 
 const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING",
@@ -81,11 +81,12 @@ zpt::log(std::string const& _text,
 }
 
 auto
-zpt::log_hostname() -> char* {
-    if (zpt::log_hname == nullptr) {
-        zpt::log_hname = new char[65];
-        bzero(zpt::log_hname, 65);
-        gethostname(zpt::log_hname, 64);
+zpt::log_hostname() -> std::string {
+    if (zpt::log_hname.length() == 0) {
+        char buffer[65];
+        bzero(buffer, 65);
+        gethostname(buffer, 64);
+        zpt::log_hname.assign(buffer);
     }
     return zpt::log_hname;
 }

@@ -51,5 +51,5 @@ to_str(std::ostream& _out, HTTPReq& _in) -> void;
 auto
 to_str(std::ostream& _out, HTTPRep& _in) -> void;
 
-}
+} // namespace http
 } // namespace zpt

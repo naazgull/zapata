@@ -399,6 +399,6 @@ HTTPLexerBase::noReturn_() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif //  HTTPLexerBASE_H_INCLUDED

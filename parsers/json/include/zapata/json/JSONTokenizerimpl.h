@@ -30,7 +30,7 @@ JSONTokenizer::exceptionHandler(std::exception const& exc) {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 // Add here includes that are only required for the compilation
 // of JSONTokenizer's sources.

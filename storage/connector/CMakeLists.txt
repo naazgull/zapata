@@ -26,8 +26,8 @@ set_target_properties(zapata-storage-connector
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)
@@ -60,6 +60,6 @@ target_link_libraries(zapata_test_storage_connector
 
 set_target_properties(zapata_test_storage_connector
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

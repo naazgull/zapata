@@ -435,7 +435,7 @@ SR_ const* s_state[] = {
     s_28, s_29, s_30, s_31, s_32, s_33, s_34, s_35, s_36, s_37, s_38, s_39, s_40, s_41,
 };
 
-} // anonymous namespace ends
+} // namespace
 
 // $insert namespace-open
 namespace zpt {
@@ -917,4 +917,4 @@ catch (Return_ retValue) {
 // derived/tail
 
 // $insert namespace-close
-}
+} // namespace zpt

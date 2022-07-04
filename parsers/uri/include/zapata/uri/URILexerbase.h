@@ -395,6 +395,6 @@ URILexerBase::noReturn_() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif //  URILexerBASE_H_INCLUDED

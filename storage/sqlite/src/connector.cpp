@@ -255,6 +255,11 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session
 }
 
 auto
+zpt::storage::sqlite::database::connection() -> sqlite3_ptr {
+    return this->__underlying;
+}
+
+auto
 zpt::storage::sqlite::database::path() -> std::string& {
     return this->__path;
 }
@@ -338,7 +343,6 @@ zpt::storage::sqlite::action::get_state() -> zpt::json {
 auto
 zpt::storage::sqlite::action::prepare(std::string const& _statement) -> void {
     sqlite3_stmt* _stmt{ nullptr };
-    zlog(_statement, zpt::info);
     sqlite_expect(
       sqlite3_prepare_v2(
         this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
@@ -469,7 +473,10 @@ zpt::storage::sqlite::action_add::add_insert(zpt::json _document) -> void {
         }
         else { _first = false; }
         _names << "\"" << _key << "\"" << std::flush;
-        _values << _value << std::flush;
+        if (_value->is_string() || _value->is_object() || _value->is_array()) {
+            _values << "'" << static_cast<std::string>(_value) << "'" << std::flush;
+        }
+        else { _values << _value << std::flush; }
     }
     _names << ")" << std::flush;
     _values << ")" << std::flush;
@@ -583,9 +590,6 @@ zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
             sqlite_expect(
               _result,
               "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
-            if (_result == SQLITE_ROW) {
-                zlog(zpt::storage::sqlite::from_db_doc(_prepared.get()), zpt::info);
-            }
         }
     }
     catch (zpt::failed_expectation const& _e) {
@@ -606,7 +610,11 @@ zpt::storage::sqlite::action_modify::add_update() -> void {
     for (auto [_, _key, _value] : this->__set) {
         if (!_first) { _oss << ", "; }
         else { _first = false; }
-        _oss << "\"" << _key << "\" = " << _value << std::flush;
+        _oss << "\"" << _key << "\" = " << std::flush;
+        if (_value->is_string() || _value->is_object() || _value->is_array()) {
+            _oss << "'" << static_cast<std::string>(_value) << "'" << std::flush;
+        }
+        else { _oss << _value << std::flush; }
     }
     this->__set->clear();
     for (auto [_, _key, _value] : this->__unset) {
@@ -858,7 +866,10 @@ zpt::storage::sqlite::action_replace::add_replace() -> void {
         }
         else { _first = false; }
         _names << "\"" << _key << "\"" << std::flush;
-        _values << _value << std::flush;
+        if (_value->is_string() || _value->is_object() || _value->is_array()) {
+            _values << "'" << static_cast<std::string>(_value) << "'" << std::flush;
+        }
+        else { _values << _value << std::flush; }
     }
     _names << ")" << std::flush;
     _values << ")" << std::flush;

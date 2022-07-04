@@ -63,6 +63,6 @@ URILexer::print() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // URILexer_H_INCLUDED_

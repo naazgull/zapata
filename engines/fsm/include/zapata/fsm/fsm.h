@@ -319,5 +319,5 @@ zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _conten
     this->trigger(this->__pause, _content);
 }
 
-} // currentspace fsm
-} // nanespace zpt
+} // namespace fsm
+} // namespace zpt

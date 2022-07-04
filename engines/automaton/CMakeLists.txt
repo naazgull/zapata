@@ -20,7 +20,7 @@ target_link_libraries(zapata-engine-automaton
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-engine-fsm
 )
 
@@ -28,8 +28,8 @@ set_target_properties(zapata-engine-automaton
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 add_library(zapata-engine-automaton-plugin SHARED)
@@ -47,7 +47,7 @@ target_link_libraries(zapata-engine-automaton-plugin
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-engine-fsm
     zapata-engine-automaton
 )
@@ -56,8 +56,8 @@ set_target_properties(zapata-engine-automaton-plugin
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)

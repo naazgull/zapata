@@ -902,4 +902,4 @@ void
 JSONLexerBase::print_() const {}
 
 // $insert namespace-close
-}
+} // namespace zpt

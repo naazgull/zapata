@@ -109,12 +109,11 @@ zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
         if (((int)s[i]) > 127) {
             oss << "\\u" << std::setfill('0') << std::setw(4) << std::hex << ((int)s.at(i));
         }
-        else if (quote && (s[i] == '"')) { oss << "\\" << ((char)s.at(i)); }
+        else if (quote && (s[i] == '"' || s[i] == '\'')) { oss << "\\" << ((char)s.at(i)); }
         else if (s[i] == '\n') { oss << "\\n"; }
         else if (s[i] == '\r') { oss << "\\r"; }
         else if (s[i] == '\f') { oss << "\\f"; }
         else if (s[i] == '\t') { oss << "\\t"; }
-        else if (s[i] == '/') { oss << "\\/"; }
         else if (quote && s[i] == '\\') { oss << "\\\\"; }
         else if (((int)s[i]) <= 31) { oss << ""; }
         else { oss << ((char)s.at(i)); }

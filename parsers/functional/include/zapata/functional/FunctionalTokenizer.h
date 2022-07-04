@@ -43,6 +43,6 @@ class FunctionalTokenizer : public FunctionalTokenizerBase {
 };
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

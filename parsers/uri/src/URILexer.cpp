@@ -722,4 +722,4 @@ void
 URILexerBase::print_() const {}
 
 // $insert namespace-close
-}
+} // namespace zpt

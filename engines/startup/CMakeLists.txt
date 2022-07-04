@@ -24,7 +24,7 @@ target_link_libraries(zapata-engine-startup
     zapata-io-stream
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-net-transport
 )
 
@@ -32,8 +32,8 @@ set_target_properties(zapata-engine-startup
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 add_executable(zpt)
@@ -53,15 +53,15 @@ target_link_libraries(zpt
     zapata-io-stream
     zapata-parser-json
     zapata-parser-uri
-    zapata-events
+    zapata-common-events
     zapata-net-transport
     zapata-engine-startup
 )
 
 set_target_properties(zpt
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)

@@ -32,7 +32,7 @@ zpt::json nilptr = undefined;
 zpt::json array = undefined; //"1b394520-2fed-4118-b622-940f25b8b35e";
 symbol_table __lambdas = zpt::symbol_table(
   new std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
-}
+} // namespace zpt
 
 zpt::pretty::pretty(std::string const& _rhs)
   : __underlying{ _rhs } {}

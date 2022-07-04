@@ -183,6 +183,6 @@ JSONTokenizerBase::vs_(int idx) {
 #define JSONTokenizer JSONTokenizerBase
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

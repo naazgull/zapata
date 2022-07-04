@@ -62,4 +62,4 @@ class engine : public zpt::pipeline::engine<zpt::exchange> {
 };
 
 } // namespace rest
-} // nanespace zpt
+} // namespace zpt

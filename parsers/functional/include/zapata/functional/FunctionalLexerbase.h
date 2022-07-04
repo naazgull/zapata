@@ -385,6 +385,6 @@ FunctionalLexerBase::noReturn_() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif //  FunctionalLexerBASE_H_INCLUDED

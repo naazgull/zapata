@@ -65,6 +65,6 @@ FunctionalLexer::print() {
 }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // FunctionalLexer_H_INCLUDED_

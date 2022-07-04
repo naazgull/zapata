@@ -43,6 +43,6 @@ class HTTPTokenizer : public HTTPTokenizerBase {
 };
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

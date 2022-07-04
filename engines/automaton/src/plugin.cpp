@@ -41,7 +41,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
         _automaton.start_threads();
 
-        zpt::this_thread::adaptive_timer<long, 5> _timer;
+        zpt::this_thread::adaptative_timer<long, 5> _timer;
         size_t _serial{ 0 };
         do {
             try {

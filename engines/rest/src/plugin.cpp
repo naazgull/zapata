@@ -40,7 +40,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
         auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
         _rest.start_threads();
 
-        zpt::this_thread::adaptive_timer<long, 5> _timer;
+        zpt::this_thread::adaptative_timer<long, 5> _timer;
         do {
             try {
                 auto _stream = _polling.pop();

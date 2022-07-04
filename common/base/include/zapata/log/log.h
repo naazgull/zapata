@@ -47,7 +47,6 @@ extern short int log_lvl;
 extern std::ostream* log_fd;
 extern long log_pid;
 extern std::unique_ptr<std::string> log_pname;
-extern char* log_hname;
 extern short log_format;
 
 extern const char* log_lvl_names[];
@@ -79,43 +78,48 @@ log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::str
     return zpt::log(to_string(_text), _level, _host, _line, _file);
 }
 auto
-log_hostname() -> char*;
+log_hostname() -> std::string;
 
 namespace this_thread {
-template<typename T, int Step>
-class adaptive_timer {
-    static_assert(std::is_integral<T>::value,
-                  "Type `T` in `zpt::this_thread::adaptive_timer` must be an integral type.");
+template<typename T>
+class adaptative_timer {
+    static_assert(std::is_arithmetic<T>::value,
+                  "Type `T` in `zpt::this_thread::adaptative_timer` must be an arithmetic type.");
 
   public:
-    adaptive_timer() = default;
-    virtual ~adaptive_timer() = default;
+    adaptative_timer(T steps);
+    virtual ~adaptative_timer() = default;
 
-    auto reset() -> zpt::this_thread::adaptive_timer<T, Step>&;
+    auto reset() -> zpt::this_thread::adaptative_timer<T>&;
     auto sleep_for(T _upper_limit) -> T;
 
   private:
     T __sleep_tics{ 0 };
+    T __step{ 0 };
 };
 
 } // namespace this_thread
 } // namespace zpt
 
-template<typename T, int Step>
+template<typename T>
+zpt::this_thread::adaptative_timer<T>::adaptative_timer(T _step)
+  : __step{ _step } {}
+
+template<typename T>
 auto
-zpt::this_thread::adaptive_timer<T, Step>::reset() -> zpt::this_thread::adaptive_timer<T, Step>& {
+zpt::this_thread::adaptative_timer<T>::reset() -> zpt::this_thread::adaptative_timer<T>& {
     this->__sleep_tics = 0;
     return (*this);
 }
 
-template<typename T, int Step>
+template<typename T>
 auto
-zpt::this_thread::adaptive_timer<T, Step>::sleep_for(T _upper_limit) -> T {
+zpt::this_thread::adaptative_timer<T>::sleep_for(T _upper_limit) -> T {
     if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
-    else { this->__sleep_tics += Step; }
+    else { this->__sleep_tics += this->__step; }
     if (this->__sleep_tics == 0) { std::this_thread::yield(); }
     else {
-        std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{ this->__sleep_tics });
+        std::this_thread::sleep_for(std::chrono::duration<T, std::milli>{ this->__sleep_tics });
     }
     return this->__sleep_tics;
 }

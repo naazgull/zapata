@@ -364,7 +364,8 @@ zpt::startup::engine::load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&
 auto
 zpt::startup::engine::add_plugin(zpt::plugin& _plugin, zpt::json& _config)
   -> zpt::startup::engine& {
-    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock, zpt::locks::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__plugin_list_lock,
+                                          zpt::locks::spin_lock::exclusive };
     for (auto [_, __, _handled] : _config["handles"]) {
         this->__plugins.insert(std::make_pair(static_cast<std::string>(_handled), _plugin));
     }

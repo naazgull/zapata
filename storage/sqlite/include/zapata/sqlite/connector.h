@@ -38,17 +38,11 @@ class action;
 class result;
 
 struct close_connection {
-    void operator()(sqlite3* _connection) const {
-        zlog("Closing connection to db.", zpt::info);
-        sqlite3_close(_connection);
-    }
+    void operator()(sqlite3* _connection) const { sqlite3_close(_connection); }
 };
 
 struct finalize_statement {
-    void operator()(sqlite3_stmt* _statement) const {
-        zlog("Finalizing statement.", zpt::info);
-        sqlite3_finalize(_statement);
-    }
+    void operator()(sqlite3_stmt* _statement) const { sqlite3_finalize(_statement); }
 };
 
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
@@ -107,7 +101,7 @@ class database : public zpt::storage::database::type {
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
-
+    auto connection() -> sqlite3_ptr;
     auto path() -> std::string&;
 
   private:

@@ -179,6 +179,6 @@ HTTPTokenizerBase::vs_(int idx) {
 #define HTTPTokenizer HTTPTokenizerBase
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

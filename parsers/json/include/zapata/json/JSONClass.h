@@ -51,7 +51,7 @@ class lambda;
 class json;
 
 using regex = JSONRegex;
-}
+} // namespace zpt
 
 namespace zpt {
 class pretty {
@@ -80,7 +80,7 @@ class pretty {
   private:
     std::string __underlying{ "" };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class json {
@@ -286,7 +286,7 @@ class json {
                          zpt::json::traverse_callback _callback,
                          std::string _path) -> void;
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONIterator {
@@ -340,13 +340,13 @@ class JSONIterator {
     size_t __index;
     zpt::json::map::const_iterator __iterator;
 };
-}
+} // namespace zpt
 
 namespace zpt {
 extern zpt::json undefined;
 extern zpt::json nilptr;
 extern zpt::json array;
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONObjT {
@@ -430,7 +430,7 @@ class JSONObjT {
     std::string __name{ "" };
     zpt::json::map __underlying;
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONArrT {
@@ -513,7 +513,7 @@ class JSONArrT {
   private:
     std::vector<zpt::json> __underlying;
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONObj {
@@ -568,7 +568,7 @@ class JSONObj {
   private:
     std::shared_ptr<zpt::JSONObjT> __underlying{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONArr {
@@ -622,7 +622,7 @@ class JSONArr {
   private:
     std::shared_ptr<zpt::JSONArrT> __underlying{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 using JSONStr = std::shared_ptr<std::string>;
@@ -665,7 +665,7 @@ class JSONRegex {
     std::string __underlying_original{ "" };
     std::shared_ptr<std::regex> __underlying{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONContext {
@@ -678,7 +678,7 @@ class JSONContext {
   private:
     void* __target{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class context {
@@ -699,7 +699,7 @@ class context {
   private:
     std::shared_ptr<zpt::JSONContext> __underlying{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 using symbol = std::function<zpt::json(zpt::json, unsigned short, zpt::context)>;
@@ -707,7 +707,7 @@ using symbol_table = std::shared_ptr<
   std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
 
 extern zpt::symbol_table __lambdas;
-}
+} // namespace zpt
 
 namespace zpt {
 class lambda : public std::shared_ptr<zpt::JSONLambda> {
@@ -736,7 +736,7 @@ class lambda : public std::shared_ptr<zpt::JSONLambda> {
     static auto find(std::string const& _signature) -> zpt::symbol;
     static auto find(std::string const& _name, unsigned short _1n_args) -> zpt::symbol;
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONLambda {
@@ -756,7 +756,7 @@ class JSONLambda {
     std::string __name{ "" };
     unsigned short __n_args{ 0 };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 using JSONUnion = struct JSONStruct {
@@ -811,7 +811,7 @@ using JSONUnion = struct JSONStruct {
         JSONRegex __regex;
     };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 class JSONElementT {
@@ -990,7 +990,7 @@ class JSONElementT {
     JSONUnion __target;
     JSONElementT* __parent{ nullptr };
 };
-}
+} // namespace zpt
 
 namespace zpt {
 auto
@@ -1008,14 +1008,14 @@ timestamp(zpt::json _json_date) -> zpt::timestamp_t;
 
 auto
 timestamp(zpt::timestamp_t _timestamp) -> std::string;
-}
+} // namespace zpt
 
 namespace std {
 template<>
 struct hash<zpt::json> {
     auto operator()(zpt::json const& _json) const noexcept -> std::size_t;
 };
-}
+} // namespace std
 
 /// Class `zpt::pretty` methods
 template<typename T>
