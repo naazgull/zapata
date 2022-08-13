@@ -30,17 +30,17 @@ auto
 zpt::net::transport::pipe_stream::send(zpt::exchange& _channel) const -> void {
     if (_channel->to_send()->ok()) {
         zlog("Sending piped message:\n" << _channel->to_send(), zpt::trace);
-        auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+        auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
         auto _client =
-          zpt::stream::alloc<zpt::pipestream>(static_cast<zpt::pipestream&>(*_channel->stream()));
-        _polling.listen_on(_client);
+          zpt::make_stream<zpt::pipestream>(static_cast<zpt::pipestream&>(*_channel->stream()));
+        _polling.listen_on(std::move(_client));
         _channel->stream() << _channel->to_send();
     }
 }
 
 auto
 zpt::net::transport::pipe_stream::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
     std::string _content_type = _channel->content_type()[0];
@@ -74,10 +74,10 @@ zpt::net::transport::pipe_stream::receive(zpt::exchange& _channel) const -> void
 
 auto
 zpt::net::transport::pipe_stream::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
-    expect(_uri["scheme"] == "pipe", "scheme must be 'pipe'", 500, 0);
+    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'");
+    expect(_uri["scheme"] == "pipe", "scheme must be 'pipe'");
     std::string _path{ zpt::uri::path::to_string(_uri) };
-    auto _stream = zpt::stream::alloc<zpt::pipestream>(zpt::generate::r_uuid());
+    auto _stream = zpt::make_stream<zpt::pipestream>(zpt::generate::r_uuid());
     _stream->transport("pipe");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

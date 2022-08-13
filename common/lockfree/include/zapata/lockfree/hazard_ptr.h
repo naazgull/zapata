@@ -136,7 +136,7 @@ zpt::lf::hazard_ptr<T>::hazard_ptr(long _max_threads, long _ptr_per_thread)
   , R{ N * 2 }
   , __hp{ new hp_type[N] }
   , __next_thr_slot{ new thr_slot_type[P] } {
-    expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0", 500, 0);
+    expect(_ptr_per_thread > 0, "`_ptr_per_thread` expected to be higher than 0");
     this->init();
 }
 
@@ -172,9 +172,7 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> long {
 
     expect(
       false,
-      "No more hazard-pointer slots available for this thread, release some before continuing.",
-      500,
-      0);
+      "No more hazard-pointer slots available for this thread, release some before continuing.");
     return -1;
 }
 
@@ -284,9 +282,7 @@ zpt::lf::hazard_ptr<T>::get_next_available_thread_slot() -> int {
     expect(_idx != this->P,
            "No more thread space available for " << std::this_thread::get_id() << " in domain "
                                                  << typeid(T).name() << " and instance " << std::hex
-                                                 << this,
-           500,
-           0);
+                                                 << this);
     return -1;
 }
 

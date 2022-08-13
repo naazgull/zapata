@@ -27,7 +27,7 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
+    auto& _boot = zpt::globals::get<zpt::startup::boot>(zpt::BOOT());
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     long _threads = std::max(static_cast<long>(_config["limits"]["max_queue_threads"]), 1L);
     long _max_queue_spin_sleep =
@@ -35,13 +35,13 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     zpt::globals::alloc<zpt::automaton::engine>(
       zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
 
-    _boot.add_thread([_max_queue_spin_sleep]() -> void {
+    _plugin.add_thread([_max_queue_spin_sleep]() -> void {
         zlog("Starting AUTOMATON engine", zpt::info);
-        auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+        auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
         auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
         _automaton.start_threads();
 
-        zpt::this_thread::adaptative_timer<long, 5> _timer;
+        zpt::this_thread::timer<long, 5> _timer;
         size_t _serial{ 0 };
         do {
             try {

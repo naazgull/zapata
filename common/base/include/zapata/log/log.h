@@ -82,44 +82,47 @@ log_hostname() -> std::string;
 
 namespace this_thread {
 template<typename T>
-class adaptative_timer {
+class timer {
     static_assert(std::is_arithmetic<T>::value,
-                  "Type `T` in `zpt::this_thread::adaptative_timer` must be an arithmetic type.");
+                  "Type `T` in `zpt::this_thread::timer` must be an arithmetic type.");
 
   public:
-    adaptative_timer(T steps);
-    virtual ~adaptative_timer() = default;
+    timer(T steps, unsigned int _non_waiting_cycles = 0);
+    virtual ~timer() = default;
 
-    auto reset() -> zpt::this_thread::adaptative_timer<T>&;
+    auto reset() -> zpt::this_thread::timer<T>&;
     auto sleep_for(T _upper_limit) -> T;
 
   private:
     T __sleep_tics{ 0 };
     T __step{ 0 };
+    unsigned int __non_waiting_cycles{ 0 };
 };
 
 } // namespace this_thread
 } // namespace zpt
 
 template<typename T>
-zpt::this_thread::adaptative_timer<T>::adaptative_timer(T _step)
-  : __step{ _step } {}
+zpt::this_thread::timer<T>::timer(T _step, unsigned int _non_waiting_cycles)
+  : __sleep_tics{ _step * -_non_waiting_cycles }
+  , __step{ _step }
+  , __non_waiting_cycles{ _non_waiting_cycles } {}
 
 template<typename T>
 auto
-zpt::this_thread::adaptative_timer<T>::reset() -> zpt::this_thread::adaptative_timer<T>& {
-    this->__sleep_tics = 0;
+zpt::this_thread::timer<T>::reset() -> zpt::this_thread::timer<T>& {
+    this->__sleep_tics = -this->__non_waiting_cycles * this->__step;
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::this_thread::adaptative_timer<T>::sleep_for(T _upper_limit) -> T {
+zpt::this_thread::timer<T>::sleep_for(T _upper_limit) -> T {
     if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
     else { this->__sleep_tics += this->__step; }
-    if (this->__sleep_tics == 0) { std::this_thread::yield(); }
+    if (this->__sleep_tics <= 0) { std::this_thread::yield(); }
     else {
-        std::this_thread::sleep_for(std::chrono::duration<T, std::milli>{ this->__sleep_tics });
+        std::this_thread::sleep_for(std::chrono::duration<T>{ this->__sleep_tics });
     }
     return this->__sleep_tics;
 }

@@ -5,22 +5,21 @@ set(ENGINE_PIPELINE_INCLUDE_DIR
 add_library(zapata-engine-pipeline SHARED)
 
 target_sources(zapata-engine-pipeline
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipeline.cpp
-  INTERFACE
     ${ENGINE_PIPELINE_INCLUDE_DIR}/zapata/pipeline/pipeline.h
     ${ENGINE_PIPELINE_INCLUDE_DIR}/zapata/pipeline.h
 )
 target_include_directories(zapata-engine-pipeline
-  INTERFACE
+  PUBLIC
     ${ENGINE_PIPELINE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-pipeline
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
 )
 
 set_target_properties(zapata-engine-pipeline
@@ -48,15 +47,15 @@ target_sources(zapata_test_engine_pipeline
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_engine_pipeline
-  PUBLIC
+  PRIVATE
     ${ENGINE_PIPELINE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_engine_pipeline
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-pipeline
 )
 

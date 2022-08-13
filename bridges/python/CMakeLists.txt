@@ -5,18 +5,17 @@ set(BRIDGE_PYTHON_INCLUDE_DIR
 add_library(zapata-bridge-python SHARED)
 
 target_sources(zapata-bridge-python
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/python.cpp
-  INTERFACE
     ${BRIDGE_PYTHON_INCLUDE_DIR}/zapata/python.h
     ${BRIDGE_PYTHON_INCLUDE_DIR}/zapata/python/python.h
 )
 target_include_directories(zapata-bridge-python
-  INTERFACE
+  PUBLIC
     ${BRIDGE_PYTHON_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-python
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -34,15 +33,15 @@ set_target_properties(zapata-bridge-python
 add_library(zapata-bridge-python-plugin SHARED)
 
 target_sources(zapata-bridge-python-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-python-plugin
-  INTERFACE
+  PUBLIC
     ${BRIDGE_PYTHON_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-python-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -75,11 +74,11 @@ target_sources(zapata_test_bridge_python
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_python
-  PUBLIC
+  PRIVATE
     ${BRIDGE_PYTHON_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_python
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-bridge-base

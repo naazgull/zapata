@@ -34,7 +34,7 @@ auto
 zpt::locks::spin_lock::acquire_shared() -> zpt::locks::spin_lock& {
     auto& _count = zpt::locks::spin_lock::__acquired_spins[this];
     if (_count == 0) { this->spin_shared_lock(); }
-    expect(_count >= 0, "can't re-acquire in shared mode while holding in exclusive mode", 500, 0);
+    expect(_count >= 0, "can't re-acquire in shared mode while holding in exclusive mode");
     ++_count;
     return (*this);
 }
@@ -43,7 +43,7 @@ auto
 zpt::locks::spin_lock::acquire_exclusive() -> zpt::locks::spin_lock& {
     auto& _count = zpt::locks::spin_lock::__acquired_spins[this];
     if (_count == 0) { this->spin_exclusive_lock(); }
-    expect(_count <= 0, "can't re-acquire in exclusive mode while holding in shared mode", 500, 0);
+    expect(_count <= 0, "can't re-acquire in exclusive mode while holding in shared mode");
     --_count;
     return (*this);
 }
@@ -52,9 +52,7 @@ auto
 zpt::locks::spin_lock::release_shared() -> zpt::locks::spin_lock& {
     auto _found = zpt::locks::spin_lock::__acquired_spins.find(this);
     expect(_found != zpt::locks::spin_lock::__acquired_spins.end() && _found->second > 0,
-           "spin lock not acquired by thread",
-           500,
-           0);
+           "spin lock not acquired by thread");
     --_found->second;
     if (_found->second == 0) {
         zpt::locks::spin_lock::__acquired_spins.erase(_found);
@@ -67,9 +65,7 @@ auto
 zpt::locks::spin_lock::release_exclusive() -> zpt::locks::spin_lock& {
     auto _found = zpt::locks::spin_lock::__acquired_spins.find(this);
     expect(_found != zpt::locks::spin_lock::__acquired_spins.end() && _found->second < 0,
-           "spin lock not acquired by thread",
-           500,
-           0);
+           "spin lock not acquired by thread");
     ++_found->second;
     if (_found->second == 0) {
         zpt::locks::spin_lock::__acquired_spins.erase(_found);
@@ -134,7 +130,7 @@ zpt::locks::spin_lock::guard::release() -> zpt::locks::spin_lock::guard& {
 
 auto
 zpt::locks::spin_lock::guard::exclusivity() -> zpt::locks::spin_lock::guard& {
-    expect(!this->__released, "can't acquire exclusive lock on an already released lock", 500, 0);
+    expect(!this->__released, "can't acquire exclusive lock on an already released lock");
 
     if (this->__can_be_shared) {
         this->__target
@@ -147,7 +143,7 @@ zpt::locks::spin_lock::guard::exclusivity() -> zpt::locks::spin_lock::guard& {
 
 auto
 zpt::locks::spin_lock::guard::shareability() -> zpt::locks::spin_lock::guard& {
-    expect(!this->__released, "can't acquire shared lock on an already released lock", 500, 0);
+    expect(!this->__released, "can't acquire shared lock on an already released lock");
     if (!this->__can_be_shared) {
         this->__target
           .release_exclusive() //

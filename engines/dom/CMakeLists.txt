@@ -5,22 +5,21 @@ set(ENGINE_DOM_INCLUDE_DIR
 add_library(zapata-engine-dom SHARED)
 
 target_sources(zapata-engine-dom
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dom.cpp
-  INTERFACE
     ${ENGINE_DOM_INCLUDE_DIR}/zapata/dom/dom.h
     ${ENGINE_DOM_INCLUDE_DIR}/zapata/dom.h
 )
 target_include_directories(zapata-engine-dom
-  INTERFACE
+  PUBLIC
     ${ENGINE_DOM_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-dom
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-pipeline
 )
 
@@ -49,15 +48,15 @@ target_sources(zapata_test_engine_dom
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_engine_dom
-  PUBLIC
+  PRIVATE
     ${ENGINE_DOM_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_engine_dom
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-pipeline
     zapata-engine-dom
 )

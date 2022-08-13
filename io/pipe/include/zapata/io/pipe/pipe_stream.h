@@ -142,7 +142,7 @@ zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs)
 template<typename Char>
 auto
 zpt::basic_pipebuf<Char>::open() -> void {
-    expect(::pipe(this->__fds) != -1, "unable to create the pipe", 500, 0);
+    expect(::pipe(this->__fds) != -1, "unable to create the pipe");
     fcntl(this->__fds[0], F_SETFL, O_NONBLOCK);
 }
 

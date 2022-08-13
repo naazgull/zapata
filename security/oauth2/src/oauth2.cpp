@@ -41,7 +41,7 @@ zpt::auth::oauth2::server::server(zpt::auth::oauth2::token_provider_ptr _token_p
   : __token_provider{ _token_provider }
   , __options(_options) {
     expect(
-      this->__token_provider.get() != nullptr, "a valid token provider must be provided", 500, 0);
+      this->__token_provider.get() != nullptr, "a valid token provider must be provided");
 }
 
 zpt::auth::oauth2::server::~server() {}

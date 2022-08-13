@@ -5,21 +5,21 @@ set(SECURITY_OAUTH2_INCLUDE_DIR
 add_library(zapata-security-oauth2 SHARED)
 
 target_sources(zapata-security-oauth2
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/oauth2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/listeners.cpp
-  INTERFACE
+  PUBLIC
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/oauth2.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/listeners.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2.h
 )
 target_include_directories(zapata-security-oauth2
-  INTERFACE
+  PUBLIC
     ${SECURITY_OAUTH2_INCLUDE_DIR}
 )
 target_link_libraries(zapata-security-oauth2
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-engine-rest
@@ -36,15 +36,15 @@ set_target_properties(zapata-security-oauth2
 add_library(zapata-security-oauth2-plugin SHARED)
 
 target_sources(zapata-security-oauth2-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-security-oauth2-plugin
-  INTERFACE
+  PUBLIC
     ${SECURITY_OAUTH2_INCLUDE_DIR}
 )
 target_link_libraries(zapata-security-oauth2-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-engine-rest

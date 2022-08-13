@@ -10,12 +10,12 @@ main(int argc, char* argv[]) -> int {
             std::uint16_t _port{ 0 };
             _iss >> _port;
 
-            auto _csock = zpt::stream::alloc<zpt::socketstream>("localhost", _port);
+            auto _csock = zpt::make_stream<zpt::socketstream>("localhost", _port);
             (*_csock) << std::string{ argv[3] } << std::endl << std::flush;
         }
         else if (_type == "-u") {
             std::string _path{ argv[2] };
-            auto _csock = zpt::stream::alloc<zpt::socketstream>(_path);
+            auto _csock = zpt::make_stream<zpt::socketstream>(_path);
             (*_csock) << std::string{ argv[3] } << std::endl << std::flush;
         }
     }

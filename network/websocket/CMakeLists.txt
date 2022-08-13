@@ -5,18 +5,17 @@ set(NETWORK_WEBSOCKET_INCLUDE_DIR
 add_library(zapata-net-websocket SHARED)
 
 target_sources(zapata-net-websocket
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket.cpp
-  INTERFACE
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/websocket.h
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/transport/websocket.h
 )
 target_include_directories(zapata-net-websocket
-  INTERFACE
+  PUBLIC
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-websocket
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
 )
@@ -32,15 +31,15 @@ set_target_properties(zapata-net-websocket
 add_library(zapata-net-websocket-plugin SHARED)
 
 target_sources(zapata-net-websocket-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-websocket-plugin
-  INTERFACE
+  PUBLIC
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-websocket-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-net-websocket

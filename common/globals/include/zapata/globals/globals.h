@@ -86,16 +86,16 @@ auto
 zpt::globals::alloc(ssize_t& _variable, Args... _args) -> T& {
     expect(_variable == -1,
            "variable already assigned with identifier " << _variable << "  for "
-                                                        << typeid(T).name(),
-           500,
-           0);
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
-                                          zpt::locks::spin_lock::exclusive };
+                                                        << typeid(T).name());
+    zpt::globals::__variables_lock.acquire_exclusive();
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
+    zpt::globals::__variables_lock.release_exclusive();
 
     T* _new = new T(_args...);
+    zpt::globals::__variables_lock.acquire_exclusive();
     _allocated.push_back(static_cast<void*>(_new));
     _variable = _allocated.size() - 1;
+    zpt::globals::__variables_lock.release_exclusive();
     return *_new;
 }
 
@@ -103,16 +103,17 @@ template<typename T, typename C>
 auto
 zpt::globals::cast(ssize_t& _variable, std::unique_ptr<C>&& _value) -> T& {
     expect(_variable == -1,
-           "variable already assigned with identifier " << _variable << " for " << typeid(T).name(),
-           500,
-           0);
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
-                                          zpt::locks::spin_lock::exclusive };
+           "variable already assigned with identifier " << _variable << " for "
+                                                        << typeid(T).name());
+    zpt::globals::__variables_lock.acquire_exclusive();
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
+    zpt::globals::__variables_lock.release_exclusive();
 
     T* _new = static_cast<T*>(_value.release());
+    zpt::globals::__variables_lock.acquire_exclusive();
     _allocated.push_back(static_cast<void*>(_new));
     _variable = _allocated.size() - 1;
+    zpt::globals::__variables_lock.release_exclusive();
     return *_new;
 }
 
@@ -123,13 +124,9 @@ zpt::globals::get(ssize_t _variable) -> T& {
                                           zpt::locks::spin_lock::shared };
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
     expect(_found != zpt::globals::__variables.end(),
-           "no such global variable for " << typeid(T).name(),
-           500,
-           0);
+           "no such global variable for " << typeid(T).name());
     expect(static_cast<ssize_t>(_found->second.size()) > _variable,
-           "no such global variable for " << typeid(T).name(),
-           500,
-           0);
+           "no such global variable for " << typeid(T).name());
 
     return *static_cast<T*>(_found->second[_variable]);
 }
@@ -137,19 +134,15 @@ zpt::globals::get(ssize_t _variable) -> T& {
 template<typename T>
 auto
 zpt::globals::dealloc(ssize_t _variable) -> void {
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
-                                          zpt::locks::spin_lock::exclusive };
+    zpt::globals::__variables_lock.acquire_exclusive();
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
     expect(_found != zpt::globals::__variables.end(),
-           "no such global variable for " << typeid(T).name(),
-           500,
-           0);
+           "no such global variable for " << typeid(T).name());
     expect(static_cast<ssize_t>(_found->second.size()) > _variable,
-           "no such global variable for " << typeid(T).name(),
-           500,
-           0);
+           "no such global variable for " << typeid(T).name());
     auto _ptr = static_cast<T*>(_found->second[_variable]);
     _found->second.erase(_found->second.begin() + _variable);
+    zpt::globals::__variables_lock.release_exclusive();
     delete _ptr;
 }
 
@@ -207,9 +200,7 @@ zpt::thread_local_table::get(P const& _member_variable) -> T& {
     auto _found = zpt::thread_local_table::__variables.find(
       reinterpret_cast<std::uintptr_t>(&_member_variable));
     expect(_found != zpt::thread_local_table::__variables.end(),
-           "no such global variable for " << reinterpret_cast<std::uintptr_t>(&_member_variable),
-           500,
-           0);
+           "no such global variable for " << reinterpret_cast<std::uintptr_t>(&_member_variable));
     return *static_cast<entry<T>&>(*_found->second.get());
 }
 

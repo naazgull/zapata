@@ -24,7 +24,6 @@
 
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-#include <zapata/pipeline.h>
 
 #define URI_PART_ANY "{:([^/?]+):}"
 
@@ -32,34 +31,24 @@ namespace zpt {
 auto
 REST_ENGINE() -> ssize_t&;
 namespace rest {
-class engine : public zpt::pipeline::engine<zpt::exchange> {
+class engine {
   public:
-    engine(size_t _pipeline_size, zpt::json _configuration);
+    engine(zpt::json _configuration);
     virtual ~engine() = default;
 
-    auto add_listener(std::string _pattern,
-                      std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
-      -> zpt::rest::engine&;
-    auto add_listener(size_t _step,
-                      std::string _pattern,
-                      std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
-      -> zpt::rest::engine&;
-    auto request(std::string _uri,
-                 std::function<void(zpt::pipeline::event<zpt::exchange>&)> _callback)
-      -> zpt::rest::engine&;
-
-    static auto on_error(zpt::json& _path,
-                         zpt::pipeline::event<zpt::exchange>& _event,
-                         const char* _what,
-                         const char* _description = nullptr,
-                         const char* _backtrace = nullptr,
-                         int _error = -1,
-                         int _status = 500) -> bool;
-
-  private:
-    zpt::locks::spin_lock __pending_lock;
-    std::map<std::string, std::function<void(zpt::pipeline::event<zpt::exchange>&)>> __pending;
+    auto delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool;
 };
 
+class receive_message {
+  public:
+    receive_message(zpt::polling& _polling, zpt::basic_stream& _stream);
+    virtual ~receive_message() = default;
+
+    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+
+  private:
+    zpt::polling& __polling;
+    zpt::basic_stream& __stream;
+};
 } // namespace rest
 } // namespace zpt

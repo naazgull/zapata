@@ -5,18 +5,17 @@ set(BRIDGE_PROLOG_INCLUDE_DIR
 add_library(zapata-bridge-prolog SHARED)
 
 target_sources(zapata-bridge-prolog
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/prolog.cpp
-  INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog.h
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/prolog.h
 )
 target_include_directories(zapata-bridge-prolog
-  INTERFACE
+  PUBLIC
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-prolog
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -33,15 +32,15 @@ set_target_properties(zapata-bridge-prolog
 add_library(zapata-bridge-prolog-plugin SHARED)
 
 target_sources(zapata-bridge-prolog-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-prolog-plugin
-  INTERFACE
+  PUBLIC
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-prolog-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -73,11 +72,11 @@ target_sources(zapata_test_bridge_prolog
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_prolog
-  PUBLIC
+  PRIVATE
     ${BRIDGE_PROLOG_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_prolog
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-bridge-base

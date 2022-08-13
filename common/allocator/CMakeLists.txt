@@ -3,7 +3,6 @@ set(COMMON_ALLOCATOR_INCLUDE_DIR
 )
 
 add_library(zapata-allocator INTERFACE)
-
 target_sources(zapata-allocator
   INTERFACE
     ${COMMON_ALLOCATOR_INCLUDE_DIR}/zapata/allocator/allocator.h
@@ -15,7 +14,7 @@ target_include_directories(zapata-allocator
 )
 target_link_libraries(zapata-allocator
   INTERFACE
-    zapata-base
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
 )
 
 include(GNUInstallDirs)

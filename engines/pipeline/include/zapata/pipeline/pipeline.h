@@ -505,9 +505,7 @@ zpt::pipeline::engine<T>::add_listener(size_t _step, std::string _pattern, event
   -> zpt::pipeline::engine<T>& {
     expect(_step < this->__pipeline_size,
            std::string("invalid pipeline::step number, should be lower then ") +
-             std::to_string(this->__pipeline_size),
-           500,
-           0);
+             std::to_string(this->__pipeline_size));
     this->__steps[_step]->listen(zpt::pipeline::to_pattern(_pattern), _callback);
     return (*this);
 }

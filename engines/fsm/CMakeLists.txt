@@ -5,22 +5,21 @@ set(ENGINE_FSM_INCLUDE_DIR
 add_library(zapata-engine-fsm SHARED)
 
 target_sources(zapata-engine-fsm
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fsm.cpp
-  INTERFACE
     ${ENGINE_FSM_INCLUDE_DIR}/zapata/fsm/fsm.h
     ${ENGINE_FSM_INCLUDE_DIR}/zapata/fsm.h
 )
 target_include_directories(zapata-engine-fsm
-  INTERFACE
+  PUBLIC
     ${ENGINE_FSM_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-fsm
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
 )
 
 set_target_properties(zapata-engine-fsm
@@ -48,15 +47,15 @@ target_sources(zapata_test_engine_fsm
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_engine_fsm
-  PUBLIC
+  PRIVATE
     ${ENGINE_FSM_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_engine_fsm
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-fsm
 )
 

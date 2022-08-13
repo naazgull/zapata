@@ -5,20 +5,20 @@ set(STORAGE_MYSQLX_INCLUDE_DIR
 add_library(zapata-storage-mysqlx SHARED)
 
 target_sources(zapata-storage-mysqlx
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
-  INTERFACE
+  PUBLIC
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx.h
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/translate.h
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/connector.h
 )
 target_include_directories(zapata-storage-mysqlx
-  INTERFACE
+  PUBLIC
     ${STORAGE_MYSQLX_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-mysqlx
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-functional
@@ -51,11 +51,11 @@ target_sources(zapata_test_storage_mysqlx
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_storage_mysqlx
-  PUBLIC
+  PRIVATE
     ${STORAGE_MYSQLX_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_mysqlx
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-functional

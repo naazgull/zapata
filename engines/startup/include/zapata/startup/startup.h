@@ -33,141 +33,69 @@
 namespace zpt {
 
 auto
-BOOT_ENGINE() -> ssize_t&;
+BOOT() -> ssize_t&;
 auto
 GLOBAL_CONFIG() -> ssize_t&;
 
 class plugin {
-  private:
-    class plugin_t {
-      public:
-        plugin_t() = default;
-        plugin_t(zpt::json _options, zpt::json _config);
-        virtual ~plugin_t();
-
-        auto operator->() -> zpt::plugin::plugin_t*;
-
-        auto initialize(zpt::json _config) -> zpt::plugin::plugin_t&;
-        auto handler() -> void*;
-        auto name() -> std::string&;
-        auto source() -> std::string&;
-        auto requirements() -> zpt::json&;
-        auto config() -> zpt::json&;
-        auto is_running() -> bool;
-
-        auto set_handler(void* _handler) -> zpt::plugin::plugin_t&;
-
-        auto set_loader(std::function<bool(zpt::plugin& _plugin)> _loader)
-          -> zpt::plugin::plugin_t&;
-        auto load_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t&;
-        auto set_unloader(std::function<bool(zpt::plugin& _plugin)> _loader)
-          -> zpt::plugin::plugin_t&;
-        auto unload_plugin(zpt::plugin& _other) -> zpt::plugin::plugin_t&;
-
-      private:
-        void* __lib_handler{ nullptr };
-        std::string __name{ "" };
-        std::string __source{ "" };
-        zpt::json __requirements{ zpt::json::object() };
-        std::function<bool(zpt::plugin& _plugin)> __loader;
-        std::function<bool(zpt::plugin& _plugin)> __unloader;
-        bool __running{ false };
-        zpt::json __config;
-    };
-
   public:
-    using reference = plugin_t*;
+    using plugin_fn_type = std::function<bool(zpt::plugin& _plugin)>;
 
-    plugin() = default;
     plugin(zpt::json _options, zpt::json _config);
-    plugin(zpt::plugin const& _rhs);
-    plugin(zpt::plugin&& _rhs);
-    virtual ~plugin() = default;
+    virtual ~plugin();
 
-    auto operator=(zpt::plugin const& _rhs) -> zpt::plugin&;
-    auto operator=(zpt::plugin&& _rhs) -> zpt::plugin&;
-    auto operator->() -> reference;
+    plugin(plugin const& _rhs) = delete;
+    plugin(plugin&& _rhs) = delete;
+    auto operator=(plugin const& _rhs) -> plugin& = delete;
+    auto operator=(plugin&& _rhs) -> plugin& = delete;
 
-    friend std::ostream& operator<<(std::ostream& _out, zpt::plugin& _in) {
-        _out << zpt::pretty{ zpt::json{
-                  "name", _in->name(), "source", _in->source(), "requires", _in->requirements() } }
-             << std::flush;
-        return _out;
-    }
+    auto name() -> std::string&;
+    auto source() -> std::string&;
+    auto config() -> zpt::json&;
+    auto is_shutdown_ongoing() -> bool;
+
+    auto add_thread(std::function<void()> _callback) -> plugin&;
 
   private:
-    std::shared_ptr<zpt::plugin::plugin_t> __underlying;
+    void* __lib_handler{ nullptr };
+    std::string __name{ "" };
+    std::string __source{ "" };
+    bool __running{ false };
+    zpt::json __config;
+    std::vector<std::thread> __threads;
+    zpt::padded_atomic<bool> __shutdown{ false };
 };
 
 namespace startup {
-enum steps { SEARCH = 0, LOAD = 1, CONFIGURATION = 2, RUN = 3, UNLOAD = 4 };
 
-class engine {
+class boot {
   public:
-    engine();
-    engine(zpt::json _args);
-    virtual ~engine();
+    using plugin_map_element_type = std::unique_ptr<zpt::plugin>;
+    
+    boot(zpt::json _config);
+    virtual ~boot();
 
-    auto initialize(zpt::json _args) -> zpt::startup::engine&;
+    boot(boot const& _rhs) = delete;
+    boot(boot&& _rhs) = delete;
+    auto operator=(boot const& _rhs) -> boot& = delete;
+    auto operator=(boot&& _rhs) -> boot& = delete;
 
-    auto trapped(zpt::json _event, bool _content) -> void;
-    auto listen_to(zpt::json _event, std::function<void(bool)> _callback) -> void;
-    auto report_error(zpt::json& _event,
-                      bool& _content,
-                      const char* _what,
-                      const char* _description = nullptr,
-                      const char* _backtrace = nullptr,
-                      int _error = -1,
-                      int status = 500) -> bool;
-
+    auto load() -> zpt::startup::boot&;
     auto to_string() -> std::string;
 
-    template<typename... Args>
-    auto add_thread(std::function<void(Args...)> _callback, Args... _args) -> zpt::startup::engine&;
-    auto add_thread(std::function<void()> _callback) -> zpt::startup::engine&;
-
-    auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
-    auto start() -> zpt::startup::engine&;
-    auto unload() -> bool;
-    auto exit() -> void;
-
-    friend std::ostream& operator<<(std::ostream& _out, zpt::startup::engine& _in) {
+    friend std::ostream& operator<<(std::ostream& _out, zpt::startup::boot& _in) {
         _out << _in.to_string() << std::flush;
         return _out;
     }
 
   private:
-    zpt::json& __configuration;
-    std::map<std::string, std::vector<std::function<void(bool)>>> __callbacks;
-    std::map<std::string, zpt::plugin> __plugins;
-    std::vector<std::string> __load_order;
-    zpt::locks::spin_lock __plugin_list_lock;
-    std::vector<std::thread> __workers;
+    zpt::json __configuration;
+    std::map<std::string, plugin_map_element_type> __plugins;
     std::atomic<bool> __unloaded{ false };
 
-    auto load() -> zpt::startup::engine&;
+    auto load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin&;
     auto hash(zpt::json& _event) -> std::string;
-    auto check_requirements(zpt::plugin& _plugin, std::function<void(bool)> _callback = nullptr)
-      -> bool;
-    auto load_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&;
-    auto add_plugin(zpt::plugin& _plugin, zpt::json& _config) -> zpt::startup::engine&;
-    auto unload_plugin(zpt::plugin& _plugin) -> zpt::startup::engine&;
 };
-
-namespace dynlib {
-auto
-load_plugin(zpt::plugin& _plugin) -> bool;
-auto
-unload_plugin(zpt::plugin& _plugin) -> bool;
-} // namespace dynlib
 
 } // namespace startup
 } // namespace zpt
-
-template<typename... Args>
-auto
-zpt::startup::engine::add_thread(std::function<void(Args...)> _callback, Args... _args)
-  -> zpt::startup::engine& {
-    this->__workers.emplace_back(_callback, _args...);
-    return (*this);
-}

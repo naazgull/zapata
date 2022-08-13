@@ -5,18 +5,18 @@ set(STORAGE_SQLITE_INCLUDE_DIR
 add_library(zapata-storage-sqlite SHARED)
 
 target_sources(zapata-storage-sqlite
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  INTERFACE
+  PUBLIC
     ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite.h
     ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite/connector.h
 )
 target_include_directories(zapata-storage-sqlite
-  INTERFACE
+  PUBLIC
     ${STORAGE_SQLITE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-sqlite
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-functional
@@ -49,11 +49,11 @@ target_sources(zapata_test_storage_sqlite
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_storage_sqlite
-  PUBLIC
+  PRIVATE
     ${STORAGE_SQLITE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_sqlite
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-functional

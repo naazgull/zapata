@@ -5,18 +5,17 @@ set(COMMON_CATALOGUE_INCLUDE_DIR
 add_library(zapata-common-catalogue SHARED)
 
 target_sources(zapata-common-catalogue
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/catalogue.cpp
-  INTERFACE
     ${COMMON_CATALOGUE_INCLUDE_DIR}/zapata/catalogue/catalogue.h
     ${COMMON_CATALOGUE_INCLUDE_DIR}/zapata/catalogue.h
 )
 target_include_directories(zapata-common-catalogue
-  INTERFACE
+  PUBLIC
     ${COMMON_CATALOGUE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-common-catalogue
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-storage-sqlite
@@ -33,15 +32,15 @@ set_target_properties(zapata-common-catalogue
 add_library(zapata-common-catalogue-plugin SHARED)
 
 target_sources(zapata-common-catalogue-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-common-catalogue-plugin
-  INTERFACE
+  PUBLIC
     ${COMMON_CATALOGUE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-common-catalogue-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-storage-sqlite
@@ -73,11 +72,11 @@ target_sources(zapata_test_common_catalogue
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_common_catalogue
-  PUBLIC
+  PRIVATE
     ${COMMON_CATALOGUE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_catalogue
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-storage-sqlite

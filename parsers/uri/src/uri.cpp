@@ -30,36 +30,34 @@ auto
 zpt::uri::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
-        if (_uri["scheme"]->ok()) {
-            _oss << _uri["scheme"]->string();
-            if (_uri["scheme_options"]->ok()) {
-                _oss << "+" << zpt::join(_uri["scheme_options"], "+") << std::flush;
+        if (_uri("scheme")->ok()) {
+            _oss << _uri("scheme")->string();
+            if (_uri("scheme_options")->ok()) {
+                _oss << "+" << zpt::join(_uri("scheme_options"), "+") << std::flush;
             }
             _oss << ":" << std::flush;
         }
-        if (_uri["domain"]->ok()) {
+        if (_uri("domain")->ok()) {
             _oss << "//" << std::flush;
-            if (_uri["user"]["name"]->ok()) {
-                _oss << _uri["user"]["name"]->string() << "@" << std::flush;
+            if (_uri("user")("name")->ok()) {
+                _oss << _uri("user")("name")->string() << "@" << std::flush;
             }
-            _oss << _uri["domain"]->string() << std::flush;
-            if (_uri["port"]->ok()) { _oss << ":" << _uri["port"] << std::flush; }
+            _oss << _uri("domain")->string() << std::flush;
+            if (_uri("port")->ok()) { _oss << ":" << _uri("port") << std::flush; }
         }
-        if (_uri["path"]->ok()) {
-            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
-                 << std::flush;
-        }
-        if (_uri["params"]->ok()) {
+        _oss << (_uri("is_relative")->ok() && _uri("is_relative")->boolean() ? "" : "/");
+        if (_uri("path")->ok()) { _oss << zpt::join(_uri("path"), "/") << std::flush; }
+        if (_uri("params")->ok()) {
             bool _first{ true };
             _oss << "?" << std::flush;
-            for (auto [_, _key, _value] : _uri["params"]) {
+            for (auto [_, _key, _value] : _uri("params")) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
                 _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
                      << std::flush;
             }
         }
-        if (_uri["anchor"]->ok()) { _oss << "#" << _uri["anchor"]->string() << std::flush; }
+        if (_uri("anchor")->ok()) { _oss << "#" << _uri("anchor")->string() << std::flush; }
     }
     return _oss.str();
 }

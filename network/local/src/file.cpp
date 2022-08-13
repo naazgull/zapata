@@ -30,7 +30,7 @@ zpt::net::transport::file::send(zpt::exchange& _channel) const -> void {}
 
 auto
 zpt::net::transport::file::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
     zpt::json _content = _layer.translate(_is, _channel->content_type()[0]);
@@ -40,10 +40,10 @@ zpt::net::transport::file::receive(zpt::exchange& _channel) const -> void {
 
 auto
 zpt::net::transport::file::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
-    expect(_uri["scheme"] == "file", "scheme must be 'file'", 500, 0);
+    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'");
+    expect(_uri["scheme"] == "file", "scheme must be 'file'");
     std::string _path{ zpt::uri::path::to_string(_uri) };
-    auto _stream = zpt::stream::alloc<std::basic_fstream<char>>(_path);
+    auto _stream = zpt::make_stream<std::basic_fstream<char>>(_path);
     _stream->transport("file");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

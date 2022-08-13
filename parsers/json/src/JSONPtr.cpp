@@ -26,14 +26,6 @@
 #include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONParser.h>
 
-namespace zpt {
-zpt::json undefined;
-zpt::json nilptr = undefined;
-zpt::json array = undefined; //"1b394520-2fed-4118-b622-940f25b8b35e";
-symbol_table __lambdas = zpt::symbol_table(
-  new std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>());
-} // namespace zpt
-
 zpt::pretty::pretty(std::string const& _rhs)
   : __underlying{ _rhs } {}
 
@@ -135,9 +127,7 @@ zpt::json::operator=(std::initializer_list<zpt::json> _list) -> zpt::json& {
     auto _is_array = (_list.size() > 1 && _head->type() == zpt::JSNil);
 
     expect(_is_array || (_list.size() % 2 == 0 && _head->type() == zpt::JSString),
-           "initializer list parameter doesn't seem either an array or an object",
-           500,
-           0);
+           "initializer list parameter doesn't seem either an array or an object");
 
     this->__underlying = std::make_shared<zpt::JSONElementT>();
     this->__underlying->type(_is_array ? zpt::JSArray : zpt::JSObject);
@@ -615,7 +605,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
             expect(
-              this->__underlying->type() == zpt::JSObject, "can't divide JSON objects", 500, 0);
+              this->__underlying->type() == zpt::JSObject, "can't divide JSON objects");
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {

@@ -38,7 +38,7 @@ zpt::net::transport::tcp::send(zpt::exchange& _channel) const -> void {
 
 auto
 zpt::net::transport::tcp::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
 
     std::string _content_type = _channel->content_type()[0];
@@ -72,11 +72,9 @@ zpt::net::transport::tcp::receive(zpt::exchange& _channel) const -> void {
 auto
 zpt::net::transport::tcp::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
-           "URI parameter must contain 'scheme', 'domain' and 'port'",
-           500,
-           0);
-    expect(_uri["scheme"] == "tcp", "scheme must be 'tcp'", 500, 0);
-    auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
+           "URI parameter must contain 'scheme', 'domain' and 'port'");
+    expect(_uri["scheme"] == "tcp", "scheme must be 'tcp'");
+    auto _stream = zpt::make_stream<zpt::basic_socketstream<char>>(
       _uri["domain"]->string(), static_cast<std::uint16_t>(_uri["port"]->integer()));
     _stream->transport("tcp");
     zpt::exchange _to_return{ _stream.release() };

@@ -27,11 +27,21 @@
 #include <zapata/lockfree.h>
 
 namespace zpt {
+auto
+DISPATCHER() -> ssize_t&;
+
 namespace events {
 enum state { retrigger = -1, finish = 0, abort = 1 };
 class dispatcher;
 } // namespace events
+} // namespace zpt
 
+template<typename T>
+concept Operation = requires(T t, zpt::events::dispatcher& _dispatcher) {
+    { t(_dispatcher) } -> std::convertible_to<zpt::events::state>;
+};
+
+namespace zpt {
 class abstract_event {
   public:
     abstract_event() = default;
@@ -41,11 +51,11 @@ class abstract_event {
 };
 using event = std::shared_ptr<zpt::abstract_event>;
 
-template<typename T>
+template<Operation T>
 class event_t : public zpt::abstract_event {
   public:
     template<typename... Args>
-    event_t(Args... _args);
+    event_t(Args&&... _args);
     virtual ~event_t() = default;
 
     virtual auto operator()(zpt::events::dispatcher& _dispatcher)
@@ -55,14 +65,14 @@ class event_t : public zpt::abstract_event {
     T __underlying;
 };
 
-namespace events {
 template<typename T>
 auto
 make_event(T _operator) -> zpt::event;
 template<typename T, typename... Args>
 auto
-make_event(Args... _args) -> zpt::event;
+make_event(Args&&... _args) -> zpt::event;
 
+namespace events {
 class dispatcher {
   public:
     dispatcher(long _max_consumers);
@@ -72,7 +82,7 @@ class dispatcher {
     auto stop_consumers() -> dispatcher&;
     auto trigger(zpt::event _event) -> dispatcher&;
     template<typename T, typename... Args>
-    auto trigger(Args... _args) -> dispatcher&;
+    auto trigger(Args&&... _args) -> dispatcher&;
     auto trap() -> dispatcher&;
     auto is_stopping_ongoing() -> bool;
 
@@ -85,16 +95,15 @@ class dispatcher {
 
     auto loop(long _consumer_nr) -> void;
 };
-
 } // namespace events
 } // namespace zpt
 
-template<typename T>
+template<Operation T>
 template<typename... Args>
-zpt::event_t<T>::event_t(Args... _args)
+zpt::event_t<T>::event_t(Args&&... _args)
   : __underlying{ std::forward<Args>(_args)... } {}
 
-template<typename T>
+template<Operation T>
 auto
 zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
     return this->__underlying(_dispatcher);
@@ -102,20 +111,20 @@ zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events
 
 template<typename T>
 auto
-zpt::events::make_event(T _operator) -> zpt::event {
+zpt::make_event(T _operator) -> zpt::event {
     return std::shared_ptr<zpt::abstract_event>{ new zpt::event_t<T>{ _operator } };
 }
 
 template<typename T, typename... Args>
 auto
-zpt::events::make_event(Args... _args) -> zpt::event {
+zpt::make_event(Args&&... _args) -> zpt::event {
     return std::shared_ptr<zpt::abstract_event>(
       static_cast<zpt::abstract_event*>(new zpt::event_t<T>{ std::forward<Args>(_args)... }));
 }
 
 template<typename T, typename... Args>
 auto
-zpt::events::dispatcher::trigger(Args... _args) -> dispatcher& {
-    this->trigger(zpt::events::make_event<T>(std::forward<Args>(_args)...));
+zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
+    this->trigger(zpt::make_event<T>(std::forward<Args>(_args)...));
     return (*this);
 }

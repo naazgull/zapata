@@ -1,4 +1,3 @@
-#include <zapata/http/http.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
 zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream& _in, std::ostream& _out)
@@ -7,14 +6,14 @@ zpt::HTTPTokenizerLexer::HTTPTokenizerLexer(std::istream& _in, std::ostream& _ou
 zpt::HTTPTokenizerLexer::~HTTPTokenizerLexer() {}
 
 auto
-zpt::HTTPTokenizerLexer::switchRoots(HTTPReq& _root) -> void {
-    this->__root_req = &(*_root);
+zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_request& _root) -> void {
+    this->__root_req = &_root;
     this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
 }
 
 auto
-zpt::HTTPTokenizerLexer::switchRoots(HTTPRep& _root) -> void {
-    this->__root_rep = &(*_root);
+zpt::HTTPTokenizerLexer::switchRoots(zpt::http::basic_reply& _root) -> void {
+    this->__root_rep = &_root;
     this->begin(zpt::HTTPLexerBase::StartCondition_::INITIAL);
 }
 
@@ -24,18 +23,18 @@ zpt::HTTPTokenizerLexer::justLeave() -> void {
 }
 
 auto
-zpt::HTTPTokenizerLexer::init(zpt::http::message_type _in_type) -> void {
+zpt::HTTPTokenizerLexer::init(int _in_type) -> void {
     this->d_chunked_body = false;
     this->d_chunked.clear();
     this->__root_type = _in_type;
     switch (_in_type) {
-        case zpt::http::message_type::request: {
+        case 0: {
             std::string _ms(this->matched());
             zpt::performative _m = zpt::ontology::from_str(_ms);
-            this->__root_req->method(_m);
+            this->__root_req->performative(_m);
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             break;
         }
     }
@@ -46,11 +45,11 @@ zpt::HTTPTokenizerLexer::version() -> void {
     std::string _s(this->matched());
     zpt::replace(_s, "HTTP/", "");
     switch (this->__root_type) {
-        case zpt::http::message_type::request: {
+        case 0: {
             this->__root_req->version(_s);
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             this->__root_rep->version(_s);
             break;
         }
@@ -60,11 +59,11 @@ zpt::HTTPTokenizerLexer::version() -> void {
 auto
 zpt::HTTPTokenizerLexer::body() -> void {
     switch (this->__root_type) {
-        case zpt::http::message_type::request: {
+        case 0: {
             this->__root_req->body(this->matched());
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             this->__root_rep->body(this->matched());
             break;
         }
@@ -75,11 +74,12 @@ zpt::HTTPTokenizerLexer::body() -> void {
 auto
 zpt::HTTPTokenizerLexer::url() -> void {
     switch (this->__root_type) {
-        case zpt::http::message_type::request: {
-            this->__root_req->url(this->matched());
+        case 0: {
+            this->__root_req->uri()["path"] = zpt::split(this->matched(), "/");
+            this->__root_req->uri()["scheme"] = "http";
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             break;
         }
     }
@@ -88,10 +88,10 @@ zpt::HTTPTokenizerLexer::url() -> void {
 auto
 zpt::HTTPTokenizerLexer::status() -> void {
     switch (this->__root_type) {
-        case zpt::http::message_type::request: {
+        case 0: {
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             int _status = 0;
             std::string _statusstr(this->matched());
             zpt::fromstr(_statusstr, &_status);
@@ -110,11 +110,11 @@ zpt::HTTPTokenizerLexer::add() -> void {
         return;
     }
     switch (this->__root_type) {
-        case zpt::http::message_type::request: {
+        case 0: {
             this->__root_req->header(this->__header_name, _s);
             break;
         }
-        case zpt::http::message_type::reply: {
+        case 1: {
             this->__root_rep->header(this->__header_name, _s);
             break;
         }

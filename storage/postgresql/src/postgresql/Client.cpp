@@ -83,9 +83,7 @@ zpt::pgsql::Client::reconnect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     expect(this->__conn.get() != nullptr,
            std::string("connection to PostgreSQL at ") + this->name() +
-             std::string(" has not been established."),
-           500,
-           1200);
+             std::string(" has not been established."));
     this->__conn.release();
     this->__conn.reset(
       new pqxx::connection(this->connection()["bind"]->string() + std::string(" dbname=") +
@@ -107,14 +105,10 @@ zpt::pgsql::Client::insert(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               1200);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           1201);
+           "'_document' must be of type JSObject");
 
     if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
@@ -154,14 +148,10 @@ zpt::pgsql::Client::upsert(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     {
         if (_document["href"]->ok() || _document["id"]->ok()) {
@@ -249,9 +239,7 @@ zpt::pgsql::Client::save(std::string const& _collection,
                0);
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     std::string _expression("UPDATE ");
     _expression += zpt::pgsql::escape_name(_collection);
@@ -287,14 +275,10 @@ zpt::pgsql::Client::set(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     std::string _expression("UPDATE ");
     _expression += zpt::pgsql::escape_name(_collection);
@@ -330,14 +314,10 @@ zpt::pgsql::Client::set(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     std::string _expression("UPDATE ");
     _expression += zpt::pgsql::escape_name(_collection);
@@ -377,14 +357,10 @@ zpt::pgsql::Client::unset(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     std::string _expression("UPDATE ");
     _expression += zpt::pgsql::escape_name(_collection);
@@ -420,14 +396,10 @@ zpt::pgsql::Client::unset(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
 
     std::string _expression("UPDATE ");
     _expression += zpt::pgsql::escape_name(_collection);
@@ -466,9 +438,7 @@ zpt::pgsql::Client::remove(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
 
     std::string _expression("DELETE FROM ");
@@ -503,9 +473,7 @@ zpt::pgsql::Client::remove(std::string const& _collection, zpt::json _pattern, z
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
 
     zpt::json _selected = this->query(_collection, _pattern, _opts);
@@ -553,9 +521,7 @@ zpt::pgsql::Client::query(std::string const& _collection,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn.get() != nullptr,
                std::string("connection to PostgreSQL at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     zpt::json _elements = zpt::json::array();
 

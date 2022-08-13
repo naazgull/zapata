@@ -9,6 +9,7 @@
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 #include <zapata/text/manip.h>
+#include <zapata/transport.h>
 #include <zapata/json/JSONClass.h>
 
 #ifndef CRLF
@@ -17,7 +18,6 @@
 
 namespace zpt {
 namespace http {
-enum message_type { request, reply };
 
 enum status {
     HTTP100 = 100,
@@ -85,139 +85,584 @@ enum status {
     HTTP511 = 511
 };
 
-using header_map = std::map<std::string, std::string>;
-} // namespace http
+static inline const char* method_names[] = { "GET",      "PUT",     "POST",  "DELETE",
+                                             "HEAD",     "OPTIONS", "PATCH", "REPLY",
+                                             "M-SEARCH", "NOTIFY",  "TRACE", "CONNECT" };
 
-class HTTPObj {
+static inline const char* status_names[] = {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Continue ",
+    "Switching Protocols ",
+    "Processing ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "OK ",
+    "Created ",
+    "Accepted ",
+    "Non-Authoritative Information ",
+    "No Content ",
+    "Reset Content ",
+    "Partial Content ",
+    "Multi-Status ",
+    "Already Reported ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "IM Used ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Multiple Choices ",
+    "Moved Permanently ",
+    "Found ",
+    "See Other ",
+    "Not Modified ",
+    "Use Proxy ",
+    "(Unused) ",
+    "Temporary Redirect ",
+    "Permanent Redirect ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Bad Request ",
+    "Unauthorized ",
+    "Payment Required ",
+    "Forbidden ",
+    "Not Found ",
+    "Method Not Allowed ",
+    "Not Acceptable ",
+    "Proxy Authentication Required ",
+    "Request Timeout ",
+    "Conflict ",
+    "Gone ",
+    "Length Required ",
+    "Precondition Failed ",
+    "Payload Too Large ",
+    "URI Too Long ",
+    "Unsupported Media Type ",
+    "Requested Range Not Satisfiable ",
+    "Expectation Failed ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Unprocessable Entity ",
+    "Locked ",
+    "Failed Dependency ",
+    "Unassigned ",
+    "Upgrade Required ",
+    "Unassigned ",
+    "Precondition Required ",
+    "Too Many Requests ",
+    "Unassigned ",
+    "Request Header Fields Too Large ",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Unavailable For Legal Reasons",
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    "Internal Server Error ",
+    "Not Implemented ",
+    "Bad Gateway ",
+    "Service Unavailable ",
+    "Gateway Timeout ",
+    "HTTP Version Not Supported ",
+    "Variant Also Negotiates (Experimental) ",
+    "Insufficient Storage ",
+    "Loop Detected ",
+    "Unassigned ",
+    "Not Extended ",
+    "Network Authentication Required ",
+};
+
+class basic_message : public zpt::basic_message {
   public:
-    HTTPObj();
-    virtual ~HTTPObj();
+    basic_message() = default;
+    virtual ~basic_message() = default;
 
-    auto body() const -> std::string const&;
-    auto body(std::string const& _body) -> void;
-    auto headers() const -> zpt::http::header_map const&;
-    auto header(std::string const& _name) const -> std::string const&;
-    auto header(std::string const& _name, std::string const& _value) -> void;
-    auto version() const -> std::string const&;
-    auto version(std::string const& _version) -> void;
+    virtual auto performative() const -> zpt::performative override;
+    virtual auto status() const -> zpt::status override;
+    virtual auto uri() -> zpt::json& override;
+    virtual auto uri() const -> zpt::json const override;
+    virtual auto version() const -> std::string override;
+    virtual auto scheme() const -> std::string override;
+    virtual auto resource() const -> zpt::json const override;
+    virtual auto parameters() const -> zpt::json const override;
+    virtual auto headers() -> zpt::json& override;
+    virtual auto headers() const -> zpt::json const override;
+    virtual auto body() -> zpt::json& override;
+    virtual auto body() const -> zpt::json const override;
+    virtual auto keep_alive() const -> bool override;
+    virtual auto content_type() const -> std::string override;
+    virtual auto performative(zpt::performative _performative) -> void override;
+    virtual auto status(zpt::status _status) -> void override;
+    virtual auto uri(std::string const& _uri) -> void override;
+    virtual auto version(std::string const& _uri) -> void override;
 
-    operator std::string();
-
-    virtual auto to_string() const -> std::string;
-    virtual auto stringify(std::string& _out) const -> void = 0;
-    virtual auto stringify(std::ostream& _out) const -> void = 0;
+    virtual auto anchor() const -> std::string;
+    virtual auto body(std::string const& _body) -> void;
+    virtual auto header(std::string const& _name, std::string const& _value) -> void;
 
   protected:
-    std::string __body{ "" };
-    zpt::http::header_map __headers;
-    std::string __version{ "1.1" };
+    zpt::json __underlying;
 };
 
-using HTTPPtr = std::shared_ptr<HTTPObj>;
-
-class HTTPReqT : public HTTPObj {
+class basic_request : public zpt::http::basic_message {
   public:
-    HTTPReqT();
-    virtual ~HTTPReqT();
+    basic_request() = default;
+    virtual ~basic_request() = default;
 
-    auto method() const -> zpt::performative;
-    auto method(zpt::performative) -> void;
-    auto url(std::string const&) -> void;
-    auto url() const -> std::string const&;
-    auto scheme() const -> std::string const;
-    auto domain() const -> std::string const;
-    auto path() const -> std::string const&;
-    auto params() const -> zpt::json;
-    auto anchor() const -> std::string;
-
-    virtual auto stringify(std::string& _out) const -> void override;
-    virtual auto stringify(std::ostream& _out) const -> void override;
-
-  private:
-    std::string __url{ "" };
-    zpt::performative __method{ 0 };
-    std::string __path{ "" };
-    zpt::json __url_parts;
+    auto to_stream(std::ostream& _out) const -> void override;
+    auto from_stream(std::istream& _in) -> void override;
 };
+using request = std::shared_ptr<basic_request>;
 
-class HTTPRepT : public HTTPObj {
+class basic_reply : public zpt::http::basic_message {
   public:
-    HTTPRepT();
-    virtual ~HTTPRepT();
+    basic_reply();
+    basic_reply(zpt::basic_message const& _request, bool);
+    virtual ~basic_reply() = default;
 
-    auto status() const -> zpt::http::status;
-    auto status(zpt::http::status) -> void;
-
-    virtual auto stringify(std::string& _out) const -> void override;
-    virtual auto stringify(std::ostream& _out) const -> void override;
-
-  private:
-    zpt::http::status __status{ zpt::http::HTTP100 };
+    auto to_stream(std::ostream& _out) const -> void override;
+    auto from_stream(std::istream& _in) -> void override;
 };
-
-class HTTPReq {
-  public:
-    HTTPReq();
-    virtual ~HTTPReq();
-
-    auto operator*() -> zpt::HTTPReqT&;
-    auto operator->() -> zpt::HTTPReqT*;
-    operator std::string();
-
-    virtual auto parse(std::istream& _in) -> void;
-
-    friend auto operator<<(std::ostream& _out, HTTPReq& _in) -> std::ostream& {
-        _in->stringify(_out);
-        return _out;
-    }
-    friend auto operator>>(std::istream& _in, HTTPReq& _out) -> std::istream& {
-        _out.parse(_in);
-        return _in;
-    }
-
-  private:
-    std::shared_ptr<zpt::HTTPReqT> __underlying{ nullptr };
-};
-
-class HTTPRep {
-  public:
-    HTTPRep();
-    virtual ~HTTPRep();
-
-    auto operator*() -> zpt::HTTPRepT&;
-    auto operator->() -> zpt::HTTPRepT*;
-    operator std::string();
-
-    virtual void parse(std::istream& _in);
-
-    friend auto operator<<(std::ostream& _out, HTTPRep& _in) -> std::ostream& {
-        _in->stringify(_out);
-        return _out;
-    }
-
-    friend auto operator>>(std::istream& _in, HTTPRep& _out) -> std::istream& {
-        _out.parse(_in);
-        return _in;
-    }
-
-  private:
-    std::shared_ptr<zpt::HTTPRepT> __underlying{ nullptr };
-};
-
-namespace http {
-extern std::string nil_header;
-extern const char* method_names[];
-extern const char* status_names[];
-
-using req = zpt::HTTPReq;
-using rep = zpt::HTTPRep;
+using reply = std::shared_ptr<basic_reply>;
 } // namespace http
 
 void
-init(HTTPReq& _out);
+init(zpt::http::basic_request& _out);
 void
-init(HTTPRep& _out);
+init(zpt::http::basic_reply& _out);
 } // namespace zpt
 
-auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::http::req;
-auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::http::rep;
+auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::message;
+auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message;

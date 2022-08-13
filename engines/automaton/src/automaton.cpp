@@ -50,18 +50,14 @@ zpt::automaton::engine::engine(long _processor_threads, zpt::json _configuration
         zpt::automaton::engine::receive(),
         [this](
           zpt::json _state, zpt::exchange& _channel, zpt::json const& _id) mutable -> zpt::json {
-            auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+            auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
             auto& _transport = _layer.get(_channel->scheme());
             _transport->receive(_channel);
             if (_channel->received()["performative"] == zpt::Patch) {
                 expect(_channel->received()["state"]->ok(),
-                       "a `state` must be provided to the CONTINUE directive",
-                       412,
-                       0);
+                       "a `state` must be provided to the CONTINUE directive");
                 expect(_channel->received()["id"]->ok(),
-                       "an `id` must be provided to the CONTINUE directive",
-                       412,
-                       0);
+                       "an `id` must be provided to the CONTINUE directive");
                 this->resume(_channel->received()["id"], _channel->received()["state"]);
                 return zpt::automaton::engine::pause();
             }
@@ -112,9 +108,7 @@ zpt::automaton::engine::verify_allowed_transition(zpt::json _from, zpt::json _to
              _from != this->__configuration["undefined"] &&
              _to != this->__configuration["undefined"] &&
              _from != zpt::automaton::engine::pause() && _to != zpt::automaton::engine::pause(),
-           "invalid transition nodes",
-           500,
-           0);
+           "invalid transition nodes");
 }
 
 auto
@@ -124,9 +118,7 @@ zpt::automaton::engine::verify_transition(zpt::json _current) -> void {
              _current != zpt::automaton::engine::send() &&
              _current != this->__configuration["undefined"] &&
              _current != zpt::automaton::engine::pause(),
-           "invalid transition node",
-           500,
-           0);
+           "invalid transition node");
 }
 
 auto
@@ -176,8 +168,8 @@ zpt::automaton::engine::pause() -> zpt::json {
 
 auto
 zpt::automaton::engine::transmit(zpt::exchange& _channel) -> void {
-    auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _transport = _layer.get(_channel->scheme());
     _transport->send(_channel);
     std::unique_ptr<zpt::stream> _give_back{ &_channel->stream() };

@@ -33,7 +33,7 @@ zpt::redis::ZList::ZList(zpt::json _options, std::string const& _conf_path)
                          zpt::json{ "host", _address, "port", _port });
     }
     catch (std::exceptionconst& _e) {
-        expect(false, std::string("could not connect to Redis server: ") + _e.what(), 500, 0);
+        expect(false, std::string("could not connect to Redis server: ") + _e.what());
     }
 }
 
@@ -68,9 +68,7 @@ zpt::redis::ZList::connect() -> void {
     this->__port = int(this->connection()["port"]);
     expect((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr,
            std::string("connection to Redis at ") + this->name() +
-             std::string(" has not been established."),
-           500,
-           0);
+             std::string(" has not been established."));
     zpt::Connector::connect();
 };
 
@@ -79,15 +77,11 @@ zpt::redis::ZList::reconnect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     expect(this->__conn != nullptr,
            std::string("connection to Redis at ") + this->name() +
-             std::string(" has not been established."),
-           500,
-           0);
+             std::string(" has not been established."));
     redisFree(this->__conn);
     expect((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr,
            std::string("connection to Redis at ") + this->name() +
-             std::string(" has not been established."),
-           500,
-           0);
+             std::string(" has not been established."));
     zpt::Connector::reconnect();
 }
 
@@ -97,9 +91,7 @@ zpt::redis::ZList::set(std::string const& _key, zpt::timestamp_t _score, zpt::js
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     expect(_data->ok(), "'_data' parameter must not be empty", 0, 0);
@@ -112,7 +104,7 @@ zpt::redis::ZList::set(std::string const& _key, zpt::timestamp_t _score, zpt::js
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 }
 
 auto
@@ -122,9 +114,7 @@ zpt::redis::ZList::reset(std::string const& _key, zpt::timestamp_t _increment, z
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     expect(_data->ok(), "'_data' parameter must not be empty", 0, 0);
@@ -137,7 +127,7 @@ zpt::redis::ZList::reset(std::string const& _key, zpt::timestamp_t _increment, z
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 }
 
 auto
@@ -151,9 +141,7 @@ zpt::redis::ZList::del(std::string const& _key, std::string const& _data) -> voi
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     expect(_data.length() != 0, "'_data' parameter must not be empty", 0, 0);
@@ -165,7 +153,7 @@ zpt::redis::ZList::del(std::string const& _key, std::string const& _data) -> voi
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 }
 
 auto
@@ -174,9 +162,7 @@ zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min) -> void {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     redisReply* _reply = nullptr;
@@ -187,7 +173,7 @@ zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min) -> void {
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 }
 
 auto
@@ -197,9 +183,7 @@ zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min, zpt::time
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     redisReply* _reply = nullptr;
@@ -210,7 +194,7 @@ zpt::redis::ZList::del(std::string const& _key, zpt::timestamp_t _min, zpt::time
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 }
 
 auto
@@ -219,9 +203,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     redisReply* _reply = nullptr;
@@ -233,7 +215,7 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
     if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 
     zpt::json _return = zpt::json::object();
     int _type = _reply->type;
@@ -243,25 +225,19 @@ zpt::redis::ZList::rangebypos(std::string const& _key, long int _min, long int _
             std::string _status_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied with an error/status: ") + _status_text,
-                   0,
-                   0);
+                   std::string("Redis server replied with an error/status: ") + _status_text);
         }
         case REDIS_REPLY_INTEGER: {
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"),
-                   0,
-                   0);
+                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"));
         }
         case REDIS_REPLY_STRING: {
             std::string _string_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
                    std::string("Redis server replied something else: REDIS_REPLY_STRING > ") +
-                     _string_text,
-                   0,
-                   0);
+                     _string_text);
         }
         case REDIS_REPLY_NIL: {
             freeReplyObject(_reply);
@@ -309,9 +285,7 @@ zpt::redis::ZList::range(std::string const& _key,
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     redisReply* _reply = nullptr;
@@ -362,7 +336,7 @@ zpt::redis::ZList::range(std::string const& _key,
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
     if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 
     zpt::json _return = zpt::json::object();
     int _type = _reply->type;
@@ -372,25 +346,19 @@ zpt::redis::ZList::range(std::string const& _key,
             std::string _status_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied with an error/status: ") + _status_text,
-                   0,
-                   0);
+                   std::string("Redis server replied with an error/status: ") + _status_text);
         }
         case REDIS_REPLY_INTEGER: {
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"),
-                   0,
-                   0);
+                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"));
         }
         case REDIS_REPLY_STRING: {
             std::string _string_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
                    std::string("Redis server replied something else: REDIS_REPLY_STRING > ") +
-                     _string_text,
-                   0,
-                   0);
+                     _string_text);
         }
         case REDIS_REPLY_NIL: {
             freeReplyObject(_reply);
@@ -433,11 +401,9 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
-    expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
+    expect(_key.length() != 0, "'_key' parameter must not be empty");
     redisReply* _reply = nullptr;
     bool _success = true;
     {
@@ -447,7 +413,7 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
           (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
     if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
-    expect(_success, "something whent wrong while accessing Redis", 500, 0);
+    expect(_success, "something whent wrong while accessing Redis");
 
     zpt::json _return = zpt::json::object();
     int _type = _reply->type;
@@ -457,25 +423,19 @@ zpt::redis::ZList::getall(std::string const& _key) -> zpt::json {
             std::string _status_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied with an error/status: ") + _status_text,
-                   0,
-                   0);
+                   std::string("Redis server replied with an error/status: ") + _status_text);
         }
         case REDIS_REPLY_INTEGER: {
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"),
-                   0,
-                   0);
+                   std::string("Redis server replied something else: REDIS_REPLY_INTEGER"));
         }
         case REDIS_REPLY_STRING: {
             std::string _string_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
                    std::string("Redis server replied something else: REDIS_REPLY_STRING > ") +
-                     _string_text,
-                   0,
-                   0);
+                     _string_text);
         }
         case REDIS_REPLY_NIL: {
             freeReplyObject(_reply);
@@ -518,9 +478,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
-                 std::string(" has not been established."),
-               500,
-               0);
+                 std::string(" has not been established."));
     }
     expect(_key.length() != 0, "'_key' parameter must not be empty", 0, 0);
     expect(_regexp.length() != 0, "'_regexp' parameter must not be empty", 0, 0);
@@ -539,7 +497,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
               (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
         }
         if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
-        expect(_success, "something whent wrong while accessing Redis", 500, 0);
+        expect(_success, "something whent wrong while accessing Redis");
 
         int _type = _reply->type;
         switch (_type) {
@@ -549,17 +507,13 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
                 std::string _status_text(_reply->str, _reply->len);
                 freeReplyObject(_reply);
                 expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                       std::string("Redis server replied with an error/status: ") + _status_text,
-                       0,
-                       0);
+                       std::string("Redis server replied with an error/status: ") + _status_text);
             }
             case REDIS_REPLY_INTEGER: {
                 _cursor = 0;
                 freeReplyObject(_reply);
                 expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                       std::string("Redis server replied something else: REDIS_REPLY_INTEGER"),
-                       0,
-                       0);
+                       std::string("Redis server replied something else: REDIS_REPLY_INTEGER"));
             }
             case REDIS_REPLY_STRING: {
                 _cursor = 0;
@@ -567,9 +521,7 @@ zpt::redis::ZList::find(std::string const& _key, std::string const& _regexp) -> 
                 freeReplyObject(_reply);
                 expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
                        std::string("Redis server replied something else: REDIS_REPLY_STRING > ") +
-                         _string_text,
-                       0,
-                       0);
+                         _string_text);
             }
             case REDIS_REPLY_NIL: {
                 _cursor = 0;

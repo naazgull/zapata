@@ -27,7 +27,7 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     _layer.add("internal", zpt::transport::alloc<zpt::net::transport::pipe_stream>());
 }
 

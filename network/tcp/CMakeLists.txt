@@ -5,18 +5,17 @@ set(NETWORK_TCP_INCLUDE_DIR
 add_library(zapata-net-tcp SHARED)
 
 target_sources(zapata-net-tcp
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp.cpp
-  INTERFACE
     ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/tcp.h
     ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/tcp.h
 )
 target_include_directories(zapata-net-tcp
-  INTERFACE
+  PUBLIC
     ${NETWORK_TCP_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-tcp
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
 )
@@ -32,15 +31,15 @@ set_target_properties(zapata-net-tcp
 add_library(zapata-net-tcp-plugin SHARED)
 
 target_sources(zapata-net-tcp-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-tcp-plugin
-  INTERFACE
+  PUBLIC
     ${NETWORK_TCP_INCLUDE_DIR}
 )
 target_link_libraries(zapata-net-tcp-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-net-tcp

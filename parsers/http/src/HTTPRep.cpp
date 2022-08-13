@@ -4,70 +4,68 @@
 #include <zapata/exceptions/CastException.h>
 #include <zapata/exceptions/NoHeaderNameException.h>
 #include <zapata/http/HTTPParser.h>
+#include <zapata/uri/uri.h>
 
-zpt::HTTPRepT::HTTPRepT()
-  : __status{ zpt::http::status::HTTP100 } {
-    this->__headers["Content-Length"] = "0";
+zpt::http::basic_reply::basic_reply() {
+    this->__underlying["performative"] = zpt::ontology::to_str(zpt::Reply);
+    zpt::init(*this);
 }
 
-zpt::HTTPRepT::~HTTPRepT() {}
+zpt::http::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
+  : basic_reply{} {
+    auto _req_headers = _request.headers();
+    auto _headers = zpt::json::object();
+    _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
+    _headers["Cache-Control"] =
+      _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
+    _headers["X-Conversation-ID"] =
+      _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
+    _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0";
 
-auto
-zpt::HTTPRepT::status() const -> zpt::http::status {
-    return this->__status;
+    this->__underlying           //
+      << "uri" << _request.uri() //
+      << "headers" << _headers;
 }
 
 auto
-zpt::HTTPRepT::status(zpt::http::status _in) -> void {
-    this->__status = _in;
-}
-
-auto
-zpt::HTTPRepT::stringify(std::ostream& _out) const -> void {
-    zpt::performative _status = this->__status > 99 ? this->__status : 100;
-    _out << "HTTP/" << this->version() << " " << std::to_string(_status);
-    if (this->version()[0] != '2') { _out << " " << zpt::http::status_names[_status]; }
+zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
+    zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
+                            ? static_cast<int>(this->__underlying("status"))
+                            : 100;
+    std::string _version = this->__underlying("headers")("X-Version")->ok()
+                             ? this->__underlying("headers")("X-Version")->string()
+                             : "1.1";
+    _out << "HTTP/" << _version << " " << std::to_string(_status);
+    if (_version == "1.0") { _out << " " << zpt::http::status_names[_status]; }
     _out << CRLF;
-    for (auto i : this->__headers) { _out << i.first << ": " << i.second << CRLF; }
-    _out << CRLF << this->__body;
+
+    std::string _body{ "" };
+    if (this->__underlying("body")->ok()) {
+        if (this->__underlying("headers")("Content-Type") == "application/json") {
+            _body.assign(static_cast<std::string>(this->__underlying("body")));
+        }
+        else { _body.assign(this->__underlying("body")->string()); }
+    }
+
+    for (auto [_, _name, _value] : this->__underlying("headers")) {
+        _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
+    }
+    _out << "Content-Length: " << _body.length() << CRLF;
+
+    _out << CRLF << _body;
 }
 
 auto
-zpt::HTTPRepT::stringify(std::string& _out) const -> void {
-    std::ostringstream _oss;
-    this->stringify(_oss);
-    _oss << std::flush;
-    _out.assign(_oss.str());
-}
-
-zpt::HTTPRep::HTTPRep()
-  : __underlying{ std::make_shared<HTTPRepT>() } {}
-
-zpt::HTTPRep::~HTTPRep() {}
-
-auto
-zpt::HTTPRep::operator*() -> zpt::HTTPRepT& {
-    return *this->__underlying.get();
-}
-
-auto
-zpt::HTTPRep::operator->() -> zpt::HTTPRepT* {
-    return this->__underlying.get();
-}
-
-zpt::HTTPRep::operator std::string() { return (*this)->to_string(); }
-
-auto
-zpt::HTTPRep::parse(std::istream& _in) -> void {
+zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
     _p.parse();
 }
 
-auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::http::rep {
+auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message {
     std::istringstream _oss;
-    zpt::http::rep _to_return;
+    auto _to_return = zpt::make_message<zpt::http::basic_reply>();
     _oss.str(std::string{ _string, _length });
     _oss >> _to_return;
     return _to_return;

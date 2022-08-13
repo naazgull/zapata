@@ -5,18 +5,17 @@ set(BRIDGE_BASE_INCLUDE_DIR
 add_library(zapata-bridge-base SHARED)
 
 target_sources(zapata-bridge-base
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge.cpp
-  INTERFACE
     ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge/bridge.h
     ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge.h
 )
 target_include_directories(zapata-bridge-base
-  INTERFACE
+  PUBLIC
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-base
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
 )
@@ -46,11 +45,11 @@ target_sources(zapata_test_bridge_base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_base
-  PUBLIC
+  PRIVATE
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_base
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-bridge-base

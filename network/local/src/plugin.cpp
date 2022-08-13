@@ -28,8 +28,7 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
 
     _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
@@ -37,14 +36,12 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     if (_config["path"]->ok()) {
         expect(!zpt::file_exists(_config["path"]->string()),
                "Unix socket '" << _config["path"]
-                               << "' already exists. Please, remove before reloading the plugin.",
-               500,
-               0);
+                               << "' already exists. Please, remove before reloading the plugin.");
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
           zpt::UNIX_SERVER_SOCKET(), _config["path"]->string());
 
-        _boot.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+        _plugin.add_thread([=]() mutable -> void {
+            auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
             zlog("Starting UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
 
             try {

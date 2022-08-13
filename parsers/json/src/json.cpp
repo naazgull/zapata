@@ -5,6 +5,43 @@
 #include <zapata/log/log.h>
 
 auto
+zpt::to_string(zpt::JSONType _type) -> std::string {
+    switch (_type) {
+        case JSObject: {
+            return "object";
+        }
+        case JSArray: {
+            return "array";
+        }
+        case JSString: {
+            return "string";
+        }
+        case JSInteger: {
+            return "int";
+        }
+        case JSDouble: {
+            return "double";
+        }
+        case JSBoolean: {
+            return "bool";
+        }
+        case JSNil: {
+            return "null";
+        }
+        case JSDate: {
+            return "date-time";
+        }
+        case JSLambda: {
+            return "lambda";
+        }
+        case JSRegex: {
+            return "regexp";
+        }
+    }
+    return "undefined";
+}
+
+auto
 zpt::to_string(zpt::json _in) -> std::string {
     return static_cast<std::string>(_in);
 }
@@ -28,9 +65,7 @@ zpt::split(std::string const& _to_split, std::string const& _separator, bool _tr
 auto
 zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string {
     expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
-           "JSON to join must be an array",
-           412,
-           0);
+           "JSON to join must be an array");
     std::string _return{ "" };
     for (auto [_idx, _key, _value] : _to_join) {
         if (_return.length() != 0) { _return += _separator; }
@@ -143,7 +178,7 @@ zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
     zpt::json _conf;
     std::ifstream _ifs;
     _ifs.open(_file.data());
-    expect(_ifs.is_open(), "no such file '" << _file << "'", 500, 0);
+    expect(_ifs.is_open(), "no such file '" << _file << "'");
 
     try {
         _ifs >> _conf;
@@ -152,7 +187,7 @@ zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
     }
     catch (zpt::SyntaxErrorException const& _e) {
         _conf = zpt::undefined;
-        expect(_conf->ok(), "syntax error parsing file: " << _file << ": " << _e.what(), 500, 0);
+        expect(_conf->ok(), "syntax error parsing file: " << _file << ": " << _e.what());
     }
 
     _ifs.close();
@@ -165,7 +200,7 @@ zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     else { _non_positional.push_back(_dir); }
     std::sort(_non_positional.begin(), _non_positional.end());
     for (auto _file : _non_positional) {
-        expect(zpt::file_exists(_file), "'" << _file << "' can't be found.", 500, 0);
+        expect(zpt::file_exists(_file), "'" << _file << "' can't be found.");
         if (zpt::is_dir(_file)) { zpt::conf::dirs(_file, _options); }
         else { zpt::conf::file(static_cast<std::string>(_file), _options); }
     }
@@ -297,16 +332,12 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
     for (auto [_, _key, _option] : _return) {
         if (_key == "--") { continue; }
         expect(_config[_key]->type() == zpt::JSObject,
-               std::string{ "'" } + _key + std::string{ "' is not a valid option" },
-               500,
-               0);
+               std::string{ "'" } + _key + std::string{ "' is not a valid option" });
         for (auto [_, __, _cfg_value] : _config[_key]["options"]) {
             if (_cfg_value == "single") {
                 expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
                        std::string{ "'" } + _key +
-                         std::string{ "' option can't have multiple values" },
-                       500,
-                       0);
+                         std::string{ "' option can't have multiple values" });
             }
             else if (_cfg_value == "multiple") {
                 if (_option->type() != zpt::JSArray) {
@@ -320,9 +351,7 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
         for (auto [_, __, _cfg_value] : _option["options"]) {
             if (_cfg_value == "mandatory") {
                 expect(_return[_key] != zpt::undefined,
-                       std::string{ "'" } + _key + std::string{ "' option is mandatory" },
-                       500,
-                       0);
+                       std::string{ "'" } + _key + std::string{ "' option is mandatory" });
             }
         }
     }
@@ -334,23 +363,17 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
     for (auto [_, _key, _parameter] : _to_check) {
         if (!_inclusive && !_rules[_key]->ok()) { continue; }
         expect(!_inclusive || _rules[_key]->type() == zpt::JSObject,
-               "'" << _key << "' is not a valid parameter",
-               400,
-               0);
+               "'" << _key << "' is not a valid parameter");
         for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
             if (_cfg_name == "type") {
                 expect(zpt::to_string(_parameter->type()) == _cfg_value->string(),
-                       "'" << _key << "' parameter has the wrong type",
-                       400,
-                       0);
+                       "'" << _key << "' parameter has the wrong type");
             }
             else if (_cfg_value == "pattern") {
                 expect(
                   _cfg_value->type() == zpt::JSRegex &&
                     std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
-                  "'" << _key << "' parameter pattern doesn't match",
-                  400,
-                  0);
+                  "'" << _key << "' parameter pattern doesn't match");
             }
         }
     }
@@ -358,7 +381,7 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
     for (auto [_, _key, _config] : _rules) {
         for (auto [_, _cfg_name, _cfg_value] : _config) {
             if (_cfg_name == "mandatory") {
-                expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter", 400, 0);
+                expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter");
             }
         }
     }

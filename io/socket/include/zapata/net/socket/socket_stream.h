@@ -202,7 +202,7 @@ class basic_serversocketstream {
     auto ready() -> bool;
     auto bind(std::uint16_t _port) -> bool;
     auto bind(std::string const& _path) -> bool;
-    auto accept() -> std::unique_ptr<zpt::stream>;
+    auto accept() -> zpt::stream;
 
   protected:
     int __sockfd{ -1 };
@@ -1020,8 +1020,8 @@ zpt::basic_serversocketstream<Char>::bind(std::string const& _path) -> bool {
 
 template<typename Char>
 auto
-zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
-    expect(this->__sockfd != -1, "server socket file descriptor is invalid", 500, 0);
+zpt::basic_serversocketstream<Char>::accept() -> zpt::stream {
+    expect(this->__sockfd != -1, "server socket file descriptor is invalid");
     switch (this->__protocol) {
         case IPPROTO_TCP: {
             zpt::sockaddrin_t _cli_addr{};
@@ -1029,13 +1029,17 @@ zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
             auto _newsockfd =
               ::accept(this->__sockfd, reinterpret_cast<zpt::sockaddr_t*>(&_cli_addr), &_clilen);
 
-            expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
+            if (this->__sockfd == 0) {
+                throw zpt::ClosedException("server socket file descriptor has been closed");
+            }
+            
+            expect(_newsockfd > 0, "error while accepting new connection");
 
             struct linger _so_linger;
             _so_linger.l_onoff = 1;
             _so_linger.l_linger = 30;
             ::setsockopt(_newsockfd, SOL_SOCKET, SO_LINGER, &_so_linger, sizeof _so_linger);
-            return zpt::stream::alloc<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+            return zpt::make_stream<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
         }
         case UNIXPROTO_RAW: {
             zpt::sockaddrun_t _cli_addr{};
@@ -1044,9 +1048,13 @@ zpt::basic_serversocketstream<Char>::accept() -> std::unique_ptr<zpt::stream> {
             strncpy(_cli_addr.sun_path, this->__path.data(), (sizeof _cli_addr.sun_path) - 1);
             auto _newsockfd = ::accept(this->__sockfd, nullptr, nullptr);
 
-            expect(_newsockfd > 0, "error while accepting new connection", 500, 0);
+            if (this->__sockfd == 0) {
+                throw zpt::ClosedException("server socket file descriptor has been closed");
+            }
+            
+            expect(_newsockfd > 0, "error while accepting new connection");
 
-            return zpt::stream::alloc<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
+            return zpt::make_stream<zpt::basic_socketstream<Char>>(_newsockfd, _cli_addr);
         }
     }
     return nullptr;

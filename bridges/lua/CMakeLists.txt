@@ -5,18 +5,17 @@ set(BRIDGE_LUA_INCLUDE_DIR
 add_library(zapata-bridge-lua SHARED)
 
 target_sources(zapata-bridge-lua
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.cpp
-  INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua.h
     ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua/lua.h
 )
 target_include_directories(zapata-bridge-lua
-  INTERFACE
+  PUBLIC
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -34,15 +33,15 @@ set_target_properties(zapata-bridge-lua
 add_library(zapata-bridge-lua-plugin SHARED)
 
 target_sources(zapata-bridge-lua-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-lua-plugin
-  INTERFACE
+  PUBLIC
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-bridge-base
@@ -75,11 +74,11 @@ target_sources(zapata_test_bridge_lua
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_lua
-  PUBLIC
+  PRIVATE
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_lua
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-bridge-base

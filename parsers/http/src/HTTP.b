@@ -26,7 +26,7 @@ exp :
 	METHOD
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::http::message_type::request);
+		d_scanner.init(0);
 	}
 	SPACE URL
 	{
@@ -52,7 +52,7 @@ exp :
 	HTTP_VERSION
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::http::message_type::reply);
+		d_scanner.init(1);
 		d_scanner.version();
 	}
 	SPACE STATUS

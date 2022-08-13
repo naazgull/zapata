@@ -24,43 +24,6 @@
 #include <zapata/base/expect.h>
 
 auto
-zpt::to_string(zpt::JSONType _type) -> std::string {
-    switch (_type) {
-        case JSObject: {
-            return "object";
-        }
-        case JSArray: {
-            return "array";
-        }
-        case JSString: {
-            return "string";
-        }
-        case JSInteger: {
-            return "int";
-        }
-        case JSDouble: {
-            return "double";
-        }
-        case JSBoolean: {
-            return "bool";
-        }
-        case JSNil: {
-            return "null";
-        }
-        case JSDate: {
-            return "date-time";
-        }
-        case JSLambda: {
-            return "lambda";
-        }
-        case JSRegex: {
-            return "regexp";
-        }
-    }
-    return "undefined";
-}
-
-auto
 non_static_get_tz() -> std::string {
     std::string _to_return;
     std::ifstream _tzf;

@@ -31,97 +31,97 @@
     catch (pqxx::feature_not_supported & _e) {                                                     \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 400, s + 2);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::insufficient_privilege & _e) {                                                    \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 403, s + 3);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::disk_full & _e) {                                                                 \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 4);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::out_of_memory & _e) {                                                             \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 5);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::insufficient_resources & _e) {                                                    \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 500, s + 6);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::check_violation & _e) {                                                           \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 7);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::foreign_key_violation & _e) {                                                     \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 8);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::not_null_violation & _e) {                                                        \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 9);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::restrict_violation & _e) {                                                        \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 10);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::unique_violation & _e) {                                                          \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 11);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::integrity_constraint_violation & _e) {                                            \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 12);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::invalid_cursor_name & _e) {                                                       \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 13);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::invalid_cursor_state & _e) {                                                      \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 14);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::invalid_sql_statement_name & _e) {                                                \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 15);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::undefined_column & _e) {                                                          \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 16);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::undefined_function & _e) {                                                        \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 17);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::undefined_table & _e) {                                                           \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 404, s + 18);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::syntax_error & _e) {                                                              \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 19);                          \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }                                                                                              \
     catch (pqxx::sql_error & _e) {                                                                 \
         zlog(std::string("pgsql: error in '") + _e.query() + std::string("': ") + _e.what(),       \
              zpt::trace);                                                                          \
-        expect(false, zpt::r_replace(_e.what(), "\n", " "), 412, s + 1);                           \
+        expect(false, zpt::r_replace(_e.what(), "\n", " "));                                       \
     }
 
 namespace zpt {

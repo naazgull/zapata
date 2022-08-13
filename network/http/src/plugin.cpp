@@ -27,29 +27,31 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
+    auto& _config = _plugin.config();
 
-    _layer.add("http", zpt::transport::alloc<zpt::net::transport::http>());
-    if (_config["port"]->ok()) {
+    zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER())
+      .add("http", zpt::make_transport<zpt::net::transport::http>());
+
+    if (_config("port")->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
           zpt::HTTP_SERVER_SOCKET(),
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
-        _boot.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+        _plugin.add_thread([&]() -> void {
+            auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
             zlog("Starting HTTP transport on port " << _config["port"], zpt::info);
 
-            try {
-                do {
+            do {
+                try {
                     auto _client = _server_sock->accept();
                     _client->transport("http");
-                    _polling.listen_on(_client);
-                } while (true);
-            }
-            catch (zpt::failed_expectation const& _e) {
-            }
+                    _polling.listen_on(std::move(_client));
+                }
+                catch (zpt::ClosedException const& _e) {
+                    expect(_plugin.is_shutdown_ongoing(),
+                           "HTTP server socket closed but plugin not shutding down");
+                }
+            } while (!_plugin.is_shutdown_ongoing());
             zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);
         });
     }
@@ -57,8 +59,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
-    if (_config["port"]->ok()) {
+    auto& _config = _plugin.config();
+    if (_config("port")->ok()) {
         zpt::globals::get<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET())->close();
         zpt::globals::dealloc<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET());
     }

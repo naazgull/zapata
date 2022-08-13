@@ -130,7 +130,7 @@ zpt::object_pool<T>::acquire(size_t _n) -> pointer_type {
         }
     }
     expect(
-      this->__current_addr + _byte_size < this->__max_size, "no more memory available", 500, 0);
+      this->__current_addr + _byte_size < this->__max_size, "no more memory available");
     auto _return = &this->__underlying[this->__current_addr];
     this->__current_addr += _byte_size;
     this->__object_count += _n;
@@ -263,14 +263,14 @@ zpt::allocator<T>::to_string() const -> std::string {
 template<typename T>
 auto
 zpt::allocator<T>::get_pool() -> zpt::object_pool<T>& {
-    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes", 500, 0);
+    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes");
     return zpt::allocator<T>::get_pool(this->__max_size);
 }
 
 template<typename T>
 auto
 zpt::allocator<T>::get_pool() const -> zpt::object_pool<T> const& {
-    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes", 500, 0);
+    expect(this->__max_size != 0, "can't allocate in a memory chunk of zero bytes");
     return zpt::allocator<T>::get_pool(this->__max_size);
 }
 

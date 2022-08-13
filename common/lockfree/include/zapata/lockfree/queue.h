@@ -232,9 +232,9 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
         auto _tail = _tail_sentry.target();
         zpt::lf::forward_node<T>* _null{ nullptr };
         if (_tail->__next->compare_exchange_strong(_null, _new)) {
+            ++(*this->__size);
             _tail->__value = _value;
             _tail->__is_null = false;
-            ++(*this->__size);
             this->__tail->store(_new, std::memory_order_release);
             return (*this);
         }
@@ -254,9 +254,9 @@ zpt::lf::queue<T>::pop() -> T {
         if (_next == nullptr) { break; }
 
         if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
-            --(*this->__size);
             while (_head->__is_null)
                 ;
+            --(*this->__size);
             _head->__is_null = true;
             _head_sentry.retire();
             return std::move(_head->__value);

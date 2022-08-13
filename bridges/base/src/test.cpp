@@ -43,7 +43,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
           (_conf["module"]->ok() ? _conf["module"]->string() : std::string{ "" }) +
           std::string{ "::" };
         zlog(_package, zpt::info);
-        expect(this->__modules.find(_package) != this->__modules.end(), "no such module", 500, 0);
+        expect(this->__modules.find(_package) != this->__modules.end(), "no such module");
         this->__lambdas.insert(std::make_pair(_package + _conf["name"]->string(), _lambda));
         return (*this);
     }
@@ -51,7 +51,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
     auto execute(std::string _to_evaluate, object_type _arg, class_type& _bridge) -> zpt::json {
         auto _found = this->__lambdas.find(_to_evaluate);
         expect(
-          _found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'", 500, 0);
+          _found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'");
         return _found->second(_arg, *this);
     }
 

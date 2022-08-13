@@ -28,9 +28,7 @@
         auto __error__ = _error;                                                                   \
         expect(__error__ == 0,                                                                     \
                std::get<0>(__messages[__error__])                                                  \
-                 << ": " << _message << " due to: " << std::get<1>(__messages[__error__]),         \
-               500,                                                                                \
-               __error__);                                                                         \
+                 << ": " << _message << " due to: " << std::get<1>(__messages[__error__]));        \
     }
 
 std::map<int, std::tuple<std::string, std::string>> __messages = {
@@ -210,7 +208,7 @@ zpt::storage::lmdb::collection::count() -> size_t {
 
     MDB_stat _stat;
     _error = mdb_stat(_read_trx, _dbi, &_stat);
-    expect(_error == 0, "unable to retrieve statistics from database", 500, _error);
+    expect(_error == 0, "unable to retrieve statistics from database");
 
     auto _count = _stat.ms_entries;
 
@@ -295,46 +293,46 @@ zpt::storage::lmdb::action_add::add(zpt::json _document) -> zpt::storage::action
 
 auto
 zpt::storage::lmdb::action_add::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from an 'add' action", 500, 0);
+    expect(false, "can't modify from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from an 'add' action", 500, 0);
+    expect(false, "can't remove from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from an 'add' action", 500, 0);
+    expect(false, "can't replace from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from an 'add' action", 500, 0);
+    expect(false, "can't find from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
-    expect(false, "can't set from an 'add' action", 500, 0);
+    expect(false, "can't set from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::unset(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    expect(false, "can't unset from an 'add' action", 500, 0);
+    expect(false, "can't unset from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_add::patch(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't patch from an 'add' action", 500, 0);
+    expect(false, "can't patch from an 'add' action");
     return this;
 }
 
@@ -406,32 +404,32 @@ zpt::storage::lmdb::action_modify::action_modify(zpt::storage::lmdb::collection&
 
 auto
 zpt::storage::lmdb::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'modify' action", 500, 0);
+    expect(false, "can't add from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'modify' action", 500, 0);
+    expect(false, "can't modify from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'modify' action", 500, 0);
+    expect(false, "can't remove from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'modify' action", 500, 0);
+    expect(false, "can't replace from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_modify::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'modify' action", 500, 0);
+    expect(false, "can't find from a 'modify' action");
     return this;
 }
 
@@ -569,13 +567,13 @@ zpt::storage::lmdb::action_remove::action_remove(zpt::storage::lmdb::collection&
 
 auto
 zpt::storage::lmdb::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'remove' action", 500, 0);
+    expect(false, "can't add from a 'remove' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_remove::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'remove' action", 500, 0);
+    expect(false, "can't modify from a 'remove' action");
     return this;
 }
 
@@ -588,13 +586,13 @@ zpt::storage::lmdb::action_remove::remove(zpt::json _search) -> zpt::storage::ac
 auto
 zpt::storage::lmdb::action_remove::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'remove' action", 500, 0);
+    expect(false, "can't replace from a 'remove' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_remove::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'remove' action", 500, 0);
+    expect(false, "can't find from a 'remove' action");
     return this;
 }
 
@@ -721,32 +719,32 @@ zpt::storage::lmdb::action_replace::action_replace(zpt::storage::lmdb::collectio
 
 auto
 zpt::storage::lmdb::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'replace' action", 500, 0);
+    expect(false, "can't add from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_replace::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'replace' action", 500, 0);
+    expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_replace::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'replace' action", 500, 0);
+    expect(false, "can't remove from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_replace::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'replace' action", 500, 0);
+    expect(false, "can't replace from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_replace::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'replace' action", 500, 0);
+    expect(false, "can't find from a 'replace' action");
     return this;
 }
 
@@ -854,32 +852,32 @@ zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _co
 
 auto
 zpt::storage::lmdb::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'find' action", 500, 0);
+    expect(false, "can't add from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'find' action", 500, 0);
+    expect(false, "can't modify from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'find' action", 500, 0);
+    expect(false, "can't remove from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'find' action", 500, 0);
+    expect(false, "can't replace from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::lmdb::action_find::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'find' action", 500, 0);
+    expect(false, "can't find from a 'find' action");
     return this;
 }
 

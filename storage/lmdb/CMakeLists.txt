@@ -5,18 +5,17 @@ set(STORAGE_LMDB_INCLUDE_DIR
 add_library(zapata-storage-lmdb SHARED)
 
 target_sources(zapata-storage-lmdb
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  INTERFACE
     ${STORAGE_LMDB_INCLUDE_DIR}/zapata/lmdb.h
     ${STORAGE_LMDB_INCLUDE_DIR}/zapata/lmdb/connector.h
 )
 target_include_directories(zapata-storage-lmdb
-  INTERFACE
+  PUBLIC
     ${STORAGE_LMDB_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-lmdb
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-functional
@@ -49,11 +48,11 @@ target_sources(zapata_test_storage_lmdb
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_storage_lmdb
-  PUBLIC
+  PRIVATE
     ${STORAGE_LMDB_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_lmdb
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-functional

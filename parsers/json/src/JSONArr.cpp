@@ -38,9 +38,7 @@ zpt::JSONArrT::pop(std::string const& _idx) -> JSONArrT& {
         expect((size_t)_i < this->__underlying.size(),
                "the index of the element you want to "
                "remove must be lower than the array "
-               "size",
-               500,
-               0);
+               "size");
         this->__underlying.erase(this->__underlying.begin() + _i);
     }
     return (*this);
@@ -48,12 +46,10 @@ zpt::JSONArrT::pop(std::string const& _idx) -> JSONArrT& {
 
 auto
 zpt::JSONArrT::pop(size_t _idx) -> JSONArrT& {
-    expect(_idx >= 0, "the index of the element you want to remove must be higher then 0", 500, 0);
+    expect(_idx >= 0, "the index of the element you want to remove must be higher then 0");
     expect(_idx < this->__underlying.size(),
            "the index of the element you want to remove "
-           "must be lower than the array size",
-           500,
-           0);
+           "must be lower than the array size");
     this->__underlying.erase(this->__underlying.begin() + _idx);
     return (*this);
 }
@@ -257,51 +253,51 @@ zpt::JSONArrT::operator>=(zpt::JSONArr const& _rhs) const -> bool {
 }
 
 auto
-zpt::JSONArrT::operator[](int _idx) -> zpt::json {
+zpt::JSONArrT::operator[](int _idx) -> zpt::json& {
     return (*this)[(size_t)_idx];
 }
 
 auto
-zpt::JSONArrT::operator[](size_t _idx) -> zpt::json {
-    if (_idx < 0 || _idx >= this->__underlying.size()) { return zpt::undefined; }
+zpt::JSONArrT::operator[](size_t _idx) -> zpt::json& {
+    if (_idx >= this->__underlying.size()) { this->__underlying.resize(_idx + 1); }
     return this->__underlying.at(_idx);
 }
 
 auto
-zpt::JSONArrT::operator[](const char* _idx) -> zpt::json {
+zpt::JSONArrT::operator[](const char* _idx) -> zpt::json& {
     return (*this)[std::string(_idx)];
 }
 
 auto
-zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json {
+zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json& {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
-    if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }
-    return this->__underlying.at((size_t)_i);
+    expect(_i != -1, "illegal index value");
+    return (*this)[(size_t)_i];
 }
 
 auto
-zpt::JSONArrT::operator[](int _idx) const -> zpt::json const& {
+zpt::JSONArrT::operator[](int _idx) const -> zpt::json const {
     return (*this)[(size_t)_idx];
 }
 
 auto
-zpt::JSONArrT::operator[](size_t _idx) const -> zpt::json const& {
-    if (_idx < 0 || _idx >= this->__underlying.size()) { return zpt::undefined; }
+zpt::JSONArrT::operator[](size_t _idx) const -> zpt::json const {
+    if (_idx >= this->__underlying.size()) { return zpt::undefined; }
     return this->__underlying.at(_idx);
 }
 
 auto
-zpt::JSONArrT::operator[](const char* _idx) const -> zpt::json const& {
+zpt::JSONArrT::operator[](const char* _idx) const -> zpt::json const {
     return (*this)[std::string(_idx)];
 }
 
 auto
-zpt::JSONArrT::operator[](std::string const& _idx) const -> zpt::json const& {
+zpt::JSONArrT::operator[](std::string const& _idx) const -> zpt::json const {
     long _i = -1;
     zpt::fromstr(_idx, &_i);
-    if (_i < 0 || _i >= (long)this->__underlying.size()) { return zpt::undefined; }
-    return this->__underlying.at((size_t)_i);
+    expect(_i != -1, "illegal index value");
+    return (*this)[(size_t)_i];
 }
 
 auto

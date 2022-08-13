@@ -42,7 +42,7 @@ zpt::couchdb::Client::Client(zpt::json _options, std::string const& _conf_path)
         this->connection(_options->get_path(_conf_path) + zpt::json{ "uri", _uri });
     }
     catch (std::exception const& _e) {
-        expect(false, std::string("could not connect to CouchDB server: ") + _e.what(), 500, 0);
+        expect(false, std::string("could not connect to CouchDB server: ") + _e.what());
     }
 
     this->__pool_size = 0;
@@ -216,9 +216,7 @@ zpt::couchdb::Client::create_database(std::string const& _collection) -> void {
     zpt::http::rep _rep = this->send(_req);
     zpt::json _response(_rep->body());
     expect(_rep->status() == zpt::http::status::HTTP201 && bool(_response["ok"]) == true,
-           std::string("could not create database:\n") + std::string(_rep),
-           500,
-           2001);
+           std::string("could not create database:\n") + std::string(_rep));
 }
 
 auto
@@ -249,9 +247,7 @@ zpt::couchdb::Client::insert(std::string const& _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -299,9 +295,7 @@ zpt::couchdb::Client::upsert(std::string const& _collection,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -398,9 +392,7 @@ zpt::couchdb::Client::save(std::string const& _collection,
                            zpt::json _document,
                            zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           std::string("'_document' must be of type JSObject"),
-           412,
-           0);
+           std::string("'_document' must be of type JSObject"));
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -435,9 +427,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           std::string("'_document' must be of type JSObject"),
-           412,
-           0);
+           std::string("'_document' must be of type JSObject"));
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -472,9 +462,7 @@ zpt::couchdb::Client::set(std::string const& _collection,
                           zpt::json _document,
                           zpt::json _opts) -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-           "'_pattern' must be of type JSObject",
-           412,
-           0);
+           "'_pattern' must be of type JSObject");
     size_t _size = 0;
 
     std::string _db_name =
@@ -514,9 +502,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject",
-           412,
-           0);
+           "'_document' must be of type JSObject");
     std::string _db_name =
       std::string("/") + std::string(this->connection()["db"]) + std::string("_") + _collection;
     std::transform(_db_name.begin(), _db_name.end(), _db_name.begin(), ::tolower);
@@ -551,9 +537,7 @@ zpt::couchdb::Client::unset(std::string const& _collection,
                             zpt::json _document,
                             zpt::json _opts) -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-           "'_pattern' must be of type JSObject",
-           412,
-           0);
+           "'_pattern' must be of type JSObject");
     size_t _size = 0;
 
     std::string _db_name =
@@ -617,9 +601,7 @@ auto
 zpt::couchdb::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
   -> int {
     expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
-           "'_pattern' must be of type JSObject",
-           412,
-           0);
+           "'_pattern' must be of type JSObject");
     size_t _size = 0;
 
     std::string _db_name =

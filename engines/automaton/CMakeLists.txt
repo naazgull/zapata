@@ -5,22 +5,21 @@ set(ENGINE_AUTOMATON_INCLUDE_DIR
 add_library(zapata-engine-automaton SHARED)
 
 target_sources(zapata-engine-automaton
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/automaton.cpp
-  INTERFACE
     ${ENGINE_AUTOMATON_INCLUDE_DIR}/zapata/automaton.h
     ${ENGINE_AUTOMATON_INCLUDE_DIR}/zapata/automaton/automaton.h
 )
 target_include_directories(zapata-engine-automaton
-  INTERFACE
+  PUBLIC
     ${ENGINE_AUTOMATON_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-automaton
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-fsm
 )
 
@@ -35,19 +34,19 @@ set_target_properties(zapata-engine-automaton
 add_library(zapata-engine-automaton-plugin SHARED)
 
 target_sources(zapata-engine-automaton-plugin
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-engine-automaton-plugin
-  INTERFACE
+  PUBLIC
     ${ENGINE_AUTOMATON_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-automaton-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-uri
-    zapata-common-events
+    zapata-events
     zapata-engine-fsm
     zapata-engine-automaton
 )

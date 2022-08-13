@@ -27,8 +27,8 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
+    auto& _boot = zpt::globals::get<zpt::startup::boot>(zpt::BOOT());
+    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto& _config = _plugin->config();
 
     _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
@@ -37,8 +37,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
           zpt::WEBSOCKET_SERVER_SOCKET(),
           static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
-        _boot.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
+        _plugin.add_thread([=]() mutable -> void {
+            auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
             zlog("Starting WebSocket transport on port " << _config["port"], zpt::info);
 
             try {

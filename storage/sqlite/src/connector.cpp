@@ -29,9 +29,7 @@
         auto __error__ = _error;                                                                   \
         expect(!zpt::storage::sqlite::is_error(__error__),                                         \
                std::get<0>(__messages[__error__])                                                  \
-                 << "(" << std::get<1>(__messages[__error__]) << "): " << _message,                \
-               500,                                                                                \
-               __error__);                                                                         \
+                 << "(" << std::get<1>(__messages[__error__]) << "): " << _message);               \
     }
 #define sqlite_print(_error)                                                                       \
     {                                                                                              \
@@ -132,7 +130,7 @@ auto
 zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value)
   -> void {
     auto _index = sqlite3_bind_parameter_index(_stmt, (std::string{ ":" } + _name).data());
-    expect(_index != 0, "No such parameter named :" << _name, 500, 0);
+    expect(_index != 0, "No such parameter named :" << _name);
     switch (_value->type()) {
         case zpt::JSString:
         case zpt::JSObject:
@@ -359,7 +357,7 @@ zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection& _
 
 auto
 zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(_document->is_object(), "expected add parameter to be a JSON object", 500, 0);
+    expect(_document->is_object(), "expected add parameter to be a JSON object");
     if (!_document["_id"]->ok()) {
         std::string _id{ zpt::generate::r_uuid() };
         _document << "_id" << _id;
@@ -371,46 +369,46 @@ zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::acti
 
 auto
 zpt::storage::sqlite::action_add::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from an 'add' action", 500, 0);
+    expect(false, "can't modify from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from an 'add' action", 500, 0);
+    expect(false, "can't remove from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from an 'add' action", 500, 0);
+    expect(false, "can't replace from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from an 'add' action", 500, 0);
+    expect(false, "can't find from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::set(std::string const& _attribute, zpt::json _value)
   -> zpt::storage::action::type* {
-    expect(false, "can't set from an 'add' action", 500, 0);
+    expect(false, "can't set from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::unset(std::string const& _attribute)
   -> zpt::storage::action::type* {
-    expect(false, "can't unset from an 'add' action", 500, 0);
+    expect(false, "can't unset from an 'add' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_add::patch(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't patch from an 'add' action", 500, 0);
+    expect(false, "can't patch from an 'add' action");
     return this;
 }
 
@@ -493,32 +491,32 @@ zpt::storage::sqlite::action_modify::action_modify(zpt::storage::sqlite::collect
 
 auto
 zpt::storage::sqlite::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'modify' action", 500, 0);
+    expect(false, "can't add from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_modify::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'modify' action", 500, 0);
+    expect(false, "can't modify from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_modify::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'modify' action", 500, 0);
+    expect(false, "can't remove from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_modify::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'modify' action", 500, 0);
+    expect(false, "can't replace from a 'modify' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_modify::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'modify' action", 500, 0);
+    expect(false, "can't find from a 'modify' action");
     return this;
 }
 
@@ -565,7 +563,7 @@ zpt::storage::sqlite::action_modify::limit(size_t _number) -> zpt::storage::acti
 
 auto
 zpt::storage::sqlite::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
+    expect(_map->is_object(), "expected binding map to be a JSON object");
     try {
         this->add_update();
         for (auto _prepared : this->__prepared) {
@@ -635,13 +633,13 @@ zpt::storage::sqlite::action_remove::action_remove(zpt::storage::sqlite::collect
 
 auto
 zpt::storage::sqlite::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'remove' action", 500, 0);
+    expect(false, "can't add from a 'remove' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_remove::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'remove' action", 500, 0);
+    expect(false, "can't modify from a 'remove' action");
     return this;
 }
 
@@ -654,13 +652,13 @@ zpt::storage::sqlite::action_remove::remove(zpt::json _search) -> zpt::storage::
 auto
 zpt::storage::sqlite::action_remove::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'remove' action", 500, 0);
+    expect(false, "can't replace from a 'remove' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_remove::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'remove' action", 500, 0);
+    expect(false, "can't find from a 'remove' action");
     return this;
 }
 
@@ -704,7 +702,7 @@ zpt::storage::sqlite::action_remove::limit(size_t _number) -> zpt::storage::acti
 
 auto
 zpt::storage::sqlite::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
+    expect(_map->is_object(), "expected binding map to be a JSON object");
     try {
         this->add_delete();
         for (auto _prepared : this->__prepared) {
@@ -760,32 +758,32 @@ zpt::storage::sqlite::action_replace::action_replace(zpt::storage::sqlite::colle
 
 auto
 zpt::storage::sqlite::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'replace' action", 500, 0);
+    expect(false, "can't add from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_replace::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'replace' action", 500, 0);
+    expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_replace::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'replace' action", 500, 0);
+    expect(false, "can't remove from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_replace::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'replace' action", 500, 0);
+    expect(false, "can't replace from a 'replace' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_replace::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'replace' action", 500, 0);
+    expect(false, "can't find from a 'replace' action");
     return this;
 }
 
@@ -897,32 +895,32 @@ zpt::storage::sqlite::action_find::action_find(zpt::storage::sqlite::collection&
 
 auto
 zpt::storage::sqlite::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
-    expect(false, "can't add from a 'find' action", 500, 0);
+    expect(false, "can't add from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_find::modify(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't modify from a 'find' action", 500, 0);
+    expect(false, "can't modify from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_find::remove(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't remove from a 'find' action", 500, 0);
+    expect(false, "can't remove from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_find::replace(std::string const& _id, zpt::json _document)
   -> zpt::storage::action::type* {
-    expect(false, "can't replace from a 'find' action", 500, 0);
+    expect(false, "can't replace from a 'find' action");
     return this;
 }
 
 auto
 zpt::storage::sqlite::action_find::find(zpt::json _search) -> zpt::storage::action::type* {
-    expect(false, "can't find from a 'find' action", 500, 0);
+    expect(false, "can't find from a 'find' action");
     return this;
 }
 
@@ -970,7 +968,7 @@ zpt::storage::sqlite::action_find::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::sqlite::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    expect(_map->is_object(), "expected binding map to be a JSON object", 500, 0);
+    expect(_map->is_object(), "expected binding map to be a JSON object");
     try {
         this->add_select();
         for (auto _prepared : this->__prepared) {

@@ -21,7 +21,7 @@ zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
-    expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
+    expect(this->__name.length() != 0, "you must pass a field name first");
     zpt::json _ref{ std::move(_value) };
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _ref));
     if (!_inserted) { _it->second = _ref; }
@@ -31,7 +31,7 @@ zpt::JSONObjT::push(std::unique_ptr<zpt::JSONElementT> _value) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::push(zpt::json const& _value) -> JSONObjT& {
-    expect(this->__name.length() != 0, "you must pass a field name first", 500, 0);
+    expect(this->__name.length() != 0, "you must pass a field name first");
     auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, _value));
     if (!_inserted) { _it->second = _value; }
     this->__name.clear();
@@ -45,7 +45,7 @@ zpt::JSONObjT::pop(int _idx) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::pop(size_t _idx) -> JSONObjT& {
-    expect(this->__underlying.size() < _idx, "no such index", 500, 0);
+    expect(this->__underlying.size() < _idx, "no such index");
     try {
         this->pop(this->key_for(_idx));
     }
@@ -68,7 +68,7 @@ zpt::JSONObjT::pop(std::string const& _name) -> JSONObjT& {
 
 auto
 zpt::JSONObjT::key_for(size_t _idx) const -> std::string {
-    expect(this->__underlying.size() > _idx, "no such index", 500, 0);
+    expect(this->__underlying.size() > _idx, "no such index");
     std::string _name{ "" };
     size_t _pos{ 0 };
     for (auto _element : this->__underlying) {
@@ -281,48 +281,46 @@ zpt::JSONObjT::operator>=(zpt::JSONObj const& _rhs) const -> bool {
 }
 
 auto
-zpt::JSONObjT::operator[](int _idx) -> zpt::json {
-    expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
+zpt::JSONObjT::operator[](int _idx) -> zpt::json& {
+    expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index");
     return this->operator[](this->key_for(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](size_t _idx) -> zpt::json {
-    expect(this->__underlying.size() < _idx, "no such index", 500, 0);
+zpt::JSONObjT::operator[](size_t _idx) -> zpt::json& {
+    expect(this->__underlying.size() < _idx, "no such index");
     return this->operator[](this->key_for(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](const char* _idx) -> zpt::json {
+zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
     return this->operator[](std::string(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json {
-    auto _found = this->__underlying.find(_idx);
-    if (_found != this->__underlying.end()) { return _found->second; }
-    return zpt::undefined;
+zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json& {
+    return this->__underlying[_idx];
 }
 
 auto
-zpt::JSONObjT::operator[](int _idx) const -> zpt::json const& {
-    expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index", 500, 0);
+zpt::JSONObjT::operator[](int _idx) const -> zpt::json const {
+    expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index");
     return this->operator[](this->key_for(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](size_t _idx) const -> zpt::json const& {
-    expect(this->__underlying.size() < _idx, "no such index", 500, 0);
+zpt::JSONObjT::operator[](size_t _idx) const -> zpt::json const {
+    expect(this->__underlying.size() < _idx, "no such index");
     return this->operator[](this->key_for(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](const char* _idx) const -> zpt::json const& {
+zpt::JSONObjT::operator[](const char* _idx) const -> zpt::json const {
     return this->operator[](std::string(_idx));
 }
 
 auto
-zpt::JSONObjT::operator[](std::string const& _idx) const -> zpt::json const& {
+zpt::JSONObjT::operator[](std::string const& _idx) const -> zpt::json const {
     auto _found = this->__underlying.find(_idx);
     if (_found != this->__underlying.end()) { return _found->second; }
     return zpt::undefined;

@@ -22,6 +22,12 @@
 
 #include <zapata/events/dispatcher.h>
 
+auto
+zpt::DISPATCHER() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
+}
+
 zpt::events::dispatcher::dispatcher(long _max_consumers)
   : __queue{ _max_consumers + 1 }
   , __max_consumers{ _max_consumers } {}
@@ -46,9 +52,7 @@ zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
 auto
 zpt::events::dispatcher::stop_consumers() -> dispatcher& {
     expect(!this->__shutdown->load(),
-           "`stop_consunmers()` already been called from another execution path",
-           500,
-           0);
+           "`stop_consunmers()` already been called from another execution path");
     this->__shutdown->store(true);
     while (this->__running_consumers->load(std::memory_order_relaxed) != 0) {
         std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });
@@ -72,20 +76,10 @@ zpt::events::dispatcher::trap() -> dispatcher& {
         if (state == zpt::events::retrigger) { this->trigger(_event); }
     }
     catch (zpt::failed_expectation const& _e) {
-        // if (!this->report_error(_event,
-        //                         _content,
-        //                         _e.what(),
-        //                         _e.description(),
-        //                         _e.backtrace(),
-        //                         _e.code(),
-        //                         _e.status())) {
-        throw;
-        // }
+        zlog("Uncaught exception found: " << _e.what(), zpt::error);
     }
     catch (std::exception const& _e) {
-        // if (!this->report_error(_event, _content, _e.what(), nullptr, nullptr, -1, 500)) {
-        throw;
-        // }
+        zlog("Uncaught exception found: " << _e.what(), zpt::error);
     }
     return (*this);
 }
@@ -97,18 +91,18 @@ zpt::events::dispatcher::is_stopping_ongoing() -> bool {
 
 auto
 zpt::events::dispatcher::loop(long _consumer_nr) -> void {
-    zpt::this_thread::adaptative_timer<float> _timer{ 0.05f };
-    zlog("Thread@" << _consumer_nr << " starting", zpt::info);
+    zpt::this_thread::timer<float> _timer{ 0.005f };
+    zlog("Thread@" << _consumer_nr << " starting", zpt::trace);
     do {
         try {
             this->trap();
             _timer.reset();
         }
         catch (zpt::NoMoreElementsException const& e) {
-            _timer.sleep_for(0.1f);
+            _timer.sleep_for(0.5f);
         }
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();
     --(*this->__running_consumers);
-    zlog("Thread@" << _consumer_nr << " stopping", zpt::info);
+    zlog("Thread@" << _consumer_nr << " stopping", zpt::trace);
 }

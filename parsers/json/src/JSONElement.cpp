@@ -105,7 +105,7 @@ zpt::JSONElementT::demangle() const -> std::string {
 
 auto
 zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
-    expect(_in >= 0, "the type must be a valid value", 500, 0);
+    expect(_in >= 0, "the type must be a valid value");
 
     if (_in == this->__target.__type) { return (*this); }
 
@@ -459,81 +459,63 @@ zpt::JSONElementT::number() -> double {
 auto
 zpt::JSONElementT::object() const -> zpt::JSONObj const& {
     expect(this->__target.__type == zpt::JSObject,
-           std::string("this element is not of type JSObject: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSObject: ") + this->stringify());
     return this->__target.__object;
 }
 
 auto
 zpt::JSONElementT::array() const -> zpt::JSONArr const& {
     expect(this->__target.__type == zpt::JSArray,
-           std::string("this element is not of type JSArray: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSArray: ") + this->stringify());
     return this->__target.__array;
 }
 
 auto
 zpt::JSONElementT::string() const -> std::string const& {
     expect(this->__target.__type == zpt::JSString,
-           std::string("this element is not of type JSString: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSString: ") + this->stringify());
     return *(this->__target.__string.get());
 }
 
 auto
 zpt::JSONElementT::integer() const -> long long const& {
     expect(this->__target.__type == zpt::JSInteger,
-           std::string("this element is not of type JSInteger: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSInteger: ") + this->stringify());
     return this->__target.__integer;
 }
 
 auto
 zpt::JSONElementT::floating() const -> double const& {
     expect(this->__target.__type == zpt::JSDouble,
-           std::string("this element is not of type JSDouble: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSDouble: ") + this->stringify());
     return this->__target.__double;
 }
 
 auto
 zpt::JSONElementT::boolean() const -> bool const& {
     expect(this->__target.__type == zpt::JSBoolean,
-           std::string("this element is not of type JSBoolean: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSBoolean: ") + this->stringify());
     return this->__target.__boolean;
 }
 
 auto
 zpt::JSONElementT::date() const -> zpt::timestamp_t const& {
     expect(this->__target.__type == zpt::JSDate,
-           std::string("this element is not of type JSDate: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSDate: ") + this->stringify());
     return this->__target.__date;
 }
 
 auto
 zpt::JSONElementT::lambda() const -> zpt::lambda const& {
     expect(this->__target.__type == zpt::JSLambda,
-           std::string("this element is not of type JSLambda: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSLambda: ") + this->stringify());
     return this->__target.__lambda;
 }
 
 auto
 zpt::JSONElementT::regex() const -> zpt::regex const& {
     expect(this->__target.__type == zpt::JSRegex,
-           std::string("this element is not of type JSRegex: ") + this->stringify(),
-           500,
-           1100);
+           std::string("this element is not of type JSRegex: ") + this->stringify());
     return this->__target.__regex;
 }
 
@@ -542,9 +524,7 @@ zpt::JSONElementT::number() const -> double const {
     expect(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger ||
              this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean,
            std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") +
-             this->stringify(),
-           500,
-           1100);
+             this->stringify());
     switch (this->__target.__type) {
         case zpt::JSInteger: {
             return (double)this->__target.__integer;
@@ -1175,57 +1155,43 @@ zpt::JSONElementT::operator zpt::timestamp_t() {
 
 zpt::JSONElementT::operator JSONObj() {
     expect(this->type() == zpt::JSObject,
-           std::string("this element is not of type JSObject: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSObject: ") + static_cast<std::string>(*this));
     return this->object();
 }
 
 zpt::JSONElementT::operator JSONArr() {
     expect(this->type() == zpt::JSArray,
-           std::string("this element is not of type JSArray: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSArray: ") + static_cast<std::string>(*this));
     return this->array();
 }
 
 zpt::JSONElementT::operator JSONObj&() {
     expect(this->type() == zpt::JSObject,
-           std::string("this element is not of type JSObject: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSObject: ") + static_cast<std::string>(*this));
     return this->object();
 }
 
 zpt::JSONElementT::operator JSONArr&() {
     expect(this->type() == zpt::JSArray,
-           std::string("this element is not of type JSArray: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSArray: ") + static_cast<std::string>(*this));
     return this->array();
 }
 
 zpt::JSONElementT::operator zpt::lambda() {
     expect(this->type() == zpt::JSLambda,
-           std::string("this element is not of type JSLambda: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSLambda: ") + static_cast<std::string>(*this));
     return this->lambda();
 }
 
 zpt::JSONElementT::operator zpt::regex() {
     expect(this->type() == zpt::JSRegex,
-           std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this));
     return this->regex();
 }
 
 zpt::JSONElementT::operator zpt::regex&() {
     expect(this->type() == zpt::JSRegex,
-           std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this),
-           0,
-           0);
+           std::string("this element is not of type JSRegex: ") + static_cast<std::string>(*this));
     return this->regex();
 }
 
@@ -1333,7 +1299,7 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
 
 auto
 zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
             if (this->__target.__type != _in.type()) { return false; }
@@ -1401,7 +1367,7 @@ zpt::JSONElementT::operator==(zpt::json _rhs) const -> bool {
 
 auto
 zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     return !(*this == _in);
 }
 
@@ -1412,57 +1378,57 @@ zpt::JSONElementT::operator!=(zpt::json _rhs) const -> bool {
 
 auto
 zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if (this->__target.__type != _in.type()) { return this->hash() < _in.hash(); }
+            if (this->__target.__type != _in.type()) { return this->__target.__type < _in.type(); }
             return *(this->__target.__object) < *(_in.object());
         }
         case zpt::JSArray: {
-            if (this->__target.__type != _in.type()) { return this->hash() < _in.hash(); }
+            if (this->__target.__type != _in.type()) { return this->__target.__type < _in.type(); }
             return *(this->__target.__array) < *(_in.array());
         }
         case zpt::JSString: {
-            if (this->__target.__type != _in.type()) { return this->hash() < _in.hash(); }
+            if (this->__target.__type != _in.type()) { return this->__target.__type < _in.type(); }
             return *(this->__target.__string.get()) < _in.string();
         }
         case zpt::JSInteger: {
             if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
                 _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
-                return this->hash() < _in.hash();
+                return this->__target.__type < _in.type();
             }
             return this->__target.__integer < _in.number();
         }
         case zpt::JSDouble: {
             if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
                 _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
-                return this->hash() < _in.hash();
+                return this->__target.__type < _in.type();
             }
             return this->__target.__double < _in.number();
         }
         case zpt::JSBoolean: {
             if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
                 _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
-                return this->hash() < _in.hash();
+                return this->__target.__type < _in.type();
             }
             return this->__target.__boolean < _in.number();
         }
         case zpt::JSNil: {
-            if (this->__target.__type != _in.type()) { return this->hash() < _in.hash(); }
-            return true;
+            return this->__target.__type < _in.type();
         }
         case zpt::JSDate: {
             if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
                 _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
-                return this->hash() < _in.hash();
+                return this->__target.__type < _in.type();
             }
             return this->__target.__date < _in.number();
         }
         case zpt::JSLambda: {
+            if (this->__target.__type != _in.type()) { return this->__target.__type < _in.type(); }
             return this->__target.__lambda->n_args() < _in.lambda()->n_args();
         }
         case zpt::JSRegex: {
-            return this->hash() < _in.hash();
+            return this->__target.__type < _in.type();
         }
     }
     return false;
@@ -1475,7 +1441,7 @@ zpt::JSONElementT::operator<(zpt::json _rhs) const -> bool {
 
 auto
 zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
             if (this->__target.__type != _in.type()) { return this->hash() > _in.hash(); }
@@ -1558,7 +1524,7 @@ zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool {
 
 auto
 zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
             return this->__target.__object->get_path(_path, _separator);
@@ -1584,7 +1550,7 @@ auto
 zpt::JSONElementT::set_path(std::string const& _path,
                             zpt::json _value,
                             std::string const& _separator) -> JSONElementT& {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->set_path(_path, _value, _separator);
@@ -1611,7 +1577,7 @@ zpt::JSONElementT::set_path(std::string const& _path,
 auto
 zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator)
   -> JSONElementT& {
-    expect(this->__target.__type >= 0, "the type must be a valid value", 500, 0);
+    expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->del_path(_path, _separator);

@@ -124,9 +124,7 @@ zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, uns
     auto _comma = _signature.find(",");
 
     expect(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
-           "lambda signature format not recognized",
-           412,
-           0);
+           "lambda signature format not recognized");
 
     std::string _name{ _signature.substr(_lpar + 1, _comma - _lpar - 1) };
     std::string _args{ _signature.substr(_comma + 1, _rpar - _comma - 1) };
@@ -147,7 +145,7 @@ auto
 zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_signature);
-        expect(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined");
     }
     catch (zpt::failed_expectation const& _e) {
     }
@@ -160,7 +158,7 @@ auto
 zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_name, _n_args);
-        expect(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined");
     }
     catch (zpt::failed_expectation const& _e) {
     }
@@ -170,7 +168,7 @@ zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _
 
 auto
 zpt::lambda::call(std::string const& _name, zpt::json _args, zpt::context _ctx) -> zpt::json {
-    expect(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
+    expect(_args->type() == zpt::JSArray, "second argument must be a JSON array");
     zpt::symbol _f = zpt::lambda::find(_name, (**_args->array()).size());
     return _f(_args, (**_args->array()).size(), _ctx);
 }
@@ -179,9 +177,7 @@ auto
 zpt::lambda::find(std::string const& _signature) -> zpt::symbol {
     auto _found = zpt::__lambdas->find(_signature);
     expect(_found != zpt::__lambdas->end(),
-           std::string("symbol for ") + _signature + std::string(" was not found"),
-           404,
-           0);
+           std::string("symbol for ") + _signature + std::string(" was not found"));
     return std::get<2>(_found->second);
 }
 

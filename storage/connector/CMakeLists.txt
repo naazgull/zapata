@@ -5,18 +5,18 @@ set(STORAGE_CONNECTOR_INCLUDE_DIR
 add_library(zapata-storage-connector SHARED)
 
 target_sources(zapata-storage-connector
-  PRIVATE
+  PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  INTERFACE
+  PUBLIC
     ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector/connector.h
     ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector.h
 )
 target_include_directories(zapata-storage-connector
-  INTERFACE
+  PUBLIC
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-connector
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-parser-functional
@@ -47,11 +47,11 @@ target_sources(zapata_test_storage_connector
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_storage_connector
-  PUBLIC
+  PRIVATE
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_connector
-  PUBLIC
+  PRIVATE
     zapata-base
     zapata-parser-json
     zapata-parser-functional
