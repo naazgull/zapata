@@ -16,6 +16,6 @@ jobs:
     - name: Setup compiler
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 700 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Configure
-      run: mkdir build && cd build && cmake ..
+      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release
     - name: Build modules
       run: cd build && make -j4
