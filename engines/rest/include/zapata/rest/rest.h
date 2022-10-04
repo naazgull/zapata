@@ -44,6 +44,7 @@ class receive_message {
     receive_message(zpt::polling& _polling, zpt::basic_stream& _stream);
     virtual ~receive_message() = default;
 
+    auto blocked() const -> bool;
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
 
   private:

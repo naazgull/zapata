@@ -31,22 +31,23 @@ class JSONTokenizerLexer : public JSONLexer {
     JSONTokenizerLexer(std::istream& _in = std::cin, std::ostream& _out = std::cout);
     virtual ~JSONTokenizerLexer();
 
-    void switchRoots(zpt::json& _root);
+    auto switchRoots(zpt::json& _root) -> void;
+    auto justLeave() -> void;
 
-    void result(zpt::JSONType _in);
-    void finish(zpt::JSONType _in);
+    auto result(zpt::JSONType _in) -> void;
+    auto finish(zpt::JSONType _in) -> void;
 
-    void init(zpt::JSONType _in_type, const std::string _in_str);
-    void init(zpt::JSONType _in_type);
-    void init(bool _in);
-    void init(long long _in);
-    void init(double _in);
-    void init(std::string const& _in);
-    void init(zpt::lambda _in);
-    void init(zpt::regex _in);
-    void init();
+    auto init(zpt::JSONType _in_type, const std::string _in_str) -> void;
+    auto init(zpt::JSONType _in_type) -> void;
+    auto init(bool _in) -> void;
+    auto init(long long _in) -> void;
+    auto init(double _in) -> void;
+    auto init(std::string const& _in) -> void;
+    auto init(zpt::lambda _in) -> void;
+    auto init(zpt::regex _in) -> void;
+    auto init() -> void;
 
-    void add();
+    auto add() -> void;
 
     zpt::JSONElementT* __root{ nullptr };
     zpt::JSONType __root_type;

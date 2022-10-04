@@ -32,61 +32,38 @@ zpt::UNIX_SERVER_SOCKET() -> ssize_t& {
 }
 
 auto
-zpt::net::transport::unix_socket::send(zpt::exchange& _channel) const -> void {
-    if (_channel->to_send()->ok()) { _channel->stream() << _channel->to_send(); }
-}
-
-auto
-zpt::net::transport::unix_socket::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
-
-    std::string _content_type = _channel->content_type()[0];
-    _channel->received() =
-      _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
-
-    _channel //
-      ->version()
-      .assign("1.0");
-    _channel //
-      ->scheme()
-      .assign("unix");
-
-    if (!_channel->received()["performative"]->ok() || _channel->received()["status"]->ok()) {
-        _channel->received() << "performative" << 7;
-    }
-    if (!_channel->received()["resource"]->ok()) {
-        _channel //
-          ->uri()
-          .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
-    }
-    else {
-        _channel //
-          ->uri()
-          .assign(_channel->received()["resource"]);
-    }
-
-    _channel->keep_alive() = true;
-}
-
-auto
-zpt::net::transport::unix_socket::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'");
-    expect(_uri["scheme"] == "unix", "scheme must be 'unix'");
-    std::string _path{ zpt::path::join(_uri["path"]) };
-    auto _stream = zpt::make_stream<std::basic_fstream<char>>(_path);
-    _stream->transport("unix");
-    zpt::exchange _to_return{ _stream.release() };
-    _to_return //
-      ->scheme()
-      .assign("unix");
-    _to_return //
-      ->uri()
-      .assign(_path);
-    _to_return->keep_alive() = true;
-    if (_uri["scheme_options"]->ok()) {
-        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
-    }
-    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
+zpt::net::transport::unix_socket::make_request() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
+}
+
+auto
+zpt::net::transport::unix_socket::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
+    return _to_return;
+}
+
+auto
+zpt::net::transport::unix_socket::make_reply(zpt::message _request) const -> zpt::message {
+    auto _to_return =
+      zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
+    return _to_return;
+}
+
+auto
+zpt::net::transport::unix_socket::process_incoming_request(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "unix", "Stream underlying transport isn't 'unix'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
+}
+
+auto
+zpt::net::transport::unix_socket::process_incoming_reply(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "unix", "Stream underlying transport isn't 'unix'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
 }

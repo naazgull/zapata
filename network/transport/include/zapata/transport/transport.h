@@ -55,12 +55,13 @@ class basic_message {
     virtual auto version(std::string const& _version) -> void = 0;
     virtual auto to_stream(std::ostream& _out) const -> void = 0;
     virtual auto from_stream(std::istream& _in) -> void = 0;
+    virtual auto make_reply() -> std::shared_ptr<basic_message> = 0;
 };
 using message = std::shared_ptr<basic_message>;
 
 class json_message : public basic_message {
   public:
-    json_message() = default;
+    json_message();
     json_message(basic_message const& _req, bool);
     virtual ~json_message() = default;
 
@@ -84,6 +85,7 @@ class json_message : public basic_message {
     auto status(zpt::status _status) -> void override;
     auto uri(std::string const& _uri) -> void override;
     auto version(std::string const& _version) -> void override;
+    auto make_reply() -> std::shared_ptr<basic_message> override;
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 
@@ -99,8 +101,10 @@ class basic_transport {
     virtual auto make_request() const -> zpt::message = 0;
     virtual auto make_reply() const -> zpt::message = 0;
     virtual auto make_reply(zpt::message _reuqest) const -> zpt::message = 0;
-    virtual auto receive(zpt::basic_stream& _stream) const -> zpt::message = 0;
-    virtual auto send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void = 0;
+    virtual auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message = 0;
+    virtual auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message = 0;
+    virtual auto receive(zpt::basic_stream& _stream) const -> zpt::message final;
+    virtual auto send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void final;
 };
 using transport = std::shared_ptr<basic_transport>;
 

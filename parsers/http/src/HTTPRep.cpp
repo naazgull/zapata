@@ -60,7 +60,19 @@ zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
-    _p.parse();
+    try {
+        _p.parse();
+    }
+    catch (zpt::SyntaxErrorException const& _e) {
+        throw;
+    }
+    catch (...) {
+    }
+}
+
+auto
+zpt::http::basic_reply::make_reply() -> zpt::message {
+    return zpt::make_message<zpt::http::basic_reply>(*this, true);
 }
 
 auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message {

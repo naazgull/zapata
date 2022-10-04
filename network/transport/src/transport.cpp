@@ -30,15 +30,46 @@ zpt::TRANSPORT_LAYER() -> ssize_t& {
     return _global;
 }
 
+zpt::json_message::json_message() {
+    auto _rawtime = time(nullptr);
+    struct tm _ptm;
+    char _buffer_date[80];
+    localtime_r(&_rawtime, &_ptm);
+    strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+    auto _headers = zpt::json{ "Content-Type",
+                               "application/json",
+                               "Cache-Control",
+                               "no-store",
+                               "X-Conversation-ID",
+                               "0",
+                               "X-Version",
+                               "1.0",
+                               "Date",
+                               std::string{ _buffer_date } };
+
+    this->__underlying << "headers" << _headers;
+}
+
 zpt::json_message::json_message(basic_message const& _request, bool) {
     auto _req_headers = _request.headers();
-    auto _headers = zpt::json::object();
-    _headers["Content-Type"] = _request.content_type();
-    _headers["Cache-Control"] =
-      _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-    _headers["X-Conversation-ID"] =
-      _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
-    _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0";
+    auto _rawtime = time(nullptr);
+    struct tm _ptm;
+    char _buffer_date[80];
+    localtime_r(&_rawtime, &_ptm);
+    strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
+
+    auto _headers =
+      zpt::json{ "Content-Type",
+                 _request.content_type(),
+                 "Cache-Control",
+                 _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
+                 "X-Conversation-ID",
+                 _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0",
+                 "X-Version",
+                 _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0",
+                 "Date",
+                 std::string{ _buffer_date } };
 
     this->__underlying                                       //
       << "performative" << zpt::ontology::to_str(zpt::Reply) //
@@ -144,6 +175,46 @@ zpt::json_message::uri(std::string const& _uri) -> void {
 auto
 zpt::json_message::version(std::string const& _version) -> void {
     this->__underlying["headers"]["X-Version"] = _version;
+}
+
+auto
+zpt::json_message::make_reply() -> zpt::message {
+    return zpt::make_message<zpt::json_message>(*this, true);
+}
+
+auto
+zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::message {
+    expect(_stream.state() == zpt::stream_state::IDLE ||
+             _stream.state() == zpt::stream_state::WAITING,
+           "Stream not in a valida state for receiving");
+
+    zpt::message _to_return;
+    if (_stream.state() == zpt::stream_state::IDLE) {
+        _stream.state() = zpt::stream_state::PROCESSING;
+        _to_return = this->process_incoming_request(_stream);
+    }
+    else if (_stream.state() == zpt::stream_state::WAITING) {
+        _stream.state() = zpt::stream_state::IDLE;
+        _to_return = this->process_incoming_reply(_stream);
+    }
+    zlog("Received '" << _stream.transport() << "' message:\n" << _to_return, zpt::trace);
+    return _to_return;
+}
+
+auto
+zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void {
+    expect(_stream.state() == zpt::stream_state::IDLE ||
+             _stream.state() == zpt::stream_state::PROCESSING,
+           "Stream not in a valida state for sending");
+
+    zlog("Sending '" << _stream.transport() << "' message:\n" << _to_send, zpt::trace);
+    _stream << _to_send << std::flush;
+    if (_stream.state() == zpt::stream_state::IDLE) {
+        _stream.state() = zpt::stream_state::WAITING;
+    }
+    else if (_stream.state() == zpt::stream_state::PROCESSING) {
+        _stream.state() = zpt::stream_state::IDLE;
+    }
 }
 
 zpt::network::layer::layer() {

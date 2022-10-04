@@ -71,6 +71,11 @@ zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
 auto
 zpt::events::dispatcher::trap() -> dispatcher& {
     auto _event = this->__queue.pop();
+    if (_event->blocked()) {
+        this->trigger(_event);
+        std::this_thread::yield();
+        return (*this);
+    }
     try {
         auto state = (*_event)((*this));
         if (state == zpt::events::retrigger) { this->trigger(_event); }
@@ -99,7 +104,7 @@ zpt::events::dispatcher::loop(long _consumer_nr) -> void {
             _timer.reset();
         }
         catch (zpt::NoMoreElementsException const& e) {
-            _timer.sleep_for(0.5f);
+            _timer.sleep_for(0.01f);
         }
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();

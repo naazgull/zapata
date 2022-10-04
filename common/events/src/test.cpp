@@ -28,6 +28,8 @@ class my_operator {
       : __str{ _str }
       , __i{ _i } {}
 
+    auto blocked() const -> bool { return true; }
+
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
         zlog("job1: " << this->__str << " " << this->__i, zpt::info);
         ++this->__i;
@@ -43,6 +45,8 @@ class my_other_operator {
   public:
     my_other_operator(int _i)
       : __i{ _i } {}
+
+    auto blocked() const -> bool { return true; }
 
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
         zlog("job2: xpto " << this->__i, zpt::info);

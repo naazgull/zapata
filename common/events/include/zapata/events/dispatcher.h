@@ -31,7 +31,7 @@ auto
 DISPATCHER() -> ssize_t&;
 
 namespace events {
-enum state { retrigger = -1, finish = 0, abort = 1 };
+enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
 class dispatcher;
 } // namespace events
 } // namespace zpt
@@ -47,6 +47,7 @@ class abstract_event {
     abstract_event() = default;
     virtual ~abstract_event() = default;
 
+    virtual auto blocked() const -> bool = 0;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
 };
 using event = std::shared_ptr<zpt::abstract_event>;
@@ -58,6 +59,7 @@ class event_t : public zpt::abstract_event {
     event_t(Args&&... _args);
     virtual ~event_t() = default;
 
+    virtual auto blocked() const -> bool override final;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher)
       -> zpt::events::state override final;
 
@@ -102,6 +104,12 @@ template<Operation T>
 template<typename... Args>
 zpt::event_t<T>::event_t(Args&&... _args)
   : __underlying{ std::forward<Args>(_args)... } {}
+
+template<Operation T>
+auto
+zpt::event_t<T>::blocked() const -> bool {
+    return this->__underlying.blocked();
+}
 
 template<Operation T>
 auto

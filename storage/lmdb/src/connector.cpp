@@ -386,7 +386,7 @@ zpt::storage::lmdb::action_add::execute() -> zpt::storage::result {
         mdb_expect(_error, "unable to commit transaction");
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         mdb_dbi_close(this->__underlying->env(), _dbi);
         mdb_txn_abort(_trx);
         throw;
@@ -550,7 +550,7 @@ zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
         mdb_expect(_error, "unable to commit transaction");
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         mdb_cursor_close(_cursor);
         mdb_dbi_close(this->__underlying->env(), _dbi);
         mdb_txn_abort(_trx);
@@ -700,7 +700,7 @@ zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
         mdb_expect(_error, "unable to commit transaction");
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         mdb_cursor_close(_cursor);
         mdb_dbi_close(this->__underlying->env(), _dbi);
         mdb_txn_abort(_trx);
@@ -823,7 +823,7 @@ zpt::storage::lmdb::action_replace::execute() -> zpt::storage::result {
         mdb_expect(_error, "unable to commit transaction");
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         mdb_dbi_close(this->__underlying->env(), _dbi);
         mdb_txn_abort(_trx);
         throw;
@@ -988,7 +988,7 @@ zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
         mdb_txn_abort(_trx);
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         mdb_cursor_close(_cursor);
         mdb_dbi_close(this->__underlying->env(), _dbi);
         mdb_txn_abort(_trx);

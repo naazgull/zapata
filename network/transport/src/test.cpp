@@ -15,16 +15,16 @@ class some_protocol : public zpt::basic_transport {
         return nullptr;
     }
 
-    auto receive(zpt::basic_stream& _stream) const -> zpt::message override {
+    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override {
         auto _message = zpt::make_message<zpt::json_message>();
         _stream >> _message;
-        std::cout << _message << std::endl << std::flush;
         return _message;
     }
 
-    auto send(zpt::basic_stream& _stream, zpt::message _to_send) const
-      -> void override {
-        _stream << _to_send << std::flush;
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override {
+        auto _message = zpt::make_message<zpt::json_message>();
+        _stream >> _message;
+        return _message;
     }
 };
 

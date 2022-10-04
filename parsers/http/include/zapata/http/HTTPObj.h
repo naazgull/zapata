@@ -638,11 +638,13 @@ class basic_message : public zpt::basic_message {
 
 class basic_request : public zpt::http::basic_message {
   public:
-    basic_request() = default;
+    basic_request();
+    basic_request(zpt::basic_message const& _request, bool);
     virtual ~basic_request() = default;
 
     auto to_stream(std::ostream& _out) const -> void override;
     auto from_stream(std::istream& _in) -> void override;
+    auto make_reply() -> zpt::message override;
 };
 using request = std::shared_ptr<basic_request>;
 
@@ -654,6 +656,7 @@ class basic_reply : public zpt::http::basic_message {
 
     auto to_stream(std::ostream& _out) const -> void override;
     auto from_stream(std::istream& _in) -> void override;
+    auto make_reply() -> zpt::message override;
 };
 using reply = std::shared_ptr<basic_reply>;
 } // namespace http

@@ -47,6 +47,7 @@ exp :
 			d_scanner.d_chunked_length = -1;
 			d_scanner.d_chunked.assign("");
 		}
+        d_scanner.justLeave();
 	}
 |
 	HTTP_VERSION
@@ -71,6 +72,7 @@ exp :
 			d_scanner.d_chunked_length = -1;
 			d_scanner.d_chunked.assign("");
 		}
+        d_scanner.justLeave();
 	}
 ;
 

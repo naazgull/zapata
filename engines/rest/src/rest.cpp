@@ -47,12 +47,17 @@ zpt::rest::receive_message::receive_message(zpt::polling& _polling, zpt::basic_s
   , __stream{ _stream } {}
 
 auto
+zpt::rest::receive_message::blocked() const -> bool {
+    return false;
+}
+
+auto
 zpt::rest::receive_message::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
     auto _transport = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER())
                         .get(this->__stream.transport());
     try {
         auto _request = _transport->receive(this->__stream);
-        auto _reply = _transport->make_reply(_request);
+        auto _reply = _request->make_reply();
         _reply->status(200);
         _reply->body() = "<h1>Hello WORLD!!!</h1>";
         _transport->send(this->__stream, _reply);

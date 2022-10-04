@@ -448,7 +448,7 @@ zpt::storage::sqlite::action_add::execute() -> zpt::storage::result {
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     zpt::json _result{ "state", this->get_state(), "generated", this->__generated_uuid };
@@ -573,7 +573,7 @@ zpt::storage::sqlite::action_modify::bind(zpt::json _map) -> zpt::storage::actio
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     return this;
@@ -591,7 +591,7 @@ zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     zpt::json _result{ "state", this->get_state() };
@@ -712,7 +712,7 @@ zpt::storage::sqlite::action_remove::bind(zpt::json _map) -> zpt::storage::actio
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     return this;
@@ -729,7 +729,7 @@ zpt::storage::sqlite::action_remove::execute() -> zpt::storage::result {
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     zpt::json _result{ "state", this->get_state() };
@@ -841,7 +841,7 @@ zpt::storage::sqlite::action_replace::execute() -> zpt::storage::result {
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     zpt::json _result{ "state", this->get_state() };
@@ -978,7 +978,7 @@ zpt::storage::sqlite::action_find::bind(zpt::json _map) -> zpt::storage::action:
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     return this;
@@ -990,7 +990,7 @@ zpt::storage::sqlite::action_find::execute() -> zpt::storage::result {
         this->add_select();
     }
     catch (zpt::failed_expectation const& _e) {
-        this->set_state(_e.code());
+        this->set_state(-1);
         throw;
     }
     auto _found = zpt::json::array();

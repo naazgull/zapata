@@ -103,9 +103,7 @@ zpt::http::basic_message::body(std::string const& _body) -> void {
     if (this->content_type() == "application/json") {
         this->__underlying["body"] = zpt::json::parse_json_str(_body);
     }
-    else {
-        this->__underlying["body"] = _body;
-    }
+    else { this->__underlying["body"] = _body; }
 }
 
 auto

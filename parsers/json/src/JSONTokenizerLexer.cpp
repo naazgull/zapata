@@ -15,6 +15,11 @@ zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
     this->begin(zpt::JSONLexerBase::StartCondition_::INITIAL);
 }
 
+auto
+zpt::JSONTokenizerLexer::justLeave() -> void {
+    this->leave(-1);
+}
+
 void
 zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     try {

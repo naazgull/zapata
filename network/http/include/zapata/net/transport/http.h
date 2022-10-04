@@ -44,12 +44,8 @@ class http : public zpt::basic_transport {
     auto make_request() const -> zpt::message override;
     auto make_reply() const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;
-    auto receive(zpt::basic_stream& _stream) const -> zpt::message override;
-    auto send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void override;
-
-  private:
-    auto receive_request(zpt::basic_stream& _stream) const -> zpt::message;
-    auto receive_reply(zpt::basic_stream& _stream) const -> zpt::message;
+    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

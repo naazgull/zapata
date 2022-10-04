@@ -23,6 +23,7 @@
 #include <cstdarg>
 #include <ostream>
 #include <regex>
+#include <zapata/exceptions/SyntaxErrorException.h>
 #include <zapata/json/JSONClass.h>
 #include <zapata/json/JSONParser.h>
 
@@ -604,8 +605,7 @@ zpt::json::operator/(zpt::json _rhs) -> zpt::json {
     if (_rhs->type() == zpt::JSNil) { return this->__underlying->clone(); }
     switch (this->__underlying->type()) {
         case zpt::JSObject: {
-            expect(
-              this->__underlying->type() == zpt::JSObject, "can't divide JSON objects");
+            expect(this->__underlying->type() == zpt::JSObject, "can't divide JSON objects");
         }
         case zpt::JSArray: {
             if (_rhs->type() == zpt::JSArray) {
@@ -814,7 +814,14 @@ zpt::json::load_from(std::istream& _in) -> zpt::json& {
     static thread_local zpt::JSONParser _thread_local_parser;
     _thread_local_parser.switchRoots(*this);
     _thread_local_parser.switchStreams(_in);
-    _thread_local_parser.parse();
+    try {
+        _thread_local_parser.parse();
+    }
+    catch (zpt::SyntaxErrorException const& _e) {
+        throw;
+    }
+    catch (...) {
+    }
     return (*this);
 }
 

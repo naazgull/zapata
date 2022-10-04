@@ -28,11 +28,11 @@
 
 extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _config = _plugin.config();
     auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
 
-    _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
-    _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
+    _layer.add("file", zpt::make_transport<zpt::net::transport::file>());
+    _layer.add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
     if (_config["path"]->ok()) {
         expect(!zpt::file_exists(_config["path"]->string()),
                "Unix socket '" << _config["path"]
@@ -48,7 +48,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("unix");
-                    _polling.listen_on(_client);
+                    _polling.listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
@@ -60,7 +60,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
 extern "C" auto
 _zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
+    auto& _config = _plugin.config();
     if (_config["path"]->ok()) {
         zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
         zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());

@@ -54,50 +54,20 @@ zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::messa
 }
 
 auto
-zpt::net::transport::http::receive(zpt::basic_stream& _stream) const -> zpt::message {
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::PROCESSING;
-        return this->receive_request(_stream);
-    }
-    else if (_stream.state() == zpt::stream_state::WAITING) {
-        _stream.state() = zpt::stream_state::IDLE;
-        return this->receive_reply(_stream);
-    }
-    expect(false, "Stream not in a valida state for receiving");
-}
-
-auto
-zpt::net::transport::http::send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void {
-    expect(_stream.transport() == "http", "Stream underlying transport isn't HTTP");
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::PROCESSING,
-           "Stream not in a valida state for receiving");
-
-    zlog("Sending HTTP message:\n" << _to_send, zpt::trace);
-    _stream << _to_send << std::flush;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::WAITING;
-    }
-    else if (_stream.state() == zpt::stream_state::PROCESSING) {
-        _stream.state() = zpt::stream_state::IDLE;
-    }
-}
-
-auto
-zpt::net::transport::http::receive_request(zpt::basic_stream& _stream) const -> zpt::message {
-    expect(_stream.transport() == "http", "Stream underlying transport isn't HTTP");
+zpt::net::transport::http::process_incoming_request(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
     auto _request = zpt::make_message<zpt::http::basic_request>();
     _stream >> std::noskipws >> _request;
     _request->uri()["domain"] = _request->headers()["Host"];
-    zlog("Received HTTP message:\n" << _request, zpt::trace);
     return _request;
 }
 
 auto
-zpt::net::transport::http::receive_reply(zpt::basic_stream& _stream) const -> zpt::message {
-    expect(_stream.transport() == "http", "Stream underlying transport isn't HTTP");
+zpt::net::transport::http::process_incoming_reply(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
     auto _reply = zpt::make_message<zpt::http::basic_reply>();
     _stream >> std::noskipws >> _reply;
-    zlog("Received HTTP message:\n" << _reply, zpt::trace);
     return _reply;
 }
