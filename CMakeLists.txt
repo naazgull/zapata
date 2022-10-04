@@ -39,7 +39,7 @@ include_directories(
     ${MYSQL_XDEVAPI_INCLUDEDIR}
 )
 
-add_subdirectory(bridges/base)
+# add_subdirectory(bridges/base)
 # add_subdirectory(bridges/lua)
 # add_subdirectory(bridges/prolog)
 # add_subdirectory(bridges/python)

@@ -9,7 +9,7 @@ externalproject_add(
   BUILD_COMMAND make -j${N}
   CMAKE_ARGS
     -Wno-dev
-    # -DCMAKE_INSTALL_PREFIX=${CMAKE_SOURCE_DIR}/third_party/xdevapi
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
 )
 set(MYSQL_XDEVAPI_INCLUDEDIR
   ${CMAKE_INSTALL_PREFIX}/include

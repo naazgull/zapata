@@ -4,3 +4,4 @@ cscope*
 .emacs.desktop*
 */**/__pycache__/
 */**/build
+third_party/*/**

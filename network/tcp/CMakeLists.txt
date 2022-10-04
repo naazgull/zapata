@@ -53,11 +53,16 @@ set_target_properties(zapata-net-tcp
 add_library(zapata-net-tcp-plugin SHARED)
 add_dependencies(zapata-net-tcp-plugin
   zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
   zapata-io-stream
   zapata-io-socket
+  zapata-lockfree
   zapata-net-transport
-  zapata-parser-json
   zapata-net-tcp
+  zapata-parser-json
+  zapata-parser-uri
 )
 target_sources(zapata-net-tcp-plugin
   PUBLIC

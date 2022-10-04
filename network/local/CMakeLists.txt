@@ -54,11 +54,16 @@ set_target_properties(zapata-net-local
 add_library(zapata-net-local-plugin SHARED)
 add_dependencies(zapata-net-local-plugin
   zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
   zapata-io-stream
   zapata-io-socket
+  zapata-lockfree
   zapata-net-transport
-  zapata-parser-json
   zapata-net-local
+  zapata-parser-json
+  zapata-parser-uri
 )
 target_sources(zapata-net-local-plugin
   PUBLIC

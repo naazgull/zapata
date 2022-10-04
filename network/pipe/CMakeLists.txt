@@ -51,7 +51,7 @@ set_target_properties(zapata-net-pipe
 )
 
 add_library(zapata-net-pipe-plugin SHARED)
-add_dependencies(zapata-net-http-plugin
+add_dependencies(zapata-net-pipe-plugin
   zapata-base
   zapata-engine-startup
   zapata-events
