@@ -12,9 +12,7 @@ jobs:
     - name: Update OS
       run: sudo apt update
     - name: Install dependencies
-      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev libossp-uuid-dev g++-10 cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
-    - name: Setup compiler
-      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 700 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 800 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+      run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev libossp-uuid-dev g++ cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
     - name: Configure
       run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release
     - name: Build modules
