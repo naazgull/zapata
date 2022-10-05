@@ -13,7 +13,9 @@ jobs:
       run: sudo apt update
     - name: Install dependencies
       run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev libossp-uuid-dev g++ cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
+    - name: Install dependencies (XDevApi)
+      run: git clone https://github.com/mysql/mysql-connector-cpp.git && cd mysql-connector-cpp && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/zapata && cmake --build . --config Release && sudo cmake --install .
     - name: Configure
-      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release
+      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
     - name: Build modules
-      run: cd build && make -j4
+      run: cmake --build build -j4

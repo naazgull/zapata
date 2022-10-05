@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.18)
 
 project(zapata VERSION 2.0.0)
 
+option(DONT_COMPILE_XDEVAPI
+  "Do not compile the XDevAPI (assume it's already there)"
+  OFF
+)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

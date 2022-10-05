@@ -1,16 +1,19 @@
-include(ExternalProject)
-include(ProcessorCount)
-processorcount(n)
+if (NOT DONT_COMPILE_XDEVAPI)
+  include(ExternalProject)
+  include(ProcessorCount)
+  processorcount(n)
+  
+  externalproject_add(
+    mysqlxdevapi
+    GIT_REPOSITORY "https://github.com/mysql/mysql-connector-cpp"
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/xdevapi/download
+    BUILD_COMMAND make
+    CMAKE_ARGS
+      -Wno-dev
+      -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+  )
+endif(NOT DONT_COMPILE_XDEVAPI)
 
-externalproject_add(
-  mysqlxdevapi
-  GIT_REPOSITORY "https://github.com/mysql/mysql-connector-cpp"
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/xdevapi/download
-  BUILD_COMMAND make -j${N}
-  CMAKE_ARGS
-    -Wno-dev
-    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-)
 set(MYSQL_XDEVAPI_INCLUDEDIR
   ${CMAKE_INSTALL_PREFIX}/include
 )
