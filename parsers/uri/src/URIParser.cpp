@@ -1,8 +1,6 @@
 #include <zapata/uri/URIParser.h>
 
-zpt::URIParser::URIParser(std::istream& _in, std::ostream& _out) {
-    this->d_scanner.switchStreams(_in, _out);
-}
+zpt::URIParser::URIParser(std::istream& _in, std::ostream& _out) { this->d_scanner.switchStreams(_in, _out); }
 
 zpt::URIParser::~URIParser() {}
 

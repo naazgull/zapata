@@ -31,16 +31,12 @@ namespace zpt {
 
 class ExpectationException : public zpt::exception {
   public:
-    ExpectationException(std::string const& _what,
-                         std::string _desc,
-                         int _line = 0,
-                         std::string _file = "");
+    ExpectationException(std::string const& _what, std::string _desc, int _line = 0, std::string _file = "");
     virtual ~ExpectationException() throw();
 
     virtual auto description() const -> const char*;
 
-    friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in)
-      -> std::ostream& {
+    friend auto operator<<(std::ostream& _out, zpt::ExpectationException const& _in) -> std::ostream& {
         _out << _in.what() << ": " << _in.description() << ")";
         if (zpt::log_lvl >= zpt::debug && _in.backtrace() != nullptr) {
             _out << std::endl << _in.backtrace() << std::flush;

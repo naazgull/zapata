@@ -32,16 +32,14 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
     auto name() const -> std::string { return "cpp_example"; }
 
     auto setup_module(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
-        auto [_it, _] = this->__modules.insert(
-          std::make_pair(_conf["name"]->string() + std::string{ "::" }, _conf));
+        auto [_it, _] = this->__modules.insert(std::make_pair(_conf["name"]->string() + std::string{ "::" }, _conf));
         _it->second += _lambda(_conf, *this);
         return (*this);
     }
 
     auto setup_lambda(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
         std::string _package =
-          (_conf["module"]->ok() ? _conf["module"]->string() : std::string{ "" }) +
-          std::string{ "::" };
+          (_conf["module"]->ok() ? _conf["module"]->string() : std::string{ "" }) + std::string{ "::" };
         zlog(_package, zpt::info);
         expect(this->__modules.find(_package) != this->__modules.end(), "no such module");
         this->__lambdas.insert(std::make_pair(_package + _conf["name"]->string(), _lambda));
@@ -50,8 +48,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
 
     auto execute(std::string _to_evaluate, object_type _arg, class_type& _bridge) -> zpt::json {
         auto _found = this->__lambdas.find(_to_evaluate);
-        expect(
-          _found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'");
+        expect(_found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'");
         return _found->second(_arg, *this);
     }
 
@@ -79,8 +76,7 @@ main(int argc, char* argv[]) -> int {
     auto _result = _bridge                                       //
                      .set_options({ "flags", "SFGT" })           //
                      .add_module(init_module_x, { "name", "x" }) //
-                     .call<std::string, zpt::json, cpp_bridge&>(
-                       "x::to_a", zpt::json{ "field", "xpto" }, _bridge);
+                     .call<std::string, zpt::json, cpp_bridge&>("x::to_a", zpt::json{ "field", "xpto" }, _bridge);
     zlog(_result, zpt::info);
     return 0;
 }

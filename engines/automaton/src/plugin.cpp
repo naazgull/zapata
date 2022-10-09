@@ -30,10 +30,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _boot = zpt::globals::get<zpt::startup::boot>(zpt::BOOT());
     auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     long _threads = std::max(static_cast<long>(_config["limits"]["max_queue_threads"]), 1L);
-    long _max_queue_spin_sleep =
-      std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
-    zpt::globals::alloc<zpt::automaton::engine>(
-      zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
+    long _max_queue_spin_sleep = std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
+    zpt::globals::alloc<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
 
     _plugin.add_thread([_max_queue_spin_sleep]() -> void {
         zlog("Starting AUTOMATON engine", zpt::info);

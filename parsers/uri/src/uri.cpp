@@ -1,3 +1,25 @@
+/*
+  This is free and unencumbered software released into the public domain.
+
+  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+  this software, either in source code form or as a compiled binary, for any
+  purpose, commercial or non-commercial, and by any means.
+
+  In jurisdictions that recognize copyright laws, the author or authors of this
+  software dedicate any and all copyright interest in the software to the public
+  domain. We make this dedication for the benefit of the public at large and to
+  the detriment of our heirs and successors. We intend this dedication to be an
+  overt act of relinquishment in perpetuity of all present and future rights to
+  this software under copyright law.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include <fstream>
 #include <iostream>
 #include <signal.h>
@@ -32,16 +54,12 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
     if (_uri->type() == zpt::JSObject) {
         if (_uri("scheme")->ok()) {
             _oss << _uri("scheme")->string();
-            if (_uri("scheme_options")->ok()) {
-                _oss << "+" << zpt::join(_uri("scheme_options"), "+") << std::flush;
-            }
+            if (_uri("scheme_options")->ok()) { _oss << "+" << zpt::join(_uri("scheme_options"), "+") << std::flush; }
             _oss << ":" << std::flush;
         }
         if (_uri("domain")->ok()) {
             _oss << "//" << std::flush;
-            if (_uri("user")("name")->ok()) {
-                _oss << _uri("user")("name")->string() << "@" << std::flush;
-            }
+            if (_uri("user")("name")->ok()) { _oss << _uri("user")("name")->string() << "@" << std::flush; }
             _oss << _uri("domain")->string() << std::flush;
             if (_uri("port")->ok()) { _oss << ":" << _uri("port") << std::flush; }
         }
@@ -53,8 +71,7 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
             for (auto [_, _key, _value] : _uri("params")) {
                 if (!_first) { _oss << "&"; }
                 _first = false;
-                _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "")
-                     << std::flush;
+                _oss << _key << "=" << (_value->ok() ? static_cast<std::string>(_value) : "") << std::flush;
             }
         }
         if (_uri("anchor")->ok()) { _oss << "#" << _uri("anchor")->string() << std::flush; }
@@ -90,8 +107,7 @@ zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
         else {
             auto _casted = static_cast<std::string>(_item);
             auto _length = _casted.length();
-            if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
-                _casted[_length - 1] == '}') {
+            if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' && _casted[_length - 1] == '}') {
                 _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
                 _to_return << _key << zpt::regex{ _casted };
             }
@@ -107,8 +123,7 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
     for (auto [_, __, _item] : _in) {
         auto _casted = static_cast<std::string>(_item);
         auto _length = _casted.length();
-        if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
-            _casted[_length - 1] == '}') {
+        if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' && _casted[_length - 1] == '}') {
             _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
             _to_return << zpt::regex{ _casted };
         }
@@ -122,13 +137,9 @@ zpt::uri::path::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri["path"]->ok()) {
-            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/")
-                 << std::flush;
+            _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/") << std::flush;
         }
     }
-    else {
-        _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri["path"], "/")
-             << std::flush;
-    }
+    else { _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri["path"], "/") << std::flush; }
     return _oss.str();
 }

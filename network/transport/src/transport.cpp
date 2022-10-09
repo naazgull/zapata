@@ -59,17 +59,16 @@ zpt::json_message::json_message(basic_message const& _request, bool) {
     localtime_r(&_rawtime, &_ptm);
     strftime(_buffer_date, 80, "%a, %d %b %Y %X %Z", &_ptm);
 
-    auto _headers =
-      zpt::json{ "Content-Type",
-                 _request.content_type(),
-                 "Cache-Control",
-                 _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
-                 "X-Conversation-ID",
-                 _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0",
-                 "X-Version",
-                 _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0",
-                 "Date",
-                 std::string{ _buffer_date } };
+    auto _headers = zpt::json{ "Content-Type",
+                               _request.content_type(),
+                               "Cache-Control",
+                               _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
+                               "X-Conversation-ID",
+                               _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0",
+                               "X-Version",
+                               _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0",
+                               "Date",
+                               std::string{ _buffer_date } };
 
     this->__underlying                                       //
       << "performative" << zpt::ontology::to_str(zpt::Reply) //
@@ -184,8 +183,7 @@ zpt::json_message::make_reply() -> zpt::message {
 
 auto
 zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::message {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::WAITING,
+    expect(_stream.state() == zpt::stream_state::IDLE || _stream.state() == zpt::stream_state::WAITING,
            "Stream not in a valida state for receiving");
 
     zpt::message _to_return;
@@ -203,43 +201,33 @@ zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::message 
 
 auto
 zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_send) const -> void {
-    expect(_stream.state() == zpt::stream_state::IDLE ||
-             _stream.state() == zpt::stream_state::PROCESSING,
+    expect(_stream.state() == zpt::stream_state::IDLE || _stream.state() == zpt::stream_state::PROCESSING,
            "Stream not in a valida state for sending");
 
     zlog("Sending '" << _stream.transport() << "' message:\n" << _to_send, zpt::trace);
     _stream << _to_send << std::flush;
-    if (_stream.state() == zpt::stream_state::IDLE) {
-        _stream.state() = zpt::stream_state::WAITING;
-    }
-    else if (_stream.state() == zpt::stream_state::PROCESSING) {
-        _stream.state() = zpt::stream_state::IDLE;
-    }
+    if (_stream.state() == zpt::stream_state::IDLE) { _stream.state() = zpt::stream_state::WAITING; }
+    else if (_stream.state() == zpt::stream_state::PROCESSING) { _stream.state() = zpt::stream_state::IDLE; }
 }
 
 zpt::network::layer::layer() {
-    this->add_content_provider("*/*",
-                               zpt::network::layer::translate_from_default,
-                               zpt::network::layer::translate_to_default);
     this->add_content_provider(
-      "text", zpt::network::layer::translate_from_raw, zpt::network::layer::translate_to_raw);
+      "*/*", zpt::network::layer::translate_from_default, zpt::network::layer::translate_to_default);
+    this->add_content_provider("text", zpt::network::layer::translate_from_raw, zpt::network::layer::translate_to_raw);
     this->add_content_provider(
       "text/plain", zpt::network::layer::translate_from_raw, zpt::network::layer::translate_to_raw);
     this->add_content_provider(
       "json", zpt::network::layer::translate_from_json, zpt::network::layer::translate_to_json);
-    this->add_content_provider("application/json",
-                               zpt::network::layer::translate_from_json,
-                               zpt::network::layer::translate_to_json);
-    this->add_content_provider("text/x-json",
-                               zpt::network::layer::translate_from_json,
-                               zpt::network::layer::translate_to_json);
+    this->add_content_provider(
+      "application/json", zpt::network::layer::translate_from_json, zpt::network::layer::translate_to_json);
+    this->add_content_provider(
+      "text/x-json", zpt::network::layer::translate_from_json, zpt::network::layer::translate_to_json);
     this->add_content_provider(
       "text/xml", zpt::network::layer::translate_from_xml, zpt::network::layer::translate_to_xml);
 }
 
 auto
-zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
-  -> zpt::network::layer& {
+zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport) -> zpt::network::layer& {
     this->__underlying.insert(std::make_pair(_scheme, _transport));
     return (*this);
 }
@@ -247,9 +235,7 @@ zpt::network::layer::add(std::string const& _scheme, zpt::transport _transport)
 auto
 zpt::network::layer::get(std::string const& _scheme) const -> const zpt::transport {
     auto _found = this->__underlying.find(_scheme);
-    if (_found == this->__underlying.end()) {
-        throw zpt::NoMoreElementsException("there is no such transport");
-    }
+    if (_found == this->__underlying.end()) { throw zpt::NoMoreElementsException("there is no such transport"); }
     return _found->second;
 }
 
@@ -262,12 +248,9 @@ zpt::network::layer::translate(std::istream& _io, std::string _mime) const -> zp
 }
 
 auto
-zpt::network::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const
-  -> std::string {
+zpt::network::layer::translate(std::ostream& _io, std::string _mime, zpt::json _content) const -> std::string {
     auto _found = this->__content_providers.find(_mime);
-    if (_found != this->__content_providers.end()) {
-        return std::get<1>(_found->second)(_io, _content);
-    }
+    if (_found != this->__content_providers.end()) { return std::get<1>(_found->second)(_io, _content); }
     else { return zpt::network::layer::translate_to_json(_io, _content); }
 }
 
@@ -385,8 +368,7 @@ zpt::network::resolve_content_type(zpt::basic_message const& _message) -> std::s
         }
         return _highest;
     }
-    return _message.headers()("Content-Type")->ok() ? _message.headers()["Content-Type"]->string()
-                                                    : "*/*";
+    return _message.headers()("Content-Type")->ok() ? _message.headers()["Content-Type"]->string() : "*/*";
 }
 
 auto

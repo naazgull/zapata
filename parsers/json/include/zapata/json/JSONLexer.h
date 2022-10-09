@@ -12,9 +12,7 @@ namespace zpt {
 // $insert classHead
 class JSONLexer : public JSONLexerBase {
   public:
-    explicit JSONLexer(std::istream& in = std::cin,
-                       std::ostream& out = std::cout,
-                       bool keepCwd = true);
+    explicit JSONLexer(std::istream& in = std::cin, std::ostream& out = std::cout, bool keepCwd = true);
 
     JSONLexer(std::string const& infile, std::string const& outfile, bool keepCwd = true);
 

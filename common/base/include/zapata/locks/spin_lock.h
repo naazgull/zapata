@@ -24,8 +24,7 @@ class spin_lock {
         guard(zpt::locks::spin_lock::guard&&) = delete;
         virtual ~guard();
 
-        auto operator=(zpt::locks::spin_lock::guard const&)
-          -> zpt::locks::spin_lock::guard& = delete;
+        auto operator=(zpt::locks::spin_lock::guard const&) -> zpt::locks::spin_lock::guard& = delete;
         auto operator=(zpt::locks::spin_lock::guard&&) -> zpt::locks::spin_lock::guard& = delete;
 
         auto release() -> zpt::locks::spin_lock::guard&;

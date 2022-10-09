@@ -651,8 +651,7 @@ JSONTokenizer::errorRecovery_() {
 // derived/executeaction
 void
 JSONTokenizer::executeAction_(int production) try {
-    if (token_() != Reserved_::UNDETERMINED_)
-        pushToken_(token_()); // save an already available token
+    if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
 

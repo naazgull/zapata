@@ -42,9 +42,8 @@ zpt::mongodb::Client::~Client() {
 
 auto
 zpt::mongodb::Client::name() -> std::string {
-    return std::string("mongodb://") + ((std::string)this->connection()["bind"]) +
-           std::string(":") + ((std::string)this->connection()["port"]) + std::string("/") +
-           ((std::string)this->connection()["db"]);
+    return std::string("mongodb://") + ((std::string)this->connection()["bind"]) + std::string(":") +
+           ((std::string)this->connection()["port"]) + std::string("/") + ((std::string)this->connection()["db"]);
 }
 
 auto
@@ -82,8 +81,7 @@ zpt::mongodb::Client::insert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
 
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (this->connection()["user"]->ok()) {
@@ -102,21 +100,18 @@ zpt::mongodb::Client::insert(std::string const& _collection,
     if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
-                  << (_href_prefix +
-                      (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
+                  << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
                       _document["id"]->string());
     }
     _document << "_id" << _document["href"];
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
     _conn->insert(_full_collection, _mongo_document.object());
     _conn.done();
 
-    if (!bool(_opts["mutated-event"]))
-        zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+    if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     return _document["id"]->string();
 }
 
@@ -125,8 +120,7 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
                              std::string _href_prefix,
                              zpt::json _document,
                              zpt::json _opts) -> std::string {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -137,8 +131,7 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
         if (_document["href"]->ok() || _document["id"]->ok()) {
             if (!_document["href"]->ok()) {
                 _document << "href"
-                          << (_href_prefix +
-                              (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
+                          << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
                               _document["id"]->string());
             }
             if (!_document["id"]->ok()) {
@@ -147,20 +140,16 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
             }
             std::string _href = std::string(_document["href"]);
             unsigned long _size = 0;
-            _size =
-              _conn->count(_full_collection, BSON("_id" << _href), (int)mongo::QueryOption_SlaveOk);
+            _size = _conn->count(_full_collection, BSON("_id" << _href), (int)mongo::QueryOption_SlaveOk);
             if (_size != 0) {
                 zpt::json _exclude =
-                  (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts)
-                                               : zpt::undefined);
+                  (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
                 mongo::BSONObjBuilder _mongo_document;
                 zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
-                _conn->update(
-                  _full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
+                _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
                 _conn.done();
 
-                if (!bool(_opts["mutated-event"]))
-                    zpt::Connector::set(_collection, _href, _document, _opts);
+                if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
                 return _document["id"]->string();
             }
         }
@@ -169,41 +158,34 @@ zpt::mongodb::Client::upsert(std::string const& _collection,
         if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
-                      << (_href_prefix +
-                          (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
+                      << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
                           _document["id"]->string());
         }
         _document << "_id" << _document["href"];
 
         zpt::json _exclude =
-          (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts)
-                                       : zpt::undefined);
+          (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
         mongo::BSONObjBuilder _mongo_document;
         zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
         _conn->insert(_full_collection, _mongo_document.object());
         _conn.done();
 
-        if (!bool(_opts["mutated-event"]))
-            zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+        if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     }
     return _document["id"]->string();
 }
 
 auto
-zpt::mongodb::Client::save(std::string const& _collection,
-                           std::string _href,
-                           zpt::json _document,
-                           zpt::json _opts) -> int {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+zpt::mongodb::Client::save(std::string const& _collection, std::string _href, zpt::json _document, zpt::json _opts)
+  -> int {
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
     _full_collection.insert(0, ".");
     _full_collection.insert(0, (std::string)this->connection()["db"]);
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(_document - _exclude, _mongo_document);
     _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
@@ -214,20 +196,16 @@ zpt::mongodb::Client::save(std::string const& _collection,
 }
 
 auto
-zpt::mongodb::Client::set(std::string const& _collection,
-                          std::string _href,
-                          zpt::json _document,
-                          zpt::json _opts) -> int {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+zpt::mongodb::Client::set(std::string const& _collection, std::string _href, zpt::json _document, zpt::json _opts)
+  -> int {
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
     _full_collection.insert(0, ".");
     _full_collection.insert(0, (std::string)this->connection()["db"]);
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
     _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
@@ -238,12 +216,9 @@ zpt::mongodb::Client::set(std::string const& _collection,
 }
 
 auto
-zpt::mongodb::Client::set(std::string const& _collection,
-                          zpt::json _pattern,
-                          zpt::json _document,
-                          zpt::json _opts) -> int {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+zpt::mongodb::Client::set(std::string const& _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts)
+  -> int {
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) { _pattern = zpt::json::object(); }
 
@@ -258,33 +233,27 @@ zpt::mongodb::Client::set(std::string const& _collection,
     unsigned long _size = 0;
     _size = _conn->count(_full_collection, _filter.obj, (int)mongo::QueryOption_SlaveOk);
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$set", _document - _exclude }), _mongo_document);
     _conn->update(_full_collection, _filter, _mongo_document.object(), false, bool(_opts["multi"]));
     _conn.done();
 
-    if (!bool(_opts["mutated-event"]) && _size != 0)
-        zpt::Connector::set(_collection, _pattern, _document, _opts);
+    if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::set(_collection, _pattern, _document, _opts);
     return _size;
 }
 
 auto
-zpt::mongodb::Client::unset(std::string const& _collection,
-                            std::string _href,
-                            zpt::json _document,
-                            zpt::json _opts) -> int {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+zpt::mongodb::Client::unset(std::string const& _collection, std::string _href, zpt::json _document, zpt::json _opts)
+  -> int {
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
     _full_collection.insert(0, ".");
     _full_collection.insert(0, (std::string)this->connection()["db"]);
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
     _conn->update(_full_collection, BSON("_id" << _href), _mongo_document.object(), false, false);
@@ -295,12 +264,9 @@ zpt::mongodb::Client::unset(std::string const& _collection,
 }
 
 auto
-zpt::mongodb::Client::unset(std::string const& _collection,
-                            zpt::json _pattern,
-                            zpt::json _document,
-                            zpt::json _opts) -> int {
-    expect(_document->ok() && _document->type() == zpt::JSObject,
-           "'_document' must be of type JSObject");
+zpt::mongodb::Client::unset(std::string const& _collection, zpt::json _pattern, zpt::json _document, zpt::json _opts)
+  -> int {
+    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) { _pattern = zpt::json::object(); }
 
@@ -315,22 +281,18 @@ zpt::mongodb::Client::unset(std::string const& _collection,
     unsigned long _size = 0;
     _size = _conn->count(_full_collection, _filter.obj, (int)mongo::QueryOption_SlaveOk);
 
-    zpt::json _exclude =
-      (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
+    zpt::json _exclude = (_opts["fields"]->is_array() ? _document - zpt::mongodb::get_fields(_opts) : zpt::undefined);
     mongo::BSONObjBuilder _mongo_document;
     zpt::mongodb::tomongo(zpt::json({ "$unset", _document - _exclude }), _mongo_document);
     _conn->update(_full_collection, _filter, _mongo_document.object(), false, bool(_opts["multi"]));
     _conn.done();
 
-    if (!bool(_opts["mutated-event"]) && _size != 0)
-        zpt::Connector::unset(_collection, _pattern, _document, _opts);
+    if (!bool(_opts["mutated-event"]) && _size != 0) zpt::Connector::unset(_collection, _pattern, _document, _opts);
     return _size;
 }
 
 auto
-zpt::mongodb::Client::remove(std::string const& _collection,
-                             std::string const& _href,
-                             zpt::json _opts) -> int {
+zpt::mongodb::Client::remove(std::string const& _collection, std::string const& _href, zpt::json _opts) -> int {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -343,14 +305,12 @@ zpt::mongodb::Client::remove(std::string const& _collection,
     _conn.done();
 
     if (!bool(_opts["mutated-event"]))
-        zpt::Connector::remove(
-          _collection, _removed["href"]->string(), _opts + zpt::json{ "removed", _removed });
+        zpt::Connector::remove(_collection, _removed["href"]->string(), _opts + zpt::json{ "removed", _removed });
     return 1;
 }
 
 auto
-zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
-  -> int {
+zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts) -> int {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) { _pattern = zpt::json::object(); }
 
@@ -364,8 +324,7 @@ zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern,
         _conn->remove(_full_collection, BSON("id" << _record["id"]->string()));
 
         if (!bool(_opts["mutated-event"]))
-            zpt::Connector::remove(
-              _collection, _record["href"]->string(), _opts + zpt::json{ "removed", _record });
+            zpt::Connector::remove(_collection, _record["href"]->string(), _opts + zpt::json{ "removed", _record });
     }
     _conn.done();
 
@@ -373,9 +332,7 @@ zpt::mongodb::Client::remove(std::string const& _collection, zpt::json _pattern,
 }
 
 auto
-zpt::mongodb::Client::get(std::string const& _collection,
-                          std::string const& _topic,
-                          zpt::json _opts) -> zpt::json {
+zpt::mongodb::Client::get(std::string const& _collection, std::string const& _topic, zpt::json _opts) -> zpt::json {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
 
     std::string _full_collection(_collection);
@@ -387,15 +344,14 @@ zpt::mongodb::Client::get(std::string const& _collection,
     zpt::mongodb::tomongo(_fields, _bb_fields);
     mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
-    _result.reset(
-      _conn
-        ->query(_full_collection,
-                BSON("_id" << _topic),
-                0,
-                0,
-                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
-                (int)mongo::QueryOption_SlaveOk)
-        .release());
+    _result.reset(_conn
+                    ->query(_full_collection,
+                            BSON("_id" << _topic),
+                            0,
+                            0,
+                            (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
+                            (int)mongo::QueryOption_SlaveOk)
+                    .release());
 
     if (_result->more()) {
         mongo::BSONObj _record = _result->next();
@@ -409,15 +365,12 @@ zpt::mongodb::Client::get(std::string const& _collection,
 }
 
 auto
-zpt::mongodb::Client::query(std::string const& _collection,
-                            std::string const& _pattern,
-                            zpt::json _opts) -> zpt::json {
+zpt::mongodb::Client::query(std::string const& _collection, std::string const& _pattern, zpt::json _opts) -> zpt::json {
     return this->query(_collection, zpt::json(_pattern), _opts);
 }
 
 auto
-zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
-  -> zpt::json {
+zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, zpt::json _opts) -> zpt::json {
     mongo::ScopedDbConnection _conn((std::string)this->connection()["bind"]);
     if (!_pattern->ok()) { _pattern = zpt::json::object(); }
 
@@ -468,15 +421,14 @@ zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, 
     zpt::mongodb::tomongo(_fields, _bb_fields);
     mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
-    _result.reset(
-      _conn
-        ->query(_full_collection,
-                _query,
-                _page_size,
-                _page_start_index,
-                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
-                (int)mongo::QueryOption_SlaveOk)
-        .release());
+    _result.reset(_conn
+                    ->query(_full_collection,
+                            _query,
+                            _page_size,
+                            _page_start_index,
+                            (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
+                            (int)mongo::QueryOption_SlaveOk)
+                    .release());
     while (_result->more()) {
         mongo::BSONObj _record = _result->next();
         zpt::JSONObj _obj;
@@ -491,14 +443,11 @@ zpt::mongodb::Client::query(std::string const& _collection, zpt::json _pattern, 
         _return << "links"
                 << zpt::json(
                      { "next",
-                       (std::string("?page_size=") + std::to_string(_page_size) +
-                        std::string("&page_start_index=") +
+                       (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") +
                         std::to_string(_page_start_index + _page_size)),
                        "prev",
-                       (std::string("?page_size=") + std::to_string(_page_size) +
-                        std::string("&page_start_index=") +
-                        std::to_string(
-                          _page_size < _page_start_index ? _page_start_index - _page_size : 0)) });
+                       (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") +
+                        std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0)) });
     }
     return _return;
 }
@@ -551,15 +500,14 @@ zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
     zpt::mongodb::tomongo(_fields, _bb_fields);
     mongo::BSONObj _filter = _bb_fields.object();
     std::unique_ptr<mongo::DBClientCursor> _result;
-    _result.reset(
-      _conn
-        ->query(_full_collection,
-                _query,
-                _page_size,
-                _page_start_index,
-                (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
-                (int)mongo::QueryOption_SlaveOk)
-        .release());
+    _result.reset(_conn
+                    ->query(_full_collection,
+                            _query,
+                            _page_size,
+                            _page_start_index,
+                            (_fields->is_object() && _fields->object()->size() != 0 ? &_filter : nullptr),
+                            (int)mongo::QueryOption_SlaveOk)
+                    .release());
 
     while (_result->more()) {
         mongo::BSONObj _record = _result->next();
@@ -575,14 +523,11 @@ zpt::mongodb::Client::all(std::string const& _collection, zpt::json _opts) -> zp
         _return << "links"
                 << zpt::json(
                      { "next",
-                       (std::string("?page_size=") + std::to_string(_page_size) +
-                        std::string("&page_start_index=") +
+                       (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") +
                         std::to_string(_page_start_index + _page_size)),
                        "prev",
-                       (std::string("?page_size=") + std::to_string(_page_size) +
-                        std::string("&page_start_index=") +
-                        std::to_string(
-                          _page_size < _page_start_index ? _page_start_index - _page_size : 0)) });
+                       (std::string("?page_size=") + std::to_string(_page_size) + std::string("&page_start_index=") +
+                        std::to_string(_page_size < _page_start_index ? _page_start_index - _page_size : 0)) });
     }
     return _return;
 }

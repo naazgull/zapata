@@ -477,10 +477,9 @@ SR_ const s_51[] = {
 
 // State array:
 SR_ const* s_state[] = {
-    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12,
-    s_13, s_14, s_15, s_16, s_17, s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25,
-    s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33, s_34, s_35, s_36, s_37, s_38,
-    s_39, s_40, s_41, s_42, s_43, s_44, s_45, s_46, s_47, s_48, s_49, s_50, s_51,
+    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12, s_13, s_14, s_15, s_16, s_17,
+    s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33, s_34, s_35,
+    s_36, s_37, s_38, s_39, s_40, s_41, s_42, s_43, s_44, s_45, s_46, s_47, s_48, s_49, s_50, s_51,
 };
 
 } // namespace
@@ -699,8 +698,7 @@ URITokenizer::errorRecovery_() {
 // derived/executeaction
 void
 URITokenizer::executeAction_(int production) try {
-    if (token_() != Reserved_::UNDETERMINED_)
-        pushToken_(token_()); // save an already available token
+    if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
 
@@ -722,8 +720,7 @@ URITokenizer::executeAction_(int production) try {
                 if (!d_scanner.d_part_is_placeholder) {
                     auto _idx = _scheme.find("+");
                     if (_idx != std::string::npos) {
-                        (*d_scanner)
-                          << "scheme_options" << zpt::split(_scheme.substr(_idx + 1), "+", true);
+                        (*d_scanner) << "scheme_options" << zpt::split(_scheme.substr(_idx + 1), "+", true);
                         _scheme.assign(_scheme.substr(0, _idx));
                     }
                 }
@@ -745,9 +742,7 @@ URITokenizer::executeAction_(int production) try {
         } break;
 
         case 8: {
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner) << "domain" << d_scanner.matched();
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner) << "domain" << d_scanner.matched(); }
             else { (*d_scanner) << d_scanner.matched(); }
         } break;
 
@@ -756,9 +751,7 @@ URITokenizer::executeAction_(int production) try {
         } break;
 
         case 10: {
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner) << "domain" << d_scanner.matched();
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner) << "domain" << d_scanner.matched(); }
             else { (*d_scanner) << d_scanner.matched(); }
         } break;
 
@@ -783,9 +776,7 @@ URITokenizer::executeAction_(int production) try {
         } break;
 
         case 16: {
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner) << "is_relative" << false;
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner) << "is_relative" << false; }
             else { (*d_scanner) << "/"; }
         } break;
 
@@ -844,9 +835,7 @@ URITokenizer::executeAction_(int production) try {
 
         case 26: {
             if ((*d_scanner)->type() == zpt::JSObject) {
-                if (!(*d_scanner)("params")->ok()) {
-                    (*d_scanner) << "params" << zpt::json::object();
-                }
+                if (!(*d_scanner)("params")->ok()) { (*d_scanner) << "params" << zpt::json::object(); }
                 (*d_scanner) << "__aux" << d_scanner.matched();
             }
             else { (*d_scanner) << d_scanner.matched(); }
@@ -857,17 +846,13 @@ URITokenizer::executeAction_(int production) try {
         } break;
 
         case 28: {
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner) << "__aux" << d_scanner.matched();
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner) << "__aux" << d_scanner.matched(); }
             else { (*d_scanner) << d_scanner.matched(); }
         } break;
 
         case 29: {
             auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
-            if ((*d_scanner)->type() == zpt::JSObject) {
-                (*d_scanner)["params"] << __name << zpt::undefined;
-            }
+            if ((*d_scanner)->type() == zpt::JSObject) { (*d_scanner)["params"] << __name << zpt::undefined; }
             else { (*d_scanner) << d_scanner.matched(); }
         } break;
 

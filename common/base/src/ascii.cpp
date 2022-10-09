@@ -31,9 +31,7 @@ zpt::ascii::encode(std::string& _out, bool quote) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
     std::wstring ws{ wc };
 
-    for (size_t i = 0; i != iso.length(); i++) {
-        std::replace(ws.begin(), ws.end(), iso[i], plain[i]);
-    }
+    for (size_t i = 0; i != iso.length(); i++) { std::replace(ws.begin(), ws.end(), iso[i], plain[i]); }
 
     std::ostringstream _oss;
     delete[] wc;

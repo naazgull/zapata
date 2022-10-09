@@ -40,11 +40,8 @@ const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARN
 } // namespace zpt
 
 auto
-zpt::log(std::string const& _text,
-         zpt::LogLevel _level,
-         std::string const& _host,
-         int _line,
-         std::string const& _file) -> int {
+zpt::log(std::string const& _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file)
+  -> int {
     if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
@@ -58,21 +55,19 @@ zpt::log(std::string const& _text,
 
     if (zpt::log_format == 1) {
         std::ostringstream _oss;
-        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
-             << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
-             << _text;
+        _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " " << *zpt::log_pname << "["
+             << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " " << _text;
         if (_level > 6) { _oss << " " << _file << ":" << _line; }
         _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
     }
     else {
         std::ostringstream _oss;
-        _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host
-             << "\",\"short_message\":\"" << _text << "\",\"full_message\":\"" << _file << ":"
-             << _line << " | " << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"")
-             << "\",\"timestamp\":" << _tp.tv_sec << "." << (int)(_tp.tv_usec / 1000)
-             << ",\"level\":" << (int)_level << ",\"pid\":" << zpt::log_pid << ",\"exec\":\""
-             << *zpt::log_pname << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}"
+        _oss << "{\"version\":\"1.1\",\"host\":\"" << _host << "\",\"source\":\"" << _host << "\",\"short_message\":\""
+             << _text << "\",\"full_message\":\"" << _file << ":" << _line << " | "
+             << zpt::r_replace(zpt::r_replace(_text, "\n", "\\n"), "\"", "\\\"") << "\",\"timestamp\":" << _tp.tv_sec
+             << "." << (int)(_tp.tv_usec / 1000) << ",\"level\":" << (int)_level << ",\"pid\":" << zpt::log_pid
+             << ",\"exec\":\"" << *zpt::log_pname << "\",\"file\":\"" << _file << "\",\"line\":" << _line << "}"
              << std::endl
              << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;

@@ -145,10 +145,7 @@ zpt::dump_path(std::string const& _in, std::wstring& _content) -> bool {
 }
 
 auto
-zpt::globRegexp(std::string& dir,
-                std::vector<std::string>& result,
-                std::regex& pattern,
-                short recursion) -> int {
+zpt::globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion) -> int {
     DIR* dp{ nullptr };
     struct dirent* dirp{ nullptr };
     std::vector<std::string> torecurse;
@@ -160,9 +157,7 @@ zpt::globRegexp(std::string& dir,
             if (dir[dir.length() - 1] != '/') { cname.insert(0, "/"); }
             cname.insert(0, dir.data());
             if (recursion != 0 && dirp->d_type == 4 && cname != dir) { torecurse.push_back(cname); }
-            if (std::regex_match(std::string(dirp->d_name), pattern)) {
-                result.insert(result.begin(), cname);
-            }
+            if (std::regex_match(std::string(dirp->d_name), pattern)) { result.insert(result.begin(), cname); }
         }
     }
     closedir(dp);
@@ -173,8 +168,7 @@ zpt::globRegexp(std::string& dir,
 }
 
 auto
-zpt::glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion)
-  -> int {
+zpt::glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion) -> int {
     std::regex regexp(pattern);
     return zpt::globRegexp(dir, result, regexp, recursion);
 }

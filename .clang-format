@@ -1,14 +1,14 @@
-
 BasedOnStyle: Mozilla
-ColumnLimit: 100
-Standard: Cpp11
+
+Language: Cpp
+Standard: c++17
+
+ColumnLimit: 120
 IndentWidth: 4
 TabWidth: 4
 SortIncludes: false
 BinPackArguments: false
 BinPackParameters: false
-
-Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
 BreakBeforeBraces: Custom

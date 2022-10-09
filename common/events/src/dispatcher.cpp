@@ -39,10 +39,9 @@ zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
     if (_n_consumers == 0 || _n_consumers + this->__consumers.size() >= this->__max_consumers) {
         _n_consumers = this->__max_consumers - this->__consumers.size();
     }
-    for (long _consumer_nr = this->__consumers.size(), _idx = 0; _idx != _n_consumers;
-         ++_idx, ++_consumer_nr) {
-        auto& _consumer = this->__consumers.emplace_back(
-          [this, _consumer_nr]() mutable -> void { this->loop(_consumer_nr); });
+    for (long _consumer_nr = this->__consumers.size(), _idx = 0; _idx != _n_consumers; ++_idx, ++_consumer_nr) {
+        auto& _consumer =
+          this->__consumers.emplace_back([this, _consumer_nr]() mutable -> void { this->loop(_consumer_nr); });
         _consumer.detach();
         ++(*this->__running_consumers);
     }
@@ -51,8 +50,7 @@ zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
 
 auto
 zpt::events::dispatcher::stop_consumers() -> dispatcher& {
-    expect(!this->__shutdown->load(),
-           "`stop_consunmers()` already been called from another execution path");
+    expect(!this->__shutdown->load(), "`stop_consunmers()` already been called from another execution path");
     this->__shutdown->store(true);
     while (this->__running_consumers->load(std::memory_order_relaxed) != 0) {
         std::this_thread::sleep_for(std::chrono::duration<int, std::milli>{ 100 });

@@ -22,10 +22,7 @@
 
 #include <zapata/dom/dom.h>
 
-zpt::dom::element::element(std::string _xpath,
-                           std::string _name,
-                           zpt::json _content,
-                           zpt::json _parent)
+zpt::dom::element::element(std::string _xpath, std::string _name, zpt::json _content, zpt::json _parent)
   : __xpath{ _xpath }
   , __name{ _name }
   , __content{ _content }
@@ -87,18 +84,17 @@ zpt::dom::engine::engine(size_t _pipeline_size, zpt::json _config)
 }
 
 auto
-zpt::dom::engine::add_listener(
-  size_t _step,
-  std::string _pattern,
-  std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback) -> zpt::dom::engine& {
+zpt::dom::engine::add_listener(size_t _step,
+                               std::string _pattern,
+                               std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback)
+  -> zpt::dom::engine& {
     _pattern.insert(0, "/ROOT");
     zpt::pipeline::engine<zpt::dom::element>::add_listener(_step, _pattern, _callback);
     return (*this);
 }
 
 auto
-zpt::dom::engine::traverse(zpt::json _document, std::string _path, zpt::json _parent)
-  -> zpt::dom::engine& {
+zpt::dom::engine::traverse(zpt::json _document, std::string _path, zpt::json _parent) -> zpt::dom::engine& {
     if (_path.length() == 0) { _path = "/ROOT"; }
     for (auto [_idx, _key, _content] : _document) {
         std::string _name = zpt::r_replace(_key, "/", "_");
@@ -126,8 +122,7 @@ zpt::dom::engine::on_error(zpt::json _path,
                            const char* _backtrace,
                            int _error,
                            int status) -> bool {
-    zlog("Error found while processing '" << _event->content().xpath() << "': " << _what << ", "
-                                          << _description,
+    zlog("Error found while processing '" << _event->content().xpath() << "': " << _what << ", " << _description,
          zpt::error);
     return true;
 }

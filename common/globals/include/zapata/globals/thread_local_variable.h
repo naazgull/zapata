@@ -120,7 +120,6 @@ zpt::thread_local_variable<T>::get() -> reference {
         return zpt::thread_local_table::get<zpt::thread_local_variable<T>, T>(*this);
     }
     catch (...) {
-        return zpt::thread_local_table::alloc<zpt::thread_local_variable<T>, T>(
-          *this, this->__initial_value);
+        return zpt::thread_local_table::alloc<zpt::thread_local_variable<T>, T>(*this, this->__initial_value);
     }
 }

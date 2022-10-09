@@ -12,9 +12,7 @@ namespace zpt {
 // $insert classHead
 class HTTPLexer : public HTTPLexerBase {
   public:
-    explicit HTTPLexer(std::istream& in = std::cin,
-                       std::ostream& out = std::cout,
-                       bool keepCwd = true);
+    explicit HTTPLexer(std::istream& in = std::cin, std::ostream& out = std::cout, bool keepCwd = true);
 
     HTTPLexer(std::string const& infile, std::string const& outfile, bool keepCwd = true);
 

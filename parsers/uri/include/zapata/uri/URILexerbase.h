@@ -152,12 +152,7 @@ class URILexerBase {
     static int const s_dfa_[][24];
     static int const (*s_dfaBase_[])[24];
     enum : bool { s_interactive_ = false };
-    enum : size_t {
-        s_rangeOfEOF_ = 21,
-        s_finIdx_ = 22,
-        s_nRules_ = 30,
-        s_maxSizeofStreamStack_ = 10
-    };
+    enum : size_t { s_rangeOfEOF_ = 21, s_finIdx_ = 22, s_nRules_ = 30, s_maxSizeofStreamStack_ = 10 };
     static size_t const s_ranges_[];
     static size_t const s_rf_[][2];
 
@@ -186,9 +181,7 @@ class URILexerBase {
 
   protected:
     URILexerBase(std::istream& in, std::ostream& out, bool keepCwd = true);
-    URILexerBase(std::string const& infilename,
-                 std::string const& outfilename,
-                 bool keepCwd = true);
+    URILexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd = true);
     ~URILexerBase();
 
     bool popStream();
@@ -273,9 +266,7 @@ inline ReturnType constexpr URILexerBase::as(ArgType value) {
 }
 
 // $insert startcondimpl
-inline URILexerBase::StartCondition_ constexpr URILexerBase::SC(int sc) {
-    return as<StartCondition_>(sc);
-}
+inline URILexerBase::StartCondition_ constexpr URILexerBase::SC(int sc) { return as<StartCondition_>(sc); }
 
 inline int constexpr URILexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
@@ -295,9 +286,7 @@ URILexerBase::knownFinalState() {
     return (d_atBOL && available(d_final.bol.rule)) || available(d_final.std.rule);
 }
 
-inline bool constexpr URILexerBase::available(size_t value) {
-    return value != std::numeric_limits<size_t>::max();
-}
+inline bool constexpr URILexerBase::available(size_t value) { return value != std::numeric_limits<size_t>::max(); }
 
 inline std::ostream&
 URILexerBase::out() {

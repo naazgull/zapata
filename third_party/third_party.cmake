@@ -6,7 +6,6 @@ if (NOT DONT_COMPILE_XDEVAPI)
   externalproject_add(
     mysqlxdevapi
     GIT_REPOSITORY "https://github.com/mysql/mysql-connector-cpp"
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/xdevapi/download
     BUILD_COMMAND make
     CMAKE_ARGS
       -Wno-dev

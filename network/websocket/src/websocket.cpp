@@ -38,18 +38,15 @@ zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     do {
         std::getline(*_stream, _line);
         zpt::trim(_line);
-        if (_line.find("Sec-WebSocket-Key:") != std::string::npos) {
-            _key.assign(_line.substr(19));
-        }
+        if (_line.find("Sec-WebSocket-Key:") != std::string::npos) { _key.assign(_line.substr(19)); }
     } while (_line != "");
 
     _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
     _key.assign(zpt::crypto::sha1(_key));
     zpt::base64::encode(_key);
 
-    _stream << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF
-            << "Connection: Upgrade" << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF
-            << std::flush;
+    _stream << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF << "Connection: Upgrade"
+            << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF << std::flush;
 }
 
 auto
@@ -95,9 +92,7 @@ zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     }
 
     if (_mask) {
-        for (size_t _i = 0; _i < _masked.length(); _i++) {
-            _out.push_back(_masked[_i] ^ _masking[_i % 4]);
-        }
+        for (size_t _i = 0; _i < _masked.length(); _i++) { _out.push_back(_masked[_i] ^ _masking[_i % 4]); }
     }
     else { _out.assign(_masked); }
 
@@ -134,8 +129,7 @@ zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
         _is.str(_body);
 
         std::string _content_type = _channel->content_type()[0];
-        _channel->received() =
-          _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
+        _channel->received() = _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 
         _channel //
           ->version()
@@ -166,8 +160,8 @@ zpt::net::transport::websocket::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
            "URI parameter must contain 'scheme', 'domain' and 'port'");
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'");
-    auto _stream = zpt::make_stream<zpt::basic_socketstream<char>>(
-      _uri["domain"]->string(), static_cast<std::uint16_t>(_uri["port"]->integer()));
+    auto _stream = zpt::make_stream<zpt::basic_socketstream<char>>(_uri["domain"]->string(),
+                                                                   static_cast<std::uint16_t>(_uri["port"]->integer()));
     _stream->transport("ws");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

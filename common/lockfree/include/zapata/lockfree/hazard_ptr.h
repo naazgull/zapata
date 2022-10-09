@@ -75,9 +75,8 @@ class hazard_ptr {
     auto get_thread_held_count() -> size_t;
 
     friend auto operator<<(std::ostream& _out, zpt::lf::hazard_ptr<T>& _in) -> std::ostream& {
-        _out << "hazard_ptr(" << std::hex << &_in << std::dec << ") -> P = " << _in.P
-             << " | K = " << _in.K << " | N = " << _in.N << " | R = " << _in.R << std::dec
-             << std::flush;
+        _out << "hazard_ptr(" << std::hex << &_in << std::dec << ") -> P = " << _in.P << " | K = " << _in.K
+             << " | N = " << _in.N << " | R = " << _in.R << std::dec << std::flush;
         return _out;
     }
 
@@ -165,14 +164,10 @@ zpt::lf::hazard_ptr<T>::acquire(T* _ptr) -> long {
 
     for (auto _k = _idx * this->K; _k != ((_idx + 1) * this->K); ++_k) {
         T* _null{ nullptr };
-        if (this->__hp[_k]->compare_exchange_strong(_null, _ptr, std::memory_order_release)) {
-            return _k;
-        }
+        if (this->__hp[_k]->compare_exchange_strong(_null, _ptr, std::memory_order_release)) { return _k; }
     }
 
-    expect(
-      false,
-      "No more hazard-pointer slots available for this thread, release some before continuing.");
+    expect(false, "No more hazard-pointer slots available for this thread, release some before continuing.");
     return -1;
 }
 
@@ -280,9 +275,8 @@ zpt::lf::hazard_ptr<T>::get_next_available_thread_slot() -> int {
         if (this->__next_thr_slot[_idx]->compare_exchange_strong(_acquired, true)) { return _idx; }
     }
     expect(_idx != this->P,
-           "No more thread space available for " << std::this_thread::get_id() << " in domain "
-                                                 << typeid(T).name() << " and instance " << std::hex
-                                                 << this);
+           "No more thread space available for " << std::this_thread::get_id() << " in domain " << typeid(T).name()
+                                                 << " and instance " << std::hex << this);
     return -1;
 }
 

@@ -31,8 +31,7 @@ to_a(PyObject* _self, PyObject* _args) -> PyObject* {
     return _ret;
 }
 
-PyMethodDef methods[] = { { "to_a", to_a, METH_VARARGS, "To a." },
-                          { nullptr, nullptr, 0, nullptr } };
+PyMethodDef methods[] = { { "to_a", to_a, METH_VARARGS, "To a." }, { nullptr, nullptr, 0, nullptr } };
 PyModuleDef spec = { PyModuleDef_HEAD_INIT, "builtin", nullptr, -1, methods };
 
 auto
@@ -53,8 +52,7 @@ main(int argc, char* argv[]) -> int {
                                     zpt::json{ zpt::array, { "field", "xpto" } });
         zlog(_result, zpt::info);
 
-        auto _instance =
-          _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
+        auto _instance = _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
         _bridge.call(_instance, "set", zpt::json{ "field", "xpto" });
         _result = _bridge.call(_instance, "get", nullptr);
         zlog(_result, zpt::info);
@@ -65,8 +63,7 @@ main(int argc, char* argv[]) -> int {
                                     zpt::json{ zpt::array, { "field", "xpto" } });
         zlog(_result, zpt::info);
 
-        auto _instance =
-          _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
+        auto _instance = _bridge.call(zpt::json{ "module", "external", "function", "to_b" }, zpt::undefined);
         _bridge.call(_instance, "set", zpt::json{ "field", "xpto" });
         _result = _bridge.call(_instance, "get", nullptr);
         zlog(_result, zpt::info);

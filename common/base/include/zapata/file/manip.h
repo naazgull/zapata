@@ -479,11 +479,7 @@ auto
 dirname(std::string const& _path) -> std::string;
 
 auto
-globRegexp(std::string& dir,
-           std::vector<std::string>& result,
-           std::regex& pattern,
-           short recursion = 0) -> int;
+globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion = 0) -> int;
 auto
-glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion = 0)
-  -> int;
+glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion = 0) -> int;
 } // namespace zpt

@@ -60,8 +60,7 @@ main(int argc, char* argv[]) -> int {
 
     size_t _c{ 0 };
     do {
-        std::string _d{ "(N" + std::to_string(_c) + "/p" + std::string{ _c % 2 ? "1" : "2" } +
-                        ") ·" };
+        std::string _d{ "(N" + std::to_string(_c) + "/p" + std::string{ _c % 2 ? "1" : "2" } + ") ·" };
         _sm.begin(_d, _c);
         ++_c;
         std::this_thread::sleep_for(std::chrono::duration<int, std::micro>{ 10 });

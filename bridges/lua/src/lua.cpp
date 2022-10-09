@@ -122,12 +122,10 @@ zpt::lua::bridge::thread_instance() -> bridge& {
 }
 
 auto
-zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
-  -> zpt::lua::bridge& {
+zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist) -> zpt::lua::bridge& {
     expect(_conf["module"]->is_string(), "Lua: module name must be provided");
     expect(!luaL_loadfile(this->__underlying, _external_path.data()),
-           "Lua: error loading module '" << _external_path
-                                         << "': " << lua_tostring(this->__underlying, -1));
+           "Lua: error loading module '" << _external_path << "': " << lua_tostring(this->__underlying, -1));
     expect(!lua_pcall(this->__underlying, 0, LUA_MULTRET, 0),
            "Lua: error invoking function: " << lua_tostring(this->__underlying, -1));
     zlog("Lua: loading module " << _conf["module"] << " from " << _external_path, zpt::info);
@@ -136,14 +134,12 @@ zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool
 }
 
 auto
-zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
-  -> zpt::lua::bridge& {
+zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist) -> zpt::lua::bridge& {
     expect(_conf["module"]->is_string(), "Lua: module name must be provided");
     zlog("Lua: loading builtin module " << _conf["module"], zpt::info);
     _callback(this->__underlying);
     if (_persist) {
-        this->__builtin_to_load.insert(
-          std::make_pair(_conf["module"]->string(), std::make_tuple(_callback, _conf)));
+        this->__builtin_to_load.insert(std::make_pair(_conf["module"]->string(), std::make_tuple(_callback, _conf)));
     }
     return (*this);
 }
@@ -155,22 +151,18 @@ zpt::lua::bridge::find(zpt::json _to_locate) -> object_type {
 
     if (!_to_locate["module"]->ok()) {
         lua_getglobal(this->__underlying, _to_locate["function"]->string().data());
-        expect(lua_isfunction(this->__underlying, -1),
-               "Lua: couldn't locate `" << _to_locate["function"] << "`",
-               500,
-               0);
+        expect(
+          lua_isfunction(this->__underlying, -1), "Lua: couldn't locate `" << _to_locate["function"] << "`", 500, 0);
         lua_xmove(this->__underlying, this->__underlying, 1);
         return this->__underlying;
     }
 
     lua_getglobal(this->__underlying, _to_locate["module"]->string().data());
-    expect(lua_gettop(this->__underlying) == 1,
-           "Lua: couldn't locate `" << _to_locate["module"] << "`");
+    expect(lua_gettop(this->__underlying) == 1, "Lua: couldn't locate `" << _to_locate["module"] << "`");
     lua_pushstring(this->__underlying, _to_locate["function"]->string().data());
     lua_gettable(this->__underlying, 1);
     expect(lua_isfunction(this->__underlying, -1),
-           "Lua: couldn't locate `" << _to_locate["module"] << "." << _to_locate["function"]
-                                    << "`");
+           "Lua: couldn't locate `" << _to_locate["module"] << "." << _to_locate["function"] << "`");
     lua_remove(this->__underlying, 1);
     return this->__underlying;
 }
@@ -237,10 +229,7 @@ zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert, int _index)
             return this->to_ref(_to_convert, _index);
         }
         case LUA_TTHREAD: {
-            expect(lua_type(_to_convert, _index) != LUA_TTHREAD,
-                   "Lua: unmanaged lua type LUA_TTHREAD",
-                   500,
-                   0);
+            expect(lua_type(_to_convert, _index) != LUA_TTHREAD, "Lua: unmanaged lua type LUA_TTHREAD", 500, 0);
         }
     }
     return zpt::undefined;
@@ -260,8 +249,7 @@ zpt::lua::bridge::to_object(zpt::json _to_convert) -> zpt::lua::bridge::object_t
 }
 
 auto
-zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
-  -> zpt::lua::bridge::object_type {
+zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return) -> zpt::lua::bridge::object_type {
     switch (_to_convert->type()) {
         case zpt::JSObject: {
             lua_newtable(_return);
@@ -319,8 +307,7 @@ zpt::lua::bridge::to_object(zpt::json _to_convert, object_type _return)
 }
 
 auto
-zpt::lua::bridge::from_ref(zpt::json _to_convert, object_type _return)
-  -> zpt::lua::bridge::object_type {
+zpt::lua::bridge::from_ref(zpt::json _to_convert, object_type _return) -> zpt::lua::bridge::object_type {
     unsigned long _ref{ 0 };
     if (_to_convert->is_lambda()) {
         std::istringstream _iss;
@@ -373,9 +360,7 @@ zpt::lua::bridge::to_args(zpt::json _args) -> zpt::lua::bridge& {
 
 auto
 zpt::lua::bridge::initialize() -> zpt::lua::bridge& {
-    for (auto [_file, _conf] : this->__external_to_load) {
-        this->setup_module(_conf, _file, false);
-    }
+    for (auto [_file, _conf] : this->__external_to_load) { this->setup_module(_conf, _file, false); }
     for (auto [_, _pair] : this->__builtin_to_load) {
         auto [_callback, _conf] = _pair;
         this->setup_module(_conf, _callback, false);

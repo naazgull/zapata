@@ -31,8 +31,7 @@ extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
     auto _config = _plugin->config();
-    auto& _token_provider =
-      zpt::globals::get<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
+    auto& _token_provider = zpt::globals::get<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
     zpt::globals::alloc<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER(), _token_provider, _config);
 
     size_t _step = _plugin->config()["add_to_step"]->integer();
@@ -40,12 +39,10 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     _rest.add_listener(_step,
                        std::string{ "/{:(GET|POST):}" } + _config["authorize_url"]->string(),
                        zpt::auth::oauth2::authorize_listener);
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["token_url"]->string(),
-                       zpt::auth::oauth2::token_listener);
-    _rest.add_listener(_step,
-                       std::string{ "/{:(GET|POST):}" } + _config["refresh_url"]->string(),
-                       zpt::auth::oauth2::refresh_listener);
+    _rest.add_listener(
+      _step, std::string{ "/{:(GET|POST):}" } + _config["token_url"]->string(), zpt::auth::oauth2::token_listener);
+    _rest.add_listener(
+      _step, std::string{ "/{:(GET|POST):}" } + _config["refresh_url"]->string(), zpt::auth::oauth2::refresh_listener);
     _rest.add_listener(_step,
                        std::string{ "/{:(GET|POST):}" } + _config["validate_url"]->string(),
                        zpt::auth::oauth2::validate_listener);

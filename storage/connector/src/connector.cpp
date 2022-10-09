@@ -231,8 +231,7 @@ zpt::storage::connection::connection(zpt::storage::connection::type* _underlying
   : __underlying{ _underlying } {}
 
 auto
-zpt::storage::connection::operator=(zpt::storage::connection const& _rhs)
-  -> zpt::storage::connection& {
+zpt::storage::connection::operator=(zpt::storage::connection const& _rhs) -> zpt::storage::connection& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
@@ -331,8 +330,7 @@ zpt::storage::collection::collection(zpt::storage::collection::type* _underlying
   : __underlying{ _underlying } {}
 
 auto
-zpt::storage::collection::operator=(zpt::storage::collection const& _rhs)
-  -> zpt::storage::collection& {
+zpt::storage::collection::operator=(zpt::storage::collection const& _rhs) -> zpt::storage::collection& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
@@ -420,8 +418,7 @@ zpt::storage::result::operator*() -> zpt::storage::result::type& {
 }
 
 auto
-zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _to_find)
-  -> zpt::storage::action {
+zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _to_find) -> zpt::storage::action {
     if (_to_find->ok()) {
         auto _find = _collection->find(zpt::storage::extract_find(_to_find));
         if (_to_find["page_size"]->ok()) {
@@ -444,15 +441,13 @@ zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
             _reply["body"] << "page_size" << static_cast<long long>(_params["page_size"]);
         }
         if (_params["page_start_index"]->ok()) {
-            _reply["body"] << "page_start_index"
-                           << static_cast<long long>(_params["page_start_index"]);
+            _reply["body"] << "page_start_index" << static_cast<long long>(_params["page_start_index"]);
         }
     }
 }
 
 auto
-zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _to_remove)
-  -> zpt::storage::action {
+zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::json _to_remove) -> zpt::storage::action {
     if (_to_remove->ok()) {
         auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
         if (_to_remove["page_size"]->ok()) {
@@ -488,8 +483,7 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                     auto _function = zpt::functional::parse(_to_eval);
                     auto _params = _function["params"];
                     if (_params->ok()) {
-                        (**_params->array())
-                          .insert((**_params->array()).begin(), zpt::json::string(_key));
+                        (**_params->array()).insert((**_params->array()).begin(), zpt::json::string(_key));
                     }
                     else { _function << "params" << _key; }
                     zpt::storage::functional_to_sql(_function, _find, ::variable_name);
@@ -511,9 +505,8 @@ zpt::storage::extract_find(zpt::json _to_process) -> std::string {
 }
 
 auto
-zpt::storage::functional_to_sql(zpt::json _function,
-                                std::ostream& _find,
-                                zpt::storage::string_output _str_output) -> void {
+zpt::storage::functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output)
+  -> void {
     if (!_function->ok()) { return; }
     if (!_function->is_object()) {
         _str_output(_function, _find);
@@ -523,8 +516,7 @@ zpt::storage::functional_to_sql(zpt::json _function,
 }
 
 auto
-zpt::storage::functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find)
-  -> void {
+zpt::storage::functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void {
     auto _found = ::functors().find(_functor);
     if (_found != ::functors().end()) { _found->second(_params, _find); }
     else { ::func_default(_functor, _params, _find); }

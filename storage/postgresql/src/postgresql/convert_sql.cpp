@@ -26,10 +26,10 @@ namespace zpt {
 
 namespace pgsql {
 
-std::map<std::string, std::string> OPS = { { "gt", ">" },  { "gte", ">=" },
-                                           { "lt", "<" },  { "lte", "<=" },
-                                           { "ne", "<>" }, { "exists", "EXISTS" },
-                                           { "in", "IN" }, { "nin", "NOT IN" } };
+std::map<std::string, std::string> OPS = {
+    { "gt", ">" },  { "gte", ">=" },        { "lt", "<" },  { "lte", "<=" },
+    { "ne", "<>" }, { "exists", "EXISTS" }, { "in", "IN" }, { "nin", "NOT IN" }
+};
 }
 } // namespace zpt
 
@@ -176,50 +176,43 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             // T_point
             case 600: {
                 // zdbg("point");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_lseg
             case 601: {
                 // zdbg("lseg");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_path
             case 602: {
                 // zdbg("path");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_box
             case 603: {
                 // zdbg("box");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_polygon
             case 604: {
                 // zdbg("polygon");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_line
             case 628: {
                 // zdbg("line");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__line
             case 629: {
                 // zdbg("line");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_cidr
@@ -266,10 +259,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             case 718: {
                 // zdbg("circle");
                 _out << zpt::json(zpt::r_replace(
-                  zpt::r_replace(
-                    zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["),
-                    ")",
-                    "]"),
+                  zpt::r_replace(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["), ")", "]"),
                   "(",
                   "["));
                 break;
@@ -278,10 +268,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             case 719: {
                 // zdbg("circle");
                 _out << zpt::json(zpt::r_replace(
-                  zpt::r_replace(
-                    zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["),
-                    ")",
-                    "]"),
+                  zpt::r_replace(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ">", "]"), "<", "["), ")", "]"),
                   "(",
                   "["));
                 break;
@@ -389,29 +376,25 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             // T__point
             case 1017: {
                 // zdbg("point");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__lseg
             case 1018: {
                 // zdbg("lseg");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__path
             case 1019: {
                 // zdbg("path");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__box
             case 1020: {
                 // zdbg("box");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__float4
@@ -442,8 +425,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             // T__polygon
             case 1027: {
                 // zdbg("polygon");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__oid
@@ -828,8 +810,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             // T_anyrange
             case 3831: {
                 // zdbg("anyrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_event_trigger
@@ -839,85 +820,73 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
             // T_int4range
             case 3904: {
                 // zdbg("int4range");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__int4range
             case 3905: {
                 // zdbg("int4range");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_numrange
             case 3906: {
                 // zdbg("numrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__numrange
             case 3907: {
                 // zdbg("numrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_tsrange
             case 3908: {
                 // zdbg("tsrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__tsrange
             case 3909: {
                 // zdbg("tsrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_tstzrange
             case 3910: {
                 // zdbg("tstzrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__tstzrange
             case 3911: {
                 // zdbg("tstzrange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_daterange
             case 3912: {
                 // zdbg("daterange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__daterange
             case 3913: {
                 // zdbg("daterange");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T_int8range
             case 3926: {
                 // zdbg("int8range");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             // T__int8range Oid =
             case 3927: {
                 // zdbg("int8range");
-                _out << zpt::json(
-                  zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
+                _out << zpt::json(zpt::r_replace(zpt::r_replace(_f.as<std::string>(), ")", "]"), "(", "["));
                 break;
             }
             default: {
@@ -947,8 +916,8 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
         std::string _key = _i.first;
         zpt::json _v = _i.second;
 
-        if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" ||
-            _key == "fields" || _key == "embed") {
+        if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" ||
+            _key == "embed") {
             continue;
         }
 
@@ -984,9 +953,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                     }
                     else {
 
-                        if (_expression.length() > 0) {
-                            _expression[_expression.length() - 1] = '/';
-                        }
+                        if (_expression.length() > 0) { _expression[_expression.length() - 1] = '/'; }
                     }
                 }
                 else if (_bar_count == 2) {
@@ -1028,30 +995,18 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                 _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") +
                                            zpt::pgsql::escape(zpt::json::string(_expression));
                             }
-                            else {
-                                _queryr +=
-                                  zpt::pgsql::escape_name(_key) + std::string(" = ") + _bexpr;
-                            }
+                            else { _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + _bexpr; }
                         }
-                        else {
-
-                            _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") +
-                                       std::to_string(d);
-                        }
+                        else { _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(d); }
                     }
-                    else {
-
-                        _queryr +=
-                          zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(i);
-                    }
+                    else { _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(i); }
 
                     continue;
                 }
             }
             else {
 
-                std::map<std::string, std::string>::iterator _found =
-                  zpt::pgsql::OPS.find(_command);
+                std::map<std::string, std::string>::iterator _found = zpt::pgsql::OPS.find(_command);
 
                 if (_found != zpt::pgsql::OPS.end()) {
 
@@ -1059,8 +1014,8 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 
                     if (_bar_count == 2) {
 
-                        _queryr += zpt::pgsql::escape_name(_key) + _op +
-                                   zpt::pgsql::escape(zpt::json::string(_expression));
+                        _queryr +=
+                          zpt::pgsql::escape_name(_key) + _op + zpt::pgsql::escape(zpt::json::string(_expression));
                     }
                     else if (_options == "n") {
 
@@ -1079,8 +1034,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 
                                 std::string _bexpr(_expression.data());
 
-                                std::transform(
-                                  _bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
+                                std::transform(_bexpr.begin(), _bexpr.end(), _bexpr.begin(), ::tolower);
 
                                 if (_bexpr != "true" && _bexpr != "false") {
                                     _queryr += zpt::pgsql::escape_name(_key) + _op +
@@ -1088,10 +1042,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                 }
                                 else { _queryr += zpt::pgsql::escape_name(_key) + _op + _bexpr; }
                             }
-                            else {
-
-                                _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(d);
-                            }
+                            else { _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(d); }
                         }
                         else { _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(i); }
                     }
@@ -1115,8 +1066,8 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                     _v += zpt::pgsql::escape(_e);
                                 }
 
-                                _queryr += zpt::pgsql::escape_name(_key) + _op + std::string("(") +
-                                           _v + std::string(")");
+                                _queryr +=
+                                  zpt::pgsql::escape_name(_key) + _op + std::string("(") + _v + std::string(")");
                             }
                         }
                         catch (std::exception const& _e) {
@@ -1124,9 +1075,8 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                     }
                     else if (_options == "d") {
 
-                        _queryr +=
-                          zpt::pgsql::escape_name(_key) + _op + std::string("TIMESTAMP('") +
-                          zpt::pgsql::escape(zpt::json::string(_expression)) + std::string("')");
+                        _queryr += zpt::pgsql::escape_name(_key) + _op + std::string("TIMESTAMP('") +
+                                   zpt::pgsql::escape(zpt::json::string(_expression)) + std::string("')");
                     }
 
                     continue;
@@ -1162,9 +1112,8 @@ zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
 
                 _part.erase(0, 1);
 
-                _queryr += (!_first ? ", " : "") +
-                           zpt::pgsql::escape(zpt::json::string(_part), "\"") + std::string(" ") +
-                           _dir;
+                _queryr +=
+                  (!_first ? ", " : "") + zpt::pgsql::escape(zpt::json::string(_part), "\"") + std::string(" ") + _dir;
 
                 _first = false;
             }
@@ -1175,13 +1124,9 @@ zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
 
     if (_in["embed"]) {}
 
-    if (_in["page_start_index"]) {
-        _queryr += std::string(" OFFSET ") + std::to_string(int(_in["page_start_index"]));
-    }
+    if (_in["page_start_index"]) { _queryr += std::string(" OFFSET ") + std::to_string(int(_in["page_start_index"])); }
 
-    if (_in["page_size"]) {
-        _queryr += std::string(" LIMIT ") + std::to_string(int(_in["page_size"]));
-    }
+    if (_in["page_size"]) { _queryr += std::string(" LIMIT ") + std::to_string(int(_in["page_size"])); }
 }
 
 auto
@@ -1291,8 +1236,7 @@ zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string
 
             if (_values.length() != 0) { _values += std::string(", "); }
 
-            _values += zpt::pgsql::escape_name(_c.first) + std::string(" = ") +
-                       zpt::pgsql::escape(_c.second);
+            _values += zpt::pgsql::escape_name(_c.first) + std::string(" = ") + zpt::pgsql::escape(_c.second);
         }
     }
 
@@ -1324,10 +1268,7 @@ zpt::pgsql::escape(zpt::json _in, std::string const& _str_delimiter) -> std::str
                 _out.assign(std::string("point") +
                             zpt::r_replace(zpt::r_replace(std::string(_in), "[", "("), "]", ")"));
             }
-            else {
-                _out.assign(
-                  zpt::pgsql::escape(zpt::json::string(std::string(_in)), _str_delimiter));
-            }
+            else { _out.assign(zpt::pgsql::escape(zpt::json::string(std::string(_in)), _str_delimiter)); }
             break;
         }
         case zpt::JSString: {
@@ -1354,8 +1295,7 @@ zpt::pgsql::escape(zpt::json _in, std::string const& _str_delimiter) -> std::str
             break;
         }
         case zpt::JSDate: {
-            _out.assign(std::string("TIMESTAMP ") + _str_delimiter + std::string(_in) +
-                        _str_delimiter);
+            _out.assign(std::string("TIMESTAMP ") + _str_delimiter + std::string(_in) + _str_delimiter);
             break;
         }
         case zpt::JSLambda: {

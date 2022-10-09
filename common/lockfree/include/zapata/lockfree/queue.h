@@ -58,8 +58,7 @@ class forward_node {
 
 template<typename T>
 class queue {
-    static_assert(std::is_copy_constructible<T>::value,
-                  "Type `T` in `zpt::lf::queue<T>` must be copy constuctible.");
+    static_assert(std::is_copy_constructible<T>::value, "Type `T` in `zpt::lf::queue<T>` must be copy constuctible.");
 
   public:
     using size_type = size_t;
@@ -148,8 +147,7 @@ class queue {
         try {
             size_t _count{ 0 };
             for (auto _it = _in.begin(); _it != _in.end(); ++_it, ++_count) {
-                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", ")) << *_it.node()
-                     << std::flush;
+                _out << (_count == 0 ? "" : (_count % 5 == 0 ? "\n       " : ", ")) << *_it.node() << std::flush;
             }
         }
         catch (zpt::NoMoreElementsException const& e) {
@@ -202,9 +200,7 @@ template<typename T>
 auto
 zpt::lf::queue<T>::back() const -> T {
     auto _tail = this->tail();
-    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) {
-        return _tail->__value;
-    }
+    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) { return _tail->__value; }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
@@ -227,8 +223,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     typename zpt::lf::queue<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
 
     do {
-        typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail,
-                                                                       this->__hazard_domain };
+        typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail, this->__hazard_domain };
         auto _tail = _tail_sentry.target();
         zpt::lf::forward_node<T>* _null{ nullptr };
         if (_tail->__next->compare_exchange_strong(_null, _new)) {
@@ -247,8 +242,7 @@ template<typename T>
 auto
 zpt::lf::queue<T>::pop() -> T {
     do {
-        typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head,
-                                                                       this->__hazard_domain };
+        typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head, this->__hazard_domain };
         auto _head = _head_sentry.target();
         auto _next = _head->__next->load(std::memory_order_acquire);
         if (_next == nullptr) { break; }

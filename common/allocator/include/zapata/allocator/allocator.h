@@ -121,16 +121,14 @@ zpt::object_pool<T>::acquire(size_t _n) -> pointer_type {
                 auto _return = &this->__underlying[_addr];
                 this->__available.erase(_addr);
                 if (_size - _byte_size != 0) {
-                    this->__available.insert(
-                      std::make_pair(_addr + _byte_size, _size - _byte_size));
+                    this->__available.insert(std::make_pair(_addr + _byte_size, _size - _byte_size));
                 }
                 this->__object_count += _n;
                 return _return;
             }
         }
     }
-    expect(
-      this->__current_addr + _byte_size < this->__max_size, "no more memory available");
+    expect(this->__current_addr + _byte_size < this->__max_size, "no more memory available");
     auto _return = &this->__underlying[this->__current_addr];
     this->__current_addr += _byte_size;
     this->__object_count += _n;
@@ -159,9 +157,7 @@ zpt::object_pool<T>::to_string() const -> std::string {
     _oss << "- main chunk: (" << this->__current_addr << "/" << this->__max_size << ")";
     if (this->__available.size() != 0) {
         _oss << std::endl << "- previously allocated and available chunks:";
-        for (auto [_addr, _size] : this->__available) {
-            _oss << " (" << _addr << ", " << _size << ")" << std::flush;
-        }
+        for (auto [_addr, _size] : this->__available) { _oss << " (" << _addr << ", " << _size << ")" << std::flush; }
     }
     return _oss.str();
 }
@@ -236,8 +232,7 @@ zpt::allocator<T>::allocate(size_type _n) -> pointer {
 template<typename T>
 auto
 zpt::allocator<T>::deallocate(pointer _to_deallocate, size_type _n) -> void {
-    this->get_pool().restore(reinterpret_cast<zpt::object_pool<T>::pointer_type>(_to_deallocate),
-                             _n);
+    this->get_pool().restore(reinterpret_cast<zpt::object_pool<T>::pointer_type>(_to_deallocate), _n);
 }
 
 template<typename T>
@@ -252,8 +247,7 @@ zpt::allocator<T>::to_string() const -> std::string {
     unsigned long long _count = this->get_pool().count();
     std::ostringstream _oss;
     _oss << "zpt::allocator<" << typeid(T).name() << ">:" << std::endl
-         << "- max of " << this->__max_size << " bytes of allocatable memory per thread"
-         << std::endl
+         << "- max of " << this->__max_size << " bytes of allocatable memory per thread" << std::endl
          << "- holds " << _count << " objects in a total of " << (_count * sizeof(T))
          << " bytes allocated by the current thread" << std::endl
          << this->get_pool().to_string() << std::flush;

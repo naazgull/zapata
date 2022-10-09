@@ -91,7 +91,7 @@ class polling {
     auto listen_on(zpt::stream _stream) -> zpt::polling&;
     auto mute(zpt::basic_stream& _stream) -> zpt::polling&;
     auto unmute(zpt::basic_stream& _stream) -> zpt::polling&;
-    
+
     auto poll() -> void;
     auto shutdown() -> void;
 

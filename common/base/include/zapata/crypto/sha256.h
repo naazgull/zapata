@@ -33,17 +33,17 @@
 #define SHA256_F2(x) (SHA2_ROTR(x, 6) ^ SHA2_ROTR(x, 11) ^ SHA2_ROTR(x, 25))
 #define SHA256_F3(x) (SHA2_ROTR(x, 7) ^ SHA2_ROTR(x, 18) ^ SHA2_SHFR(x, 3))
 #define SHA256_F4(x) (SHA2_ROTR(x, 17) ^ SHA2_ROTR(x, 19) ^ SHA2_SHFR(x, 10))
-#define SHA2_UNPACK32(x, str)                                                                      \
-    {                                                                                              \
-        *((str) + 3) = (std::uint8_t)((x));                                                        \
-        *((str) + 2) = (std::uint8_t)((x) >> 8);                                                   \
-        *((str) + 1) = (std::uint8_t)((x) >> 16);                                                  \
-        *((str) + 0) = (std::uint8_t)((x) >> 24);                                                  \
+#define SHA2_UNPACK32(x, str)                                                                                          \
+    {                                                                                                                  \
+        *((str) + 3) = (std::uint8_t)((x));                                                                            \
+        *((str) + 2) = (std::uint8_t)((x) >> 8);                                                                       \
+        *((str) + 1) = (std::uint8_t)((x) >> 16);                                                                      \
+        *((str) + 0) = (std::uint8_t)((x) >> 24);                                                                      \
     }
-#define SHA2_PACK32(str, x)                                                                        \
-    {                                                                                              \
-        *(x) = ((std::uint32_t) * ((str) + 3)) | ((std::uint32_t) * ((str) + 2) << 8) |            \
-               ((std::uint32_t) * ((str) + 1) << 16) | ((std::uint32_t) * ((str) + 0) << 24);      \
+#define SHA2_PACK32(str, x)                                                                                            \
+    {                                                                                                                  \
+        *(x) = ((std::uint32_t) * ((str) + 3)) | ((std::uint32_t) * ((str) + 2) << 8) |                                \
+               ((std::uint32_t) * ((str) + 1) << 16) | ((std::uint32_t) * ((str) + 0) << 24);                          \
     }
 
 namespace zpt::crypto {

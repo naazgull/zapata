@@ -45,10 +45,8 @@ zpt::base64::encode(std::string& _out) {
     while (in.readsome(&buff1[i++], 1))
         if (i == 3) {
             _out.push_back(encodeCharacterTable[(buff1[0] & 0xfc) >> 2]);
-            _out.push_back(
-              encodeCharacterTable[((buff1[0] & 0x03) << 4) + ((buff1[1] & 0xf0) >> 4)]);
-            _out.push_back(
-              encodeCharacterTable[((buff1[1] & 0x0f) << 2) + ((buff1[2] & 0xc0) >> 6)]);
+            _out.push_back(encodeCharacterTable[((buff1[0] & 0x03) << 4) + ((buff1[1] & 0xf0) >> 4)]);
+            _out.push_back(encodeCharacterTable[((buff1[1] & 0x0f) << 2) + ((buff1[2] & 0xc0) >> 6)]);
             _out.push_back(encodeCharacterTable[buff1[2] & 0x3f]);
             i = 0;
         }

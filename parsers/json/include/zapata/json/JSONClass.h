@@ -106,8 +106,7 @@ class json {
     using iterator = zpt::JSONIterator;
     using const_iterator = const zpt::JSONIterator;
 
-    using traverse_callback =
-      std::function<void(std::string const&, zpt::json, std::string const&)>;
+    using traverse_callback = std::function<void(std::string const&, zpt::json, std::string const&)>;
 
     json();
     json(std::nullptr_t);
@@ -291,8 +290,7 @@ class json {
 
     static auto traverse(zpt::json _document, zpt::json::traverse_callback _callback) -> void;
     static auto flatten(zpt::json _document) -> zpt::json;
-    static auto find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find)
-      -> zpt::json::iterator;
+    static auto find(zpt::json::iterator _begin, zpt::json::iterator _end, zpt::json _to_find) -> zpt::json::iterator;
 
   private:
     std::shared_ptr<zpt::JSONElementT> __underlying{ nullptr };
@@ -300,9 +298,7 @@ class json {
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
     auto strict_union(zpt::json _rhs) -> void;
 
-    static auto traverse(zpt::json _document,
-                         zpt::json::traverse_callback _callback,
-                         std::string _path) -> void;
+    static auto traverse(zpt::json _document, zpt::json::traverse_callback _callback, std::string _path) -> void;
 };
 } // namespace zpt
 
@@ -394,8 +390,7 @@ class JSONObjT {
     virtual auto key_for(size_t _idx) const -> std::string;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
-      -> zpt::JSONObjT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".") -> zpt::JSONObjT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> JSONObjT&;
 
     auto clone() const -> zpt::json;
@@ -478,8 +473,7 @@ class JSONArrT {
     virtual auto sort(std::function<bool(zpt::json, zpt::json)> _comparator) -> zpt::JSONArrT&;
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
-      -> zpt::JSONArrT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".") -> zpt::JSONArrT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> zpt::JSONArrT&;
 
     auto clone() const -> zpt::json;
@@ -721,8 +715,8 @@ class context {
 
 namespace zpt {
 using symbol = std::function<zpt::json(zpt::json, unsigned short, zpt::context)>;
-using symbol_table = std::shared_ptr<
-  std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
+using symbol_table =
+  std::shared_ptr<std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
 static inline symbol_table __lambdas{
     new std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>{}
 };
@@ -987,8 +981,7 @@ class JSONElementT {
     }
 
     auto get_path(std::string const& _path, std::string const& _separator = ".") -> zpt::json;
-    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".")
-      -> JSONElementT&;
+    auto set_path(std::string const& _path, zpt::json _value, std::string const& _separator = ".") -> JSONElementT&;
     auto del_path(std::string const& _path, std::string const& _separator = ".") -> JSONElementT&;
 
     virtual auto stringify(std::string& _out) -> JSONElementT&;
@@ -1408,9 +1401,7 @@ zpt::JSONElementT::operator[](T _idx) -> json& {
 template<typename T>
 auto
 zpt::JSONElementT::operator[](T _idx) const -> json const {
-    if (this->__target.__type == zpt::JSObject) {
-        return static_cast<JSONObj const&>(this->__target.__object)[_idx];
-    }
+    if (this->__target.__type == zpt::JSObject) { return static_cast<JSONObj const&>(this->__target.__object)[_idx]; }
     else if (this->__target.__type == zpt::JSArray) {
         return static_cast<JSONArr const&>(this->__target.__array)[_idx];
     }

@@ -51,9 +51,7 @@ class element {
     auto content() -> zpt::json;
     auto parent() -> zpt::json;
 
-    friend auto operator<<(std::ostream& _os, zpt::dom::element& _out) -> std::ostream& {
-        return _os;
-    }
+    friend auto operator<<(std::ostream& _os, zpt::dom::element& _out) -> std::ostream& { return _os; }
 
   private:
     std::string __xpath{ "" };
@@ -77,11 +75,9 @@ class engine : public zpt::pipeline::engine<zpt::dom::element> {
 
     auto add_listener(size_t _step,
                       std::string _pattern,
-                      std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback)
-      -> zpt::dom::engine&;
+                      std::function<void(zpt::pipeline::event<zpt::dom::element>&)> _callback) -> zpt::dom::engine&;
 
-    auto traverse(zpt::json _document, std::string _path = "", zpt::json _parent = zpt::undefined)
-      -> zpt::dom::engine&;
+    auto traverse(zpt::json _document, std::string _path = "", zpt::json _parent = zpt::undefined) -> zpt::dom::engine&;
 
     static auto on_error(zpt::json _path,
                          zpt::pipeline::event<zpt::dom::element>& _event,

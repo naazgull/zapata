@@ -28,8 +28,8 @@ extern "C" auto
 _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin->config();
     if (_config["database_dir"]->ok()) {
-        zpt::globals::alloc<zpt::catalogue<std::string, zpt::json>>(
-          zpt::CATALOGUE(), _config["database_dir"]->string());
+        zpt::globals::alloc<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE(),
+                                                                    _config["database_dir"]->string());
     }
 }
 

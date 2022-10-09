@@ -40,7 +40,7 @@ class pipe_stream : public zpt::basic_transport {
     auto make_reply() const -> zpt::message override;
     auto make_reply(zpt::message _request) const -> zpt::message override;
     auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
-    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;    
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

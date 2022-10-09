@@ -11,8 +11,7 @@ namespace zpt {
 
 inline void
 URITokenizer::error() {
-    throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") +
-                                    std::to_string(d_scanner.lineNr()));
+    throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") + std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex

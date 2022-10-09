@@ -1,3 +1,25 @@
+/*
+  This is free and unencumbered software released into the public domain.
+
+  Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+  this software, either in source code form or as a compiled binary, for any
+  purpose, commercial or non-commercial, and by any means.
+
+  In jurisdictions that recognize copyright laws, the author or authors of this
+  software dedicate any and all copyright interest in the software to the public
+  domain. We make this dedication for the benefit of the public at large and to
+  the detriment of our heirs and successors. We intend this dedication to be an
+  overt act of relinquishment in perpetuity of all present and future rights to
+  this software under copyright law.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+  AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #include <cstdarg>
 #include <ostream>
 #include <regex>
@@ -11,8 +33,7 @@ auto
 zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
     if (this->__name.length() == 0) { this->__name.assign(_name.data()); }
     else {
-        auto [_it, _inserted] =
-          this->__underlying.insert(std::make_pair(this->__name, zpt::json(_name)));
+        auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, zpt::json(_name)));
         if (!_inserted) { _it->second = _name; }
         this->__name.clear();
     }
@@ -107,8 +128,7 @@ zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separator)
 }
 
 auto
-zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
-  -> JSONObjT& {
+zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator) -> JSONObjT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -127,9 +147,7 @@ zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string 
         }
     }
     else {
-        if (_iss.good()) {
-            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
-        }
+        if (_iss.good()) { _current->set_path(_path.substr(_part.length() + 1), _value, _separator); }
         else {
             this->push(_part);
             this->push(_value);

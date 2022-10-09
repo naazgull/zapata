@@ -33,8 +33,7 @@ zpt::auth::oauth2::authorize_listener(zpt::pipeline::event<zpt::exchange>& _even
     auto _body = _message["body"];
     auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _server = zpt::globals::get<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
-    auto _authorization =
-      _server.authorize(_message["performative"]->integer(), _message, _config["oauth2"]);
+    auto _authorization = _server.authorize(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _authorization;
 }
 
@@ -56,8 +55,7 @@ zpt::auth::oauth2::refresh_listener(zpt::pipeline::event<zpt::exchange>& _event)
     auto _body = _message["body"];
     auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _server = zpt::globals::get<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
-    auto _refresh =
-      _server.refresh(_message["performative"]->integer(), _message, _config["oauth2"]);
+    auto _refresh = _server.refresh(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _refresh;
 }
 
@@ -68,7 +66,6 @@ zpt::auth::oauth2::validate_listener(zpt::pipeline::event<zpt::exchange>& _event
     auto _body = _message["body"];
     auto _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
     auto& _server = zpt::globals::get<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
-    auto _validate =
-      _server.validate(_message["performative"]->integer(), _message, _config["oauth2"]);
+    auto _validate = _server.validate(_message["performative"]->integer(), _message, _config["oauth2"]);
     _channel->to_send() = _validate;
 }

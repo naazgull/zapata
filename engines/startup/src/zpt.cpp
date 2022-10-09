@@ -42,12 +42,7 @@ main(int _argc, char* _argv[]) -> int {
     std::signal(SIGINT, deallocate);
     zpt::json _parameter_setup{
         "--conf-file",
-        { "options",
-          { zpt::array, "optional", "multiple" },
-          "type",
-          "path",
-          "description",
-          "configuration file" },
+        { "options", { zpt::array, "optional", "multiple" }, "type", "path", "description", "configuration file" },
         "--conf-dir",
         { "options",
           { zpt::array, "optional", "multiple" },
@@ -57,12 +52,7 @@ main(int _argc, char* _argv[]) -> int {
           "configuration directory, all the files in it are assumed to be configuration "
           "files" },
         "--help",
-        { "options",
-          { zpt::array, "optional", "single" },
-          "type",
-          "void",
-          "description",
-          "show this help" },
+        { "options", { zpt::array, "optional", "single" }, "type", "void", "description", "show this help" },
         "--terminate",
         { "options",
           { zpt::array, "optional", "single" },
@@ -91,14 +81,12 @@ main(int _argc, char* _argv[]) -> int {
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config["log"]["level"]) : 7;
-    zpt::log_format =
-      _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
+    zpt::log_format = _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
 
     zpt::globals::alloc<zpt::polling>(zpt::STREAM_POLLING());
     zpt::globals::alloc<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto _consumers = _config("limits")("max_consumer_threads")->integer();
-    zpt::globals::alloc<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers)
-      .start_consumers(_consumers);
+    zpt::globals::alloc<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers).start_consumers(_consumers);
     zpt::globals::alloc<zpt::startup::boot>(zpt::BOOT(), _config).load();
 
     zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING()).poll();

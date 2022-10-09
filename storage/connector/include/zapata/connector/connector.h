@@ -138,8 +138,7 @@ class collection {
         virtual auto add(zpt::json _document) -> zpt::storage::action = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action = 0;
-        virtual auto replace(std::string const& _id, zpt::json _document)
-          -> zpt::storage::action = 0;
+        virtual auto replace(std::string const& _id, zpt::json _document) -> zpt::storage::action = 0;
         virtual auto find(zpt::json _search) -> zpt::storage::action = 0;
         virtual auto count() -> size_t = 0;
     };
@@ -173,11 +172,9 @@ class action {
         virtual auto add(zpt::json _document) -> zpt::storage::action::type* = 0;
         virtual auto modify(zpt::json _search) -> zpt::storage::action::type* = 0;
         virtual auto remove(zpt::json _search) -> zpt::storage::action::type* = 0;
-        virtual auto replace(std::string const& _id, zpt::json _document)
-          -> zpt::storage::action::type* = 0;
+        virtual auto replace(std::string const& _id, zpt::json _document) -> zpt::storage::action::type* = 0;
         virtual auto find(zpt::json _search) -> zpt::storage::action::type* = 0;
-        virtual auto set(std::string const& _attribute, zpt::json _value)
-          -> zpt::storage::action::type* = 0;
+        virtual auto set(std::string const& _attribute, zpt::json _value) -> zpt::storage::action::type* = 0;
         virtual auto unset(std::string const& _attribute) -> zpt::storage::action::type* = 0;
         virtual auto patch(zpt::json _document) -> zpt::storage::action::type* = 0;
         virtual auto sort(std::string const& _attribute) -> zpt::storage::action::type* = 0;
@@ -250,8 +247,7 @@ filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::
 auto
 extract_find(zpt::json _to_parse) -> std::string;
 auto
-functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output)
-  -> void;
+functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output) -> void;
 auto
 functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
 } // namespace storage

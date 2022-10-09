@@ -22,9 +22,7 @@
 
 #include <zapata/http/HTTPParser.h>
 
-zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) {
-    this->d_scanner.switchStreams(_in, _out);
-}
+zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) { this->d_scanner.switchStreams(_in, _out); }
 
 zpt::HTTPParser::~HTTPParser() {}
 

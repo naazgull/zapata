@@ -60,8 +60,7 @@ class event_t : public zpt::abstract_event {
     virtual ~event_t() = default;
 
     virtual auto blocked() const -> bool override final;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher)
-      -> zpt::events::state override final;
+    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state override final;
 
   private:
     T __underlying;

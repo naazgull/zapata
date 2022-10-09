@@ -48,8 +48,7 @@ class ZList : public zpt::Connector {
     virtual auto reconnect() -> void;
 
     virtual auto set(std::string const& _key, zpt::timestamp_t _score, zpt::json _data) -> void;
-    virtual auto reset(std::string const& _key, zpt::timestamp_t _increment, zpt::json _data)
-      -> void;
+    virtual auto reset(std::string const& _key, zpt::timestamp_t _increment, zpt::json _data) -> void;
     virtual auto del(std::string const& _key, zpt::json _data) -> void;
     virtual auto del(std::string const& _key, std::string const& _data) -> void;
     virtual auto del(std::string const& _key, zpt::timestamp_t _min) -> void;

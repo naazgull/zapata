@@ -24,15 +24,10 @@
 
 auto
 main(int argc, char* argv[]) -> int {
-    zpt::pipeline::engine<zpt::json> _engine{ 3,
-                                              { "max_queue_threads",
-                                                3,
-                                                "max_producer_threads",
-                                                1,
-                                                "max_consumer_threads",
-                                                1,
-                                                "max_queue_spin_sleep",
-                                                5000 } };
+    zpt::pipeline::engine<zpt::json> _engine{
+        3,
+        { "max_queue_threads", 3, "max_producer_threads", 1, "max_consumer_threads", 1, "max_queue_spin_sleep", 5000 }
+    };
 
     _engine.add_listener(0, "http:/{:(.*):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         _in->set_path(zpt::r_replace(static_cast<std::string>(_in->path()["raw"]), "http:", ""));
@@ -48,8 +43,7 @@ main(int argc, char* argv[]) -> int {
     });
 
     _engine.add_listener(2, "/users/{:([^/]+):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
-        std::cout << std::this_thread::get_id() << ": " << _in->content() << std::endl
-                  << std::flush;
+        std::cout << std::this_thread::get_id() << ": " << _in->content() << std::endl << std::flush;
     });
 
     _engine.start_threads();

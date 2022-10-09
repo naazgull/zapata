@@ -30,15 +30,13 @@ zpt::REST_ENGINE() -> ssize_t& {
 
 zpt::rest::engine::engine(zpt::json _configuration) {
     zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING())
-      .register_delegate([this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-          return this->delegate(_poll, _stream);
-      });
+      .register_delegate(
+        [this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool { return this->delegate(_poll, _stream); });
 }
 
 auto
 zpt::rest::engine::delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-    zpt::globals::get<zpt::events::dispatcher>(zpt::DISPATCHER())
-      .trigger<zpt::rest::receive_message>(_poll, _stream);
+    zpt::globals::get<zpt::events::dispatcher>(zpt::DISPATCHER()).trigger<zpt::rest::receive_message>(_poll, _stream);
     return true;
 }
 
@@ -53,8 +51,7 @@ zpt::rest::receive_message::blocked() const -> bool {
 
 auto
 zpt::rest::receive_message::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
-    auto _transport = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER())
-                        .get(this->__stream.transport());
+    auto _transport = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER()).get(this->__stream.transport());
     try {
         auto _request = _transport->receive(this->__stream);
         auto _reply = _request->make_reply();

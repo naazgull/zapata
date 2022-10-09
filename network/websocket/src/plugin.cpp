@@ -34,8 +34,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
     if (_config["port"]->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
-          zpt::WEBSOCKET_SERVER_SOCKET(),
-          static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
+          zpt::WEBSOCKET_SERVER_SOCKET(), static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _plugin.add_thread([=]() mutable -> void {
             auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());

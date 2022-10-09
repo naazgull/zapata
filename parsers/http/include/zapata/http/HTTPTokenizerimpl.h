@@ -10,8 +10,7 @@ namespace zpt {
 
 inline void
 HTTPTokenizer::error() {
-    throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") +
-                                    std::to_string(d_scanner.lineNr()));
+    throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") + std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex

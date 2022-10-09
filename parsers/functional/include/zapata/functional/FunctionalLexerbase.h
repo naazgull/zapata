@@ -142,12 +142,7 @@ class FunctionalLexerBase {
     static int const s_dfa_[][21];
     static int const (*s_dfaBase_[])[21];
     enum : bool { s_interactive_ = false };
-    enum : size_t {
-        s_rangeOfEOF_ = 18,
-        s_finIdx_ = 19,
-        s_nRules_ = 10,
-        s_maxSizeofStreamStack_ = 10
-    };
+    enum : size_t { s_rangeOfEOF_ = 18, s_finIdx_ = 19, s_nRules_ = 10, s_maxSizeofStreamStack_ = 10 };
     static size_t const s_ranges_[];
     static size_t const s_rf_[][2];
 
@@ -176,9 +171,7 @@ class FunctionalLexerBase {
 
   protected:
     FunctionalLexerBase(std::istream& in, std::ostream& out, bool keepCwd = true);
-    FunctionalLexerBase(std::string const& infilename,
-                        std::string const& outfilename,
-                        bool keepCwd = true);
+    FunctionalLexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd = true);
     ~FunctionalLexerBase();
 
     bool popStream();

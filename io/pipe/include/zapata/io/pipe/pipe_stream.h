@@ -132,8 +132,7 @@ zpt::basic_pipebuf<Char>::~basic_pipebuf() {}
 
 template<typename Char>
 auto
-zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs)
-  -> basic_pipebuf<char_type>& {
+zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs) -> basic_pipebuf<char_type>& {
     this->__fds[0] = _rhs.__fds[0];
     this->__fds[1] = _rhs.__fds[1];
     return (*this);
@@ -184,9 +183,7 @@ zpt::basic_pipebuf<Char>::underflow() -> int_type {
     if (!this->__fds[0]) { return traits_type::eof(); }
 
     auto _actually_read = -1;
-    if ((_actually_read = ::read(this->__fds[0], this->__ibuf, 1024)) <= 0) {
-        return traits_type::eof();
-    }
+    if ((_actually_read = ::read(this->__fds[0], this->__ibuf, 1024)) <= 0) { return traits_type::eof(); }
     if (_actually_read == 0) { return traits_type::eof(); }
     buf_type::setg(this->__ibuf, this->__ibuf, this->__ibuf + _actually_read);
     return *buf_type::gptr();
@@ -205,9 +202,7 @@ zpt::basic_pipebuf<Char>::dump() -> int_type {
     if (!this->__fds[1]) { return traits_type::eof(); }
     auto _num = buf_type::pptr() - buf_type::pbase();
     auto _actually_written = -1;
-    if ((_actually_written = ::write(this->__fds[1], this->__obuf, _num)) < 0) {
-        return traits_type::eof();
-    }
+    if ((_actually_written = ::write(this->__fds[1], this->__obuf, _num)) < 0) { return traits_type::eof(); }
     buf_type::pbump(-_actually_written);
     return _actually_written;
 }
@@ -232,8 +227,7 @@ zpt::basic_pipestream<Char>::basic_pipestream(const basic_pipestream<char_type>&
 
 template<typename Char>
 auto
-zpt::basic_pipestream<Char>::operator=(const basic_pipestream<char_type>& _rhs)
-  -> basic_pipestream<char_type>& {
+zpt::basic_pipestream<Char>::operator=(const basic_pipestream<char_type>& _rhs) -> basic_pipestream<char_type>& {
     this->__uuid = _rhs.__uuid;
     this->__buf = _rhs.__buf;
 }

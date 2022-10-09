@@ -23,17 +23,16 @@
 #include <zapata/lmdb/connector.h>
 #include <algorithm>
 
-#define mdb_expect(_error, _message)                                                               \
-    {                                                                                              \
-        auto __error__ = _error;                                                                   \
-        expect(__error__ == 0,                                                                     \
-               std::get<0>(__messages[__error__])                                                  \
-                 << ": " << _message << " due to: " << std::get<1>(__messages[__error__]));        \
+#define mdb_expect(_error, _message)                                                                                   \
+    {                                                                                                                  \
+        auto __error__ = _error;                                                                                       \
+        expect(__error__ == 0,                                                                                         \
+               std::get<0>(__messages[__error__])                                                                      \
+                 << ": " << _message << " due to: " << std::get<1>(__messages[__error__]));                            \
     }
 
 std::map<int, std::tuple<std::string, std::string>> __messages = {
-    { MDB_PANIC,
-      { "MDB_PANIC", "a fatal error occurred earlier and the environment must be shut down." } },
+    { MDB_PANIC, { "MDB_PANIC", "a fatal error occurred earlier and the environment must be shut down." } },
     { MDB_MAP_RESIZED,
       { "MDB_MAP_RESIZED",
         "another process wrote data beyond this MDB_env's mapsize and this environment's map must "
@@ -46,8 +45,7 @@ std::map<int, std::tuple<std::string, std::string>> __messages = {
       { "MDB_NOTFOUND",
         "the specified database doesn't exist in the environment and MDB_CREATE was not "
         "specified." } },
-    { MDB_DBS_FULL,
-      { "MDB_DBS_FULL", "too many databases have been opened. See mdb_env_set_maxdbs()." } },
+    { MDB_DBS_FULL, { "MDB_DBS_FULL", "too many databases have been opened. See mdb_env_set_maxdbs()." } },
     { MDB_MAP_FULL, { "MDB_MAP_FULL", "the database is full, see mdb_env_set_mapsize()." } },
     { MDB_TXN_FULL, { "MDB_TXN_FULL", "the transaction has too many dirty pages." } },
     { MDB_VERSION_MISMATCH,
@@ -133,8 +131,7 @@ zpt::storage::lmdb::session::database(std::string const& _db) -> zpt::storage::d
     return zpt::storage::database::alloc<zpt::storage::lmdb::database>(*this, _db);
 }
 
-zpt::storage::lmdb::database::database(zpt::storage::lmdb::session& _session,
-                                       std::string const& _db)
+zpt::storage::lmdb::database::database(zpt::storage::lmdb::session& _session, std::string const& _db)
   : __path{ _session.__options["path"]->string() + std::string{ "/" } + _db }
   , __commit{ _session.is_to_commit() } {}
 
@@ -149,13 +146,11 @@ zpt::storage::lmdb::database::path() -> std::string& {
 }
 
 auto
-zpt::storage::lmdb::database::collection(std::string const& _collection)
-  -> zpt::storage::collection {
+zpt::storage::lmdb::database::collection(std::string const& _collection) -> zpt::storage::collection {
     return zpt::storage::collection::alloc<zpt::storage::lmdb::collection>(*this, _collection);
 }
 
-zpt::storage::lmdb::collection::collection(zpt::storage::lmdb::database& _database,
-                                           std::string const& _collection)
+zpt::storage::lmdb::collection::collection(zpt::storage::lmdb::database& _database, std::string const& _collection)
   : __underlying{ nullptr }
   , __collection_name{ _collection }
   , __collection_file{ _database.path() + std::string{ "/" } + _collection + std::string{ ".mdb" } }
@@ -186,8 +181,7 @@ zpt::storage::lmdb::collection::remove(zpt::json _search) -> zpt::storage::actio
 }
 
 auto
-zpt::storage::lmdb::collection::replace(std::string const& _id, zpt::json _document)
-  -> zpt::storage::action {
+zpt::storage::lmdb::collection::replace(std::string const& _id, zpt::json _document) -> zpt::storage::action {
     return zpt::storage::action::alloc<zpt::storage::lmdb::action_replace>(*this, _id, _document);
 }
 
@@ -246,8 +240,7 @@ zpt::storage::lmdb::action::set_state(int _error) -> void {
         this->__state = { "code",
                           _error,
                           "message",
-                          std::get<0>(__messages[_error]) + std::string{ ": " } +
-                            std::get<1>(__messages[_error]) };
+                          std::get<0>(__messages[_error]) + std::string{ ": " } + std::get<1>(__messages[_error]) };
     }
 }
 
@@ -274,8 +267,7 @@ zpt::storage::lmdb::action::trim(zpt::json _fields, zpt::json _to_trim) -> zpt::
     return _to_trim;
 }
 
-zpt::storage::lmdb::action_add::action_add(zpt::storage::lmdb::collection& _collection,
-                                           zpt::json _document)
+zpt::storage::lmdb::action_add::action_add(zpt::storage::lmdb::collection& _collection, zpt::json _document)
   : zpt::storage::lmdb::action::action{ _collection } {
     this->add(_document);
 }
@@ -304,8 +296,7 @@ zpt::storage::lmdb::action_add::remove(zpt::json _search) -> zpt::storage::actio
 }
 
 auto
-zpt::storage::lmdb::action_add::replace(std::string const& _id, zpt::json _document)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_add::replace(std::string const& _id, zpt::json _document) -> zpt::storage::action::type* {
     expect(false, "can't replace from an 'add' action");
     return this;
 }
@@ -317,15 +308,13 @@ zpt::storage::lmdb::action_add::find(zpt::json _search) -> zpt::storage::action:
 }
 
 auto
-zpt::storage::lmdb::action_add::set(std::string const& _attribute, zpt::json _value)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_add::set(std::string const& _attribute, zpt::json _value) -> zpt::storage::action::type* {
     expect(false, "can't set from an 'add' action");
     return this;
 }
 
 auto
-zpt::storage::lmdb::action_add::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_add::unset(std::string const& _attribute) -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action");
     return this;
 }
@@ -395,8 +384,7 @@ zpt::storage::lmdb::action_add::execute() -> zpt::storage::result {
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
 }
 
-zpt::storage::lmdb::action_modify::action_modify(zpt::storage::lmdb::collection& _collection,
-                                                 zpt::json _search)
+zpt::storage::lmdb::action_modify::action_modify(zpt::storage::lmdb::collection& _collection, zpt::json _search)
   : zpt::storage::lmdb::action::action{ _collection }
   , __search{ _search }
   , __set{ zpt::json::object() }
@@ -421,8 +409,7 @@ zpt::storage::lmdb::action_modify::remove(zpt::json _search) -> zpt::storage::ac
 }
 
 auto
-zpt::storage::lmdb::action_modify::replace(std::string const& _id, zpt::json _document)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_modify::replace(std::string const& _id, zpt::json _document) -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'modify' action");
     return this;
 }
@@ -434,15 +421,13 @@ zpt::storage::lmdb::action_modify::find(zpt::json _search) -> zpt::storage::acti
 }
 
 auto
-zpt::storage::lmdb::action_modify::set(std::string const& _attribute, zpt::json _value)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_modify::set(std::string const& _attribute, zpt::json _value) -> zpt::storage::action::type* {
     this->__set << _attribute << _value;
     return this;
 }
 
 auto
-zpt::storage::lmdb::action_modify::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_modify::unset(std::string const& _attribute) -> zpt::storage::action::type* {
     this->__unset << _attribute << true;
     return this;
 }
@@ -454,8 +439,7 @@ zpt::storage::lmdb::action_modify::patch(zpt::json _document) -> zpt::storage::a
 }
 
 auto
-zpt::storage::lmdb::action_modify::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_modify::sort(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -476,8 +460,7 @@ zpt::storage::lmdb::action_modify::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::lmdb::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -509,9 +492,9 @@ zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
             _error = mdb_get(_trx, _dbi, &_key, &_value_f);
             mdb_expect(_error, "unable to find the record");
 
-            auto _doc = zpt::storage::lmdb::from_db_doc(
-                          std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size }) +
-                        this->__set - this->__unset;
+            auto _doc =
+              zpt::storage::lmdb::from_db_doc(std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size }) +
+              this->__set - this->__unset;
             auto _value = zpt::storage::lmdb::to_db_doc(_doc);
             MDB_val _value_v{ _value.length(), _value.data() };
             _error = mdb_put(_trx, _dbi, &_key, &_value_v, 0);
@@ -526,9 +509,7 @@ zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
                 MDB_val _key;
                 MDB_val _value_f;
                 _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
-                if (_error != 0 && _error != MDB_NOTFOUND) {
-                    mdb_expect(_error, "unable to retrieve from cursor");
-                }
+                if (_error != 0 && _error != MDB_NOTFOUND) { mdb_expect(_error, "unable to retrieve from cursor"); }
 
                 auto _object = zpt::storage::lmdb::from_db_doc(
                   std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
@@ -560,8 +541,7 @@ zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
     return zpt::storage::result::alloc<zpt::storage::lmdb::result>(_result);
 }
 
-zpt::storage::lmdb::action_remove::action_remove(zpt::storage::lmdb::collection& _collection,
-                                                 zpt::json _search)
+zpt::storage::lmdb::action_remove::action_remove(zpt::storage::lmdb::collection& _collection, zpt::json _search)
   : zpt::storage::lmdb::action::action{ _collection }
   , __search{ _search } {}
 
@@ -584,8 +564,7 @@ zpt::storage::lmdb::action_remove::remove(zpt::json _search) -> zpt::storage::ac
 }
 
 auto
-zpt::storage::lmdb::action_remove::replace(std::string const& _id, zpt::json _document)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_remove::replace(std::string const& _id, zpt::json _document) -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'remove' action");
     return this;
 }
@@ -597,14 +576,12 @@ zpt::storage::lmdb::action_remove::find(zpt::json _search) -> zpt::storage::acti
 }
 
 auto
-zpt::storage::lmdb::action_remove::set(std::string const& _attribute, zpt::json _value)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_remove::set(std::string const& _attribute, zpt::json _value) -> zpt::storage::action::type* {
     return this;
 }
 
 auto
-zpt::storage::lmdb::action_remove::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_remove::unset(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -614,8 +591,7 @@ zpt::storage::lmdb::action_remove::patch(zpt::json _document) -> zpt::storage::a
 }
 
 auto
-zpt::storage::lmdb::action_remove::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_remove::sort(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -636,8 +612,7 @@ zpt::storage::lmdb::action_remove::limit(size_t _number) -> zpt::storage::action
 
 auto
 zpt::storage::lmdb::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -665,9 +640,7 @@ zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
             MDB_val _key{ _document_key.length(), _document_key.data() };
             _error = mdb_del(_trx, _dbi, &_key, nullptr);
-            if (_error != 0 && _error != MDB_NOTFOUND) {
-                mdb_expect(_error, "unable to remove the record");
-            }
+            if (_error != 0 && _error != MDB_NOTFOUND) { mdb_expect(_error, "unable to remove the record"); }
             else if (_error == 0) { ++_count; }
         }
         else {
@@ -679,16 +652,12 @@ zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
                 MDB_val _value_f;
 
                 _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
-                if (_error != 0 && _error != MDB_NOTFOUND) {
-                    mdb_expect(_error, "unable to retrieve from cursor");
-                }
+                if (_error != 0 && _error != MDB_NOTFOUND) { mdb_expect(_error, "unable to retrieve from cursor"); }
                 auto _object = zpt::storage::lmdb::from_db_doc(
                   std::string{ static_cast<char*>(_value_f.mv_data), _value_f.mv_size });
                 if (!this->is_filtered_out(this->__search, _object)) {
                     _error = mdb_del(_trx, _dbi, &_key, nullptr);
-                    if (_error != 0 && _error != MDB_NOTFOUND) {
-                        mdb_expect(_error, "unable to remove the record");
-                    }
+                    if (_error != 0 && _error != MDB_NOTFOUND) { mdb_expect(_error, "unable to remove the record"); }
                     else if (_error == 0) { ++_count; }
                 }
             } while (_error != MDB_NOTFOUND);
@@ -755,8 +724,7 @@ zpt::storage::lmdb::action_replace::set(std::string const& _attribute, zpt::json
 }
 
 auto
-zpt::storage::lmdb::action_replace::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_replace::unset(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -766,8 +734,7 @@ zpt::storage::lmdb::action_replace::patch(zpt::json _document) -> zpt::storage::
 }
 
 auto
-zpt::storage::lmdb::action_replace::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_replace::sort(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -788,8 +755,7 @@ zpt::storage::lmdb::action_replace::limit(size_t _number) -> zpt::storage::actio
 
 auto
 zpt::storage::lmdb::action_replace::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -843,8 +809,7 @@ zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _co
   , __sort{ zpt::json::array() }
   , __fields{ zpt::json::array() } {}
 
-zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _collection,
-                                             zpt::json _search)
+zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _collection, zpt::json _search)
   : zpt::storage::lmdb::action::action{ _collection }
   , __search{ _search }
   , __sort{ zpt::json::array() }
@@ -869,8 +834,7 @@ zpt::storage::lmdb::action_find::remove(zpt::json _search) -> zpt::storage::acti
 }
 
 auto
-zpt::storage::lmdb::action_find::replace(std::string const& _id, zpt::json _document)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_find::replace(std::string const& _id, zpt::json _document) -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'find' action");
     return this;
 }
@@ -882,14 +846,12 @@ zpt::storage::lmdb::action_find::find(zpt::json _search) -> zpt::storage::action
 }
 
 auto
-zpt::storage::lmdb::action_find::set(std::string const& _attribute, zpt::json _value)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_find::set(std::string const& _attribute, zpt::json _value) -> zpt::storage::action::type* {
     return this;
 }
 
 auto
-zpt::storage::lmdb::action_find::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_find::unset(std::string const& _attribute) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -899,8 +861,7 @@ zpt::storage::lmdb::action_find::patch(zpt::json _document) -> zpt::storage::act
 }
 
 auto
-zpt::storage::lmdb::action_find::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+zpt::storage::lmdb::action_find::sort(std::string const& _attribute) -> zpt::storage::action::type* {
     this->__sort << _attribute;
     return this;
 }
@@ -925,8 +886,7 @@ zpt::storage::lmdb::action_find::limit(size_t _number) -> zpt::storage::action::
 
 auto
 zpt::storage::lmdb::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -972,9 +932,7 @@ zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
                 MDB_val _key;
                 MDB_val _value_f;
                 _error = mdb_cursor_get(_cursor, &_key, &_value_f, MDB_NEXT);
-                if (_error != 0 && _error != MDB_NOTFOUND) {
-                    mdb_expect(_error, "unable to retrieve from cursor");
-                }
+                if (_error != 0 && _error != MDB_NOTFOUND) { mdb_expect(_error, "unable to retrieve from cursor"); }
                 ++_consumed;
                 if (_error == 0 && _consumed > this->__offset) {
                     _found << zpt::storage::lmdb::from_db_doc(
@@ -1006,8 +964,7 @@ auto
 zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
     if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
     auto _result = zpt::json::array();
-    for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
-         ++this->__current, ++_fetched) {
+    for (size_t _fetched = 0; this->__current != this->__result["cursor"].end(); ++this->__current, ++_fetched) {
         if (_amount == 1) { return std::get<2>(*this->__current); }
         _result << std::get<2>(*this->__current);
         if (_fetched == _amount) { break; }

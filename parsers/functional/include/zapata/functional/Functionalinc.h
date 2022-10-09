@@ -2,6 +2,6 @@
 
 #include <zapata/functional/FunctionalTokenizerLexer.h>
 
-#define FunctionalScanner                                                                          \
-  public:                                                                                          \
+#define FunctionalScanner                                                                                              \
+  public:                                                                                                              \
     FunctionalTokenizerLexer

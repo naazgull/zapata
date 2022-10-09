@@ -53,9 +53,9 @@ main(int argc, char* argv[]) -> int {
 
     std::thread _thread1{ [&]() -> void {
         std::cout << "Thread1:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
-             zpt::info);
+        zlog(
+          _bridge.thread_instance().call(zpt::json{ "function", "to_a" }, zpt::json{ zpt::array, 1, "testing", false }),
+          zpt::info);
         _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
                                             zpt::json{ zpt::array, 1, "testing", false }),
@@ -64,9 +64,9 @@ main(int argc, char* argv[]) -> int {
 
     std::thread _thread2{ [&]() -> void {
         std::cout << "Thread2:" << std::endl << std::flush;
-        zlog(_bridge.thread_instance().call(zpt::json{ "function", "to_a" },
-                                            zpt::json{ zpt::array, 1, "testing", false }),
-             zpt::info);
+        zlog(
+          _bridge.thread_instance().call(zpt::json{ "function", "to_a" }, zpt::json{ zpt::array, 1, "testing", false }),
+          zpt::info);
         _bridge.thread_instance().call(zpt::json{ "function", "to_b" }, zpt::undefined);
         zlog(_bridge.thread_instance().call(zpt::json{ "module", "builtin", "function", "to_c" },
                                             zpt::json{ zpt::array, 1, "testing", false }),

@@ -24,7 +24,7 @@
 
 #include <zapata/json/JSONTokenizerLexer.h>
 
-#define JSONScanner                                                                                \
-  public:                                                                                          \
+#define JSONScanner                                                                                                    \
+  public:                                                                                                              \
     JSONTokenizerLexer
 namespace zpt {}

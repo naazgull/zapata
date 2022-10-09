@@ -137,8 +137,7 @@ zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, uns
 
 auto
 zpt::lambda::stringify(std::string const& _name, unsigned short _n_args) -> std::string {
-    return std::string("lambda(\"") + _name + std::string("\",") + std::to_string(_n_args) +
-           std::string(")");
+    return std::string("lambda(\"") + _name + std::string("\",") + std::to_string(_n_args) + std::string(")");
 }
 
 auto
@@ -150,8 +149,8 @@ zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
     catch (zpt::failed_expectation const& _e) {
     }
     auto _parsed = zpt::lambda::parse(_signature);
-    zpt::__lambdas->insert(std::make_pair(
-      _signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
+    zpt::__lambdas->insert(
+      std::make_pair(_signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
 
 auto
@@ -176,8 +175,7 @@ zpt::lambda::call(std::string const& _name, zpt::json _args, zpt::context _ctx) 
 auto
 zpt::lambda::find(std::string const& _signature) -> zpt::symbol {
     auto _found = zpt::__lambdas->find(_signature);
-    expect(_found != zpt::__lambdas->end(),
-           std::string("symbol for ") + _signature + std::string(" was not found"));
+    expect(_found != zpt::__lambdas->end(), std::string("symbol for ") + _signature + std::string(" was not found"));
     return std::get<2>(_found->second);
 }
 

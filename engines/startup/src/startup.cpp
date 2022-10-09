@@ -133,18 +133,14 @@ zpt::startup::boot::to_string() -> std::string {
 auto
 zpt::startup::boot::load() -> zpt::startup::boot& {
     auto _to_load = zpt::json::object();
-    for (auto [_idx, __, _lib] : this->__configuration["load"]) {
-        _to_load << _lib["name"]->string() << true;
-    }
+    for (auto [_idx, __, _lib] : this->__configuration["load"]) { _to_load << _lib["name"]->string() << true; }
 
     while (_to_load->size() != 0) {
         for (auto [_idx, __, _lib] : this->__configuration["load"]) {
             auto _name = _lib["name"]->string();
             if (_lib("requires")->ok() && _lib["requires"]->is_array()) {
                 for (auto [___, ____, _required] : _lib("requires")) {
-                    if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
-                        continue;
-                    }
+                    if (this->__plugins.find(_required->string()) == this->__plugins.end()) { continue; }
                 }
             }
             this->load(_lib, this->__configuration[_name]);
@@ -159,9 +155,9 @@ auto
 zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
     expect(_plugin_options["name"]->ok(), "missing name definition in plugin configuration");
 
-    auto [_it, _inserted] = this->__plugins.emplace(
-      _plugin_options["name"]->string(),
-      std::unique_ptr<zpt::plugin>{ new zpt::plugin{ _plugin_options, _plugin_config } });
+    auto [_it, _inserted] =
+      this->__plugins.emplace(_plugin_options["name"]->string(),
+                              std::unique_ptr<zpt::plugin>{ new zpt::plugin{ _plugin_options, _plugin_config } });
     auto& _plugin = _it->second;
     return *_plugin;
 }

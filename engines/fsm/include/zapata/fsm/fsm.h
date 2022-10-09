@@ -43,8 +43,7 @@ template<typename C, typename S, typename D, typename I>
 class machine;
 
 template<typename C, typename S, typename D, typename I>
-class machine
-  : public zpt::events::dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>> {
+class machine : public zpt::events::dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>> {
   public:
     using callback = std::function<S(S&, D&, I const&)>;
     using callback_list = std::vector<callback>;
@@ -106,11 +105,8 @@ class machine
 };
 
 template<typename C, typename S, typename D, typename I>
-zpt::fsm::machine<C, S, D, I>::machine(long _processor_threads,
-                                       long _max_threads,
-                                       zpt::json _config)
-  : zpt::events::
-      dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>{ _max_threads }
+zpt::fsm::machine<C, S, D, I>::machine(long _processor_threads, long _max_threads, zpt::json _config)
+  : zpt::events::dispatcher<zpt::fsm::machine<C, S, D, I>, S, zpt::fsm::payload<D, I>>{ _max_threads }
   , __processor_threads{ _processor_threads } {
     this->set_states(_config);
     if (_config["transitions"]->ok()) { this->add_allowed_transitions(_config["transitions"]); }
@@ -137,8 +133,7 @@ zpt::fsm::machine<C, S, D, I>::add_allowed_transitions(zpt::json _states) -> mac
     expect(_states->ok() && _states->is_array(), "states JSON configuration must be a JSON array");
 
     for (auto [_, __, _potential] : _states) {
-        expect(_potential[1]->is_array(),
-               "each state allowed states member value must be an array");
+        expect(_potential[1]->is_array(), "each state allowed states member value must be an array");
         for (auto [_, __, _target] : _potential[1]) {
             auto _from = static_cast<S>(_potential[0]);
             auto _to = static_cast<S>(_target);
@@ -163,8 +158,7 @@ zpt::fsm::machine<C, S, D, I>::resume(I _id, S _state) -> machine& {
     S _next_state;
     D _data;
     {
-        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock,
-                                                     zpt::locks::spin_lock::exclusive };
+        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock, zpt::locks::spin_lock::exclusive };
         auto _found = this->__stalled.find(_id);
         expect(_found != this->__stalled.end(), "no such payload identified by " << _id);
         _stalled_state = std::get<0>(_found->second);
@@ -200,17 +194,13 @@ zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I>
 
         for (auto _callback : _it->second) {
             try {
-                S _potential =
-                  _callback(_current_state, std::get<0>(_content), std::get<1>(_content));
-                expect(_next_state == this->__undefined || _potential == this->__undefined ||
-                         _next_state == _potential,
+                S _potential = _callback(_current_state, std::get<0>(_content), std::get<1>(_content));
+                expect(_next_state == this->__undefined || _potential == this->__undefined || _next_state == _potential,
                        "state '" << _potential
                                  << "' returned from transition callback isn't consistent with "
                                     "previously returned state '"
                                  << _next_state << "'");
-                if (_potential != this->__undefined) {
-                    _next_state = this->coalesce(_current_state, _potential);
-                }
+                if (_potential != this->__undefined) { _next_state = this->coalesce(_current_state, _potential); }
             }
             catch (zpt::events::unregister const& _e) {
             }
@@ -226,8 +216,7 @@ auto
 zpt::fsm::machine<C, S, D, I>::listen_to(S _event, callback _callback) -> void {
     auto _found = this->__callbacks.find(_event);
     if (_found == this->__callbacks.end()) {
-        auto [_insert, _was_inserted] =
-          this->__callbacks.insert(std::make_pair(_event, callback_list()));
+        auto [_insert, _was_inserted] = this->__callbacks.insert(std::make_pair(_event, callback_list()));
         expect(_was_inserted, "something wrong with the map key logic around typename 'S'");
         _found = _insert;
     }
@@ -244,14 +233,8 @@ zpt::fsm::machine<C, S, D, I>::report_error(S const& _event,
                                             int _error,
                                             int _status) -> bool {
     if (this->__error_callback != nullptr) {
-        return this->__error_callback(_event,
-                                      std::get<0>(_content),
-                                      std::get<1>(_content),
-                                      _what,
-                                      _description,
-                                      _backtrace,
-                                      _error,
-                                      _status);
+        return this->__error_callback(
+          _event, std::get<0>(_content), std::get<1>(_content), _what, _description, _backtrace, _error, _status);
     }
     return false;
 }
@@ -274,9 +257,7 @@ zpt::fsm::machine<C, S, D, I>::to_string() const -> std::string {
             << "> transitions: " << std::endl;
     for (auto [_source, _potential] : this->__transitions) {
         _return << "  S(" << _source << ")" << std::endl << std::flush;
-        for (auto [_target, _] : _potential) {
-            _return << "\t-> S(" << _target << ")" << std::endl << std::flush;
-        }
+        for (auto [_target, _] : _potential) { _return << "\t-> S(" << _target << ")" << std::endl << std::flush; }
     }
     return _return.str();
 }
@@ -287,13 +268,11 @@ zpt::fsm::machine<C, S, D, I>::coalesce(S _current, S _potential) const -> S {
     if (_potential != this->__undefined && _potential != this->__pause) {
         auto _possible = this->__transitions.find(_current);
         expect(_possible != this->__transitions.end(),
-               "state '" << _current << "' not found as a possible source of a transition to '"
-                         << _potential << "'",
+               "state '" << _current << "' not found as a possible source of a transition to '" << _potential << "'",
                500,
                0);
         expect(_possible->second.find(_potential) != _possible->second.end(),
-               "state '" << _potential << "' not found as possible transitions from '" << _current
-                         << "'");
+               "state '" << _potential << "' not found as possible transitions from '" << _current << "'");
     }
     return _potential;
 }
@@ -302,10 +281,8 @@ template<typename C, typename S, typename D, typename I>
 auto
 zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
     {
-        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock,
-                                                     zpt::locks::spin_lock::exclusive };
-        this->__stalled.insert(
-          std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
+        zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock, zpt::locks::spin_lock::exclusive };
+        this->__stalled.insert(std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
     }
     this->trigger(this->__pause, _content);
 }

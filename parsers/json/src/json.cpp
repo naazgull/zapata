@@ -64,15 +64,12 @@ zpt::split(std::string const& _to_split, std::string const& _separator, bool _tr
 
 auto
 zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string {
-    expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
-           "JSON to join must be an array");
+    expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject, "JSON to join must be an array");
     std::string _return{ "" };
     for (auto [_idx, _key, _value] : _to_join) {
         if (_return.length() != 0) { _return += _separator; }
         if (_to_join->type() == zpt::JSArray) { _return += static_cast<std::string>(_value); }
-        else if (_to_join->type() == zpt::JSObject) {
-            _return += _key + _separator + static_cast<std::string>(_value);
-        }
+        else if (_to_join->type() == zpt::JSObject) { _return += _key + _separator + static_cast<std::string>(_value); }
     }
     return _return;
 }
@@ -94,8 +91,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
     std::string _last("");
     for (int _i = 1; _i != _argc; _i++) {
         std::string _arg(_argv[_i]);
-        if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 ||
-            _arg.find("--force") == 0) {
+        if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 || _arg.find("--force") == 0) {
             if (_last.length() != 0) {
                 if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
@@ -105,8 +101,7 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
             _return[_arg] << true;
             _last.assign("");
         }
-        else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 ||
-                 _arg.find("-force") == 0) {
+        else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 || _arg.find("-force") == 0) {
             if (_last.length() != 0) {
                 if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
@@ -161,8 +156,7 @@ zpt::conf::evaluate_ref(zpt::json _options,
                         std::string const& _file_context) -> void {
     for (auto [_, _key, _value] : _options) {
         if (_key == "$ref") {
-            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context)
-                                                           : std::string{ "" }) +
+            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context) : std::string{ "" }) +
                                _value->string() };
             zpt::json _other;
             zpt::conf::file(_href, _other);
@@ -212,23 +206,22 @@ zpt::conf::dirs(zpt::json& _options) -> void {
     do {
         *_redo = false;
         zpt::json _traversable = _options->clone();
-        zpt::json::traverse(
-          _traversable,
-          [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-              if (_key == "$include") {
-                  zpt::json _object = (_path.rfind(".") != std::string::npos
-                                         ? _options->get_path(_path.substr(0, _path.rfind(".")))
-                                         : _options);
-                  if (_item->is_array()) {
-                      for (auto [_idx, _key, _file] : _item) {
-                          zpt::conf::dirs((std::string)_file, _object);
-                      }
-                  }
-                  else { zpt::conf::dirs((std::string)_item, _object); }
-                  _object->object()->pop("$include");
-                  *_redo = true;
-              }
-          });
+        zpt::json::traverse(_traversable,
+                            [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+                                if (_key == "$include") {
+                                    zpt::json _object = (_path.rfind(".") != std::string::npos
+                                                           ? _options->get_path(_path.substr(0, _path.rfind(".")))
+                                                           : _options);
+                                    if (_item->is_array()) {
+                                        for (auto [_idx, _key, _file] : _item) {
+                                            zpt::conf::dirs((std::string)_file, _object);
+                                        }
+                                    }
+                                    else { zpt::conf::dirs((std::string)_item, _object); }
+                                    _object->object()->pop("$include");
+                                    *_redo = true;
+                                }
+                            });
     } while (*_redo);
     delete _redo;
 }
@@ -237,18 +230,15 @@ auto
 zpt::conf::env(zpt::json& _options) -> void {
     zpt::json _traversable = _options->clone();
     zpt::json::traverse(
-      _traversable,
-      [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
+      _traversable, [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
           if (_item->type() != zpt::JSString) { return; }
           std::string _value{ static_cast<std::string>(_item) };
           bool _changed{ false };
-          for (size_t _idx = _value.find("$"); _idx != std::string::npos;
-               _idx = _value.find("$", _idx + 1)) {
+          for (size_t _idx = _value.find("$"); _idx != std::string::npos; _idx = _value.find("$", _idx + 1)) {
               std::string _var = _value.substr(_idx + 2, _value.find("}", _idx) - _idx - 2);
               const char* _env_value = std::getenv(_var.data());
               if (_env_value != nullptr) {
-                  zpt::replace(
-                    _value, std::string("${") + _var + std::string("}"), zpt::r_trim(_env_value));
+                  zpt::replace(_value, std::string("${") + _var + std::string("}"), zpt::r_trim(_env_value));
                   _changed = true;
               }
           }
@@ -271,9 +261,8 @@ zpt::email::parse(std::string const& _email) -> zpt::json {
         "full",
         ((std::string)_email_matches[0]),
         "name",
-        (((std::string)_email_matches[1]).length() == 0
-           ? zpt::undefined
-           : zpt::json::string(((std::string)_email_matches[1]))),
+        (((std::string)_email_matches[1]).length() == 0 ? zpt::undefined
+                                                        : zpt::json::string(((std::string)_email_matches[1]))),
         "user",
         (((std::string)_email_matches[2]) + ((std::string)_email_matches[3])),
         "domain",
@@ -336,13 +325,10 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
         for (auto [_, __, _cfg_value] : _config[_key]["options"]) {
             if (_cfg_value == "single") {
                 expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
-                       std::string{ "'" } + _key +
-                         std::string{ "' option can't have multiple values" });
+                       std::string{ "'" } + _key + std::string{ "' option can't have multiple values" });
             }
             else if (_cfg_value == "multiple") {
-                if (_option->type() != zpt::JSArray) {
-                    _return << _key << zpt::json{ zpt::array, _option };
-                }
+                if (_option->type() != zpt::JSArray) { _return << _key << zpt::json{ zpt::array, _option }; }
             }
         }
     }
@@ -362,27 +348,23 @@ auto
 zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) -> void {
     for (auto [_, _key, _parameter] : _to_check) {
         if (!_inclusive && !_rules[_key]->ok()) { continue; }
-        expect(!_inclusive || _rules[_key]->type() == zpt::JSObject,
-               "'" << _key << "' is not a valid parameter");
+        expect(!_inclusive || _rules[_key]->type() == zpt::JSObject, "'" << _key << "' is not a valid parameter");
         for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
             if (_cfg_name == "type") {
                 expect(zpt::to_string(_parameter->type()) == _cfg_value->string(),
                        "'" << _key << "' parameter has the wrong type");
             }
             else if (_cfg_value == "pattern") {
-                expect(
-                  _cfg_value->type() == zpt::JSRegex &&
-                    std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
-                  "'" << _key << "' parameter pattern doesn't match");
+                expect(_cfg_value->type() == zpt::JSRegex &&
+                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
+                       "'" << _key << "' parameter pattern doesn't match");
             }
         }
     }
 
     for (auto [_, _key, _config] : _rules) {
         for (auto [_, _cfg_name, _cfg_value] : _config) {
-            if (_cfg_name == "mandatory") {
-                expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter");
-            }
+            if (_cfg_name == "mandatory") { expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter"); }
         }
     }
 }
@@ -415,10 +397,8 @@ zpt::parameters::usage(zpt::json _config) -> std::string {
 
 auto
 zpt::test::location(zpt::json _location) -> bool {
-    return (_location->is_object() && _location["longitude"]->is_number() &&
-            _location["latitude"]->is_number()) ||
-           (_location->is_array() && _location->size() == 2 && _location[0]->is_number() &&
-            _location[1]->is_number());
+    return (_location->is_object() && _location["longitude"]->is_number() && _location["latitude"]->is_number()) ||
+           (_location->is_array() && _location->size() == 2 && _location[0]->is_number() && _location[1]->is_number());
 }
 
 auto

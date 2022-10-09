@@ -17,17 +17,15 @@ namespace zpt {
 //           The range for EOF is defined in a constant in the
 //           class header file
 size_t const FunctionalLexerBase::s_ranges_[] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-    4,  4,  4,  4,  4,  4,  4,  4,  5,  6,  7,  8,  8,  8,  8,  8,  9,  10, 11, 11, 12, 13, 14, 15,
-    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  5,  6,  7,  8,  8,  8,  8,  8,  9,  10, 11, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
     17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
 };
 
 // $insert startcondinfo
@@ -132,9 +130,7 @@ FunctionalLexerBase::switchStream_(std::istream& in, size_t lineNr) {
     d_streamStack.back().input = { new std::istream(in.rdbuf()), lineNr };
 }
 
-FunctionalLexerBase::FunctionalLexerBase(std::string const& infilename,
-                                         std::string const& outfilename,
-                                         bool keepCwd)
+FunctionalLexerBase::FunctionalLexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd)
   : d_out(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
           : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
                               : new std::ofstream(outfilename))
@@ -156,8 +152,7 @@ FunctionalLexerBase::switchIstream(std::string const& infilename) {
     d_input->close();
     d_filename = infilename;
 
-    d_streamStack.back() =
-      StreamStruct{ chgWorkingDir(d_filename), { new std::ifstream(infilename) } };
+    d_streamStack.back() = StreamStruct{ chgWorkingDir(d_filename), { new std::ifstream(infilename) } };
 
     d_atBOL = true;
 }

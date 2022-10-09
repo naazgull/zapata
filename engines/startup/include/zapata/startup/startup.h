@@ -71,7 +71,7 @@ namespace startup {
 class boot {
   public:
     using plugin_map_element_type = std::unique_ptr<zpt::plugin>;
-    
+
     boot(zpt::json _config);
     virtual ~boot();
 

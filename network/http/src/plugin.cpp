@@ -34,8 +34,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
 
     if (_config("port")->ok()) {
         auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
-          zpt::HTTP_SERVER_SOCKET(),
-          static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
+          zpt::HTTP_SERVER_SOCKET(), static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _plugin.add_thread([&]() -> void {
             auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
@@ -48,8 +47,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                     _polling.listen_on(std::move(_client));
                 }
                 catch (zpt::ClosedException const& _e) {
-                    expect(_plugin.is_shutdown_ongoing(),
-                           "HTTP server socket closed but plugin not shutding down");
+                    expect(_plugin.is_shutdown_ongoing(), "HTTP server socket closed but plugin not shutding down");
                 }
             } while (!_plugin.is_shutdown_ongoing());
             zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);

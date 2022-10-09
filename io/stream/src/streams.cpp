@@ -123,8 +123,7 @@ zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
         this->unmute(*_stream);
         {
-            zpt::locks::spin_lock::guard _sentry{ this->__poll_lock,
-                                                  zpt::locks::spin_lock::exclusive };
+            zpt::locks::spin_lock::guard _sentry{ this->__poll_lock, zpt::locks::spin_lock::exclusive };
             this->__polled_streams.emplace(static_cast<int>(*_stream), std::move(_stream));
         }
     }
@@ -177,10 +176,8 @@ zpt::polling::poll() -> void {
     auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
     zpt::epoll_event_t _epoll_events[MAX_EVENT_PER_POLL];
     do {
-        auto _n_alive = epoll_wait(this->__epoll_fd,
-                                   _epoll_events,
-                                   MAX_EVENT_PER_POLL,
-                                   std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
+        auto _n_alive = epoll_wait(
+          this->__epoll_fd, _epoll_events, MAX_EVENT_PER_POLL, std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
         if (_n_alive < 0) { continue; }
 
         if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }

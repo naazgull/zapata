@@ -86,10 +86,8 @@ class event {
         event_t(zpt::pipeline::event<T>::event_t&& _rhs) = delete;
         virtual ~event_t() = default;
 
-        auto operator=(zpt::pipeline::event<T>::event_t const& _rhs)
-          -> zpt::pipeline::event<T>::event_t& = delete;
-        auto operator=(zpt::pipeline::event<T>::event_t&& _rhs)
-          -> zpt::pipeline::event<T>::event_t& = delete;
+        auto operator=(zpt::pipeline::event<T>::event_t const& _rhs) -> zpt::pipeline::event<T>::event_t& = delete;
+        auto operator=(zpt::pipeline::event<T>::event_t&& _rhs) -> zpt::pipeline::event<T>::event_t& = delete;
 
         auto path() -> zpt::json;
         auto content() -> T&;
@@ -133,8 +131,7 @@ class event {
 };
 
 template<typename T>
-class step
-  : public zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>> {
+class step : public zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>> {
   public:
     friend class zpt::pipeline::event<T>;
 
@@ -202,8 +199,7 @@ class engine {
     auto shutdown() -> zpt::pipeline::engine<T>&;
     auto is_shutdown_ongoing() -> bool;
 
-    auto add_listener(size_t _step, std::string _pattern, event_callback _callback)
-      -> zpt::pipeline::engine<T>&;
+    auto add_listener(size_t _step, std::string _pattern, event_callback _callback) -> zpt::pipeline::engine<T>&;
     auto trigger(std::string const& _uri, T _content) -> zpt::pipeline::engine<T>&;
     auto trigger(zpt::json _uri, T _content) -> zpt::pipeline::engine<T>&;
 
@@ -268,8 +264,7 @@ zpt::pipeline::event<T>::event_t::position::next() -> position& {
 template<typename T>
 auto
 zpt::pipeline::event<T>::event_t::position::mark() -> size_t {
-    if (this->__requested <= this->__current ||
-        (this->__next > this->__current && this->__requested > this->__next)) {
+    if (this->__requested <= this->__current || (this->__next > this->__current && this->__requested > this->__next)) {
         return this->__next;
     }
     this->__next = this->__requested;
@@ -281,9 +276,7 @@ zpt::pipeline::event<T>::event_t::position::position(size_t _max)
   : __max{ _max } {}
 
 template<typename T>
-zpt::pipeline::event<T>::event_t::event_t(zpt::pipeline::engine<T>& _parent,
-                                          T _content,
-                                          zpt::json const& _path)
+zpt::pipeline::event<T>::event_t::event_t(zpt::pipeline::engine<T>& _parent, T _content, zpt::json const& _path)
   : __content{ _content }
   , __path{ _path }
   , __parent{ _parent }
@@ -303,32 +296,28 @@ zpt::pipeline::event<T>::event_t::content() -> T& {
 
 template<typename T>
 auto
-zpt::pipeline::event<T>::event_t::set_path(std::string const& _path)
-  -> zpt::pipeline::event<T>::event_t& {
+zpt::pipeline::event<T>::event_t::set_path(std::string const& _path) -> zpt::pipeline::event<T>::event_t& {
     this->__path = zpt::pipeline::to_path(_path);
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::pipeline::event<T>::event_t::set_content(T const& _content)
-  -> zpt::pipeline::event<T>::event_t& {
+zpt::pipeline::event<T>::event_t::set_content(T const& _content) -> zpt::pipeline::event<T>::event_t& {
     this->__content = _content;
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::pipeline::event<T>::event_t::trigger(std::string const& _uri, T _content)
-  -> zpt::pipeline::event<T>::event_t& {
+zpt::pipeline::event<T>::event_t::trigger(std::string const& _uri, T _content) -> zpt::pipeline::event<T>::event_t& {
     this->__parent->trigger(_uri, _content);
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::pipeline::event<T>::event_t::trigger(zpt::json _uri, T _content)
-  -> zpt::pipeline::event<T>::event_t& {
+zpt::pipeline::event<T>::event_t::trigger(zpt::json _uri, T _content) -> zpt::pipeline::event<T>::event_t& {
     this->__parent->trigger(_uri, _content);
     return (*this);
 }
@@ -340,9 +329,7 @@ zpt::pipeline::event<T>::event_t::steps() -> zpt::pipeline::event<T>::event_t::p
 }
 
 template<typename T>
-zpt::pipeline::event<T>::event(zpt::pipeline::engine<T>& _parent,
-                               T _content,
-                               zpt::json const& _path)
+zpt::pipeline::event<T>::event(zpt::pipeline::engine<T>& _parent, T _content, zpt::json const& _path)
   : __underlying{ std::make_shared<zpt::pipeline::event<T>::event_t>(_parent, _content, _path) } {}
 
 template<typename T>
@@ -390,17 +377,14 @@ zpt::pipeline::event<T>::send_to_next_step() -> void {
 
 template<typename T>
 zpt::pipeline::step<T>::step(long _max_threads, long _max_pop_wait_micro)
-  : zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>>{
-      _max_threads,
-      _max_pop_wait_micro
-  } {}
+  : zpt::events::dispatcher<zpt::pipeline::step<T>, zpt::json, zpt::pipeline::event<T>>{ _max_threads,
+                                                                                         _max_pop_wait_micro } {}
 
 template<typename T>
 auto
 zpt::pipeline::step<T>::trapped(zpt::json _path, zpt::pipeline::event<T> _event) -> void {
     zpt::locks::spin_lock::guard _sentry{ this->__callback_lock, zpt::locks::spin_lock::shared };
-    this->__callbacks.eval(
-      _path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->string(), _event);
+    this->__callbacks.eval(_path["splitted"].begin(), _path["splitted"].end(), _path["raw"]->string(), _event);
     if (_event->steps().marked() == _event->steps().current()) { _event->steps().next().mark(); }
     _event.send_to_next_step();
 }
@@ -409,8 +393,7 @@ template<typename T>
 auto
 zpt::pipeline::step<T>::listen_to(zpt::json _path, event_callback _callback) -> void {
     zpt::locks::spin_lock::guard _sentry{ this->__callback_lock, zpt::locks::spin_lock::exclusive };
-    this->__callbacks.merge(
-      _path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->regex(), _callback);
+    this->__callbacks.merge(_path["splitted"].begin(), _path["splitted"].end(), _path["regex"]->regex(), _callback);
 }
 
 template<typename T>
@@ -424,8 +407,7 @@ zpt::pipeline::step<T>::report_error(zpt::json& _event,
                                      int status) -> bool {
     bool _to_return{ true };
     if (this->__error_callback != nullptr) {
-        _to_return =
-          this->__error_callback(_event, _content, _what, _description, _backtrace, _error, status);
+        _to_return = this->__error_callback(_event, _content, _what, _description, _backtrace, _error, status);
     }
     _content->steps().last().mark();
     _content.send_to_next_step();
@@ -434,8 +416,7 @@ zpt::pipeline::step<T>::report_error(zpt::json& _event,
 
 template<typename T>
 auto
-zpt::pipeline::step<T>::set_error_callback(error_callback _error_callback)
-  -> zpt::pipeline::step<T>& {
+zpt::pipeline::step<T>::set_error_callback(error_callback _error_callback) -> zpt::pipeline::step<T>& {
     this->__error_callback = _error_callback;
     return (*this);
 }
@@ -443,18 +424,15 @@ zpt::pipeline::step<T>::set_error_callback(error_callback _error_callback)
 template<typename T>
 zpt::pipeline::engine<T>::engine(size_t _pipeline_size, zpt::json _step_queue_configuration)
   : __pipeline_size{ _pipeline_size }
-  , __threads_per_step{ std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]),
-                                 1L) } {
+  , __threads_per_step{ std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]), 1L) } {
     long _max_threads =
-      std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]), 1L) *
-        (signed)_pipeline_size +
+      std::max(static_cast<long>(_step_queue_configuration["max_queue_threads"]), 1L) * (signed)_pipeline_size +
       std::max(static_cast<long>(_step_queue_configuration["max_producer_threads"]), 1L) +
       static_cast<long>(_step_queue_configuration["max_consumer_threads"]);
 
     for (size_t _i = 0; _i != this->__pipeline_size; ++_i) {
         this->__steps.push_back(std::make_shared<zpt::pipeline::step<T>>(
-          _max_threads,
-          std::max(static_cast<long>(_step_queue_configuration["max_queue_spin_sleep"]), 50000L)));
+          _max_threads, std::max(static_cast<long>(_step_queue_configuration["max_queue_spin_sleep"]), 50000L)));
     }
 }
 
@@ -504,16 +482,14 @@ auto
 zpt::pipeline::engine<T>::add_listener(size_t _step, std::string _pattern, event_callback _callback)
   -> zpt::pipeline::engine<T>& {
     expect(_step < this->__pipeline_size,
-           std::string("invalid pipeline::step number, should be lower then ") +
-             std::to_string(this->__pipeline_size));
+           std::string("invalid pipeline::step number, should be lower then ") + std::to_string(this->__pipeline_size));
     this->__steps[_step]->listen(zpt::pipeline::to_pattern(_pattern), _callback);
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::trigger(std::string const& _uri, T _content)
-  -> zpt::pipeline::engine<T>& {
+zpt::pipeline::engine<T>::trigger(std::string const& _uri, T _content) -> zpt::pipeline::engine<T>& {
     return this->trigger(zpt::pipeline::to_path(_uri), _content);
 }
 
@@ -526,20 +502,18 @@ zpt::pipeline::engine<T>::trigger(zpt::json _uri, T _content) -> zpt::pipeline::
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::set_error_callback(error_callback _error_callback)
-  -> zpt::pipeline::engine<T>& {
+zpt::pipeline::engine<T>::set_error_callback(error_callback _error_callback) -> zpt::pipeline::engine<T>& {
     for (auto _step : this->__steps) { _step->set_error_callback(_error_callback); }
     return (*this);
 }
 
 template<typename T>
 auto
-zpt::pipeline::engine<T>::send_to_next_step(zpt::pipeline::event<T> _event)
-  -> zpt::pipeline::engine<T>& {
+zpt::pipeline::engine<T>::send_to_next_step(zpt::pipeline::event<T> _event) -> zpt::pipeline::engine<T>& {
     std::size_t _step{ _event->steps().current() };
     if (_step < this->__steps.size()) {
-        zlog("Event " << std::hex << &(*_event) << std::dec << " going to step " << _step
-                      << " with path '" << _event->path()["raw"] << "'",
+        zlog("Event " << std::hex << &(*_event) << std::dec << " going to step " << _step << " with path '"
+                      << _event->path()["raw"] << "'",
              zpt::trace);
         this->__steps[_step]->trigger(_event->path(), _event);
     }

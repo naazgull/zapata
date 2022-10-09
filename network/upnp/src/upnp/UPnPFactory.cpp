@@ -62,9 +62,8 @@ _zpt_plugin_load_() {
             zpt::poll::instance<zpt::ChannelPoll>()->poll(_upnp);
 
             zlog(std::string("binding ") + _upnp->protocol() + std::string(" listener to ") +
-                   std::string(_upnp->uri()["scheme"]) + std::string("://") +
-                   std::string(_upnp->uri()["domain"]) + std::string(":") +
-                   std::string(_upnp->uri()["port"]),
+                   std::string(_upnp->uri()["scheme"]) + std::string("://") + std::string(_upnp->uri()["domain"]) +
+                   std::string(":") + std::string(_upnp->uri()["port"]),
                  zpt::info);
         }
     }

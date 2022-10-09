@@ -97,8 +97,7 @@ zpt::programming::bridge<C, O>::add_module(std::string _external_path, zpt::json
 template<typename C, typename O>
 template<typename Callback>
 auto
-zpt::programming::bridge<C, O>::add_module(Callback _callback, zpt::json _conf)
-  -> zpt::programming::bridge<C, O>& {
+zpt::programming::bridge<C, O>::add_module(Callback _callback, zpt::json _conf) -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->setup_module(_conf, _callback);
     return (*this);
 }
@@ -106,8 +105,7 @@ zpt::programming::bridge<C, O>::add_module(Callback _callback, zpt::json _conf)
 template<typename C, typename O>
 template<typename Lambda>
 auto
-zpt::programming::bridge<C, O>::add_lambda(Lambda _lambda, zpt::json _conf)
-  -> zpt::programming::bridge<C, O>& {
+zpt::programming::bridge<C, O>::add_lambda(Lambda _lambda, zpt::json _conf) -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->setup_lambda(_conf, _lambda);
     return (*this);
 }
