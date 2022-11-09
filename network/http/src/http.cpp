@@ -25,35 +25,31 @@
 #include <zapata/uri/uri.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto
-zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
+auto zpt::HTTP_SERVER_SOCKET() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-auto
-zpt::net::transport::http::make_request() const -> zpt::message {
+auto zpt::net::transport::http::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::http::basic_request>();
     zpt::init(message_cast<zpt::http::basic_request>(_to_return));
     return _to_return;
 }
 
-auto
-zpt::net::transport::http::make_reply() const -> zpt::message {
+auto zpt::net::transport::http::make_reply() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::http::basic_reply>();
     zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 
-auto
-zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::message {
-    auto _to_return = zpt::make_message<zpt::http::basic_reply>(message_cast<zpt::http::basic_request>(_request), true);
+auto zpt::net::transport::http::make_reply(zpt::message _request) const -> zpt::message {
+    auto _to_return =
+      zpt::make_message<zpt::http::basic_reply>(message_cast<zpt::http::basic_request>(_request), true);
     zpt::init(message_cast<zpt::http::basic_reply>(_to_return));
     return _to_return;
 }
 
-auto
-zpt::net::transport::http::process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message {
+auto zpt::net::transport::http::process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message {
     expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
     auto _request = zpt::make_message<zpt::http::basic_request>();
     _stream >> std::noskipws >> _request;
@@ -61,8 +57,7 @@ zpt::net::transport::http::process_incoming_request(zpt::basic_stream& _stream) 
     return _request;
 }
 
-auto
-zpt::net::transport::http::process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message {
+auto zpt::net::transport::http::process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message {
     expect(_stream.transport() == "http", "Stream underlying transport isn't 'http'");
     auto _reply = zpt::make_message<zpt::http::basic_reply>();
     _stream >> std::noskipws >> _reply;

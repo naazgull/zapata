@@ -1,8 +1,7 @@
 #include <zapata/catalogue.h>
 
-auto
-main(int argc, char* argv[]) -> int {
-    zpt::catalogue<std::string, zpt::json> _catalogue{ "/home/pf/Void/sqlite" };
+auto main(int argc, char* argv[]) -> int {
+    zpt::catalogue<std::string, zpt::json> _catalogue;
     _catalogue.clear();
 
     _catalogue.add("/users", { "host", "localhost", "port", 8080 });

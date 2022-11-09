@@ -24,8 +24,7 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/local.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 2) {
         std::string _scheme{ argv[1] };
         std::string _path{ argv[2] };
@@ -53,8 +52,8 @@ main(int argc, char* argv[]) -> int {
         if (_scheme == "file") {
             zpt::transport _transport{ new zpt::net::transport::file{} };
             auto _in = zpt::make_stream<std::fstream>(_path, std::ios_base::in);
-            auto _out =
-              zpt::make_stream<std::fstream>(_path, std::ios_base::out | std::ios_base::ate | std::ios_base::app);
+            auto _out = zpt::make_stream<std::fstream>(
+              _path, std::ios_base::out | std::ios_base::ate | std::ios_base::app);
             _in->transport("file");
             _out->transport("file");
             auto _t1 = std::chrono::high_resolution_clock::now();

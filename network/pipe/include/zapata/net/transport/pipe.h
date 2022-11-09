@@ -27,8 +27,7 @@
 #include <zapata/transport.h>
 
 namespace zpt {
-auto
-INTERNAL_SERVER_STREAM() -> ssize_t&;
+auto INTERNAL_SERVER_STREAM() -> ssize_t&;
 namespace net {
 namespace transport {
 class pipe_stream : public zpt::basic_transport {

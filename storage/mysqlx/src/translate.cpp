@@ -23,8 +23,7 @@
 #include <zapata/mysqlx/translate.h>
 #include <mysqlx/xdevapi.h>
 
-auto
-zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
+auto zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
     switch (_rhs.getType()) {
         case ::mysqlx::Value::Type::VNULL: {
             return zpt::undefined;
@@ -61,8 +60,7 @@ zpt::storage::mysqlx::translate_from_db(::mysqlx::Value const& _rhs) -> zpt::jso
     return zpt::undefined;
 }
 
-auto
-zpt::storage::mysqlx::translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json {
+auto zpt::storage::mysqlx::translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::json {
     auto _to_return = zpt::json::object();
     for (auto _it = _rhs.begin(); _it != _rhs.end(); ++_it) {
         _to_return << *_it << zpt::storage::mysqlx::translate_from_db(_rhs[*_it]);
@@ -70,14 +68,12 @@ zpt::storage::mysqlx::translate_object_from_db(::mysqlx::DbDoc& _rhs) -> zpt::js
     return _to_return;
 }
 
-auto
-zpt::storage::mysqlx::translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
+auto zpt::storage::mysqlx::translate_array_from_db(::mysqlx::Value const& _rhs) -> zpt::json {
     auto _to_return = zpt::json::array();
     for (auto _it : _rhs) { _to_return << zpt::storage::mysqlx::translate_from_db(_it); }
     return _to_return;
 }
 
-auto
-zpt::storage::mysqlx::translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json {
+auto zpt::storage::mysqlx::translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json {
     return zpt::undefined;
 }

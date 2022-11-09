@@ -30,15 +30,13 @@
 #include <zapata/uri/URIParser.h>
 #include <zapata/uri/uri.h>
 
-auto
-zpt::uri::parse(std::string const& _in, zpt::JSONType _type) -> zpt::json {
+auto zpt::uri::parse(std::string const& _in, zpt::JSONType _type) -> zpt::json {
     std::istringstream _iss;
     _iss.str(_in);
     return zpt::uri::parse(_iss, _type);
 }
 
-auto
-zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
+auto zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
     static thread_local zpt::URIParser _thread_local_parser;
     zpt::json _root = _type == zpt::JSArray ? zpt::json::array() : zpt::json::object();
     _thread_local_parser.switchRoots(_root);
@@ -48,13 +46,14 @@ zpt::uri::parse(std::istream& _in, zpt::JSONType _type) -> zpt::json {
     return _root;
 }
 
-auto
-zpt::uri::to_string(zpt::json _uri) -> std::string {
+auto zpt::uri::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri("scheme")->ok()) {
             _oss << _uri("scheme")->string();
-            if (_uri("scheme_options")->ok()) { _oss << "+" << zpt::join(_uri("scheme_options"), "+") << std::flush; }
+            if (_uri("scheme_options")->ok()) {
+                _oss << "+" << zpt::join(_uri("scheme_options"), "+") << std::flush;
+            }
             _oss << ":" << std::flush;
         }
         if (_uri("domain")->ok()) {
@@ -79,15 +78,13 @@ zpt::uri::to_string(zpt::json _uri) -> std::string {
     return _oss.str();
 }
 
-auto
-zpt::uri::to_regex(zpt::json _in) -> zpt::json {
+auto zpt::uri::to_regex(zpt::json _in) -> zpt::json {
     if (_in->type() == zpt::JSObject) { return zpt::uri::to_regex_object(_in); }
     if (_in->type() == zpt::JSArray) { return zpt::uri::to_regex_array(_in); }
     return _in;
 }
 
-auto
-zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
+auto zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
     zpt::json _to_return = zpt::json::object();
     for (auto [_, _key, _item] : _in) {
         if (_key == "path") {
@@ -107,7 +104,8 @@ zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
         else {
             auto _casted = static_cast<std::string>(_item);
             auto _length = _casted.length();
-            if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' && _casted[_length - 1] == '}') {
+            if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
+                _casted[_length - 1] == '}') {
                 _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
                 _to_return << _key << zpt::regex{ _casted };
             }
@@ -117,13 +115,13 @@ zpt::uri::to_regex_object(zpt::json _in) -> zpt::json {
     return _to_return;
 }
 
-auto
-zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
+auto zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
     zpt::json _to_return = zpt::json::array();
     for (auto [_, __, _item] : _in) {
         auto _casted = static_cast<std::string>(_item);
         auto _length = _casted.length();
-        if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' && _casted[_length - 1] == '}') {
+        if (_casted[0] == '{' && _casted[1] == ':' && _casted[_length - 2] == ':' &&
+            _casted[_length - 1] == '}') {
             _casted = zpt::r_replace(zpt::r_replace(_casted, "{:", ""), ":}", "");
             _to_return << zpt::regex{ _casted };
         }
@@ -132,14 +130,15 @@ zpt::uri::to_regex_array(zpt::json _in) -> zpt::json {
     return _to_return;
 }
 
-auto
-zpt::uri::path::to_string(zpt::json _uri) -> std::string {
+auto zpt::uri::path::to_string(zpt::json _uri) -> std::string {
     std::ostringstream _oss;
     if (_uri->type() == zpt::JSObject) {
         if (_uri["path"]->ok()) {
             _oss << (_uri["is_relative"]->boolean() ? "" : "/") << zpt::join(_uri["path"], "/") << std::flush;
         }
     }
-    else { _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri["path"], "/") << std::flush; }
+    else {
+        _oss << (_uri[0] == "." || _uri[0] == ".." ? "" : "/") << zpt::join(_uri["path"], "/") << std::flush;
+    }
     return _oss.str();
 }

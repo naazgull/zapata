@@ -27,16 +27,12 @@
 #include <zapata/transport.h>
 
 namespace zpt {
-auto
-WEBSOCKET_SERVER_SOCKET() -> ssize_t&;
+auto WEBSOCKET_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace ws {
-auto
-handshake(zpt::stream& _stream) -> void;
-auto
-read(zpt::stream& _stream) -> std::tuple<std::string, int>;
-auto
-write(zpt::stream& _stream, std::string const& _in) -> void;
+auto handshake(zpt::stream& _stream) -> void;
+auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
+auto write(zpt::stream& _stream, std::string const& _in) -> void;
 } // namespace ws
 namespace transport {
 class websocket : public zpt::transport::transport_t {

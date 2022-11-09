@@ -74,21 +74,18 @@ class bridge : public zpt::programming::integration {
 } // namespace zpt
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::set_options(zpt::json _conf) -> zpt::programming::bridge<C, O>& {
+auto zpt::programming::bridge<C, O>::set_options(zpt::json _conf) -> zpt::programming::bridge<C, O>& {
     this->__options = _conf;
     return (*this);
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::options() const -> zpt::json {
+auto zpt::programming::bridge<C, O>::options() const -> zpt::json {
     return this->__options;
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::add_module(std::string _external_path, zpt::json _conf)
+auto zpt::programming::bridge<C, O>::add_module(std::string _external_path, zpt::json _conf)
   -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->setup_module(_conf, _external_path);
     return (*this);
@@ -96,49 +93,44 @@ zpt::programming::bridge<C, O>::add_module(std::string _external_path, zpt::json
 
 template<typename C, typename O>
 template<typename Callback>
-auto
-zpt::programming::bridge<C, O>::add_module(Callback _callback, zpt::json _conf) -> zpt::programming::bridge<C, O>& {
+auto zpt::programming::bridge<C, O>::add_module(Callback _callback, zpt::json _conf)
+  -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->setup_module(_conf, _callback);
     return (*this);
 }
 
 template<typename C, typename O>
 template<typename Lambda>
-auto
-zpt::programming::bridge<C, O>::add_lambda(Lambda _lambda, zpt::json _conf) -> zpt::programming::bridge<C, O>& {
+auto zpt::programming::bridge<C, O>::add_lambda(Lambda _lambda, zpt::json _conf)
+  -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->setup_lambda(_conf, _lambda);
     return (*this);
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::init() -> zpt::programming::bridge<C, O>& {
+auto zpt::programming::bridge<C, O>::init() -> zpt::programming::bridge<C, O>& {
     static_cast<C*>(this)->initialize();
     return (*this);
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::locate(zpt::json _to_locate) -> object_type {
+auto zpt::programming::bridge<C, O>::locate(zpt::json _to_locate) -> object_type {
     return static_cast<C*>(this)->find(_to_locate);
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::json_to_object(zpt::json _to_convert) -> object_type {
+auto zpt::programming::bridge<C, O>::json_to_object(zpt::json _to_convert) -> object_type {
     return static_cast<C*>(this)->to_object(_to_convert);
 }
 
 template<typename C, typename O>
-auto
-zpt::programming::bridge<C, O>::object_to_json(object_type _to_convert) -> zpt::json {
+auto zpt::programming::bridge<C, O>::object_to_json(object_type _to_convert) -> zpt::json {
     return static_cast<C*>(this)->to_json(_to_convert);
 }
 
 template<typename C, typename O>
 template<typename Term, typename... Args>
-auto
-zpt::programming::bridge<C, O>::call(Term _to_call, Args... _arg) -> zpt::json {
+auto zpt::programming::bridge<C, O>::call(Term _to_call, Args... _arg) -> zpt::json {
     O _ret = static_cast<C*>(this)->execute(_to_call, _arg...);
     auto _json_ret = static_cast<C*>(this)->to_json(_ret);
     return _json_ret;

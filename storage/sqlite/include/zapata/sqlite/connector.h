@@ -48,16 +48,11 @@ struct finalize_statement {
 using sqlite3_ptr = std::shared_ptr<sqlite3>;
 using sqlite3_stmt_ptr = std::shared_ptr<sqlite3_stmt>;
 
-auto
-is_error(long _error) -> bool;
-auto
-from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
-auto
-to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
-auto
-free_byte_array(void* _to_delete) -> void;
-auto
-bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
+auto is_error(long _error) -> bool;
+auto from_db_doc(sqlite3_stmt* _stmt) -> zpt::json;
+auto to_byte_array(zpt::json _value) -> std::tuple<char*, size_t>;
+auto free_byte_array(void* _to_delete) -> void;
+auto bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -85,6 +80,7 @@ class session : public zpt::storage::session::type {
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
     auto add_database_connection(sqlite3_ptr _database) -> void;
 
@@ -100,6 +96,7 @@ class database : public zpt::storage::database::type {
     database(const zpt::storage::sqlite::database& _rhs) = delete;
     database(zpt::storage::sqlite::database&& _rhs) = delete;
     virtual ~database() override = default;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
     auto connection() -> sqlite3_ptr;
     auto path() -> std::string&;

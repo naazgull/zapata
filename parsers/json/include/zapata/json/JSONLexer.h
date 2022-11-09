@@ -40,25 +40,17 @@ inline JSONLexer::JSONLexer(std::string const& infile, std::string const& outfil
   : JSONLexerBase(infile, outfile, keepCwd) {}
 
 // $insert inlineLexFunction
-inline int
-JSONLexer::lex() {
-    return lex_();
-}
+inline int JSONLexer::lex() { return lex_(); }
 
-inline void
-JSONLexer::preCode() {
+inline void JSONLexer::preCode() {
     // optionally replace by your own code
 }
 
-inline void
-JSONLexer::postCode([[maybe_unused]] PostEnum_ type) {
+inline void JSONLexer::postCode([[maybe_unused]] PostEnum_ type) {
     // optionally replace by your own code
 }
 
-inline void
-JSONLexer::print() {
-    print_();
-}
+inline void JSONLexer::print() { print_(); }
 
 // $insert namespace-close
 } // namespace zpt

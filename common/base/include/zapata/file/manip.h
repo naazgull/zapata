@@ -449,37 +449,23 @@ enum MIMEType {
     text_x_script_zsh
 };
 
-auto
-ls(std::string dir, std::vector<std::string>& result, bool recursive) -> int;
-auto
-mkdir_recursive(std::string const& _name) -> bool;
+auto ls(std::string dir, std::vector<std::string>& result, bool recursive) -> int;
+auto mkdir_recursive(std::string const& _name) -> bool;
 
-auto
-copy_path(std::string const& _from, std::string const& _to) -> bool;
-auto
-move_path(std::string const& _from, std::string const& _to) -> bool;
-auto
-load_path(std::string const& _in, std::string& _out) -> bool;
-auto
-load_path(std::string const& _in, std::wstring& _out) -> bool;
-auto
-dump_path(std::string const& _in, std::string& _content) -> bool;
-auto
-dump_path(std::string const& _in, std::wstring& _content) -> bool;
+auto copy_path(std::string const& _from, std::string const& _to) -> bool;
+auto move_path(std::string const& _from, std::string const& _to) -> bool;
+auto load_path(std::string const& _in, std::string& _out) -> bool;
+auto load_path(std::string const& _in, std::wstring& _out) -> bool;
+auto dump_path(std::string const& _in, std::string& _content) -> bool;
+auto dump_path(std::string const& _in, std::wstring& _content) -> bool;
 
-auto
-get_mime(std::string const& _in) -> zpt::MIMEType;
-auto
-path_exists(std::string const& _in) -> bool;
-auto
-is_dir(std::string const& _path) -> bool;
-auto
-file_exists(std::string const& _path) -> bool;
-auto
-dirname(std::string const& _path) -> std::string;
+auto get_mime(std::string const& _in) -> zpt::MIMEType;
+auto path_exists(std::string const& _in) -> bool;
+auto is_dir(std::string const& _path) -> bool;
+auto file_exists(std::string const& _path) -> bool;
+auto dirname(std::string const& _path) -> std::string;
 
-auto
-globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion = 0) -> int;
-auto
-glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion = 0) -> int;
+auto globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion = 0)
+  -> int;
+auto glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion = 0) -> int;
 } // namespace zpt

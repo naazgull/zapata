@@ -24,8 +24,7 @@
 #include <string>
 #include <zapata/globals.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     zpt::cached<std::vector<std::string>> _global;
     zpt::cached<std::vector<std::string>> _global2;
     _global->push_back("a");

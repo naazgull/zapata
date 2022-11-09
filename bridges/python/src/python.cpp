@@ -24,8 +24,7 @@
 #include <zapata/base/sentry.h>
 #include <datetime.h>
 
-auto
-zpt::PYTHON_BRIDGE() -> ssize_t& {
+auto zpt::PYTHON_BRIDGE() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -49,69 +48,52 @@ zpt::py_object::~py_object() {
     if (this->__underlying != nullptr) { Py_DECREF(this->__underlying); }
 }
 
-auto
-zpt::py_object::operator=(py_object const& _rhs) -> py_object& {
+auto zpt::py_object::operator=(py_object const& _rhs) -> py_object& {
     this->__underlying = _rhs.__underlying;
     if (this->__underlying != nullptr) { Py_INCREF(this->__underlying); }
     return (*this);
 }
 
-auto
-zpt::py_object::operator=(py_object&& _rhs) -> py_object& {
+auto zpt::py_object::operator=(py_object&& _rhs) -> py_object& {
     this->__underlying = _rhs.__underlying;
     _rhs.__underlying = nullptr;
     return (*this);
 }
 
-auto
-zpt::py_object::operator=(PyObject* _rhs) -> py_object& {
+auto zpt::py_object::operator=(PyObject* _rhs) -> py_object& {
     this->__underlying = _rhs;
     if (this->__underlying != nullptr) { Py_INCREF(this->__underlying); }
     return (*this);
 }
 
-auto
-zpt::py_object::operator->() -> PyObject* {
-    return this->__underlying;
-}
+auto zpt::py_object::operator->() -> PyObject* { return this->__underlying; }
 
-auto
-zpt::py_object::operator*() -> PyObject& {
-    return *this->__underlying;
-}
+auto zpt::py_object::operator*() -> PyObject& { return *this->__underlying; }
 
 zpt::py_object::operator PyObject*() { return this->__underlying; }
 
-auto
-zpt::py_object::get() -> PyObject* {
-    return this->__underlying;
-}
+auto zpt::py_object::get() -> PyObject* { return this->__underlying; }
 
 zpt::python::bridge::~bridge() {
     // if (this->is_initialized()) { Py_Finalize(); }
 }
 
-auto
-zpt::python::bridge::name() const -> std::string {
-    return "python";
-}
+auto zpt::python::bridge::name() const -> std::string { return "python"; }
 
-auto
-zpt::python::bridge::setup_module(zpt::json _conf, std::string _name) -> zpt::python::bridge& {
+auto zpt::python::bridge::setup_module(zpt::json _conf, std::string _name) -> zpt::python::bridge& {
     expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
     this->__external_to_load.insert(std::make_pair(_name, _conf));
     return (*this);
 }
 
-auto
-zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback) -> zpt::python::bridge& {
+auto zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback) -> zpt::python::bridge& {
     expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
-    this->__builtin_to_load.insert(std::make_pair(_conf["name"]->string(), std::make_tuple(_callback, _conf)));
+    this->__builtin_to_load.insert(
+      std::make_pair(_conf["name"]->string(), std::make_tuple(_callback, _conf)));
     return (*this);
 }
 
-auto
-zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
+auto zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
     expect(_to_locate["module"]->is_string(), "Python: module name must be provided");
     expect(_to_locate["function"]->is_string(), "Python: function name must be provided");
     this->initialize();
@@ -125,8 +107,7 @@ zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
     return nullptr;
 }
 
-auto
-zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
+auto zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     if (_exp == nullptr) { return zpt::undefined; }
     this->initialize();
 
@@ -237,7 +218,9 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     else if (Py_TYPE(_exp) == &PyBytesIter_Type) {
         expect(Py_TYPE(_exp) != &PyBytesIter_Type, "Python: unmanaged python type PyBytesIter");
     }
-    else if (PyCell_Check(_exp)) { expect(Py_TYPE(_exp) != &PyCell_Type, "Python: unmanaged python type PyCell"); }
+    else if (PyCell_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PyCell_Type, "Python: unmanaged python type PyCell");
+    }
     else if (PyMethod_Check(_exp)) {
         expect(Py_TYPE(_exp) != &PyMethod_Type, "Python: unmanaged python type PyMethod");
     }
@@ -295,7 +278,9 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     else if (Py_TYPE(_exp) == &PyStdPrinter_Type) {
         expect(Py_TYPE(_exp) != &PyStdPrinter_Type, "Python: unmanaged python type PyStdPrinter");
     }
-    else if (PyCode_Check(_exp)) { expect(Py_TYPE(_exp) != &PyCode_Type, "Python: unmanaged python type PyCode"); }
+    else if (PyCode_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PyCode_Type, "Python: unmanaged python type PyCode");
+    }
     else if (PyFunction_Check(_exp)) {
         // zdbg("Py_Function");
         std::ostringstream _oss;
@@ -310,7 +295,9 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     else if (Py_TYPE(_exp) == &PyStaticMethod_Type) {
         expect(Py_TYPE(_exp) != &PyStaticMethod_Type, "Python: unmanaged python type PyStaticMethod");
     }
-    else if (PyGen_Check(_exp)) { expect(Py_TYPE(_exp) != &PyGen_Type, "Python: unmanaged python type PyGen"); }
+    else if (PyGen_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PyGen_Type, "Python: unmanaged python type PyGen");
+    }
     else if (Py_TYPE(_exp) == &PyCoro_Type) {
         expect(Py_TYPE(_exp) != &PyCoro_Type, "Python: unmanaged python type PyCoro");
     }
@@ -324,7 +311,8 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         expect(Py_TYPE(_exp) != &_PyAsyncGenASend_Type, "Python: unmanaged python type _PyAsyncGenASend");
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenWrappedValue_Type) {
-        expect(Py_TYPE(_exp) != &_PyAsyncGenWrappedValue_Type, "Python: unmanaged python type _PyAsyncGenWrappedValue");
+        expect(Py_TYPE(_exp) != &_PyAsyncGenWrappedValue_Type,
+               "Python: unmanaged python type _PyAsyncGenWrappedValue");
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenAThrow_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenAThrow_Type, "Python: unmanaged python type _PyAsyncGenAThrow");
@@ -391,21 +379,27 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     else if (Py_TYPE(_exp) == &PyCapsule_Type) {
         expect(Py_TYPE(_exp) != &PyCapsule_Type, "Python: unmanaged python type PyCapsule");
     }
-    else if (PyRange_Check(_exp)) { expect(Py_TYPE(_exp) != &PyRange_Type, "Python: unmanaged python type PyRange"); }
+    else if (PyRange_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PyRange_Type, "Python: unmanaged python type PyRange");
+    }
     else if (Py_TYPE(_exp) == &PyRangeIter_Type) {
         expect(Py_TYPE(_exp) != &PyRangeIter_Type, "Python: unmanaged python type PyRangeIter");
     }
     else if (Py_TYPE(_exp) == &PyLongRangeIter_Type) {
         expect(Py_TYPE(_exp) != &PyLongRangeIter_Type, "Python: unmanaged python type PyLongRangeIter");
     }
-    else if (PySet_Check(_exp)) { expect(Py_TYPE(_exp) != &PySet_Type, "Python: unmanaged python type PySet"); }
+    else if (PySet_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PySet_Type, "Python: unmanaged python type PySet");
+    }
     else if (PyFrozenSet_Check(_exp)) {
         expect(Py_TYPE(_exp) != &PyFrozenSet_Type, "Python: unmanaged python type PyFrozenSet");
     }
     else if (Py_TYPE(_exp) == &PySetIter_Type) {
         expect(Py_TYPE(_exp) != &PySetIter_Type, "Python: unmanaged python type PySetIter");
     }
-    else if (PySlice_Check(_exp)) { expect(Py_TYPE(_exp) != &PySlice_Type, "Python: unmanaged python type PySlice"); }
+    else if (PySlice_Check(_exp)) {
+        expect(Py_TYPE(_exp) != &PySlice_Type, "Python: unmanaged python type PySlice");
+    }
     else if (Py_TYPE(_exp) == &PyEllipsis_Type) {
         expect(Py_TYPE(_exp) != &PyEllipsis_Type, "Python: unmanaged python type PyEllipsis");
     }
@@ -427,8 +421,7 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     return _parent;
 }
 
-auto
-zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
+auto zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
     if (_exp == nullptr) { return zpt::undefined; }
     this->initialize();
     std::ostringstream _oss;
@@ -438,8 +431,7 @@ zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
     else { return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")")); }
 }
 
-auto
-zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
+auto zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
     object_type _ret = nullptr;
     this->initialize();
     switch (_to_convert->type()) {
@@ -501,8 +493,7 @@ zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
     return _ret;
 }
 
-auto
-zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
+auto zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
     this->initialize();
     if (_to_convert->is_lambda()) {
         unsigned long _ref = 0;
@@ -524,8 +515,7 @@ zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
     return nullptr;
 }
 
-auto
-zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args) -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args) -> zpt::python::bridge::object_type {
     this->initialize();
 
     expect(_func_name->is_object(), "Python: cannot call a null function");
@@ -540,8 +530,7 @@ zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args) -> zpt::pyth
     return this->execute(_func, _tuple);
 }
 
-auto
-zpt::python::bridge::execute(object_type _func, object_type _args) -> zpt::python::bridge::object_type {
+auto zpt::python::bridge::execute(object_type _func, object_type _args) -> zpt::python::bridge::object_type {
     this->initialize();
 
     expect(_func.get() != nullptr, "Python: cannot call a null function");
@@ -557,16 +546,14 @@ zpt::python::bridge::execute(object_type _func, object_type _args) -> zpt::pytho
     return _ret;
 }
 
-auto
-zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
+auto zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
     expect(_self->ok(), "Python: cannot call a function over a null instance");
     return this->execute(this->to_object(_self), _func_name, nullptr);
 }
 
-auto
-zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
+auto zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
 
@@ -583,8 +570,7 @@ zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nul
     return _ret;
 }
 
-auto
-zpt::python::bridge::initialize() -> zpt::python::bridge& {
+auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
     auto _not_initialized{ false };
     if (this->__initialized.compare_exchange_strong(_not_initialized, true)) {
         Py_SetProgramName((wchar_t*)("zpt"));
@@ -626,7 +612,4 @@ zpt::python::bridge::initialize() -> zpt::python::bridge& {
     return (*this);
 }
 
-auto
-zpt::python::bridge::is_initialized() const -> bool {
-    return this->__initialized.load();
-}
+auto zpt::python::bridge::is_initialized() const -> bool { return this->__initialized.load(); }

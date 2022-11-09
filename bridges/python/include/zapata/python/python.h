@@ -27,8 +27,7 @@
 #include <zapata/locks/spin_lock.h>
 
 namespace zpt {
-auto
-PYTHON_BRIDGE() -> ssize_t&;
+auto PYTHON_BRIDGE() -> ssize_t&;
 
 class py_object {
   public:
@@ -75,8 +74,10 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
 
     auto execute(zpt::json _func, zpt::json _args) -> zpt::python::bridge::object_type;
     auto execute(object_type _func, object_type _args) -> zpt::python::bridge::object_type;
-    auto execute(zpt::json _self, std::string _func, std::nullptr_t _args) -> zpt::python::bridge::object_type;
-    auto execute(object_type _self, std::string _func, std::nullptr_t _args) -> zpt::python::bridge::object_type;
+    auto execute(zpt::json _self, std::string _func, std::nullptr_t _args)
+      -> zpt::python::bridge::object_type;
+    auto execute(object_type _self, std::string _func, std::nullptr_t _args)
+      -> zpt::python::bridge::object_type;
     template<typename... Args>
     auto execute(zpt::json _self, std::string _func, Args... _arg) -> zpt::python::bridge::object_type;
     template<typename... Args>
@@ -96,8 +97,7 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
 } // namespace zpt
 
 template<typename... Args>
-auto
-zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _args)
+auto zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
     expect(_self->ok(), "Python: cannot call a function over a null instance");
@@ -105,8 +105,7 @@ zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _a
 }
 
 template<typename... Args>
-auto
-zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... _args)
+auto zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
     expect(_self != nullptr, "Python: cannot call a function over a null instance");

@@ -25,19 +25,18 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/http.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
 
-    zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER())
+    zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER())
       .add("http", zpt::make_transport<zpt::net::transport::http>());
 
     if (_config("port")->ok()) {
-        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
+        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(
           zpt::HTTP_SERVER_SOCKET(), static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _plugin.add_thread([&]() -> void {
-            auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
+            auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
             zlog("Starting HTTP transport on port " << _config["port"], zpt::info);
 
             do {
@@ -47,7 +46,8 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
                     _polling.listen_on(std::move(_client));
                 }
                 catch (zpt::ClosedException const& _e) {
-                    expect(_plugin.is_shutdown_ongoing(), "HTTP server socket closed but plugin not shutding down");
+                    expect(_plugin.is_shutdown_ongoing(),
+                           "HTTP server socket closed but plugin not shutding down");
                 }
             } while (!_plugin.is_shutdown_ongoing());
             zlog("Stopping HTTP transport on port " << _config["port"], zpt::info);
@@ -55,11 +55,10 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
     if (_config("port")->ok()) {
-        zpt::globals::get<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET())->close();
-        zpt::globals::dealloc<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET());
+        zpt::global_cast<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET())->close();
+        zpt::release_global<zpt::serversocketstream>(zpt::HTTP_SERVER_SOCKET());
     }
 }

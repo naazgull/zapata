@@ -23,8 +23,7 @@
 #include <zapata/base/performative.h>
 #include <algorithm>
 
-auto
-zpt::ontology::to_str(zpt::performative _performative) -> std::string {
+auto zpt::ontology::to_str(zpt::performative _performative) -> std::string {
     switch (_performative) {
         case zpt::Get: {
             return "GET";
@@ -66,8 +65,7 @@ zpt::ontology::to_str(zpt::performative _performative) -> std::string {
     return "HEAD";
 }
 
-auto
-zpt::ontology::from_str(std::string _performative) -> zpt::performative {
+auto zpt::ontology::from_str(std::string _performative) -> zpt::performative {
     std::transform(_performative.begin(), _performative.end(), _performative.begin(), ::toupper);
     if (_performative == "GET") { return zpt::Get; }
     if (_performative == "PUT") { return zpt::Put; }

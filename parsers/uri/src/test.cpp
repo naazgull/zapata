@@ -29,15 +29,18 @@
 
 #include <zapata/uri.h>
 
-int
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     try {
         std::cout << zpt::uri::parse("/") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("/")) << std::endl << std::endl << std::flush;
         std::cout << zpt::uri::parse("file:./users.json") << std::endl << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("file:./users.json")) << std::endl << std::endl << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("file:./users.json")) << std::endl
+                  << std::endl
+                  << std::flush;
         std::cout << zpt::uri::parse("{:(.*):}:/{:(.*):}") << std::endl << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("{(.*)}:/{(.*)}")) << std::endl << std::endl << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("{(.*)}:/{(.*)}")) << std::endl
+                  << std::endl
+                  << std::flush;
         std::cout << zpt::uri::parse("/home/pf/{tmp:/(.*)/}/a.txt") << std::endl << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("/home/pf/{tmp:/(.*)/}/a.txt")) << std::endl
                   << std::endl
@@ -64,28 +67,34 @@ main(int argc, char* argv[]) {
                   << std::flush;
         std::cout << zpt::uri::parse("file+json:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc") << std::endl
                   << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("file+json:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc"))
+        std::cout << zpt::uri::to_string(
+                       zpt::uri::parse("file+json:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc"))
                   << std::endl
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse("tcp+json+ssl:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc") << std::endl
                   << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("tcp+json+ssl:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc"))
+        std::cout << zpt::uri::to_string(
+                       zpt::uri::parse("tcp+json+ssl:/home/pf/{tmp:/(.*)/}/a.j#some_point_in_doc"))
                   << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("tcp+json+ssl:/home/pf/../{tmp:/(.*)/}/a.j#some_point_in_doc") << std::endl
+        std::cout << zpt::uri::parse("tcp+json+ssl:/home/pf/../{tmp:/(.*)/}/a.j#some_point_in_doc")
+                  << std::endl
                   << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("tcp+json+ssl:/home/pf/../{tmp:/(.*)/}/a.j#some_point_in_doc"))
+        std::cout << zpt::uri::to_string(
+                       zpt::uri::parse("tcp+json+ssl:/home/pf/../{tmp:/(.*)/}/a.j#some_point_in_doc"))
                   << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c=") << std::endl << std::flush;
+        std::cout << zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c=") << std::endl
+                  << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c="))
                   << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c=#some_point_in_doc") << std::endl
+        std::cout << zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c=#some_point_in_doc")
+                  << std::endl
                   << std::flush;
         std::cout << zpt::uri::to_string(
                        zpt::uri::parse("{/http|ftp/}://api:8081/2.0/users/me?a=2&b=3&c=#some_point_in_doc"))
@@ -96,7 +105,8 @@ main(int argc, char* argv[]) {
         std::cout << zpt::uri::to_string(zpt::uri::parse("?a=2&b=3&c=1&d=lower(Strong)")) << std::endl
                   << std::endl
                   << std::flush;
-        std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=") << std::endl << std::flush;
+        std::cout << zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c=") << std::endl
+                  << std::flush;
         std::cout << zpt::uri::to_string(zpt::uri::parse("http://pf@na.zgul.me/api/2.0/users/me?a=2&b=3&c="))
                   << std::endl
                   << std::endl
@@ -125,10 +135,14 @@ main(int argc, char* argv[]) {
                   << std::endl
                   << std::flush;
         std::cout << zpt::uri::parse("#some_point_in_doc") << std::endl << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("#some_point_in_doc")) << std::endl << std::endl << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("#some_point_in_doc")) << std::endl
+                  << std::endl
+                  << std::flush;
 
-        std::cout << zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}") << std::endl << std::flush;
-        std::cout << zpt::uri::to_string(zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}")) << std::endl
+        std::cout << zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}") << std::endl
+                  << std::flush;
+        std::cout << zpt::uri::to_string(zpt::uri::parse("http://localhost:8080/users?name={.lower(u).}"))
+                  << std::endl
                   << std::endl
                   << std::flush;
     }

@@ -55,16 +55,14 @@ using item_type = int;
 #endif
 zpt::lf::queue<item_type> _queue{ MAX_THREADS_QUEUE };
 
-auto
-pause(int _signal) -> void {
+auto pause(int _signal) -> void {
     std::cout << _queue << std::endl << std::flush;
     std::cout << "* " << MAX_THREADS_QUEUE << " working threads:" << std::endl << std::flush;
     std::cout << "  #pushed -> " << _pushed.load() << std::endl << std::flush;
     std::cout << "  #poped -> " << _poped.load() << std::endl << std::flush;
 }
 
-auto
-test_queue() -> int {
+auto test_queue() -> int {
     _pushed = 0;
     _poped = 0;
     auto _t1 = std::chrono::high_resolution_clock::now();
@@ -129,8 +127,7 @@ test_queue() -> int {
     return 0;
 }
 
-auto
-test_hazard_ptr() -> void {
+auto test_hazard_ptr() -> void {
     zpt::lf::queue<long> _q1{ 2 };
 
     _q1.push(1);
@@ -157,8 +154,7 @@ test_hazard_ptr() -> void {
     _q1.clear_thread_context();
 }
 
-auto
-test_aligned() -> void {
+auto test_aligned() -> void {
     zpt::padded_atomic<bool> _atomic{ false };
     _atomic->store(true);
     std::cout << std::endl
@@ -169,8 +165,7 @@ test_aligned() -> void {
     (*_atomic) = false;
 }
 
-auto
-main(int _argc, char* _argv[]) -> int {
+auto main(int _argc, char* _argv[]) -> int {
     test_queue();
     test_hazard_ptr();
     test_aligned();

@@ -116,7 +116,8 @@ class MQTT : public zpt::Channel {
      * - http://mosquitto.org/api/files/mosquitto-h.html#mosquitto_connect
      */
     virtual auto connect(zpt::json _options) -> bool;
-    virtual auto connect(std::string const& _host, bool _tls = false, int _port = 1883, int _keep_alive = 25) -> bool;
+    virtual auto connect(std::string const& _host, bool _tls = false, int _port = 1883, int _keep_alive = 25)
+      -> bool;
     virtual auto reconnect() -> bool;
 
     /**
@@ -169,7 +170,8 @@ class MQTT : public zpt::Channel {
     virtual auto available() -> bool;
     virtual auto buffer(zpt::json _envelope) -> void;
     virtual auto recv() -> zpt::json;
-    virtual auto send(zpt::performative _performative, std::string const& _resource, zpt::json _payload) -> zpt::json;
+    virtual auto send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
+      -> zpt::json;
     virtual auto send(zpt::json _envelope) -> zpt::json;
     virtual auto loop_iteration() -> void;
     virtual auto socket() -> zmq::socket_ptr;
@@ -186,9 +188,13 @@ class MQTT : public zpt::Channel {
     static auto on_connect(struct mosquitto* _mosq, void* _ptr, int _rc) -> void;
     static auto on_disconnect(struct mosquitto* _mosq, void* _ptr, int _reason) -> void;
     static auto on_publish(struct mosquitto* _mosq, void* _ptr, int _mid) -> void;
-    static auto on_message(struct mosquitto* _mosq, void* _ptr, const struct mosquitto_message* _message) -> void;
-    static auto on_subscribe(struct mosquitto* _mosq, void* _ptr, int _mid, int _qos_count, const int* _granted_qos)
+    static auto on_message(struct mosquitto* _mosq, void* _ptr, const struct mosquitto_message* _message)
       -> void;
+    static auto on_subscribe(struct mosquitto* _mosq,
+                             void* _ptr,
+                             int _mid,
+                             int _qos_count,
+                             const int* _granted_qos) -> void;
     static auto on_unsubscribe(struct mosquitto* _mosq, void* _ptr, int _mid) -> void;
     static auto on_error(struct mosquitto* _mosq, void* _ptr) -> void;
     static auto on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message) -> void;

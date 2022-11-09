@@ -22,8 +22,7 @@
 
 #include <zapata/functional.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     std::cout << zpt::functional::parse("gt(integer(0.1, \"zpto\"))") << std::endl << std::flush;
     std::cout << zpt::functional::parse("gt(double(0.1, xpto))") << std::endl << std::flush;
     return 0;

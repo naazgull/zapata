@@ -33,30 +33,30 @@
 #define SHA512_F2(x) (SHA2_ROTR(x, 14) ^ SHA2_ROTR(x, 18) ^ SHA2_ROTR(x, 41))
 #define SHA512_F3(x) (SHA2_ROTR(x, 1) ^ SHA2_ROTR(x, 8) ^ SHA2_SHFR(x, 7))
 #define SHA512_F4(x) (SHA2_ROTR(x, 19) ^ SHA2_ROTR(x, 61) ^ SHA2_SHFR(x, 6))
-#define SHA2_UNPACK32(x, str)                                                                                          \
-    {                                                                                                                  \
-        *((str) + 3) = (std::uint8_t)((x));                                                                            \
-        *((str) + 2) = (std::uint8_t)((x) >> 8);                                                                       \
-        *((str) + 1) = (std::uint8_t)((x) >> 16);                                                                      \
-        *((str) + 0) = (std::uint8_t)((x) >> 24);                                                                      \
+#define SHA2_UNPACK32(x, str)                                                                                \
+    {                                                                                                        \
+        *((str) + 3) = (std::uint8_t)((x));                                                                  \
+        *((str) + 2) = (std::uint8_t)((x) >> 8);                                                             \
+        *((str) + 1) = (std::uint8_t)((x) >> 16);                                                            \
+        *((str) + 0) = (std::uint8_t)((x) >> 24);                                                            \
     }
-#define SHA2_UNPACK64(x, str)                                                                                          \
-    {                                                                                                                  \
-        *((str) + 7) = (std::uint8_t)((x));                                                                            \
-        *((str) + 6) = (std::uint8_t)((x) >> 8);                                                                       \
-        *((str) + 5) = (std::uint8_t)((x) >> 16);                                                                      \
-        *((str) + 4) = (std::uint8_t)((x) >> 24);                                                                      \
-        *((str) + 3) = (std::uint8_t)((x) >> 32);                                                                      \
-        *((str) + 2) = (std::uint8_t)((x) >> 40);                                                                      \
-        *((str) + 1) = (std::uint8_t)((x) >> 48);                                                                      \
-        *((str) + 0) = (std::uint8_t)((x) >> 56);                                                                      \
+#define SHA2_UNPACK64(x, str)                                                                                \
+    {                                                                                                        \
+        *((str) + 7) = (std::uint8_t)((x));                                                                  \
+        *((str) + 6) = (std::uint8_t)((x) >> 8);                                                             \
+        *((str) + 5) = (std::uint8_t)((x) >> 16);                                                            \
+        *((str) + 4) = (std::uint8_t)((x) >> 24);                                                            \
+        *((str) + 3) = (std::uint8_t)((x) >> 32);                                                            \
+        *((str) + 2) = (std::uint8_t)((x) >> 40);                                                            \
+        *((str) + 1) = (std::uint8_t)((x) >> 48);                                                            \
+        *((str) + 0) = (std::uint8_t)((x) >> 56);                                                            \
     }
-#define SHA2_PACK64(str, x)                                                                                            \
-    {                                                                                                                  \
-        *(x) = ((std::uint64_t) * ((str) + 7)) | ((std::uint64_t) * ((str) + 6) << 8) |                                \
-               ((std::uint64_t) * ((str) + 5) << 16) | ((std::uint64_t) * ((str) + 4) << 24) |                         \
-               ((std::uint64_t) * ((str) + 3) << 32) | ((std::uint64_t) * ((str) + 2) << 40) |                         \
-               ((std::uint64_t) * ((str) + 1) << 48) | ((std::uint64_t) * ((str) + 0) << 56);                          \
+#define SHA2_PACK64(str, x)                                                                                  \
+    {                                                                                                        \
+        *(x) = ((std::uint64_t) * ((str) + 7)) | ((std::uint64_t) * ((str) + 6) << 8) |                      \
+               ((std::uint64_t) * ((str) + 5) << 16) | ((std::uint64_t) * ((str) + 4) << 24) |               \
+               ((std::uint64_t) * ((str) + 3) << 32) | ((std::uint64_t) * ((str) + 2) << 40) |               \
+               ((std::uint64_t) * ((str) + 1) << 48) | ((std::uint64_t) * ((str) + 0) << 56);                \
     }
 
 namespace zpt::crypto {
@@ -79,6 +79,5 @@ class SHA512 {
     std::uint64_t m_h[8];
 };
 
-std::string
-sha512(std::string const& input);
+std::string sha512(std::string const& input);
 } // namespace zpt::crypto

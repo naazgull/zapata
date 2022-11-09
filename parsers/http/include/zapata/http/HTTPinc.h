@@ -26,7 +26,7 @@
 #include <zapata/exceptions/SyntaxErrorException.h>
 #include <zapata/http/HTTPTokenizerLexer.h>
 
-#define HTTPScanner                                                                                                    \
-  public:                                                                                                              \
+#define HTTPScanner                                                                                          \
+  public:                                                                                                    \
     HTTPTokenizerLexer
 namespace zpt {}

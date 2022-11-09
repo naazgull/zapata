@@ -73,13 +73,17 @@ class Client : public zpt::Connector {
                        zpt::json _query,
                        zpt::json _record,
                        zpt::json _opts = zpt::undefined) -> int;
-    virtual auto remove(std::string const& _collection, std::string _href, zpt::json _opts = zpt::undefined) -> int;
-    virtual auto remove(std::string const& _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> int;
-    virtual auto get(std::string const& _collection, std::string const& _href, zpt::json _opts = zpt::undefined)
-      -> zpt::json;
+    virtual auto remove(std::string const& _collection, std::string _href, zpt::json _opts = zpt::undefined)
+      -> int;
+    virtual auto remove(std::string const& _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> int;
+    virtual auto get(std::string const& _collection,
+                     std::string const& _href,
+                     zpt::json _opts = zpt::undefined) -> zpt::json;
     virtual auto query(std::string const& _collection, std::string _query, zpt::json _opts = zpt::undefined)
       -> zpt::json;
-    virtual auto query(std::string const& _collection, zpt::json _query, zpt::json _opts = zpt::undefined) -> zpt::json;
+    virtual auto query(std::string const& _collection, zpt::json _query, zpt::json _opts = zpt::undefined)
+      -> zpt::json;
     virtual auto all(std::string const& _collection, zpt::json _opts = zpt::undefined) -> zpt::json;
 
   private:

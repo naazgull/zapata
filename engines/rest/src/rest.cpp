@@ -22,21 +22,21 @@
 
 #include <zapata/rest/rest.h>
 
-auto
-zpt::REST_ENGINE() -> ssize_t& {
+auto zpt::REST_ENGINE() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
 zpt::rest::engine::engine(zpt::json _configuration) {
-    zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING())
-      .register_delegate(
-        [this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool { return this->delegate(_poll, _stream); });
+    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING())
+      .register_delegate([this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
+          return this->delegate(_poll, _stream);
+      });
 }
 
-auto
-zpt::rest::engine::delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-    zpt::globals::get<zpt::events::dispatcher>(zpt::DISPATCHER()).trigger<zpt::rest::receive_message>(_poll, _stream);
+auto zpt::rest::engine::delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
+    zpt::global_cast<zpt::events::dispatcher>(zpt::DISPATCHER())
+      .trigger<zpt::rest::receive_message>(_poll, _stream);
     return true;
 }
 
@@ -44,17 +44,14 @@ zpt::rest::receive_message::receive_message(zpt::polling& _polling, zpt::basic_s
   : __polling{ _polling }
   , __stream{ _stream } {}
 
-auto
-zpt::rest::receive_message::blocked() const -> bool {
-    return false;
-}
+auto zpt::rest::receive_message::blocked() const -> bool { return false; }
 
-auto
-zpt::rest::receive_message::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
-    auto _transport = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER()).get(this->__stream.transport());
+auto zpt::rest::receive_message::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+                        .get(this->__stream.transport());
     try {
         auto _request = _transport->receive(this->__stream);
-        auto _reply = _request->make_reply();
+        auto _reply = _transport->make_reply(_request);
         _reply->status(200);
         _reply->body() = "<h1>Hello WORLD!!!</h1>";
         _transport->send(this->__stream, _reply);

@@ -60,7 +60,8 @@ class UPnP : public zpt::Channel {
     virtual auto listen() -> zpt::http::req;
 
     virtual auto recv() -> zpt::json;
-    virtual auto send(zpt::performative _performative, std::string const& _resource, zpt::json _payload) -> zpt::json;
+    virtual auto send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
+      -> zpt::json;
     virtual auto send(zpt::json _envelope) -> zpt::json;
 
     virtual auto id() -> std::string;

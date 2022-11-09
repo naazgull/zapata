@@ -29,19 +29,14 @@ zpt::JSONTokenizerLexer::JSONTokenizerLexer(std::istream& _in, std::ostream& _ou
 
 zpt::JSONTokenizerLexer::~JSONTokenizerLexer() {}
 
-void
-zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
+void zpt::JSONTokenizerLexer::switchRoots(zpt::json& _root) {
     this->__root = this->__parent = &(*_root);
     this->begin(zpt::JSONLexerBase::StartCondition_::INITIAL);
 }
 
-auto
-zpt::JSONTokenizerLexer::justLeave() -> void {
-    this->leave(-1);
-}
+auto zpt::JSONTokenizerLexer::justLeave() -> void { this->leave(-1); }
 
-void
-zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
+void zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     try {
         this->__root_type = _in;
     }
@@ -51,8 +46,7 @@ zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
+void zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
     try {
         zpt::JSONElementT* _cur = this->__parent;
         this->__parent = _cur->parent();
@@ -64,8 +58,7 @@ zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str) {
+void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str) {
     try {
         (*this->__parent) << _in_str;
     }
@@ -75,8 +68,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str)
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
+void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
     if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
         this->__parent->type(_in_type);
         return;
@@ -90,7 +82,8 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation const& _e) {
-                std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+                std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                          << std::flush;
                 // this->__parent->type(_in_type);
                 throw _e;
             }
@@ -104,7 +97,8 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
                 this->__parent = &(*_ref);
             }
             catch (zpt::failed_expectation const& _e) {
-                std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+                std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                          << std::flush;
                 // delete _ptr;
                 // this->__parent->type(_in_type);
                 throw _e;
@@ -116,8 +110,7 @@ zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(bool _in) {
+void zpt::JSONTokenizerLexer::init(bool _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -130,8 +123,7 @@ zpt::JSONTokenizerLexer::init(bool _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(long long _in) {
+void zpt::JSONTokenizerLexer::init(long long _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -144,8 +136,7 @@ zpt::JSONTokenizerLexer::init(long long _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(double _in) {
+void zpt::JSONTokenizerLexer::init(double _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -158,8 +149,7 @@ zpt::JSONTokenizerLexer::init(double _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(std::string const& _in) {
+void zpt::JSONTokenizerLexer::init(std::string const& _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -172,8 +162,7 @@ zpt::JSONTokenizerLexer::init(std::string const& _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
+void zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -186,8 +175,7 @@ zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init(zpt::regex _in) {
+void zpt::JSONTokenizerLexer::init(zpt::regex _in) {
     try {
         if (this->__parent->type() != zpt::JSObject && this->__parent->type() != zpt::JSArray) {
             (*this->__parent) = _in;
@@ -200,8 +188,7 @@ zpt::JSONTokenizerLexer::init(zpt::regex _in) {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::init() {
+void zpt::JSONTokenizerLexer::init() {
     zpt::json _ref;
     try {
         if (this->__parent->type() == zpt::JSObject || this->__parent->type() == zpt::JSArray) {
@@ -214,5 +201,4 @@ zpt::JSONTokenizerLexer::init() {
     }
 }
 
-void
-zpt::JSONTokenizerLexer::add() {}
+void zpt::JSONTokenizerLexer::add() {}

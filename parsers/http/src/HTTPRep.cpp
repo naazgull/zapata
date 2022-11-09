@@ -38,21 +38,24 @@ zpt::http::basic_reply::basic_reply(zpt::basic_message const& _request, bool)
     auto _req_headers = _request.headers();
     auto _headers = zpt::json::object();
     _headers["Content-Type"] = zpt::network::resolve_content_type(_request);
-    _headers["Cache-Control"] = _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
-    _headers["X-Conversation-ID"] = _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
-    _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.0";
+    _headers["Cache-Control"] =
+      _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store";
+    _headers["X-Conversation-ID"] =
+      _req_headers("X-Conversation-ID")->ok() ? _req_headers("X-Conversation-ID") : "0";
+    _headers["X-Version"] = _req_headers("X-Version")->ok() ? _req_headers("X-Version") : "1.1";
 
     this->__underlying           //
       << "uri" << _request.uri() //
       << "headers" << _headers;
 }
 
-auto
-zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
-    zpt::status _status =
-      static_cast<int>(this->__underlying("status")) > 99 ? static_cast<int>(this->__underlying("status")) : 100;
-    std::string _version =
-      this->__underlying("headers")("X-Version")->ok() ? this->__underlying("headers")("X-Version")->string() : "1.1";
+auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
+    zpt::status _status = static_cast<int>(this->__underlying("status")) > 99
+                            ? static_cast<int>(this->__underlying("status"))
+                            : 100;
+    std::string _version = this->__underlying("headers")("X-Version")->ok()
+                             ? this->__underlying("headers")("X-Version")->string()
+                             : "1.1";
     _out << "HTTP/" << _version << " " << std::to_string(_status);
     if (_version == "1.0") { _out << " " << zpt::http::status_names[_status]; }
     _out << CRLF;
@@ -73,8 +76,7 @@ zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
     _out << CRLF << _body;
 }
 
-auto
-zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
+auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
     static thread_local zpt::HTTPParser _p;
     _p.switchRoots(*this);
     _p.switchStreams(_in);
@@ -86,11 +88,6 @@ zpt::http::basic_reply::from_stream(std::istream& _in) -> void {
     }
     catch (...) {
     }
-}
-
-auto
-zpt::http::basic_reply::make_reply() -> zpt::message {
-    return zpt::make_message<zpt::http::basic_reply>(*this, true);
 }
 
 auto operator"" _HTTP_REPLY(const char* _string, size_t _length) -> zpt::message {

@@ -26,18 +26,17 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/tcp.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _config = _plugin.config();
-    auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
 
     _layer.add("tcp", zpt::make_transport<zpt::net::transport::tcp>());
     if (_config["port"]->ok()) {
-        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
+        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(
           zpt::TCP_SERVER_SOCKET(), static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _plugin.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
+            auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
             zlog("Starting TCP+JSON transport on port " << _config["port"], zpt::info);
 
             try {
@@ -54,11 +53,10 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     }
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
     auto& _config = _plugin.config();
     if (_config["port"]->ok()) {
-        zpt::globals::get<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET())->close();
-        zpt::globals::dealloc<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET());
+        zpt::global_cast<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET())->close();
+        zpt::release_global<zpt::serversocketstream>(zpt::TCP_SERVER_SOCKET());
     }
 }

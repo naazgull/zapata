@@ -25,14 +25,12 @@
 #include <zapata/rest.h>
 #include <zapata/transport.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::globals::alloc<zpt::rest::engine>(zpt::REST_ENGINE(), _plugin.config());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    zpt::make_global<zpt::rest::engine>(zpt::REST_ENGINE(), _plugin.config());
     zlog("Starting REST engine", zpt::info);
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Stopping REST engine", zpt::info);
-    zpt::globals::dealloc<zpt::rest::engine>(zpt::REST_ENGINE());
+    zpt::release_global<zpt::rest::engine>(zpt::REST_ENGINE());
 }

@@ -32,7 +32,8 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
     auto name() const -> std::string { return "cpp_example"; }
 
     auto setup_module(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
-        auto [_it, _] = this->__modules.insert(std::make_pair(_conf["name"]->string() + std::string{ "::" }, _conf));
+        auto [_it, _] =
+          this->__modules.insert(std::make_pair(_conf["name"]->string() + std::string{ "::" }, _conf));
         _it->second += _lambda(_conf, *this);
         return (*this);
     }
@@ -60,8 +61,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
     std::map<std::string, zpt::json> __modules;
 };
 
-auto
-init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::json {
+auto init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::json {
     _bridge.add_lambda(
       [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json {
           return { "a", _a };
@@ -70,13 +70,13 @@ init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::json {
     return zpt::undefined;
 }
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     cpp_bridge _bridge;
-    auto _result = _bridge                                       //
-                     .set_options({ "flags", "SFGT" })           //
-                     .add_module(init_module_x, { "name", "x" }) //
-                     .call<std::string, zpt::json, cpp_bridge&>("x::to_a", zpt::json{ "field", "xpto" }, _bridge);
+    auto _result =
+      _bridge                                       //
+        .set_options({ "flags", "SFGT" })           //
+        .add_module(init_module_x, { "name", "x" }) //
+        .call<std::string, zpt::json, cpp_bridge&>("x::to_a", zpt::json{ "field", "xpto" }, _bridge);
     zlog(_result, zpt::info);
     return 0;
 }

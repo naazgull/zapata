@@ -33,34 +33,22 @@
 
 namespace zpt {
 
-void
-ltrim(std::string& _in_out);
-void
-rtrim(std::string& _in_out);
-void
-trim(std::string& _in_out);
-auto
-replace(std::string& str, std::string find, std::string replace) -> void;
+void ltrim(std::string& _in_out);
+void rtrim(std::string& _in_out);
+void trim(std::string& _in_out);
+auto replace(std::string& str, std::string find, std::string replace) -> void;
 
-void
-normalize_path(std::string& _in_out, bool _with_trailing);
+void normalize_path(std::string& _in_out, bool _with_trailing);
 
-void
-prettify_header_name(std::string& name);
+void prettify_header_name(std::string& name);
 
-std::string
-r_ltrim(std::string const& _in_out);
-std::string
-r_rtrim(std::string const& _in_out);
-std::string
-r_trim(std::string const& _in_out);
-std::string
-r_replace(std::string str, std::string find, std::string replace);
+std::string r_ltrim(std::string const& _in_out);
+std::string r_rtrim(std::string const& _in_out);
+std::string r_trim(std::string const& _in_out);
+std::string r_replace(std::string str, std::string find, std::string replace);
 
-std::string
-r_normalize_path(std::string const& _in_out, bool _with_trailing);
+std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
-std::string
-r_prettify_header_name(std::string name);
+std::string r_prettify_header_name(std::string name);
 
 } // namespace zpt

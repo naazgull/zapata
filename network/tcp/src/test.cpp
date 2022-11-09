@@ -24,8 +24,7 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/tcp.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 1) {
         std::istringstream _iss;
         _iss.str(std::string{ argv[1] });

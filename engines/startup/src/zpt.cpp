@@ -26,23 +26,23 @@
 #include <unistd.h>
 #include <csignal>
 
-auto
-deallocate(int _signal) -> void {
-    zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING()).shutdown();
-}
+auto deallocate(int _signal) -> void { zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown(); }
 
-auto
-nostop(int _signal) -> void {
+auto nostop(int _signal) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
 }
 
-auto
-main(int _argc, char* _argv[]) -> int {
+auto main(int _argc, char* _argv[]) -> int {
     std::signal(SIGUSR1, deallocate);
     std::signal(SIGINT, deallocate);
     zpt::json _parameter_setup{
         "--conf-file",
-        { "options", { zpt::array, "optional", "multiple" }, "type", "path", "description", "configuration file" },
+        { "options",
+          { zpt::array, "optional", "multiple" },
+          "type",
+          "path",
+          "description",
+          "configuration file" },
         "--conf-dir",
         { "options",
           { zpt::array, "optional", "multiple" },
@@ -76,25 +76,24 @@ main(int _argc, char* _argv[]) -> int {
         return 0;
     }
 
-    auto _config = zpt::globals::alloc<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object());
+    auto _config = zpt::make_global<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object());
     zpt::log_lvl = 8;
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config["log"]["level"]) : 7;
     zpt::log_format = _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
-
-    zpt::globals::alloc<zpt::polling>(zpt::STREAM_POLLING());
-    zpt::globals::alloc<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     auto _consumers = _config("limits")("max_consumer_threads")->integer();
-    zpt::globals::alloc<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers).start_consumers(_consumers);
-    zpt::globals::alloc<zpt::startup::boot>(zpt::BOOT(), _config).load();
 
-    zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING()).poll();
+    zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
+    zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers).start_consumers(_consumers);
+    zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config).load();
 
-    zpt::globals::dealloc<zpt::polling>(zpt::STREAM_POLLING());
-    zpt::globals::dealloc<zpt::events::dispatcher>(zpt::DISPATCHER());
-    zpt::globals::dealloc<zpt::startup::boot>(zpt::BOOT());
-    zpt::globals::dealloc<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    zpt::globals::dealloc<zpt::json>(zpt::GLOBAL_CONFIG());
+    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).poll();
+
+    zpt::release_global<zpt::polling>(zpt::STREAM_POLLING());
+    zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER());
+    zpt::release_global<zpt::startup::boot>(zpt::BOOT());
+    zpt::release_global<zpt::json>(zpt::GLOBAL_CONFIG());
     return 0;
 }

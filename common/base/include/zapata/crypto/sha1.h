@@ -50,6 +50,5 @@ class SHA1 {
     static void read(std::istream& is, std::string& s, int max);
 };
 
-std::string
-sha1(const std::string& string);
+std::string sha1(const std::string& string);
 } // namespace zpt::crypto

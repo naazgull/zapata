@@ -14,8 +14,7 @@ class my_machine : public zpt::fsm::machine<my_machine, int, std::string, size_t
     auto verify_transition(int _current) -> void {}
 };
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     my_machine _sm{};
     _sm //
       .add_allowed_transitions({

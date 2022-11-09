@@ -31,8 +31,7 @@
 #include <zapata/locks/spin_lock.h>
 
 namespace zpt {
-auto
-STREAM_POLLING() -> ssize_t&;
+auto STREAM_POLLING() -> ssize_t&;
 
 enum class stream_state { IDLE, WAITING, PROCESSING };
 using epoll_event_t = struct epoll_event;
@@ -107,35 +106,33 @@ class polling {
 };
 
 template<typename T, typename... Args>
-static auto
-make_stream(Args... _args) -> zpt::stream;
+static auto make_stream(Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
 } // namespace zpt
 
 template<typename T>
-auto
-stream_cast(zpt::stream& _rhs) -> T& {
+auto stream_cast(zpt::stream& _rhs) -> T& {
     return static_cast<T&>(**_rhs);
 }
 
 template<typename T>
-auto
-zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
-    (*this->__underlying.get()) >> _out;
+auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+    if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
+        _out->from_stream(*this->__underlying.get());
+    }
+    else { (*this->__underlying.get()) >> _out; }
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
     (*this->__underlying.get()) << _in;
     return (*this);
 }
 
 template<typename T, typename... Args>
-auto
-zpt::make_stream(Args... _args) -> zpt::stream {
+auto zpt::make_stream(Args... _args) -> zpt::stream {
     zpt::stream _to_return{ new zpt::basic_stream{ std::make_unique<T>(_args...) } };
     if constexpr (std::is_convertible<T, int>::value) {
         (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));

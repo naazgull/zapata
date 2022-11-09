@@ -28,8 +28,7 @@ namespace zpt {
 namespace startup {
 namespace configuration {
 
-auto
-load(zpt::json _parameters, zpt::json& _output) -> void;
+auto load(zpt::json _parameters, zpt::json& _output) -> void;
 
 } // namespace configuration
 } // namespace startup

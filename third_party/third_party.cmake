@@ -5,11 +5,14 @@ if (NOT DONT_COMPILE_XDEVAPI)
   
   externalproject_add(
     mysqlxdevapi
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/third_party/xdevapi"
     GIT_REPOSITORY "https://github.com/mysql/mysql-connector-cpp"
-    BUILD_COMMAND make
+    GIT_TAG trunk
     CMAKE_ARGS
       -Wno-dev
       -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    BUILD_COMMAND
+      ${CMAKE_COMMAND} --build <BINARY_DIR> -j${n}
   )
 endif(NOT DONT_COMPILE_XDEVAPI)
 

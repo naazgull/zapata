@@ -8,23 +8,17 @@
 // $insert namespace-open
 namespace zpt {
 
-inline void
-FunctionalTokenizer::error() {
+inline void FunctionalTokenizer::error() {
     throw zpt::SyntaxErrorException(std::string("Functional: Syntax error in line ") +
                                     std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex
-inline int
-FunctionalTokenizer::lex() {
-    return d_scanner.lex();
-}
+inline int FunctionalTokenizer::lex() { return d_scanner.lex(); }
 
-inline void
-FunctionalTokenizer::print() {}
+inline void FunctionalTokenizer::print() {}
 
-inline void
-FunctionalTokenizer::exceptionHandler(std::exception const& exc) {
+inline void FunctionalTokenizer::exceptionHandler(std::exception const& exc) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

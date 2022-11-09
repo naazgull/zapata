@@ -32,10 +32,8 @@
 
 namespace zpt {
 
-auto
-BOOT() -> ssize_t&;
-auto
-GLOBAL_CONFIG() -> ssize_t&;
+auto BOOT() -> ssize_t&;
+auto GLOBAL_CONFIG() -> ssize_t&;
 
 class plugin {
   public:

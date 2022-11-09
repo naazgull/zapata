@@ -68,10 +68,7 @@ enum StateType // modify statetype/data.cc when this enum changes
     REQ_DEF,    // REQ_TOKEN | DEF_RED
     ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
 };
-inline bool
-operator&(StateType lhs, StateType rhs) {
-    return (static_cast<int>(lhs) & rhs) != 0;
-}
+inline bool operator&(StateType lhs, StateType rhs) { return (static_cast<int>(lhs) & rhs) != 0; }
 enum StateTransition {
     ACCEPT_ = 0, // `ACCEPT' TRANSITION
 };
@@ -364,8 +361,7 @@ HTTPTokenizerBase::HTTPTokenizerBase()
   d_requiredTokens_(0) {}
 
 // base/clearin
-void
-HTTPTokenizerBase::clearin_() {
+void HTTPTokenizerBase::clearin_() {
     d_nErrors_ = 0;
     d_stackIdx = -1;
     d_stateStack.clear();
@@ -380,21 +376,18 @@ HTTPTokenizerBase::clearin_() {
 
 // base/debugfunctions
 
-void
-HTTPTokenizerBase::setDebug(bool mode) {
+void HTTPTokenizerBase::setDebug(bool mode) {
     d_actionCases_ = false;
     d_debug_ = mode;
 }
 
-void
-HTTPTokenizerBase::setDebug(DebugMode_ mode) {
+void HTTPTokenizerBase::setDebug(DebugMode_ mode) {
     d_actionCases_ = mode & ACTIONCASES;
     d_debug_ = mode & ON;
 }
 
 // base/lex
-void
-HTTPTokenizerBase::lex_(int token) {
+void HTTPTokenizerBase::lex_(int token) {
     d_token = token;
 
     if (d_token <= 0) d_token = Reserved_::EOF_;
@@ -403,8 +396,7 @@ HTTPTokenizerBase::lex_(int token) {
 }
 
 // base/lookup
-int
-HTTPTokenizerBase::lookup_() const {
+int HTTPTokenizerBase::lookup_() const {
     // if the final transition is negative, then we should reduce by the rule
     // given by its positive value.
 
@@ -436,8 +428,7 @@ HTTPTokenizerBase::lookup_() const {
 }
 
 // base/pop
-void
-HTTPTokenizerBase::pop_(size_t count) {
+void HTTPTokenizerBase::pop_(size_t count) {
     if (d_stackIdx < static_cast<int>(count)) { ABORT(); }
 
     d_stackIdx -= count;
@@ -446,8 +437,7 @@ HTTPTokenizerBase::pop_(size_t count) {
 }
 
 // base/poptoken
-void
-HTTPTokenizerBase::popToken_() {
+void HTTPTokenizerBase::popToken_() {
     d_token = d_next.first;
     d_val_ = std::move(d_next.second);
 
@@ -455,8 +445,7 @@ HTTPTokenizerBase::popToken_() {
 }
 
 // base/push
-void
-HTTPTokenizerBase::push_(size_t state) {
+void HTTPTokenizerBase::push_(size_t state) {
     size_t currentSize = d_stateStack.size();
     if (stackSize_() == currentSize) {
         size_t newSize = currentSize + STACK_EXPANSION_;
@@ -473,21 +462,18 @@ HTTPTokenizerBase::push_(size_t state) {
 }
 
 // base/pushtoken
-void
-HTTPTokenizerBase::pushToken_(int token) {
+void HTTPTokenizerBase::pushToken_(int token) {
     d_next = TokenPair{ d_token, std::move(d_val_) };
     d_token = token;
 }
 
 // base/redotoken
-void
-HTTPTokenizerBase::redoToken_() {
+void HTTPTokenizerBase::redoToken_() {
     if (d_token != Reserved_::UNDETERMINED_) pushToken_(d_token);
 }
 
 // base/reduce
-void
-HTTPTokenizerBase::reduce_(int rule) {
+void HTTPTokenizerBase::reduce_(int rule) {
     PI_ const& pi = s_productionInfo[rule];
 
     d_token = pi.d_nonTerm;
@@ -497,8 +483,7 @@ HTTPTokenizerBase::reduce_(int rule) {
 }
 
 // base/shift
-void
-HTTPTokenizerBase::shift_(int action) {
+void HTTPTokenizerBase::shift_(int action) {
     push_(action);
     popToken_(); // token processed
 
@@ -509,8 +494,7 @@ HTTPTokenizerBase::shift_(int action) {
 }
 
 // base/startrecovery
-void
-HTTPTokenizerBase::startRecovery_() {
+void HTTPTokenizerBase::startRecovery_() {
     int lastToken = d_token; // give the unexpected token a
                              // chance to be processed
                              // again.
@@ -526,14 +510,10 @@ HTTPTokenizerBase::startRecovery_() {
 }
 
 // base/top
-inline size_t
-HTTPTokenizerBase::top_() const {
-    return d_stateStack[d_stackIdx].first;
-}
+inline size_t HTTPTokenizerBase::top_() const { return d_stateStack[d_stackIdx].first; }
 
 // derived/errorrecovery
-void
-HTTPTokenizer::errorRecovery_() {
+void HTTPTokenizer::errorRecovery_() {
     // When an error has occurred, pop elements off the stack until the top
     // state has an error-item. If none is found, the default recovery
     // mode (which is to abort) is activated.
@@ -559,8 +539,7 @@ HTTPTokenizer::errorRecovery_() {
 }
 
 // derived/executeaction
-void
-HTTPTokenizer::executeAction_(int production) try {
+void HTTPTokenizer::executeAction_(int production) try {
     if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
@@ -655,8 +634,7 @@ catch (std::exception const& exc) {
 }
 
 // derived/nextcycle
-void
-HTTPTokenizer::nextCycle_() try {
+void HTTPTokenizer::nextCycle_() try {
     if (s_state[state_()]->d_type & REQ_TOKEN) nextToken_(); // obtain next token
 
     int action = lookup_(); // lookup d_token in d_state
@@ -694,8 +672,7 @@ catch (ErrorRecovery_) {
 }
 
 // derived/nexttoken
-void
-HTTPTokenizer::nextToken_() {
+void HTTPTokenizer::nextToken_() {
     // If d_token is Reserved_::UNDETERMINED_ then if savedToken_() is
     // Reserved_::UNDETERMINED_ another token is obtained from lex(). Then
     // savedToken_() is assigned to d_token.
@@ -716,14 +693,12 @@ HTTPTokenizer::nextToken_() {
 }
 
 // derived/print
-void
-HTTPTokenizer::print_() {
+void HTTPTokenizer::print_() {
     // $insert print
 }
 
 // derived/parse
-int
-HTTPTokenizer::parse() try {
+int HTTPTokenizer::parse() try {
     // The parsing algorithm:
     // Initially, state 0 is pushed on the stack, and all relevant variables
     // are initialized by Base::clearin_.

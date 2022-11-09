@@ -8,22 +8,17 @@
 // $insert namespace-open
 namespace zpt {
 
-inline void
-HTTPTokenizer::error() {
-    throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") + std::to_string(d_scanner.lineNr()));
+inline void HTTPTokenizer::error() {
+    throw zpt::SyntaxErrorException(std::string("HTTP: Syntax error in line ") +
+                                    std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex
-inline int
-HTTPTokenizer::lex() {
-    return d_scanner.lex();
-}
+inline int HTTPTokenizer::lex() { return d_scanner.lex(); }
 
-inline void
-HTTPTokenizer::print() {}
+inline void HTTPTokenizer::print() {}
 
-inline void
-HTTPTokenizer::exceptionHandler(std::exception const& exc) {
+inline void HTTPTokenizer::exceptionHandler(std::exception const& exc) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

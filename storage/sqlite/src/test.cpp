@@ -1,9 +1,8 @@
 #include <zapata/sqlite.h>
 
-auto
-main(int _argc, char* _argv[]) -> int {
-    zpt::json _config{ "storage", { "sqlite", { "path", "/home/pf/Void/sqlite" } } };
-    auto _connection = zpt::storage::connection::alloc<zpt::storage::sqlite::connection>(_config);
+auto main(int _argc, char* _argv[]) -> int {
+    zpt::json _config{ "storage", { "sqlite", { "memory", true } } };
+    auto _connection = zpt::make_connection<zpt::storage::sqlite::connection>(_config);
     auto _session = _connection->session();
     auto _database = _session->database("zapata");
     auto _collection = _database->collection("users");

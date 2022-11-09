@@ -22,21 +22,16 @@
 
 #include <zapata/http/HTTPParser.h>
 
-zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) { this->d_scanner.switchStreams(_in, _out); }
+zpt::HTTPParser::HTTPParser(std::istream& _in, std::ostream& _out) {
+    this->d_scanner.switchStreams(_in, _out);
+}
 
 zpt::HTTPParser::~HTTPParser() {}
 
-void
-zpt::HTTPParser::switchRoots(zpt::http::basic_request& _root) {
-    this->d_scanner.switchRoots(_root);
-}
+void zpt::HTTPParser::switchRoots(zpt::http::basic_request& _root) { this->d_scanner.switchRoots(_root); }
 
-void
-zpt::HTTPParser::switchRoots(zpt::http::basic_reply& _root) {
-    this->d_scanner.switchRoots(_root);
-}
+void zpt::HTTPParser::switchRoots(zpt::http::basic_reply& _root) { this->d_scanner.switchRoots(_root); }
 
-void
-zpt::HTTPParser::switchStreams(std::istream& _in, std::ostream& _out) {
+void zpt::HTTPParser::switchStreams(std::istream& _in, std::ostream& _out) {
     this->d_scanner.switchStreams(_in, _out);
 }

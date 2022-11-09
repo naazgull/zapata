@@ -26,8 +26,7 @@
 #include <zapata/json.h>
 
 namespace zpt {
-auto
-TRANSPORT_LAYER() -> ssize_t&;
+auto TRANSPORT_LAYER() -> ssize_t&;
 
 class basic_message {
   public:
@@ -55,7 +54,16 @@ class basic_message {
     virtual auto version(std::string const& _version) -> void = 0;
     virtual auto to_stream(std::ostream& _out) const -> void = 0;
     virtual auto from_stream(std::istream& _in) -> void = 0;
-    virtual auto make_reply() -> std::shared_ptr<basic_message> = 0;
+
+    friend auto operator<<(std::ostream& _out, zpt::basic_message const& _in) -> std::ostream& {
+        _in.to_stream(_out);
+        return _out;
+    }
+
+    friend auto operator>>(std::istream& _in, zpt::basic_message& _out) -> std::istream& {
+        _out.from_stream(_in);
+        return _in;
+    }
 };
 using message = std::shared_ptr<basic_message>;
 
@@ -85,7 +93,6 @@ class json_message : public basic_message {
     auto status(zpt::status _status) -> void override;
     auto uri(std::string const& _uri) -> void override;
     auto version(std::string const& _version) -> void override;
-    auto make_reply() -> std::shared_ptr<basic_message> override;
     template<typename T>
     auto operator<<(T _to_add) -> zpt::json_message&;
 
@@ -145,45 +152,36 @@ class layer {
     static auto translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string;
 };
 
-auto
-resolve_content_type(zpt::basic_message const& _message) -> std::string;
+auto resolve_content_type(zpt::basic_message const& _message) -> std::string;
 } // namespace network
 
 template<typename T, typename... Args>
-auto
-make_transport(Args... _args) -> zpt::transport;
+auto make_transport(Args... _args) -> zpt::transport;
 template<typename T, typename... Args>
-auto
-make_message(Args... _args) -> zpt::message;
+auto make_message(Args... _args) -> zpt::message;
 } // namespace zpt
 
-auto
-operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
-auto
-operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
+auto operator<<(std::ostream& _out, zpt::message _in) -> std::ostream&;
+auto operator>>(std::istream& _in, zpt::message _out) -> std::istream&;
 
 template<typename T>
-auto
-message_cast(zpt::message _rhs) -> T& {
+auto message_cast(zpt::message _rhs) -> T& {
     return static_cast<T&>(*_rhs);
 }
 
 template<typename T>
-auto
-zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {
+auto zpt::json_message::operator<<(T _to_add) -> zpt::json_message& {
     if (!this->__underlying("body")->ok()) { this->__underlying["body"] = zpt::json::object(); }
     this->__underlying["body"] << _to_add;
     return (*this);
 }
 
 template<typename T, typename... Args>
-auto
-zpt::make_transport(Args... _args) -> zpt::transport {
+auto zpt::make_transport(Args... _args) -> zpt::transport {
     return zpt::transport{ new T{ std::forward<Args>(_args)... } };
 }
 
 template<typename T, typename... Args>
-auto
-zpt::make_message(Args... _args) -> zpt::message {
+auto zpt::make_message(Args... _args) -> zpt::message {
     return zpt::message{ new T{ std::forward<Args>(_args)... } };
 }

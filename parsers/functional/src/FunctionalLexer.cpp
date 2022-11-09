@@ -17,15 +17,16 @@ namespace zpt {
 //           The range for EOF is defined in a constant in the
 //           class header file
 size_t const FunctionalLexerBase::s_ranges_[] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-    4,  4,  4,  5,  6,  7,  8,  8,  8,  8,  8,  9,  10, 11, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  2,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  4,  4,  5,  6,  7,  8,  8,  8,  8,  8,  9,  10, 11, 11, 12, 13, 14, 15, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
 };
 
 // $insert startcondinfo
@@ -74,8 +75,7 @@ FunctionalLexerBase::Input::Input(std::istream* iStream, size_t lineNr)
   : d_in(iStream)
   , d_lineNr(lineNr) {}
 
-size_t
-FunctionalLexerBase::Input::get() {
+size_t FunctionalLexerBase::Input::get() {
     switch (size_t ch = next()) // get the next input char
     {
         case '\n': ++d_lineNr; [[fallthrough]];
@@ -84,8 +84,7 @@ FunctionalLexerBase::Input::get() {
     }
 }
 
-size_t
-FunctionalLexerBase::Input::next() {
+size_t FunctionalLexerBase::Input::next() {
     size_t ch;
 
     if (d_deque.empty()) // deque empty: next char fm d_in
@@ -101,16 +100,14 @@ FunctionalLexerBase::Input::next() {
     return ch;
 }
 
-void
-FunctionalLexerBase::Input::reRead(size_t ch) {
+void FunctionalLexerBase::Input::reRead(size_t ch) {
     if (ch < 0x100) {
         if (ch == '\n') --d_lineNr;
         d_deque.push_front(ch);
     }
 }
 
-void
-FunctionalLexerBase::Input::reRead(std::string const& str, size_t fm) {
+void FunctionalLexerBase::Input::reRead(std::string const& str, size_t fm) {
     for (size_t idx = str.size(); idx-- > fm;) reRead(str[idx]);
 }
 
@@ -124,13 +121,14 @@ FunctionalLexerBase::FunctionalLexerBase(std::istream& in, std::ostream& out, bo
     p_pushStream(s_istream, new std::istream(in.rdbuf()));
 }
 
-void
-FunctionalLexerBase::switchStream_(std::istream& in, size_t lineNr) {
+void FunctionalLexerBase::switchStream_(std::istream& in, size_t lineNr) {
     d_input->close();
     d_streamStack.back().input = { new std::istream(in.rdbuf()), lineNr };
 }
 
-FunctionalLexerBase::FunctionalLexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd)
+FunctionalLexerBase::FunctionalLexerBase(std::string const& infilename,
+                                         std::string const& outfilename,
+                                         bool keepCwd)
   : d_out(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
           : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
                               : new std::ofstream(outfilename))
@@ -141,14 +139,12 @@ FunctionalLexerBase::FunctionalLexerBase(std::string const& infilename, std::str
     toCwd();
 }
 
-void
-FunctionalLexerBase::switchStreams(std::istream& in, std::ostream& out) {
+void FunctionalLexerBase::switchStreams(std::istream& in, std::ostream& out) {
     switchStream_(in, 1);
     switchOstream(out);
 }
 
-void
-FunctionalLexerBase::switchIstream(std::string const& infilename) {
+void FunctionalLexerBase::switchIstream(std::string const& infilename) {
     d_input->close();
     d_filename = infilename;
 
@@ -157,19 +153,16 @@ FunctionalLexerBase::switchIstream(std::string const& infilename) {
     d_atBOL = true;
 }
 
-void
-FunctionalLexerBase::switchStreams(std::string const& infilename, std::string const& outfilename) {
+void FunctionalLexerBase::switchStreams(std::string const& infilename, std::string const& outfilename) {
     switchOstream(outfilename);
     switchIstream(infilename);
 }
 
-void
-FunctionalLexerBase::pushStream(std::istream& istr) {
+void FunctionalLexerBase::pushStream(std::istream& istr) {
     p_pushStream("(istream)", new std::istream(istr.rdbuf())); // streamPtr);
 }
 
-void
-FunctionalLexerBase::pushStream(std::string const& name) {
+void FunctionalLexerBase::pushStream(std::string const& name) {
     std::istream* streamPtr = new std::ifstream(name);
     if (!*streamPtr) {
         delete streamPtr;
@@ -178,8 +171,7 @@ FunctionalLexerBase::pushStream(std::string const& name) {
     p_pushStream(name, streamPtr);
 }
 
-void
-FunctionalLexerBase::toCwd() const {
+void FunctionalLexerBase::toCwd() const {
     using namespace std;
     using namespace filesystem;
 
@@ -190,8 +182,7 @@ FunctionalLexerBase::toCwd() const {
 };
 
 // static
-std::string
-FunctionalLexerBase::chgWorkingDir(std::string const& name) // any name
+std::string FunctionalLexerBase::chgWorkingDir(std::string const& name) // any name
 {
     using namespace std;
     using namespace filesystem;
@@ -207,8 +198,7 @@ FunctionalLexerBase::chgWorkingDir(std::string const& name) // any name
     return path.string(); // return the pathname
 }
 
-void
-FunctionalLexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
+void FunctionalLexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
     if (d_streamStack.size() == s_maxSizeofStreamStack_) {
         delete streamPtr;
         throw std::length_error("Max stream stack size exceeded");
@@ -222,38 +212,30 @@ FunctionalLexerBase::p_pushStream(std::string const& name, std::istream* streamP
     d_atBOL = true;
 }
 
-void
-FunctionalLexerBase::switchOstream(std::ostream& out) {
+void FunctionalLexerBase::switchOstream(std::ostream& out) {
     *d_out << std::flush;
     d_out.reset(new std::ostream(out.rdbuf()));
 }
 
 // $insert debugFunctions
-void
-FunctionalLexerBase::setDebug(bool onOff) {}
+void FunctionalLexerBase::setDebug(bool onOff) {}
 
-bool
-FunctionalLexerBase::debug() const {
-    return false;
-}
+bool FunctionalLexerBase::debug() const { return false; }
 
-void
-FunctionalLexerBase::redo(size_t nChars) {
+void FunctionalLexerBase::redo(size_t nChars) {
     size_t from = nChars >= length() ? 0 : length() - nChars;
     d_input->reRead(d_matched, from);
     d_matched.resize(from);
 }
 
-void
-FunctionalLexerBase::switchOstream(std::string const& outfilename) {
+void FunctionalLexerBase::switchOstream(std::string const& outfilename) {
     *d_out << std::flush;
     d_out.reset(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
                 : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
                                     : new std::ofstream(outfilename));
 }
 
-bool
-FunctionalLexerBase::popStream() {
+bool FunctionalLexerBase::popStream() {
     using namespace std::filesystem;
 
     d_input->close();
@@ -271,8 +253,7 @@ FunctionalLexerBase::popStream() {
 
 // See the manual's section `Run-time operations' section for an explanation
 // of this member.
-FunctionalLexerBase::ActionType_
-FunctionalLexerBase::actionType_(size_t range) {
+FunctionalLexerBase::ActionType_ FunctionalLexerBase::actionType_(size_t range) {
     d_nextState = d_dfaBase_[d_state][range];
 
     if (d_nextState != -1) // transition is possible
@@ -286,8 +267,7 @@ FunctionalLexerBase::actionType_(size_t range) {
     return range != s_rangeOfEOF_ ? ActionType_::ECHO_CH : ActionType_::RETURN;
 }
 
-void
-FunctionalLexerBase::accept(size_t nChars) // old name: less
+void FunctionalLexerBase::accept(size_t nChars) // old name: less
 {
     if (nChars < d_matched.size()) {
         d_input->reRead(d_matched, nChars);
@@ -295,8 +275,7 @@ FunctionalLexerBase::accept(size_t nChars) // old name: less
     }
 }
 
-void
-FunctionalLexerBase::setMatchedSize(size_t length) {
+void FunctionalLexerBase::setMatchedSize(size_t length) {
     d_input->reRead(d_matched, length); // reread the tail section
     d_matched.resize(length);           // return what's left
 }
@@ -307,8 +286,7 @@ FunctionalLexerBase::setMatchedSize(size_t length) {
 // d_atBOL is updated. Finally the rule's index is returned.
 // The numbers behind the finalPtr assignments are explained in the
 // manual's `Run-time operations' section.
-size_t
-FunctionalLexerBase::matched_(size_t ch) {
+size_t FunctionalLexerBase::matched_(size_t ch) {
     d_input->reRead(ch);
 
     FinalData* finalPtr;
@@ -339,23 +317,20 @@ FunctionalLexerBase::matched_(size_t ch) {
     return finalPtr->rule;
 }
 
-size_t
-FunctionalLexerBase::getRange_(int ch) // using int to prevent casts
+size_t FunctionalLexerBase::getRange_(int ch) // using int to prevent casts
 {
     return ch == AT_EOF ? as<size_t>(s_rangeOfEOF_) : s_ranges_[ch];
 }
 
 // At this point d_nextState contains the next state and continuation is
 // possible. The just read char. is appended to d_match
-void
-FunctionalLexerBase::continue_(int ch) {
+void FunctionalLexerBase::continue_(int ch) {
     d_state = d_nextState;
 
     if (ch != AT_EOF) d_matched += ch;
 }
 
-void
-FunctionalLexerBase::echoCh_(size_t ch) {
+void FunctionalLexerBase::echoCh_(size_t ch) {
     *d_out << as<char>(ch);
     d_atBOL = ch == '\n';
 }
@@ -365,8 +340,7 @@ FunctionalLexerBase::echoCh_(size_t ch) {
 // the buffer. The first char. in the buffer is echoed to stderr.
 // If there isn't any 1st char yet then the current char doesn't fit any
 // rules and that char is then echoed
-void
-FunctionalLexerBase::echoFirst_(size_t ch) {
+void FunctionalLexerBase::echoFirst_(size_t ch) {
     d_input->reRead(ch);
     d_input->reRead(d_matched, 1);
     echoCh_(d_matched[0]);
@@ -376,8 +350,7 @@ FunctionalLexerBase::echoFirst_(size_t ch) {
 // for BOL and std rules.
 // If a rule was set, update the rule index and the current d_matched
 // length.
-void
-FunctionalLexerBase::updateFinals_() {
+void FunctionalLexerBase::updateFinals_() {
     size_t len = d_matched.size();
 
     int const* rf = d_dfaBase_[d_state] + s_finIdx_;
@@ -393,8 +366,7 @@ FunctionalLexerBase::updateFinals_() {
     }
 }
 
-void
-FunctionalLexerBase::reset_() {
+void FunctionalLexerBase::reset_() {
     d_final = Final{ FinalData{ s_unavailable, 0 }, FinalData{ s_unavailable, 0 } };
 
     d_state = 0;
@@ -405,8 +377,7 @@ FunctionalLexerBase::reset_() {
     d_more = false;
 }
 
-int
-FunctionalLexer::executeAction_(size_t ruleIdx) try {
+int FunctionalLexer::executeAction_(size_t ruleIdx) try {
     switch (ruleIdx) {
         // $insert actions
         case 0: {
@@ -471,8 +442,7 @@ catch (Leave_ value) {
     return static_cast<int>(value);
 }
 
-int
-FunctionalLexer::lex_() {
+int FunctionalLexer::lex_() {
     reset_();
     preCode();
 
@@ -517,8 +487,7 @@ FunctionalLexer::lex_() {
     } // while
 }
 
-void
-FunctionalLexerBase::print_() const {}
+void FunctionalLexerBase::print_() const {}
 
 // $insert namespace-close
 } // namespace zpt

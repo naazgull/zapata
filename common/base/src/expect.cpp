@@ -23,8 +23,7 @@
 #include <fstream>
 #include <zapata/base/expect.h>
 
-auto
-non_static_get_tz() -> std::string {
+auto non_static_get_tz() -> std::string {
     std::string _to_return;
     std::ifstream _tzf;
     _tzf.open("/etc/timezone");
@@ -36,14 +35,12 @@ non_static_get_tz() -> std::string {
     return _to_return;
 }
 
-auto
-zpt::get_tz() -> std::string const& {
+auto zpt::get_tz() -> std::string const& {
     static std::string tz = non_static_get_tz();
     return tz;
 }
 
-auto
-zpt::get_time(time_t _t) -> zpt::tm_ptr {
+auto zpt::get_time(time_t _t) -> zpt::tm_ptr {
     std::tm* _tm = new std::tm();
     std::memcpy(_tm, localtime(&_t), sizeof(std::tm));
     return zpt::tm_ptr(_tm);

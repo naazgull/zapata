@@ -26,8 +26,7 @@
 #include <unistd.h>
 #include <zapata/text/manip.h>
 
-auto
-zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) -> void {
+auto zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool tags) -> void {
     for (size_t i = 0; i != s.length(); i++) {
         if (((unsigned char)s[i]) > 127) { out << "&#" << std::dec << ((int)s.at(i)) << ";"; }
         else if (s[i] == '"' && quote) { out << "&quot;"; }
@@ -39,8 +38,7 @@ zpt::html::entities_encode(std::wstring s, std::ostream& out, bool quote, bool t
     out << std::flush;
 }
 
-auto
-zpt::html::entities_encode(std::string& _out, bool quote, bool tags) -> void {
+auto zpt::html::entities_encode(std::string& _out, bool quote, bool tags) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
     std::wstring ws{ wc };
     std::ostringstream out;
@@ -49,8 +47,7 @@ zpt::html::entities_encode(std::string& _out, bool quote, bool tags) -> void {
     _out.assign(out.str());
 }
 
-auto
-zpt::html::entities_decode(std::string& _out) -> void {
+auto zpt::html::entities_decode(std::string& _out) -> void {
     std::wostringstream oss;
     for (size_t i = 0; i != _out.length(); i++) {
         if (_out[i] == '&' && _out[i + 1] == '#') {
@@ -74,8 +71,7 @@ zpt::html::entities_decode(std::string& _out) -> void {
     delete[] c;
 }
 
-auto
-zpt::html::content_boundary(std::string& _in, std::string& _out) -> void {
+auto zpt::html::content_boundary(std::string& _in, std::string& _out) -> void {
     auto _idx = _in.find("boundary=");
     if (_idx != std::string::npos) { _out.assign(_in.substr(_idx + 9)); }
 }

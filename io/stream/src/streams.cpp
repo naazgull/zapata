@@ -28,8 +28,7 @@ namespace {
 constexpr std::uint64_t POLL_WAIT_TIMEOUT{ 100000 };
 }
 
-auto
-zpt::STREAM_POLLING() -> ssize_t& {
+auto zpt::STREAM_POLLING() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -45,32 +44,23 @@ zpt::basic_stream::basic_stream(std::unique_ptr<std::iostream> _underlying)
 
 zpt::basic_stream::~basic_stream() { this->close(); }
 
-auto
-zpt::basic_stream::operator=(int _rhs) -> zpt::basic_stream& {
+auto zpt::basic_stream::operator=(int _rhs) -> zpt::basic_stream& {
     this->__fd = _rhs;
     return (*this);
 }
 
-auto
-zpt::basic_stream::operator<<(ostream_manipulator _in) -> zpt::basic_stream& {
+auto zpt::basic_stream::operator<<(ostream_manipulator _in) -> zpt::basic_stream& {
     (*this->__underlying.get()) << _in;
     return (*this);
 }
 
-auto
-zpt::basic_stream::operator->() -> std::iostream* {
-    return this->__underlying.get();
-}
+auto zpt::basic_stream::operator->() -> std::iostream* { return this->__underlying.get(); }
 
-auto
-zpt::basic_stream::operator*() -> std::iostream& {
-    return *this->__underlying.get();
-}
+auto zpt::basic_stream::operator*() -> std::iostream& { return *this->__underlying.get(); }
 
 zpt::basic_stream::operator int() { return this->__fd; }
 
-auto
-zpt::basic_stream::close() -> zpt::basic_stream& {
+auto zpt::basic_stream::close() -> zpt::basic_stream& {
     zlog("Closing connection to " << this->uri(), zpt::trace);
     this->__underlying.reset(nullptr);
     this->__fd = -1;
@@ -80,46 +70,34 @@ zpt::basic_stream::close() -> zpt::basic_stream& {
     return (*this);
 }
 
-auto
-zpt::basic_stream::transport(const std::string& _rhs) -> zpt::basic_stream& {
+auto zpt::basic_stream::transport(const std::string& _rhs) -> zpt::basic_stream& {
     this->__transport = _rhs;
     return (*this);
 }
 
-auto
-zpt::basic_stream::transport() -> std::string& {
-    return this->__transport;
-}
+auto zpt::basic_stream::transport() -> std::string& { return this->__transport; }
 
-auto
-zpt::basic_stream::uri(const std::string& _rhs) -> zpt::basic_stream& {
+auto zpt::basic_stream::uri(const std::string& _rhs) -> zpt::basic_stream& {
     this->__uri = _rhs;
     return (*this);
 }
 
-auto
-zpt::basic_stream::uri() -> std::string& {
-    return this->__uri;
-}
+auto zpt::basic_stream::uri() -> std::string& { return this->__uri; }
 
-auto
-zpt::basic_stream::state() -> zpt::stream_state& {
-    return this->__state;
-}
+auto zpt::basic_stream::state() -> zpt::stream_state& { return this->__state; }
 
 zpt::polling::polling()
   : __epoll_fd{ epoll_create(1) } {}
 
-zpt::polling::~polling() { ::close(this->__epoll_fd); }
+zpt::polling::~polling() { // ::close(this->__epoll_fd);
+}
 
-auto
-zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling& {
+auto zpt::polling::register_delegate(delegate_fn_type _callback) -> zpt::polling& {
     this->__delegates.push_back(_callback);
     return (*this);
 }
 
-auto
-zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
+auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
         this->unmute(*_stream);
         {
@@ -130,8 +108,7 @@ zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto
-zpt::polling::erase(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::erase(zpt::basic_stream& _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     {
@@ -141,15 +118,13 @@ zpt::polling::erase(zpt::basic_stream& _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto
-zpt::polling::mute(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::mute(zpt::basic_stream& _stream) -> zpt::polling& {
     auto _fd = static_cast<int>(_stream);
     epoll_ctl(this->__epoll_fd, EPOLL_CTL_DEL, _fd, nullptr);
     return (*this);
 }
 
-auto
-zpt::polling::unmute(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::unmute(zpt::basic_stream& _stream) -> zpt::polling& {
     zpt::epoll_event_t _new_event;
     _new_event.events = EPOLLIN | EPOLLPRI | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
     _new_event.data.ptr = static_cast<void*>(&_stream);
@@ -160,8 +135,7 @@ zpt::polling::unmute(zpt::basic_stream& _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto
-zpt::polling::delegate(zpt::basic_stream& _stream) -> zpt::polling& {
+auto zpt::polling::delegate(zpt::basic_stream& _stream) -> zpt::polling& {
     this->mute(_stream);
     for (auto& d : this->__delegates) {
         if (d((*this), _stream)) { return (*this); }
@@ -170,14 +144,15 @@ zpt::polling::delegate(zpt::basic_stream& _stream) -> zpt::polling& {
     return (*this);
 }
 
-auto
-zpt::polling::poll() -> void {
+auto zpt::polling::poll() -> void {
     std::uint64_t _sd_watchdog_usec{ ::POLL_WAIT_TIMEOUT * 1000 };
     auto _sd_watchdog_enabled = sd_watchdog_enabled(0, &_sd_watchdog_usec) != 0;
     zpt::epoll_event_t _epoll_events[MAX_EVENT_PER_POLL];
     do {
-        auto _n_alive = epoll_wait(
-          this->__epoll_fd, _epoll_events, MAX_EVENT_PER_POLL, std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
+        auto _n_alive = epoll_wait(this->__epoll_fd,
+                                   _epoll_events,
+                                   MAX_EVENT_PER_POLL,
+                                   std::min(::POLL_WAIT_TIMEOUT, _sd_watchdog_usec / 1000));
         if (_n_alive < 0) { continue; }
 
         if (_sd_watchdog_enabled) { sd_notify(0, "WATCHDOG=1"); }
@@ -205,7 +180,4 @@ zpt::polling::poll() -> void {
     } while (!this->__shutdown.load());
 }
 
-auto
-zpt::polling::shutdown() -> void {
-    this->__shutdown.store(true);
-}
+auto zpt::polling::shutdown() -> void { this->__shutdown.store(true); }

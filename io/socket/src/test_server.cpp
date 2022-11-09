@@ -1,7 +1,6 @@
 #include <zapata/net/socket.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 2) {
         std::unique_ptr<zpt::serversocketstream> _ssock{ nullptr };
         std::string _type{ argv[1] };

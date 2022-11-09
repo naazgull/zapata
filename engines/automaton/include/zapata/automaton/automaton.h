@@ -27,8 +27,7 @@
 #include <zapata/transport.h>
 
 namespace zpt {
-auto
-AUTOMATON_ENGINE() -> ssize_t&;
+auto AUTOMATON_ENGINE() -> ssize_t&;
 
 namespace automaton {
 class engine : public zpt::fsm::machine<engine, zpt::json, zpt::exchange, zpt::json> {

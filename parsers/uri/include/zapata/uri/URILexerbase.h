@@ -270,118 +270,60 @@ inline URILexerBase::StartCondition_ constexpr URILexerBase::SC(int sc) { return
 
 inline int constexpr URILexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
-inline URILexerBase::StartCondition_
-URILexerBase::startCondition() const {
-    return SC(d_startCondition);
-}
+inline URILexerBase::StartCondition_ URILexerBase::startCondition() const { return SC(d_startCondition); }
 
-inline void
-URILexerBase::begin(StartCondition_ startCondition) {
+inline void URILexerBase::begin(StartCondition_ startCondition) {
     // d_state is reset to 0 by reset_()
     d_dfaBase_ = s_dfaBase_[d_startCondition = SC(startCondition)];
 }
 
-inline bool
-URILexerBase::knownFinalState() {
+inline bool URILexerBase::knownFinalState() {
     return (d_atBOL && available(d_final.bol.rule)) || available(d_final.std.rule);
 }
 
-inline bool constexpr URILexerBase::available(size_t value) { return value != std::numeric_limits<size_t>::max(); }
-
-inline std::ostream&
-URILexerBase::out() {
-    return *d_out;
+inline bool constexpr URILexerBase::available(size_t value) {
+    return value != std::numeric_limits<size_t>::max();
 }
 
-inline void
-URILexerBase::push(size_t ch) {
-    d_input->reRead(ch);
-}
+inline std::ostream& URILexerBase::out() { return *d_out; }
 
-inline void
-URILexerBase::push(std::string const& str) {
-    d_input->reRead(str, 0);
-}
+inline void URILexerBase::push(size_t ch) { d_input->reRead(ch); }
 
-inline std::vector<URILexerBase::StreamStruct> const&
-URILexerBase::streamStack() const {
+inline void URILexerBase::push(std::string const& str) { d_input->reRead(str, 0); }
+
+inline std::vector<URILexerBase::StreamStruct> const& URILexerBase::streamStack() const {
     return d_streamStack;
 }
 
-inline void
-URILexerBase::setFilename(std::string const& name) {
-    d_filename = name;
-}
+inline void URILexerBase::setFilename(std::string const& name) { d_filename = name; }
 
-inline void
-URILexerBase::setMatched(std::string const& text) {
-    d_matched = text;
-}
+inline void URILexerBase::setMatched(std::string const& text) { d_matched = text; }
 
-inline std::string const&
-URILexerBase::matched() const {
-    return d_matched;
-}
+inline std::string const& URILexerBase::matched() const { return d_matched; }
 
-inline std::string const&
-URILexerBase::cwd() const {
-    return d_cwd;
-}
+inline std::string const& URILexerBase::cwd() const { return d_cwd; }
 
-inline std::string const&
-URILexerBase::filename() const {
-    return d_filename;
-}
+inline std::string const& URILexerBase::filename() const { return d_filename; }
 
-inline void
-URILexerBase::echo() const {
-    *d_out << d_matched;
-}
+inline void URILexerBase::echo() const { *d_out << d_matched; }
 
-inline size_t
-URILexerBase::length() const {
-    return d_matched.size();
-}
+inline size_t URILexerBase::length() const { return d_matched.size(); }
 
-inline void
-URILexerBase::leave(int retValue) const {
-    throw as<Leave_>(retValue);
-}
+inline void URILexerBase::leave(int retValue) const { throw as<Leave_>(retValue); }
 
-inline size_t
-URILexerBase::lineNr() const {
-    return d_input->lineNr();
-}
+inline size_t URILexerBase::lineNr() const { return d_input->lineNr(); }
 
-inline void
-URILexerBase::more() {
-    d_more = true;
-}
+inline void URILexerBase::more() { d_more = true; }
 
-inline size_t
-URILexerBase::state_() const {
-    return d_state;
-}
+inline size_t URILexerBase::state_() const { return d_state; }
 
-inline size_t
-URILexerBase::get_() {
-    return (this->*d_get)();
-}
+inline size_t URILexerBase::get_() { return (this->*d_get)(); }
 
-inline size_t
-URILexerBase::getInput() {
-    return d_input->get();
-}
+inline size_t URILexerBase::getInput() { return d_input->get(); }
 
-inline bool
-URILexerBase::return_() {
-    return d_return;
-}
+inline bool URILexerBase::return_() { return d_return; }
 
-inline void
-URILexerBase::noReturn_() {
-    d_return = false;
-}
+inline void URILexerBase::noReturn_() { d_return = false; }
 
 // $insert namespace-close
 } // namespace zpt

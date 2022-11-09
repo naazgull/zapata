@@ -28,8 +28,7 @@
 #define URI_PART_ANY "{:([^/?]+):}"
 
 namespace zpt {
-auto
-REST_ENGINE() -> ssize_t&;
+auto REST_ENGINE() -> ssize_t&;
 namespace rest {
 class engine {
   public:

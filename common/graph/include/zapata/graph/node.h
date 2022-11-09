@@ -82,8 +82,7 @@ zpt::tree::node<T, P, C>::node(zpt::tree::node<T, P, C>&& _rhs)
 }
 
 template<typename T, typename P, typename C>
-auto
-zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs) -> zpt::tree::node<T, P, C>& {
+auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs) -> zpt::tree::node<T, P, C>& {
     this->__children = _rhs.__children;
     this->__value = _rhs.__value;
     this->__path = _rhs.__path;
@@ -92,8 +91,7 @@ zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs) -> zpt
 }
 
 template<typename T, typename P, typename C>
-auto
-zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs) -> zpt::tree::node<T, P, C>& {
+auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs) -> zpt::tree::node<T, P, C>& {
     this->__children = std::move(_rhs.__children);
     this->__value = std::move(_rhs.__value);
     this->__path = std::move(_rhs.__path);
@@ -103,8 +101,7 @@ zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs) -> zpt::tre
 }
 
 template<typename T, typename P, typename C>
-auto
-zpt::tree::node<T, P, C>::clear() -> zpt::tree::node<T, P, C>& {
+auto zpt::tree::node<T, P, C>::clear() -> zpt::tree::node<T, P, C>& {
     this->__children.clear();
     this->__callbacks.clear();
     return (*this);
@@ -112,8 +109,7 @@ zpt::tree::node<T, P, C>::clear() -> zpt::tree::node<T, P, C>& {
 
 template<typename T, typename P, typename C>
 template<typename I, typename M, typename... Types>
-auto
-zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool {
+auto zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool {
     if (_sequence == _end) { return false; }
 
     auto _return{ false };
@@ -134,8 +130,7 @@ zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... 
 
 template<typename T, typename P, typename C>
 template<typename I>
-auto
-zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bool {
+auto zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bool {
     auto _is_null{ this->__value == nullptr };
     if (_is_null) { this->__value = (*_sequence); }
 
@@ -160,8 +155,7 @@ zpt::tree::node<T, P, C>::merge(I _sequence, I _end, P _path, C _callback) -> bo
 }
 
 template<typename T, typename P, typename C>
-auto
-zpt::tree::node<T, P, C>::to_string(uint _n_tabs) const -> std::string {
+auto zpt::tree::node<T, P, C>::to_string(uint _n_tabs) const -> std::string {
     std::ostringstream _oss;
     _oss << std::string(static_cast<size_t>(_n_tabs), '\t');
     if (_n_tabs != 0) { _oss << "|"; }

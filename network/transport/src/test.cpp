@@ -44,8 +44,7 @@ class some_protocol : public zpt::basic_transport {
     }
 };
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 1) {
         std::istringstream _iss;
         _iss.str(std::string{ argv[1] });

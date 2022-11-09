@@ -63,53 +63,45 @@ zpt::ref_ptr<T>::ref_ptr(zpt::ref_ptr<T>&& _rhs)
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator=(zpt::ref_ptr<T> const& _rhs) -> zpt::ref_ptr<T>& {
+auto zpt::ref_ptr<T>::operator=(zpt::ref_ptr<T> const& _rhs) -> zpt::ref_ptr<T>& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator=(zpt::ref_ptr<T>&& _rhs) -> zpt::ref_ptr<T>& {
+auto zpt::ref_ptr<T>::operator=(zpt::ref_ptr<T>&& _rhs) -> zpt::ref_ptr<T>& {
     this->__underlying = _rhs.__underlying;
     _rhs.reset();
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator->() -> T* {
+auto zpt::ref_ptr<T>::operator->() -> T* {
     return this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator->() const -> T const* {
+auto zpt::ref_ptr<T>::operator->() const -> T const* {
     return this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator*() -> T& {
+auto zpt::ref_ptr<T>::operator*() -> T& {
     return *this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::operator*() const -> T const& {
+auto zpt::ref_ptr<T>::operator*() const -> T const& {
     return *this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::get() -> T* {
+auto zpt::ref_ptr<T>::get() -> T* {
     this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::ref_ptr<T>::reset() -> T* {
+auto zpt::ref_ptr<T>::reset() -> T* {
     auto _return = this->__underlying;
     this->__underlying = nullptr;
     return _return;

@@ -27,8 +27,7 @@ zpt::MQTTFactory::MQTTFactory()
 
 zpt::MQTTFactory::~MQTTFactory() {}
 
-auto
-zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
+auto zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) { _return = _found->second; }
@@ -42,14 +41,14 @@ zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
         } while (_attempts < 10);
         if (_mqtt->connected()) {
             zlog(std::string("binding ") + _mqtt->protocol() + std::string(" listener to ") +
-                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") +
-                   std::string(_uri["port"]),
+                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) +
+                   std::string(":") + std::string(_uri["port"]),
                  zpt::info);
         }
         else {
             zlog(std::string("unable to bind ") + _mqtt->protocol() + std::string(" listener to ") +
-                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") +
-                   std::string(_uri["port"]),
+                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) +
+                   std::string(":") + std::string(_uri["port"]),
                  zpt::warning);
         }
         _return = zpt::socket(_mqtt);
@@ -57,23 +56,17 @@ zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     return _return;
 }
 
-auto
-zpt::MQTTFactory::is_reusable(std::string const& _type) -> bool {
-    return true;
+auto zpt::MQTTFactory::is_reusable(std::string const& _type) -> bool { return true; }
+
+auto zpt::MQTTFactory::clean(zpt::socket _socket) -> bool { return false; }
+
+auto zpt::MQTTFactory::on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+    if (_data->__rc == 0) {
+        zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
+    }
 }
 
-auto
-zpt::MQTTFactory::clean(zpt::socket _socket) -> bool {
-    return false;
-}
-
-auto
-zpt::MQTTFactory::on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
-    if (_data->__rc == 0) { zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice); }
-}
-
-auto
-zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
+auto zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
     zpt::poll::instance()->vanished(_mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
         int _attempts = 0;
         do {
@@ -83,22 +76,21 @@ zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) 
         } while (_attempts < 10);
         if (_mqtt->connected()) {
             zlog(std::string("binding ") + _mqtt->protocol() + std::string(" listener to ") +
-                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") +
-                   std::string(_uri["port"]),
+                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) +
+                   std::string(":") + std::string(_uri["port"]),
                  zpt::info);
             zpt::poll::instance()->poll(zpt::poll::instance()->add(_mqtt.get()));
         }
         else {
             zlog(std::string("unable to bind ") + _mqtt->protocol() + std::string(" listener to ") +
-                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) + std::string(":") +
-                   std::string(_uri["port"]),
+                   std::string(_uri["scheme"]) + std::string("://") + std::string(_uri["domain"]) +
+                   std::string(":") + std::string(_uri["port"]),
                  zpt::warning);
         }
     });
 }
 
-auto
-zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
+auto zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
     zpt::json _envelope = zpt::json::object();
 
     _envelope << "performative" << int(zpt::ev::Reply);
@@ -120,8 +112,7 @@ zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mut
     _mqtt->buffer(_envelope);
 }
 
-extern "C" void
-_zpt_plugin_load_() {
+extern "C" void _zpt_plugin_load_() {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::MQTTFactory());
     _emitter->channel({ { "mqtt", _factory }, { "mqtts", _factory } });
@@ -138,12 +129,15 @@ _zpt_plugin_load_() {
             zpt::mqtt::broker _mqtt;
             zpt::json _uri = zpt::uri::parse(std::string(_definition["bind"]));
 
-            if (!_uri["port"]->ok()) { _uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883); }
+            if (!_uri["port"]->ok()) {
+                _uri << "port" << (_uri["scheme"] == zpt::json::string("mqtts") ? 8883 : 1883);
+            }
             if (_uri["user"]->ok() && _uri["password"]->ok()) {
                 _mqtt->credentials(std::string(_uri["user"]), std::string(_uri["password"]));
             }
             else if (_credentials["client_id"]->is_string() && _credentials["access_token"]->is_string()) {
-                _mqtt->credentials(std::string(_credentials["client_id"]), std::string(_credentials["access_token"]));
+                _mqtt->credentials(std::string(_credentials["client_id"]),
+                                   std::string(_credentials["access_token"]));
             }
 
             _mqtt->on("connect", zpt::MQTTFactory::on_connect);
@@ -152,8 +146,9 @@ _zpt_plugin_load_() {
 
             int _attempts = 0;
             do {
-                if (_mqtt->connect(
-                      std::string(_uri["domain"]), _uri["scheme"] == zpt::json::string("mqtts"), int(_uri["port"]))) {
+                if (_mqtt->connect(std::string(_uri["domain"]),
+                                   _uri["scheme"] == zpt::json::string("mqtts"),
+                                   int(_uri["port"]))) {
                     break;
                 }
                 ++_attempts;

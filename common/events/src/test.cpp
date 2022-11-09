@@ -58,8 +58,7 @@ class my_other_operator {
     int __i;
 };
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     zpt::events::dispatcher _dispatcher{ 10 };
 
     _dispatcher //

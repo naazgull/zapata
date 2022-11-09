@@ -1,7 +1,6 @@
 #include <zapata/connector.h>
 
-auto
-main(int _argc, char* _argv[]) -> int {
+auto main(int _argc, char* _argv[]) -> int {
     zpt::json _find = { "a", "{.gt(+(1,2,*(2,4))).}",
                         "b", "{.lt(double(0.034)).}",
                         "c", "{.boolean(true).}",

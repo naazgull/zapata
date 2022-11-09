@@ -28,8 +28,7 @@
 #include <lauxlib.h>
 
 namespace zpt {
-auto
-LUA_BRIDGE() -> ssize_t&;
+auto LUA_BRIDGE() -> ssize_t&;
 
 class lua_object {
   public:

@@ -10,12 +10,12 @@ option(DONT_COMPILE_XDEVAPI
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer")
+set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size")
 set(ZAPATA_LINK_FLAGS "")
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" ZAPATA_BUILD_TYPE)
 if(ZAPATA_BUILD_TYPE STREQUAL debug)
-  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer")
+  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size")
 endif()
 
 message("-- Compiler flags: ${ZAPATA_COMPILE_FLAGS}")
@@ -50,7 +50,7 @@ include_directories(
 # add_subdirectory(bridges/python)
 add_subdirectory(common/allocator)
 add_subdirectory(common/base)
-# add_subdirectory(common/catalogue)
+add_subdirectory(common/catalogue)
 add_subdirectory(common/events)
 add_subdirectory(common/globals)
 add_subdirectory(common/graph)

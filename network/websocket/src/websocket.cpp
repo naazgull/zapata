@@ -25,14 +25,12 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto
-zpt::WEBSOCKET_SERVER_SOCKET() -> ssize_t& {
+auto zpt::WEBSOCKET_SERVER_SOCKET() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-auto
-zpt::net::ws::handshake(zpt::stream& _stream) -> void {
+auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     std::string _key;
     std::string _line;
     do {
@@ -45,12 +43,12 @@ zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     _key.assign(zpt::crypto::sha1(_key));
     zpt::base64::encode(_key);
 
-    _stream << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF << "Connection: Upgrade"
-            << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF << std::flush;
+    _stream << "HTTP/1.1 101 Switching Protocols" << CRLF << "Upgrade: websocket" << CRLF
+            << "Connection: Upgrade" << CRLF << "Sec-WebSocket-Accept: " << _key << CRLF << CRLF
+            << std::flush;
 }
 
-auto
-zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
+auto zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     std::string _out;
     unsigned char _hdr = 0;
     _stream >> std::noskipws >> _hdr;
@@ -99,8 +97,7 @@ zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     return std::make_tuple(_out, _op_code);
 }
 
-auto
-zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
+auto zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
     int _len = _in.length();
 
     _stream << (unsigned char)0x81;
@@ -115,16 +112,14 @@ zpt::net::ws::write(zpt::stream& _stream, std::string const& _in) -> void {
     _stream << _in << std::flush;
 }
 
-auto
-zpt::net::transport::websocket::send(zpt::exchange& _channel) const -> void {
+auto zpt::net::transport::websocket::send(zpt::exchange& _channel) const -> void {
     if (_channel->to_send()->ok()) { zpt::net::ws::write(_channel->stream(), _channel->to_send()); }
 }
 
-auto
-zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
+auto zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
     auto [_body, _] = zpt::net::ws::read(_channel->stream());
     if (_body.length() != 0) {
-        auto& _layer = zpt::globals::get<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+        auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
         std::istringstream _is;
         _is.str(_body);
 
@@ -155,13 +150,12 @@ zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> void {
     _channel->keep_alive() = true;
 }
 
-auto
-zpt::net::transport::websocket::resolve(zpt::json _uri) const -> zpt::exchange {
+auto zpt::net::transport::websocket::resolve(zpt::json _uri) const -> zpt::exchange {
     expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
            "URI parameter must contain 'scheme', 'domain' and 'port'");
     expect(_uri["scheme"] == "ws", "scheme must be 'ws'");
-    auto _stream = zpt::make_stream<zpt::basic_socketstream<char>>(_uri["domain"]->string(),
-                                                                   static_cast<std::uint16_t>(_uri["port"]->integer()));
+    auto _stream = zpt::make_stream<zpt::basic_socketstream<char>>(
+      _uri["domain"]->string(), static_cast<std::uint16_t>(_uri["port"]->integer()));
     _stream->transport("ws");
     zpt::exchange _to_return{ _stream.release() };
     _to_return //

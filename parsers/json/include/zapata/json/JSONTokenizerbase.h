@@ -112,70 +112,43 @@ class JSONTokenizerBase {
 };
 
 // hdr/abort
-inline void
-JSONTokenizerBase::ABORT() const {
-    throw PARSE_ABORT_;
-}
+inline void JSONTokenizerBase::ABORT() const { throw PARSE_ABORT_; }
 
 // hdr/accept
-inline void
-JSONTokenizerBase::ACCEPT() const {
-    throw PARSE_ACCEPT_;
-}
+inline void JSONTokenizerBase::ACCEPT() const { throw PARSE_ACCEPT_; }
 
 // hdr/error
-inline void
-JSONTokenizerBase::ERROR() const {
-    throw UNEXPECTED_TOKEN_;
-}
+inline void JSONTokenizerBase::ERROR() const { throw UNEXPECTED_TOKEN_; }
 
 // hdr/savedtoken
-inline int
-JSONTokenizerBase::savedToken_() const {
-    return d_next.first;
-}
+inline int JSONTokenizerBase::savedToken_() const { return d_next.first; }
 
 // hdr/opbitand
-inline JSONTokenizerBase::DebugMode_
-operator&(JSONTokenizerBase::DebugMode_ lhs, JSONTokenizerBase::DebugMode_ rhs) {
+inline JSONTokenizerBase::DebugMode_ operator&(JSONTokenizerBase::DebugMode_ lhs,
+                                               JSONTokenizerBase::DebugMode_ rhs) {
     return static_cast<JSONTokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 
 // hdr/opbitor
-inline JSONTokenizerBase::DebugMode_
-operator|(JSONTokenizerBase::DebugMode_ lhs, JSONTokenizerBase::DebugMode_ rhs) {
+inline JSONTokenizerBase::DebugMode_ operator|(JSONTokenizerBase::DebugMode_ lhs,
+                                               JSONTokenizerBase::DebugMode_ rhs) {
     return static_cast<JSONTokenizerBase::DebugMode_>(static_cast<int>(lhs) | rhs);
 };
 
 // hdr/recovery
-inline bool
-JSONTokenizerBase::recovery_() const {
-    return d_recovery;
-}
+inline bool JSONTokenizerBase::recovery_() const { return d_recovery; }
 
 // hdr/stacksize
-inline size_t
-JSONTokenizerBase::stackSize_() const {
-    return d_stackIdx + 1;
-}
+inline size_t JSONTokenizerBase::stackSize_() const { return d_stackIdx + 1; }
 
 // hdr/state
-inline size_t
-JSONTokenizerBase::state_() const {
-    return d_state;
-}
+inline size_t JSONTokenizerBase::state_() const { return d_state; }
 
 // hdr/token
-inline int
-JSONTokenizerBase::token_() const {
-    return d_token;
-}
+inline int JSONTokenizerBase::token_() const { return d_token; }
 
 // hdr/vs
-inline JSONTokenizerBase::STYPE_&
-JSONTokenizerBase::vs_(int idx) {
-    return (d_vsp + idx)->second;
-}
+inline JSONTokenizerBase::STYPE_& JSONTokenizerBase::vs_(int idx) { return (d_vsp + idx)->second; }
 
 // hdr/tail
 // For convenience, when including ParserBase.h its symbols are available as

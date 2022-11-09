@@ -27,8 +27,7 @@
 #include <zapata/transport.h>
 
 namespace zpt {
-auto
-TCP_SERVER_SOCKET() -> ssize_t&;
+auto TCP_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
 class tcp : public zpt::basic_transport {

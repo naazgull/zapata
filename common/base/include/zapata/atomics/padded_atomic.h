@@ -81,14 +81,12 @@ template<typename T>
 zpt::padded_atomic<T>::~padded_atomic() {}
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator==(T const& _rhs) -> bool {
+auto zpt::padded_atomic<T>::operator==(T const& _rhs) -> bool {
     return (this->__underlying.load(std::memory_order_relaxed)) == _rhs;
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator!=(T const& _rhs) -> bool {
+auto zpt::padded_atomic<T>::operator!=(T const& _rhs) -> bool {
     return !((*this) == _rhs);
 }
 
@@ -98,32 +96,27 @@ zpt::padded_atomic<T>::operator T() {
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator=(T const& _rhs) -> zpt::padded_atomic<T>& {
+auto zpt::padded_atomic<T>::operator=(T const& _rhs) -> zpt::padded_atomic<T>& {
     this->__underlying.store(_rhs);
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator->() -> std::atomic<T>* {
+auto zpt::padded_atomic<T>::operator->() -> std::atomic<T>* {
     return &this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator->() const -> std::atomic<T> const* {
+auto zpt::padded_atomic<T>::operator->() const -> std::atomic<T> const* {
     return &this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
+auto zpt::padded_atomic<T>::operator*() -> std::atomic<T>& {
     return this->__underlying;
 }
 
 template<typename T>
-auto
-zpt::padded_atomic<T>::operator*() const -> std::atomic<T> const& {
+auto zpt::padded_atomic<T>::operator*() const -> std::atomic<T> const& {
     return this->__underlying;
 }

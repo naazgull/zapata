@@ -69,10 +69,7 @@ enum StateType // modify statetype/data.cc when this enum changes
     REQ_DEF,    // REQ_TOKEN | DEF_RED
     ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
 };
-inline bool
-operator&(StateType lhs, StateType rhs) {
-    return (static_cast<int>(lhs) & rhs) != 0;
-}
+inline bool operator&(StateType lhs, StateType rhs) { return (static_cast<int>(lhs) & rhs) != 0; }
 enum StateTransition {
     ACCEPT_ = 0, // `ACCEPT' TRANSITION
 };
@@ -477,9 +474,10 @@ SR_ const s_51[] = {
 
 // State array:
 SR_ const* s_state[] = {
-    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12, s_13, s_14, s_15, s_16, s_17,
-    s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33, s_34, s_35,
-    s_36, s_37, s_38, s_39, s_40, s_41, s_42, s_43, s_44, s_45, s_46, s_47, s_48, s_49, s_50, s_51,
+    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12,
+    s_13, s_14, s_15, s_16, s_17, s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25,
+    s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33, s_34, s_35, s_36, s_37, s_38,
+    s_39, s_40, s_41, s_42, s_43, s_44, s_45, s_46, s_47, s_48, s_49, s_50, s_51,
 };
 
 } // namespace
@@ -501,8 +499,7 @@ URITokenizerBase::URITokenizerBase()
   d_requiredTokens_(0) {}
 
 // base/clearin
-void
-URITokenizerBase::clearin_() {
+void URITokenizerBase::clearin_() {
     d_nErrors_ = 0;
     d_stackIdx = -1;
     d_stateStack.clear();
@@ -517,21 +514,18 @@ URITokenizerBase::clearin_() {
 
 // base/debugfunctions
 
-void
-URITokenizerBase::setDebug(bool mode) {
+void URITokenizerBase::setDebug(bool mode) {
     d_actionCases_ = false;
     d_debug_ = mode;
 }
 
-void
-URITokenizerBase::setDebug(DebugMode_ mode) {
+void URITokenizerBase::setDebug(DebugMode_ mode) {
     d_actionCases_ = mode & ACTIONCASES;
     d_debug_ = mode & ON;
 }
 
 // base/lex
-void
-URITokenizerBase::lex_(int token) {
+void URITokenizerBase::lex_(int token) {
     d_token = token;
 
     if (d_token <= 0) d_token = Reserved_::EOF_;
@@ -540,8 +534,7 @@ URITokenizerBase::lex_(int token) {
 }
 
 // base/lookup
-int
-URITokenizerBase::lookup_() const {
+int URITokenizerBase::lookup_() const {
     // if the final transition is negative, then we should reduce by the rule
     // given by its positive value.
 
@@ -573,8 +566,7 @@ URITokenizerBase::lookup_() const {
 }
 
 // base/pop
-void
-URITokenizerBase::pop_(size_t count) {
+void URITokenizerBase::pop_(size_t count) {
     if (d_stackIdx < static_cast<int>(count)) { ABORT(); }
 
     d_stackIdx -= count;
@@ -583,8 +575,7 @@ URITokenizerBase::pop_(size_t count) {
 }
 
 // base/poptoken
-void
-URITokenizerBase::popToken_() {
+void URITokenizerBase::popToken_() {
     d_token = d_next.first;
     d_val_ = std::move(d_next.second);
 
@@ -592,8 +583,7 @@ URITokenizerBase::popToken_() {
 }
 
 // base/push
-void
-URITokenizerBase::push_(size_t state) {
+void URITokenizerBase::push_(size_t state) {
     size_t currentSize = d_stateStack.size();
     if (stackSize_() == currentSize) {
         size_t newSize = currentSize + STACK_EXPANSION_;
@@ -610,21 +600,18 @@ URITokenizerBase::push_(size_t state) {
 }
 
 // base/pushtoken
-void
-URITokenizerBase::pushToken_(int token) {
+void URITokenizerBase::pushToken_(int token) {
     d_next = TokenPair{ d_token, std::move(d_val_) };
     d_token = token;
 }
 
 // base/redotoken
-void
-URITokenizerBase::redoToken_() {
+void URITokenizerBase::redoToken_() {
     if (d_token != Reserved_::UNDETERMINED_) pushToken_(d_token);
 }
 
 // base/reduce
-void
-URITokenizerBase::reduce_(int rule) {
+void URITokenizerBase::reduce_(int rule) {
     PI_ const& pi = s_productionInfo[rule];
 
     d_token = pi.d_nonTerm;
@@ -634,8 +621,7 @@ URITokenizerBase::reduce_(int rule) {
 }
 
 // base/shift
-void
-URITokenizerBase::shift_(int action) {
+void URITokenizerBase::shift_(int action) {
     push_(action);
     popToken_(); // token processed
 
@@ -646,8 +632,7 @@ URITokenizerBase::shift_(int action) {
 }
 
 // base/startrecovery
-void
-URITokenizerBase::startRecovery_() {
+void URITokenizerBase::startRecovery_() {
     int lastToken = d_token; // give the unexpected token a
                              // chance to be processed
                              // again.
@@ -663,14 +648,10 @@ URITokenizerBase::startRecovery_() {
 }
 
 // base/top
-inline size_t
-URITokenizerBase::top_() const {
-    return d_stateStack[d_stackIdx].first;
-}
+inline size_t URITokenizerBase::top_() const { return d_stateStack[d_stackIdx].first; }
 
 // derived/errorrecovery
-void
-URITokenizer::errorRecovery_() {
+void URITokenizer::errorRecovery_() {
     // When an error has occurred, pop elements off the stack until the top
     // state has an error-item. If none is found, the default recovery
     // mode (which is to abort) is activated.
@@ -696,8 +677,7 @@ URITokenizer::errorRecovery_() {
 }
 
 // derived/executeaction
-void
-URITokenizer::executeAction_(int production) try {
+void URITokenizer::executeAction_(int production) try {
     if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
@@ -877,8 +857,7 @@ catch (std::exception const& exc) {
 }
 
 // derived/nextcycle
-void
-URITokenizer::nextCycle_() try {
+void URITokenizer::nextCycle_() try {
     if (s_state[state_()]->d_type & REQ_TOKEN) nextToken_(); // obtain next token
 
     int action = lookup_(); // lookup d_token in d_state
@@ -916,8 +895,7 @@ catch (ErrorRecovery_) {
 }
 
 // derived/nexttoken
-void
-URITokenizer::nextToken_() {
+void URITokenizer::nextToken_() {
     // If d_token is Reserved_::UNDETERMINED_ then if savedToken_() is
     // Reserved_::UNDETERMINED_ another token is obtained from lex(). Then
     // savedToken_() is assigned to d_token.
@@ -938,14 +916,12 @@ URITokenizer::nextToken_() {
 }
 
 // derived/print
-void
-URITokenizer::print_() {
+void URITokenizer::print_() {
     // $insert print
 }
 
 // derived/parse
-int
-URITokenizer::parse() try {
+int URITokenizer::parse() try {
     // The parsing algorithm:
     // Initially, state 0 is pushed on the stack, and all relevant variables
     // are initialized by Base::clearin_.

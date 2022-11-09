@@ -61,13 +61,9 @@ zpt::JSONElementT::JSONElementT(zpt::regex _rhs) { (*this) = _rhs; }
 
 zpt::JSONElementT::~JSONElementT() {}
 
-auto
-zpt::JSONElementT::type() const -> zpt::JSONType {
-    return (zpt::JSONType)this->__target.__type;
-}
+auto zpt::JSONElementT::type() const -> zpt::JSONType { return (zpt::JSONType)this->__target.__type; }
 
-auto
-zpt::JSONElementT::demangle() const -> std::string {
+auto zpt::JSONElementT::demangle() const -> std::string {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             return "object";
@@ -103,8 +99,7 @@ zpt::JSONElementT::demangle() const -> std::string {
     return "null";
 }
 
-auto
-zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
+auto zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
     expect(_in >= 0, "the type must be a valid value");
 
     if (_in == this->__target.__type) { return (*this); }
@@ -164,25 +159,22 @@ zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
     return (*this);
 }
 
-auto
-zpt::JSONElementT::value() -> zpt::JSONUnion& {
-    return this->__target;
-}
+auto zpt::JSONElementT::value() -> zpt::JSONUnion& { return this->__target; }
 
-auto
-zpt::JSONElementT::ok() const -> bool {
-    return this->__target.__type != zpt::JSNil;
-}
+auto zpt::JSONElementT::ok() const -> bool { return this->__target.__type != zpt::JSNil; }
 
-auto
-zpt::JSONElementT::empty() const -> bool {
+auto zpt::JSONElementT::empty() const -> bool {
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if (this->__target.__object.operator->() != nullptr) { return (*this->__target.__object)->size() == 0; }
+            if (this->__target.__object.operator->() != nullptr) {
+                return (*this->__target.__object)->size() == 0;
+            }
             return true;
         }
         case zpt::JSArray: {
-            if (this->__target.__array.operator->() != nullptr) { return (**this->__target.__array).size() == 0; }
+            if (this->__target.__array.operator->() != nullptr) {
+                return (**this->__target.__array).size() == 0;
+            }
             return true;
         }
         case zpt::JSString: {
@@ -214,13 +206,9 @@ zpt::JSONElementT::empty() const -> bool {
     return true;
 }
 
-auto
-zpt::JSONElementT::nil() const -> bool {
-    return this->__target.__type == zpt::JSNil;
-}
+auto zpt::JSONElementT::nil() const -> bool { return this->__target.__type == zpt::JSNil; }
 
-auto
-zpt::JSONElementT::clear() -> void {
+auto zpt::JSONElementT::clear() -> void {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             if (this->__target.__object.operator->() != nullptr) { (**this->__target.__object).clear(); }
@@ -243,11 +231,12 @@ zpt::JSONElementT::clear() -> void {
     }
 }
 
-auto
-zpt::JSONElementT::size() const -> size_t {
+auto zpt::JSONElementT::size() const -> size_t {
     switch (this->__target.__type) {
         case zpt::JSObject: {
-            if (this->__target.__object.operator->() != nullptr) { return (**this->__target.__object).size(); }
+            if (this->__target.__object.operator->() != nullptr) {
+                return (**this->__target.__object).size();
+            }
         }
         case zpt::JSArray: {
             if (this->__target.__array.operator->() != nullptr) { return (**this->__target.__array).size(); }
@@ -266,8 +255,7 @@ zpt::JSONElementT::size() const -> size_t {
     return 0;
 }
 
-auto
-zpt::JSONElementT::hash() const -> size_t {
+auto zpt::JSONElementT::hash() const -> size_t {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             if (this->__target.__object.operator->() != nullptr) {
@@ -317,192 +305,134 @@ zpt::JSONElementT::hash() const -> size_t {
     return 0;
 }
 
-auto
-zpt::JSONElementT::parent() -> JSONElementT* {
-    return this->__parent;
-}
+auto zpt::JSONElementT::parent() -> JSONElementT* { return this->__parent; }
 
-auto
-zpt::JSONElementT::parent(JSONElementT* _parent) -> JSONElementT& {
+auto zpt::JSONElementT::parent(JSONElementT* _parent) -> JSONElementT& {
     this->__parent = _parent;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::is_object() -> bool {
-    return this->__target.__type == zpt::JSObject;
-}
+auto zpt::JSONElementT::is_object() -> bool { return this->__target.__type == zpt::JSObject; }
 
-auto
-zpt::JSONElementT::is_array() -> bool {
-    return this->__target.__type == zpt::JSArray;
-}
+auto zpt::JSONElementT::is_array() -> bool { return this->__target.__type == zpt::JSArray; }
 
-auto
-zpt::JSONElementT::is_string() -> bool {
-    return this->__target.__type == zpt::JSString;
-}
+auto zpt::JSONElementT::is_string() -> bool { return this->__target.__type == zpt::JSString; }
 
-auto
-zpt::JSONElementT::is_integer() -> bool {
-    return this->__target.__type == zpt::JSInteger;
-}
+auto zpt::JSONElementT::is_integer() -> bool { return this->__target.__type == zpt::JSInteger; }
 
-auto
-zpt::JSONElementT::is_floating() -> bool {
-    return this->__target.__type == zpt::JSDouble;
-}
+auto zpt::JSONElementT::is_floating() -> bool { return this->__target.__type == zpt::JSDouble; }
 
-auto
-zpt::JSONElementT::is_number() -> bool {
+auto zpt::JSONElementT::is_number() -> bool {
     return this->__target.__type == zpt::JSInteger || this->__target.__type == zpt::JSDouble;
 }
 
-auto
-zpt::JSONElementT::is_bool() -> bool {
-    return this->__target.__type == zpt::JSBoolean;
-}
+auto zpt::JSONElementT::is_bool() -> bool { return this->__target.__type == zpt::JSBoolean; }
 
-auto
-zpt::JSONElementT::is_date() -> bool {
+auto zpt::JSONElementT::is_date() -> bool {
     return this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSString;
 }
 
-auto
-zpt::JSONElementT::is_lambda() -> bool {
-    return this->__target.__type == zpt::JSLambda;
-}
+auto zpt::JSONElementT::is_lambda() -> bool { return this->__target.__type == zpt::JSLambda; }
 
-auto
-zpt::JSONElementT::is_regex() -> bool {
-    return this->__target.__type == zpt::JSRegex;
-}
+auto zpt::JSONElementT::is_regex() -> bool { return this->__target.__type == zpt::JSRegex; }
 
-auto
-zpt::JSONElementT::is_nil() -> bool {
-    return this->__target.__type == zpt::JSNil;
-}
+auto zpt::JSONElementT::is_nil() -> bool { return this->__target.__type == zpt::JSNil; }
 
-auto
-zpt::JSONElementT::is_iterable() -> bool {
-    return this->__target.__type == zpt::JSNil;
-}
+auto zpt::JSONElementT::is_iterable() -> bool { return this->__target.__type == zpt::JSNil; }
 
-auto
-zpt::JSONElementT::object() -> zpt::JSONObj& {
+auto zpt::JSONElementT::object() -> zpt::JSONObj& {
     return const_cast<zpt::JSONObj&>(static_cast<const zpt::JSONElementT&>(*this).object());
 }
 
-auto
-zpt::JSONElementT::array() -> zpt::JSONArr& {
+auto zpt::JSONElementT::array() -> zpt::JSONArr& {
     return const_cast<zpt::JSONArr&>(static_cast<const zpt::JSONElementT&>(*this).array());
 }
 
-auto
-zpt::JSONElementT::string() -> std::string& {
+auto zpt::JSONElementT::string() -> std::string& {
     return const_cast<std::string&>(static_cast<const zpt::JSONElementT&>(*this).string());
 }
 
-auto
-zpt::JSONElementT::integer() -> long long& {
+auto zpt::JSONElementT::integer() -> long long& {
     return const_cast<long long&>(static_cast<const zpt::JSONElementT&>(*this).integer());
 }
 
-auto
-zpt::JSONElementT::floating() -> double& {
+auto zpt::JSONElementT::floating() -> double& {
     return const_cast<double&>(static_cast<const zpt::JSONElementT&>(*this).floating());
 }
 
-auto
-zpt::JSONElementT::boolean() -> bool& {
+auto zpt::JSONElementT::boolean() -> bool& {
     return const_cast<bool&>(static_cast<const zpt::JSONElementT&>(*this).boolean());
 }
 
-auto
-zpt::JSONElementT::date() -> zpt::timestamp_t& {
+auto zpt::JSONElementT::date() -> zpt::timestamp_t& {
     return const_cast<zpt::timestamp_t&>(static_cast<const zpt::JSONElementT&>(*this).date());
 }
 
-auto
-zpt::JSONElementT::lambda() -> zpt::lambda& {
+auto zpt::JSONElementT::lambda() -> zpt::lambda& {
     return const_cast<zpt::lambda&>(static_cast<const zpt::JSONElementT&>(*this).lambda());
 }
 
-auto
-zpt::JSONElementT::regex() -> zpt::regex& {
+auto zpt::JSONElementT::regex() -> zpt::regex& {
     return const_cast<zpt::regex&>(static_cast<const zpt::JSONElementT&>(*this).regex());
 }
 
-auto
-zpt::JSONElementT::number() -> double {
-    return static_cast<const zpt::JSONElementT&>(*this).number();
-}
+auto zpt::JSONElementT::number() -> double { return static_cast<const zpt::JSONElementT&>(*this).number(); }
 
-auto
-zpt::JSONElementT::object() const -> zpt::JSONObj const& {
+auto zpt::JSONElementT::object() const -> zpt::JSONObj const& {
     expect(this->__target.__type == zpt::JSObject,
            std::string("this element is not of type JSObject: ") + this->stringify());
     return this->__target.__object;
 }
 
-auto
-zpt::JSONElementT::array() const -> zpt::JSONArr const& {
+auto zpt::JSONElementT::array() const -> zpt::JSONArr const& {
     expect(this->__target.__type == zpt::JSArray,
            std::string("this element is not of type JSArray: ") + this->stringify());
     return this->__target.__array;
 }
 
-auto
-zpt::JSONElementT::string() const -> std::string const& {
+auto zpt::JSONElementT::string() const -> std::string const& {
     expect(this->__target.__type == zpt::JSString,
            std::string("this element is not of type JSString: ") + this->stringify());
     return *(this->__target.__string.get());
 }
 
-auto
-zpt::JSONElementT::integer() const -> long long const& {
+auto zpt::JSONElementT::integer() const -> long long const& {
     expect(this->__target.__type == zpt::JSInteger,
            std::string("this element is not of type JSInteger: ") + this->stringify());
     return this->__target.__integer;
 }
 
-auto
-zpt::JSONElementT::floating() const -> double const& {
+auto zpt::JSONElementT::floating() const -> double const& {
     expect(this->__target.__type == zpt::JSDouble,
            std::string("this element is not of type JSDouble: ") + this->stringify());
     return this->__target.__double;
 }
 
-auto
-zpt::JSONElementT::boolean() const -> bool const& {
+auto zpt::JSONElementT::boolean() const -> bool const& {
     expect(this->__target.__type == zpt::JSBoolean,
            std::string("this element is not of type JSBoolean: ") + this->stringify());
     return this->__target.__boolean;
 }
 
-auto
-zpt::JSONElementT::date() const -> zpt::timestamp_t const& {
+auto zpt::JSONElementT::date() const -> zpt::timestamp_t const& {
     expect(this->__target.__type == zpt::JSDate,
            std::string("this element is not of type JSDate: ") + this->stringify());
     return this->__target.__date;
 }
 
-auto
-zpt::JSONElementT::lambda() const -> zpt::lambda const& {
+auto zpt::JSONElementT::lambda() const -> zpt::lambda const& {
     expect(this->__target.__type == zpt::JSLambda,
            std::string("this element is not of type JSLambda: ") + this->stringify());
     return this->__target.__lambda;
 }
 
-auto
-zpt::JSONElementT::regex() const -> zpt::regex const& {
+auto zpt::JSONElementT::regex() const -> zpt::regex const& {
     expect(this->__target.__type == zpt::JSRegex,
            std::string("this element is not of type JSRegex: ") + this->stringify());
     return this->__target.__regex;
 }
 
-auto
-zpt::JSONElementT::number() const -> double const {
+auto zpt::JSONElementT::number() const -> double const {
     expect(this->__target.__type == zpt::JSDate || this->__target.__type == zpt::JSInteger ||
              this->__target.__type == zpt::JSDouble || this->__target.__type == zpt::JSBoolean,
            std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify());
@@ -526,8 +456,7 @@ zpt::JSONElementT::number() const -> double const {
     return 0;
 }
 
-auto
-zpt::JSONElementT::clone() const -> zpt::json {
+auto zpt::JSONElementT::clone() const -> zpt::json {
     switch (this->type()) {
         case zpt::JSObject: {
             return this->object()->clone();
@@ -569,8 +498,7 @@ zpt::JSONElementT::clone() const -> zpt::json {
     return zpt::undefined;
 }
 
-auto
-zpt::JSONElementT::operator=(const JSONElementT& _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(const JSONElementT& _rhs) -> JSONElementT& {
     this->type(_rhs.__target.__type);
     this->__parent = _rhs.__parent;
 
@@ -619,8 +547,7 @@ zpt::JSONElementT::operator=(const JSONElementT& _rhs) -> JSONElementT& {
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
     this->type(_rhs.__target.__type);
     this->__parent = _rhs.__parent;
     _rhs.__parent = nullptr;
@@ -670,106 +597,91 @@ zpt::JSONElementT::operator=(JSONElementT&& _rhs) -> JSONElementT& {
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(std::string const& _rhs) -> JSONElementT& {
     this->type(zpt::JSString);
     this->__target.__string = std::make_shared<std::string>(_rhs);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(std::nullptr_t) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(std::nullptr_t) -> JSONElementT& {
     this->type(zpt::JSNil);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(const char* _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(const char* _rhs) -> JSONElementT& {
     this->type(zpt::JSString);
     this->__target.__string = std::make_shared<std::string>(_rhs);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(long long _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(long long _rhs) -> JSONElementT& {
     this->type(zpt::JSInteger);
     this->__target.__integer = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(double _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(double _rhs) -> JSONElementT& {
     this->type(zpt::JSDouble);
     this->__target.__double = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(bool _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(bool _rhs) -> JSONElementT& {
     this->type(zpt::JSBoolean);
     this->__target.__boolean = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(int _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(int _rhs) -> JSONElementT& {
     this->type(zpt::JSInteger);
     this->__target.__integer = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(size_t _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(size_t _rhs) -> JSONElementT& {
     this->type(zpt::JSInteger);
     this->__target.__integer = _rhs;
     return (*this);
 }
 
 #ifdef __LP64__
-auto
-zpt::JSONElementT::operator=(unsigned int _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(unsigned int _rhs) -> JSONElementT& {
     this->type(zpt::JSInteger);
     this->__target.__integer = _rhs;
     return (*this);
 }
 #endif
 
-auto
-zpt::JSONElementT::operator=(zpt::json _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::json _rhs) -> JSONElementT& {
     (*this) = (*_rhs);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(zpt::timestamp_t _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::timestamp_t _rhs) -> JSONElementT& {
     this->type(zpt::JSDate);
     this->__target.__date = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(zpt::JSONObj& _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::JSONObj& _rhs) -> JSONElementT& {
     this->type(zpt::JSObject);
     this->__target.__object = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(zpt::JSONArr& _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::JSONArr& _rhs) -> JSONElementT& {
     this->type(zpt::JSArray);
     this->__target.__array = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(zpt::lambda _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::lambda _rhs) -> JSONElementT& {
     this->type(zpt::JSLambda);
     this->__target.__lambda = _rhs;
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator=(zpt::regex _rhs) -> JSONElementT& {
+auto zpt::JSONElementT::operator=(zpt::regex _rhs) -> JSONElementT& {
     this->type(zpt::JSRegex);
     this->__target.__regex = _rhs;
     return (*this);
@@ -1176,14 +1088,12 @@ zpt::JSONElementT::operator zpt::regex&() {
     return this->regex();
 }
 
-auto
-zpt::JSONElementT::operator<<(const char* _in) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::operator<<(const char* _in) -> zpt::JSONElementT& {
     (*this) << std::string(_in);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->push(_in);
@@ -1233,8 +1143,7 @@ zpt::JSONElementT::operator<<(std::string const& _in) -> zpt::JSONElementT& {
     return (*this);
 }
 
-auto
-zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->push(_in);
@@ -1278,8 +1187,7 @@ zpt::JSONElementT::operator<<(zpt::json _in) -> zpt::JSONElementT& {
     return *this;
 }
 
-auto
-zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1339,24 +1247,16 @@ zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
     return false;
 }
 
-auto
-zpt::JSONElementT::operator==(zpt::json _rhs) const -> bool {
-    return *this == *_rhs;
-}
+auto zpt::JSONElementT::operator==(zpt::json _rhs) const -> bool { return *this == *_rhs; }
 
-auto
-zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     return !(*this == _in);
 }
 
-auto
-zpt::JSONElementT::operator!=(zpt::json _rhs) const -> bool {
-    return *this != (*_rhs);
-}
+auto zpt::JSONElementT::operator!=(zpt::json _rhs) const -> bool { return *this != (*_rhs); }
 
-auto
-zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1413,13 +1313,9 @@ zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
     return false;
 }
 
-auto
-zpt::JSONElementT::operator<(zpt::json _rhs) const -> bool {
-    return *this < *_rhs;
-}
+auto zpt::JSONElementT::operator<(zpt::json _rhs) const -> bool { return *this < *_rhs; }
 
-auto
-zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1476,33 +1372,21 @@ zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
     return false;
 }
 
-auto
-zpt::JSONElementT::operator>(zpt::json _rhs) const -> bool {
-    return (*this) > _rhs;
-}
+auto zpt::JSONElementT::operator>(zpt::json _rhs) const -> bool { return (*this) > _rhs; }
 
-auto
-zpt::JSONElementT::operator<=(zpt::JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator<=(zpt::JSONElementT const& _in) const -> bool {
     return (*this) == _in || (*this) < _in;
 }
 
-auto
-zpt::JSONElementT::operator<=(zpt::json _rhs) const -> bool {
-    return (*this) <= _rhs;
-}
+auto zpt::JSONElementT::operator<=(zpt::json _rhs) const -> bool { return (*this) <= _rhs; }
 
-auto
-zpt::JSONElementT::operator>=(zpt::JSONElementT const& _in) const -> bool {
+auto zpt::JSONElementT::operator>=(zpt::JSONElementT const& _in) const -> bool {
     return (*this) == _in || (*this) > _in;
 }
 
-auto
-zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool {
-    return (*this) >= _rhs;
-}
+auto zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool { return (*this) >= _rhs; }
 
-auto
-zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
+auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1525,8 +1409,7 @@ zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separa
     return zpt::undefined;
 }
 
-auto
-zpt::JSONElementT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
+auto zpt::JSONElementT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
   -> JSONElementT& {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
@@ -1552,8 +1435,7 @@ zpt::JSONElementT::set_path(std::string const& _path, zpt::json _value, std::str
     return (*this);
 }
 
-auto
-zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator) -> JSONElementT& {
+auto zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator) -> JSONElementT& {
     expect(this->__target.__type >= 0, "the type must be a valid value");
     switch (this->__target.__type) {
         case zpt::JSObject: {
@@ -1578,20 +1460,17 @@ zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separa
     return (*this);
 }
 
-auto
-zpt::JSONElementT::stringify(std::string& _out) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::stringify(std::string& _out) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).stringify(_out);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::stringify(std::ostream& _out) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::stringify(std::ostream& _out) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).stringify(_out);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT const& {
+auto zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT const& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->stringify(_out);
@@ -1639,8 +1518,7 @@ zpt::JSONElementT::stringify(std::ostream& _out) const -> zpt::JSONElementT cons
     return (*this);
 }
 
-auto
-zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const& {
+auto zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->stringify(_out);
@@ -1694,27 +1572,23 @@ zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const& {
     return (*this);
 }
 
-auto
-zpt::JSONElementT::stringify() const -> std::string {
+auto zpt::JSONElementT::stringify() const -> std::string {
     std::string _out;
     this->stringify(_out);
     return _out;
 }
 
-auto
-zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) -> zpt::JSONElementT& {
+auto zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) -> zpt::JSONElementT& {
     static_cast<zpt::JSONElementT const&>(*this).prettify(_out, _n_tabs);
     return (*this);
 }
 
-auto
-zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONElementT const& {
+auto zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONElementT const& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->prettify(_out, _n_tabs);
@@ -1763,8 +1637,7 @@ zpt::JSONElementT::prettify(std::ostream& _out, uint _n_tabs) const -> JSONEleme
     return (*this);
 }
 
-auto
-zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONElementT const& {
+auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONElementT const& {
     switch (this->__target.__type) {
         case zpt::JSObject: {
             this->__target.__object->prettify(_out, _n_tabs);
@@ -1819,18 +1692,17 @@ zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONElemen
     return (*this);
 }
 
-auto
-zpt::JSONElementT::prettify() const -> std::string {
+auto zpt::JSONElementT::prettify() const -> std::string {
     std::string _out{ "" };
     this->prettify(_out);
     return _out;
 }
 
-auto
-zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json> {
+auto zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json> {
     switch (this->__target.__type) {
         case zpt::JSObject:
-            return std::make_tuple(_pos, this->__target.__object->key_for(_pos), this->__target.__object[_pos]);
+            return std::make_tuple(
+              _pos, this->__target.__object->key_for(_pos), this->__target.__object[_pos]);
         case zpt::JSArray: return std::make_tuple(_pos, std::to_string(_pos), this->__target.__array[_pos]);
         case zpt::JSString:
         case zpt::JSInteger:

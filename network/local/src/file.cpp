@@ -25,34 +25,29 @@
 #include <zapata/uri.h>
 #include <zapata/globals/globals.h>
 
-auto
-zpt::net::transport::file::make_request() const -> zpt::message {
+auto zpt::net::transport::file::make_request() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
-auto
-zpt::net::transport::file::make_reply() const -> zpt::message {
+auto zpt::net::transport::file::make_reply() const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
 }
 
-auto
-zpt::net::transport::file::make_reply(zpt::message _request) const -> zpt::message {
+auto zpt::net::transport::file::make_reply(zpt::message _request) const -> zpt::message {
     auto _to_return = zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
     return _to_return;
 }
 
-auto
-zpt::net::transport::file::process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message {
+auto zpt::net::transport::file::process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message {
     expect(_stream.transport() == "file", "Stream underlying transport isn't 'file'");
     auto _message = zpt::make_message<zpt::json_message>();
     _stream >> std::noskipws >> _message;
     return _message;
 }
 
-auto
-zpt::net::transport::file::process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message {
+auto zpt::net::transport::file::process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message {
     expect(_stream.transport() == "file", "Stream underlying transport isn't 'file'");
     auto _message = zpt::make_message<zpt::json_message>();
     _stream >> std::noskipws >> _message;

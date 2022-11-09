@@ -1,7 +1,6 @@
 #include <zapata/net/socket.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 3) {
         std::string _type{ argv[1] };
         if (_type == "-t") {

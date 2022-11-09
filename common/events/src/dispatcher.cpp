@@ -22,8 +22,7 @@
 
 #include <zapata/events/dispatcher.h>
 
-auto
-zpt::DISPATCHER() -> ssize_t& {
+auto zpt::DISPATCHER() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -34,22 +33,21 @@ zpt::events::dispatcher::dispatcher(long _max_consumers)
 
 zpt::events::dispatcher::~dispatcher() { this->stop_consumers(); }
 
-auto
-zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
+auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
     if (_n_consumers == 0 || _n_consumers + this->__consumers.size() >= this->__max_consumers) {
         _n_consumers = this->__max_consumers - this->__consumers.size();
     }
-    for (long _consumer_nr = this->__consumers.size(), _idx = 0; _idx != _n_consumers; ++_idx, ++_consumer_nr) {
-        auto& _consumer =
-          this->__consumers.emplace_back([this, _consumer_nr]() mutable -> void { this->loop(_consumer_nr); });
+    for (long _consumer_nr = this->__consumers.size(), _idx = 0; _idx != _n_consumers;
+         ++_idx, ++_consumer_nr) {
+        auto& _consumer = this->__consumers.emplace_back(
+          [this, _consumer_nr]() mutable -> void { this->loop(_consumer_nr); });
         _consumer.detach();
         ++(*this->__running_consumers);
     }
     return (*this);
 }
 
-auto
-zpt::events::dispatcher::stop_consumers() -> dispatcher& {
+auto zpt::events::dispatcher::stop_consumers() -> dispatcher& {
     expect(!this->__shutdown->load(), "`stop_consunmers()` already been called from another execution path");
     this->__shutdown->store(true);
     while (this->__running_consumers->load(std::memory_order_relaxed) != 0) {
@@ -60,14 +58,12 @@ zpt::events::dispatcher::stop_consumers() -> dispatcher& {
     return (*this);
 }
 
-auto
-zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
+auto zpt::events::dispatcher::trigger(zpt::event _event) -> dispatcher& {
     this->__queue.push(_event);
     return (*this);
 }
 
-auto
-zpt::events::dispatcher::trap() -> dispatcher& {
+auto zpt::events::dispatcher::trap() -> dispatcher& {
     auto _event = this->__queue.pop();
     if (_event->blocked()) {
         this->trigger(_event);
@@ -87,13 +83,9 @@ zpt::events::dispatcher::trap() -> dispatcher& {
     return (*this);
 }
 
-auto
-zpt::events::dispatcher::is_stopping_ongoing() -> bool {
-    return this->__shutdown->load();
-}
+auto zpt::events::dispatcher::is_stopping_ongoing() -> bool { return this->__shutdown->load(); }
 
-auto
-zpt::events::dispatcher::loop(long _consumer_nr) -> void {
+auto zpt::events::dispatcher::loop(long _consumer_nr) -> void {
     zpt::this_thread::timer<float> _timer{ 0.005f };
     zlog("Thread@" << _consumer_nr << " starting", zpt::trace);
     do {
@@ -102,7 +94,7 @@ zpt::events::dispatcher::loop(long _consumer_nr) -> void {
             _timer.reset();
         }
         catch (zpt::NoMoreElementsException const& e) {
-            _timer.sleep_for(0.01f);
+            _timer.sleep_for(0.1f);
         }
     } while (!this->__shutdown->load(std::memory_order_relaxed));
     this->__queue.clear_thread_context();

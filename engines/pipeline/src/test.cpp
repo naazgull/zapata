@@ -22,12 +22,16 @@
 
 #include <zapata/pipeline.h>
 
-auto
-main(int argc, char* argv[]) -> int {
-    zpt::pipeline::engine<zpt::json> _engine{
-        3,
-        { "max_queue_threads", 3, "max_producer_threads", 1, "max_consumer_threads", 1, "max_queue_spin_sleep", 5000 }
-    };
+auto main(int argc, char* argv[]) -> int {
+    zpt::pipeline::engine<zpt::json> _engine{ 3,
+                                              { "max_queue_threads",
+                                                3,
+                                                "max_producer_threads",
+                                                1,
+                                                "max_consumer_threads",
+                                                1,
+                                                "max_queue_spin_sleep",
+                                                5000 } };
 
     _engine.add_listener(0, "http:/{:(.*):}", [](zpt::pipeline::event<zpt::json> _in) -> void {
         _in->set_path(zpt::r_replace(static_cast<std::string>(_in->path()["raw"]), "http:", ""));

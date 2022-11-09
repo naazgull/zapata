@@ -108,70 +108,43 @@ class HTTPTokenizerBase {
 };
 
 // hdr/abort
-inline void
-HTTPTokenizerBase::ABORT() const {
-    throw PARSE_ABORT_;
-}
+inline void HTTPTokenizerBase::ABORT() const { throw PARSE_ABORT_; }
 
 // hdr/accept
-inline void
-HTTPTokenizerBase::ACCEPT() const {
-    throw PARSE_ACCEPT_;
-}
+inline void HTTPTokenizerBase::ACCEPT() const { throw PARSE_ACCEPT_; }
 
 // hdr/error
-inline void
-HTTPTokenizerBase::ERROR() const {
-    throw UNEXPECTED_TOKEN_;
-}
+inline void HTTPTokenizerBase::ERROR() const { throw UNEXPECTED_TOKEN_; }
 
 // hdr/savedtoken
-inline int
-HTTPTokenizerBase::savedToken_() const {
-    return d_next.first;
-}
+inline int HTTPTokenizerBase::savedToken_() const { return d_next.first; }
 
 // hdr/opbitand
-inline HTTPTokenizerBase::DebugMode_
-operator&(HTTPTokenizerBase::DebugMode_ lhs, HTTPTokenizerBase::DebugMode_ rhs) {
+inline HTTPTokenizerBase::DebugMode_ operator&(HTTPTokenizerBase::DebugMode_ lhs,
+                                               HTTPTokenizerBase::DebugMode_ rhs) {
     return static_cast<HTTPTokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 
 // hdr/opbitor
-inline HTTPTokenizerBase::DebugMode_
-operator|(HTTPTokenizerBase::DebugMode_ lhs, HTTPTokenizerBase::DebugMode_ rhs) {
+inline HTTPTokenizerBase::DebugMode_ operator|(HTTPTokenizerBase::DebugMode_ lhs,
+                                               HTTPTokenizerBase::DebugMode_ rhs) {
     return static_cast<HTTPTokenizerBase::DebugMode_>(static_cast<int>(lhs) | rhs);
 };
 
 // hdr/recovery
-inline bool
-HTTPTokenizerBase::recovery_() const {
-    return d_recovery;
-}
+inline bool HTTPTokenizerBase::recovery_() const { return d_recovery; }
 
 // hdr/stacksize
-inline size_t
-HTTPTokenizerBase::stackSize_() const {
-    return d_stackIdx + 1;
-}
+inline size_t HTTPTokenizerBase::stackSize_() const { return d_stackIdx + 1; }
 
 // hdr/state
-inline size_t
-HTTPTokenizerBase::state_() const {
-    return d_state;
-}
+inline size_t HTTPTokenizerBase::state_() const { return d_state; }
 
 // hdr/token
-inline int
-HTTPTokenizerBase::token_() const {
-    return d_token;
-}
+inline int HTTPTokenizerBase::token_() const { return d_token; }
 
 // hdr/vs
-inline HTTPTokenizerBase::STYPE_&
-HTTPTokenizerBase::vs_(int idx) {
-    return (d_vsp + idx)->second;
-}
+inline HTTPTokenizerBase::STYPE_& HTTPTokenizerBase::vs_(int idx) { return (d_vsp + idx)->second; }
 
 // hdr/tail
 // For convenience, when including ParserBase.h its symbols are available as

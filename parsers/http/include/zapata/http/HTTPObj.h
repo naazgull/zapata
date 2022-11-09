@@ -107,10 +107,10 @@ enum status {
     HTTP511 = 511
 };
 
-static inline const char* method_names[] = { "GET",   "PUT",   "POST",     "DELETE", "HEAD",  "OPTIONS",
-                                             "PATCH", "REPLY", "M-SEARCH", "NOTIFY", "TRACE", "CONNECT" };
+inline const char* method_names[] = { "GET",   "PUT",   "POST",     "DELETE", "HEAD",  "OPTIONS",
+                                      "PATCH", "REPLY", "M-SEARCH", "NOTIFY", "TRACE", "CONNECT" };
 
-static inline const char* status_names[] = {
+inline const char* status_names[] = {
     nullptr,
     nullptr,
     nullptr,
@@ -665,7 +665,6 @@ class basic_request : public zpt::http::basic_message {
 
     auto to_stream(std::ostream& _out) const -> void override;
     auto from_stream(std::istream& _in) -> void override;
-    auto make_reply() -> zpt::message override;
 };
 using request = std::shared_ptr<basic_request>;
 
@@ -677,15 +676,12 @@ class basic_reply : public zpt::http::basic_message {
 
     auto to_stream(std::ostream& _out) const -> void override;
     auto from_stream(std::istream& _in) -> void override;
-    auto make_reply() -> zpt::message override;
 };
 using reply = std::shared_ptr<basic_reply>;
 } // namespace http
 
-void
-init(zpt::http::basic_request& _out);
-void
-init(zpt::http::basic_reply& _out);
+void init(zpt::http::basic_request& _out);
+void init(zpt::http::basic_reply& _out);
 } // namespace zpt
 
 auto operator"" _HTTP_REQUEST(const char* _string, size_t _length) -> zpt::message;

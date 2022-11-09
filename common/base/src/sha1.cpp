@@ -28,36 +28,35 @@
 
 /* Help macros */
 #define SHA1_ROL(value, bits) (((value) << (bits)) | (((value)&0xffffffff) >> (32 - (bits))))
-#define SHA1_BLK(i)                                                                                                    \
-    (block[i & 15] = SHA1_ROL(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
+#define SHA1_BLK(i)                                                                                          \
+    (block[i & 15] =                                                                                         \
+       SHA1_ROL(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-#define SHA1_R0(v, w, x, y, z, i)                                                                                      \
-    z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + SHA1_ROL(v, 5);                                                 \
+#define SHA1_R0(v, w, x, y, z, i)                                                                            \
+    z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + SHA1_ROL(v, 5);                                       \
     w = SHA1_ROL(w, 30);
-#define SHA1_R1(v, w, x, y, z, i)                                                                                      \
-    z += ((w & (x ^ y)) ^ y) + SHA1_BLK(i) + 0x5a827999 + SHA1_ROL(v, 5);                                              \
+#define SHA1_R1(v, w, x, y, z, i)                                                                            \
+    z += ((w & (x ^ y)) ^ y) + SHA1_BLK(i) + 0x5a827999 + SHA1_ROL(v, 5);                                    \
     w = SHA1_ROL(w, 30);
-#define SHA1_R2(v, w, x, y, z, i)                                                                                      \
-    z += (w ^ x ^ y) + SHA1_BLK(i) + 0x6ed9eba1 + SHA1_ROL(v, 5);                                                      \
+#define SHA1_R2(v, w, x, y, z, i)                                                                            \
+    z += (w ^ x ^ y) + SHA1_BLK(i) + 0x6ed9eba1 + SHA1_ROL(v, 5);                                            \
     w = SHA1_ROL(w, 30);
-#define SHA1_R3(v, w, x, y, z, i)                                                                                      \
-    z += (((w | x) & y) | (w & x)) + SHA1_BLK(i) + 0x8f1bbcdc + SHA1_ROL(v, 5);                                        \
+#define SHA1_R3(v, w, x, y, z, i)                                                                            \
+    z += (((w | x) & y) | (w & x)) + SHA1_BLK(i) + 0x8f1bbcdc + SHA1_ROL(v, 5);                              \
     w = SHA1_ROL(w, 30);
-#define SHA1_R4(v, w, x, y, z, i)                                                                                      \
-    z += (w ^ x ^ y) + SHA1_BLK(i) + 0xca62c1d6 + SHA1_ROL(v, 5);                                                      \
+#define SHA1_R4(v, w, x, y, z, i)                                                                            \
+    z += (w ^ x ^ y) + SHA1_BLK(i) + 0xca62c1d6 + SHA1_ROL(v, 5);                                            \
     w = SHA1_ROL(w, 30);
 
 zpt::crypto::SHA1::SHA1() { reset(); }
 
-void
-zpt::crypto::SHA1::update(const std::string& s) {
+void zpt::crypto::SHA1::update(const std::string& s) {
     std::istringstream is(s);
     update(is);
 }
 
-void
-zpt::crypto::SHA1::update(std::istream& is) {
+void zpt::crypto::SHA1::update(std::istream& is) {
     std::string rest_of_buffer;
     read(is, rest_of_buffer, BLOCK_BYTES - buffer.size());
     buffer += rest_of_buffer;
@@ -73,8 +72,7 @@ zpt::crypto::SHA1::update(std::istream& is) {
  * Add padding and return the message digest.
  */
 
-std::string
-zpt::crypto::SHA1::finalize() {
+std::string zpt::crypto::SHA1::finalize() {
     /* Total number of hashed bits */
     std::uint64_t total_bits = (transforms * BLOCK_BYTES + buffer.size()) * 8;
 
@@ -109,16 +107,14 @@ zpt::crypto::SHA1::finalize() {
     return result.str();
 }
 
-std::string
-zpt::crypto::SHA1::from_file(const std::string& filename) {
+std::string zpt::crypto::SHA1::from_file(const std::string& filename) {
     std::ifstream stream(filename.c_str(), std::ios::binary);
     SHA1 checksum;
     checksum.update(stream);
     return checksum.finalize();
 }
 
-void
-zpt::crypto::SHA1::reset() {
+void zpt::crypto::SHA1::reset() {
     /* SHA1 initialization constants */
     digest[0] = 0x67452301;
     digest[1] = 0xefcdab89;
@@ -135,8 +131,7 @@ zpt::crypto::SHA1::reset() {
  * Hash a single 512-bit block. This is the core of the algorithm.
  */
 
-void
-zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
+void zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
     /* Copy digest[] to working vars */
     std::uint32_t a = digest[0];
     std::uint32_t b = digest[1];
@@ -237,24 +232,21 @@ zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
     transforms++;
 }
 
-void
-zpt::crypto::SHA1::buffer_to_block(const std::string& buffer, std::uint32_t block[BLOCK_BYTES]) {
+void zpt::crypto::SHA1::buffer_to_block(const std::string& buffer, std::uint32_t block[BLOCK_BYTES]) {
     /* Convert the std::string (byte buffer) to a std::uint32_t array (MSB) */
     for (unsigned int i = 0; i < BLOCK_INTS; i++) {
-        block[i] = (buffer[4 * i + 3] & 0xff) | (buffer[4 * i + 2] & 0xff) << 8 | (buffer[4 * i + 1] & 0xff) << 16 |
-                   (buffer[4 * i + 0] & 0xff) << 24;
+        block[i] = (buffer[4 * i + 3] & 0xff) | (buffer[4 * i + 2] & 0xff) << 8 |
+                   (buffer[4 * i + 1] & 0xff) << 16 | (buffer[4 * i + 0] & 0xff) << 24;
     }
 }
 
-void
-zpt::crypto::SHA1::read(std::istream& is, std::string& s, int max) {
+void zpt::crypto::SHA1::read(std::istream& is, std::string& s, int max) {
     char sbuf[max];
     is.read(sbuf, max);
     s.assign(sbuf, is.gcount());
 }
 
-std::string
-zpt::crypto::sha1(const std::string& string) {
+std::string zpt::crypto::sha1(const std::string& string) {
     SHA1 checksum;
     checksum.update(string);
     return checksum.finalize();

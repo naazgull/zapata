@@ -32,8 +32,7 @@
 #endif
 
 namespace zpt {
-auto
-HTTP_SERVER_SOCKET() -> ssize_t&;
+auto HTTP_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
 class http : public zpt::basic_transport {

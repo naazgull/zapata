@@ -30,8 +30,7 @@
 #include <semaphore.h>
 #include <zapata/json.h>
 
-auto
-test_json_map() -> int {
+auto test_json_map() -> int {
     std::map<zpt::json, int> _map;
 
     _map[zpt::json{ "a" }] = 1;
@@ -41,13 +40,14 @@ test_json_map() -> int {
     _map[zpt::json{ 2 }] = 5;
     _map[zpt::json{ zpt::array, 1, 2, 3 }] = 6;
 
-    for (auto& [_key, _value] : _map) { std::cout << "map[" << _key << "] = " << _value << std::endl << std::flush; }
+    for (auto& [_key, _value] : _map) {
+        std::cout << "map[" << _key << "] = " << _value << std::endl << std::flush;
+    }
 
     return 0;
 }
 
-auto
-test_json_init() -> int {
+auto test_json_init() -> int {
     zpt::json _obj1 = zpt::json::object();
     _obj1["a"]["c"] = 1;
     _obj1["a"]["b"][0] = "hello";
@@ -58,11 +58,10 @@ test_json_init() -> int {
     return 0;
 }
 
-int
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     if (argc > 1) {
-        auto _parameters =
-          zpt::parameters::parse(argc, argv, { "--print", { "options", { zpt::array, "optional", "single" } } });
+        auto _parameters = zpt::parameters::parse(
+          argc, argv, { "--print", { "options", { zpt::array, "optional", "single" } } });
 
         auto _init = "null"_JSON;
 
@@ -74,7 +73,8 @@ main(int argc, char* argv[]) {
             zpt::json _ptr;
             std::ifstream _in;
             _in.open(static_cast<std::string>(_file));
-            expect(_in.is_open(), std::string{ "unable to open provided file: " } + static_cast<std::string>(_file));
+            expect(_in.is_open(),
+                   std::string{ "unable to open provided file: " } + static_cast<std::string>(_file));
             try {
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 _in >> _ptr;
@@ -92,11 +92,13 @@ main(int argc, char* argv[]) {
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 _oss << _ptr << std::flush;
                 auto _t2 = std::chrono::high_resolution_clock::now();
-                _stringify_duration += std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
+                _stringify_duration +=
+                  std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
             }
             if (_parameters["--print"] != zpt::undefined) {
-                std::cout << (_parameters["--print"] == "pretty" ? static_cast<std::string>(zpt::pretty{ _ptr })
-                                                                 : static_cast<std::string>(_ptr))
+                std::cout << (_parameters["--print"] == "pretty"
+                                ? static_cast<std::string>(zpt::pretty{ _ptr })
+                                : static_cast<std::string>(_ptr))
                           << std::flush;
             }
         }

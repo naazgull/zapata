@@ -24,9 +24,8 @@
 #include <zapata/startup.h>
 #include <zapata/lua.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _bridge = zpt::globals::alloc<zpt::lua::bridge>(zpt::LUA_BRIDGE());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _bridge = zpt::make_global<zpt::lua::bridge>(zpt::LUA_BRIDGE());
 
     _bridge.set_options(_plugin->config());
     if (_bridge.options()["modules"]->is_array()) {
@@ -38,8 +37,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Starting LUA bridge", zpt::info);
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Stopping LUA bridge", zpt::info);
-    zpt::globals::dealloc<zpt::lua::bridge>(zpt::LUA_BRIDGE());
+    zpt::release_global<zpt::lua::bridge>(zpt::LUA_BRIDGE());
 }

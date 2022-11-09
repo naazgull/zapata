@@ -24,8 +24,7 @@
 #include <zapata/json/JSONClass.h>
 #include <zapata/http.h>
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     if (argc > 1) {
         std::istringstream _iss;
         _iss.str(std::string{ argv[1] });
@@ -39,8 +38,8 @@ main(int argc, char* argv[]) -> int {
             auto _request = zpt::make_message<zpt::http::basic_request>();
             (*_csock) >> std::noskipws >> _request;
 
-            auto _reply =
-              zpt::make_message<zpt::http::basic_reply>(message_cast<zpt::http::basic_request>(_request), true);
+            auto _reply = zpt::make_message<zpt::http::basic_reply>(
+              message_cast<zpt::http::basic_request>(_request), true);
             _reply->status(zpt::http::status::HTTP200);
             if (argc > 2) {
                 std::ifstream _ifs;

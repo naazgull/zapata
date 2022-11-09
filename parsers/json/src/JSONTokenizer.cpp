@@ -68,10 +68,7 @@ enum StateType // modify statetype/data.cc when this enum changes
     REQ_DEF,    // REQ_TOKEN | DEF_RED
     ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
 };
-inline bool
-operator&(StateType lhs, StateType rhs) {
-    return (static_cast<int>(lhs) & rhs) != 0;
-}
+inline bool operator&(StateType lhs, StateType rhs) { return (static_cast<int>(lhs) & rhs) != 0; }
 enum StateTransition {
     ACCEPT_ = 0, // `ACCEPT' TRANSITION
 };
@@ -454,8 +451,7 @@ JSONTokenizerBase::JSONTokenizerBase()
   d_requiredTokens_(0) {}
 
 // base/clearin
-void
-JSONTokenizerBase::clearin_() {
+void JSONTokenizerBase::clearin_() {
     d_nErrors_ = 0;
     d_stackIdx = -1;
     d_stateStack.clear();
@@ -470,21 +466,18 @@ JSONTokenizerBase::clearin_() {
 
 // base/debugfunctions
 
-void
-JSONTokenizerBase::setDebug(bool mode) {
+void JSONTokenizerBase::setDebug(bool mode) {
     d_actionCases_ = false;
     d_debug_ = mode;
 }
 
-void
-JSONTokenizerBase::setDebug(DebugMode_ mode) {
+void JSONTokenizerBase::setDebug(DebugMode_ mode) {
     d_actionCases_ = mode & ACTIONCASES;
     d_debug_ = mode & ON;
 }
 
 // base/lex
-void
-JSONTokenizerBase::lex_(int token) {
+void JSONTokenizerBase::lex_(int token) {
     d_token = token;
 
     if (d_token <= 0) d_token = Reserved_::EOF_;
@@ -493,8 +486,7 @@ JSONTokenizerBase::lex_(int token) {
 }
 
 // base/lookup
-int
-JSONTokenizerBase::lookup_() const {
+int JSONTokenizerBase::lookup_() const {
     // if the final transition is negative, then we should reduce by the rule
     // given by its positive value.
 
@@ -526,8 +518,7 @@ JSONTokenizerBase::lookup_() const {
 }
 
 // base/pop
-void
-JSONTokenizerBase::pop_(size_t count) {
+void JSONTokenizerBase::pop_(size_t count) {
     if (d_stackIdx < static_cast<int>(count)) { ABORT(); }
 
     d_stackIdx -= count;
@@ -536,8 +527,7 @@ JSONTokenizerBase::pop_(size_t count) {
 }
 
 // base/poptoken
-void
-JSONTokenizerBase::popToken_() {
+void JSONTokenizerBase::popToken_() {
     d_token = d_next.first;
     d_val_ = std::move(d_next.second);
 
@@ -545,8 +535,7 @@ JSONTokenizerBase::popToken_() {
 }
 
 // base/push
-void
-JSONTokenizerBase::push_(size_t state) {
+void JSONTokenizerBase::push_(size_t state) {
     size_t currentSize = d_stateStack.size();
     if (stackSize_() == currentSize) {
         size_t newSize = currentSize + STACK_EXPANSION_;
@@ -563,21 +552,18 @@ JSONTokenizerBase::push_(size_t state) {
 }
 
 // base/pushtoken
-void
-JSONTokenizerBase::pushToken_(int token) {
+void JSONTokenizerBase::pushToken_(int token) {
     d_next = TokenPair{ d_token, std::move(d_val_) };
     d_token = token;
 }
 
 // base/redotoken
-void
-JSONTokenizerBase::redoToken_() {
+void JSONTokenizerBase::redoToken_() {
     if (d_token != Reserved_::UNDETERMINED_) pushToken_(d_token);
 }
 
 // base/reduce
-void
-JSONTokenizerBase::reduce_(int rule) {
+void JSONTokenizerBase::reduce_(int rule) {
     PI_ const& pi = s_productionInfo[rule];
 
     d_token = pi.d_nonTerm;
@@ -587,8 +573,7 @@ JSONTokenizerBase::reduce_(int rule) {
 }
 
 // base/shift
-void
-JSONTokenizerBase::shift_(int action) {
+void JSONTokenizerBase::shift_(int action) {
     push_(action);
     popToken_(); // token processed
 
@@ -599,8 +584,7 @@ JSONTokenizerBase::shift_(int action) {
 }
 
 // base/startrecovery
-void
-JSONTokenizerBase::startRecovery_() {
+void JSONTokenizerBase::startRecovery_() {
     int lastToken = d_token; // give the unexpected token a
                              // chance to be processed
                              // again.
@@ -616,14 +600,10 @@ JSONTokenizerBase::startRecovery_() {
 }
 
 // base/top
-inline size_t
-JSONTokenizerBase::top_() const {
-    return d_stateStack[d_stackIdx].first;
-}
+inline size_t JSONTokenizerBase::top_() const { return d_stateStack[d_stackIdx].first; }
 
 // derived/errorrecovery
-void
-JSONTokenizer::errorRecovery_() {
+void JSONTokenizer::errorRecovery_() {
     // When an error has occurred, pop elements off the stack until the top
     // state has an error-item. If none is found, the default recovery
     // mode (which is to abort) is activated.
@@ -649,8 +629,7 @@ JSONTokenizer::errorRecovery_() {
 }
 
 // derived/executeaction
-void
-JSONTokenizer::executeAction_(int production) try {
+void JSONTokenizer::executeAction_(int production) try {
     if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
@@ -820,8 +799,7 @@ catch (std::exception const& exc) {
 }
 
 // derived/nextcycle
-void
-JSONTokenizer::nextCycle_() try {
+void JSONTokenizer::nextCycle_() try {
     if (s_state[state_()]->d_type & REQ_TOKEN) nextToken_(); // obtain next token
 
     int action = lookup_(); // lookup d_token in d_state
@@ -859,8 +837,7 @@ catch (ErrorRecovery_) {
 }
 
 // derived/nexttoken
-void
-JSONTokenizer::nextToken_() {
+void JSONTokenizer::nextToken_() {
     // If d_token is Reserved_::UNDETERMINED_ then if savedToken_() is
     // Reserved_::UNDETERMINED_ another token is obtained from lex(). Then
     // savedToken_() is assigned to d_token.
@@ -881,14 +858,12 @@ JSONTokenizer::nextToken_() {
 }
 
 // derived/print
-void
-JSONTokenizer::print_() {
+void JSONTokenizer::print_() {
     // $insert print
 }
 
 // derived/parse
-int
-JSONTokenizer::parse() try {
+int JSONTokenizer::parse() try {
     // The parsing algorithm:
     // Initially, state 0 is pushed on the stack, and all relevant variables
     // are initialized by Base::clearin_.

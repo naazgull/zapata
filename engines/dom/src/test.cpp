@@ -47,8 +47,7 @@ zpt::json _document = R"({
     }
 })"_JSON;
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     zpt::dom::engine _dom;
     _dom.start_threads();
 
@@ -70,15 +69,16 @@ main(int argc, char* argv[]) -> int {
                   << "parent: " << _element.parent() << std::endl
                   << std::flush;
     });
-    _dom.add_listener(0, "/stand-alone/zmq/{:([^/]+):}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
-        auto _element = _event->content();
-        std::cout << "----------------------------------------------------" << std::endl
-                  << "xpath: " << _element.xpath() << std::endl
-                  << "name: " << _element.name() << std::endl
-                  << "content: " << _element.content() << std::endl
-                  << "parent: " << _element.parent() << std::endl
-                  << std::flush;
-    });
+    _dom.add_listener(
+      0, "/stand-alone/zmq/{:([^/]+):}/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
+          auto _element = _event->content();
+          std::cout << "----------------------------------------------------" << std::endl
+                    << "xpath: " << _element.xpath() << std::endl
+                    << "name: " << _element.name() << std::endl
+                    << "content: " << _element.content() << std::endl
+                    << "parent: " << _element.parent() << std::endl
+                    << std::flush;
+      });
     _dom.add_listener(0, "/worker/http/bind", [](zpt::pipeline::event<zpt::dom::element>& _event) {
         auto& _element = _event->content();
         std::cout << "----------------------------------------------------" << std::endl

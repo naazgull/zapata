@@ -49,6 +49,7 @@ class connection {
     };
 
     connection() = default;
+    connection(zpt::storage::connection::type* _underlying);
     connection(zpt::storage::connection const& _rhs);
     connection(zpt::storage::connection&& _rhs);
     virtual ~connection() = default;
@@ -59,13 +60,8 @@ class connection {
     auto operator->() -> zpt::storage::connection::type*;
     auto operator*() -> zpt::storage::connection::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::connection;
-
   private:
     std::shared_ptr<zpt::storage::connection::type> __underlying{ nullptr };
-
-    connection(zpt::storage::connection::type* _underlying);
 };
 class session {
   public:
@@ -75,12 +71,14 @@ class session {
         virtual ~type() = default;
 
         virtual auto is_open() -> bool = 0;
+        virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* = 0;
         virtual auto commit() -> zpt::storage::session::type* = 0;
         virtual auto rollback() -> zpt::storage::session::type* = 0;
         virtual auto database(std::string const& _db) -> zpt::storage::database = 0;
     };
 
     session() = default;
+    session(zpt::storage::session::type* _underlying);
     session(zpt::storage::session const& _rhs);
     session(zpt::storage::session&& _rhs);
     virtual ~session() = default;
@@ -91,13 +89,8 @@ class session {
     auto operator->() -> zpt::storage::session::type*;
     auto operator*() -> zpt::storage::session::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::session;
-
   private:
     std::shared_ptr<zpt::storage::session::type> __underlying{ nullptr };
-
-    session(zpt::storage::session::type* _underlying);
 };
 class database {
   public:
@@ -106,10 +99,12 @@ class database {
         type() = default;
         virtual ~type() = default;
 
+        virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* = 0;
         virtual auto collection(std::string const& _name) -> zpt::storage::collection = 0;
     };
 
     database() = default;
+    database(zpt::storage::database::type* _underlying);
     database(zpt::storage::database const& _rhs);
     database(zpt::storage::database&& _rhs);
     virtual ~database() = default;
@@ -120,13 +115,8 @@ class database {
     auto operator->() -> zpt::storage::database::type*;
     auto operator*() -> zpt::storage::database::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::database;
-
   private:
     std::shared_ptr<zpt::storage::database::type> __underlying{ nullptr };
-
-    database(zpt::storage::database::type* _underlying);
 };
 class collection {
   public:
@@ -144,6 +134,7 @@ class collection {
     };
 
     collection() = default;
+    collection(zpt::storage::collection::type* _underlying);
     collection(zpt::storage::collection const& _rhs);
     collection(zpt::storage::collection&& _rhs);
     virtual ~collection() = default;
@@ -154,13 +145,8 @@ class collection {
     auto operator->() -> zpt::storage::collection::type*;
     auto operator*() -> zpt::storage::collection::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::collection;
-
   private:
     std::shared_ptr<zpt::storage::collection::type> __underlying{ nullptr };
-
-    collection(zpt::storage::collection::type* _underlying);
 };
 class action {
   public:
@@ -186,6 +172,7 @@ class action {
     };
 
     action() = default;
+    action(zpt::storage::action::type* _underlying);
     action(zpt::storage::action const& _rhs);
     action(zpt::storage::action&& _rhs);
     virtual ~action() = default;
@@ -196,13 +183,8 @@ class action {
     auto operator->() -> zpt::storage::action::type*;
     auto operator*() -> zpt::storage::action::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::action;
-
   private:
     std::shared_ptr<zpt::storage::action::type> __underlying{ nullptr };
-
-    action(zpt::storage::action::type* _underlying);
 };
 class result {
   public:
@@ -220,6 +202,7 @@ class result {
     };
 
     result() = default;
+    result(zpt::storage::result::type* _underlying);
     result(zpt::storage::result const& _rhs);
     result(zpt::storage::result&& _rhs);
     virtual ~result() = default;
@@ -230,63 +213,60 @@ class result {
     auto operator->() -> zpt::storage::result::type*;
     auto operator*() -> zpt::storage::result::type&;
 
-    template<typename T, typename... Args>
-    static auto alloc(Args&... _args) -> zpt::storage::result;
-
   private:
     std::shared_ptr<zpt::storage::result::type> __underlying{ nullptr };
-
-    result(zpt::storage::result::type* _underlying);
 };
-auto
-filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
-auto
-reply_find(zpt::json& _reply, zpt::json _params) -> void;
-auto
-filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
-auto
-extract_find(zpt::json _to_parse) -> std::string;
-auto
-functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output) -> void;
-auto
-functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
+auto filter_find(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+auto reply_find(zpt::json& _reply, zpt::json _params) -> void;
+auto filter_remove(zpt::storage::collection& _collection, zpt::json _params) -> zpt::storage::action;
+auto extract_find(zpt::json _to_parse) -> std::string;
+auto functional_to_sql(zpt::json _function, std::ostream& _find, zpt::storage::string_output _str_output)
+  -> void;
+auto functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find) -> void;
 } // namespace storage
+
+template<typename T, typename... Args>
+auto make_connection(Args&... _args) -> zpt::storage::connection;
+template<typename T, typename... Args>
+auto make_session(Args&... _args) -> zpt::storage::session;
+template<typename T, typename... Args>
+auto make_database(Args&... _args) -> zpt::storage::database;
+template<typename T, typename... Args>
+auto make_collection(Args&... _args) -> zpt::storage::collection;
+template<typename T, typename... Args>
+auto make_action(Args&... _args) -> zpt::storage::action;
+template<typename T, typename... Args>
+auto make_result(Args&... _args) -> zpt::storage::result;
 } // namespace zpt
 
 template<typename T, typename... Args>
-auto
-zpt::storage::connection::alloc(Args&... _args) -> zpt::storage::connection {
+auto zpt::make_connection(Args&... _args) -> zpt::storage::connection {
     static thread_local zpt::storage::connection _to_return{ new T{ _args... } };
     return _to_return;
 }
 
 template<typename T, typename... Args>
-auto
-zpt::storage::session::alloc(Args&... _args) -> zpt::storage::session {
+auto zpt::make_session(Args&... _args) -> zpt::storage::session {
     static thread_local zpt::storage::session _to_return{ new T{ _args... } };
     return _to_return;
 }
 
 template<typename T, typename... Args>
-auto
-zpt::storage::database::alloc(Args&... _args) -> zpt::storage::database {
+auto zpt::make_database(Args&... _args) -> zpt::storage::database {
     return zpt::storage::database{ new T{ _args... } };
 }
 
 template<typename T, typename... Args>
-auto
-zpt::storage::collection::alloc(Args&... _args) -> zpt::storage::collection {
+auto zpt::make_collection(Args&... _args) -> zpt::storage::collection {
     return zpt::storage::collection{ new T{ _args... } };
 }
 
 template<typename T, typename... Args>
-auto
-zpt::storage::action::alloc(Args&... _args) -> zpt::storage::action {
+auto zpt::make_action(Args&... _args) -> zpt::storage::action {
     return zpt::storage::action{ new T{ _args... } };
 }
 
 template<typename T, typename... Args>
-auto
-zpt::storage::result::alloc(Args&... _args) -> zpt::storage::result {
+auto zpt::make_result(Args&... _args) -> zpt::storage::result {
     return zpt::storage::result{ new T{ _args... } };
 }

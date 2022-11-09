@@ -26,9 +26,7 @@
 
 namespace zpt {
 namespace functional {
-auto
-parse(std::string const& _in) -> zpt::json;
-auto
-parse(std::istream& _in) -> zpt::json;
+auto parse(std::string const& _in) -> zpt::json;
+auto parse(std::istream& _in) -> zpt::json;
 } // namespace functional
 } // namespace zpt

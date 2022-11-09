@@ -29,14 +29,11 @@
 #include <zapata/json.h>
 
 namespace zpt {
-auto
-OAUTH2_TOKEN_PROVIDER() -> ssize_t&;
-auto
-OAUTH2_SERVER() -> ssize_t&;
+auto OAUTH2_TOKEN_PROVIDER() -> ssize_t&;
+auto OAUTH2_SERVER() -> ssize_t&;
 
 namespace auth {
-auto
-extract(zpt::json _envelope) -> std::string;
+auto extract(zpt::json _envelope) -> std::string;
 
 namespace oauth2 {
 class token_provider {
@@ -45,10 +42,12 @@ class token_provider {
     virtual ~token_provider() = default;
 
     virtual auto retrieve_owner(zpt::json _envelope) -> zpt::json = 0;
-    virtual auto retrieve_owner(std::string const& _owner, std::string const& _password, std::string const& _client_id)
-      -> zpt::json = 0;
+    virtual auto retrieve_owner(std::string const& _owner,
+                                std::string const& _password,
+                                std::string const& _client_id) -> zpt::json = 0;
     virtual auto retrieve_client(zpt::json _envelope) -> zpt::json = 0;
-    virtual auto retrieve_client(std::string const& _client_id, std::string const& _client_secret) -> zpt::json = 0;
+    virtual auto retrieve_client(std::string const& _client_id, std::string const& _client_secret)
+      -> zpt::json = 0;
     virtual auto store_token(zpt::json _token) -> std::string = 0;
     virtual auto exchange_code(std::string const& _code, std::string const& _id, std::string const& _secret)
       -> zpt::json = 0;
@@ -69,8 +68,10 @@ class server {
     virtual auto options() -> zpt::json;
     virtual auto name() -> std::string;
 
-    virtual auto authorize(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
-    virtual auto authorize(std::string const& _topic, zpt::json _envelope, zpt::json _roles_needed) -> zpt::json;
+    virtual auto authorize(zpt::performative _performative, zpt::json _envelope, zpt::json _opts)
+      -> zpt::json;
+    virtual auto authorize(std::string const& _topic, zpt::json _envelope, zpt::json _roles_needed)
+      -> zpt::json;
     virtual auto token(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
     virtual auto refresh(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
     virtual auto validate(zpt::performative _performative, zpt::json _envelope, zpt::json _opts) -> zpt::json;
@@ -79,8 +80,10 @@ class server {
     zpt::auth::oauth2::token_provider_ptr __token_provider{ nullptr };
     zpt::json __options;
 
-    auto authorize_with_code(zpt::performative _performative, zpt::json _request, zpt::json _envelope, zpt::json _opts)
-      -> zpt::json;
+    auto authorize_with_code(zpt::performative _performative,
+                             zpt::json _request,
+                             zpt::json _envelope,
+                             zpt::json _opts) -> zpt::json;
     auto authorize_with_password(zpt::performative _performative,
                                  zpt::json _request,
                                  zpt::json _envelope,

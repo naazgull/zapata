@@ -265,118 +265,60 @@ inline JSONLexerBase::StartCondition_ constexpr JSONLexerBase::SC(int sc) { retu
 
 inline int constexpr JSONLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
-inline JSONLexerBase::StartCondition_
-JSONLexerBase::startCondition() const {
-    return SC(d_startCondition);
-}
+inline JSONLexerBase::StartCondition_ JSONLexerBase::startCondition() const { return SC(d_startCondition); }
 
-inline void
-JSONLexerBase::begin(StartCondition_ startCondition) {
+inline void JSONLexerBase::begin(StartCondition_ startCondition) {
     // d_state is reset to 0 by reset_()
     d_dfaBase_ = s_dfaBase_[d_startCondition = SC(startCondition)];
 }
 
-inline bool
-JSONLexerBase::knownFinalState() {
+inline bool JSONLexerBase::knownFinalState() {
     return (d_atBOL && available(d_final.bol.rule)) || available(d_final.std.rule);
 }
 
-inline bool constexpr JSONLexerBase::available(size_t value) { return value != std::numeric_limits<size_t>::max(); }
-
-inline std::ostream&
-JSONLexerBase::out() {
-    return *d_out;
+inline bool constexpr JSONLexerBase::available(size_t value) {
+    return value != std::numeric_limits<size_t>::max();
 }
 
-inline void
-JSONLexerBase::push(size_t ch) {
-    d_input->reRead(ch);
-}
+inline std::ostream& JSONLexerBase::out() { return *d_out; }
 
-inline void
-JSONLexerBase::push(std::string const& str) {
-    d_input->reRead(str, 0);
-}
+inline void JSONLexerBase::push(size_t ch) { d_input->reRead(ch); }
 
-inline std::vector<JSONLexerBase::StreamStruct> const&
-JSONLexerBase::streamStack() const {
+inline void JSONLexerBase::push(std::string const& str) { d_input->reRead(str, 0); }
+
+inline std::vector<JSONLexerBase::StreamStruct> const& JSONLexerBase::streamStack() const {
     return d_streamStack;
 }
 
-inline void
-JSONLexerBase::setFilename(std::string const& name) {
-    d_filename = name;
-}
+inline void JSONLexerBase::setFilename(std::string const& name) { d_filename = name; }
 
-inline void
-JSONLexerBase::setMatched(std::string const& text) {
-    d_matched = text;
-}
+inline void JSONLexerBase::setMatched(std::string const& text) { d_matched = text; }
 
-inline std::string const&
-JSONLexerBase::matched() const {
-    return d_matched;
-}
+inline std::string const& JSONLexerBase::matched() const { return d_matched; }
 
-inline std::string const&
-JSONLexerBase::cwd() const {
-    return d_cwd;
-}
+inline std::string const& JSONLexerBase::cwd() const { return d_cwd; }
 
-inline std::string const&
-JSONLexerBase::filename() const {
-    return d_filename;
-}
+inline std::string const& JSONLexerBase::filename() const { return d_filename; }
 
-inline void
-JSONLexerBase::echo() const {
-    *d_out << d_matched;
-}
+inline void JSONLexerBase::echo() const { *d_out << d_matched; }
 
-inline size_t
-JSONLexerBase::length() const {
-    return d_matched.size();
-}
+inline size_t JSONLexerBase::length() const { return d_matched.size(); }
 
-inline void
-JSONLexerBase::leave(int retValue) const {
-    throw as<Leave_>(retValue);
-}
+inline void JSONLexerBase::leave(int retValue) const { throw as<Leave_>(retValue); }
 
-inline size_t
-JSONLexerBase::lineNr() const {
-    return d_input->lineNr();
-}
+inline size_t JSONLexerBase::lineNr() const { return d_input->lineNr(); }
 
-inline void
-JSONLexerBase::more() {
-    d_more = true;
-}
+inline void JSONLexerBase::more() { d_more = true; }
 
-inline size_t
-JSONLexerBase::state_() const {
-    return d_state;
-}
+inline size_t JSONLexerBase::state_() const { return d_state; }
 
-inline size_t
-JSONLexerBase::get_() {
-    return (this->*d_get)();
-}
+inline size_t JSONLexerBase::get_() { return (this->*d_get)(); }
 
-inline size_t
-JSONLexerBase::getInput() {
-    return d_input->get();
-}
+inline size_t JSONLexerBase::getInput() { return d_input->get(); }
 
-inline bool
-JSONLexerBase::return_() {
-    return d_return;
-}
+inline bool JSONLexerBase::return_() { return d_return; }
 
-inline void
-JSONLexerBase::noReturn_() {
-    d_return = false;
-}
+inline void JSONLexerBase::noReturn_() { d_return = false; }
 
 // $insert namespace-close
 } // namespace zpt

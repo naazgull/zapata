@@ -131,23 +131,20 @@ template<typename Char>
 zpt::basic_pipebuf<Char>::~basic_pipebuf() {}
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs) -> basic_pipebuf<char_type>& {
+auto zpt::basic_pipebuf<Char>::operator=(const basic_pipebuf<char_type>& _rhs) -> basic_pipebuf<char_type>& {
     this->__fds[0] = _rhs.__fds[0];
     this->__fds[1] = _rhs.__fds[1];
     return (*this);
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::open() -> void {
+auto zpt::basic_pipebuf<Char>::open() -> void {
     expect(::pipe(this->__fds) != -1, "unable to create the pipe");
     fcntl(this->__fds[0], F_SETFL, O_NONBLOCK);
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::close() -> void {
+auto zpt::basic_pipebuf<Char>::close() -> void {
     if (this->__fds[0]) { ::close(this->__fds[0]); }
     if (this->__fds[1]) { ::close(this->__fds[1]); }
     this->__fds[0] = 0;
@@ -155,20 +152,17 @@ zpt::basic_pipebuf<Char>::close() -> void {
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::output_fd() -> int {
+auto zpt::basic_pipebuf<Char>::output_fd() -> int {
     return this->__fds[1];
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::input_fd() -> int {
+auto zpt::basic_pipebuf<Char>::input_fd() -> int {
     return this->__fds[0];
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::overflow(int_type _c) -> int_type {
+auto zpt::basic_pipebuf<Char>::overflow(int_type _c) -> int_type {
     if (_c != traits_type::eof()) {
         *buf_type::pptr() = _c;
         buf_type::pbump(1);
@@ -177,8 +171,7 @@ zpt::basic_pipebuf<Char>::overflow(int_type _c) -> int_type {
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::underflow() -> int_type {
+auto zpt::basic_pipebuf<Char>::underflow() -> int_type {
     if (buf_type::gptr() < buf_type::egptr()) { return *buf_type::gptr(); }
     if (!this->__fds[0]) { return traits_type::eof(); }
 
@@ -190,15 +183,13 @@ zpt::basic_pipebuf<Char>::underflow() -> int_type {
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::sync() -> int {
+auto zpt::basic_pipebuf<Char>::sync() -> int {
     if (this->dump() == traits_type::eof()) { return traits_type::eof(); }
     return 0;
 }
 
 template<typename Char>
-auto
-zpt::basic_pipebuf<Char>::dump() -> int_type {
+auto zpt::basic_pipebuf<Char>::dump() -> int_type {
     if (!this->__fds[1]) { return traits_type::eof(); }
     auto _num = buf_type::pptr() - buf_type::pbase();
     auto _actually_written = -1;
@@ -226,8 +217,8 @@ zpt::basic_pipestream<Char>::basic_pipestream(const basic_pipestream<char_type>&
 }
 
 template<typename Char>
-auto
-zpt::basic_pipestream<Char>::operator=(const basic_pipestream<char_type>& _rhs) -> basic_pipestream<char_type>& {
+auto zpt::basic_pipestream<Char>::operator=(const basic_pipestream<char_type>& _rhs)
+  -> basic_pipestream<char_type>& {
     this->__uuid = _rhs.__uuid;
     this->__buf = _rhs.__buf;
 }
@@ -246,21 +237,18 @@ zpt::basic_pipestream<Char>::operator std::string() {
 }
 
 template<typename Char>
-auto
-zpt::basic_pipestream<Char>::open(std::string const& _pipe_name) -> void {
+auto zpt::basic_pipestream<Char>::open(std::string const& _pipe_name) -> void {
     this->__uuid.assign(_pipe_name);
     this->__buf.close();
     this->__buf.open();
 }
 
 template<typename Char>
-auto
-zpt::basic_pipestream<Char>::close() -> void {
+auto zpt::basic_pipestream<Char>::close() -> void {
     this->__buf.close();
 }
 
 template<typename Char>
-auto
-zpt::basic_pipestream<Char>::is_open() -> bool {
+auto zpt::basic_pipestream<Char>::is_open() -> bool {
     return this->__buf.output_fd() != 0 && this->__buf.input_fd() != 0;
 }

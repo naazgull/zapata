@@ -1,9 +1,8 @@
 #include <zapata/lmdb.h>
 
-auto
-main(int _argc, char* _argv[]) -> int {
+auto main(int _argc, char* _argv[]) -> int {
     zpt::json _config{ "storage", { "lmdb", { "path", "/home/pf/Void/lmdb" } } };
-    auto _connection = zpt::storage::connection::alloc<zpt::storage::lmdb::connection>(_config);
+    auto _connection = zpt::make_connection<zpt::storage::lmdb::connection>(_config);
     auto _session = _connection->session();
     auto _database = _session->database("zapata");
     auto _collection = _database->collection("users");
@@ -18,7 +17,8 @@ main(int _argc, char* _argv[]) -> int {
                          ->add({ "nick", "jaster", "email", "address@kicker" })
                          ->execute();
         _id2.assign(_result->to_json()["generated"][0]["_id"]->string());
-        std::cout << "There are " << _collection->count() << " records in the collection." << std::endl << std::flush;
+        std::cout << "There are " << _collection->count() << " records in the collection." << std::endl
+                  << std::flush;
     }
     {
         auto _result = _collection //
@@ -34,14 +34,18 @@ main(int _argc, char* _argv[]) -> int {
                          ->find({ "_id", _id1 })
                          ->execute();
 
-        std::cout << "First record: " << std::endl << zpt::pretty(_result->to_json()) << std::endl << std::flush;
+        std::cout << "First record: " << std::endl
+                  << zpt::pretty(_result->to_json()) << std::endl
+                  << std::flush;
     }
     {
         auto _result = _collection //
                          ->find({ "_id", _id2 })
                          ->execute();
 
-        std::cout << "Second record: " << std::endl << zpt::pretty(_result->to_json()) << std::endl << std::flush;
+        std::cout << "Second record: " << std::endl
+                  << zpt::pretty(_result->to_json()) << std::endl
+                  << std::flush;
     }
     {
         auto _result = _collection //
@@ -67,7 +71,9 @@ main(int _argc, char* _argv[]) -> int {
                          ->remove({})
                          ->execute();
 
-        std::cout << "Removed elements: " << std::endl << zpt::pretty(_result->to_json()) << std::endl << std::flush;
+        std::cout << "Removed elements: " << std::endl
+                  << zpt::pretty(_result->to_json()) << std::endl
+                  << std::flush;
     }
     {
         auto _result = _collection //

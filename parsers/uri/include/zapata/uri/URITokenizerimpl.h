@@ -9,22 +9,17 @@
 // $insert namespace-open
 namespace zpt {
 
-inline void
-URITokenizer::error() {
-    throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") + std::to_string(d_scanner.lineNr()));
+inline void URITokenizer::error() {
+    throw zpt::SyntaxErrorException(std::string("URI: Syntax error in line ") +
+                                    std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex
-inline int
-URITokenizer::lex() {
-    return d_scanner.lex();
-}
+inline int URITokenizer::lex() { return d_scanner.lex(); }
 
-inline void
-URITokenizer::print() {}
+inline void URITokenizer::print() {}
 
-inline void
-URITokenizer::exceptionHandler(std::exception const& exc) {
+inline void URITokenizer::exceptionHandler(std::exception const& exc) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

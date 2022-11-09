@@ -27,13 +27,12 @@
 #include <zapata/sqlite.h>
 
 namespace zpt {
-auto
-CATALOGUE() -> ssize_t&;
+auto CATALOGUE() -> ssize_t&;
 
 template<typename K, typename M>
 class catalogue {
   public:
-    catalogue(std::string const& _uri);
+    catalogue();
     virtual ~catalogue() = default;
 
     auto clear() -> catalogue&;
@@ -47,9 +46,8 @@ class catalogue {
 } // namespace zpt
 
 template<typename K, typename M>
-zpt::catalogue<K, M>::catalogue(std::string const& _uri) {
-    zpt::json _config{ "storage", { "sqlite", { "path", _uri } } };
-    this->__connection = zpt::storage::connection::alloc<zpt::storage::sqlite::connection>(_config);
+zpt::catalogue<K, M>::catalogue() {
+    this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(zpt::undefined);
     auto _session = this->__connection->session();
     auto _database = _session->database("catalogue");
 
@@ -66,8 +64,7 @@ zpt::catalogue<K, M>::catalogue(std::string const& _uri) {
 }
 
 template<typename K, typename M>
-auto
-zpt::catalogue<K, M>::clear() -> catalogue& {
+auto zpt::catalogue<K, M>::clear() -> catalogue& {
     this
       ->__catalogue //
       ->remove({})
@@ -76,8 +73,7 @@ zpt::catalogue<K, M>::clear() -> catalogue& {
 }
 
 template<typename K, typename M>
-auto
-zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
+auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
     std::ostringstream _oss;
     _oss << _key << std::flush;
     std::string _t_key{ _oss.str() };
@@ -93,8 +89,7 @@ zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
 }
 
 template<typename K, typename M>
-auto
-zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<M> {
+auto zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<M> {
     auto _result = this
                      ->__catalogue //
                      ->find({ "_id", _pattern })
@@ -104,9 +99,10 @@ zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<M> {
     std::deque<M> _to_return;
     for (auto _row = _result->fetch(1); _row != zpt::undefined; _row = _result->fetch(1)) {
         M _value;
-        _ss << _row["metadata"]->string() << std::flush;
-        _ss >> _value;
-        _to_return.push_back(_value);
+        zlog((_row == zpt::undefined), zpt::info);
+        // _ss << _row["metadata"] << std::flush;
+        // _ss >> _value;
+        // _to_return.push_back(_value);
     }
     return std::move(_to_return);
 }

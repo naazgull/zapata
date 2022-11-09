@@ -26,8 +26,7 @@
 
 #define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^$elemMatch^")
 
-auto
-zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
+auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
     zpt::json _selector = { "_id", { "$lt", "_" } };
     zpt::json _query = { "selector", _selector };
     if (!_in->is_object()) {
@@ -96,7 +95,9 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                 else if (_bar_count == 1) {
                     _expression.append(_part);
 
-                    if (_expression.length() == 0 || _expression[_expression.length() - 1] != '\\') { ++_bar_count; }
+                    if (_expression.length() == 0 || _expression[_expression.length() - 1] != '\\') {
+                        ++_bar_count;
+                    }
                     else {
                         if (_expression.length() > 0) { _expression[_expression.length() - 1] = '/'; }
                     }
@@ -126,7 +127,9 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                         if (!iss.eof()) {
                             std::string bexpr(_expression.data());
                             std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
-                            if (bexpr != "true" && bexpr != "false") { _selector << std::string(_key) << _expression; }
+                            if (bexpr != "true" && bexpr != "false") {
+                                _selector << std::string(_key) << _expression;
+                            }
                             else { _selector << std::string(_key) << zpt::json::boolean(bexpr == "true"); }
                         }
                         else { _selector << std::string(_key) << d; }
@@ -148,17 +151,23 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
                         try {
                             _json_expression = zpt::json(_expression);
                             if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
-                                _selector << std::string(_key) << zpt::json{ comp, { other_comp, _json_expression } };
+                                _selector << std::string(_key)
+                                          << zpt::json{ comp, { other_comp, _json_expression } };
                             }
                             else {
-                                _selector << std::string(_key) << zpt::json{ comp, { _options, _json_expression } };
+                                _selector << std::string(_key)
+                                          << zpt::json{ comp, { _options, _json_expression } };
                             }
                         }
                         catch (std::exception const& _e) {
                             if (_VALID_OPS.find(other_comp + std::string("^")) != std::string::npos) {
-                                _selector << std::string(_key) << zpt::json{ comp, { other_comp, _expression } };
+                                _selector << std::string(_key)
+                                          << zpt::json{ comp, { other_comp, _expression } };
                             }
-                            else { _selector << std::string(_key) << zpt::json{ comp, { _options, _expression } }; }
+                            else {
+                                _selector << std::string(_key)
+                                          << zpt::json{ comp, { _options, _expression } };
+                            }
                         }
                     }
                     else if (_options == "n") {
@@ -209,8 +218,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
     return _query;
 }
 
-auto
-zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
+auto zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _fields = _opts["fields"];
     if (_fields->ok()) {

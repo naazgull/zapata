@@ -28,24 +28,22 @@ namespace zpt {
 using performative = unsigned short;
 using status = unsigned short;
 
-static inline const zpt::performative Get = 0;
-static inline const zpt::performative Put = 1;
-static inline const zpt::performative Post = 2;
-static inline const zpt::performative Delete = 3;
-static inline const zpt::performative Head = 4;
-static inline const zpt::performative Options = 5;
-static inline const zpt::performative Patch = 6;
-static inline const zpt::performative Reply = 7;
-static inline const zpt::performative Msearch = 8;
-static inline const zpt::performative Notify = 9;
-static inline const zpt::performative Trace = 10;
-static inline const zpt::performative Connect = 11;
+inline const zpt::performative Get = 0;
+inline const zpt::performative Put = 1;
+inline const zpt::performative Post = 2;
+inline const zpt::performative Delete = 3;
+inline const zpt::performative Head = 4;
+inline const zpt::performative Options = 5;
+inline const zpt::performative Patch = 6;
+inline const zpt::performative Reply = 7;
+inline const zpt::performative Msearch = 8;
+inline const zpt::performative Notify = 9;
+inline const zpt::performative Trace = 10;
+inline const zpt::performative Connect = 11;
 
 namespace ontology {
-auto
-to_str(zpt::performative _performative) -> std::string;
-auto
-from_str(std::string _performative) -> zpt::performative;
+auto to_str(zpt::performative _performative) -> std::string;
+auto from_str(std::string _performative) -> zpt::performative;
 } // namespace ontology
 
 } // namespace zpt

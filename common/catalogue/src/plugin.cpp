@@ -24,19 +24,10 @@
 #include <zapata/startup.h>
 #include <zapata/catalogue.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _config = _plugin->config();
-    if (_config["database_dir"]->ok()) {
-        zpt::globals::alloc<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE(),
-                                                                    _config["database_dir"]->string());
-    }
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    zpt::make_global<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE());
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
-    if (_config["database_dir"]->ok()) {
-        zpt::globals::dealloc<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE());
-    }
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
+    zpt::release_global<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE());
 }

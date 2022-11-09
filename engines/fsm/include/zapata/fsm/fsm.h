@@ -118,8 +118,7 @@ zpt::fsm::machine<C, S, D, I>::~machine() {
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::set_states(zpt::json _states) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::set_states(zpt::json _states) -> machine& {
     this->__undefined = static_cast<S>(_states["undefined"]);
     this->__begin = static_cast<S>(_states["begin"]);
     this->__end = static_cast<S>(_states["end"]);
@@ -128,8 +127,7 @@ zpt::fsm::machine<C, S, D, I>::set_states(zpt::json _states) -> machine& {
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::add_allowed_transitions(zpt::json _states) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::add_allowed_transitions(zpt::json _states) -> machine& {
     expect(_states->ok() && _states->is_array(), "states JSON configuration must be a JSON array");
 
     for (auto [_, __, _potential] : _states) {
@@ -145,15 +143,13 @@ zpt::fsm::machine<C, S, D, I>::add_allowed_transitions(zpt::json _states) -> mac
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::begin(D _content, I _id) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::begin(D _content, I _id) -> machine& {
     this->trigger(this->__begin, zpt::fsm::payload<D, I>{ std::make_tuple(_content, _id) });
     return (*this);
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::resume(I _id, S _state) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::resume(I _id, S _state) -> machine& {
     S _stalled_state;
     S _next_state;
     D _data;
@@ -171,23 +167,20 @@ zpt::fsm::machine<C, S, D, I>::resume(I _id, S _state) -> machine& {
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::add_transition(S _source, callback _callback) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::add_transition(S _source, callback _callback) -> machine& {
     static_cast<C*>(this)->verify_transition(_source);
     this->listen(_source, _callback);
     return (*this);
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::set_error_callback(error_callback _error_callback) -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::set_error_callback(error_callback _error_callback) -> machine& {
     this->__error_callback = _error_callback;
     return (*this);
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I> _content) -> void {
+auto zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I> _content) -> void {
     auto _it = this->__callbacks.find(_current_state);
     if (_it != this->__callbacks.end()) {
         S _next_state = this->__undefined;
@@ -195,12 +188,15 @@ zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I>
         for (auto _callback : _it->second) {
             try {
                 S _potential = _callback(_current_state, std::get<0>(_content), std::get<1>(_content));
-                expect(_next_state == this->__undefined || _potential == this->__undefined || _next_state == _potential,
+                expect(_next_state == this->__undefined || _potential == this->__undefined ||
+                         _next_state == _potential,
                        "state '" << _potential
                                  << "' returned from transition callback isn't consistent with "
                                     "previously returned state '"
                                  << _next_state << "'");
-                if (_potential != this->__undefined) { _next_state = this->coalesce(_current_state, _potential); }
+                if (_potential != this->__undefined) {
+                    _next_state = this->coalesce(_current_state, _potential);
+                }
             }
             catch (zpt::events::unregister const& _e) {
             }
@@ -212,8 +208,7 @@ zpt::fsm::machine<C, S, D, I>::trapped(S _current_state, zpt::fsm::payload<D, I>
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::listen_to(S _event, callback _callback) -> void {
+auto zpt::fsm::machine<C, S, D, I>::listen_to(S _event, callback _callback) -> void {
     auto _found = this->__callbacks.find(_event);
     if (_found == this->__callbacks.end()) {
         auto [_insert, _was_inserted] = this->__callbacks.insert(std::make_pair(_event, callback_list()));
@@ -224,31 +219,34 @@ zpt::fsm::machine<C, S, D, I>::listen_to(S _event, callback _callback) -> void {
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::report_error(S const& _event,
-                                            zpt::fsm::payload<D, I>& _content,
-                                            const char* _what,
-                                            const char* _description,
-                                            const char* _backtrace,
-                                            int _error,
-                                            int _status) -> bool {
+auto zpt::fsm::machine<C, S, D, I>::report_error(S const& _event,
+                                                 zpt::fsm::payload<D, I>& _content,
+                                                 const char* _what,
+                                                 const char* _description,
+                                                 const char* _backtrace,
+                                                 int _error,
+                                                 int _status) -> bool {
     if (this->__error_callback != nullptr) {
-        return this->__error_callback(
-          _event, std::get<0>(_content), std::get<1>(_content), _what, _description, _backtrace, _error, _status);
+        return this->__error_callback(_event,
+                                      std::get<0>(_content),
+                                      std::get<1>(_content),
+                                      _what,
+                                      _description,
+                                      _backtrace,
+                                      _error,
+                                      _status);
     }
     return false;
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::start_threads() -> machine& {
+auto zpt::fsm::machine<C, S, D, I>::start_threads() -> machine& {
     for (long _i = 0; _i != this->__processor_threads; ++_i) { this->add_consumer(); }
     return (*this);
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::to_string() const -> std::string {
+auto zpt::fsm::machine<C, S, D, I>::to_string() const -> std::string {
     std::ostringstream _return;
     _return << "> begin: " << this->__begin << std::endl
             << "> end: " << this->__end << std::endl
@@ -257,18 +255,20 @@ zpt::fsm::machine<C, S, D, I>::to_string() const -> std::string {
             << "> transitions: " << std::endl;
     for (auto [_source, _potential] : this->__transitions) {
         _return << "  S(" << _source << ")" << std::endl << std::flush;
-        for (auto [_target, _] : _potential) { _return << "\t-> S(" << _target << ")" << std::endl << std::flush; }
+        for (auto [_target, _] : _potential) {
+            _return << "\t-> S(" << _target << ")" << std::endl << std::flush;
+        }
     }
     return _return.str();
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::coalesce(S _current, S _potential) const -> S {
+auto zpt::fsm::machine<C, S, D, I>::coalesce(S _current, S _potential) const -> S {
     if (_potential != this->__undefined && _potential != this->__pause) {
         auto _possible = this->__transitions.find(_current);
         expect(_possible != this->__transitions.end(),
-               "state '" << _current << "' not found as a possible source of a transition to '" << _potential << "'",
+               "state '" << _current << "' not found as a possible source of a transition to '" << _potential
+                         << "'",
                500,
                0);
         expect(_possible->second.find(_potential) != _possible->second.end(),
@@ -278,11 +278,11 @@ zpt::fsm::machine<C, S, D, I>::coalesce(S _current, S _potential) const -> S {
 }
 
 template<typename C, typename S, typename D, typename I>
-auto
-zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
+auto zpt::fsm::machine<C, S, D, I>::pause(S _current, zpt::fsm::payload<D, I> _content) -> void {
     {
         zpt::locks::spin_lock::guard _shared_sentry{ this->__stalled_lock, zpt::locks::spin_lock::exclusive };
-        this->__stalled.insert(std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
+        this->__stalled.insert(
+          std::make_pair(std::get<1>(_content), std::make_pair(_current, std::get<0>(_content))));
     }
     this->trigger(this->__pause, _content);
 }

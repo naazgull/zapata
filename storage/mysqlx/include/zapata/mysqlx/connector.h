@@ -36,13 +36,10 @@ class collection;
 class action;
 class result;
 
-auto
-cast_to_db_value(zpt::json _value) -> ::mysqlx::Value;
+auto cast_to_db_value(zpt::json _value) -> ::mysqlx::Value;
 
-auto
-to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
-auto
-from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
+auto to_db_doc(zpt::json _document) -> ::mysqlx::DbDoc;
+auto from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json;
 
 class connection : public zpt::storage::connection::type {
   public:
@@ -66,6 +63,7 @@ class session : public zpt::storage::session::type {
     virtual auto is_open() -> bool override;
     virtual auto commit() -> zpt::storage::session::type* override;
     virtual auto rollback() -> zpt::storage::session::type* override;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::session::type* override;
     virtual auto database(std::string const& _db) -> zpt::storage::database override;
 
     virtual auto operator->() -> ::mysqlx::Session*;
@@ -79,6 +77,7 @@ class database : public zpt::storage::database::type {
     database(const zpt::storage::mysqlx::database& _rhs) = delete;
     database(zpt::storage::mysqlx::database&& _rhs) = delete;
     virtual ~database() override = default;
+    virtual auto sql(std::string const& _statement) -> zpt::storage::database::type* override;
     virtual auto collection(std::string const& _name) -> zpt::storage::collection override;
 
     virtual auto operator->() -> ::mysqlx::Schema*;

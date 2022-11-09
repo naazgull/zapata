@@ -60,8 +60,7 @@ template<typename T>
 zpt::cached<T>::~cached() {}
 
 template<typename T>
-auto
-zpt::cached<T>::commit() -> zpt::cached<T>& {
+auto zpt::cached<T>::commit() -> zpt::cached<T>& {
     zpt::locks::spin_lock::guard _sentry{ this->__repository_lock, zpt::locks::spin_lock::exclusive };
     this->__underlying = this->instance();
     ++(*this->__cache_version);
@@ -69,8 +68,7 @@ zpt::cached<T>::commit() -> zpt::cached<T>& {
 }
 
 template<typename T>
-auto
-zpt::cached<T>::commit(T const& _new_value) -> zpt::cached<T>& {
+auto zpt::cached<T>::commit(T const& _new_value) -> zpt::cached<T>& {
     zpt::locks::spin_lock::guard _sentry{ this->__repository_lock, zpt::locks::spin_lock::exclusive };
     this->__underlying = _new_value;
     ++(*this->__cache_version);
@@ -78,26 +76,22 @@ zpt::cached<T>::commit(T const& _new_value) -> zpt::cached<T>& {
 }
 
 template<typename T>
-auto
-zpt::cached<T>::version() -> unsigned long long {
+auto zpt::cached<T>::version() -> unsigned long long {
     return this->__cache_version->load();
 }
 
 template<typename T>
-auto
-zpt::cached<T>::operator->() -> T* {
+auto zpt::cached<T>::operator->() -> T* {
     return &this->instance();
 }
 
 template<typename T>
-auto
-zpt::cached<T>::operator*() -> T& {
+auto zpt::cached<T>::operator*() -> T& {
     return this->instance();
 }
 
 template<typename T>
-auto
-zpt::cached<T>::instance() -> T& {
+auto zpt::cached<T>::instance() -> T& {
     static thread_local std::map<zpt::cached<T>*, std::tuple<T, unsigned long long>> _local;
     auto& [_local_copy, _local_version] = _local[this];
     if (this->__cache_version->load() > _local_version) {

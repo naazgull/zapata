@@ -82,40 +82,34 @@ zpt::thread_local_variable<T>::operator const_reference() const {
 }
 
 template<typename T>
-auto
-zpt::thread_local_variable<T>::operator*() -> reference {
+auto zpt::thread_local_variable<T>::operator*() -> reference {
     return this->get();
 }
 
 template<typename T>
-auto
-zpt::thread_local_variable<T>::operator*() const -> const_reference {
+auto zpt::thread_local_variable<T>::operator*() const -> const_reference {
     return this->get();
 }
 
 template<typename T>
 template<typename D, std::enable_if_t<std::is_class<D>::value, bool>>
-auto
-zpt::thread_local_variable<T>::operator->() -> pointer {
+auto zpt::thread_local_variable<T>::operator->() -> pointer {
     return &this->get();
 }
 
 template<typename T>
 template<typename D, std::enable_if_t<std::is_class<D>::value, bool>>
-auto
-zpt::thread_local_variable<T>::operator->() const -> const_pointer {
+auto zpt::thread_local_variable<T>::operator->() const -> const_pointer {
     return &this->get();
 }
 
 template<typename T>
-auto
-zpt::thread_local_variable<T>::dispose_local_image() -> void {
+auto zpt::thread_local_variable<T>::dispose_local_image() -> void {
     zpt::thread_local_table::dealloc<zpt::thread_local_variable<T>, T>(*this);
 }
 
 template<typename T>
-auto
-zpt::thread_local_variable<T>::get() -> reference {
+auto zpt::thread_local_variable<T>::get() -> reference {
     try {
         return zpt::thread_local_table::get<zpt::thread_local_variable<T>, T>(*this);
     }

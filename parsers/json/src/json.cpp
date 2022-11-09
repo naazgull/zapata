@@ -4,8 +4,7 @@
 #include <zapata/json/json.h>
 #include <zapata/log/log.h>
 
-auto
-zpt::to_string(zpt::JSONType _type) -> std::string {
+auto zpt::to_string(zpt::JSONType _type) -> std::string {
     switch (_type) {
         case JSObject: {
             return "object";
@@ -41,13 +40,9 @@ zpt::to_string(zpt::JSONType _type) -> std::string {
     return "undefined";
 }
 
-auto
-zpt::to_string(zpt::json _in) -> std::string {
-    return static_cast<std::string>(_in);
-}
+auto zpt::to_string(zpt::json _in) -> std::string { return static_cast<std::string>(_in); }
 
-auto
-zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim) -> zpt::json {
+auto zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim) -> zpt::json {
     zpt::json _ret = zpt::json::array();
     if (_to_split.length() == 0 || _separator.length() == 0) { return _ret; }
     std::istringstream _iss(_to_split);
@@ -62,30 +57,27 @@ zpt::split(std::string const& _to_split, std::string const& _separator, bool _tr
     return _ret;
 }
 
-auto
-zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string {
-    expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject, "JSON to join must be an array");
+auto zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string {
+    expect(_to_join->type() == zpt::JSArray || _to_join->type() == zpt::JSObject,
+           "JSON to join must be an array");
     std::string _return{ "" };
     for (auto [_idx, _key, _value] : _to_join) {
         if (_return.length() != 0) { _return += _separator; }
         if (_to_join->type() == zpt::JSArray) { _return += static_cast<std::string>(_value); }
-        else if (_to_join->type() == zpt::JSObject) { _return += _key + _separator + static_cast<std::string>(_value); }
+        else if (_to_join->type() == zpt::JSObject) {
+            _return += _key + _separator + static_cast<std::string>(_value);
+        }
     }
     return _return;
 }
 
-auto
-zpt::path::split(std::string const& _to_split) -> zpt::json {
-    return zpt::split(_to_split, "/", true);
-}
+auto zpt::path::split(std::string const& _to_split) -> zpt::json { return zpt::split(_to_split, "/", true); }
 
-auto
-zpt::path::join(zpt::json _to_join) -> std::string {
+auto zpt::path::join(zpt::json _to_join) -> std::string {
     return std::string("/") + zpt::join(_to_join, "/");
 }
 
-auto
-zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
+auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
     zpt::json _non_positional = zpt::json::array();
     zpt::json _return = { "--", _non_positional };
     std::string _last("");
@@ -143,20 +135,19 @@ zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
     return _return;
 }
 
-auto
-zpt::conf::setup(zpt::json _options) -> void {
+auto zpt::conf::setup(zpt::json _options) -> void {
     zpt::conf::dirs(_options);
     zpt::conf::env(_options);
 }
 
-auto
-zpt::conf::evaluate_ref(zpt::json _options,
-                        std::string const& _parent_key,
-                        zpt::json _parent,
-                        std::string const& _file_context) -> void {
+auto zpt::conf::evaluate_ref(zpt::json _options,
+                             std::string const& _parent_key,
+                             zpt::json _parent,
+                             std::string const& _file_context) -> void {
     for (auto [_, _key, _value] : _options) {
         if (_key == "$ref") {
-            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context) : std::string{ "" }) +
+            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context)
+                                                           : std::string{ "" }) +
                                _value->string() };
             zpt::json _other;
             zpt::conf::file(_href, _other);
@@ -167,8 +158,7 @@ zpt::conf::evaluate_ref(zpt::json _options,
     }
 }
 
-auto
-zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
+auto zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
     zpt::json _conf;
     std::ifstream _ifs;
     _ifs.open(_file.data());
@@ -187,8 +177,7 @@ zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
     _ifs.close();
 }
 
-auto
-zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
+auto zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     std::vector<std::string> _non_positional;
     if (zpt::is_dir(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
     else { _non_positional.push_back(_dir); }
@@ -200,34 +189,30 @@ zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     }
 }
 
-auto
-zpt::conf::dirs(zpt::json& _options) -> void {
+auto zpt::conf::dirs(zpt::json& _options) -> void {
     bool* _redo = new bool(false);
     do {
         *_redo = false;
         zpt::json _traversable = _options->clone();
-        zpt::json::traverse(_traversable,
-                            [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
-                                if (_key == "$include") {
-                                    zpt::json _object = (_path.rfind(".") != std::string::npos
-                                                           ? _options->get_path(_path.substr(0, _path.rfind(".")))
-                                                           : _options);
-                                    if (_item->is_array()) {
-                                        for (auto [_idx, _key, _file] : _item) {
-                                            zpt::conf::dirs((std::string)_file, _object);
-                                        }
-                                    }
-                                    else { zpt::conf::dirs((std::string)_item, _object); }
-                                    _object->object()->pop("$include");
-                                    *_redo = true;
-                                }
-                            });
+        zpt::json::traverse(
+          _traversable, [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+              if (_key == "$include") {
+                  zpt::json _object = (_path.rfind(".") != std::string::npos
+                                         ? _options->get_path(_path.substr(0, _path.rfind(".")))
+                                         : _options);
+                  if (_item->is_array()) {
+                      for (auto [_idx, _key, _file] : _item) { zpt::conf::dirs((std::string)_file, _object); }
+                  }
+                  else { zpt::conf::dirs((std::string)_item, _object); }
+                  _object->object()->pop("$include");
+                  *_redo = true;
+              }
+          });
     } while (*_redo);
     delete _redo;
 }
 
-auto
-zpt::conf::env(zpt::json& _options) -> void {
+auto zpt::conf::env(zpt::json& _options) -> void {
     zpt::json _traversable = _options->clone();
     zpt::json::traverse(
       _traversable, [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
@@ -246,8 +231,7 @@ zpt::conf::env(zpt::json& _options) -> void {
       });
 }
 
-auto
-zpt::email::parse(std::string const& _email) -> zpt::json {
+auto zpt::email::parse(std::string const& _email) -> zpt::json {
     static const std::regex _email_rgx("(?:\"([^\"]*)\")?"
                                        "(?:[ ])?"
                                        "(?:<)?"
@@ -261,8 +245,9 @@ zpt::email::parse(std::string const& _email) -> zpt::json {
         "full",
         ((std::string)_email_matches[0]),
         "name",
-        (((std::string)_email_matches[1]).length() == 0 ? zpt::undefined
-                                                        : zpt::json::string(((std::string)_email_matches[1]))),
+        (((std::string)_email_matches[1]).length() == 0
+           ? zpt::undefined
+           : zpt::json::string(((std::string)_email_matches[1]))),
         "user",
         (((std::string)_email_matches[2]) + ((std::string)_email_matches[3])),
         "domain",
@@ -273,8 +258,7 @@ zpt::email::parse(std::string const& _email) -> zpt::json {
     };
 }
 
-auto
-zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json {
+auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _values = zpt::json::array();
 
@@ -344,11 +328,11 @@ zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt::json
     return _return;
 }
 
-auto
-zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) -> void {
+auto zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) -> void {
     for (auto [_, _key, _parameter] : _to_check) {
         if (!_inclusive && !_rules[_key]->ok()) { continue; }
-        expect(!_inclusive || _rules[_key]->type() == zpt::JSObject, "'" << _key << "' is not a valid parameter");
+        expect(!_inclusive || _rules[_key]->type() == zpt::JSObject,
+               "'" << _key << "' is not a valid parameter");
         for (auto [_, _cfg_name, _cfg_value] : _rules[_key]) {
             if (_cfg_name == "type") {
                 expect(zpt::to_string(_parameter->type()) == _cfg_value->string(),
@@ -364,13 +348,14 @@ zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclusive) 
 
     for (auto [_, _key, _config] : _rules) {
         for (auto [_, _cfg_name, _cfg_value] : _config) {
-            if (_cfg_name == "mandatory") { expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter"); }
+            if (_cfg_name == "mandatory") {
+                expect(_to_check[_key]->ok(), "'" << _key << "' is a required parameter");
+            }
         }
     }
 }
 
-auto
-zpt::parameters::usage(zpt::json _config) -> std::string {
+auto zpt::parameters::usage(zpt::json _config) -> std::string {
     std::ostringstream _oss;
     _oss << "Usage: zpt [OPTIONS]" << std::endl << "Options:" << std::endl << std::flush;
     size_t _max_len{ 0 };
@@ -395,14 +380,14 @@ zpt::parameters::usage(zpt::json _config) -> std::string {
     return zpt::r_replace(_oss.str(), "\"", "");
 }
 
-auto
-zpt::test::location(zpt::json _location) -> bool {
-    return (_location->is_object() && _location["longitude"]->is_number() && _location["latitude"]->is_number()) ||
-           (_location->is_array() && _location->size() == 2 && _location[0]->is_number() && _location[1]->is_number());
+auto zpt::test::location(zpt::json _location) -> bool {
+    return (_location->is_object() && _location["longitude"]->is_number() &&
+            _location["latitude"]->is_number()) ||
+           (_location->is_array() && _location->size() == 2 && _location[0]->is_number() &&
+            _location[1]->is_number());
 }
 
-auto
-zpt::test::timestamp(zpt::json _timestamp) -> bool {
+auto zpt::test::timestamp(zpt::json _timestamp) -> bool {
     if (_timestamp->type() == zpt::JSDate) { return true; }
     if (_timestamp->type() != zpt::JSString) { return false; }
     static const std::regex _timestamp_rgx("^([0-9]{4})-"
@@ -416,8 +401,7 @@ zpt::test::timestamp(zpt::json _timestamp) -> bool {
     return std::regex_match(_timestamp->string(), _timestamp_rgx);
 }
 
-auto
-zpt::http::cookies::deserialize(std::string const& _cookie_header) -> zpt::json {
+auto zpt::http::cookies::deserialize(std::string const& _cookie_header) -> zpt::json {
     zpt::json _splitted = zpt::split(_cookie_header, ";");
     zpt::json _return = zpt::json::object();
     bool _first = true;
@@ -436,8 +420,7 @@ zpt::http::cookies::deserialize(std::string const& _cookie_header) -> zpt::json 
     return _return;
 }
 
-auto
-zpt::http::cookies::serialize(zpt::json _info) -> std::string {
+auto zpt::http::cookies::serialize(zpt::json _info) -> std::string {
     std::string _return((std::string)_info["value"]);
     for (auto [_idx, _key, _field] : _info) {
         if (_key == "value") { continue; }
@@ -446,7 +429,4 @@ zpt::http::cookies::serialize(zpt::json _info) -> std::string {
     return _return;
 }
 
-extern "C" auto
-zpt_lex_json() -> int {
-    return 1;
-}
+extern "C" auto zpt_lex_json() -> int { return 1; }

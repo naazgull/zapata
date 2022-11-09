@@ -9,22 +9,17 @@
 // $insert namespace-open
 namespace zpt {
 
-inline void
-JSONTokenizer::error() {
-    throw zpt::SyntaxErrorException(std::string("JSON: Syntax error in line ") + std::to_string(d_scanner.lineNr()));
+inline void JSONTokenizer::error() {
+    throw zpt::SyntaxErrorException(std::string("JSON: Syntax error in line ") +
+                                    std::to_string(d_scanner.lineNr()));
 }
 
 // $insert lex
-inline int
-JSONTokenizer::lex() {
-    return d_scanner.lex();
-}
+inline int JSONTokenizer::lex() { return d_scanner.lex(); }
 
-inline void
-JSONTokenizer::print() {}
+inline void JSONTokenizer::print() {}
 
-inline void
-JSONTokenizer::exceptionHandler(std::exception const& exc) {
+inline void JSONTokenizer::exceptionHandler(std::exception const& exc) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

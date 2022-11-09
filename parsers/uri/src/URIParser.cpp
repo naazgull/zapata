@@ -4,12 +4,8 @@ zpt::URIParser::URIParser(std::istream& _in, std::ostream& _out) { this->d_scann
 
 zpt::URIParser::~URIParser() {}
 
-void
-zpt::URIParser::switchRoots(zpt::json& _root) {
-    this->d_scanner.switchRoots(_root);
-}
+void zpt::URIParser::switchRoots(zpt::json& _root) { this->d_scanner.switchRoots(_root); }
 
-void
-zpt::URIParser::switchStreams(std::istream& _in, std::ostream& _out) {
+void zpt::URIParser::switchStreams(std::istream& _in, std::ostream& _out) {
     this->d_scanner.switchStreams(_in, _out);
 }

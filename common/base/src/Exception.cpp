@@ -32,12 +32,8 @@ zpt::exception::exception(std::string const& _what, bool _with_stack)
 
 zpt::exception::~exception() throw() {}
 
-auto
-zpt::exception::what() const noexcept -> const char* {
-    return this->__what.data();
-}
+auto zpt::exception::what() const noexcept -> const char* { return this->__what.data(); }
 
-auto
-zpt::exception::backtrace() const -> const char* {
+auto zpt::exception::backtrace() const -> const char* {
     return this->__backtrace.length() == 0 ? nullptr : this->__backtrace.data();
 }

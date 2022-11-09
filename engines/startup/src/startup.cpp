@@ -24,13 +24,11 @@
 #include <zapata/transport.h>
 #include <zapata/startup/startup.h>
 
-auto
-zpt::BOOT() -> ssize_t& {
+auto zpt::BOOT() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
-auto
-zpt::GLOBAL_CONFIG() -> ssize_t& {
+auto zpt::GLOBAL_CONFIG() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -88,28 +86,15 @@ zpt::plugin::~plugin() {
     this->__lib_handler = nullptr;
 }
 
-auto
-zpt::plugin::name() -> std::string& {
-    return this->__name;
-}
+auto zpt::plugin::name() -> std::string& { return this->__name; }
 
-auto
-zpt::plugin::source() -> std::string& {
-    return this->__source;
-}
+auto zpt::plugin::source() -> std::string& { return this->__source; }
 
-auto
-zpt::plugin::config() -> zpt::json& {
-    return this->__config;
-}
+auto zpt::plugin::config() -> zpt::json& { return this->__config; }
 
-auto
-zpt::plugin::is_shutdown_ongoing() -> bool {
-    return this->__shutdown->load();
-}
+auto zpt::plugin::is_shutdown_ongoing() -> bool { return this->__shutdown->load(); }
 
-auto
-zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin& {
+auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin& {
     this->__threads.emplace_back(_callback);
     return (*this);
 }
@@ -121,8 +106,7 @@ zpt::startup::boot::boot(zpt::json _config)
 
 zpt::startup::boot::~boot() {}
 
-auto
-zpt::startup::boot::to_string() -> std::string {
+auto zpt::startup::boot::to_string() -> std::string {
     auto _plugins = zpt::json::object();
     for (auto& [_key, _plugin] : this->__plugins) {
         _plugins << _key << zpt::json{ "name", _plugin->name(), "source", _plugin->source() };
@@ -130,10 +114,11 @@ zpt::startup::boot::to_string() -> std::string {
     return *(zpt::pretty{ zpt::json{ "plugins", _plugins } });
 }
 
-auto
-zpt::startup::boot::load() -> zpt::startup::boot& {
+auto zpt::startup::boot::load() -> zpt::startup::boot& {
     auto _to_load = zpt::json::object();
-    for (auto [_idx, __, _lib] : this->__configuration["load"]) { _to_load << _lib["name"]->string() << true; }
+    for (auto [_idx, __, _lib] : this->__configuration["load"]) {
+        _to_load << _lib["name"]->string() << true;
+    }
 
     while (_to_load->size() != 0) {
         for (auto [_idx, __, _lib] : this->__configuration["load"]) {
@@ -151,19 +136,17 @@ zpt::startup::boot::load() -> zpt::startup::boot& {
     return (*this);
 }
 
-auto
-zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
+auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
     expect(_plugin_options["name"]->ok(), "missing name definition in plugin configuration");
 
-    auto [_it, _inserted] =
-      this->__plugins.emplace(_plugin_options["name"]->string(),
-                              std::unique_ptr<zpt::plugin>{ new zpt::plugin{ _plugin_options, _plugin_config } });
+    auto [_it, _inserted] = this->__plugins.emplace(
+      _plugin_options["name"]->string(),
+      std::unique_ptr<zpt::plugin>{ new zpt::plugin{ _plugin_options, _plugin_config } });
     auto& _plugin = _it->second;
     return *_plugin;
 }
 
-auto
-zpt::startup::boot::hash(zpt::json& _event) -> std::string {
+auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
     return static_cast<std::string>(_event["plugin"]) + std::string("/") +
            std::to_string(static_cast<int>(_event["step"]));
 }

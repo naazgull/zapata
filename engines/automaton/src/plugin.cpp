@@ -25,18 +25,18 @@
 #include <zapata/automaton.h>
 #include <zapata/transport.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::boot>(zpt::BOOT());
-    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _boot = zpt::global_cast<zpt::startup::boot>(zpt::BOOT());
+    auto& _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
     long _threads = std::max(static_cast<long>(_config["limits"]["max_queue_threads"]), 1L);
-    long _max_queue_spin_sleep = std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
-    zpt::globals::alloc<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
+    long _max_queue_spin_sleep =
+      std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
+    zpt::make_global<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE(), _threads, _plugin->config());
 
     _plugin.add_thread([_max_queue_spin_sleep]() -> void {
         zlog("Starting AUTOMATON engine", zpt::info);
-        auto& _polling = zpt::globals::get<zpt::polling>(zpt::STREAM_POLLING());
-        auto& _automaton = zpt::globals::get<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
+        auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+        auto& _automaton = zpt::global_cast<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
         _automaton.start_threads();
 
         zpt::this_thread::timer<long, 5> _timer;
@@ -60,8 +60,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     });
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Stopping AUTOMATON engine", zpt::info);
-    zpt::globals::dealloc<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
+    zpt::release_global<zpt::automaton::engine>(zpt::AUTOMATON_ENGINE());
 }

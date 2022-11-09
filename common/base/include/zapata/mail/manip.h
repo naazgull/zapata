@@ -28,10 +28,9 @@
 #include <string>
 
 namespace zpt {
-bool
-sendmail(std::string const& _to,
-         std::string _from,
-         std::string _subject,
-         std::string _message,
-         std::string _replyto = "");
+bool sendmail(std::string const& _to,
+              std::string _from,
+              std::string _subject,
+              std::string _message,
+              std::string _replyto = "");
 }

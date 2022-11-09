@@ -32,15 +32,13 @@
 #include <sstream>
 #include <string>
 
-auto
-zpt::ltrim(std::string& _in_out) -> void {
+auto zpt::ltrim(std::string& _in_out) -> void {
     _in_out.erase(_in_out.begin(), std::find_if(_in_out.begin(), _in_out.end(), [](char c) {
                       return !std::isspace<char>(c, std::locale::classic());
                   }));
 }
 
-auto
-zpt::rtrim(std::string& _in_out) -> void {
+auto zpt::rtrim(std::string& _in_out) -> void {
     _in_out.erase(std::find_if(_in_out.rbegin(),
                                _in_out.rend(),
                                [](char c) { return !std::isspace<char>(c, std::locale::classic()); })
@@ -48,14 +46,12 @@ zpt::rtrim(std::string& _in_out) -> void {
                   _in_out.end());
 }
 
-auto
-zpt::trim(std::string& _in_out) -> void {
+auto zpt::trim(std::string& _in_out) -> void {
     zpt::ltrim(_in_out);
     zpt::rtrim(_in_out);
 }
 
-auto
-zpt::replace(std::string& str, std::string find, std::string replace) -> void {
+auto zpt::replace(std::string& str, std::string find, std::string replace) -> void {
     if (str.length() == 0) { return; }
 
     size_t start{ 0 };
@@ -66,8 +62,7 @@ zpt::replace(std::string& str, std::string find, std::string replace) -> void {
     }
 }
 
-auto
-zpt::normalize_path(std::string& _in_out, bool _with_trailing) -> void {
+auto zpt::normalize_path(std::string& _in_out, bool _with_trailing) -> void {
     if (_with_trailing) {
         if (_in_out[_in_out.length() - 1] != '/') { _in_out.insert(_in_out.length(), "/"); }
     }
@@ -76,8 +71,7 @@ zpt::normalize_path(std::string& _in_out, bool _with_trailing) -> void {
     }
 }
 
-auto
-zpt::prettify_header_name(std::string& name) -> void {
+auto zpt::prettify_header_name(std::string& name) -> void {
     std::transform(name.begin(), name.begin() + 1, name.begin(), ::toupper);
 
     std::stringstream iss;
@@ -92,32 +86,29 @@ zpt::prettify_header_name(std::string& name) -> void {
     }
 }
 
-auto
-zpt::r_ltrim(std::string const& _in_out) -> std::string {
+auto zpt::r_ltrim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
     _return.erase(_return.begin(),
                   std::find_if(_return.begin(), _return.end(), [](char c) { return std::isspace(c); }));
     return _return;
 }
 
-auto
-zpt::r_rtrim(std::string const& _in_out) -> std::string {
+auto zpt::r_rtrim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
-    _return.erase(std::find_if(_return.rbegin(), _return.rend(), [](char c) { return std::isspace(c); }).base(),
-                  _return.end());
+    _return.erase(
+      std::find_if(_return.rbegin(), _return.rend(), [](char c) { return std::isspace(c); }).base(),
+      _return.end());
     return _return;
 }
 
-auto
-zpt::r_trim(std::string const& _in_out) -> std::string {
+auto zpt::r_trim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
     zpt::ltrim(_return);
     zpt::rtrim(_return);
     return _return;
 }
 
-auto
-zpt::r_replace(std::string str, std::string find, std::string replace) -> std::string {
+auto zpt::r_replace(std::string str, std::string find, std::string replace) -> std::string {
     std::string _return{ str.data() };
     try {
         if (_return.length() == 0) { return _return; }
@@ -135,8 +126,7 @@ zpt::r_replace(std::string str, std::string find, std::string replace) -> std::s
     return _return;
 }
 
-auto
-zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) -> std::string {
+auto zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) -> std::string {
     std::string _return{ _in_out.data() };
     if (_with_trailing) {
         if (_return[_return.length() - 1] != '/') { _return.insert(_return.length(), "/"); }
@@ -147,8 +137,7 @@ zpt::r_normalize_path(std::string const& _in_out, bool _with_trailing) -> std::s
     return _return;
 }
 
-auto
-zpt::r_prettify_header_name(std::string name) -> std::string {
+auto zpt::r_prettify_header_name(std::string name) -> std::string {
     std::string _return{ name.data() };
     std::transform(_return.begin(), _return.begin() + 1, _return.begin(), ::toupper);
 

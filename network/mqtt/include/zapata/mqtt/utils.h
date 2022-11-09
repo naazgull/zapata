@@ -17,8 +17,7 @@ Copyright (c) 2017, Muzzley
 namespace zpt {
 namespace mqtt {
 namespace utils {
-auto
-check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int;
+auto check_err(int _return, int _errno, const std::string& _connection, zpt::LogLevel _log_level) -> int;
 }
 } // namespace mqtt
 } // namespace zpt

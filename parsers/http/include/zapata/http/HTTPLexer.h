@@ -40,25 +40,17 @@ inline HTTPLexer::HTTPLexer(std::string const& infile, std::string const& outfil
   : HTTPLexerBase(infile, outfile, keepCwd) {}
 
 // $insert inlineLexFunction
-inline int
-HTTPLexer::lex() {
-    return lex_();
-}
+inline int HTTPLexer::lex() { return lex_(); }
 
-inline void
-HTTPLexer::preCode() {
+inline void HTTPLexer::preCode() {
     // optionally replace by your own code
 }
 
-inline void
-HTTPLexer::postCode([[maybe_unused]] PostEnum_ type) {
+inline void HTTPLexer::postCode([[maybe_unused]] PostEnum_ type) {
     // optionally replace by your own code
 }
 
-inline void
-HTTPLexer::print() {
-    print_();
-}
+inline void HTTPLexer::print() { print_(); }
 
 // $insert namespace-close
 } // namespace zpt

@@ -1,7 +1,6 @@
 #include <zapata/net/manip.h>
 
-auto
-zpt::net::getip(std::string const& _if) -> std::string {
+auto zpt::net::getip(std::string const& _if) -> std::string {
     std::string _out;
     struct ifaddrs *_if_addr = nullptr, *_ifa = nullptr;
     void* _tmp_add_ptr = nullptr;
@@ -12,7 +11,8 @@ zpt::net::getip(std::string const& _if) -> std::string {
             char _mask[INET_ADDRSTRLEN];
             void* _mask_ptr = &((struct sockaddr_in*)_ifa->ifa_netmask)->sin_addr;
             inet_ntop(AF_INET, _mask_ptr, _mask, INET_ADDRSTRLEN);
-            if (strcmp(_mask, "255.0.0.0") != 0 && (_if.length() == 0 || std::string(_ifa->ifa_name) == _if)) {
+            if (strcmp(_mask, "255.0.0.0") != 0 &&
+                (_if.length() == 0 || std::string(_ifa->ifa_name) == _if)) {
                 _tmp_add_ptr = &((struct sockaddr_in*)_ifa->ifa_addr)->sin_addr;
                 char _address_buf[INET_ADDRSTRLEN];
                 bzero(_address_buf, INET_ADDRSTRLEN);
@@ -27,7 +27,8 @@ zpt::net::getip(std::string const& _if) -> std::string {
             char _mask[INET6_ADDRSTRLEN];
             void* _mask_ptr = &((struct sockaddr_in*)_ifa->ifa_netmask)->sin_addr;
             inet_ntop(AF_INET6, _mask_ptr, _mask, INET6_ADDRSTRLEN);
-            if (strcmp(_mask, "255.0.0.0") != 0 && (_if.length() == 0 || std::string(_ifa->ifa_name) == _if)) {
+            if (strcmp(_mask, "255.0.0.0") != 0 &&
+                (_if.length() == 0 || std::string(_ifa->ifa_name) == _if)) {
                 _tmp_add_ptr = &((struct sockaddr_in*)_ifa->ifa_addr)->sin_addr;
                 char _address_buf[INET6_ADDRSTRLEN];
                 bzero(_address_buf, INET6_ADDRSTRLEN);
