@@ -25,12 +25,12 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
 message("-- Build runtime path: ${CMAKE_BUILD_RPATH}")
 
-set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size -Wall")
+set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size -Wall -Wno-restrict")
 set(ZAPATA_LINK_FLAGS "")
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" ZAPATA_BUILD_TYPE)
 if(ZAPATA_BUILD_TYPE STREQUAL debug)
-  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size -Wall")
+  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size -Wall -Wno-restrict")
 endif()
 
 message("-- Compiler flags: ${ZAPATA_COMPILE_FLAGS}")

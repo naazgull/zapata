@@ -34,7 +34,8 @@ zpt::events::dispatcher::dispatcher(long _max_consumers)
 zpt::events::dispatcher::~dispatcher() { this->stop_consumers(); }
 
 auto zpt::events::dispatcher::start_consumers(long _n_consumers) -> dispatcher& {
-    if (_n_consumers == 0 || _n_consumers + this->__consumers.size() >= this->__max_consumers) {
+    if (_n_consumers == 0 ||
+        _n_consumers + this->__consumers.size() >= static_cast<size_t>(this->__max_consumers)) {
         _n_consumers = this->__max_consumers - this->__consumers.size();
     }
     for (long _consumer_nr = this->__consumers.size(), _idx = 0; _idx != _n_consumers;
