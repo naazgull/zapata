@@ -76,7 +76,7 @@ auto zpt::generate::hash(std::string& _out) -> void {
         if (i % 10 == 0) { srand(_tv.tv_usec * i); }
         _randompass[i] = _charset[rand() % _charset.length()];
     };
-    _out.insert(_out.length(), _randompass);
+    _out.append(_randompass);
 }
 
 auto zpt::generate::r_hash() -> std::string {

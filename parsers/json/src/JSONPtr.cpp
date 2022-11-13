@@ -1058,11 +1058,11 @@ auto zpt::timestamp(zpt::json _json_date) -> zpt::timestamp_t { return (zpt::tim
 
 auto zpt::timestamp(zpt::timestamp_t _timestamp) -> std::string {
     std::string _date = zpt::tostr((size_t)(_timestamp / 1000), "%Y-%m-%dT%H:%M:%S");
-    _date.insert(_date.length(), ".");
+    _date.append(".");
     size_t _remainder = _timestamp % 1000;
     if (_remainder < 100) {
-        _date.insert(_date.length(), "0");
-        if (_remainder < 10) { _date.insert(_date.length(), "0"); }
+        _date.append("0");
+        if (_remainder < 10) { _date.append("0"); }
     }
     zpt::tostr(_date, _remainder);
     size_t _time_offset = (size_t)(_timestamp / 1000);

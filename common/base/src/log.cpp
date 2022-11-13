@@ -47,7 +47,9 @@ auto zpt::log(std::string const& _text,
     if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
-        _oss << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
+        _oss << zpt::log_lvl_names[_level] << " " << _text;
+        if (_level > 6) { _oss << " " << _file << ":" << _line; }
+        _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
         return 0;
     }

@@ -1448,9 +1448,9 @@ auto zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const
         case zpt::JSString: {
             std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
-            _out.insert(_out.length(), "\"");
-            _out.insert(_out.length(), _str);
-            _out.insert(_out.length(), "\"");
+            _out.append("\"");
+            _out.append(_str);
+            _out.append("\"");
             break;
         }
         case zpt::JSInteger: {
@@ -1467,23 +1467,23 @@ auto zpt::JSONElementT::stringify(std::string& _out) const -> JSONElementT const
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
-            _out.insert(_out.length(), "null");
+            _out.append("null");
             break;
         }
         case zpt::JSDate: {
-            _out.insert(_out.length(), "\"");
-            _out.insert(_out.length(), zpt::timestamp(this->date()));
-            _out.insert(_out.length(), "\"");
+            _out.append("\"");
+            _out.append(zpt::timestamp(this->date()));
+            _out.append("\"");
             break;
         }
         case zpt::JSLambda: {
-            _out.insert(_out.length(), this->lambda()->signature());
+            _out.append(this->lambda()->signature());
             break;
         }
         case zpt::JSRegex: {
-            _out.insert(_out.length(), "/");
-            _out.insert(_out.length(), this->regex().to_string());
-            _out.insert(_out.length(), "/");
+            _out.append("/");
+            _out.append(this->regex().to_string());
+            _out.append("/");
             break;
         }
     }
@@ -1569,9 +1569,9 @@ auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONE
         case zpt::JSString: {
             std::string _str{ this->string() };
             zpt::json::to_unicode(_str);
-            _out.insert(_out.length(), "\"");
-            _out.insert(_out.length(), _str);
-            _out.insert(_out.length(), "\"");
+            _out.append("\"");
+            _out.append(_str);
+            _out.append("\"");
             break;
         }
         case zpt::JSInteger: {
@@ -1588,27 +1588,27 @@ auto zpt::JSONElementT::prettify(std::string& _out, uint _n_tabs) const -> JSONE
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
-            _out.insert(_out.length(), "null");
+            _out.append("null");
             break;
         }
         case zpt::JSDate: {
-            _out.insert(_out.length(), "\"");
-            _out.insert(_out.length(), zpt::timestamp(this->date()));
-            _out.insert(_out.length(), "\"");
+            _out.append("\"");
+            _out.append(zpt::timestamp(this->date()));
+            _out.append("\"");
             break;
         }
         case zpt::JSLambda: {
-            _out.insert(_out.length(), this->lambda()->signature());
+            _out.append(this->lambda()->signature());
             break;
         }
         case zpt::JSRegex: {
-            _out.insert(_out.length(), "/");
-            _out.insert(_out.length(), this->regex().to_string());
-            _out.insert(_out.length(), "/");
+            _out.append("/");
+            _out.append(this->regex().to_string());
+            _out.append("/");
             break;
         }
     }
-    if (_n_tabs == 0) { _out.insert(_out.length(), "\n"); }
+    if (_n_tabs == 0) { _out.append("\n"); }
     return (*this);
 }
 

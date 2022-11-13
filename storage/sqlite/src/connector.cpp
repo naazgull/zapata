@@ -216,7 +216,6 @@ auto zpt::storage::sqlite::session::sql(std::string const& _statement) -> zpt::s
 }
 
 auto zpt::storage::sqlite::session::database(std::string const& _db) -> zpt::storage::database {
-    zlog(this->__options("path"), zpt::info);
     return zpt::make_database<zpt::storage::sqlite::database>(*this, _db);
 }
 
@@ -940,7 +939,6 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
             _return << _row;
         }
     }
-    zlog(_return->size(), zpt::info);
     return (_return->size() != 0 ? _return : zpt::undefined);
 }
 

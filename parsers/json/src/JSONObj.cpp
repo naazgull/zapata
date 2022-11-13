@@ -292,17 +292,17 @@ auto zpt::JSONObjT::stringify(std::ostream& _out) -> zpt::JSONObjT& {
 }
 
 auto zpt::JSONObjT::stringify(std::string& _out) const -> zpt::JSONObjT const& {
-    _out.insert(_out.length(), "{");
+    _out.append("{");
     auto _first = true;
     for (auto _element : this->__underlying) {
-        if (!_first) { _out.insert(_out.length(), ","); }
+        if (!_first) { _out.append(","); }
         _first = false;
-        _out.insert(_out.length(), "\"");
-        _out.insert(_out.length(), _element.first);
-        _out.insert(_out.length(), "\":");
+        _out.append("\"");
+        _out.append(_element.first);
+        _out.append("\":");
         _element.second->stringify(_out);
     }
-    _out.insert(_out.length(), "}");
+    _out.append("}");
     return (*this);
 }
 
@@ -329,23 +329,23 @@ auto zpt::JSONObjT::prettify(std::ostream& _out, uint _n_tabs) -> zpt::JSONObjT&
 }
 
 auto zpt::JSONObjT::prettify(std::string& _out, uint _n_tabs) const -> zpt::JSONObjT const& {
-    _out.insert(_out.length(), "{");
+    _out.append("{");
     auto _first = true;
     for (auto _element : this->__underlying) {
-        if (!_first) { _out.insert(_out.length(), ","); }
-        _out.insert(_out.length(), "\n");
+        if (!_first) { _out.append(","); }
+        _out.append("\n");
         _first = false;
-        _out.insert(_out.length(), std::string(_n_tabs + 1, '\t'));
-        _out.insert(_out.length(), "\"");
-        _out.insert(_out.length(), _element.first);
-        _out.insert(_out.length(), "\" : ");
+        _out.append(std::string(_n_tabs + 1, '\t'));
+        _out.append("\"");
+        _out.append(_element.first);
+        _out.append("\" : ");
         _element.second->prettify(_out, _n_tabs + 1);
     }
     if (!_first) {
-        _out.insert(_out.length(), "\n");
-        _out.insert(_out.length(), std::string(_n_tabs, '\t'));
+        _out.append("\n");
+        _out.append(std::string(_n_tabs, '\t'));
     }
-    _out.insert(_out.length(), "}");
+    _out.append("}");
     return (*this);
 }
 

@@ -37,7 +37,7 @@ class catalogue {
 
     auto clear() -> catalogue&;
     auto add(K _key, M _metadata) -> catalogue&;
-    auto search(K const& _pattern) -> std::deque<M>;
+    auto search(K const& _pattern) -> std::deque<std::tuple<K, M>>;
 
   private:
     zpt::storage::connection __connection;
@@ -89,20 +89,19 @@ auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<M> {
+auto zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<std::tuple<K, M>> {
     auto _result = this
                      ->__catalogue //
                      ->find({ "_id", _pattern })
                      ->execute();
 
-    std::stringstream _ss;
-    std::deque<M> _to_return;
+    std::deque<std::tuple<K, M>> _to_return;
     for (auto _row = _result->fetch(1); _row != zpt::undefined; _row = _result->fetch(1)) {
         M _value;
-        zlog((_row == zpt::undefined), zpt::info);
-        // _ss << _row["metadata"] << std::flush;
-        // _ss >> _value;
-        // _to_return.push_back(_value);
+        std::stringstream _ss;
+        _ss << _row["metadata"]->string() << std::flush;
+        _ss >> _value;
+        _to_return.push_back({ static_cast<K>(_row["_id"]), _value });
     }
     return _to_return;
 }

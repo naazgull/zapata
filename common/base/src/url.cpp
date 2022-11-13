@@ -36,7 +36,7 @@ auto zpt::quoted_printable::encode(std::string const& _quote, std::string const&
         else { _oss << _quote[_i]; }
     }
     _oss << "?=" << std::flush;
-    _out.insert(_out.length(), _oss.str());
+    _out.append(_oss.str());
 }
 
 auto zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset) -> std::string {

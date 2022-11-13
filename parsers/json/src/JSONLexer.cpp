@@ -709,7 +709,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
             {
                 std::string _out(matched());
                 _out.erase(_out.length() - 1, 1);
-                _out.insert(_out.length(), "\n");
+                _out.append("\n");
                 setMatched(_out);
                 more();
                 begin(d_intermediate_state);
@@ -719,7 +719,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
             {
                 std::string _out(matched());
                 _out.erase(_out.length() - 1, 1);
-                _out.insert(_out.length(), "\t");
+                _out.append("\t");
                 setMatched(_out);
                 more();
                 begin(d_intermediate_state);
@@ -729,7 +729,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
             {
                 std::string _out(matched());
                 _out.erase(_out.length() - 1, 1);
-                _out.insert(_out.length(), "\r");
+                _out.append("\r");
                 setMatched(_out);
                 more();
                 begin(d_intermediate_state);
@@ -739,7 +739,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
             {
                 std::string _out(matched());
                 _out.erase(_out.length() - 1, 1);
-                _out.insert(_out.length(), "\f");
+                _out.append("\f");
                 setMatched(_out);
                 more();
                 begin(d_intermediate_state);
@@ -758,7 +758,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
             {
                 std::string _out(matched());
                 _out.erase(_out.length() - 1, 1);
-                _out.insert(_out.length(), "\\");
+                _out.append("\\");
                 setMatched(_out);
                 more();
                 begin(d_intermediate_state);
@@ -802,7 +802,7 @@ int JSONLexer::executeAction_(size_t ruleIdx) try {
                 else { dest.insert(dest.end(), '?'); }
 
                 _out.assign(_out.substr(0, _out.length() - 4));
-                _out.insert(_out.length(), dest);
+                _out.append(dest);
                 setMatched(_out);
                 more();
 

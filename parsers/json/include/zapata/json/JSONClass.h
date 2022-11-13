@@ -110,7 +110,7 @@ class json {
     using traverse_callback = std::function<void(std::string const&, zpt::json, std::string const&)>;
 
     json();
-    json(std::nullptr_t);
+    json(std::nullptr_t _rhs);
     json(std::unique_ptr<zpt::JSONElementT> _target);
     json(std::initializer_list<zpt::json> _init);
     json(zpt::json const& _rhs);
@@ -360,8 +360,8 @@ class JSONIterator {
 } // namespace zpt
 
 namespace zpt {
-inline zpt::json undefined;
-inline zpt::json array = undefined;
+inline zpt::json undefined{ zpt::JSUndefined };
+inline zpt::json array;
 } // namespace zpt
 
 namespace zpt {
