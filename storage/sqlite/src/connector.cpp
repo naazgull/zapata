@@ -148,6 +148,7 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
             sqlite3_bind_text(_stmt, _index, _bytes, _size, zpt::storage::sqlite::free_byte_array);
             break;
         }
+        case zpt::JSUndefined:
         case zpt::JSNil: {
             sqlite3_bind_null(_stmt, _index);
             break;

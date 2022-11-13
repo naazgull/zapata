@@ -45,6 +45,7 @@ auto zpt::storage::mysqlx::cast_to_db_value(zpt::json _value) -> ::mysqlx::Value
         case zpt::JSDate: {
             return ::mysqlx::Value{ _value->date() };
         }
+        case zpt::JSUndefined:
         case zpt::JSNil:
         case zpt::JSLambda:
         case zpt::JSRegex: {

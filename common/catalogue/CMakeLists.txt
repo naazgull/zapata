@@ -44,10 +44,14 @@ set_target_properties(zapata-common-catalogue
 
 add_library(zapata-common-catalogue-plugin SHARED)
 add_dependencies(zapata-common-catalogue-plugin
-    zapata-base
-    zapata-parser-json
-    zapata-storage-sqlite
-    zapata-common-catalogue
+  zapata-base
+  zapata-engine-startup
+  zapata-events
+  zapata-globals
+  zapata-lockfree
+  zapata-parser-json
+  zapata-storage-sqlite
+  zapata-common-catalogue
 )
 target_sources(zapata-common-catalogue-plugin
   PUBLIC
@@ -56,6 +60,10 @@ target_sources(zapata-common-catalogue-plugin
 target_include_directories(zapata-common-catalogue-plugin
  PRIVATE
     $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
@@ -66,6 +74,10 @@ target_include_directories(zapata-common-catalogue-plugin
 target_link_libraries(zapata-common-catalogue-plugin
   PRIVATE
     $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
     $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
     ${SQLite3_LIBRARIES}
@@ -92,7 +104,12 @@ install(DIRECTORY ${COMMON_CATALOGUE_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_common_catalogue)
-
+add_dependencies(zapata_test_common_catalogue
+    zapata-base
+    zapata-parser-json
+    zapata-storage-sqlite
+    zapata-common-catalogue
+)
 target_sources(zapata_test_common_catalogue
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp

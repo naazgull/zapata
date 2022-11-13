@@ -36,6 +36,9 @@ auto zpt::to_string(zpt::JSONType _type) -> std::string {
         case JSRegex: {
             return "regexp";
         }
+        case JSUndefined: {
+            return "undefined";
+        }
     }
     return "undefined";
 }

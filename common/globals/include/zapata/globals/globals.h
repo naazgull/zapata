@@ -119,17 +119,6 @@ auto zpt::release_global(ssize_t _variable) -> void {
     delete _ptr;
 }
 
-auto zpt::globals::to_string() -> std::string {
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::locks::spin_lock::shared };
-    std::ostringstream _out;
-    _out << "Global variables:" << std::endl;
-    for (auto [_key, _value] : zpt::globals::__variables) {
-        _out << _key << ":" << std::endl << std::flush;
-        for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
-    }
-    return _out.str();
-}
-
 template<typename T>
 template<typename... Args>
 zpt::thread_local_table::entry<T>::entry(Args... _args)
@@ -176,13 +165,4 @@ auto zpt::thread_local_table::dealloc(P const& _member_variable) -> void {
       zpt::thread_local_table::__variables.find(reinterpret_cast<std::uintptr_t>(&_member_variable));
     if (_found == zpt::thread_local_table::__variables.end()) { return; }
     zpt::thread_local_table::__variables.erase(_found);
-}
-
-auto zpt::thread_local_table::to_string() -> std::string {
-    std::ostringstream _out;
-    _out << "Thread local members:" << std::endl;
-    for (auto& [_key, _value] : zpt::thread_local_table::__variables) {
-        _out << _key << ": " << _value << std::endl << std::flush;
-    }
-    return _out.str();
 }

@@ -10,12 +10,27 @@ option(DONT_COMPILE_XDEVAPI
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size")
+set(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third_party)
+set(THIRD_PARTY_BUILD_INSTALL_DIR ${THIRD_PARTY_DIR}/install)
+
+list(APPEND CMAKE_INSTALL_RPATH
+  ${CMAKE_INSTALL_PREFIX}/bin
+  ${CMAKE_INSTALL_PREFIX}/lib
+  ${THIRD_PARTY_BUILD_INSTALL_DIR}/lib)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+set(CMAKE_SKIP_INSTALL_RPATH OFF)
+set(CMAKE_SKIP_BUILD_RPATH OFF)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
+
+message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
+message("-- Build runtime path: ${CMAKE_BUILD_RPATH}")
+
+set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size -Wall")
 set(ZAPATA_LINK_FLAGS "")
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" ZAPATA_BUILD_TYPE)
 if(ZAPATA_BUILD_TYPE STREQUAL debug)
-  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size")
+  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size -Wall")
 endif()
 
 message("-- Compiler flags: ${ZAPATA_COMPILE_FLAGS}")
@@ -79,7 +94,6 @@ add_subdirectory(storage/connector)
 add_subdirectory(storage/lmdb)
 add_subdirectory(storage/mysqlx)
 add_subdirectory(storage/sqlite)
-
 # add_subdirectory(network/mqtt)
 # add_subdirectory(network/smtp)
 # add_subdirectory(network/upnp)

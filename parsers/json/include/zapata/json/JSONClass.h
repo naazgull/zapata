@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <unordered_map>
 #include <vector>
+#include <variant>
 #include <zapata/base/expect.h>
 
 #include <zapata/log/log.h>
@@ -51,7 +52,8 @@ enum JSONType {
     JSArray = 6,
     JSObject = 7,
     JSRegex = 8,
-    JSLambda
+    JSLambda = 9,
+    JSUndefined = 10
 };
 
 auto to_string(zpt::JSONType _type) -> std::string;
@@ -358,9 +360,8 @@ class JSONIterator {
 } // namespace zpt
 
 namespace zpt {
-inline zpt::json const undefined;
-inline zpt::json const null = undefined;
-inline zpt::json const array = undefined;
+inline zpt::json undefined;
+inline zpt::json array = undefined;
 } // namespace zpt
 
 namespace zpt {
@@ -775,64 +776,10 @@ class JSONLambda {
 } // namespace zpt
 
 namespace zpt {
-using JSONUnion = struct JSONStruct {
-    JSONStruct()
-      : __type{ JSNil }
-      , __nil{ nullptr } {}
-    ~JSONStruct() {
-        switch (__type) {
-            case zpt::JSObject: {
-                __object.~JSONObj();
-                break;
-            }
-            case zpt::JSArray: {
-                __array.~JSONArr();
-                break;
-            }
-            case zpt::JSString: {
-                __string.~JSONStr();
-                break;
-            }
-            case zpt::JSLambda: {
-                __lambda.~lambda();
-                break;
-            }
-            case zpt::JSRegex: {
-                __regex.~JSONRegex();
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-
-    JSONStruct(JSONStruct const&) = delete;
-    JSONStruct& operator=(JSONStruct const&) = delete;
-
-    JSONStruct(JSONStruct&&) = delete;
-    JSONStruct& operator=(JSONStruct&&) = delete;
-
-    JSONType __type{ JSNil };
-    union {
-        JSONObj __object;
-        JSONArr __array;
-        JSONStr __string;
-        long long __integer;
-        double __double;
-        bool __boolean;
-        void* __nil;
-        zpt::timestamp_t __date;
-        zpt::lambda __lambda;
-        JSONRegex __regex;
-    };
-};
-} // namespace zpt
-
-namespace zpt {
 class JSONElementT {
   public:
     JSONElementT();
+    JSONElementT(JSONType _in);
     JSONElementT(const JSONElementT& _element);
     JSONElementT(JSONElementT&& _element);
     JSONElementT(JSONObj& _value);
@@ -850,12 +797,13 @@ class JSONElementT {
 #endif
     JSONElementT(zpt::lambda _value);
     JSONElementT(zpt::regex _value);
+    JSONElementT(std::nullptr_t _rhs);
+    JSONElementT(void* _rhs);
     virtual ~JSONElementT();
 
     virtual auto type() const -> JSONType;
     virtual auto demangle() const -> std::string;
     virtual auto type(JSONType _in) -> JSONElementT&;
-    virtual auto value() -> JSONUnion&;
     virtual auto ok() const -> bool;
     virtual auto empty() const -> bool;
     virtual auto nil() const -> bool;
@@ -880,7 +828,7 @@ class JSONElementT {
     virtual auto is_lambda() -> bool;
     virtual auto is_regex() -> bool;
     virtual auto is_nil() -> bool;
-    virtual auto is_iterable() -> bool;
+    virtual auto is_undefined() -> bool;
 
     virtual auto object() -> JSONObj&;
     virtual auto array() -> JSONArr&;
@@ -922,6 +870,7 @@ class JSONElementT {
     auto operator=(zpt::JSONArr& _rhs) -> JSONElementT&;
     auto operator=(zpt::lambda _rhs) -> JSONElementT&;
     auto operator=(zpt::regex _rhs) -> JSONElementT&;
+    auto operator=(void*) -> JSONElementT&;
 
     operator std::string();
     operator bool();
@@ -1003,8 +952,19 @@ class JSONElementT {
     virtual auto element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json>;
 
   private:
-    JSONUnion __target;
     JSONElementT* __parent{ nullptr };
+    std::variant<std::nullptr_t,   // JSNil
+                 bool,             // JSBoolean
+                 long long int,    // JSInteger
+                 double,           // JSDouble
+                 std::string,      // JSString
+                 zpt::timestamp_t, // JSDate
+                 JSONArr,          // JSArray
+                 JSONObj,          // JSObject
+                 JSONRegex,        // JSRegex
+                 zpt::lambda,      // JSLambda
+                 void*>            // JSUndefined
+      __underlying;
 };
 } // namespace zpt
 
@@ -1290,14 +1250,13 @@ auto zpt::JSONArr::operator[](T _idx) const -> json const {
 /// Class `zpt::JSONElementT` methods
 template<typename T>
 auto zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
-    expect(this->__target.__type >= 0, "the type must be a valid value");
-    switch (this->__target.__type) {
+    switch (this->__underlying.index()) {
         case zpt::JSObject: {
-            this->__target.__object << _in;
+            this->object() << _in;
             break;
         }
         case zpt::JSArray: {
-            this->__target.__array << _in;
+            this->array() << _in;
             break;
         }
         default: {
@@ -1327,40 +1286,40 @@ auto zpt::JSONElementT::operator<<(T _in) -> JSONElementT& {
 // }
 template<typename T>
 auto zpt::JSONElementT::operator[](T _idx) -> json& {
-    if (this->__target.__type == zpt::JSObject) { return this->__target.__object[_idx]; }
-    else if (this->__target.__type == zpt::JSArray) { return this->__target.__array[_idx]; }
-    else if (this->__target.__type == zpt::JSNil) {
+    if (this->type() == zpt::JSObject) { return this->object()[_idx]; }
+    else if (this->type() == zpt::JSArray) { return this->array()[_idx]; }
+    else if (this->type() == zpt::JSNil) {
         if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, const char*>) {
-            this->type(zpt::JSObject);
-            return this->__target.__object[_idx];
+            this->__underlying = zpt::JSONObj();
+            return this->object()[_idx];
         }
         else if constexpr (std::is_integral_v<T>) {
-            this->type(zpt::JSArray);
-            return this->__target.__array[_idx];
+            this->__underlying = zpt::JSONArr();
+            return this->array()[_idx];
         }
     }
-    return {};
+    return zpt::undefined;
 }
 
 template<typename T>
 auto zpt::JSONElementT::operator[](T _idx) const -> json const {
-    zlog(this->__target.__type, zpt::info);
-    if (this->__target.__type == zpt::JSObject) {
-        return static_cast<JSONObj const&>(this->__target.__object)[_idx];
-    }
-    else if (this->__target.__type == zpt::JSArray) {
-        return static_cast<JSONArr const&>(this->__target.__array)[_idx];
-    }
+    if (this->type() == zpt::JSObject) { return static_cast<JSONObj const&>(this->object())[_idx]; }
+    else if (this->type() == zpt::JSArray) { return static_cast<JSONArr const&>(this->array())[_idx]; }
     return zpt::undefined;
 }
 template<typename T>
 auto zpt::JSONElementT::operator==(T _in) const -> bool {
+    if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
+        if (_in == nullptr) { return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined; }
+    }
     JSONElementT _rhs{ _in };
     return (*this) == _rhs;
 }
 template<typename T>
 auto zpt::JSONElementT::operator!=(T _in) const -> bool {
-    if (_in == nullptr) { return this->__target.__type == zpt::JSNil; }
+    if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
+        if (_in == nullptr) { return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined; }
+    }
     JSONElementT _rhs{ _in };
     return (*this) != _rhs;
 }

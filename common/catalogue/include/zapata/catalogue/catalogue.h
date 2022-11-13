@@ -104,5 +104,5 @@ auto zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<M> {
         // _ss >> _value;
         // _to_return.push_back(_value);
     }
-    return std::move(_to_return);
+    return _to_return;
 }

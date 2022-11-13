@@ -23,8 +23,22 @@
 #include <zapata/base.h>
 #include <zapata/globals.h>
 
-auto f() -> int {
-    auto uuid = zpt::generate::r_uuid();
-    std::cout << uuid << std::endl << std::flush;
-    return 0;
+auto zpt::globals::to_string() -> std::string {
+    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::locks::spin_lock::shared };
+    std::ostringstream _out;
+    _out << "Global variables:" << std::endl;
+    for (auto [_key, _value] : zpt::globals::__variables) {
+        _out << _key << ":" << std::endl << std::flush;
+        for (auto _variable : _value) { _out << "\t- " << _variable << std::endl << std::flush; }
+    }
+    return _out.str();
+}
+
+auto zpt::thread_local_table::to_string() -> std::string {
+    std::ostringstream _out;
+    _out << "Thread local members:" << std::endl;
+    for (auto& [_key, _value] : zpt::thread_local_table::__variables) {
+        _out << _key << ": " << _value << std::endl << std::flush;
+    }
+    return _out.str();
 }
