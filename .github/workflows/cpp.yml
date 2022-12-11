@@ -18,4 +18,4 @@ jobs:
     - name: Configure
       run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
     - name: Build modules
-      run: pwd && cmake --build build
+      run: cd build && make -j4
