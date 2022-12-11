@@ -1,15 +1,35 @@
 #include <zapata/catalogue.h>
 
+auto factory(zpt::json _argv, std::uint16_t _argc, zpt::context _context) -> zpt::json {
+    zlog(_argv(1), zpt::info);
+    return zpt::undefined;
+}
+
 auto main(int argc, char* argv[]) -> int {
-    zpt::catalogue<std::string, zpt::json> _catalogue;
+    zpt::catalogue<std::string, zpt::json> _catalogue{ "catalogue" };
     _catalogue.clear();
 
-    _catalogue.add("/users", { "host", "localhost", "port", 8080 });
-    _catalogue.add("/users/([^/]+)", { "host", "localhost", "port", 8080 });
-    _catalogue.add("/users/([^/]+)/info", { "host", "localhost", "port", 8080 });
+    zpt::lambda::add("factory", 2, factory);
 
-    for (auto& [_pattern, _record] : _catalogue.search("{.like(/users/%/info).}")) {
-        zlog(_pattern << ": " << zpt::pretty{ _record }, zpt::info);
+    _catalogue.add(
+      "/users", { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
+    _catalogue.add(
+      "/users/{}",
+      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
+    _catalogue.add(
+      "/users/n@zgul.me",
+      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
+    _catalogue.add(
+      "/users/{}/info",
+      { "host", "localhost", "port", 8080, "callback", zpt::json::lambda("factory", 2) });
+
+    for (auto [_, _key, _record] : _catalogue.search("/users/n@zgul.me/info")) {
+        _record("metadata")("callback")
+          ->lambda()({ zpt::array, _key, _record }, zpt::context{ nullptr });
+    }
+    for (auto [_, _key, _record] : _catalogue.search("/users/n@zgul.me")) {
+        _record("metadata")("callback")
+          ->lambda()({ zpt::array, _key, _record }, zpt::context{ nullptr });
     }
     return 0;
 }

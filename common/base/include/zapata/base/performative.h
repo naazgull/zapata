@@ -40,6 +40,7 @@ inline const zpt::performative Msearch = 8;
 inline const zpt::performative Notify = 9;
 inline const zpt::performative Trace = 10;
 inline const zpt::performative Connect = 11;
+inline const zpt::performative Performative_end = 12;
 
 namespace ontology {
 auto to_str(zpt::performative _performative) -> std::string;

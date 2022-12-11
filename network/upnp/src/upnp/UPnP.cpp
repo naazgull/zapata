@@ -54,7 +54,8 @@ zpt::UPnP::UPnP(zpt::json _options)
            std::string("upnp: error with socket: ") + this->__underlying->error_string(),
            503,
            this->__underlying->error_code());
-    this->__send->open(this->uri()["domain"]->string().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
+    this->__send->open(
+      this->uri()["domain"]->string().data(), int(this->uri()["port"]), false, IPPROTO_UDP);
     expect(!this->__send->is_error(),
            std::string("upnp: error with socket: ") + this->__send->error_string(),
            503,
@@ -89,7 +90,9 @@ zpt::UPnP::UPnP(zpt::json _options)
     _local_addr.sin_family = AF_INET;
     _local_addr.sin_port = htons(int(this->uri()["port"]));
     _local_addr.sin_addr.s_addr = INADDR_ANY;
-    ::bind(this->__underlying->buffer().get_socket(), (struct sockaddr*)&_local_addr, sizeof _local_addr);
+    ::bind(this->__underlying->buffer().get_socket(),
+           (struct sockaddr*)&_local_addr,
+           sizeof _local_addr);
 
     struct ip_mreq _group_addr;
     _group_addr.imr_multiaddr.s_addr = inet_addr(this->uri()["domain"]->string().data());
@@ -170,21 +173,26 @@ auto zpt::UPnP::type() -> short int { return UPNP_RAW; }
 
 auto zpt::UPnP::protocol() -> std::string { return "UPnP/1.1"; }
 
-auto zpt::UPnP::send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
-  -> zpt::json {
-    return this->send({ "performative", _performative, "resource", _resource, "payload", _payload });
+auto zpt::UPnP::send(zpt::performative _performative,
+                     std::string const& _resource,
+                     zpt::json _payload) -> zpt::json {
+    return this->send(
+      { "performative", _performative, "resource", _resource, "payload", _payload });
 }
 
 auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
-    if (_performative != zpt::ev::Search && _performative != zpt::ev::Notify) { return zpt::undefined; }
+    if (_performative != zpt::ev::Search && _performative != zpt::ev::Notify) {
+        return zpt::undefined;
+    }
 
     zpt::json _uri = zpt::uri::parse(_envelope["resource"]);
     _envelope << "resource"
               << "*"
               << "protocol" << this->protocol() << "params"
-              << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) + _uri["query"]);
+              << ((_envelope["params"]->is_object() ? _envelope["params"] : zpt::undefined) +
+                  _uri["query"]);
 
     if (_envelope["payload"]["assertion_failed"]->ok() && _envelope["payload"]["code"]->ok()) {
         _envelope["headers"] << "X-Error" << _envelope["payload"]["code"];
@@ -193,16 +201,18 @@ auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
         {
             std::lock_guard<std::mutex> _lock(this->out_mtx());
             std::string _message;
-            _message.assign(std::string(zpt::internal2http_req(
-              _envelope,
-              this->__underlying->host() + std::string(":") + std::to_string(this->__underlying->port()))));
+            _message.assign(
+              std::string(zpt::internal2http_req(_envelope,
+                                                 this->__underlying->host() + std::string(":") +
+                                                   std::to_string(this->__underlying->port()))));
             (*this->__send) << _message << std::flush;
         }
 
         ztrace(std::string("> ") + zpt::ev::to_str(_performative) + std::string(" ") +
                _envelope["resource"]->string() +
-               (_performative == zpt::ev::Reply ? std::string(" ") + std::string(_envelope["status"])
-                                                : std::string("")));
+               (_performative == zpt::ev::Reply
+                  ? std::string(" ") + std::string(_envelope["status"])
+                  : std::string("")));
         zverbose(zpt::ev::pretty(_envelope));
     }
     catch (std::ios_base::failure const& _e) {
@@ -240,7 +250,9 @@ extern "C" auto _zpt_plugin_load_() -> void {
       { "upnp", zpt::channel_factory(new zpt::ZMQFactory()) },
     });
 
-    if (!this->__options["discoverable"]->ok()) { this->__options["rest"] << "discoverable" << false; }
+    if (!this->__options["discoverable"]->ok()) {
+        this->__options["rest"] << "discoverable" << false;
+    }
 
     if (bool(this->options()["discoverable"])) {
         this->__upnp = zpt::upnp::broker(_options);

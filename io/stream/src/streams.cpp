@@ -101,7 +101,8 @@ auto zpt::polling::listen_on(zpt::stream _stream) -> zpt::polling& {
     if (!this->__shutdown.load()) {
         this->unmute(*_stream);
         {
-            zpt::locks::spin_lock::guard _sentry{ this->__poll_lock, zpt::locks::spin_lock::exclusive };
+            zpt::locks::spin_lock::guard _sentry{ this->__poll_lock,
+                                                  zpt::locks::spin_lock::exclusive };
             this->__polled_streams.emplace(static_cast<int>(*_stream), std::move(_stream));
         }
     }

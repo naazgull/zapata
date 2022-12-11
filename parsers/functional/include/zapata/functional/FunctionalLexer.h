@@ -12,7 +12,9 @@ namespace zpt {
 // $insert classHead
 class FunctionalLexer : public FunctionalLexerBase {
   public:
-    explicit FunctionalLexer(std::istream& in = std::cin, std::ostream& out = std::cout, bool keepCwd = true);
+    explicit FunctionalLexer(std::istream& in = std::cin,
+                             std::ostream& out = std::cout,
+                             bool keepCwd = true);
 
     FunctionalLexer(std::string const& infile, std::string const& outfile, bool keepCwd = true);
 
@@ -36,7 +38,9 @@ class FunctionalLexer : public FunctionalLexerBase {
 inline FunctionalLexer::FunctionalLexer(std::istream& in, std::ostream& out, bool keepCwd)
   : FunctionalLexerBase(in, out, keepCwd) {}
 
-inline FunctionalLexer::FunctionalLexer(std::string const& infile, std::string const& outfile, bool keepCwd)
+inline FunctionalLexer::FunctionalLexer(std::string const& infile,
+                                        std::string const& outfile,
+                                        bool keepCwd)
   : FunctionalLexerBase(infile, outfile, keepCwd) {}
 
 // $insert inlineLexFunction

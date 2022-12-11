@@ -82,8 +82,12 @@ auto zpt::locks::spin_lock::spin_shared_lock() -> void {
 }
 
 auto zpt::locks::spin_lock::spin_exclusive_lock() -> void {
-    while (this->__exclusive_access->exchange(true, std::memory_order_acquire)) { std::this_thread::yield(); }
-    while (this->__shared_access->load(std::memory_order_seq_cst) != 0) { std::this_thread::yield(); }
+    while (this->__exclusive_access->exchange(true, std::memory_order_acquire)) {
+        std::this_thread::yield();
+    }
+    while (this->__shared_access->load(std::memory_order_seq_cst) != 0) {
+        std::this_thread::yield();
+    }
 }
 
 zpt::locks::spin_lock::guard::guard(zpt::locks::spin_lock& _target, bool _can_be_shared)

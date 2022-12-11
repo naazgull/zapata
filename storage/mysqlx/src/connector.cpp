@@ -94,7 +94,8 @@ zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connec
                   ::mysqlx::SessionOption::HOST,
                   _connection.options()["host"]->string(),
                   ::mysqlx::SessionOption::PORT,
-                  _connection.options()["port"]->ok() ? _connection.options()["port"]->integer() : 33060,
+                  _connection.options()["port"]->ok() ? _connection.options()["port"]->integer()
+                                                      : 33060,
                   ::mysqlx::SessionOption::SSL_MODE,
                   ::mysqlx::SSLMode::REQUIRED } {}
 
@@ -112,28 +113,36 @@ auto zpt::storage::mysqlx::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::mysqlx::session::sql(std::string const& _statement) -> zpt::storage::session::type* {
+auto zpt::storage::mysqlx::session::sql(std::string const& _statement)
+  -> zpt::storage::session::type* {
     this->__underlying.sql(_statement).execute();
     return this;
 }
 
-auto zpt::storage::mysqlx::session::operator->() -> ::mysqlx::Session* { return &this->__underlying; }
+auto zpt::storage::mysqlx::session::operator->() -> ::mysqlx::Session* {
+    return &this->__underlying;
+}
 
 auto zpt::storage::mysqlx::session::database(std::string const& _db) -> zpt::storage::database {
     return zpt::make_database<zpt::storage::mysqlx::database>(*this, _db);
 }
 
-zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session, std::string const& _db)
+zpt::storage::mysqlx::database::database(zpt::storage::mysqlx::session& _session,
+                                         std::string const& _db)
   : __underlying{ _session->getSchema(_db) } {}
 
-auto zpt::storage::mysqlx::database::sql(std::string const& _statement) -> zpt::storage::database::type* {
+auto zpt::storage::mysqlx::database::sql(std::string const& _statement)
+  -> zpt::storage::database::type* {
     expect(false, "Database `sql` method not implemented for MySQL XDevAPI, use session's");
     return this;
 }
 
-auto zpt::storage::mysqlx::database::operator->() -> ::mysqlx::Schema* { return &this->__underlying; }
+auto zpt::storage::mysqlx::database::operator->() -> ::mysqlx::Schema* {
+    return &this->__underlying;
+}
 
-auto zpt::storage::mysqlx::database::collection(std::string const& _collection) -> zpt::storage::collection {
+auto zpt::storage::mysqlx::database::collection(std::string const& _collection)
+  -> zpt::storage::collection {
     return zpt::make_collection<zpt::storage::mysqlx::collection>(*this, _collection);
 }
 
@@ -164,7 +173,9 @@ auto zpt::storage::mysqlx::collection::find(zpt::json _search) -> zpt::storage::
 
 auto zpt::storage::mysqlx::collection::count() -> size_t { return this->__underlying.count(); }
 
-auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* { return &this->__underlying; }
+auto zpt::storage::mysqlx::collection::operator->() -> ::mysqlx::Collection* {
+    return &this->__underlying;
+}
 
 zpt::storage::mysqlx::action::action(zpt::storage::mysqlx::collection& _collection) {}
 
@@ -205,7 +216,8 @@ auto zpt::storage::mysqlx::action_add::set(std::string const& _attribute, zpt::j
     return this;
 }
 
-auto zpt::storage::mysqlx::action_add::unset(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_add::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action");
     return this;
 }
@@ -215,7 +227,8 @@ auto zpt::storage::mysqlx::action_add::patch(zpt::json _document) -> zpt::storag
     return this;
 }
 
-auto zpt::storage::mysqlx::action_add::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_add::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -223,11 +236,17 @@ auto zpt::storage::mysqlx::action_add::fields(zpt::json _fields) -> zpt::storage
     return this;
 }
 
-auto zpt::storage::mysqlx::action_add::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mysqlx::action_add::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
-auto zpt::storage::mysqlx::action_add::limit(size_t _number) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mysqlx::action_add::limit(size_t _number) -> zpt::storage::action::type* {
+    return this;
+}
 
-auto zpt::storage::mysqlx::action_add::bind(zpt::json _map) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mysqlx::action_add::bind(zpt::json _map) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::mysqlx::action_add::execute() -> zpt::storage::result {
     zpt::storage::result _to_return = zpt::make_result<zpt::storage::mysqlx::result>(*this);
@@ -281,12 +300,14 @@ auto zpt::storage::mysqlx::action_modify::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::mysqlx::action_modify::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_modify::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     this->__underlying.patch(static_cast<std::string>(_document));
     return this;
 }
 
-auto zpt::storage::mysqlx::action_modify::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_modify::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     this->__underlying.sort(_attribute);
     return this;
 }
@@ -295,7 +316,9 @@ auto zpt::storage::mysqlx::action_modify::fields(zpt::json _fields) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::mysqlx::action_modify::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mysqlx::action_modify::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::mysqlx::action_modify::limit(size_t _number) -> zpt::storage::action::type* {
     this->__underlying.limit(_number);
@@ -358,11 +381,13 @@ auto zpt::storage::mysqlx::action_remove::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::mysqlx::action_remove::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_remove::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::mysqlx::action_remove::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_remove::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     this->__underlying.sort(_attribute);
     return this;
 }
@@ -371,7 +396,9 @@ auto zpt::storage::mysqlx::action_remove::fields(zpt::json _fields) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::mysqlx::action_remove::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::mysqlx::action_remove::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::mysqlx::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
     this->__underlying.limit(_number);
@@ -406,12 +433,14 @@ auto zpt::storage::mysqlx::action_replace::add(zpt::json _document) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::mysqlx::action_replace::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_replace::modify(zpt::json _search)
+  -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::mysqlx::action_replace::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_replace::remove(zpt::json _search)
+  -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'replace' action");
     return this;
 }
@@ -437,7 +466,8 @@ auto zpt::storage::mysqlx::action_replace::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::mysqlx::action_replace::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_replace::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -446,7 +476,8 @@ auto zpt::storage::mysqlx::action_replace::sort(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::mysqlx::action_replace::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_replace::fields(zpt::json _fields)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -468,7 +499,8 @@ auto zpt::storage::mysqlx::action_replace::execute() -> zpt::storage::result {
 }
 
 auto zpt::storage::mysqlx::action_replace::replace_one() -> ::mysqlx::Result {
-    return this->__underlying->replaceOne(this->__id, zpt::storage::mysqlx::to_db_doc(this->__document));
+    return this->__underlying->replaceOne(this->__id,
+                                          zpt::storage::mysqlx::to_db_doc(this->__document));
 }
 
 auto zpt::storage::mysqlx::action_replace::operator->() -> ::mysqlx::Collection* {
@@ -483,8 +515,8 @@ zpt::storage::mysqlx::action_find::action_find(zpt::storage::mysqlx::collection&
                                                zpt::json _search)
   : zpt::storage::mysqlx::action::action(_collection)
   , __find_criteria{ zpt::storage::extract_find(_search) }
-  , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria) : _collection->find() } {
-}
+  , __underlying{ __find_criteria.length() != 0 ? _collection->find(__find_criteria)
+                                                : _collection->find() } {}
 
 auto zpt::storage::mysqlx::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'find' action");
@@ -517,7 +549,8 @@ auto zpt::storage::mysqlx::action_find::set(std::string const& _attribute, zpt::
     return this;
 }
 
-auto zpt::storage::mysqlx::action_find::unset(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_find::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -525,7 +558,8 @@ auto zpt::storage::mysqlx::action_find::patch(zpt::json _document) -> zpt::stora
     return this;
 }
 
-auto zpt::storage::mysqlx::action_find::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_find::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     this->__underlying.sort(_attribute);
     return this;
 }

@@ -465,7 +465,12 @@ auto is_dir(std::string const& _path) -> bool;
 auto file_exists(std::string const& _path) -> bool;
 auto dirname(std::string const& _path) -> std::string;
 
-auto globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion = 0)
-  -> int;
-auto glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion = 0) -> int;
+auto globRegexp(std::string& dir,
+                std::vector<std::string>& result,
+                std::regex& pattern,
+                short recursion = 0) -> int;
+auto glob(std::string dir,
+          std::vector<std::string>& result,
+          std::string pattern,
+          short recursion = 0) -> int;
 } // namespace zpt

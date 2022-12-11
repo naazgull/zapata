@@ -75,7 +75,8 @@ class csv : public std::string {
     };
 };
 
-auto split(std::string const& _to_split, std::string const& _separator, bool _trim = false) -> zpt::json;
+auto split(std::string const& _to_split, std::string const& _separator, bool _trim = false)
+  -> zpt::json;
 auto join(zpt::json _to_join, std::string const& _separator) -> std::string;
 
 namespace path {

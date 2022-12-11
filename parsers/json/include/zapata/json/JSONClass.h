@@ -107,7 +107,8 @@ class json {
     using iterator = zpt::JSONIterator;
     using const_iterator = const zpt::JSONIterator;
 
-    using traverse_callback = std::function<void(std::string const&, zpt::json, std::string const&)>;
+    using traverse_callback =
+      std::function<void(std::string const&, zpt::json, std::string const&)>;
 
     json();
     json(std::nullptr_t _rhs);
@@ -300,8 +301,9 @@ class json {
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
     auto strict_union(zpt::json _rhs) -> void;
 
-    static auto traverse(zpt::json _document, zpt::json::traverse_callback _callback, std::string _path)
-      -> void;
+    static auto traverse(zpt::json _document,
+                         zpt::json::traverse_callback _callback,
+                         std::string _path) -> void;
 };
 } // namespace zpt
 
@@ -719,8 +721,8 @@ class context {
 
 namespace zpt {
 using symbol = std::function<zpt::json(zpt::json, unsigned short, zpt::context)>;
-using symbol_table =
-  std::shared_ptr<std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
+using symbol_table = std::shared_ptr<
+  std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>>;
 inline symbol_table __lambdas{
     new std::unordered_map<std::string, std::tuple<std::string, unsigned short, zpt::symbol>>{}
 };
@@ -740,6 +742,7 @@ class lambda : public std::shared_ptr<zpt::JSONLambda> {
     auto hash() const -> size_t;
 
     virtual auto operator()(zpt::json _args, zpt::context _ctx) -> zpt::json;
+    virtual auto operator()(zpt::json _args, zpt::context _ctx) const -> zpt::json;
 
     static auto add(std::string const& _signature, zpt::symbol _lambda) -> void;
     static auto add(std::string const& _name, unsigned short _n_args, zpt::symbol _lambda) -> void;
@@ -1304,13 +1307,17 @@ auto zpt::JSONElementT::operator[](T _idx) -> json& {
 template<typename T>
 auto zpt::JSONElementT::operator[](T _idx) const -> json const {
     if (this->type() == zpt::JSObject) { return static_cast<JSONObj const&>(this->object())[_idx]; }
-    else if (this->type() == zpt::JSArray) { return static_cast<JSONArr const&>(this->array())[_idx]; }
+    else if (this->type() == zpt::JSArray) {
+        return static_cast<JSONArr const&>(this->array())[_idx];
+    }
     return zpt::undefined;
 }
 template<typename T>
 auto zpt::JSONElementT::operator==(T _in) const -> bool {
     if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
-        if (_in == nullptr) { return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined; }
+        if (_in == nullptr) {
+            return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined;
+        }
     }
     JSONElementT _rhs{ _in };
     return (*this) == _rhs;
@@ -1318,7 +1325,9 @@ auto zpt::JSONElementT::operator==(T _in) const -> bool {
 template<typename T>
 auto zpt::JSONElementT::operator!=(T _in) const -> bool {
     if constexpr (std::is_same<T, std::nullptr_t>::value || std::is_pointer<T>::value) {
-        if (_in == nullptr) { return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined; }
+        if (_in == nullptr) {
+            return this->type() == zpt::JSNil || this->type() == zpt::JSUndefined;
+        }
     }
     JSONElementT _rhs{ _in };
     return (*this) != _rhs;

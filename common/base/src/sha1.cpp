@@ -28,25 +28,25 @@
 
 /* Help macros */
 #define SHA1_ROL(value, bits) (((value) << (bits)) | (((value)&0xffffffff) >> (32 - (bits))))
-#define SHA1_BLK(i)                                                                                          \
-    (block[i & 15] =                                                                                         \
-       SHA1_ROL(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
+#define SHA1_BLK(i)                                                                                \
+    (block[i & 15] = SHA1_ROL(                                                                     \
+       block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-#define SHA1_R0(v, w, x, y, z, i)                                                                            \
-    z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + SHA1_ROL(v, 5);                                       \
+#define SHA1_R0(v, w, x, y, z, i)                                                                  \
+    z += ((w & (x ^ y)) ^ y) + block[i] + 0x5a827999 + SHA1_ROL(v, 5);                             \
     w = SHA1_ROL(w, 30);
-#define SHA1_R1(v, w, x, y, z, i)                                                                            \
-    z += ((w & (x ^ y)) ^ y) + SHA1_BLK(i) + 0x5a827999 + SHA1_ROL(v, 5);                                    \
+#define SHA1_R1(v, w, x, y, z, i)                                                                  \
+    z += ((w & (x ^ y)) ^ y) + SHA1_BLK(i) + 0x5a827999 + SHA1_ROL(v, 5);                          \
     w = SHA1_ROL(w, 30);
-#define SHA1_R2(v, w, x, y, z, i)                                                                            \
-    z += (w ^ x ^ y) + SHA1_BLK(i) + 0x6ed9eba1 + SHA1_ROL(v, 5);                                            \
+#define SHA1_R2(v, w, x, y, z, i)                                                                  \
+    z += (w ^ x ^ y) + SHA1_BLK(i) + 0x6ed9eba1 + SHA1_ROL(v, 5);                                  \
     w = SHA1_ROL(w, 30);
-#define SHA1_R3(v, w, x, y, z, i)                                                                            \
-    z += (((w | x) & y) | (w & x)) + SHA1_BLK(i) + 0x8f1bbcdc + SHA1_ROL(v, 5);                              \
+#define SHA1_R3(v, w, x, y, z, i)                                                                  \
+    z += (((w | x) & y) | (w & x)) + SHA1_BLK(i) + 0x8f1bbcdc + SHA1_ROL(v, 5);                    \
     w = SHA1_ROL(w, 30);
-#define SHA1_R4(v, w, x, y, z, i)                                                                            \
-    z += (w ^ x ^ y) + SHA1_BLK(i) + 0xca62c1d6 + SHA1_ROL(v, 5);                                            \
+#define SHA1_R4(v, w, x, y, z, i)                                                                  \
+    z += (w ^ x ^ y) + SHA1_BLK(i) + 0xca62c1d6 + SHA1_ROL(v, 5);                                  \
     w = SHA1_ROL(w, 30);
 
 zpt::crypto::SHA1::SHA1() { reset(); }
@@ -232,7 +232,8 @@ void zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
     transforms++;
 }
 
-void zpt::crypto::SHA1::buffer_to_block(const std::string& buffer, std::uint32_t block[BLOCK_BYTES]) {
+void zpt::crypto::SHA1::buffer_to_block(const std::string& buffer,
+                                        std::uint32_t block[BLOCK_BYTES]) {
     /* Convert the std::string (byte buffer) to a std::uint32_t array (MSB) */
     for (unsigned int i = 0; i < BLOCK_INTS; i++) {
         block[i] = (buffer[4 * i + 3] & 0xff) | (buffer[4 * i + 2] & 0xff) << 8 |

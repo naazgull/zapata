@@ -103,8 +103,9 @@ auto zpt::JSONArrT::get_path(std::string const& _path, std::string const& _separ
     return _current->get_path(_remainder, _separator);
 }
 
-auto zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
-  -> JSONArrT& {
+auto zpt::JSONArrT::set_path(std::string const& _path,
+                             zpt::json _value,
+                             std::string const& _separator) -> JSONArrT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -119,7 +120,9 @@ auto zpt::JSONArrT::set_path(std::string const& _path, zpt::json _value, std::st
         else { this->__underlying.push_back(_value); }
     }
     else {
-        if (_iss.good()) { _current->set_path(_path.substr(_part.length() + 1), _value, _separator); }
+        if (_iss.good()) {
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
+        }
         else {
             this->pop(_part);
             (*this)[std::stoi(_part)] = _value;
@@ -157,9 +160,13 @@ auto zpt::JSONArrT::operator->() -> std::vector<zpt::json>* { return &this->__un
 
 auto zpt::JSONArrT::operator*() -> std::vector<zpt::json>& { return this->__underlying; }
 
-auto zpt::JSONArrT::operator->() const -> std::vector<zpt::json> const* { return &this->__underlying; }
+auto zpt::JSONArrT::operator->() const -> std::vector<zpt::json> const* {
+    return &this->__underlying;
+}
 
-auto zpt::JSONArrT::operator*() const -> std::vector<zpt::json> const& { return this->__underlying; }
+auto zpt::JSONArrT::operator*() const -> std::vector<zpt::json> const& {
+    return this->__underlying;
+}
 
 auto zpt::JSONArrT::operator==(zpt::JSONArrT const& _rhs) const -> bool {
     for (size_t _f = 0; _f != this->__underlying.size(); _f++) {
@@ -227,7 +234,9 @@ auto zpt::JSONArrT::operator[](size_t _idx) -> zpt::json& {
     return this->__underlying.at(_idx);
 }
 
-auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json& { return (*this)[std::string(_idx)]; }
+auto zpt::JSONArrT::operator[](const char* _idx) -> zpt::json& {
+    return (*this)[std::string(_idx)];
+}
 
 auto zpt::JSONArrT::operator[](std::string const& _idx) -> zpt::json& {
     long _i = -1;
@@ -344,7 +353,9 @@ zpt::JSONArr::JSONArr(zpt::JSONArrT* _target)
 
 zpt::JSONArr::~JSONArr() {}
 
-auto zpt::JSONArr::hash() const -> size_t { return reinterpret_cast<size_t>(this->__underlying.get()); }
+auto zpt::JSONArr::hash() const -> size_t {
+    return reinterpret_cast<size_t>(this->__underlying.get());
+}
 
 auto zpt::JSONArr::operator=(const zpt::JSONArr& _rhs) -> zpt::JSONArr& {
     this->__underlying = _rhs.__underlying;

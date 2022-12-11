@@ -25,6 +25,12 @@
 #include <string>
 #include <deque>
 #include <zapata/sqlite.h>
+#include <zapata/json.h>
+
+namespace {
+static constexpr char const* SEARCH_STMT = "(_id like '{}{}{}%')";
+static constexpr char const* EXACT_SEARCH_STMT = "((_id = '{}{}{}') or (_id = '{}{}{}'))";
+} // namespace
 
 namespace zpt {
 auto CATALOGUE() -> ssize_t&;
@@ -32,24 +38,32 @@ auto CATALOGUE() -> ssize_t&;
 template<typename K, typename M>
 class catalogue {
   public:
-    catalogue();
+    catalogue(std::string const& _catalogue_name);
     virtual ~catalogue() = default;
 
     auto clear() -> catalogue&;
     auto add(K _key, M _metadata) -> catalogue&;
-    auto search(K const& _pattern) -> std::deque<std::tuple<K, M>>;
+    auto search(K const& _pattern) const -> zpt::json const;
 
   private:
-    zpt::storage::connection __connection;
-    zpt::storage::collection __catalogue;
+    mutable zpt::storage::connection __connection;
+    mutable zpt::storage::collection __catalogue;
+
+    auto query(std::string const& _query) const -> zpt::json const;
 };
+
+namespace catalogue_id {
+template<typename K>
+auto separator() -> std::string;
+auto split(std::string const& _pattern) -> zpt::json;
+} // namespace catalogue_id
 } // namespace zpt
 
 template<typename K, typename M>
-zpt::catalogue<K, M>::catalogue() {
+zpt::catalogue<K, M>::catalogue(std::string const& _catalogue_name) {
     this->__connection = zpt::make_connection<zpt::storage::sqlite::connection>(zpt::undefined);
     auto _session = this->__connection->session();
-    auto _database = _session->database("catalogue");
+    auto _database = _session->database(_catalogue_name);
 
     sqlite3_exec(static_cast<zpt::storage::sqlite::database*>(&(*_database))->connection().get(), //
                  "CREATE TABLE IF NOT EXISTS catalogue ("
@@ -89,19 +103,72 @@ auto zpt::catalogue<K, M>::add(K _key, M _metadata) -> catalogue& {
 }
 
 template<typename K, typename M>
-auto zpt::catalogue<K, M>::search(K const& _pattern) -> std::deque<std::tuple<K, M>> {
-    auto _result = this
-                     ->__catalogue //
-                     ->find({ "_id", _pattern })
-                     ->execute();
+auto zpt::catalogue<K, M>::search(K const& _pattern) const -> zpt::json const {
+    auto _separator = zpt::catalogue_id::separator<K>();
+    auto _parts = zpt::catalogue_id::split(_pattern);
+    zpt::json _result = zpt::json::array();
+    zpt::json _prefixes{ zpt::array, "" };
 
-    std::deque<std::tuple<K, M>> _to_return;
-    for (auto _row = _result->fetch(1); _row != zpt::undefined; _row = _result->fetch(1)) {
-        M _value;
-        std::stringstream _ss;
-        _ss << _row["metadata"]->string() << std::flush;
-        _ss >> _value;
-        _to_return.push_back({ static_cast<K>(_row["_id"]), _value });
+    for (auto const& [_idx, __, _part] : _parts) {
+        if (_idx == _parts->size() - 1) {
+            for (auto [_, __, _prefix] : _prefixes) {
+                _result += this->query(zpt::format(EXACT_SEARCH_STMT, //
+                                                   _prefix->string(),
+                                                   _separator,
+                                                   _part->string(),
+                                                   _prefix->string(),
+                                                   _separator));
+            }
+            expect(_result->size() != 0, "Pattern '" << _pattern << "' not found.");
+        }
+        else {
+            zpt::json _matching = zpt::json::array();
+
+            for (auto [_, __, _prefix] : _prefixes) {
+                if (this
+                      ->query(zpt::format(SEARCH_STMT, //
+                                          _prefix->string(),
+                                          _separator,
+                                          _part->string()))
+                      ->size() != 0) {
+                    _matching << (_prefix->string() + _separator + static_cast<std::string>(_part));
+                }
+                if (this
+                      ->query(zpt::format(SEARCH_STMT, //
+                                          _prefix->string(),
+                                          _separator))
+                      ->size() != 0) {
+                    _matching << (_prefix->string() + _separator + std::string{ "{}" });
+                }
+            }
+
+            expect(_matching->size() != 0, "Pattern '" << _pattern << "' not found.");
+            _prefixes = _matching;
+        }
     }
-    return _to_return;
+
+    std::istringstream _iss;
+    for (auto [_, __, _row] : _result) {
+        M _metadata;
+        _iss.str(_row("metadata")->string());
+        _iss >> _metadata;
+        _iss.str("");
+        _row["metadata"] = _metadata;
+    }
+    return _result;
+}
+
+template<typename K, typename M>
+auto zpt::catalogue<K, M>::query(std::string const& _query) const -> zpt::json const {
+    return this
+      ->__catalogue //
+      ->find(_query)
+      ->execute()
+      ->fetch();
+}
+
+template<typename K>
+auto zpt::catalogue_id::separator() -> std::string {
+    if constexpr (std::is_same<K, std::string>::value) { return "/"; }
+    return "";
 }

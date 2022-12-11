@@ -38,11 +38,11 @@
  * @param y the error message
  * @param z the HTTP status code to be replied to the invoking HTTP client
  */
-#define expect(x, y)                                                                                         \
-    if (!(x)) {                                                                                              \
-        std::ostringstream __OSS__;                                                                          \
-        __OSS__ << y << std::flush;                                                                          \
-        throw zpt::ExpectationException(__OSS__.str(), #x, __LINE__, __FILE__);                              \
+#define expect(x, y)                                                                               \
+    if (!(x)) {                                                                                    \
+        std::ostringstream __OSS__;                                                                \
+        __OSS__ << y << std::flush;                                                                \
+        throw zpt::ExpectationException(__OSS__.str(), #x, __LINE__, __FILE__);                    \
     }
 
 namespace zpt {

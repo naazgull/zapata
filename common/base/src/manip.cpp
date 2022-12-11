@@ -39,11 +39,12 @@ auto zpt::ltrim(std::string& _in_out) -> void {
 }
 
 auto zpt::rtrim(std::string& _in_out) -> void {
-    _in_out.erase(std::find_if(_in_out.rbegin(),
-                               _in_out.rend(),
-                               [](char c) { return !std::isspace<char>(c, std::locale::classic()); })
-                    .base(),
-                  _in_out.end());
+    _in_out.erase(
+      std::find_if(_in_out.rbegin(),
+                   _in_out.rend(),
+                   [](char c) { return !std::isspace<char>(c, std::locale::classic()); })
+        .base(),
+      _in_out.end());
 }
 
 auto zpt::trim(std::string& _in_out) -> void {
@@ -88,8 +89,9 @@ auto zpt::prettify_header_name(std::string& name) -> void {
 
 auto zpt::r_ltrim(std::string const& _in_out) -> std::string {
     std::string _return{ _in_out.data() };
-    _return.erase(_return.begin(),
-                  std::find_if(_return.begin(), _return.end(), [](char c) { return std::isspace(c); }));
+    _return.erase(_return.begin(), std::find_if(_return.begin(), _return.end(), [](char c) {
+                      return std::isspace(c);
+                  }));
     return _return;
 }
 
@@ -149,7 +151,8 @@ auto zpt::r_prettify_header_name(std::string name) -> std::string {
     while (iss.good()) {
         iss.getline(line, 256, '-');
         pos += iss.gcount();
-        std::transform(_return.begin() + pos, _return.begin() + pos + 1, _return.begin() + pos, ::toupper);
+        std::transform(
+          _return.begin() + pos, _return.begin() + pos + 1, _return.begin() + pos, ::toupper);
     }
     return _return;
 }

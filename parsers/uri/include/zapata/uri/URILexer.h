@@ -12,7 +12,9 @@ namespace zpt {
 // $insert classHead
 class URILexer : public URILexerBase {
   public:
-    explicit URILexer(std::istream& in = std::cin, std::ostream& out = std::cout, bool keepCwd = true);
+    explicit URILexer(std::istream& in = std::cin,
+                      std::ostream& out = std::cout,
+                      bool keepCwd = true);
 
     URILexer(std::string const& infile, std::string const& outfile, bool keepCwd = true);
 

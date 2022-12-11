@@ -36,8 +36,8 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
         expect(!zpt::file_exists(_config["path"]->string()),
                "Unix socket '" << _config["path"]
                                << "' already exists. Please, remove before reloading the plugin.");
-        auto& _server_sock =
-          zpt::make_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(), _config["path"]->string());
+        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
+                                                                       _config["path"]->string());
 
         _plugin.add_thread([=]() mutable -> void {
             auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());

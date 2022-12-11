@@ -17,7 +17,8 @@ auto main(int _argc, char* _argv[]) -> int {
                          ->add({ "nick", "jaster", "email", "address@kicker" })
                          ->execute();
         _id2.assign(_result->to_json()["generated"][0]["_id"]->string());
-        std::cout << "There are " << _collection->count() << " records in the collection." << std::endl
+        std::cout << "There are " << _collection->count() << " records in the collection."
+                  << std::endl
                   << std::flush;
     }
     {

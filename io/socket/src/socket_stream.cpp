@@ -3,7 +3,8 @@
 auto zpt::ssl_error_print(SSL* _ssl, int _ret) -> std::string {
     switch (SSL_get_error(_ssl, _ret)) {
         case SSL_ERROR_NONE: {
-            return std::string("SSL_ERROR_NONE: ") + std::string(ERR_error_string(ERR_get_error(), nullptr));
+            return std::string("SSL_ERROR_NONE: ") +
+                   std::string(ERR_error_string(ERR_get_error(), nullptr));
         }
         case SSL_ERROR_ZERO_RETURN: {
             return std::string("SSL_ERROR_ZERO_RETURN: ") +
@@ -38,7 +39,8 @@ auto zpt::ssl_error_print(SSL* _ssl, int _ret) -> std::string {
             return std::string("SSL_ERROR_SYSCALL: ") + std::string(strerror(errno));
         }
         case SSL_ERROR_SSL: {
-            return std::string("SSL_ERROR_SSL: ") + std::string(ERR_error_string(ERR_get_error(), nullptr));
+            return std::string("SSL_ERROR_SSL: ") +
+                   std::string(ERR_error_string(ERR_get_error(), nullptr));
         }
     }
     return "UNKNOW ERROR";
@@ -63,12 +65,14 @@ zpt::serversocketstream::serversocketstream(const zpt::serversocketstream& _rhs)
 
 zpt::serversocketstream::serversocketstream(zpt::serversocketstream&& _rhs) { (*this) = _rhs; }
 
-auto zpt::serversocketstream::operator=(const zpt::serversocketstream& _rhs) -> zpt::serversocketstream& {
+auto zpt::serversocketstream::operator=(const zpt::serversocketstream& _rhs)
+  -> zpt::serversocketstream& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
-auto zpt::serversocketstream::operator=(zpt::serversocketstream&& _rhs) -> zpt::serversocketstream& {
+auto zpt::serversocketstream::operator=(zpt::serversocketstream&& _rhs)
+  -> zpt::serversocketstream& {
     this->__underlying = std::move(_rhs.__underlying);
     return (*this);
 }
@@ -90,16 +94,20 @@ zpt::wserversocketstream::wserversocketstream(std::uint16_t _port)
 zpt::wserversocketstream::wserversocketstream(std::string const& _path)
   : __underlying{ std::make_shared<zpt::basic_serversocketstream<wchar_t>>(_path) } {}
 
-zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _rhs) { (*this) = _rhs; }
+zpt::wserversocketstream::wserversocketstream(const zpt::wserversocketstream& _rhs) {
+    (*this) = _rhs;
+}
 
 zpt::wserversocketstream::wserversocketstream(zpt::wserversocketstream&& _rhs) { (*this) = _rhs; }
 
-auto zpt::wserversocketstream::operator=(const zpt::wserversocketstream& _rhs) -> zpt::wserversocketstream& {
+auto zpt::wserversocketstream::operator=(const zpt::wserversocketstream& _rhs)
+  -> zpt::wserversocketstream& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
-auto zpt::wserversocketstream::operator=(zpt::wserversocketstream&& _rhs) -> zpt::wserversocketstream& {
+auto zpt::wserversocketstream::operator=(zpt::wserversocketstream&& _rhs)
+  -> zpt::wserversocketstream& {
     this->__underlying = std::move(_rhs.__underlying);
     return (*this);
 }

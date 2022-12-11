@@ -131,8 +131,8 @@ auto zpt::MQTT::connect(std::string const& _host, bool _tls, int _port, int _kee
             errno = 0, _ret = mosquitto_tls_opts_set(this->__mosq, 1, nullptr, nullptr);
             zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
 
-            errno = 0,
-            _ret = mosquitto_tls_set(this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
+            errno = 0, _ret = mosquitto_tls_set(
+                         this->__mosq, nullptr, "/usr/lib/ssl/certs/", nullptr, nullptr, nullptr);
             zpt::mqtt::utils::check_err(_ret, errno, this->connection(), zpt::error);
         }
 
@@ -162,7 +162,8 @@ auto zpt::MQTT::connect(std::string const& _host, bool _tls, int _port, int _kee
             }
         } while (_run);
 
-        zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"), zpt::notice);
+        zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"),
+             zpt::notice);
     }
     else { zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning); }
 
@@ -200,7 +201,8 @@ auto zpt::MQTT::reconnect() -> bool {
             }
         } while (_run);
 
-        zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"), zpt::notice);
+        zlog(std::string("connection to ") + this->connection() + std::string(" succeeded"),
+             zpt::notice);
     }
     else { zpt::mqtt::utils::check_err(_rc, errno, this->connection(), zpt::warning); }
 
@@ -333,8 +335,9 @@ auto zpt::MQTT::on_publish(struct mosquitto* _mosq, void* _ptr, int _mid) -> voi
     _self->trigger("publish", _data);
 }
 
-auto zpt::MQTT::on_message(struct mosquitto* _mosq, void* _ptr, const struct mosquitto_message* _message)
-  -> void {
+auto zpt::MQTT::on_message(struct mosquitto* _mosq,
+                           void* _ptr,
+                           const struct mosquitto_message* _message) -> void {
     zpt::MQTT* _self = (zpt::MQTT*)_ptr;
     zpt::mqtt::data _data(new MQTTData());
     try {
@@ -374,7 +377,8 @@ auto zpt::MQTT::on_error(struct mosquitto* _mosq, void* _ptr) -> void {
     _self->trigger("error", _data);
 }
 
-auto zpt::MQTT::on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message) -> void {
+auto zpt::MQTT::on_log(struct mosquitto* _mosq, void* _ptr, int _level, const char* _message)
+  -> void {
     zlog(std::string(_message), (zpt::LogLevel)_level);
 }
 
@@ -423,8 +427,9 @@ auto zpt::MQTT::recv() -> zpt::json {
     return _return;
 }
 
-auto zpt::MQTT::send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
-  -> zpt::json {
+auto zpt::MQTT::send(zpt::performative _performative,
+                     std::string const& _resource,
+                     zpt::json _payload) -> zpt::json {
     this->publish(_resource, _payload);
     {
         std::lock_guard<std::mutex> _lock(this->__mtx_conn);

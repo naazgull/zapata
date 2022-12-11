@@ -125,7 +125,9 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
             auto _name = _lib["name"]->string();
             if (_lib("requires")->ok() && _lib["requires"]->is_array()) {
                 for (auto [___, ____, _required] : _lib("requires")) {
-                    if (this->__plugins.find(_required->string()) == this->__plugins.end()) { continue; }
+                    if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
+                        continue;
+                    }
                 }
             }
             this->load(_lib, this->__configuration[_name]);

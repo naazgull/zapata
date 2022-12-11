@@ -53,11 +53,13 @@ zpt::http::basic_request::basic_request(zpt::basic_message const& _request, bool
 
 auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
     _out << this->__underlying("performative")->string() << " "
-         << zpt::uri::to_string(this->__underlying("uri"));
+         << static_cast<std::string>(this->__underlying("uri")("raw_path"));
 
     if (this->__underlying("uri")("params")->ok()) {
         _out << "?";
-        for (auto [_, _name, _value] : this->__underlying("params")) { _out << _name << "=" << _value; }
+        for (auto const& [_, _name, _value] : this->__underlying("params")) {
+            _out << _name << "=" << _value;
+        }
     }
 
     _out << " HTTP/"

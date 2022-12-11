@@ -66,25 +66,30 @@ int main(int argc, char* argv[]) {
         auto _init = "null"_JSON;
 
         auto _t = std::chrono::high_resolution_clock::now();
-        auto _parsing_duration = std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
-        auto _stringify_duration = std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
+        auto _parsing_duration =
+          std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
+        auto _stringify_duration =
+          std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
 
         for (auto [_, __, _file] : _parameters["--"]) {
             zpt::json _ptr;
             std::ifstream _in;
             _in.open(static_cast<std::string>(_file));
             expect(_in.is_open(),
-                   std::string{ "unable to open provided file: " } + static_cast<std::string>(_file));
+                   std::string{ "unable to open provided file: " } +
+                     static_cast<std::string>(_file));
             try {
                 auto _t1 = std::chrono::high_resolution_clock::now();
                 _in >> _ptr;
                 auto _t2 = std::chrono::high_resolution_clock::now();
-                _parsing_duration += std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
+                _parsing_duration +=
+                  std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
                 zpt::conf::dirs(_ptr);
                 zpt::conf::env(_ptr);
             }
             catch (zpt::SyntaxErrorException const& _e) {
-                std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl << std::flush;
+                std::cout << "syntax error in '" << _file << "', " << _e.what() << std::endl
+                          << std::flush;
                 return -1;
             }
             {
@@ -103,7 +108,8 @@ int main(int argc, char* argv[]) {
             }
         }
         std::cout << "parsing total time: " << _parsing_duration << "µs" << std::endl << std::flush;
-        std::cout << "stringify total time: " << _stringify_duration << "µs" << std::endl << std::flush;
+        std::cout << "stringify total time: " << _stringify_duration << "µs" << std::endl
+                  << std::flush;
     }
     return 0;
 }

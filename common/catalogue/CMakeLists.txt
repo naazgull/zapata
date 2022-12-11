@@ -23,6 +23,8 @@ target_include_directories(zapata-common-catalogue
     $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
     ${COMMON_CATALOGUE_INCLUDE_DIR}
  INTERFACE
+    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
     ${COMMON_CATALOGUE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-common-catalogue
@@ -40,57 +42,6 @@ set_target_properties(zapata-common-catalogue
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
     LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-common-catalogue.so
-)
-
-add_library(zapata-common-catalogue-plugin SHARED)
-add_dependencies(zapata-common-catalogue-plugin
-  zapata-base
-  zapata-engine-startup
-  zapata-events
-  zapata-globals
-  zapata-lockfree
-  zapata-parser-json
-  zapata-storage-sqlite
-  zapata-common-catalogue
-)
-target_sources(zapata-common-catalogue-plugin
-  PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
-)
-target_include_directories(zapata-common-catalogue-plugin
- PRIVATE
-    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
-    ${COMMON_CATALOGUE_INCLUDE_DIR}
- INTERFACE
-    ${COMMON_CATALOGUE_INCLUDE_DIR}
-)
-target_link_libraries(zapata-common-catalogue-plugin
-  PRIVATE
-    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
-    ${SQLite3_LIBRARIES}
-    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
-    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
-)
-set_target_properties(zapata-common-catalogue-plugin
-  PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
-    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
-    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-common-catalogue-plugin.so
 )
 
 include(GNUInstallDirs)

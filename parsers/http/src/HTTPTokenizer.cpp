@@ -338,8 +338,9 @@ SR_ const s_33[] = {
 
 // State array:
 SR_ const* s_state[] = {
-    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11, s_12, s_13, s_14, s_15, s_16,
-    s_17, s_18, s_19, s_20, s_21, s_22, s_23, s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33,
+    s_0,  s_1,  s_2,  s_3,  s_4,  s_5,  s_6,  s_7,  s_8,  s_9,  s_10, s_11,
+    s_12, s_13, s_14, s_15, s_16, s_17, s_18, s_19, s_20, s_21, s_22, s_23,
+    s_24, s_25, s_26, s_27, s_28, s_29, s_30, s_31, s_32, s_33,
 };
 
 } // namespace
@@ -540,7 +541,8 @@ void HTTPTokenizer::errorRecovery_() {
 
 // derived/executeaction
 void HTTPTokenizer::executeAction_(int production) try {
-    if (token_() != Reserved_::UNDETERMINED_) pushToken_(token_()); // save an already available token
+    if (token_() != Reserved_::UNDETERMINED_)
+        pushToken_(token_()); // save an already available token
     switch (production) {
             // $insert actioncases
 

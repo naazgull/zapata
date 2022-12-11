@@ -22,12 +22,43 @@
 
 #include <iostream>
 #include <zapata/startup.h>
-#include <zapata/catalogue.h>
+#include <zapata/rest.h>
+#include <zapata/transport.h>
+
+class collection : public zpt::events::process {
+  public:
+    collection(zpt::message _received)
+      : zpt::events::process{ _received } {}
+    virtual ~collection() = default;
+
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+        this->to_send()->status(200);
+        this->to_send()->body() = { "a", 1 };
+        return zpt::events::finish;
+    }
+};
+
+class logger : public zpt::events::process {
+  public:
+    logger(zpt::message _received)
+      : zpt::events::process{ _received } {}
+    virtual ~logger() = default;
+
+    auto blocked() const -> bool { return false; }
+    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+        zlog(this->received(), zpt::info);
+        return zpt::events::finish;
+    }
+};
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::make_global<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE());
+    zlog("Registering event in REST resolver", zpt::info);
+    auto _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    _resolver->add<collection>("/collection/{}");
+    _resolver->add<logger>("/{}/{}");
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
-    zpt::release_global<zpt::catalogue<std::string, zpt::json>>(zpt::CATALOGUE());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+    zlog("Stopping event processing", zpt::info);
 }

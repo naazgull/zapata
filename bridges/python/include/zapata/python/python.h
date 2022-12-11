@@ -79,9 +79,11 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
     auto execute(object_type _self, std::string _func, std::nullptr_t _args)
       -> zpt::python::bridge::object_type;
     template<typename... Args>
-    auto execute(zpt::json _self, std::string _func, Args... _arg) -> zpt::python::bridge::object_type;
+    auto execute(zpt::json _self, std::string _func, Args... _arg)
+      -> zpt::python::bridge::object_type;
     template<typename... Args>
-    auto execute(object_type _self, std::string _func, Args... _arg) -> zpt::python::bridge::object_type;
+    auto execute(object_type _self, std::string _func, Args... _arg)
+      -> zpt::python::bridge::object_type;
 
     auto initialize() -> zpt::python::bridge&;
     auto is_initialized() const -> bool;
@@ -117,6 +119,7 @@ auto zpt::python::bridge::execute(object_type _self, std::string _func_name, Arg
     PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
     PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
 
-    expect(_py_error_type == nullptr, "Python: error invoking callable object: " << this->to_json(_py_error));
+    expect(_py_error_type == nullptr,
+           "Python: error invoking callable object: " << this->to_json(_py_error));
     return _ret;
 }

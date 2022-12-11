@@ -21,12 +21,15 @@
 */
 
 #include <zapata/startup.h>
+#include <zapata/events/engine.h>
 #include <zapata/transport.h>
 #include <signal.h>
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int _signal) -> void { zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown(); }
+auto deallocate(int _signal) -> void {
+    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown();
+}
 
 auto nostop(int _signal) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
@@ -52,7 +55,12 @@ auto main(int _argc, char* _argv[]) -> int {
           "configuration directory, all the files in it are assumed to be configuration "
           "files" },
         "--help",
-        { "options", { zpt::array, "optional", "single" }, "type", "void", "description", "show this help" },
+        { "options",
+          { zpt::array, "optional", "single" },
+          "type",
+          "void",
+          "description",
+          "show this help" },
         "--terminate",
         { "options",
           { zpt::array, "optional", "single" },
@@ -81,18 +89,26 @@ auto main(int _argc, char* _argv[]) -> int {
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config["log"]["level"]) : 7;
-    zpt::log_format = _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
-    auto _consumers = _config("limits")("max_consumer_threads")->integer();
+    zpt::log_format =
+      _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
+    auto _consumers = _config("limits")("max_consumer_threads")->ok()
+                        ? _config("limits")("max_consumer_threads")->integer()
+                        : 2;
 
     zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
     zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers).start_consumers(_consumers);
-    zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config).load();
-
-    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).poll();
+    zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //
+      .start_consumers(_consumers);
+    zpt::make_global<zpt::events::engine>(zpt::EVENTS_ENGINE(), _config);
+    zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config) //
+      .load();
+    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
+      .poll();
 
     zpt::release_global<zpt::polling>(zpt::STREAM_POLLING());
+    zpt::release_global<zpt::events::engine>(zpt::EVENTS_ENGINE());
     zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER());
+    zpt::release_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     zpt::release_global<zpt::startup::boot>(zpt::BOOT());
     zpt::release_global<zpt::json>(zpt::GLOBAL_CONFIG());
     return 0;

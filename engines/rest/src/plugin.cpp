@@ -26,11 +26,13 @@
 #include <zapata/transport.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::make_global<zpt::rest::engine>(zpt::REST_ENGINE(), _plugin.config());
-    zlog("Starting REST engine", zpt::info);
+    zpt::global_cast<zpt::events::engine>(zpt::EVENTS_ENGINE()) //
+      .add_resolver(zpt::make_global<zpt::rest::resolver>(
+        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
+    zlog("Added REST event resolver", zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping REST engine", zpt::info);
-    zpt::release_global<zpt::rest::engine>(zpt::REST_ENGINE());
+    zlog("Disposing REST event resolver", zpt::info);
+    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
 }

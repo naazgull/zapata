@@ -136,8 +136,10 @@ auto zpt::dump_path(std::string const& _in, std::wstring& _content) -> bool {
     return true;
 }
 
-auto zpt::globRegexp(std::string& dir, std::vector<std::string>& result, std::regex& pattern, short recursion)
-  -> int {
+auto zpt::globRegexp(std::string& dir,
+                     std::vector<std::string>& result,
+                     std::regex& pattern,
+                     short recursion) -> int {
     DIR* dp{ nullptr };
     struct dirent* dirp{ nullptr };
     std::vector<std::string> torecurse;
@@ -161,8 +163,10 @@ auto zpt::globRegexp(std::string& dir, std::vector<std::string>& result, std::re
     return 0;
 }
 
-auto zpt::glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion)
-  -> int {
+auto zpt::glob(std::string dir,
+               std::vector<std::string>& result,
+               std::string pattern,
+               short recursion) -> int {
     std::regex regexp(pattern);
     return zpt::globRegexp(dir, result, regexp, recursion);
 }

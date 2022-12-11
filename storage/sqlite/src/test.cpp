@@ -48,9 +48,10 @@ auto main(int _argc, char* _argv[]) -> int {
         zlog("---- First record modified: " << zpt::pretty(_result->to_json()), zpt::info);
     }
     {
-        auto _result = _collection //
-                         ->replace(_id1, { "nick", "fimber replace", "email", "address_replace@host" })
-                         ->execute();
+        auto _result =
+          _collection //
+            ->replace(_id1, { "nick", "fimber replace", "email", "address_replace@host" })
+            ->execute();
         zlog("----- Replaced elements: " << zpt::pretty(_result->to_json()), zpt::info);
     }
     {
@@ -64,7 +65,8 @@ auto main(int _argc, char* _argv[]) -> int {
         auto _result = _collection //
                          ->find(_search)
                          ->execute();
-        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()), zpt::info);
+        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()),
+             zpt::info);
     }
     {
         auto _result = _collection //
@@ -78,7 +80,8 @@ auto main(int _argc, char* _argv[]) -> int {
                          ->find("nick = :nick")
                          ->bind({ "nick", "fizz" })
                          ->execute();
-        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()), zpt::info);
+        zlog("---- Collection elements matching 'fizz': " << zpt::json::pretty(_result->fetch()),
+             zpt::info);
     }
     {
         auto _result = _collection //

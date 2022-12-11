@@ -68,12 +68,12 @@ auto zpt::http::basic_reply::to_stream(std::ostream& _out) const -> void {
         else { _body.assign(this->__underlying("body")->string()); }
     }
 
-    for (auto [_, _name, _value] : this->__underlying("headers")) {
+    for (auto const& [_, _name, _value] : this->__underlying("headers")) {
         _out << _name << ": " << static_cast<std::string>(_value) << CRLF;
     }
     _out << "Content-Length: " << _body.length() << CRLF;
 
-    _out << CRLF << _body;
+    _out << CRLF << _body << std::flush;
 }
 
 auto zpt::http::basic_reply::from_stream(std::istream& _in) -> void {

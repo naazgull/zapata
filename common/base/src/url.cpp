@@ -25,8 +25,9 @@
 #include <unistd.h>
 #include <iomanip>
 
-auto zpt::quoted_printable::encode(std::string const& _quote, std::string const& _charset, std::string& _out)
-  -> void {
+auto zpt::quoted_printable::encode(std::string const& _quote,
+                                   std::string const& _charset,
+                                   std::string& _out) -> void {
     std::ostringstream _oss;
     _oss << "=?" << _charset << "?Q?" << std::flush;
     for (size_t _i = 0; _i != _quote.length(); _i++) {
@@ -39,7 +40,8 @@ auto zpt::quoted_printable::encode(std::string const& _quote, std::string const&
     _out.append(_oss.str());
 }
 
-auto zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset) -> std::string {
+auto zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset)
+  -> std::string {
     std::string _out;
     zpt::quoted_printable::encode(_quote, _charset, _out);
     return _out;
@@ -55,7 +57,8 @@ auto zpt::url::encode(std::string& _out) -> void {
 
     for (; pSrc < SRC_END; ++pSrc) {
         if ((*pSrc > 127) || (*pSrc == '%') || (*pSrc == ' ') || (*pSrc == '&') || (*pSrc == '+') ||
-            (*pSrc == '?') || (*pSrc == '#') || (*pSrc == '=') || (*pSrc == '/') || (*pSrc == ':')) {
+            (*pSrc == '?') || (*pSrc == '#') || (*pSrc == '=') || (*pSrc == '/') ||
+            (*pSrc == ':')) {
             *pEnd++ = '%';
             *pEnd++ = DEC2HEX[*pSrc >> 4];
             *pEnd++ = DEC2HEX[*pSrc & 0x0F];

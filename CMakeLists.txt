@@ -10,13 +10,18 @@ option(DONT_COMPILE_XDEVAPI
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third_party)
-set(THIRD_PARTY_BUILD_INSTALL_DIR ${THIRD_PARTY_DIR}/install)
+set(THIRD_PARTY_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/third_party/install)
 
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
   ${CMAKE_INSTALL_PREFIX}/lib
-  ${THIRD_PARTY_BUILD_INSTALL_DIR}/lib)
+  ${CMAKE_INSTALL_PREFIX}/lib64
+)
+list(APPEND CMAKE_BUILD_RPATH
+  ${THIRD_PARTY_INSTALL_PREFIX}/bin
+  ${THIRD_PARTY_INSTALL_PREFIX}/lib
+  ${THIRD_PARTY_INSTALL_PREFIX}/lib64
+)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
 set(CMAKE_SKIP_INSTALL_RPATH OFF)
 set(CMAKE_SKIP_BUILD_RPATH OFF)
@@ -70,12 +75,9 @@ add_subdirectory(common/events)
 add_subdirectory(common/globals)
 add_subdirectory(common/graph)
 add_subdirectory(common/lockfree)
-# add_subdirectory(engines/automaton)
-# add_subdirectory(engines/dom)
-# add_subdirectory(engines/fsm)
-# add_subdirectory(engines/pipeline)
-add_subdirectory(engines/rest)
 add_subdirectory(engines/startup)
+add_subdirectory(engines/events)
+add_subdirectory(engines/rest)
 add_subdirectory(io/pipe)
 add_subdirectory(io/socket)
 add_subdirectory(io/stream)

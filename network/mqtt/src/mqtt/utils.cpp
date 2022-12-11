@@ -14,7 +14,9 @@ auto zpt::mqtt::utils::check_err(int _return,
         case MOSQ_ERR_INVAL: _error_description = "input parameters were invalid"; break;
         case MOSQ_ERR_NOMEM: _error_description = "out of memory condition occurred"; break;
         case MOSQ_ERR_NO_CONN: _error_description = "the client isn't connected to a broker"; break;
-        case MOSQ_ERR_CONN_LOST: _error_description = "the connection to the broker was lost"; break;
+        case MOSQ_ERR_CONN_LOST:
+            _error_description = "the connection to the broker was lost";
+            break;
         case MOSQ_ERR_PROTOCOL:
             _error_description = "there is a protocol error communicating with the broker";
             break;
@@ -31,8 +33,9 @@ auto zpt::mqtt::utils::check_err(int _return,
         default: _error_description = std::string("unknown error: code=") + std::to_string(_return);
     }
 
-    zlog(std::string("mqtt: error(") + std::to_string(_errno) + std::string(") while connecting to ") +
-           _connection + std::string(": ") + _error_description,
+    zlog(std::string("mqtt: error(") + std::to_string(_errno) +
+           std::string(") while connecting to ") + _connection + std::string(": ") +
+           _error_description,
          _log_level);
 
     return _return;

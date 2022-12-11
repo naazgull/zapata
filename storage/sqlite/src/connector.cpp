@@ -24,17 +24,18 @@
 #include <zapata/base/sentry.h>
 #include <algorithm>
 
-#define sqlite_expect(_error, _message)                                                                      \
-    {                                                                                                        \
-        auto __error__ = _error;                                                                             \
-        expect(!zpt::storage::sqlite::is_error(__error__),                                                   \
-               std::get<0>(__messages[__error__])                                                            \
-                 << "(" << std::get<1>(__messages[__error__]) << "): " << _message);                         \
+#define sqlite_expect(_error, _message)                                                            \
+    {                                                                                              \
+        auto __error__ = _error;                                                                   \
+        expect(!zpt::storage::sqlite::is_error(__error__),                                         \
+               std::get<0>(__messages[__error__])                                                  \
+                 << "(" << std::get<1>(__messages[__error__]) << "): " << _message);               \
     }
-#define sqlite_print(_error)                                                                                 \
-    {                                                                                                        \
-        auto __error__ = _error;                                                                             \
-        zlog(std::get<0>(__messages[__error__]) << ": " << std::get<1>(__messages[__error__]), zpt::info);   \
+#define sqlite_print(_error)                                                                       \
+    {                                                                                              \
+        auto __error__ = _error;                                                                   \
+        zlog(std::get<0>(__messages[__error__]) << ": " << std::get<1>(__messages[__error__]),     \
+             zpt::info);                                                                           \
     }
 
 std::map<int, std::tuple<std::string, std::string>> __messages = {
@@ -99,7 +100,8 @@ auto zpt::storage::sqlite::from_db_doc(sqlite3_stmt* _stmt) -> zpt::json {
                 break;
             }
             case SQLITE3_TEXT: {
-                std::string _text{ reinterpret_cast<const char*>(sqlite3_column_text(_stmt, _idx)) };
+                std::string _text{ reinterpret_cast<const char*>(
+                  sqlite3_column_text(_stmt, _idx)) };
                 _to_return << _text;
                 break;
             }
@@ -120,7 +122,8 @@ auto zpt::storage::sqlite::free_byte_array(void* _to_delete) -> void {
     delete[] static_cast<char*>(_to_delete);
 }
 
-auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value) -> void {
+auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, zpt::json _value)
+  -> void {
     auto _index = sqlite3_bind_parameter_index(_stmt, (std::string{ ":" } + _name).data());
     expect(_index != 0, "No such parameter named :" << _name);
     switch (_value->type()) {
@@ -191,7 +194,8 @@ auto zpt::storage::sqlite::session::commit() -> zpt::storage::session::type* {
           "unable to prepare statement for commit: " << sqlite3_errmsg(_db.get()));
         sqlite_expect(sqlite3_step(_stmt),
                       "unable to execute commit statement: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_finalize(_stmt), "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
+        sqlite_expect(sqlite3_finalize(_stmt),
+                      "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
     }
     return this;
 }
@@ -205,12 +209,14 @@ auto zpt::storage::sqlite::session::rollback() -> zpt::storage::session::type* {
           "unable to prepare statement for rollback: " << sqlite3_errmsg(_db.get()));
         sqlite_expect(sqlite3_step(_stmt),
                       "unable to execute rollback statement: " << sqlite3_errmsg(_db.get()));
-        sqlite_expect(sqlite3_finalize(_stmt), "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
+        sqlite_expect(sqlite3_finalize(_stmt),
+                      "unable to cleanup statement: " << sqlite3_errmsg(_db.get()));
     }
     return this;
 }
 
-auto zpt::storage::sqlite::session::sql(std::string const& _statement) -> zpt::storage::session::type* {
+auto zpt::storage::sqlite::session::sql(std::string const& _statement)
+  -> zpt::storage::session::type* {
     expect(false, "Session `sql` method not implemented for SQLite, use database's");
     return this;
 }
@@ -223,7 +229,8 @@ auto zpt::storage::sqlite::session::add_database_connection(sqlite3_ptr _databas
     this->__underlying.push_back(_database);
 }
 
-zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session, std::string const& _db)
+zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session,
+                                         std::string const& _db)
   : __path{ _session.__options("path")->ok()
               ? _session.__options("path")->string() + std::string{ "/" } + _db
               : std::string{ "file:" } + _db + std::string{ "?mode=memory&cache=shared" } } {
@@ -234,13 +241,16 @@ zpt::storage::sqlite::database::database(zpt::storage::sqlite::session& _session
     _session.add_database_connection(this->__underlying);
 }
 
-auto zpt::storage::sqlite::database::sql(std::string const& _to_execute) -> zpt::storage::database::type* {
+auto zpt::storage::sqlite::database::sql(std::string const& _to_execute)
+  -> zpt::storage::database::type* {
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(
-      sqlite3_prepare_v2(this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
+      sqlite3_prepare_v2(
+        this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
       "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
+    sqlite_expect(
+      sqlite3_step(_stmt),
+      "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
     return this;
@@ -250,7 +260,8 @@ auto zpt::storage::sqlite::database::connection() -> sqlite3_ptr { return this->
 
 auto zpt::storage::sqlite::database::path() -> std::string& { return this->__path; }
 
-auto zpt::storage::sqlite::database::collection(std::string const& _collection) -> zpt::storage::collection {
+auto zpt::storage::sqlite::database::collection(std::string const& _collection)
+  -> zpt::storage::collection {
     return zpt::make_collection<zpt::storage::sqlite::collection>(*this, _collection);
 }
 
@@ -286,10 +297,12 @@ auto zpt::storage::sqlite::collection::count() -> size_t {
     std::string _to_execute{ _oss.str() };
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(
-      sqlite3_prepare_v2(this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
+      sqlite3_prepare_v2(
+        this->__underlying.get(), _to_execute.data(), _to_execute.length(), &_stmt, nullptr),
       "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
-    sqlite_expect(sqlite3_step(_stmt),
-                  "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
+    sqlite_expect(
+      sqlite3_step(_stmt),
+      "unable to execute commit statement: " << sqlite3_errmsg(this->__underlying.get()));
     zpt::json _count = zpt::storage::sqlite::from_db_doc(_stmt);
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
@@ -315,9 +328,11 @@ auto zpt::storage::sqlite::action::get_state() -> zpt::json { return this->__sta
 auto zpt::storage::sqlite::action::prepare(std::string const& _statement) -> void {
     sqlite3_stmt* _stmt{ nullptr };
     sqlite_expect(
-      sqlite3_prepare_v2(this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
+      sqlite3_prepare_v2(
+        this->__underlying.get(), _statement.data(), _statement.length(), &_stmt, nullptr),
       "unable to prepare statement for commit: " << sqlite3_errmsg(this->__underlying.get()));
-    this->__prepared.push_back(sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
+    this->__prepared.push_back(
+      sqlite3_stmt_ptr{ _stmt, zpt::storage::sqlite::finalize_statement{} });
 }
 
 zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection& _collection,
@@ -364,7 +379,8 @@ auto zpt::storage::sqlite::action_add::set(std::string const& _attribute, zpt::j
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::unset(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action");
     return this;
 }
@@ -374,7 +390,8 @@ auto zpt::storage::sqlite::action_add::patch(zpt::json _document) -> zpt::storag
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_add::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -382,11 +399,17 @@ auto zpt::storage::sqlite::action_add::fields(zpt::json _fields) -> zpt::storage
     return this;
 }
 
-auto zpt::storage::sqlite::action_add::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::sqlite::action_add::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
-auto zpt::storage::sqlite::action_add::limit(size_t _number) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::sqlite::action_add::limit(size_t _number) -> zpt::storage::action::type* {
+    return this;
+}
 
-auto zpt::storage::sqlite::action_add::bind(zpt::json _map) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::sqlite::action_add::bind(zpt::json _map) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::sqlite::action_add::execute() -> zpt::storage::result {
     try {
@@ -475,12 +498,14 @@ auto zpt::storage::sqlite::action_modify::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     for (auto [_, _key, _member] : _document) { this->__set << _key << _member; }
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_modify::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -488,7 +513,9 @@ auto zpt::storage::sqlite::action_modify::fields(zpt::json _fields) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::sqlite::action_modify::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::sqlite::action_modify::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::sqlite::action_modify::limit(size_t _number) -> zpt::storage::action::type* {
     return this;
@@ -517,7 +544,8 @@ auto zpt::storage::sqlite::action_modify::execute() -> zpt::storage::result {
         for (auto _prepared : this->__prepared) {
             auto _result = sqlite3_step(_prepared.get());
             sqlite_expect(
-              _result, "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
+              _result,
+              "unable to execute prepared statement: " << sqlite3_errmsg(this->__underlying.get()));
         }
     }
     catch (zpt::failed_expectation const& _e) {
@@ -596,11 +624,13 @@ auto zpt::storage::sqlite::action_remove::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_remove::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -608,7 +638,9 @@ auto zpt::storage::sqlite::action_remove::fields(zpt::json _fields) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::sqlite::action_remove::offset(size_t _rows) -> zpt::storage::action::type* { return this; }
+auto zpt::storage::sqlite::action_remove::offset(size_t _rows) -> zpt::storage::action::type* {
+    return this;
+}
 
 auto zpt::storage::sqlite::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
     return this;
@@ -672,12 +704,14 @@ auto zpt::storage::sqlite::action_replace::add(zpt::json _document) -> zpt::stor
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::modify(zpt::json _search)
+  -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::remove(zpt::json _search)
+  -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'replace' action");
     return this;
 }
@@ -703,7 +737,8 @@ auto zpt::storage::sqlite::action_replace::unset(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::patch(zpt::json _document)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -712,7 +747,8 @@ auto zpt::storage::sqlite::action_replace::sort(std::string const& _attribute)
     return this;
 }
 
-auto zpt::storage::sqlite::action_replace::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_replace::fields(zpt::json _fields)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -817,7 +853,8 @@ auto zpt::storage::sqlite::action_find::set(std::string const& _attribute, zpt::
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::unset(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::unset(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     return this;
 }
 
@@ -825,7 +862,8 @@ auto zpt::storage::sqlite::action_find::patch(zpt::json _document) -> zpt::stora
     return this;
 }
 
-auto zpt::storage::sqlite::action_find::sort(std::string const& _attribute) -> zpt::storage::action::type* {
+auto zpt::storage::sqlite::action_find::sort(std::string const& _attribute)
+  -> zpt::storage::action::type* {
     this->__sort << _attribute;
     return this;
 }
@@ -942,7 +980,9 @@ auto zpt::storage::sqlite::result::fetch(size_t _amount) -> zpt::json {
     return (_return->size() != 0 ? _return : zpt::undefined);
 }
 
-auto zpt::storage::sqlite::result::generated_id() -> zpt::json { return this->__result["generated"]; }
+auto zpt::storage::sqlite::result::generated_id() -> zpt::json {
+    return this->__result["generated"];
+}
 
 auto zpt::storage::sqlite::result::count() -> size_t {
     if (this->__result["generated"]->ok()) { return this->__result["generated"]->size(); }

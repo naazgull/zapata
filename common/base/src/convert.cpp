@@ -308,7 +308,9 @@ auto zpt::get_backtrace() -> std::string {
     void* _backtrace_array[30];
     size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
     char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
-    for (size_t _i = 0; _i != _backtrace_size; _i++) { _oss << "\t" << _backtrace[_i] << std::endl; }
+    for (size_t _i = 0; _i != _backtrace_size; _i++) {
+        _oss << "\t" << _backtrace[_i] << std::endl;
+    }
     _oss << std::flush;
     free(_backtrace);
     return _oss.str();

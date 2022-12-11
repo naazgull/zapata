@@ -200,7 +200,9 @@ auto zpt::lf::queue<T>::front() const -> T {
 template<typename T>
 auto zpt::lf::queue<T>::back() const -> T {
     auto _tail = this->tail();
-    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) { return _tail->__value; }
+    if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) {
+        return _tail->__value;
+    }
     throw zpt::NoMoreElementsException("there is no element in the back");
 }
 
@@ -220,7 +222,8 @@ auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     typename zpt::lf::queue<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
 
     do {
-        typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail, this->__hazard_domain };
+        typename zpt::lf::queue<T>::hazard_domain::guard _tail_sentry{ *this->__tail,
+                                                                       this->__hazard_domain };
         auto _tail = _tail_sentry.target();
         zpt::lf::forward_node<T>* _null{ nullptr };
         if (_tail->__next->compare_exchange_strong(_null, _new)) {
@@ -238,7 +241,8 @@ auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
 template<typename T>
 auto zpt::lf::queue<T>::pop() -> T {
     do {
-        typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head, this->__hazard_domain };
+        typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head,
+                                                                       this->__hazard_domain };
         auto _head = _head_sentry.target();
         auto _next = _head->__next->load(std::memory_order_acquire);
         if (_next == nullptr) { break; }

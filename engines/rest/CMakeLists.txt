@@ -13,6 +13,8 @@ add_dependencies(zapata-engine-rest
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
+  zapata-engine-events
+  zapata-common-catalogue
 )
 target_sources(zapata-engine-rest
   PUBLIC
@@ -31,6 +33,8 @@ target_include_directories(zapata-engine-rest
     $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
     ${ENGINE_REST_INCLUDE_DIR}
   INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}
@@ -46,6 +50,11 @@ target_link_libraries(zapata-engine-rest
     $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    ${SQLite3_LIBRARIES}
+    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
 )
 set_target_properties(zapata-engine-rest
   PROPERTIES
@@ -60,6 +69,7 @@ add_library(zapata-engine-rest-plugin SHARED)
 add_dependencies(zapata-engine-rest-plugin
   zapata-base
   zapata-engine-startup
+  zapata-engine-events
   zapata-engine-rest
   zapata-events
   zapata-globals
@@ -68,6 +78,7 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-net-transport
   zapata-parser-json
   zapata-parser-uri
+  zapata-common-catalogue
 )
 target_sources(zapata-engine-rest-plugin
   PUBLIC
@@ -84,6 +95,8 @@ target_include_directories(zapata-engine-rest-plugin
     $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
     ${ENGINE_REST_INCLUDE_DIR}
 )
 target_link_libraries(zapata-engine-rest-plugin
@@ -98,6 +111,11 @@ target_link_libraries(zapata-engine-rest-plugin
     $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    ${SQLite3_LIBRARIES}
+    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
 )
 set_target_properties(zapata-engine-rest-plugin
   PROPERTIES
@@ -107,8 +125,70 @@ set_target_properties(zapata-engine-rest-plugin
     LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
+add_library(zapata-rest-example SHARED)
+add_dependencies(zapata-rest-example
+  zapata-base
+  zapata-engine-startup
+  zapata-engine-events
+  zapata-engine-rest
+  zapata-events
+  zapata-globals
+  zapata-io-stream
+  zapata-lockfree
+  zapata-net-transport
+  zapata-parser-json
+  zapata-parser-uri
+  zapata-common-catalogue
+)
+target_sources(zapata-rest-example
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+)
+target_include_directories(zapata-rest-example
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-io-stream,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-net-transport,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-uri,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-storage-sqlite,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-storage-connector,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,INTERFACE_INCLUDE_DIRECTORIES>
+    ${ENGINE_REST_INCLUDE_DIR}
+)
+target_link_libraries(zapata-rest-example
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-rest,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-io-stream,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
+    ${SQLite3_LIBRARIES}
+    $<TARGET_PROPERTY:zapata-storage-sqlite,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-common-catalogue,LIBRARIES>
+)
+set_target_properties(zapata-rest-example
+  PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+)
+
 include(GNUInstallDirs)
-install(TARGETS zapata-engine-rest zapata-engine-rest-plugin
+install(TARGETS zapata-engine-rest zapata-engine-rest-plugin zapata-rest-example
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

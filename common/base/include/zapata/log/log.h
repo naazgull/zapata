@@ -32,11 +32,11 @@
 #include <sstream>
 
 #define __HOST__ std::string(zpt::log_hostname())
-#define zlog(x, y)                                                                                           \
-    if (y <= zpt::log_lvl) {                                                                                 \
-        std::ostringstream __OSS__;                                                                          \
-        __OSS__ << x << std::flush;                                                                          \
-        zpt::log(__OSS__.str(), y, __HOST__, __LINE__, __FILE__);                                            \
+#define zlog(x, y)                                                                                 \
+    if (y <= zpt::log_lvl) {                                                                       \
+        std::ostringstream __OSS__;                                                                \
+        __OSS__ << x << std::flush;                                                                \
+        zpt::log(__OSS__.str(), y, __HOST__, __LINE__, __FILE__);                                  \
     }
 #define zdbg(x) zlog(x, zpt::debug)
 #define ztrace(x) zlog(x, zpt::trace)
@@ -71,8 +71,11 @@ auto log(std::string const& _text,
          std::string const& _file) -> int;
 
 template<typename T>
-auto log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file)
-  -> int {
+auto log(T _text,
+         zpt::LogLevel _level,
+         std::string const& _host,
+         int _line,
+         std::string const& _file) -> int {
     return zpt::log(to_string(_text), _level, _host, _line, _file);
 }
 auto log_hostname() -> std::string;

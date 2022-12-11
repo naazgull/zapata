@@ -24,31 +24,77 @@
 
 #include <zapata/startup.h>
 #include <zapata/transport.h>
-
-#define URI_PART_ANY "{:([^/?]+):}"
+#include <zapata/catalogue.h>
+#include <zapata/events/engine.h>
 
 namespace zpt {
-auto REST_ENGINE() -> ssize_t&;
+auto REST_RESOLVER() -> ssize_t&;
 namespace rest {
-class engine {
+class resolver_t : public zpt::events::resolver_t {
   public:
-    engine(zpt::json _configuration);
-    virtual ~engine() = default;
+    resolver_t(zpt::json _rest_config);
+    virtual ~resolver_t() = default;
 
-    auto delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool;
-};
-
-class receive_message {
-  public:
-    receive_message(zpt::polling& _polling, zpt::basic_stream& _stream);
-    virtual ~receive_message() = default;
-
-    auto blocked() const -> bool;
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
+    template<typename T>
+    auto add(std::string _path) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto add(std::string _path, zpt::json _metadata) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto add(zpt::performative _performtive, std::string _path) -> zpt::rest::resolver_t&;
+    template<typename T>
+    auto add(zpt::performative _performtive, std::string _path, zpt::json _metadata)
+      -> zpt::rest::resolver_t&;
+    virtual auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event>;
 
   private:
-    zpt::polling& __polling;
-    zpt::basic_stream& __stream;
+    zpt::catalogue<std::string, zpt::json> __catalogue{ "rest_catalogue" };
+    std::vector<std::function<zpt::event(zpt::message, zpt::events::initializer_t)>> __callbacks;
+    zpt::json __configuration;
+
+    template<typename T>
+    static auto make_callback(zpt::message _received, zpt::events::initializer_t _initializer)
+      -> zpt::event;
 };
+using resolver = std::shared_ptr<zpt::rest::resolver_t>;
 } // namespace rest
 } // namespace zpt
+
+template<typename T>
+auto zpt::rest::resolver_t::add(std::string _path) -> zpt::rest::resolver_t& {
+    return this->add<T>(zpt::Performative_end, _path, { "host", "localhost" });
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::add(std::string _path, zpt::json _metadata) -> zpt::rest::resolver_t& {
+    return this->add<T>(zpt::Performative_end, _path, _metadata);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::add(zpt::performative _performative, std::string _path)
+  -> zpt::rest::resolver_t& {
+    return this->add<T>(_performative, _path, { "host", "localhost" });
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::add(zpt::performative _performative,
+                                std::string _path,
+                                zpt::json _metadata) -> zpt::rest::resolver_t& {
+    auto hash_code = this->__callbacks.size();
+    this->__callbacks.push_back(zpt::rest::resolver_t::make_callback<T>);
+    _metadata << "callback" << hash_code;
+    auto _to_add = std::string{ "/" } +
+                   (_performative == zpt::Performative_end ? std::string{ "{}" }
+                                                           : zpt::ontology::to_str(_performative)) +
+                   _path;
+    this->__catalogue.add(_to_add, _metadata);
+    return (*this);
+}
+
+template<typename T>
+auto zpt::rest::resolver_t::make_callback(zpt::message _received,
+                                          zpt::events::initializer_t _initializer) -> zpt::event {
+    auto _event = zpt::make_event<T>(_received);
+    _initializer(static_cast<zpt::events::process&>(event_cast<T>(_event)));
+    return _event;
+}

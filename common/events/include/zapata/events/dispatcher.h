@@ -58,8 +58,11 @@ class event_t : public zpt::abstract_event {
     event_t(Args&&... _args);
     virtual ~event_t() = default;
 
+    auto operator*() -> T&;
+    auto operator*() const -> T const&;
     virtual auto blocked() const -> bool override final;
-    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state override final;
+    virtual auto operator()(zpt::events::dispatcher& _dispatcher)
+      -> zpt::events::state override final;
 
   private:
     T __underlying;
@@ -96,10 +99,25 @@ class dispatcher {
 } // namespace events
 } // namespace zpt
 
+template<typename T>
+auto event_cast(zpt::event& _event) -> T& {
+    return *static_cast<zpt::event_t<T>&>(*_event.get());
+}
+
 template<Operation T>
 template<typename... Args>
 zpt::event_t<T>::event_t(Args&&... _args)
   : __underlying{ std::forward<Args>(_args)... } {}
+
+template<Operation T>
+auto zpt::event_t<T>::operator*() -> T& {
+    return this->__underlying;
+}
+
+template<Operation T>
+auto zpt::event_t<T>::operator*() const -> T const& {
+    return this->__underlying;
+}
 
 template<Operation T>
 auto zpt::event_t<T>::blocked() const -> bool {

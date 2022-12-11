@@ -3,7 +3,7 @@ BasedOnStyle: Mozilla
 Language: Cpp
 Standard: c++17
 
-ColumnLimit: 110
+ColumnLimit: 100
 IndentWidth: 4
 TabWidth: 4
 SortIncludes: false

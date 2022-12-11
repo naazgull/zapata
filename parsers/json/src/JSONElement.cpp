@@ -161,7 +161,8 @@ auto zpt::JSONElementT::type(zpt::JSONType _in) -> JSONElementT& {
 }
 
 auto zpt::JSONElementT::ok() const -> bool {
-    return this->__underlying.index() != zpt::JSNil && this->__underlying.index() != zpt::JSUndefined;
+    return this->__underlying.index() != zpt::JSNil &&
+           this->__underlying.index() != zpt::JSUndefined;
 }
 
 auto zpt::JSONElementT::empty() const -> bool {
@@ -270,11 +271,13 @@ auto zpt::JSONElementT::hash() const -> size_t {
             return std::get<zpt::JSArray>(this->__underlying).hash();
         }
         case zpt::JSString: {
-            size_t _to_return = std::hash<std::string>{}(std::get<zpt::JSString>(this->__underlying));
+            size_t _to_return =
+              std::hash<std::string>{}(std::get<zpt::JSString>(this->__underlying));
             return _to_return;
         }
         case zpt::JSInteger: {
-            size_t _to_return = std::hash<long long>{}(std::get<zpt::JSInteger>(this->__underlying));
+            size_t _to_return =
+              std::hash<long long>{}(std::get<zpt::JSInteger>(this->__underlying));
             return _to_return;
         }
         case zpt::JSDouble: {
@@ -290,7 +293,8 @@ auto zpt::JSONElementT::hash() const -> size_t {
             return _to_return;
         }
         case zpt::JSDate: {
-            size_t _to_return = std::hash<unsigned long long>{}(std::get<zpt::JSDate>(this->__underlying));
+            size_t _to_return =
+              std::hash<unsigned long long>{}(std::get<zpt::JSDate>(this->__underlying));
             return _to_return;
         }
         case zpt::JSLambda: {
@@ -320,12 +324,17 @@ auto zpt::JSONElementT::is_array() -> bool { return this->__underlying.index() =
 
 auto zpt::JSONElementT::is_string() -> bool { return this->__underlying.index() == zpt::JSString; }
 
-auto zpt::JSONElementT::is_integer() -> bool { return this->__underlying.index() == zpt::JSInteger; }
+auto zpt::JSONElementT::is_integer() -> bool {
+    return this->__underlying.index() == zpt::JSInteger;
+}
 
-auto zpt::JSONElementT::is_floating() -> bool { return this->__underlying.index() == zpt::JSDouble; }
+auto zpt::JSONElementT::is_floating() -> bool {
+    return this->__underlying.index() == zpt::JSDouble;
+}
 
 auto zpt::JSONElementT::is_number() -> bool {
-    return this->__underlying.index() == zpt::JSInteger || this->__underlying.index() == zpt::JSDouble;
+    return this->__underlying.index() == zpt::JSInteger ||
+           this->__underlying.index() == zpt::JSDouble;
 }
 
 auto zpt::JSONElementT::is_bool() -> bool { return this->__underlying.index() == zpt::JSBoolean; }
@@ -340,7 +349,9 @@ auto zpt::JSONElementT::is_regex() -> bool { return this->__underlying.index() =
 
 auto zpt::JSONElementT::is_nil() -> bool { return this->__underlying.index() == zpt::JSNil; }
 
-auto zpt::JSONElementT::is_undefined() -> bool { return this->__underlying.index() == zpt::JSUndefined; }
+auto zpt::JSONElementT::is_undefined() -> bool {
+    return this->__underlying.index() == zpt::JSUndefined;
+}
 
 auto zpt::JSONElementT::object() -> zpt::JSONObj& {
     return const_cast<zpt::JSONObj&>(static_cast<const zpt::JSONElementT&>(*this).object());
@@ -378,7 +389,9 @@ auto zpt::JSONElementT::regex() -> zpt::regex& {
     return const_cast<zpt::regex&>(static_cast<const zpt::JSONElementT&>(*this).regex());
 }
 
-auto zpt::JSONElementT::number() -> double { return static_cast<const zpt::JSONElementT&>(*this).number(); }
+auto zpt::JSONElementT::number() -> double {
+    return static_cast<const zpt::JSONElementT&>(*this).number();
+}
 
 auto zpt::JSONElementT::object() const -> zpt::JSONObj const& {
     expect(this->__underlying.index() == zpt::JSObject,
@@ -435,9 +448,11 @@ auto zpt::JSONElementT::regex() const -> zpt::regex const& {
 }
 
 auto zpt::JSONElementT::number() const -> double const {
-    expect(this->__underlying.index() == zpt::JSDate || this->__underlying.index() == zpt::JSInteger ||
-             this->__underlying.index() == zpt::JSDouble || this->__underlying.index() == zpt::JSBoolean,
-           std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") + this->stringify());
+    expect(
+      this->__underlying.index() == zpt::JSDate || this->__underlying.index() == zpt::JSInteger ||
+        this->__underlying.index() == zpt::JSDouble || this->__underlying.index() == zpt::JSBoolean,
+      std::string("this element is not of type JSInteger, JSDouble or JSBoolean: ") +
+        this->stringify());
     switch (this->__underlying.index()) {
         case zpt::JSInteger: {
             return static_cast<double>(std::get<zpt::JSInteger>(this->__underlying));
@@ -1118,36 +1133,37 @@ auto zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
             return this->string() == _in.string();
         }
         case zpt::JSInteger: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return false;
             }
             return this->integer() == _in.number();
         }
         case zpt::JSDouble: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return false;
             }
             return this->floating() == _in.number();
         }
         case zpt::JSBoolean: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return false;
             }
             return this->boolean() == _in.number();
         }
         case zpt::JSUndefined:
         case zpt::JSNil: {
-            if (_in.__underlying.index() == zpt::JSNil || _in.__underlying.index() == zpt::JSUndefined) {
+            if (_in.__underlying.index() == zpt::JSNil ||
+                _in.__underlying.index() == zpt::JSUndefined) {
                 return true;
             }
             return false;
         }
         case zpt::JSDate: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return false;
             }
             return this->date() == _in.number();
@@ -1157,7 +1173,8 @@ auto zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
             return this->lambda()->signature() == _in.lambda()->signature();
         }
         case zpt::JSRegex: {
-            if (this->__underlying.index() != _in.__underlying.index() && _in.type() != zpt::JSString) {
+            if (this->__underlying.index() != _in.__underlying.index() &&
+                _in.type() != zpt::JSString) {
                 return false;
             }
             if (_in.type() == zpt::JSRegex) { return this->regex() == _in.regex(); }
@@ -1169,41 +1186,49 @@ auto zpt::JSONElementT::operator==(zpt::JSONElementT const& _in) const -> bool {
 
 auto zpt::JSONElementT::operator==(zpt::json _rhs) const -> bool { return *this == *_rhs; }
 
-auto zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool { return !(*this == _in); }
+auto zpt::JSONElementT::operator!=(JSONElementT const& _in) const -> bool {
+    return !(*this == _in);
+}
 
 auto zpt::JSONElementT::operator!=(zpt::json _rhs) const -> bool { return *this != (*_rhs); }
 
 auto zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return zpt::JSObject < _in.type(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return zpt::JSObject < _in.type();
+            }
             return *(this->object()) < *(_in.object());
         }
         case zpt::JSArray: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return zpt::JSArray < _in.type(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return zpt::JSArray < _in.type();
+            }
             return *(this->array()) < *(_in.array());
         }
         case zpt::JSString: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return zpt::JSString < _in.type(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return zpt::JSString < _in.type();
+            }
             return this->string() < _in.string();
         }
         case zpt::JSInteger: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() < _in.hash();
             }
             return this->integer() < _in.number();
         }
         case zpt::JSDouble: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() < _in.hash();
             }
             return this->floating() < _in.number();
         }
         case zpt::JSBoolean: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() < _in.hash();
             }
             return this->boolean() < _in.number();
@@ -1213,14 +1238,16 @@ auto zpt::JSONElementT::operator<(zpt::JSONElementT const& _in) const -> bool {
             return this->hash() < _in.hash();
         }
         case zpt::JSDate: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() < _in.hash();
             }
             return this->date() < _in.number();
         }
         case zpt::JSLambda: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return this->hash() < _in.hash(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return this->hash() < _in.hash();
+            }
             return this->lambda()->n_args() < _in.lambda()->n_args();
         }
         case zpt::JSRegex: {
@@ -1235,34 +1262,40 @@ auto zpt::JSONElementT::operator<(zpt::json _rhs) const -> bool { return *this <
 auto zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return this->hash() > _in.hash(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return this->hash() > _in.hash();
+            }
             return *(this->object()) > *(_in.object());
         }
         case zpt::JSArray: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return this->hash() > _in.hash(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return this->hash() > _in.hash();
+            }
             return *(this->array()) > *(_in.array());
         }
         case zpt::JSString: {
-            if (this->__underlying.index() != _in.__underlying.index()) { return this->hash() > _in.hash(); }
+            if (this->__underlying.index() != _in.__underlying.index()) {
+                return this->hash() > _in.hash();
+            }
             return this->string() > _in.string();
         }
         case zpt::JSInteger: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() > _in.hash();
             }
             return this->integer() > _in.number();
         }
         case zpt::JSDouble: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() > _in.hash();
             }
             return this->floating() > _in.number();
         }
         case zpt::JSBoolean: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() > _in.hash();
             }
             return this->boolean() > _in.number();
@@ -1272,8 +1305,8 @@ auto zpt::JSONElementT::operator>(zpt::JSONElementT const& _in) const -> bool {
             return this->hash() > _in.hash();
         }
         case zpt::JSDate: {
-            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger && _in.type() != zpt::JSDouble &&
-                _in.type() != zpt::JSBoolean) {
+            if (_in.type() != zpt::JSDate && _in.type() != zpt::JSInteger &&
+                _in.type() != zpt::JSDouble && _in.type() != zpt::JSBoolean) {
                 return this->hash() > _in.hash();
             }
             return this->date() > _in.number();
@@ -1302,7 +1335,8 @@ auto zpt::JSONElementT::operator>=(zpt::JSONElementT const& _in) const -> bool {
 
 auto zpt::JSONElementT::operator>=(zpt::json _rhs) const -> bool { return (*this) >= *_rhs; }
 
-auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator) -> zpt::json {
+auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _separator)
+  -> zpt::json {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
             return this->object()->get_path(_path, _separator);
@@ -1325,8 +1359,9 @@ auto zpt::JSONElementT::get_path(std::string const& _path, std::string const& _s
     return zpt::undefined;
 }
 
-auto zpt::JSONElementT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
-  -> JSONElementT& {
+auto zpt::JSONElementT::set_path(std::string const& _path,
+                                 zpt::json _value,
+                                 std::string const& _separator) -> JSONElementT& {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
             this->object()->set_path(_path, _value, _separator);
@@ -1351,7 +1386,8 @@ auto zpt::JSONElementT::set_path(std::string const& _path, zpt::json _value, std
     return (*this);
 }
 
-auto zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator) -> JSONElementT& {
+auto zpt::JSONElementT::del_path(std::string const& _path, std::string const& _separator)
+  -> JSONElementT& {
     switch (this->__underlying.index()) {
         case zpt::JSObject: {
             this->object()->del_path(_path, _separator);
@@ -1620,7 +1656,8 @@ auto zpt::JSONElementT::prettify() const -> std::string {
 
 auto zpt::JSONElementT::element(size_t _pos) -> std::tuple<size_t, std::string, zpt::json> {
     switch (this->__underlying.index()) {
-        case zpt::JSObject: return std::make_tuple(_pos, this->object()->key_for(_pos), this->object()[_pos]);
+        case zpt::JSObject:
+            return std::make_tuple(_pos, this->object()->key_for(_pos), this->object()[_pos]);
         case zpt::JSArray: return std::make_tuple(_pos, std::to_string(_pos), this->array()[_pos]);
         case zpt::JSString:
         case zpt::JSInteger:

@@ -216,7 +216,9 @@ void zpt::mongodb::tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out) {
     }
 }
 
-void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, std::string const& _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONObj& _in,
+                                mongo::BSONObjBuilder& _out,
+                                std::string const& _prefix) {
     for (auto _i : *_in) {
         std::string _key = _i.first;
         JSONElement _value = _i.second;
@@ -224,12 +226,16 @@ void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, 
         switch (_value->type()) {
             case zpt::JSObject: {
                 zpt::mongodb::tosetcommand(
-                  _value->object(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
+                  _value->object(),
+                  _out,
+                  (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
                 break;
             }
             case zpt::JSArray: {
                 zpt::mongodb::tosetcommand(
-                  _value->array(), _out, (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
+                  _value->array(),
+                  _out,
+                  (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key));
                 break;
             }
             case zpt::JSString: {
@@ -238,15 +244,18 @@ void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, 
                 break;
             }
             case zpt::JSBoolean: {
-                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (bool)_value;
+                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key)
+                     << (bool)_value;
                 break;
             }
             case zpt::JSDouble: {
-                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (double)_value;
+                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key)
+                     << (double)_value;
                 break;
             }
             case zpt::JSInteger: {
-                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key) << (int)_value;
+                _out << (_prefix.length() != 0 ? _prefix + std::string(".") + _key : _key)
+                     << (int)_value;
                 break;
             }
             case zpt::JSLambda: {
@@ -263,7 +272,9 @@ void zpt::mongodb::tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, 
     }
 }
 
-void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, std::string const& _prefix) {
+void zpt::mongodb::tosetcommand(zpt::JSONArr& _in,
+                                mongo::BSONObjBuilder& _out,
+                                std::string const& _prefix) {
     size_t _idx = 0;
     for (auto _i : *_in) {
         zpt::json _value = _i;
@@ -313,8 +324,9 @@ void zpt::mongodb::tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, 
                 break;
             }
             case zpt::JSNil: {
-                _out.appendNull((_prefix.length() != 0 ? _prefix + std::string(".") + std::to_string(_idx)
-                                                       : std::to_string(_idx)));
+                _out.appendNull((_prefix.length() != 0
+                                   ? _prefix + std::string(".") + std::to_string(_idx)
+                                   : std::to_string(_idx)));
                 break;
             }
             default: {
@@ -332,8 +344,8 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
         std::string _key = _i.first;
         JSONElement _value = _i.second;
 
-        if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" || _key == "fields" ||
-            _key == "embed") {
+        if (_key == "page_size" || _key == "page_start_index" || _key == "order_by" ||
+            _key == "fields" || _key == "embed") {
             continue;
         }
 
@@ -404,7 +416,9 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                         if (!iss.eof()) {
                             std::string bexpr(expression.data());
                             std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
-                            if (bexpr != "true" && bexpr != "false") { _queryr.append(key, expression); }
+                            if (bexpr != "true" && bexpr != "false") {
+                                _queryr.append(key, expression);
+                            }
                             else { _queryr.append(key, bexpr == "true"); }
                         }
                         else { _queryr.append(key, d); }
@@ -429,7 +443,8 @@ void zpt::mongodb::get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr) {
                             iss >> d;
                             if (!iss.eof()) {
                                 std::string bexpr(expression.data());
-                                std::transform(bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
+                                std::transform(
+                                  bexpr.begin(), bexpr.end(), bexpr.begin(), ::tolower);
                                 if (bexpr != "true" && bexpr != "false") {
                                     _queryr.append(key, BSON(comp << expression));
                                 }

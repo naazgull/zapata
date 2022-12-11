@@ -28,7 +28,8 @@ auto zpt::redis::to_regex(zpt::json _regexp) -> std::string {
     std::string _return;
     if (_regexp->type() == zpt::JSObject) {
         for (auto _r : _regexp->object()) {
-            _return += std::string("*\"") + _r.first + std::string("\":") + zpt::redis::to_regex(_r.second);
+            _return +=
+              std::string("*\"") + _r.first + std::string("\":") + zpt::redis::to_regex(_r.second);
         }
     }
     else if (_regexp->type() == zpt::JSArray) {

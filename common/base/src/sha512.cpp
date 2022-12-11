@@ -136,6 +136,7 @@ std::string zpt::crypto::sha512(std::string const& input) {
 
     char buf[2 * zpt::crypto::SHA512::DIGEST_SIZE + 1];
     buf[2 * zpt::crypto::SHA512::DIGEST_SIZE] = 0;
-    for (size_t i = 0; i < zpt::crypto::SHA512::DIGEST_SIZE; i++) sprintf(buf + i * 2, "%02x", digest[i]);
+    for (size_t i = 0; i < zpt::crypto::SHA512::DIGEST_SIZE; i++)
+        sprintf(buf + i * 2, "%02x", digest[i]);
     return std::string(buf);
 }

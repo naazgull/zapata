@@ -151,7 +151,12 @@ class HTTPLexerBase {
     static int const s_dfa_[][43];
     static int const (*s_dfaBase_[])[43];
     enum : bool { s_interactive_ = false };
-    enum : size_t { s_rangeOfEOF_ = 40, s_finIdx_ = 41, s_nRules_ = 47, s_maxSizeofStreamStack_ = 10 };
+    enum : size_t {
+        s_rangeOfEOF_ = 40,
+        s_finIdx_ = 41,
+        s_nRules_ = 47,
+        s_maxSizeofStreamStack_ = 10
+    };
     static size_t const s_ranges_[];
     static size_t const s_rf_[][2];
 
@@ -185,7 +190,9 @@ class HTTPLexerBase {
 
   protected:
     HTTPLexerBase(std::istream& in, std::ostream& out, bool keepCwd = true);
-    HTTPLexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd = true);
+    HTTPLexerBase(std::string const& infilename,
+                  std::string const& outfilename,
+                  bool keepCwd = true);
     ~HTTPLexerBase();
 
     bool popStream();
@@ -270,11 +277,15 @@ inline ReturnType constexpr HTTPLexerBase::as(ArgType value) {
 }
 
 // $insert startcondimpl
-inline HTTPLexerBase::StartCondition_ constexpr HTTPLexerBase::SC(int sc) { return as<StartCondition_>(sc); }
+inline HTTPLexerBase::StartCondition_ constexpr HTTPLexerBase::SC(int sc) {
+    return as<StartCondition_>(sc);
+}
 
 inline int constexpr HTTPLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
-inline HTTPLexerBase::StartCondition_ HTTPLexerBase::startCondition() const { return SC(d_startCondition); }
+inline HTTPLexerBase::StartCondition_ HTTPLexerBase::startCondition() const {
+    return SC(d_startCondition);
+}
 
 inline void HTTPLexerBase::begin(StartCondition_ startCondition) {
     // d_state is reset to 0 by reset_()

@@ -32,7 +32,8 @@ zpt::JSONObjT::~JSONObjT() {}
 auto zpt::JSONObjT::push(std::string const& _name) -> JSONObjT& {
     if (this->__name.length() == 0) { this->__name.assign(_name.data()); }
     else {
-        auto [_it, _inserted] = this->__underlying.insert(std::make_pair(this->__name, zpt::json(_name)));
+        auto [_it, _inserted] =
+          this->__underlying.insert(std::make_pair(this->__name, zpt::json(_name)));
         if (!_inserted) { _it->second = _name; }
         this->__name.clear();
     }
@@ -114,8 +115,9 @@ auto zpt::JSONObjT::get_path(std::string const& _path, std::string const& _separ
     return _current->get_path(_remainder, _separator);
 }
 
-auto zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::string const& _separator)
-  -> JSONObjT& {
+auto zpt::JSONObjT::set_path(std::string const& _path,
+                             zpt::json _value,
+                             std::string const& _separator) -> JSONObjT& {
     std::istringstream _iss(_path);
     std::string _part;
 
@@ -134,7 +136,9 @@ auto zpt::JSONObjT::set_path(std::string const& _path, zpt::json _value, std::st
         }
     }
     else {
-        if (_iss.good()) { _current->set_path(_path.substr(_part.length() + 1), _value, _separator); }
+        if (_iss.good()) {
+            _current->set_path(_path.substr(_part.length() + 1), _value, _separator);
+        }
         else {
             this->push(_part);
             this->push(_value);
@@ -257,9 +261,13 @@ auto zpt::JSONObjT::operator[](size_t _idx) -> zpt::json& {
     return this->operator[](this->key_for(_idx));
 }
 
-auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& { return this->operator[](std::string(_idx)); }
+auto zpt::JSONObjT::operator[](const char* _idx) -> zpt::json& {
+    return this->operator[](std::string(_idx));
+}
 
-auto zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json& { return this->__underlying[_idx]; }
+auto zpt::JSONObjT::operator[](std::string const& _idx) -> zpt::json& {
+    return this->__underlying[_idx];
+}
 
 auto zpt::JSONObjT::operator[](int _idx) const -> zpt::json const {
     expect(this->__underlying.size() < static_cast<size_t>(_idx), "no such index");
@@ -377,7 +385,9 @@ zpt::JSONObj::JSONObj(JSONObjT* _target)
 
 zpt::JSONObj::~JSONObj() {}
 
-auto zpt::JSONObj::hash() const -> size_t { return reinterpret_cast<size_t>(this->__underlying.get()); }
+auto zpt::JSONObj::hash() const -> size_t {
+    return reinterpret_cast<size_t>(this->__underlying.get());
+}
 
 auto zpt::JSONObj::operator=(const zpt::JSONObj& _rhs) -> zpt::JSONObj& {
     this->__underlying = _rhs.__underlying;

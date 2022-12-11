@@ -82,7 +82,8 @@ class thread_local_table {
 template<typename T, typename... Args>
 auto zpt::make_global(ssize_t& _variable, Args... _args) -> T& {
     expect(_variable == -1,
-           "variable already assigned with identifier " << _variable << "  for " << typeid(T).name());
+           "variable already assigned with identifier " << _variable << "  for "
+                                                        << typeid(T).name());
     zpt::globals::__variables_lock.acquire_exclusive();
     auto& _allocated = zpt::globals::__variables[typeid(T).hash_code()];
     zpt::globals::__variables_lock.release_exclusive();
@@ -97,9 +98,11 @@ auto zpt::make_global(ssize_t& _variable, Args... _args) -> T& {
 
 template<typename T>
 auto zpt::global_cast(ssize_t _variable) -> T& {
-    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock, zpt::locks::spin_lock::shared };
+    zpt::locks::spin_lock::guard _sentry{ zpt::globals::__variables_lock,
+                                          zpt::locks::spin_lock::shared };
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
-    expect(_found != zpt::globals::__variables.end(), "no such global variable for " << typeid(T).name());
+    expect(_found != zpt::globals::__variables.end(),
+           "no such global variable for " << typeid(T).name());
     expect(static_cast<ssize_t>(_found->second.size()) > _variable,
            "no such global variable for " << typeid(T).name());
 
@@ -110,7 +113,8 @@ template<typename T>
 auto zpt::release_global(ssize_t _variable) -> void {
     zpt::globals::__variables_lock.acquire_exclusive();
     auto _found = zpt::globals::__variables.find(typeid(T).hash_code());
-    expect(_found != zpt::globals::__variables.end(), "no such global variable for " << typeid(T).name());
+    expect(_found != zpt::globals::__variables.end(),
+           "no such global variable for " << typeid(T).name());
     expect(static_cast<ssize_t>(_found->second.size()) > _variable,
            "no such global variable for " << typeid(T).name());
     auto _ptr = static_cast<T*>(_found->second[_variable]);
@@ -145,15 +149,15 @@ auto zpt::thread_local_table::entry<T>::is_null() const -> bool {
 template<typename P, typename T, typename... Args>
 auto zpt::thread_local_table::alloc(P const& _member_variable, Args... _args) -> T& {
     entry<T>* _entry = new entry<T>(_args...);
-    zpt::thread_local_table::__variables.emplace(reinterpret_cast<std::uintptr_t>(&_member_variable),
-                                                 std::move(entry_type{ _entry }));
+    zpt::thread_local_table::__variables.emplace(
+      reinterpret_cast<std::uintptr_t>(&_member_variable), std::move(entry_type{ _entry }));
     return **_entry;
 }
 
 template<typename P, typename T>
 auto zpt::thread_local_table::get(P const& _member_variable) -> T& {
-    auto _found =
-      zpt::thread_local_table::__variables.find(reinterpret_cast<std::uintptr_t>(&_member_variable));
+    auto _found = zpt::thread_local_table::__variables.find(
+      reinterpret_cast<std::uintptr_t>(&_member_variable));
     expect(_found != zpt::thread_local_table::__variables.end(),
            "no such global variable for " << reinterpret_cast<std::uintptr_t>(&_member_variable));
     return *static_cast<entry<T>&>(*_found->second.get());
@@ -161,8 +165,8 @@ auto zpt::thread_local_table::get(P const& _member_variable) -> T& {
 
 template<typename P, typename T>
 auto zpt::thread_local_table::dealloc(P const& _member_variable) -> void {
-    auto _found =
-      zpt::thread_local_table::__variables.find(reinterpret_cast<std::uintptr_t>(&_member_variable));
+    auto _found = zpt::thread_local_table::__variables.find(
+      reinterpret_cast<std::uintptr_t>(&_member_variable));
     if (_found == zpt::thread_local_table::__variables.end()) { return; }
     zpt::thread_local_table::__variables.erase(_found);
 }

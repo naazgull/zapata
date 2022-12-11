@@ -22,50 +22,28 @@
 
 #include <zapata/rest/rest.h>
 
-auto zpt::REST_ENGINE() -> ssize_t& {
+auto zpt::REST_RESOLVER() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-zpt::rest::engine::engine(zpt::json _configuration) {
-    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING())
-      .register_delegate([this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-          return this->delegate(_poll, _stream);
-      });
-}
+zpt::rest::resolver_t::resolver_t(zpt::json _rest_config)
+  : __configuration{ _rest_config } {}
 
-auto zpt::rest::engine::delegate(zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-    zpt::global_cast<zpt::events::dispatcher>(zpt::DISPATCHER())
-      .trigger<zpt::rest::receive_message>(_poll, _stream);
-    return true;
-}
-
-zpt::rest::receive_message::receive_message(zpt::polling& _polling, zpt::basic_stream& _stream)
-  : __polling{ _polling }
-  , __stream{ _stream } {}
-
-auto zpt::rest::receive_message::blocked() const -> bool { return false; }
-
-auto zpt::rest::receive_message::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
-                        .get(this->__stream.transport());
-    try {
-        auto _request = _transport->receive(this->__stream);
-        auto _reply = _transport->make_reply(_request);
-        _reply->status(200);
-        _reply->body() = "<h1>Hello WORLD!!!</h1>";
-        _transport->send(this->__stream, _reply);
+auto zpt::rest::resolver_t::resolve(zpt::message _received,
+                                    zpt::events::initializer_t _initializer) const
+  -> std::list<zpt::event> {
+    std::list<zpt::event> _return;
+    auto _to_search = std::string{ "/" } + zpt::ontology::to_str(_received->performative()) +
+                      _received->resource()->string();
+    for (auto [_, __, _record] : this->__catalogue.search(_to_search)) {
+        auto _hash_code = _record("metadata")("callback")->integer();
+        expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),
+               "Couldn't find callback for [" << _hash_code << "]("
+                                              << _received->resource()->string() << ")");
+        _return.push_back(this->__callbacks[_hash_code](_received, _initializer));
     }
-    catch (zpt::SyntaxErrorException const& _e) {
-        auto _reply = _transport->make_reply();
-        _reply->status(500);
-        _reply->headers()["Content-Type"] = "application/json";
-        _reply->body() = { "error",    500,            //
-                           "type",     "Protocol",     //
-                           "category", "Syntax Error", //
-                           "message",  _e.what() };
-        _transport->send(this->__stream, _reply);
-    }
-    this->__polling.unmute(this->__stream);
-    return zpt::events::finish;
+    expect(_return.size() != 0,
+           "Couldn't find callback for (" << _received->resource()->string() << ")");
+    return _return;
 }

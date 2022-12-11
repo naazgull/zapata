@@ -147,7 +147,12 @@ class JSONLexerBase {
     static int const s_dfa_[][51];
     static int const (*s_dfaBase_[])[51];
     enum : bool { s_interactive_ = false };
-    enum : size_t { s_rangeOfEOF_ = 48, s_finIdx_ = 49, s_nRules_ = 34, s_maxSizeofStreamStack_ = 10 };
+    enum : size_t {
+        s_rangeOfEOF_ = 48,
+        s_finIdx_ = 49,
+        s_nRules_ = 34,
+        s_maxSizeofStreamStack_ = 10
+    };
     static size_t const s_ranges_[];
     static size_t const s_rf_[][2];
 
@@ -176,7 +181,9 @@ class JSONLexerBase {
 
   protected:
     JSONLexerBase(std::istream& in, std::ostream& out, bool keepCwd = true);
-    JSONLexerBase(std::string const& infilename, std::string const& outfilename, bool keepCwd = true);
+    JSONLexerBase(std::string const& infilename,
+                  std::string const& outfilename,
+                  bool keepCwd = true);
     ~JSONLexerBase();
 
     bool popStream();
@@ -261,11 +268,15 @@ inline ReturnType constexpr JSONLexerBase::as(ArgType value) {
 }
 
 // $insert startcondimpl
-inline JSONLexerBase::StartCondition_ constexpr JSONLexerBase::SC(int sc) { return as<StartCondition_>(sc); }
+inline JSONLexerBase::StartCondition_ constexpr JSONLexerBase::SC(int sc) {
+    return as<StartCondition_>(sc);
+}
 
 inline int constexpr JSONLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
-inline JSONLexerBase::StartCondition_ JSONLexerBase::startCondition() const { return SC(d_startCondition); }
+inline JSONLexerBase::StartCondition_ JSONLexerBase::startCondition() const {
+    return SC(d_startCondition);
+}
 
 inline void JSONLexerBase::begin(StartCondition_ startCondition) {
     // d_state is reset to 0 by reset_()

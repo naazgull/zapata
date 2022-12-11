@@ -46,7 +46,7 @@ auto zpt::http::basic_message::scheme() const -> std::string {
 }
 
 auto zpt::http::basic_message::resource() const -> zpt::json const {
-    return this->__underlying("uri")("path");
+    return this->__underlying("uri")("raw_path");
 }
 
 auto zpt::http::basic_message::parameters() const -> zpt::json const {
@@ -55,11 +55,15 @@ auto zpt::http::basic_message::parameters() const -> zpt::json const {
 
 auto zpt::http::basic_message::headers() -> zpt::json& { return this->__underlying["headers"]; }
 
-auto zpt::http::basic_message::headers() const -> zpt::json const { return this->__underlying("headers"); }
+auto zpt::http::basic_message::headers() const -> zpt::json const {
+    return this->__underlying("headers");
+}
 
 auto zpt::http::basic_message::body() -> zpt::json& { return this->__underlying["body"]; }
 
-auto zpt::http::basic_message::body() const -> zpt::json const { return this->__underlying("body"); }
+auto zpt::http::basic_message::body() const -> zpt::json const {
+    return this->__underlying("body");
+}
 
 auto zpt::http::basic_message::keep_alive() const -> bool {
     return this->__underlying("headers")("Connection") == "keep-alive" ? true : false;
@@ -77,7 +81,9 @@ auto zpt::http::basic_message::performative(zpt::performative _performative) -> 
     this->__underlying["performative"] = zpt::ontology::to_str(_performative);
 }
 
-auto zpt::http::basic_message::status(zpt::status _status) -> void { this->__underlying["status"] = _status; }
+auto zpt::http::basic_message::status(zpt::status _status) -> void {
+    this->__underlying["status"] = _status;
+}
 
 auto zpt::http::basic_message::uri(std::string const& _uri) -> void {
     this->__underlying["uri"] = zpt::uri::parse(_uri);

@@ -28,7 +28,7 @@
 std::atomic<bool> _shutdown{ false };
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _rest = zpt::global_cast<zpt::rest::engine>(zpt::REST_ENGINE());
+    auto& _rest = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
     auto _config = _plugin->config();
     auto& _token_provider =
       zpt::global_cast<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());

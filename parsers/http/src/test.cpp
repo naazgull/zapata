@@ -56,12 +56,14 @@ auto main(int argc, char* argv[]) -> int {
             }
             (*_csock) << _reply << std::flush;
             auto _t2 = std::chrono::high_resolution_clock::now();
-            auto _duration = std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
+            auto _duration =
+              std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
             std::cout << _request << std::flush;
             std::cout << _reply << std::flush;
             std::cout << std::endl
                       << "# processing time: " << _duration << "us" << std::endl
-                      << "-----------------------------------------------------------------" << std::endl
+                      << "-----------------------------------------------------------------"
+                      << std::endl
                       << std::flush;
 
         } while (true);

@@ -118,8 +118,11 @@ path :
         if ((*d_scanner)->type() == zpt::JSObject) {
             if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << false;
             }
+            (*d_scanner)["raw_path"]->string().append("/");
+            (*d_scanner)["raw_path"]->string().append(d_scanner.matched());
             (*d_scanner)["path"] << zpt::url::r_decode(d_scanner.matched());
         }
         else {
@@ -133,8 +136,10 @@ path :
         if ((*d_scanner)->type() == zpt::JSObject) {
             if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << true;
             }
+            (*d_scanner)["raw_path"]->string().append("/.");
             (*d_scanner)["path"] << ".";
         }
         else {
@@ -148,8 +153,10 @@ path :
         if ((*d_scanner)->type() == zpt::JSObject) {
             if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << true;
             }
+            (*d_scanner)["raw_path"]->string().append("/..");
             (*d_scanner)["path"] << "..";
         }
         else {

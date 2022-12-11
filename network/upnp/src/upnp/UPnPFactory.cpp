@@ -55,7 +55,8 @@ extern "C" void _zpt_plugin_load_() {
 
             zlog(std::string("binding ") + _upnp->protocol() + std::string(" listener to ") +
                    std::string(_upnp->uri()["scheme"]) + std::string("://") +
-                   std::string(_upnp->uri()["domain"]) + std::string(":") + std::string(_upnp->uri()["port"]),
+                   std::string(_upnp->uri()["domain"]) + std::string(":") +
+                   std::string(_upnp->uri()["port"]),
                  zpt::info);
         }
     }

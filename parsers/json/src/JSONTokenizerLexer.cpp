@@ -41,7 +41,8 @@ void zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
         this->__root_type = _in;
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -53,7 +54,8 @@ void zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
         _cur->parent(nullptr);
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -63,7 +65,8 @@ void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in
         (*this->__parent) << _in_str;
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -118,7 +121,8 @@ void zpt::JSONTokenizerLexer::init(bool _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -131,7 +135,8 @@ void zpt::JSONTokenizerLexer::init(long long _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -144,7 +149,8 @@ void zpt::JSONTokenizerLexer::init(double _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -157,7 +163,8 @@ void zpt::JSONTokenizerLexer::init(std::string const& _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -170,7 +177,8 @@ void zpt::JSONTokenizerLexer::init(zpt::lambda _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -183,7 +191,8 @@ void zpt::JSONTokenizerLexer::init(zpt::regex _in) {
         else { (*this->__parent) << _in; }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }
@@ -196,7 +205,8 @@ void zpt::JSONTokenizerLexer::init() {
         }
     }
     catch (zpt::failed_expectation const& _e) {
-        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl << std::flush;
+        std::cout << __FILE__ << ":" << __LINE__ << " " << _e.description() << std::endl
+                  << std::flush;
         throw _e;
     }
 }

@@ -61,7 +61,8 @@ zpt::cached<T>::~cached() {}
 
 template<typename T>
 auto zpt::cached<T>::commit() -> zpt::cached<T>& {
-    zpt::locks::spin_lock::guard _sentry{ this->__repository_lock, zpt::locks::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__repository_lock,
+                                          zpt::locks::spin_lock::exclusive };
     this->__underlying = this->instance();
     ++(*this->__cache_version);
     return (*this);
@@ -69,7 +70,8 @@ auto zpt::cached<T>::commit() -> zpt::cached<T>& {
 
 template<typename T>
 auto zpt::cached<T>::commit(T const& _new_value) -> zpt::cached<T>& {
-    zpt::locks::spin_lock::guard _sentry{ this->__repository_lock, zpt::locks::spin_lock::exclusive };
+    zpt::locks::spin_lock::guard _sentry{ this->__repository_lock,
+                                          zpt::locks::spin_lock::exclusive };
     this->__underlying = _new_value;
     ++(*this->__cache_version);
     return (*this);
@@ -96,7 +98,8 @@ auto zpt::cached<T>::instance() -> T& {
     auto& [_local_copy, _local_version] = _local[this];
     if (this->__cache_version->load() > _local_version) {
         if (this->__repository_lock.count_exclusive_acquired_by_thread() == 0) {
-            zpt::locks::spin_lock::guard _sentry{ this->__repository_lock, zpt::locks::spin_lock::shared };
+            zpt::locks::spin_lock::guard _sentry{ this->__repository_lock,
+                                                  zpt::locks::spin_lock::shared };
             _local_copy = this->__underlying;
             _local_version = this->__cache_version->load();
         }

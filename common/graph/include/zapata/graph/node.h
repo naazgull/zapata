@@ -51,7 +51,8 @@ class node {
 
     auto to_string(uint _n_tabs = 0) const -> std::string;
 
-    friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in) -> std::ostream& {
+    friend auto operator<<(std::ostream& _out, zpt::tree::node<T, P, C> const& _in)
+      -> std::ostream& {
         _out << _in.to_string();
         return _out;
     }
@@ -82,7 +83,8 @@ zpt::tree::node<T, P, C>::node(zpt::tree::node<T, P, C>&& _rhs)
 }
 
 template<typename T, typename P, typename C>
-auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs) -> zpt::tree::node<T, P, C>& {
+auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs)
+  -> zpt::tree::node<T, P, C>& {
     this->__children = _rhs.__children;
     this->__value = _rhs.__value;
     this->__path = _rhs.__path;
@@ -91,7 +93,8 @@ auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C> const& _rhs) -
 }
 
 template<typename T, typename P, typename C>
-auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs) -> zpt::tree::node<T, P, C>& {
+auto zpt::tree::node<T, P, C>::operator=(zpt::tree::node<T, P, C>&& _rhs)
+  -> zpt::tree::node<T, P, C>& {
     this->__children = std::move(_rhs.__children);
     this->__value = std::move(_rhs.__value);
     this->__path = std::move(_rhs.__path);
@@ -109,7 +112,8 @@ auto zpt::tree::node<T, P, C>::clear() -> zpt::tree::node<T, P, C>& {
 
 template<typename T, typename P, typename C>
 template<typename I, typename M, typename... Types>
-auto zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... _callback_args) -> bool {
+auto zpt::tree::node<T, P, C>::eval(I _sequence, I _end, M _value_to_match, Types... _callback_args)
+  -> bool {
     if (_sequence == _end) { return false; }
 
     auto _return{ false };

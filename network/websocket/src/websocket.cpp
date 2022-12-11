@@ -36,7 +36,9 @@ auto zpt::net::ws::handshake(zpt::stream& _stream) -> void {
     do {
         std::getline(*_stream, _line);
         zpt::trim(_line);
-        if (_line.find("Sec-WebSocket-Key:") != std::string::npos) { _key.assign(_line.substr(19)); }
+        if (_line.find("Sec-WebSocket-Key:") != std::string::npos) {
+            _key.assign(_line.substr(19));
+        }
     } while (_line != "");
 
     _key.insert(_key.length(), "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
@@ -90,7 +92,9 @@ auto zpt::net::ws::read(zpt::stream& _stream) -> std::tuple<std::string, int> {
     }
 
     if (_mask) {
-        for (size_t _i = 0; _i < _masked.length(); _i++) { _out.push_back(_masked[_i] ^ _masking[_i % 4]); }
+        for (size_t _i = 0; _i < _masked.length(); _i++) {
+            _out.push_back(_masked[_i] ^ _masking[_i % 4]);
+        }
     }
     else { _out.assign(_masked); }
 
@@ -124,7 +128,8 @@ auto zpt::net::transport::websocket::receive(zpt::exchange& _channel) const -> v
         _is.str(_body);
 
         std::string _content_type = _channel->content_type()[0];
-        _channel->received() = _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
+        _channel->received() =
+          _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
 
         _channel //
           ->version()

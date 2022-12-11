@@ -2,6 +2,6 @@
 
 #include <zapata/uri/URITokenizerLexer.h>
 
-#define URIScanner                                                                                           \
-  public:                                                                                                    \
+#define URIScanner                                                                                 \
+  public:                                                                                          \
     URITokenizerLexer

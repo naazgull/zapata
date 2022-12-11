@@ -37,7 +37,8 @@ zpt::redis::Client::Client(zpt::json _options, std::string const& _conf_path)
         std::string _bind((std::string)_options->get_path(_conf_path)["bind"]);
         std::string _address(_bind.substr(0, _bind.find(":")));
         uint _port = std::stoi(_bind.substr(_bind.find(":") + 1));
-        this->connection(_options->get_path(_conf_path) + zpt::json{ "host", _address, "port", _port });
+        this->connection(_options->get_path(_conf_path) +
+                         zpt::json{ "host", _address, "port", _port });
     }
     catch (std::exception const& _e) {
         expect(false, std::string("could not connect to Redis server: ") + _e.what());
@@ -63,17 +64,20 @@ auto zpt::redis::Client::connect() -> void {
     this->__host.assign(std::string(this->connection()["host"]).data());
     this->__port = int(this->connection()["port"]);
     expect((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr,
-           std::string("connection to Redis at ") + this->name() + std::string(" has not been established."));
+           std::string("connection to Redis at ") + this->name() +
+             std::string(" has not been established."));
     zpt::Connector::connect();
 };
 
 auto zpt::redis::Client::reconnect() -> void {
     std::lock_guard<std::mutex> _lock(this->__mtx);
     expect(this->__conn != nullptr,
-           std::string("connection to Redis at ") + this->name() + std::string(" has not been established."));
+           std::string("connection to Redis at ") + this->name() +
+             std::string(" has not been established."));
     redisFree(this->__conn);
     expect((this->__conn = redisConnect(this->__host.data(), this->__port)) != nullptr,
-           std::string("connection to Redis at ") + this->name() + std::string(" has not been established."));
+           std::string("connection to Redis at ") + this->name() +
+             std::string(" has not been established."));
     zpt::Connector::reconnect();
 }
 
@@ -87,7 +91,8 @@ auto zpt::redis::Client::insert(std::string const& _collection,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject,
+           "'_document' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -96,7 +101,8 @@ auto zpt::redis::Client::insert(std::string const& _collection,
     if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
     if (!_document["href"]->ok() && _href_prefix.length() != 0) {
         _document << "href"
-                  << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
+                  << (_href_prefix +
+                      (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
                       _document["id"]->string());
     }
 
@@ -114,7 +120,8 @@ auto zpt::redis::Client::insert(std::string const& _collection,
     freeReplyObject(_reply);
     expect(_success, "something whent wrong while accessing Redis");
 
-    if (!bool(_opts["mutated-event"])) zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
+    if (!bool(_opts["mutated-event"]))
+        zpt::Connector::insert(_collection, _href_prefix, _document, _opts);
     return _document["id"]->string();
 }
 
@@ -128,7 +135,8 @@ auto zpt::redis::Client::upsert(std::string const& _collection,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject,
+           "'_document' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -148,7 +156,9 @@ auto zpt::redis::Client::upsert(std::string const& _collection,
             std::string _href = std::string(_document["href"]);
             zpt::json _record = this->get(_collection, _href);
             if (_record->ok()) {
-                for (auto _field : _document->object()) { _record << _field.first << _field.second; }
+                for (auto _field : _document->object()) {
+                    _record << _field.first << _field.second;
+                }
 
                 redisReply* _reply = nullptr;
                 bool _success = true;
@@ -164,7 +174,8 @@ auto zpt::redis::Client::upsert(std::string const& _collection,
                 freeReplyObject(_reply);
                 expect(_success, "something whent wrong while accessing Redis");
 
-                if (!bool(_opts["mutated-event"])) zpt::Connector::set(_collection, _href, _document, _opts);
+                if (!bool(_opts["mutated-event"]))
+                    zpt::Connector::set(_collection, _href, _document, _opts);
                 return _document["id"]->string();
             }
         }
@@ -173,7 +184,8 @@ auto zpt::redis::Client::upsert(std::string const& _collection,
         if (!_document["id"]->ok()) { _document << "id" << zpt::generate::r_uuid(); }
         if (!_document["href"]->ok() && _href_prefix.length() != 0) {
             _document << "href"
-                      << (_href_prefix + (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
+                      << (_href_prefix +
+                          (_href_prefix.back() != '/' ? std::string("/") : std::string("")) +
                           _document["id"]->string());
         }
 
@@ -220,8 +232,11 @@ auto zpt::redis::Client::save(std::string const& _collection,
     bool _success = true;
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
-        redisAppendCommand(
-          this->__conn, "HSET %s %s %s", _key.data(), _href.data(), ((std::string)_document).data());
+        redisAppendCommand(this->__conn,
+                           "HSET %s %s %s",
+                           _key.data(),
+                           _href.data(),
+                           ((std::string)_document).data());
         _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
     }
     freeReplyObject(_reply);
@@ -241,7 +256,8 @@ auto zpt::redis::Client::set(std::string const& _collection,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject,
+           "'_document' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -277,7 +293,8 @@ auto zpt::redis::Client::set(std::string const& _collection,
                500,
                0);
     }
-    expect(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject");
+    expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
+           "'_pattern' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -317,7 +334,8 @@ auto zpt::redis::Client::unset(std::string const& _collection,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_document->ok() && _document->type() == zpt::JSObject, "'_document' must be of type JSObject");
+    expect(_document->ok() && _document->type() == zpt::JSObject,
+           "'_document' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -351,7 +369,8 @@ auto zpt::redis::Client::unset(std::string const& _collection,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject");
+    expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
+           "'_pattern' must be of type JSObject");
 
     std::string _key(_collection);
     _key.insert(0, "/");
@@ -381,8 +400,9 @@ auto zpt::redis::Client::unset(std::string const& _collection,
     return int(_selected["size"]);
 }
 
-auto zpt::redis::Client::remove(std::string const& _collection, std::string const& _href, zpt::json _opts)
-  -> int {
+auto zpt::redis::Client::remove(std::string const& _collection,
+                                std::string const& _href,
+                                zpt::json _opts) -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -411,14 +431,16 @@ auto zpt::redis::Client::remove(std::string const& _collection, std::string cons
     return 1;
 }
 
-auto zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts) -> int {
+auto zpt::redis::Client::remove(std::string const& _collection, zpt::json _pattern, zpt::json _opts)
+  -> int {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
                std::string("connection to Redis at ") + this->name() +
                  std::string(" has not been established."));
     }
-    expect(_pattern->ok() && _pattern->type() == zpt::JSObject, "'_pattern' must be of type JSObject");
+    expect(_pattern->ok() && _pattern->type() == zpt::JSObject,
+           "'_pattern' must be of type JSObject");
     std::string _key(_collection);
     _key.insert(0, "/");
     _key.insert(0, (std::string)this->connection()["db"]);
@@ -427,13 +449,15 @@ auto zpt::redis::Client::remove(std::string const& _collection, zpt::json _patte
     if (!_selected->ok()) { return 0; }
     for (auto _record : _selected["elements"]->array()) {
         zpt::json _removed;
-        if (!bool(_opts["mutated-event"])) _removed = this->get(_collection, _record["href"]->string());
+        if (!bool(_opts["mutated-event"]))
+            _removed = this->get(_collection, _record["href"]->string());
 
         redisReply* _reply = nullptr;
         bool _success = true;
         {
             std::lock_guard<std::mutex> _lock(this->__mtx);
-            redisAppendCommand(this->__conn, "HDEL %s %s", _key.data(), _record["href"]->string().data());
+            redisAppendCommand(
+              this->__conn, "HDEL %s %s", _key.data(), _record["href"]->string().data());
             _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK);
         }
         freeReplyObject(_reply);
@@ -446,8 +470,9 @@ auto zpt::redis::Client::remove(std::string const& _collection, zpt::json _patte
     return int(_selected["size"]);
 }
 
-auto zpt::redis::Client::get(std::string const& _collection, std::string const& _href, zpt::json _opts)
-  -> zpt::json {
+auto zpt::redis::Client::get(std::string const& _collection,
+                             std::string const& _href,
+                             zpt::json _opts) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -466,7 +491,8 @@ auto zpt::redis::Client::get(std::string const& _collection, std::string const& 
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         redisAppendCommand(this->__conn, "HGET %s %s", _key.data(), _href.data());
-        _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
+        _success =
+          (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
     if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis");
@@ -520,8 +546,9 @@ auto zpt::redis::Client::get(std::string const& _collection, std::string const& 
     return zpt::undefined;
 }
 
-auto zpt::redis::Client::query(std::string const& _collection, std::string const& _regexp, zpt::json _opts)
-  -> zpt::json {
+auto zpt::redis::Client::query(std::string const& _collection,
+                               std::string const& _regexp,
+                               zpt::json _opts) -> zpt::json {
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         expect(this->__conn != nullptr,
@@ -543,8 +570,10 @@ auto zpt::redis::Client::query(std::string const& _collection, std::string const
         bool _success = true;
         {
             std::lock_guard<std::mutex> _lock(this->__mtx);
-            redisAppendCommand(this->__conn, "HSCAN %s %i MATCH %s", _key.data(), _cursor, _regexp.data());
-            _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
+            redisAppendCommand(
+              this->__conn, "HSCAN %s %i MATCH %s", _key.data(), _cursor, _regexp.data());
+            _success =
+              (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
         }
         if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
         expect(_success, "something whent wrong while accessing Redis");
@@ -634,7 +663,8 @@ auto zpt::redis::Client::all(std::string const& _collection, zpt::json _opts) ->
     {
         std::lock_guard<std::mutex> _lock(this->__mtx);
         redisAppendCommand(this->__conn, "HGETALL %s", _key.data());
-        _success = (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
+        _success =
+          (redisGetReply(this->__conn, (void**)&_reply) == REDIS_OK) && (_reply != nullptr);
     }
     if (!_success && _reply != nullptr) { freeReplyObject(_reply); }
     expect(_success, "something whent wrong while accessing Redis");
@@ -657,7 +687,8 @@ auto zpt::redis::Client::all(std::string const& _collection, zpt::json _opts) ->
             std::string _string_text(_reply->str, _reply->len);
             freeReplyObject(_reply);
             expect(_type == REDIS_REPLY_NIL || _type == REDIS_REPLY_ARRAY,
-                   std::string("Redis server replied something else: REDIS_REPLY_STRING > ") + _string_text);
+                   std::string("Redis server replied something else: REDIS_REPLY_STRING > ") +
+                     _string_text);
         }
         case REDIS_REPLY_NIL: {
             freeReplyObject(_reply);

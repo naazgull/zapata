@@ -33,7 +33,8 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 
     if (_config("port")->ok()) {
         auto& _server_sock = zpt::make_global<zpt::serversocketstream>(
-          zpt::HTTP_SERVER_SOCKET(), static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
+          zpt::HTTP_SERVER_SOCKET(),
+          static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
 
         _plugin.add_thread([&]() -> void {
             auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());

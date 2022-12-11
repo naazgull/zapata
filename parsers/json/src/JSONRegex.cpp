@@ -74,9 +74,13 @@ auto zpt::JSONRegex::JSONRegex::operator==(std::string const& _rhs) const -> boo
     return std::regex_match(_rhs, (*this->__underlying.get()));
 }
 
-auto zpt::JSONRegex::JSONRegex::operator!=(zpt::regex _rhs) const -> bool { return !((*this) == _rhs); }
+auto zpt::JSONRegex::JSONRegex::operator!=(zpt::regex _rhs) const -> bool {
+    return !((*this) == _rhs);
+}
 
-auto zpt::JSONRegex::JSONRegex::operator!=(zpt::json _rhs) const -> bool { return !((*this) == _rhs); }
+auto zpt::JSONRegex::JSONRegex::operator!=(zpt::json _rhs) const -> bool {
+    return !((*this) == _rhs);
+}
 
 auto zpt::JSONRegex::JSONRegex::operator!=(std::string const& _rhs) const -> bool {
     return !((*this) == _rhs);

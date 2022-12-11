@@ -159,8 +159,10 @@ auto test_aligned() -> void {
     _atomic->store(true);
     std::cout << std::endl
               << "> padded_atomic" << std::endl
-              << "  #alignof(zpt::padded_atomic<bool>) -> " << alignof(zpt::padded_atomic<bool>) << std::endl
-              << "  #sizeof(zpt::padded_atomic<bool>) -> " << sizeof(zpt::padded_atomic<bool>) << std::endl
+              << "  #alignof(zpt::padded_atomic<bool>) -> " << alignof(zpt::padded_atomic<bool>)
+              << std::endl
+              << "  #sizeof(zpt::padded_atomic<bool>) -> " << sizeof(zpt::padded_atomic<bool>)
+              << std::endl
               << std::flush;
     (*_atomic) = false;
 }

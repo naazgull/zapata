@@ -45,4 +45,6 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
 
 zpt::ExpectationException::~ExpectationException() throw() {}
 
-auto zpt::ExpectationException::description() const -> const char* { return this->__description.data(); }
+auto zpt::ExpectationException::description() const -> const char* {
+    return this->__description.data();
+}

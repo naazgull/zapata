@@ -212,12 +212,14 @@ zpt::storage::connection::connection(zpt::storage::connection&& _rhs)
 zpt::storage::connection::connection(zpt::storage::connection::type* _underlying)
   : __underlying{ _underlying } {}
 
-auto zpt::storage::connection::operator=(zpt::storage::connection const& _rhs) -> zpt::storage::connection& {
+auto zpt::storage::connection::operator=(zpt::storage::connection const& _rhs)
+  -> zpt::storage::connection& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
-auto zpt::storage::connection::operator=(zpt::storage::connection&& _rhs) -> zpt::storage::connection& {
+auto zpt::storage::connection::operator=(zpt::storage::connection&& _rhs)
+  -> zpt::storage::connection& {
     this->__underlying.swap(_rhs.__underlying);
     return (*this);
 }
@@ -251,9 +253,13 @@ auto zpt::storage::session::operator=(zpt::storage::session&& _rhs) -> zpt::stor
     return (*this);
 }
 
-auto zpt::storage::session::operator->() -> zpt::storage::session::type* { return this->__underlying.get(); }
+auto zpt::storage::session::operator->() -> zpt::storage::session::type* {
+    return this->__underlying.get();
+}
 
-auto zpt::storage::session::operator*() -> zpt::storage::session::type& { return *this->__underlying.get(); }
+auto zpt::storage::session::operator*() -> zpt::storage::session::type& {
+    return *this->__underlying.get();
+}
 
 zpt::storage::database::database(zpt::storage::database const& _rhs)
   : __underlying{ _rhs.__underlying } {}
@@ -266,7 +272,8 @@ zpt::storage::database::database(zpt::storage::database&& _rhs)
 zpt::storage::database::database(zpt::storage::database::type* _underlying)
   : __underlying{ _underlying } {}
 
-auto zpt::storage::database::operator=(zpt::storage::database const& _rhs) -> zpt::storage::database& {
+auto zpt::storage::database::operator=(zpt::storage::database const& _rhs)
+  -> zpt::storage::database& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
@@ -295,12 +302,14 @@ zpt::storage::collection::collection(zpt::storage::collection&& _rhs)
 zpt::storage::collection::collection(zpt::storage::collection::type* _underlying)
   : __underlying{ _underlying } {}
 
-auto zpt::storage::collection::operator=(zpt::storage::collection const& _rhs) -> zpt::storage::collection& {
+auto zpt::storage::collection::operator=(zpt::storage::collection const& _rhs)
+  -> zpt::storage::collection& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
-auto zpt::storage::collection::operator=(zpt::storage::collection&& _rhs) -> zpt::storage::collection& {
+auto zpt::storage::collection::operator=(zpt::storage::collection&& _rhs)
+  -> zpt::storage::collection& {
     this->__underlying.swap(_rhs.__underlying);
     return (*this);
 }
@@ -334,9 +343,13 @@ auto zpt::storage::action::operator=(zpt::storage::action&& _rhs) -> zpt::storag
     return (*this);
 }
 
-auto zpt::storage::action::operator->() -> zpt::storage::action::type* { return this->__underlying.get(); }
+auto zpt::storage::action::operator->() -> zpt::storage::action::type* {
+    return this->__underlying.get();
+}
 
-auto zpt::storage::action::operator*() -> zpt::storage::action::type& { return *this->__underlying.get(); }
+auto zpt::storage::action::operator*() -> zpt::storage::action::type& {
+    return *this->__underlying.get();
+}
 
 zpt::storage::result::result(zpt::storage::result const& _rhs)
   : __underlying{ _rhs.__underlying } {}
@@ -359,9 +372,13 @@ auto zpt::storage::result::operator=(zpt::storage::result&& _rhs) -> zpt::storag
     return (*this);
 }
 
-auto zpt::storage::result::operator->() -> zpt::storage::result::type* { return this->__underlying.get(); }
+auto zpt::storage::result::operator->() -> zpt::storage::result::type* {
+    return this->__underlying.get();
+}
 
-auto zpt::storage::result::operator*() -> zpt::storage::result::type& { return *this->__underlying.get(); }
+auto zpt::storage::result::operator*() -> zpt::storage::result::type& {
+    return *this->__underlying.get();
+}
 
 auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json _to_find)
   -> zpt::storage::action {
@@ -386,7 +403,8 @@ auto zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
             _reply["body"] << "page_size" << static_cast<long long>(_params["page_size"]);
         }
         if (_params["page_start_index"]->ok()) {
-            _reply["body"] << "page_start_index" << static_cast<long long>(_params["page_start_index"]);
+            _reply["body"] << "page_start_index"
+                           << static_cast<long long>(_params["page_start_index"]);
         }
     }
 }
@@ -427,7 +445,8 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                     auto _function = zpt::functional::parse(_to_eval);
                     auto _params = _function["params"];
                     if (_params->ok()) {
-                        (**_params->array()).insert((**_params->array()).begin(), zpt::json::string(_key));
+                        (**_params->array())
+                          .insert((**_params->array()).begin(), zpt::json::string(_key));
                     }
                     else { _function << "params" << _key; }
                     zpt::storage::functional_to_sql(_function, _find, ::variable_name);
@@ -459,8 +478,9 @@ auto zpt::storage::functional_to_sql(zpt::json _function,
     zpt::storage::functor_to_sql(_function["functor"]->string(), _function["params"], _find);
 }
 
-auto zpt::storage::functor_to_sql(std::string const& _functor, zpt::json _params, std::ostream& _find)
-  -> void {
+auto zpt::storage::functor_to_sql(std::string const& _functor,
+                                  zpt::json _params,
+                                  std::ostream& _find) -> void {
     auto _found = ::functors().find(_functor);
     if (_found != ::functors().end()) { _found->second(_params, _find); }
     else { ::func_default(_functor, _params, _find); }

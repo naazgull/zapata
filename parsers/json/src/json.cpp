@@ -45,7 +45,8 @@ auto zpt::to_string(zpt::JSONType _type) -> std::string {
 
 auto zpt::to_string(zpt::json _in) -> std::string { return static_cast<std::string>(_in); }
 
-auto zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim) -> zpt::json {
+auto zpt::split(std::string const& _to_split, std::string const& _separator, bool _trim)
+  -> zpt::json {
     zpt::json _ret = zpt::json::array();
     if (_to_split.length() == 0 || _separator.length() == 0) { return _ret; }
     std::istringstream _iss(_to_split);
@@ -74,7 +75,9 @@ auto zpt::join(zpt::json _to_join, std::string const& _separator) -> std::string
     return _return;
 }
 
-auto zpt::path::split(std::string const& _to_split) -> zpt::json { return zpt::split(_to_split, "/", true); }
+auto zpt::path::split(std::string const& _to_split) -> zpt::json {
+    return zpt::split(_to_split, "/", true);
+}
 
 auto zpt::path::join(zpt::json _to_join) -> std::string {
     return std::string("/") + zpt::join(_to_join, "/");
@@ -86,7 +89,8 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
     std::string _last("");
     for (int _i = 1; _i != _argc; _i++) {
         std::string _arg(_argv[_i]);
-        if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 || _arg.find("--force") == 0) {
+        if (_arg.find("--enable") == 0 || _arg.find("--disable") == 0 ||
+            _arg.find("--force") == 0) {
             if (_last.length() != 0) {
                 if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
@@ -96,7 +100,8 @@ auto zpt::conf::getopt(int _argc, char* _argv[]) -> zpt::json {
             _return[_arg] << true;
             _last.assign("");
         }
-        else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 || _arg.find("-force") == 0) {
+        else if (_arg.find("-enable") == 0 || _arg.find("-disable") == 0 ||
+                 _arg.find("-force") == 0) {
             if (_last.length() != 0) {
                 if (!_return[_last]->ok()) { _return << _last << zpt::json::array(); }
                 _return[_last] << true;
@@ -198,13 +203,16 @@ auto zpt::conf::dirs(zpt::json& _options) -> void {
         *_redo = false;
         zpt::json _traversable = _options->clone();
         zpt::json::traverse(
-          _traversable, [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+          _traversable,
+          [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
               if (_key == "$include") {
                   zpt::json _object = (_path.rfind(".") != std::string::npos
                                          ? _options->get_path(_path.substr(0, _path.rfind(".")))
                                          : _options);
                   if (_item->is_array()) {
-                      for (auto [_idx, _key, _file] : _item) { zpt::conf::dirs((std::string)_file, _object); }
+                      for (auto [_idx, _key, _file] : _item) {
+                          zpt::conf::dirs((std::string)_file, _object);
+                      }
                   }
                   else { zpt::conf::dirs((std::string)_item, _object); }
                   _object->object()->pop("$include");
@@ -218,15 +226,18 @@ auto zpt::conf::dirs(zpt::json& _options) -> void {
 auto zpt::conf::env(zpt::json& _options) -> void {
     zpt::json _traversable = _options->clone();
     zpt::json::traverse(
-      _traversable, [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
+      _traversable,
+      [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
           if (_item->type() != zpt::JSString) { return; }
           std::string _value{ static_cast<std::string>(_item) };
           bool _changed{ false };
-          for (size_t _idx = _value.find("$"); _idx != std::string::npos; _idx = _value.find("$", _idx + 1)) {
+          for (size_t _idx = _value.find("$"); _idx != std::string::npos;
+               _idx = _value.find("$", _idx + 1)) {
               std::string _var = _value.substr(_idx + 2, _value.find("}", _idx) - _idx - 2);
               const char* _env_value = std::getenv(_var.data());
               if (_env_value != nullptr) {
-                  zpt::replace(_value, std::string("${") + _var + std::string("}"), zpt::r_trim(_env_value));
+                  zpt::replace(
+                    _value, std::string("${") + _var + std::string("}"), zpt::r_trim(_env_value));
                   _changed = true;
               }
           }
@@ -312,10 +323,13 @@ auto zpt::parameters::parse(int _argc, char* _argv[], zpt::json _config) -> zpt:
         for (auto [_, __, _cfg_value] : _config[_key]["options"]) {
             if (_cfg_value == "single") {
                 expect(_option->type() == zpt::JSString || _option->type() == zpt::JSBoolean,
-                       std::string{ "'" } + _key + std::string{ "' option can't have multiple values" });
+                       std::string{ "'" } + _key +
+                         std::string{ "' option can't have multiple values" });
             }
             else if (_cfg_value == "multiple") {
-                if (_option->type() != zpt::JSArray) { _return << _key << zpt::json{ zpt::array, _option }; }
+                if (_option->type() != zpt::JSArray) {
+                    _return << _key << zpt::json{ zpt::array, _option };
+                }
             }
         }
     }
@@ -342,9 +356,10 @@ auto zpt::parameters::verify(zpt::json _to_check, zpt::json _rules, bool _inclus
                        "'" << _key << "' parameter has the wrong type");
             }
             else if (_cfg_value == "pattern") {
-                expect(_cfg_value->type() == zpt::JSRegex &&
-                         std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
-                       "'" << _key << "' parameter pattern doesn't match");
+                expect(
+                  _cfg_value->type() == zpt::JSRegex &&
+                    std::regex_match(static_cast<std::string>(_parameter), *_cfg_value->regex()),
+                  "'" << _key << "' parameter pattern doesn't match");
             }
         }
     }

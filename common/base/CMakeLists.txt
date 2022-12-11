@@ -94,6 +94,9 @@ install(DIRECTORY ${COMMON_BASE_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_common_base)
+add_dependencies(zapata_test_common_base
+  zapata-base
+)
 target_sources(zapata_test_common_base
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp

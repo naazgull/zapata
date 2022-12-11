@@ -89,6 +89,7 @@ auto zpt::HTTPTokenizerLexer::url() -> void {
     switch (this->__root_type) {
         case 0: {
             this->__root_req->uri()["path"] = zpt::split(this->matched(), "/");
+            this->__root_req->uri()["raw_path"] = this->matched();
             this->__root_req->uri()["scheme"] = "http";
             break;
         }

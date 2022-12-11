@@ -74,7 +74,8 @@ class bridge : public zpt::programming::integration {
 } // namespace zpt
 
 template<typename C, typename O>
-auto zpt::programming::bridge<C, O>::set_options(zpt::json _conf) -> zpt::programming::bridge<C, O>& {
+auto zpt::programming::bridge<C, O>::set_options(zpt::json _conf)
+  -> zpt::programming::bridge<C, O>& {
     this->__options = _conf;
     return (*this);
 }

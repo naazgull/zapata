@@ -127,7 +127,10 @@ auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
 
 template<typename T>
 auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
-    (*this->__underlying.get()) << _in;
+    if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
+        _in->to_stream(*this->__underlying.get());
+    }
+    else { (*this->__underlying.get()) << _in; }
     return (*this);
 }
 
