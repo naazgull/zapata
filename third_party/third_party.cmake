@@ -5,7 +5,7 @@ processorcount(n)
 find_library(MYSQL_XDEVAPI_LIB NAMES mysqlcppconn8
   PATHS
     ${THIRD_PARTY_INSTALL_PREFIX}/lib
-    ${THIRD_PARTY_INSTALL_PREFIX}/lib64
+    ${CMAKE_INSTALL_PREFIX}/lib
     /usr/lib
     /usr/lib64
     /usr/local/lib
@@ -23,7 +23,7 @@ if (NOT MYSQL_XDEVAPI_LIB)
   
   externalproject_add(
     mysqlxdevapi
-    SOURCE_DIR "${THIRD_PARTY_DIR}/xdevapi"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/third_party/xdevapi"
     GIT_REPOSITORY "https://github.com/mysql/mysql-connector-cpp"
     GIT_TAG trunk
     BUILD_BYPRODUCTS
