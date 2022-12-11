@@ -16,6 +16,6 @@ jobs:
     - name: Install dependencies II
       run: mkdir -p third_party/install && cd third_party/install && wget https://na.zgul.me/~files/dependencies.tar.bz2 && tar xvjf dependencies.tar.bz2
     - name: Configure
-      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata -DDONT_COMPILE_XDEVAPI=ON
+      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
     - name: Build modules
       run: cmake --build build -j4
