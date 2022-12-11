@@ -15,7 +15,5 @@ jobs:
       run: sudo apt -y install libsystemd-dev libcrypto++-dev libssl-dev libssl1.1 libmagic-dev libossp-uuid-dev g++ cmake liblmdb-dev libsqlite3-dev python3 libpython3-dev lua5.2 liblua5.2-dev
     - name: Install dependencies II
       run: mkdir -p third_party/install && cd third_party/install && wget https://na.zgul.me/~files/dependencies.tar.bz2 && tar xvjf dependencies.tar.bz2
-    - name: Configure
-      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata
-    - name: Build modules
-      run: cd build && make -j4
+    - name: Build
+      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=release -DCMAKE_INSTALL_PREFIX=/usr/local/zapata && cmake --build .
