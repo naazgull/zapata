@@ -25,6 +25,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
 
 /* Help macros */
 #define SHA1_ROL(value, bits) (((value) << (bits)) | (((value)&0xffffffff) >> (32 - (bits))))
@@ -77,7 +78,7 @@ std::string zpt::crypto::SHA1::finalize() {
     std::uint64_t total_bits = (transforms * BLOCK_BYTES + buffer.size()) * 8;
 
     /* Padding */
-    buffer += 0x80;
+    buffer += static_cast<char>(0x80);
     unsigned int orig_size = buffer.size();
     while (buffer.size() < BLOCK_BYTES) { buffer += (char)0x00; }
 
@@ -242,9 +243,9 @@ void zpt::crypto::SHA1::buffer_to_block(const std::string& buffer,
 }
 
 void zpt::crypto::SHA1::read(std::istream& is, std::string& s, int max) {
-    char sbuf[max];
-    is.read(sbuf, max);
-    s.assign(sbuf, is.gcount());
+    std::unique_ptr<char[]> sbuf{ new char[max] };
+    is.read(sbuf.get(), max);
+    s.assign(sbuf.get(), is.gcount());
 }
 
 std::string zpt::crypto::sha1(const std::string& string) {

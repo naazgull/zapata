@@ -26,9 +26,8 @@
 #include <zapata/net/websocket.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::global_cast<zpt::startup::boot>(zpt::BOOT());
+    auto& _config = _plugin.config();
     auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
 
     _layer.add("ws", zpt::make_transport<zpt::net::transport::websocket>());
     if (_config["port"]->ok()) {
@@ -44,7 +43,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("ws");
-                    _polling.listen_on(_client);
+                    _polling.listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
@@ -55,7 +54,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
+    auto& _config = _plugin.config();
     if (_config["port"]->ok()) {
         zpt::global_cast<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET())->close();
         zpt::release_global<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET());

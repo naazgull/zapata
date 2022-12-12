@@ -3,7 +3,10 @@ set(BRIDGE_BASE_INCLUDE_DIR
 )
 
 add_library(zapata-bridge-base SHARED)
-
+add_dependencies(zapata-bridge-base
+  zapata-base
+  zapata-parser-json
+)
 target_sources(zapata-bridge-base
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge.cpp
@@ -11,21 +14,25 @@ target_sources(zapata-bridge-base
     ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge.h
 )
 target_include_directories(zapata-bridge-base
-  PUBLIC
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    ${BRIDGE_BASE_INCLUDE_DIR}
+  INTERFACE
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-base
-  PUBLIC
-    zapata-base
-    zapata-parser-json
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
 )
-
 set_target_properties(zapata-bridge-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
     LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-bridge-base.so
 )
 
 include(GNUInstallDirs)
@@ -39,22 +46,28 @@ install(DIRECTORY ${BRIDGE_BASE_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_bridge_base)
-
+add_dependencies(zapata_test_bridge_base
+  zapata-base
+  zapata-parser-json
+  zapata-bridge-base
+)
 target_sources(zapata_test_bridge_base
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_base
   PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
     ${BRIDGE_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_base
   PRIVATE
-    zapata-base
-    zapata-parser-json
-    zapata-bridge-base
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
 )
-
 set_target_properties(zapata_test_bridge_base
   PROPERTIES
     COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"

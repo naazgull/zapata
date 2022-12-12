@@ -26,14 +26,12 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     auto& _bridge = zpt::make_global<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
-
-    _bridge.set_options(_plugin->config());
+    _bridge.set_options(_plugin.config());
     if (_bridge.options()["modules"]->is_array()) {
         for (auto [_, __, _module] : _bridge.options()["modules"]) {
             _bridge.add_module(_module["file"]->string(), _module);
         }
     }
-
     zlog("Starting PYTHON bridge", zpt::info);
 }
 

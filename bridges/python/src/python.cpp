@@ -598,7 +598,9 @@ auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
     if (this->__initialized.compare_exchange_strong(_not_initialized, true)) {
         Py_SetProgramName((wchar_t*)("zpt"));
 
-        struct _inittab _initt[this->__builtin_to_load.size() + 1];
+        std::unique_ptr<struct _inittab[]> _initt{
+            new struct _inittab[this->__builtin_to_load.size() + 1]
+        };
         size_t _k{ 0 };
         for (auto [_name, _value] : this->__builtin_to_load) {
             auto [_init_callback, _conf] = _value;
@@ -608,7 +610,7 @@ auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
         }
         _initt[_k].name = nullptr;
         _initt[_k].initfunc = nullptr;
-        expect(PyImport_ExtendInittab(_initt) != -1, "Python: could not import modules");
+        expect(PyImport_ExtendInittab(_initt.get()) != -1, "Python: could not import modules");
 
         Py_Initialize();
 

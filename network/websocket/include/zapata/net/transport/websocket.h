@@ -35,14 +35,16 @@ auto read(zpt::stream& _stream) -> std::tuple<std::string, int>;
 auto write(zpt::stream& _stream, std::string const& _in) -> void;
 } // namespace ws
 namespace transport {
-class websocket : public zpt::transport::transport_t {
+class websocket : public zpt::basic_transport {
   public:
     websocket() = default;
     virtual ~websocket() = default;
 
-    auto receive(zpt::exchange& _channel) const -> void override;
-    auto send(zpt::exchange& _channel) const -> void override;
-    auto resolve(zpt::json _uri) const -> zpt::exchange override;
+    auto make_request() const -> zpt::message override;
+    auto make_reply() const -> zpt::message override;
+    auto make_reply(zpt::message _request) const -> zpt::message override;
+    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

@@ -133,9 +133,7 @@ auto zpt::lua::bridge::find(zpt::json _to_locate) -> object_type {
     if (!_to_locate["module"]->ok()) {
         lua_getglobal(this->__underlying, _to_locate["function"]->string().data());
         expect(lua_isfunction(this->__underlying, -1),
-               "Lua: couldn't locate `" << _to_locate["function"] << "`",
-               500,
-               0);
+               "Lua: couldn't locate `" << _to_locate["function"] << "`");
         lua_xmove(this->__underlying, this->__underlying, 1);
         return this->__underlying;
     }
@@ -212,9 +210,7 @@ auto zpt::lua::bridge::to_json(zpt::lua::bridge::object_type _to_convert, int _i
         }
         case LUA_TTHREAD: {
             expect(lua_type(_to_convert, _index) != LUA_TTHREAD,
-                   "Lua: unmanaged lua type LUA_TTHREAD",
-                   500,
-                   0);
+                   "Lua: unmanaged lua type LUA_TTHREAD");
         }
     }
     return zpt::undefined;
