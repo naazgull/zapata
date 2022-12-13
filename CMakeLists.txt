@@ -56,7 +56,7 @@ include_directories(
     ${Python3_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIR}
     ${SQLite3_INCLUDE_DIRS}
-    ${MYSQL_XDEVAPI_INCLUDEDIR}
+    ${THIRD_PARTY_INSTALL_PREFIX}/include
 )
 
 add_subdirectory(bridges/base)
@@ -72,6 +72,7 @@ add_subdirectory(common/graph)
 add_subdirectory(common/lockfree)
 add_subdirectory(engines/startup)
 add_subdirectory(engines/events)
+add_subdirectory(engines/transport)
 add_subdirectory(engines/rest)
 add_subdirectory(io/pipe)
 add_subdirectory(io/socket)

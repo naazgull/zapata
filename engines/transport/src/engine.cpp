@@ -1,11 +1,11 @@
-#include <zapata/events/engine.h>
+#include <zapata/transport/engine.h>
 
-auto zpt::EVENTS_ENGINE() -> ssize_t& {
+auto zpt::TRANSPORT_ENGINE() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-zpt::events::receive::receive(zpt::events::engine& _engine,
+zpt::events::receive::receive(zpt::transports::engine& _engine,
                               zpt::polling& _polling,
                               zpt::basic_stream& _stream)
   : __engine{ _engine }
@@ -85,7 +85,7 @@ zpt::events::process::process(zpt::message _received)
 zpt::events::process::~process() {
     if (this->__to_send->status() != 0) {
         this->__dispatcher->trigger<zpt::events::send>(
-            *this->__polling, *this->__stream, this->__to_send);
+          *this->__polling, *this->__stream, this->__to_send);
     }
 }
 
@@ -106,22 +106,27 @@ auto zpt::events::process::received() const -> zpt::message const { return this-
 
 auto zpt::events::process::to_send() -> zpt::message { return this->__to_send; }
 
-zpt::events::engine::engine(zpt::json _config)
-  : __configuration{ _config } {
+zpt::transports::engine::engine(zpt::json _config)
+  : __configuration{ _config }
+  , __dispatcher{ _config("limits")("max_consumer_threads")->ok()
+                    ? _config("limits")("max_consumer_threads")->integer()
+                    : 1 } {
     zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
       .register_delegate([this](zpt::polling& _poll, zpt::basic_stream& _stream) -> bool {
-          zpt::global_cast<zpt::events::dispatcher>(zpt::DISPATCHER())
-            .trigger<zpt::events::receive>(*this, _poll, _stream);
+          this->__dispatcher.trigger<zpt::events::receive>(*this, _poll, _stream);
           return true;
       });
+    this->__dispatcher.start_consumers();
 }
 
-auto zpt::events::engine::add_resolver(zpt::events::resolver _resolver) -> zpt::events::engine& {
+auto zpt::transports::engine::add_resolver(zpt::events::resolver _resolver)
+  -> zpt::transports::engine& {
     this->__resolvers.push_back(_resolver);
     return (*this);
 }
 
-auto zpt::events::engine::resolve(zpt::message _received, initializer_t _initializer) const
+auto zpt::transports::engine::resolve(zpt::message _received,
+                                      zpt::events::initializer_t _initializer) const
   -> std::list<zpt::event> {
     std::list<zpt::event> _return;
     for (auto& _resolver : this->__resolvers) {

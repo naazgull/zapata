@@ -25,7 +25,7 @@
 #include <zapata/startup.h>
 #include <zapata/transport.h>
 #include <zapata/catalogue.h>
-#include <zapata/events/engine.h>
+#include <zapata/transport/engine.h>
 
 namespace zpt {
 auto REST_RESOLVER() -> ssize_t&;
@@ -33,7 +33,12 @@ namespace rest {
 class resolver_t : public zpt::events::resolver_t {
   public:
     resolver_t(zpt::json _rest_config);
+    resolver_t(resolver_t const&) = delete;
+    resolver_t(resolver_t&&) = delete;
     virtual ~resolver_t() = default;
+
+    auto operator=(resolver_t const&) -> resolver_t& = delete;
+    auto operator=(resolver_t&&) -> resolver_t& = delete;
 
     template<typename T>
     auto add(std::string _path) -> zpt::rest::resolver_t&;
@@ -95,6 +100,6 @@ template<typename T>
 auto zpt::rest::resolver_t::make_callback(zpt::message _received,
                                           zpt::events::initializer_t _initializer) -> zpt::event {
     auto _event = zpt::make_event<T>(_received);
-    _initializer(static_cast<zpt::events::process&>(event_cast<T>(_event)));
+    _initializer(static_cast<zpt::events::process&>(zpt::event_cast<T>(_event)));
     return _event;
 }

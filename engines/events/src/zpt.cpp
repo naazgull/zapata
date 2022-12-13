@@ -21,7 +21,6 @@
 */
 
 #include <zapata/startup.h>
-#include <zapata/events/engine.h>
 #include <zapata/transport.h>
 #include <signal.h>
 #include <unistd.h>
@@ -74,13 +73,13 @@ auto main(int _argc, char* _argv[]) -> int {
     zpt::log_pname = std::make_unique<std::string>(_argv[0]);
     zpt::log_pid = ::getpid();
 
-    if (_parameters["--help"]->ok()) {
+    if (_parameters("--help")->ok()) {
         std::cout << zpt::parameters::usage(_parameter_setup) << std::flush;
         return 0;
     }
 
-    if (_parameters["--terminate"]->ok()) {
-        kill(static_cast<int>(_parameters["--terminate"]), SIGUSR1);
+    if (_parameters("--terminate")->ok()) {
+        kill(static_cast<int>(_parameters("--terminate")), SIGUSR1);
         return 0;
     }
 
@@ -88,26 +87,26 @@ auto main(int _argc, char* _argv[]) -> int {
     zpt::log_lvl = 8;
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
-    zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config["log"]["level"]) : 7;
+    zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
     zpt::log_format =
-      _config("log")("format")->ok() ? static_cast<int>(_config["log"]["format"]) : 0;
-    auto _consumers = _config("limits")("max_consumer_threads")->ok()
-                        ? _config("limits")("max_consumer_threads")->integer()
-                        : 2;
+      _config("log")("format")->ok() ? static_cast<int>(_config("log")("format")) : 0;
+    auto _consumers = _config("dispatcher")("limits")("max_consumer_threads")->ok()
+                        ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
+                        : 0;
 
     zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
     zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
-    zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //
-      .start_consumers(_consumers);
-    zpt::make_global<zpt::events::engine>(zpt::EVENTS_ENGINE(), _config);
+    if (_consumers != 0) {
+        zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //
+          .start_consumers(_consumers);
+    }
     zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config) //
       .load();
     zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
       .poll();
 
     zpt::release_global<zpt::polling>(zpt::STREAM_POLLING());
-    zpt::release_global<zpt::events::engine>(zpt::EVENTS_ENGINE());
-    zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER());
+    if (_consumers != 0) { zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER()); }
     zpt::release_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
     zpt::release_global<zpt::startup::boot>(zpt::BOOT());
     zpt::release_global<zpt::json>(zpt::GLOBAL_CONFIG());

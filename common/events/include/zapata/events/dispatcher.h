@@ -97,12 +97,9 @@ class dispatcher {
     auto loop(long _consumer_nr) -> void;
 };
 } // namespace events
-} // namespace zpt
-
 template<typename T>
-auto event_cast(zpt::event& _event) -> T& {
-    return *static_cast<zpt::event_t<T>&>(*_event.get());
-}
+auto event_cast(zpt::event& _event) -> T&;
+} // namespace zpt
 
 template<Operation T>
 template<typename... Args>
@@ -144,4 +141,9 @@ template<typename T, typename... Args>
 auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
     this->trigger(zpt::make_event<T>(std::forward<Args>(_args)...));
     return (*this);
+}
+
+template<typename T>
+auto zpt::event_cast(zpt::event& _event) -> T& {
+    return *static_cast<zpt::event_t<T>&>(*_event.get());
 }

@@ -22,17 +22,15 @@
 
 #include <iostream>
 #include <zapata/startup.h>
-#include <zapata/rest.h>
 #include <zapata/transport.h>
+#include <zapata/transport/engine.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
-    zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
-      .add_resolver(zpt::make_global<zpt::rest::resolver>(
-        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
-    zlog("Added REST event resolver", zpt::info);
+    zpt::make_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE(), _plugin.config());
+    zlog("Starting multi-transport engine", zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Disposing REST event resolver", zpt::info);
-    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
+    zlog("Stopping multi-transport engine", zpt::info);
+    zpt::release_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE());
 }

@@ -7,14 +7,43 @@
 #include <list>
 
 namespace zpt {
-auto EVENTS_ENGINE() -> ssize_t&;
+auto TRANSPORT_ENGINE() -> ssize_t&;
 
 namespace events {
-class engine;
+class process;
+using initializer_t = std::function<void(zpt::events::process& _event)>;
+class resolver_t {
+  public:
+    resolver_t() = default;
+    virtual ~resolver_t() = default;
 
+    virtual auto resolve(zpt::message _received, initializer_t _initializer) const
+      -> std::list<zpt::event> = 0;
+};
+using resolver = std::shared_ptr<resolver_t>;
+} // namespace events
+
+namespace transports {
+class engine {
+  public:
+    engine(zpt::json _config);
+    virtual ~engine() = default;
+
+    auto add_resolver(zpt::events::resolver _resolver) -> zpt::transports::engine&;
+    auto resolve(zpt::message _received, zpt::events::initializer_t _initializer) const
+      -> std::list<zpt::event>;
+
+  private:
+    zpt::json __configuration;
+    std::vector<zpt::events::resolver> __resolvers;
+    zpt::events::dispatcher __dispatcher;
+};
+} // namespace transports
+
+namespace events {
 class receive {
   public:
-    receive(zpt::events::engine& _engine, zpt::polling& _polling, zpt::basic_stream& _stream);
+    receive(zpt::transports::engine& _engine, zpt::polling& _polling, zpt::basic_stream& _stream);
     receive(zpt::events::receive const& _rhs) = delete;
     receive(zpt::events::receive&& _rhs) = delete;
     virtual ~receive();
@@ -26,10 +55,10 @@ class receive {
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state;
 
   protected:
-    zpt::events::engine& __engine;
+    zpt::transports::engine& __engine;
     zpt::polling& __polling;
     zpt::basic_stream& __stream;
-    bool __unmute{false};
+    bool __unmute{ false };
 };
 
 class send {
@@ -78,31 +107,6 @@ class process {
     zpt::ref_ptr<zpt::basic_stream> __stream;
     zpt::message __received;
     zpt::message __to_send;
-};
-
-using initializer_t = std::function<void(zpt::events::process& _event)>;
-
-class resolver_t {
-  public:
-    resolver_t() = default;
-    virtual ~resolver_t() = default;
-
-    virtual auto resolve(zpt::message _received, initializer_t _initializer) const
-      -> std::list<zpt::event> = 0;
-};
-using resolver = std::shared_ptr<resolver_t>;
-
-class engine {
-  public:
-    engine(zpt::json _config);
-    virtual ~engine() = default;
-
-    auto add_resolver(zpt::events::resolver _resolver) -> zpt::events::engine&;
-    auto resolve(zpt::message _received, initializer_t _initializer) const -> std::list<zpt::event>;
-
-  private:
-    zpt::json __configuration;
-    std::vector<zpt::events::resolver> __resolvers;
 };
 } // namespace events
 } // namespace zpt
