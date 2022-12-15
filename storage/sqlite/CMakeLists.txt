@@ -10,9 +10,9 @@ add_dependencies(zapata-storage-sqlite
   zapata-storage-connector
 )
 target_sources(zapata-storage-sqlite
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
-  PUBLIC
+  INTERFACE
     ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite.h
     ${STORAGE_SQLITE_INCLUDE_DIR}/zapata/sqlite/connector.h
 )

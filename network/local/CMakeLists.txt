@@ -13,9 +13,10 @@ add_dependencies(zapata-net-local
   zapata-parser-uri
 )
 target_sources(zapata-net-local
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/unix.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/file.cpp
+  INTERFACE
     ${NETWORK_LOCAL_INCLUDE_DIR}/zapata/net/local.h
     ${NETWORK_LOCAL_INCLUDE_DIR}/zapata/net/transport/local.h
 )
@@ -66,7 +67,7 @@ add_dependencies(zapata-net-local-plugin
   zapata-parser-uri
 )
 target_sources(zapata-net-local-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-local-plugin

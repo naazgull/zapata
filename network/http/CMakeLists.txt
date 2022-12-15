@@ -13,8 +13,9 @@ add_dependencies(zapata-net-http
   zapata-parser-http
 )
 target_sources(zapata-net-http
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/http.cpp
+  INTERFACE
     ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/http.h
     ${NETWORK_HTTP_INCLUDE_DIR}/zapata/net/transport/http.h
 )
@@ -66,7 +67,7 @@ add_dependencies(zapata-net-http-plugin
   zapata-parser-http
 )
 target_sources(zapata-net-http-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-http-plugin

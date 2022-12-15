@@ -11,8 +11,9 @@ add_dependencies(zapata-net-transport
   zapata-parser-uri
 )
 target_sources(zapata-net-transport
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/transport.cpp
+  INTERFACE
     ${NETWORK_TRANSPORT_INCLUDE_DIR}/zapata/transport.h
     ${NETWORK_TRANSPORT_INCLUDE_DIR}/zapata/transport/transport.h
 )

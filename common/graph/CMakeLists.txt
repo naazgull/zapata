@@ -7,8 +7,9 @@ add_dependencies(zapata-regex-graph
   zapata-base
 )
 target_sources(zapata-regex-graph
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp
+  INTERFACE
     ${COMMON_GRAPH_INCLUDE_DIR}/zapata/graph.h
     ${COMMON_GRAPH_INCLUDE_DIR}/zapata/graph/node.h
 )

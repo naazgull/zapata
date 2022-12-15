@@ -10,8 +10,9 @@ add_dependencies(zapata-common-catalogue
     zapata-storage-sqlite
 )
 target_sources(zapata-common-catalogue
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/catalogue.cpp
+  INTERFACE
     ${COMMON_CATALOGUE_INCLUDE_DIR}/zapata/catalogue/catalogue.h
     ${COMMON_CATALOGUE_INCLUDE_DIR}/zapata/catalogue.h
 )

@@ -11,7 +11,7 @@ add_dependencies(zapata-parser-http
   zapata-parser-uri
 )
 target_sources(zapata-parser-http
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPTokenizerLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPTokenizer.cpp
@@ -19,6 +19,7 @@ target_sources(zapata-parser-http
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPElement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HTTPRep.cpp
+  INTERFACE
     ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http.h
     ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPParser.h
     ${PARSERS_HTTP_INCLUDE_DIR}/zapata/http/HTTPTokenizerLexer.h

@@ -9,8 +9,9 @@ add_dependencies(zapata-storage-connector
   zapata-parser-functional
 )
 target_sources(zapata-storage-connector
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
+  INTERFACE
     ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector/connector.h
     ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector.h
 )

@@ -17,8 +17,9 @@ add_dependencies(zapata-engine-rest
   zapata-common-catalogue
 )
 target_sources(zapata-engine-rest
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rest.cpp
+  INTERFACE
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest.h
     ${ENGINE_REST_INCLUDE_DIR}/zapata/rest/rest.h
 )
@@ -81,7 +82,7 @@ add_dependencies(zapata-engine-rest-plugin
   zapata-common-catalogue
 )
 target_sources(zapata-engine-rest-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-engine-rest-plugin
@@ -141,7 +142,7 @@ add_dependencies(zapata-rest-example
   zapata-common-catalogue
 )
 target_sources(zapata-rest-example
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata-rest-example

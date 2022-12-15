@@ -15,7 +15,7 @@ add_dependencies(zpt
     zapata-engine-startup
 )
 target_sources(zpt
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/zpt.cpp
 )
 target_include_directories(zpt

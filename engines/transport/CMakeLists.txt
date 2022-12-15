@@ -15,8 +15,9 @@ add_dependencies(zapata-engine-transport
     zapata-engine-startup
 )
 target_sources(zapata-engine-transport
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine.cpp
+  INTERFACE
     ${ENGINE_TRANSPORT_INCLUDE_DIR}/zapata/transport/engine.h
 )
 target_include_directories(zapata-engine-transport
@@ -68,7 +69,7 @@ add_dependencies(zapata-engine-transport-plugin
     zapata-engine-transport
 )
 target_sources(zapata-engine-transport-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-engine-transport-plugin

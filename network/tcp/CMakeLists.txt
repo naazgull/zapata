@@ -13,8 +13,9 @@ add_dependencies(zapata-net-tcp
   zapata-parser-uri
 )
 target_sources(zapata-net-tcp
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tcp.cpp
+  INTERFACE
     ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/tcp.h
     ${NETWORK_TCP_INCLUDE_DIR}/zapata/net/transport/tcp.h
 )
@@ -65,7 +66,7 @@ add_dependencies(zapata-net-tcp-plugin
   zapata-parser-uri
 )
 target_sources(zapata-net-tcp-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-tcp-plugin

@@ -8,8 +8,9 @@ add_dependencies(zapata-io-pipe
   zapata-io-stream
 )
 target_sources(zapata-io-pipe
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipe_stream.cpp
+  INTERFACE
     ${IO_PIPE_INCLUDE_DIR}/zapata/io/pipe/pipe_stream.h
     ${IO_PIPE_INCLUDE_DIR}/zapata/io/pipe.h
 )

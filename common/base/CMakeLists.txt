@@ -4,7 +4,7 @@ set(COMMON_BASE_INCLUDE_DIR
 
 add_library(zapata-base SHARED)
 target_sources(zapata-base
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_lock.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ExpectationException.cpp
@@ -33,6 +33,7 @@ target_sources(zapata-base
     ${CMAKE_CURRENT_SOURCE_DIR}/src/CastException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sha256.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NoMoreElementsException.cpp    
+  INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}/zapata/mail/manip.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/log/log.h
     ${COMMON_BASE_INCLUDE_DIR}/zapata/exceptions/NoMoreElementsException.h

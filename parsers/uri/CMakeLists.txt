@@ -8,12 +8,13 @@ add_dependencies(zapata-parser-uri
   zapata-parser-json
 )
 target_sources(zapata-parser-uri
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URIParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URITokenizerLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URITokenizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URILexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uri.cpp
+  INTERFACE
     ${PARSERS_URI_INCLUDE_DIR}/zapata/uri.h
     ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URIParser.h
     ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URITokenizer.h

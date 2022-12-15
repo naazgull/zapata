@@ -7,8 +7,9 @@ add_dependencies(zapata-globals
   zapata-base
 )
 target_sources(zapata-globals
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/globals.cpp
+  INTERFACE
     ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/thread_local_variable.h
     ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/cached.h
     ${COMMON_GLOBALS_INCLUDE_DIR}/zapata/globals/globals.h

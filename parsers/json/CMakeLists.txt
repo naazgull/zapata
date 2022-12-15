@@ -7,7 +7,7 @@ add_dependencies(zapata-parser-json
   zapata-base
 )
 target_sources(zapata-parser-json
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONPtr.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONElement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONTokenizerLexer.cpp
@@ -19,6 +19,7 @@ target_sources(zapata-parser-json
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONRegex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONArr.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/JSONLambda.cpp
+  INTERFACE
     ${PARSERS_JSON_INCLUDE_DIR}/zapata/json.h
     ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONLexer.h
     ${PARSERS_JSON_INCLUDE_DIR}/zapata/json/JSONTokenizer.h

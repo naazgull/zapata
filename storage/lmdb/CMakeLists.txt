@@ -10,8 +10,9 @@ add_dependencies(zapata-storage-lmdb
   zapata-storage-connector
 )
 target_sources(zapata-storage-lmdb
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
+  INTERFACE
     ${STORAGE_LMDB_INCLUDE_DIR}/zapata/lmdb.h
     ${STORAGE_LMDB_INCLUDE_DIR}/zapata/lmdb/connector.h
 )

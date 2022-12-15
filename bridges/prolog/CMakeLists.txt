@@ -9,8 +9,9 @@ add_dependencies(zapata-bridge-prolog
   zapata-bridge-base
 )
 target_sources(zapata-bridge-prolog
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/prolog.cpp
+  INTERFACE
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog.h
     ${BRIDGE_PROLOG_INCLUDE_DIR}/zapata/prolog/prolog.h
 )
@@ -48,7 +49,7 @@ add_dependencies(zapata-bridge-prolog-plugin
   zapata-bridge-prolog
 )
 target_sources(zapata-bridge-prolog-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-prolog-plugin

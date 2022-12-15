@@ -8,8 +8,9 @@ add_dependencies(zapata-io-socket
   zapata-io-stream
 )
 target_sources(zapata-io-socket
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/socket_stream.cpp
+  INTERFACE
     ${IO_SOCKET_INCLUDE_DIR}/zapata/net/socket/socket_stream.h
     ${IO_SOCKET_INCLUDE_DIR}/zapata/net/socket.h
 )

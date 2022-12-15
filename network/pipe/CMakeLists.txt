@@ -13,8 +13,9 @@ add_dependencies(zapata-net-pipe
   zapata-parser-uri
 )
 target_sources(zapata-net-pipe
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipe.cpp
+  INTERFACE
     ${NETWORK_PIPE_INCLUDE_DIR}/zapata/net/pipe.h
     ${NETWORK_PIPE_INCLUDE_DIR}/zapata/net/transport/pipe.h
 )
@@ -65,7 +66,7 @@ add_dependencies(zapata-net-pipe-plugin
   zapata-parser-uri
 )
 target_sources(zapata-net-pipe-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-pipe-plugin

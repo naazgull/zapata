@@ -13,8 +13,9 @@ add_dependencies(zapata-net-websocket
   zapata-parser-uri
 )
 target_sources(zapata-net-websocket
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket.cpp
+  INTERFACE
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/websocket.h
     ${NETWORK_WEBSOCKET_INCLUDE_DIR}/zapata/net/transport/websocket.h
 )
@@ -66,7 +67,7 @@ add_dependencies(zapata-net-websocket-plugin
   zapata-net-websocket
 )
 target_sources(zapata-net-websocket-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-net-websocket-plugin

@@ -8,8 +8,9 @@ add_dependencies(zapata-events
   zapata-lockfree
 )
 target_sources(zapata-events
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
+  INTERFACE
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events/dispatcher.h
     ${COMMON_EVENTS_INCLUDE_DIR}/zapata/events.h
 )

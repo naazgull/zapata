@@ -14,9 +14,10 @@ add_dependencies(zapata-engine-startup
     zapata-parser-uri
 )
 target_sources(zapata-engine-startup
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/startup.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/configuration.cpp
+  INTERFACE
     ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup/configuration.h
     ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup/startup.h
     ${ENGINE_STARTUP_INCLUDE_DIR}/zapata/startup.h

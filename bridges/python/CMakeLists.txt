@@ -9,8 +9,9 @@ add_dependencies(zapata-bridge-python
   zapata-bridge-base
 )
 target_sources(zapata-bridge-python
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/python.cpp
+  INTERFACE
     ${BRIDGE_PYTHON_INCLUDE_DIR}/zapata/python.h
     ${BRIDGE_PYTHON_INCLUDE_DIR}/zapata/python/python.h
 )
@@ -49,7 +50,7 @@ add_dependencies(zapata-bridge-python-plugin
   zapata-bridge-python
 )
 target_sources(zapata-bridge-python-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-python-plugin

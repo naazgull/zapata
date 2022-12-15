@@ -10,9 +10,10 @@ add_dependencies(zapata-storage-mysqlx
   zapata-storage-connector
 )
 target_sources(zapata-storage-mysqlx
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/translate.cpp
+  INTERFACE
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx.h
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/translate.h
     ${STORAGE_MYSQLX_INCLUDE_DIR}/zapata/mysqlx/connector.h

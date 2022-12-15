@@ -9,8 +9,9 @@ add_dependencies(zapata-bridge-lua
   zapata-bridge-base
 )
 target_sources(zapata-bridge-lua
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.cpp
+  INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua.h
     ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua/lua.h
 )
@@ -49,7 +50,7 @@ add_dependencies(zapata-bridge-lua-plugin
   zapata-bridge-lua
 )
 target_sources(zapata-bridge-lua-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-lua-plugin

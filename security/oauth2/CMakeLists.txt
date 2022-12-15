@@ -5,11 +5,11 @@ set(SECURITY_OAUTH2_INCLUDE_DIR
 add_library(zapata-security-oauth2 SHARED)
 
 target_sources(zapata-security-oauth2
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/oauth2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/listeners.cpp
-  PUBLIC
+  INTERFACE
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/oauth2.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2/listeners.h
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2.h
@@ -36,7 +36,7 @@ set_target_properties(zapata-security-oauth2
 add_library(zapata-security-oauth2-plugin SHARED)
 
 target_sources(zapata-security-oauth2-plugin
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-security-oauth2-plugin

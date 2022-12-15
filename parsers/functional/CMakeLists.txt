@@ -8,12 +8,13 @@ add_dependencies(zapata-parser-functional
   zapata-parser-json
 )
 target_sources(zapata-parser-functional
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalTokenizerLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FunctionalTokenizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/functional.cpp
+  INTERFACE
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional.h
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalTokenizerbase.h
     ${PARSERS_FUNCTIONAL_INCLUDE_DIR}/zapata/functional/FunctionalParser.h

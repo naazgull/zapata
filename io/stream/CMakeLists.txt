@@ -7,8 +7,9 @@ add_dependencies(zapata-io-stream
   zapata-base
 )
 target_sources(zapata-io-stream
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/streams.cpp
+  INTERFACE
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams/streams.h
     ${IO_STREAM_INCLUDE_DIR}/zapata/streams.h
 )

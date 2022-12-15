@@ -8,8 +8,9 @@ add_dependencies(zapata-bridge-base
   zapata-parser-json
 )
 target_sources(zapata-bridge-base
-  PUBLIC
+  PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge.cpp
+  INTERFACE
     ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge/bridge.h
     ${BRIDGE_BASE_INCLUDE_DIR}/zapata/bridge.h
 )
