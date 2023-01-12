@@ -33,18 +33,18 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
 
     auto setup_module(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
         auto [_it, _] = this->__modules.insert(
-          std::make_pair(_conf["name"]->string() + std::string{ "::" }, _conf));
+          std::make_pair(_conf("name")->string() + std::string{ "::" }, _conf));
         _it->second += _lambda(_conf, *this);
         return (*this);
     }
 
     auto setup_lambda(zpt::json _conf, lambda_type _lambda) -> cpp_bridge& {
         std::string _package =
-          (_conf["module"]->ok() ? _conf["module"]->string() : std::string{ "" }) +
+          (_conf("module")->ok() ? _conf("module")->string() : std::string{ "" }) +
           std::string{ "::" };
         zlog(_package, zpt::info);
         expect(this->__modules.find(_package) != this->__modules.end(), "no such module");
-        this->__lambdas.insert(std::make_pair(_package + _conf["name"]->string(), _lambda));
+        this->__lambdas.insert(std::make_pair(_package + _conf("name")->string(), _lambda));
         return (*this);
     }
 

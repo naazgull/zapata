@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
         auto _stringify_duration =
           std::chrono::duration_cast<std::chrono::microseconds>(_t - _t).count();
 
-        for (auto [_, __, _file] : _parameters["--"]) {
+        for (auto [_, __, _file] : _parameters("--")) {
             zpt::json _ptr;
             std::ifstream _in;
             _in.open(static_cast<std::string>(_file));
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
                 _stringify_duration +=
                   std::chrono::duration_cast<std::chrono::microseconds>(_t2 - _t1).count();
             }
-            if (_parameters["--print"] != zpt::undefined) {
-                std::cout << (_parameters["--print"] == "pretty"
+            if (_parameters("--print") != zpt::undefined) {
+                std::cout << (_parameters("--print") == "pretty"
                                 ? static_cast<std::string>(zpt::pretty{ _ptr })
                                 : static_cast<std::string>(_ptr))
                           << std::flush;

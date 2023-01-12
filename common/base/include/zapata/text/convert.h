@@ -130,7 +130,8 @@ const std::wstring plain = L"aaaaaeeeeeiiiiiooooouuuuucAAAAAEEEEEIIIIIOOOOOUUUUU
 
 time_t timezone_offset();
 
-auto get_backtrace() -> std::string;
+auto demangle(std::string const& _mangled) -> std::string;
+auto get_backtrace(unsigned int _skip = 0) -> std::string;
 
 namespace base64 {
 void encode(std::string& _out);

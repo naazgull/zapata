@@ -25,6 +25,7 @@
 #include <sstream>
 #include <execinfo.h>
 #include <ctime>
+#include <cxxabi.h>
 
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
@@ -303,13 +304,35 @@ auto zpt::timezone_offset() -> time_t {
     return 0;
 }
 
-auto zpt::get_backtrace() -> std::string {
+auto zpt::demangle(std::string const& _mangled) -> std::string {
+    int _state{ -4 };
+    auto _demangled = abi::__cxa_demangle(_mangled.data(), nullptr, nullptr, &_state);
+    std::string _return{ _state == 0 ? _demangled : _mangled };
+    ::free(_demangled);
+    return _return;
+}
+
+auto zpt::get_backtrace(unsigned int _skip) -> std::string {
+    static const std::regex _line_rgx{ "([^(]+)\\(([^)]+)\\) \\[([^\\]]+)\\](.*)",
+                                       std::regex_constants::ECMAScript |
+                                         std::regex_constants::optimize };
     std::ostringstream _oss;
     void* _backtrace_array[30];
     size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
     char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
-    for (size_t _i = 0; _i != _backtrace_size; _i++) {
-        _oss << "\t" << _backtrace[_i] << std::endl;
+    for (size_t _i = 0; _i != _backtrace_size; ++_i, --_skip) {
+        if (_skip > 0) {
+            continue;
+        }
+        std::smatch _matches;
+        std::string _line{ _backtrace[_i] };
+        if (std::regex_match(_line, _matches, _line_rgx)) {
+            auto _plus_idx = _matches[2].str().find("+");
+            _oss << "\t" << zpt::demangle(_matches[2].str().substr(0, _plus_idx)) << " ["
+                 << _matches[3] << "+" << _matches[2].str().substr(_plus_idx) << "] " << _matches[1]
+                 << std::endl;
+        }
+        else { _oss << "\t" << _line << std::endl; }
     }
     _oss << std::flush;
     free(_backtrace);

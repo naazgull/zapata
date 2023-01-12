@@ -103,48 +103,48 @@ auto zpt::lua::bridge::thread_instance() -> bridge& {
 
 auto zpt::lua::bridge::setup_module(zpt::json _conf, std::string _external_path, bool _persist)
   -> zpt::lua::bridge& {
-    expect(_conf["module"]->is_string(), "Lua: module name must be provided");
+    expect(_conf("module")->is_string(), "Lua: module name must be provided");
     expect(!luaL_loadfile(this->__underlying, _external_path.data()),
            "Lua: error loading module '" << _external_path
                                          << "': " << lua_tostring(this->__underlying, -1));
     expect(!lua_pcall(this->__underlying, 0, LUA_MULTRET, 0),
            "Lua: error invoking function: " << lua_tostring(this->__underlying, -1));
-    zlog("Lua: loading module " << _conf["module"] << " from " << _external_path, zpt::info);
+    zlog("Lua: loading module " << _conf("module") << " from " << _external_path, zpt::info);
     if (_persist) { this->__external_to_load.insert(std::make_pair(_external_path, _conf)); }
     return (*this);
 }
 
 auto zpt::lua::bridge::setup_module(zpt::json _conf, callback_type _callback, bool _persist)
   -> zpt::lua::bridge& {
-    expect(_conf["module"]->is_string(), "Lua: module name must be provided");
-    zlog("Lua: loading builtin module " << _conf["module"], zpt::info);
+    expect(_conf("module")->is_string(), "Lua: module name must be provided");
+    zlog("Lua: loading builtin module " << _conf("module"), zpt::info);
     _callback(this->__underlying);
     if (_persist) {
         this->__builtin_to_load.insert(
-          std::make_pair(_conf["module"]->string(), std::make_tuple(_callback, _conf)));
+          std::make_pair(_conf("module")->string(), std::make_tuple(_callback, _conf)));
     }
     return (*this);
 }
 
 auto zpt::lua::bridge::find(zpt::json _to_locate) -> object_type {
-    expect(_to_locate["function"]->is_string(), "Lua: function name must be provided");
+    expect(_to_locate("function")->is_string(), "Lua: function name must be provided");
     lua_pop(this->__underlying, lua_gettop(this->__underlying));
 
-    if (!_to_locate["module"]->ok()) {
-        lua_getglobal(this->__underlying, _to_locate["function"]->string().data());
+    if (!_to_locate("module")->ok()) {
+        lua_getglobal(this->__underlying, _to_locate("function")->string().data());
         expect(lua_isfunction(this->__underlying, -1),
-               "Lua: couldn't locate `" << _to_locate["function"] << "`");
+               "Lua: couldn't locate `" << _to_locate("function") << "`");
         lua_xmove(this->__underlying, this->__underlying, 1);
         return this->__underlying;
     }
 
-    lua_getglobal(this->__underlying, _to_locate["module"]->string().data());
+    lua_getglobal(this->__underlying, _to_locate("module")->string().data());
     expect(lua_gettop(this->__underlying) == 1,
-           "Lua: couldn't locate `" << _to_locate["module"] << "`");
-    lua_pushstring(this->__underlying, _to_locate["function"]->string().data());
+           "Lua: couldn't locate `" << _to_locate("module") << "`");
+    lua_pushstring(this->__underlying, _to_locate("function")->string().data());
     lua_gettable(this->__underlying, 1);
     expect(lua_isfunction(this->__underlying, -1),
-           "Lua: couldn't locate `" << _to_locate["module"] << "." << _to_locate["function"]
+           "Lua: couldn't locate `" << _to_locate("module") << "." << _to_locate("function")
                                     << "`");
     lua_remove(this->__underlying, 1);
     return this->__underlying;
@@ -306,7 +306,7 @@ auto zpt::lua::bridge::from_ref(zpt::json _to_convert, object_type _return)
 }
 
 auto zpt::lua::bridge::execute(zpt::json _func, zpt::json _args) -> zpt::lua::bridge::object_type {
-    expect(_func["function"]->is_string(), "Lua: need a function");
+    expect(_func("function")->is_string(), "Lua: need a function");
     this->clear_stack();
     this->locate(_func);
     if (_args->is_array()) { this->to_args(_args); }

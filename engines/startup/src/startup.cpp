@@ -35,12 +35,12 @@ auto zpt::GLOBAL_CONFIG() -> ssize_t& {
 
 zpt::plugin::plugin(zpt::json _options, zpt::json _config)
   : __config{ _config } {
-    expect(_options["name"]->ok(), "missing name definition in plugin configuration");
-    expect(_options["source"]->ok(),
+    expect(_options("name")->ok(), "missing name definition in plugin configuration");
+    expect(_options("source")->ok(),
            std::string("missing source definition in plugin configuration of ") +
-             static_cast<std::string>(_options["name"]));
-    this->__name.assign(static_cast<std::string>(_options["name"]));
-    this->__source.assign(static_cast<std::string>(_options["source"]));
+             static_cast<std::string>(_options("name")));
+    this->__name.assign(static_cast<std::string>(_options("name")));
+    this->__source.assign(static_cast<std::string>(_options("source")));
 
     this->__lib_handler = dlopen(this->__source.data(), RTLD_NOW);
     if (this->__lib_handler != nullptr) {
@@ -100,9 +100,7 @@ auto zpt::plugin::plugin::add_thread(std::function<void()> _callback) -> plugin&
 }
 
 zpt::startup::boot::boot(zpt::json _config)
-  : __configuration{ _config } {
-    zlog("Starting server with PID " << zpt::log_pid, zpt::info);
-}
+  : __configuration{ _config } {}
 
 zpt::startup::boot::~boot() {}
 
@@ -116,14 +114,14 @@ auto zpt::startup::boot::to_string() -> std::string {
 
 auto zpt::startup::boot::load() -> zpt::startup::boot& {
     auto _to_load = zpt::json::object();
-    for (auto [_idx, __, _lib] : this->__configuration["load"]) {
-        _to_load << _lib["name"]->string() << true;
+    for (auto [_idx, __, _lib] : this->__configuration("load")) {
+        _to_load << _lib("name")->string() << true;
     }
 
     while (_to_load->size() != 0) {
-        for (auto [_idx, __, _lib] : this->__configuration["load"]) {
-            auto _name = _lib["name"]->string();
-            if (_lib("requires")->ok() && _lib["requires"]->is_array()) {
+        for (auto [_idx, __, _lib] : this->__configuration("load")) {
+            auto _name = _lib("name")->string();
+            if (_lib("requires")->ok() && _lib("requires")->is_array()) {
                 for (auto [___, ____, _required] : _lib("requires")) {
                     if (this->__plugins.find(_required->string()) == this->__plugins.end()) {
                         continue;
@@ -134,21 +132,20 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
             _to_load->object()->pop(_name);
         }
     }
-    zlog("All plugins loaded", zpt::info);
     return (*this);
 }
 
 auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
-    expect(_plugin_options["name"]->ok(), "missing name definition in plugin configuration");
+    expect(_plugin_options("name")->ok(), "missing name definition in plugin configuration");
 
     auto [_it, _inserted] = this->__plugins.emplace(
-      _plugin_options["name"]->string(),
+      _plugin_options("name")->string(),
       std::unique_ptr<zpt::plugin>{ new zpt::plugin{ _plugin_options, _plugin_config } });
     auto& _plugin = _it->second;
     return *_plugin;
 }
 
 auto zpt::startup::boot::hash(zpt::json& _event) -> std::string {
-    return static_cast<std::string>(_event["plugin"]) + std::string("/") +
-           std::to_string(static_cast<int>(_event["step"]));
+    return static_cast<std::string>(_event("plugin")) + std::string("/") +
+           std::to_string(static_cast<int>(_event("step")));
 }

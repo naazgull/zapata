@@ -87,28 +87,46 @@ auto main(int _argc, char* _argv[]) -> int {
     zpt::log_lvl = 8;
     zpt::log_format = 0;
     zpt::startup::configuration::load(_parameters, _config);
+
     zpt::log_lvl = _config("log")("level")->ok() ? static_cast<int>(_config("log")("level")) : 7;
     zpt::log_format =
       _config("log")("format")->ok() ? static_cast<int>(_config("log")("format")) : 0;
+    if (_config("log")("target")->ok()) {
+        zpt::log_fd = new std::ofstream{ _config("log")("target")->string() };
+    }
     auto _consumers = _config("dispatcher")("limits")("max_consumer_threads")->ok()
                         ? _config("dispatcher")("limits")("max_consumer_threads")->integer()
                         : 0;
 
+    zlog("Booting server PID " << zpt::log_pid, zpt::notice);
     zpt::make_global<zpt::polling>(zpt::STREAM_POLLING());
+    zlog("Initialized stream polling", zpt::info);
     zpt::make_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    zlog("Initialized transport layer", zpt::info);
     if (_consumers != 0) {
         zpt::make_global<zpt::events::dispatcher>(zpt::DISPATCHER(), _consumers) //
           .start_consumers(_consumers);
+        zlog("Started global event dispatcher (" << _consumers << " threads)", zpt::info);
     }
     zpt::make_global<zpt::startup::boot>(zpt::BOOT(), _config) //
       .load();
+    zlog("All plugins loaded", zpt::notice);
     zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()) //
       .poll();
 
     zpt::release_global<zpt::polling>(zpt::STREAM_POLLING());
-    if (_consumers != 0) { zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER()); }
+    zlog("Unloaded stream polling service", zpt::info);
+    if (_consumers != 0) {
+        zpt::release_global<zpt::events::dispatcher>(zpt::DISPATCHER());
+        zlog("Stopped global event dispatcher", zpt::info);
+    }
     zpt::release_global<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    zlog("Unloaded transport layer", zpt::info);
     zpt::release_global<zpt::startup::boot>(zpt::BOOT());
+    zlog("Unloaded all plugins", zpt::notice);
     zpt::release_global<zpt::json>(zpt::GLOBAL_CONFIG());
+
+    zlog("Server PID " << zpt::log_pid << " stopped, exiting now", zpt::notice);
+    if (_config("log")("target")->ok()) { delete zpt::log_fd; }
     return 0;
 }

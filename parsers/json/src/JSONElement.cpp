@@ -318,38 +318,50 @@ auto zpt::JSONElementT::parent(JSONElementT* _parent) -> JSONElementT& {
     return (*this);
 }
 
-auto zpt::JSONElementT::is_object() -> bool { return this->__underlying.index() == zpt::JSObject; }
+auto zpt::JSONElementT::is_object() const -> bool {
+    return this->__underlying.index() == zpt::JSObject;
+}
 
-auto zpt::JSONElementT::is_array() -> bool { return this->__underlying.index() == zpt::JSArray; }
+auto zpt::JSONElementT::is_array() const -> bool {
+    return this->__underlying.index() == zpt::JSArray;
+}
 
-auto zpt::JSONElementT::is_string() -> bool { return this->__underlying.index() == zpt::JSString; }
+auto zpt::JSONElementT::is_string() const -> bool {
+    return this->__underlying.index() == zpt::JSString;
+}
 
-auto zpt::JSONElementT::is_integer() -> bool {
+auto zpt::JSONElementT::is_integer() const -> bool {
     return this->__underlying.index() == zpt::JSInteger;
 }
 
-auto zpt::JSONElementT::is_floating() -> bool {
+auto zpt::JSONElementT::is_floating() const -> bool {
     return this->__underlying.index() == zpt::JSDouble;
 }
 
-auto zpt::JSONElementT::is_number() -> bool {
+auto zpt::JSONElementT::is_number() const -> bool {
     return this->__underlying.index() == zpt::JSInteger ||
            this->__underlying.index() == zpt::JSDouble;
 }
 
-auto zpt::JSONElementT::is_bool() -> bool { return this->__underlying.index() == zpt::JSBoolean; }
+auto zpt::JSONElementT::is_bool() const -> bool {
+    return this->__underlying.index() == zpt::JSBoolean;
+}
 
-auto zpt::JSONElementT::is_date() -> bool {
+auto zpt::JSONElementT::is_date() const -> bool {
     return this->__underlying.index() == zpt::JSDate || this->__underlying.index() == zpt::JSString;
 }
 
-auto zpt::JSONElementT::is_lambda() -> bool { return this->__underlying.index() == zpt::JSLambda; }
+auto zpt::JSONElementT::is_lambda() const -> bool {
+    return this->__underlying.index() == zpt::JSLambda;
+}
 
-auto zpt::JSONElementT::is_regex() -> bool { return this->__underlying.index() == zpt::JSRegex; }
+auto zpt::JSONElementT::is_regex() const -> bool {
+    return this->__underlying.index() == zpt::JSRegex;
+}
 
-auto zpt::JSONElementT::is_nil() -> bool { return this->__underlying.index() == zpt::JSNil; }
+auto zpt::JSONElementT::is_nil() const -> bool { return this->__underlying.index() == zpt::JSNil; }
 
-auto zpt::JSONElementT::is_undefined() -> bool {
+auto zpt::JSONElementT::is_undefined() const -> bool {
     return this->__underlying.index() == zpt::JSUndefined;
 }
 

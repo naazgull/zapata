@@ -156,7 +156,10 @@ auto zpt::basic_transport::receive(zpt::basic_stream& _stream) const -> zpt::mes
         _stream.state() = zpt::stream_state::IDLE;
         _to_return = this->process_incoming_reply(_stream);
     }
-    zlog("Received '" << _stream.transport() << "' message:\n" << _to_return, zpt::trace);
+    zlog("Received '" << _stream.transport()
+                      << "' message: " << zpt::ontology::to_str(_to_return->performative()) << " "
+                      << _to_return->resource()->string(),
+         zpt::trace);
     return _to_return;
 }
 
@@ -165,7 +168,9 @@ auto zpt::basic_transport::send(zpt::basic_stream& _stream, zpt::message _to_sen
              _stream.state() == zpt::stream_state::PROCESSING,
            "Stream not in a valid state for sending");
 
-    zlog("Sending '" << _stream.transport() << "' message:\n" << _to_send, zpt::trace);
+    zlog("Sending '" << _stream.transport() << "' message: " << _to_send->status() << " "
+                     << _to_send->content_type(),
+         zpt::trace);
     _stream << _to_send << std::flush;
     if (_stream.state() == zpt::stream_state::IDLE) {
         _stream.state() = zpt::stream_state::WAITING;
@@ -235,7 +240,7 @@ auto zpt::network::layer::end() const -> std::map<std::string, zpt::transport>::
 
 auto zpt::network::layer::resolve(std::string _uri) const -> zpt::transport {
     auto _parsed = zpt::uri::parse(_uri);
-    return this->get(_parsed["scheme"]);
+    return this->get(_parsed("scheme"));
 }
 
 auto zpt::network::layer::add_content_provider(std::string const& _mime,
@@ -306,7 +311,7 @@ auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json _content
 
 auto zpt::network::resolve_content_type(zpt::basic_message const& _message) -> std::string {
     if (_message.headers()("Accept")->ok()) {
-        auto _accept = _message.headers()["Accept"]->string();
+        auto _accept = _message.headers()("Accept")->string();
         auto _mime_types = zpt::split(_accept, ",");
         double _weight{ 0 };
         std::string _highest{ "*/*" };
@@ -328,7 +333,7 @@ auto zpt::network::resolve_content_type(zpt::basic_message const& _message) -> s
         }
         return _highest;
     }
-    return _message.headers()("Content-Type")->ok() ? _message.headers()["Content-Type"]->string()
+    return _message.headers()("Content-Type")->ok() ? _message.headers()("Content-Type")->string()
                                                     : "*/*";
 }
 

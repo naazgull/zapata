@@ -62,7 +62,6 @@ auto zpt::log(std::string const& _text,
         _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
              << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
              << _text;
-        if (_level > 6) { _oss << " " << _file << ":" << _line; }
         _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
     }

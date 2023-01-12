@@ -90,19 +90,19 @@ auto zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback)
   -> zpt::python::bridge& {
     expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
     this->__builtin_to_load.insert(
-      std::make_pair(_conf["name"]->string(), std::make_tuple(_callback, _conf)));
+      std::make_pair(_conf("name")->string(), std::make_tuple(_callback, _conf)));
     return (*this);
 }
 
 auto zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
-    expect(_to_locate["module"]->is_string(), "Python: module name must be provided");
-    expect(_to_locate["function"]->is_string(), "Python: function name must be provided");
+    expect(_to_locate("module")->is_string(), "Python: module name must be provided");
+    expect(_to_locate("function")->is_string(), "Python: function name must be provided");
     this->initialize();
-    auto _found = this->__modules.find(_to_locate["module"]->string());
+    auto _found = this->__modules.find(_to_locate("module")->string());
     if (_found != this->__modules.end()) {
         auto& _module = _found->second;
         auto _dictionary = PyModule_GetDict(_module);
-        auto _func = PyDict_GetItemString(_dictionary, _to_locate["function"]->string().data());
+        auto _func = PyDict_GetItemString(_dictionary, _to_locate("function")->string().data());
         return _func;
     }
     return nullptr;
@@ -621,9 +621,9 @@ auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
             this->__modules.insert(std::make_pair(_name, _module));
         }
 
-        if (this->options()["sys_path"]->ok() && this->options()["sys_path"]->is_array()) {
+        if (this->options()("sys_path")->ok() && this->options()("sys_path")->is_array()) {
             zpt::json _new_sys_path =
-              this->to_json(PySys_GetObject("path")) + this->options()["sys_path"];
+              this->to_json(PySys_GetObject("path")) + this->options()("sys_path");
             std::string _sys_path = zpt::join(_new_sys_path, ":");
             PySys_SetPath(zpt::utf8::utf8_to_wstring(_sys_path));
         }
@@ -631,9 +631,9 @@ auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
         for (auto [_name, _value] : this->__external_to_load) {
             object_type _module = PyImport_ImportModule(_name.data());
             expect(_module != nullptr,
-                   "Python: unable to load module '" << _value["name"]->string() << "'");
-            zlog("Python: loaded module '" << _value["name"]->string() << "'", zpt::notice);
-            this->__modules.insert(std::make_pair(_value["name"]->string(), _module));
+                   "Python: unable to load module '" << _value("name")->string() << "'");
+            zlog("Python: loaded module '" << _value("name")->string() << "'", zpt::notice);
+            this->__modules.insert(std::make_pair(_value("name")->string(), _module));
         }
     }
     return (*this);

@@ -36,8 +36,14 @@ class dispatcher;
 } // namespace zpt
 
 template<typename T>
-concept Operation = requires(T t, zpt::events::dispatcher& _dispatcher) {
-    { t(_dispatcher) } -> std::convertible_to<zpt::events::state>;
+concept Operation = requires(T t,
+                             zpt::events::dispatcher& _d,
+                             std::exception const& _e,
+                             zpt::failed_expectation const& _fe) {
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.blocked() } -> std::convertible_to<bool>;
+    { t.catch_error(_e) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe) } -> std::convertible_to<bool>;
 };
 
 namespace zpt {
@@ -47,6 +53,8 @@ class abstract_event {
     virtual ~abstract_event() = default;
 
     virtual auto blocked() const -> bool = 0;
+    virtual auto catch_error(std::exception const& _e) -> bool = 0;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
 };
 using event = std::shared_ptr<zpt::abstract_event>;
@@ -61,6 +69,8 @@ class event_t : public zpt::abstract_event {
     auto operator*() -> T&;
     auto operator*() const -> T const&;
     virtual auto blocked() const -> bool override final;
+    virtual auto catch_error(std::exception const& _e) -> bool override final;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
     virtual auto operator()(zpt::events::dispatcher& _dispatcher)
       -> zpt::events::state override final;
 
@@ -119,6 +129,16 @@ auto zpt::event_t<T>::operator*() const -> T const& {
 template<Operation T>
 auto zpt::event_t<T>::blocked() const -> bool {
     return this->__underlying.blocked();
+}
+
+template<Operation T>
+auto zpt::event_t<T>::catch_error(std::exception const& _e) -> bool {
+    return this->__underlying.catch_error(_e);
+}
+
+template<Operation T>
+auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
+    return this->__underlying.catch_error(_e);
 }
 
 template<Operation T>

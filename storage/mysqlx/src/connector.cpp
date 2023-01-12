@@ -71,7 +71,7 @@ auto zpt::storage::mysqlx::from_db_doc(::mysqlx::DbDoc& _document) -> zpt::json 
 }
 
 zpt::storage::mysqlx::connection::connection(zpt::json _options)
-  : __options(_options["storage"]["mysqlx"]) {}
+  : __options(_options("storage")("mysqlx")) {}
 
 auto zpt::storage::mysqlx::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
@@ -88,13 +88,13 @@ auto zpt::storage::mysqlx::connection::options() -> zpt::json& { return this->__
 
 zpt::storage::mysqlx::session::session(zpt::storage::mysqlx::connection& _connection)
   : __underlying{ ::mysqlx::SessionOption::USER,
-                  _connection.options()["user"]->string(),
+                  _connection.options()("user")->string(),
                   ::mysqlx::SessionOption::PWD,
-                  _connection.options()["password"]->string(),
+                  _connection.options()("password")->string(),
                   ::mysqlx::SessionOption::HOST,
-                  _connection.options()["host"]->string(),
+                  _connection.options()("host")->string(),
                   ::mysqlx::SessionOption::PORT,
-                  _connection.options()["port"]->ok() ? _connection.options()["port"]->integer()
+                  _connection.options()("port")->ok() ? _connection.options()("port")->integer()
                                                       : 33060,
                   ::mysqlx::SessionOption::SSL_MODE,
                   ::mysqlx::SSLMode::REQUIRED } {}

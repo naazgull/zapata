@@ -65,7 +65,7 @@ std::map<int, std::tuple<std::string, std::string>> __messages = {
 };
 
 auto zpt::storage::lmdb::to_db_key(zpt::json _document) -> std::string {
-    return _document["_id"]->string();
+    return _document("_id")->string();
 }
 
 auto zpt::storage::lmdb::to_db_doc(zpt::json _document) -> std::string {
@@ -77,7 +77,7 @@ auto zpt::storage::lmdb::from_db_doc(std::string const& _document) -> zpt::json 
 }
 
 zpt::storage::lmdb::connection::connection(zpt::json _options)
-  : __options(_options["storage"]["lmdb"]) {}
+  : __options(_options("storage")("lmdb")) {}
 
 auto zpt::storage::lmdb::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
@@ -121,7 +121,7 @@ auto zpt::storage::lmdb::session::database(std::string const& _db) -> zpt::stora
 
 zpt::storage::lmdb::database::database(zpt::storage::lmdb::session& _session,
                                        std::string const& _db)
-  : __path{ _session.__options["path"]->string() + std::string{ "/" } + _db }
+  : __path{ _session.__options("path")->string() + std::string{ "/" } + _db }
   , __commit{ _session.is_to_commit() } {}
 
 auto zpt::storage::lmdb::database::sql(std::string const& _statement)
@@ -244,7 +244,7 @@ zpt::storage::lmdb::action_add::action_add(zpt::storage::lmdb::collection& _coll
 }
 
 auto zpt::storage::lmdb::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
-    if (!_document["_id"]->ok()) {
+    if (!_document("_id")->ok()) {
         std::string _id{ zpt::generate::r_uuid() };
         this->__generated_uuid << zpt::json{ "_id", _id };
         _document << "_id" << _id;
@@ -438,7 +438,7 @@ auto zpt::storage::lmdb::action_modify::execute() -> zpt::storage::result {
         _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
         mdb_expect(_error, "unable to create db handle");
 
-        if (this->__search["_id"]->is_string()) {
+        if (this->__search("_id")->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
             MDB_val _key{ _document_key.length(), _document_key.data() };
             MDB_val _value_f;
@@ -583,7 +583,7 @@ auto zpt::storage::lmdb::action_remove::execute() -> zpt::storage::result {
         _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
         mdb_expect(_error, "unable to create db handle");
 
-        if (this->__search["_id"]->is_string()) {
+        if (this->__search("_id")->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
             MDB_val _key{ _document_key.length(), _document_key.data() };
             _error = mdb_del(_trx, _dbi, &_key, nullptr);
@@ -843,7 +843,7 @@ auto zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
         _error = mdb_dbi_open(_trx, nullptr, 0, &_dbi);
         mdb_expect(_error, "unable to create db handle");
 
-        if (this->__search["_id"]->is_string()) {
+        if (this->__search("_id")->is_string()) {
             std::string _document_key = zpt::storage::lmdb::to_db_key(this->__search);
             MDB_val _key{ _document_key.length(), _document_key.data() };
             MDB_val _value_f;
@@ -891,12 +891,12 @@ auto zpt::storage::lmdb::action_find::execute() -> zpt::storage::result {
 
 zpt::storage::lmdb::result::result(zpt::json _result)
   : __result{ _result }
-  , __current{ __result["cursor"].begin() } {}
+  , __current{ __result("cursor").begin() } {}
 
 auto zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
     if (_amount == 0) { _amount = std::numeric_limits<size_t>::max(); }
     auto _result = zpt::json::array();
-    for (size_t _fetched = 0; this->__current != this->__result["cursor"].end();
+    for (size_t _fetched = 0; this->__current != this->__result("cursor").end();
          ++this->__current, ++_fetched) {
         if (_amount == 1) { return std::get<2>(*this->__current); }
         _result << std::get<2>(*this->__current);
@@ -908,16 +908,16 @@ auto zpt::storage::lmdb::result::fetch(size_t _amount) -> zpt::json {
 auto zpt::storage::lmdb::result::generated_id() -> zpt::json { return this->__result["generated"]; }
 
 auto zpt::storage::lmdb::result::count() -> size_t {
-    if (this->__result["generated"]->ok()) { return this->__result["generated"]->size(); }
-    return this->__result["cursor"]->size();
+    if (this->__result("generated")->ok()) { return this->__result("generated")->size(); }
+    return this->__result("cursor")->size();
 }
 
 auto zpt::storage::lmdb::result::status() -> zpt::status {
-    return static_cast<size_t>(this->__result["state"]["code"]);
+    return static_cast<size_t>(this->__result("state")("code"));
 }
 
 auto zpt::storage::lmdb::result::message() -> std::string {
-    return this->__result["state"]["message"]->string();
+    return this->__result("state")("message")->string();
 }
 
 auto zpt::storage::lmdb::result::to_json() -> zpt::json { return this->__result; }

@@ -27,10 +27,15 @@
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zpt::make_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE(), _plugin.config());
-    zlog("Starting multi-transport engine", zpt::info);
+    zlog("Started multi-transport engine ("
+           << (_plugin.config()("limits")("max_consumer_threads")->ok()
+                 ? _plugin.config()("limits")("max_consumer_threads")->integer()
+                 : 1)
+           << " threads)",
+         zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping multi-transport engine", zpt::info);
     zpt::release_global<zpt::transports::engine>(zpt::TRANSPORT_ENGINE());
+    zlog("Stopped multi-transport engine", zpt::info);
 }

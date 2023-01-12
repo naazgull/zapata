@@ -820,18 +820,18 @@ class JSONElementT {
 
     virtual auto clone() const -> zpt::json;
 
-    virtual auto is_object() -> bool;
-    virtual auto is_array() -> bool;
-    virtual auto is_string() -> bool;
-    virtual auto is_integer() -> bool;
-    virtual auto is_floating() -> bool;
-    virtual auto is_number() -> bool;
-    virtual auto is_bool() -> bool;
-    virtual auto is_date() -> bool;
-    virtual auto is_lambda() -> bool;
-    virtual auto is_regex() -> bool;
-    virtual auto is_nil() -> bool;
-    virtual auto is_undefined() -> bool;
+    virtual auto is_object() const -> bool;
+    virtual auto is_array() const -> bool;
+    virtual auto is_string() const -> bool;
+    virtual auto is_integer() const -> bool;
+    virtual auto is_floating() const -> bool;
+    virtual auto is_number() const -> bool;
+    virtual auto is_bool() const -> bool;
+    virtual auto is_date() const -> bool;
+    virtual auto is_lambda() const -> bool;
+    virtual auto is_regex() const -> bool;
+    virtual auto is_nil() const -> bool;
+    virtual auto is_undefined() const -> bool;
 
     virtual auto object() -> JSONObj&;
     virtual auto array() -> JSONArr&;

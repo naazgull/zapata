@@ -29,6 +29,8 @@ class my_operator {
       , __i{ _i } {}
 
     auto blocked() const -> bool { return false; }
+    auto catch_error(std::exception const& _e) -> bool { return false; }
+    auto catch_error(zpt::failed_expectation const& _e) -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
         zlog("job1: " << this->__str << " " << this->__i, zpt::info);
@@ -47,6 +49,8 @@ class my_other_operator {
       : __i{ _i } {}
 
     auto blocked() const -> bool { return false; }
+    auto catch_error(std::exception const& _e) -> bool { return false; }
+    auto catch_error(zpt::failed_expectation const& _e) -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
         zlog("job2: xpto " << this->__i, zpt::info);

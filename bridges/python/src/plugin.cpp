@@ -32,10 +32,10 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
             _bridge.add_module(_module["file"]->string(), _module);
         }
     }
-    zlog("Starting PYTHON bridge", zpt::info);
+    zlog("Initialized PYTHON bridge", zpt::info);
 }
 
 extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping PYTHON bridge", zpt::info);
     zpt::release_global<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
+    zlog("Unloaded PYTHON bridge", zpt::info);
 }

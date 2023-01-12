@@ -97,6 +97,7 @@ target_link_libraries(zapata-net-local-plugin
     $<TARGET_PROPERTY:zapata-net-transport,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
     $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-net-local,LIBRARIES>
 )
 set_target_properties(zapata-net-local-plugin
   PROPERTIES

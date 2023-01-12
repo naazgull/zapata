@@ -384,13 +384,13 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
   -> zpt::storage::action {
     if (_to_find->ok()) {
         auto _find = _collection->find(zpt::storage::extract_find(_to_find));
-        if (_to_find["page_size"]->ok()) {
+        if (_to_find("page_size")->ok()) {
             _find //
-              ->limit(_to_find["page_size"]);
+              ->limit(_to_find("page_size"));
         }
-        if (_to_find["page_start_index"]->ok()) {
+        if (_to_find("page_start_index")->ok()) {
             _find //
-              ->offset(_to_find["page_start_index"]);
+              ->offset(_to_find("page_start_index"));
         }
         return _find;
     }
@@ -399,12 +399,12 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
 
 auto zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
     if (_params->ok()) {
-        if (_params["page_size"]->ok()) {
-            _reply["body"] << "page_size" << static_cast<long long>(_params["page_size"]);
+        if (_params("page_size")->ok()) {
+            _reply["body"] << "page_size" << static_cast<long long>(_params("page_size"));
         }
-        if (_params["page_start_index"]->ok()) {
+        if (_params("page_start_index")->ok()) {
             _reply["body"] << "page_start_index"
-                           << static_cast<long long>(_params["page_start_index"]);
+                           << static_cast<long long>(_params("page_start_index"));
         }
     }
 }
@@ -413,14 +413,14 @@ auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::jso
   -> zpt::storage::action {
     if (_to_remove->ok()) {
         auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
-        if (_to_remove["page_size"]->ok()) {
+        if (_to_remove("page_size")->ok()) {
             _remove //
-              ->limit(_to_remove["page_size"])
-              ->offset(_to_remove["page_start_index"]);
+              ->limit(_to_remove("page_size"))
+              ->offset(_to_remove("page_start_index"));
         }
-        if (_to_remove["page_start_index"]->ok()) {
+        if (_to_remove("page_start_index")->ok()) {
             _remove //
-              ->offset(_to_remove["page_start_index"]);
+              ->offset(_to_remove("page_start_index"));
         }
         return _remove;
     }
@@ -443,7 +443,7 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
                 try {
                     auto _to_eval = _string.substr(2, _string.length() - 4);
                     auto _function = zpt::functional::parse(_to_eval);
-                    auto _params = _function["params"];
+                    auto _params = _function("params");
                     if (_params->ok()) {
                         (**_params->array())
                           .insert((**_params->array()).begin(), zpt::json::string(_key));
@@ -475,7 +475,7 @@ auto zpt::storage::functional_to_sql(zpt::json _function,
         _str_output(_function, _find);
         return;
     }
-    zpt::storage::functor_to_sql(_function["functor"]->string(), _function["params"], _find);
+    zpt::storage::functor_to_sql(_function("functor")->string(), _function("params"), _find);
 }
 
 auto zpt::storage::functor_to_sql(std::string const& _functor,

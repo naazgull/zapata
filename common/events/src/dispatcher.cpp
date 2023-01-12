@@ -77,10 +77,14 @@ auto zpt::events::dispatcher::trap() -> dispatcher& {
         if (state == zpt::events::retrigger) { this->trigger(_event); }
     }
     catch (zpt::failed_expectation const& _e) {
-        zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        if (!_event->catch_error(_e)) {
+            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        }
     }
     catch (std::exception const& _e) {
-        zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        if (!_event->catch_error(_e)) {
+            zlog("Uncaught exception found: " << _e.what(), zpt::error);
+        }
     }
     return (*this);
 }

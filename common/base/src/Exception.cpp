@@ -27,7 +27,7 @@ zpt::exception::exception(std::string const& _what, bool _with_stack)
   : std::exception()
   , __what{ _what } {
     zpt::replace(this->__what, "\"", "");
-    if (_with_stack) { this->__backtrace.assign(zpt::get_backtrace()); }
+    if (_with_stack) { this->__backtrace.assign(zpt::get_backtrace(3)); }
 }
 
 zpt::exception::~exception() throw() {}

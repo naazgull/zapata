@@ -164,7 +164,7 @@ auto zpt::storage::sqlite::bind(sqlite3_stmt* _stmt, std::string const& _name, z
 }
 
 zpt::storage::sqlite::connection::connection(zpt::json _options)
-  : __options(_options["storage"]["sqlite"]) {}
+  : __options(_options("storage")("sqlite")) {}
 
 auto zpt::storage::sqlite::connection::open(zpt::json _options) -> zpt::storage::connection::type* {
     this->__options = _options;
@@ -306,7 +306,7 @@ auto zpt::storage::sqlite::collection::count() -> size_t {
     zpt::json _count = zpt::storage::sqlite::from_db_doc(_stmt);
     sqlite_expect(sqlite3_finalize(_stmt),
                   "unable to cleanup statement: " << sqlite3_errmsg(this->__underlying.get()));
-    return _count["count(*)"];
+    return _count("count(*)");
 }
 
 zpt::storage::sqlite::action::action(zpt::storage::sqlite::collection& _collection)
@@ -343,7 +343,7 @@ zpt::storage::sqlite::action_add::action_add(zpt::storage::sqlite::collection& _
 
 auto zpt::storage::sqlite::action_add::add(zpt::json _document) -> zpt::storage::action::type* {
     expect(_document->is_object(), "expected add parameter to be a JSON object");
-    if (!_document["_id"]->ok()) {
+    if (!_document("_id")->ok()) {
         std::string _id{ zpt::generate::r_uuid() };
         _document << "_id" << _id;
         this->__generated_uuid << _id;
@@ -985,16 +985,16 @@ auto zpt::storage::sqlite::result::generated_id() -> zpt::json {
 }
 
 auto zpt::storage::sqlite::result::count() -> size_t {
-    if (this->__result["generated"]->ok()) { return this->__result["generated"]->size(); }
+    if (this->__result("generated")->ok()) { return this->__result("generated")->size(); }
     return 0;
 }
 
 auto zpt::storage::sqlite::result::status() -> zpt::status {
-    return static_cast<size_t>(this->__result["state"]["code"]);
+    return static_cast<size_t>(this->__result("state")("code"));
 }
 
 auto zpt::storage::sqlite::result::message() -> std::string {
-    return this->__result["state"]["message"]->string();
+    return this->__result("state")("message")->string();
 }
 
 auto zpt::storage::sqlite::result::to_json() -> zpt::json { return this->__result; }
