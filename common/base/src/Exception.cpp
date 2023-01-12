@@ -27,17 +27,13 @@ zpt::exception::exception(std::string const& _what, bool _with_stack)
   : std::exception()
   , __what{ _what } {
     zpt::replace(this->__what, "\"", "");
-    if (_with_stack) { this->__backtrace.assign(zpt::get_backtrace()); }
+    if (_with_stack) { this->__backtrace.assign(zpt::get_backtrace(3)); }
 }
 
 zpt::exception::~exception() throw() {}
 
-auto
-zpt::exception::what() const noexcept -> const char* {
-    return this->__what.data();
-}
+auto zpt::exception::what() const noexcept -> const char* { return this->__what.data(); }
 
-auto
-zpt::exception::backtrace() const -> const char* {
+auto zpt::exception::backtrace() const -> const char* {
     return this->__backtrace.length() == 0 ? nullptr : this->__backtrace.data();
 }

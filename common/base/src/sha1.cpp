@@ -25,6 +25,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
 
 /* Help macros */
 #define SHA1_ROL(value, bits) (((value) << (bits)) | (((value)&0xffffffff) >> (32 - (bits))))
@@ -51,14 +52,12 @@
 
 zpt::crypto::SHA1::SHA1() { reset(); }
 
-void
-zpt::crypto::SHA1::update(const std::string& s) {
+void zpt::crypto::SHA1::update(const std::string& s) {
     std::istringstream is(s);
     update(is);
 }
 
-void
-zpt::crypto::SHA1::update(std::istream& is) {
+void zpt::crypto::SHA1::update(std::istream& is) {
     std::string rest_of_buffer;
     read(is, rest_of_buffer, BLOCK_BYTES - buffer.size());
     buffer += rest_of_buffer;
@@ -74,13 +73,12 @@ zpt::crypto::SHA1::update(std::istream& is) {
  * Add padding and return the message digest.
  */
 
-std::string
-zpt::crypto::SHA1::finalize() {
+std::string zpt::crypto::SHA1::finalize() {
     /* Total number of hashed bits */
     std::uint64_t total_bits = (transforms * BLOCK_BYTES + buffer.size()) * 8;
 
     /* Padding */
-    buffer += 0x80;
+    buffer += static_cast<char>(0x80);
     unsigned int orig_size = buffer.size();
     while (buffer.size() < BLOCK_BYTES) { buffer += (char)0x00; }
 
@@ -110,16 +108,14 @@ zpt::crypto::SHA1::finalize() {
     return result.str();
 }
 
-std::string
-zpt::crypto::SHA1::from_file(const std::string& filename) {
+std::string zpt::crypto::SHA1::from_file(const std::string& filename) {
     std::ifstream stream(filename.c_str(), std::ios::binary);
     SHA1 checksum;
     checksum.update(stream);
     return checksum.finalize();
 }
 
-void
-zpt::crypto::SHA1::reset() {
+void zpt::crypto::SHA1::reset() {
     /* SHA1 initialization constants */
     digest[0] = 0x67452301;
     digest[1] = 0xefcdab89;
@@ -136,8 +132,7 @@ zpt::crypto::SHA1::reset() {
  * Hash a single 512-bit block. This is the core of the algorithm.
  */
 
-void
-zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
+void zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
     /* Copy digest[] to working vars */
     std::uint32_t a = digest[0];
     std::uint32_t b = digest[1];
@@ -238,8 +233,8 @@ zpt::crypto::SHA1::transform(std::uint32_t block[BLOCK_BYTES]) {
     transforms++;
 }
 
-void
-zpt::crypto::SHA1::buffer_to_block(const std::string& buffer, std::uint32_t block[BLOCK_BYTES]) {
+void zpt::crypto::SHA1::buffer_to_block(const std::string& buffer,
+                                        std::uint32_t block[BLOCK_BYTES]) {
     /* Convert the std::string (byte buffer) to a std::uint32_t array (MSB) */
     for (unsigned int i = 0; i < BLOCK_INTS; i++) {
         block[i] = (buffer[4 * i + 3] & 0xff) | (buffer[4 * i + 2] & 0xff) << 8 |
@@ -247,15 +242,13 @@ zpt::crypto::SHA1::buffer_to_block(const std::string& buffer, std::uint32_t bloc
     }
 }
 
-void
-zpt::crypto::SHA1::read(std::istream& is, std::string& s, int max) {
-    char sbuf[max];
-    is.read(sbuf, max);
-    s.assign(sbuf, is.gcount());
+void zpt::crypto::SHA1::read(std::istream& is, std::string& s, int max) {
+    std::unique_ptr<char[]> sbuf{ new char[max] };
+    is.read(sbuf.get(), max);
+    s.assign(sbuf.get(), is.gcount());
 }
 
-std::string
-zpt::crypto::sha1(const std::string& string) {
+std::string zpt::crypto::sha1(const std::string& string) {
     SHA1 checksum;
     checksum.update(string);
     return checksum.finalize();

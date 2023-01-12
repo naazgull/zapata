@@ -24,8 +24,7 @@
 
 zpt::lua::bridge _bridge;
 
-auto
-to_c(lua_State* _state) -> int {
+auto to_c(lua_State* _state) -> int {
     zlog(lua_gettop(_state), zpt::debug);
     auto& _instance = _bridge.thread_instance();
     auto _json = _instance.object_to_json(_state);
@@ -36,16 +35,14 @@ to_c(lua_State* _state) -> int {
 
 struct luaL_Reg _lib[] = { { "to_c", to_c } };
 
-auto
-init_x(lua_State* _state) -> void {
+auto init_x(lua_State* _state) -> void {
     zlog("Lua: init callback called", zpt::info);
     lua_newtable(_state);
     luaL_setfuncs(_state, _lib, 0);
     lua_setglobal(_state, "builtin");
 }
 
-auto
-main(int argc, char* argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
     _bridge                                                            //
       .add_module(init_x, { "module", "builtin" })                     //
       .add_module("/home/pf/Void/test1.lua", { "module", "builtin2" }) //

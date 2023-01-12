@@ -37,26 +37,17 @@ class ScopedDbConnection;
 
 namespace zpt {
 namespace mongodb {
-void
-frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out);
-void
-frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out);
+void frommongo(mongo::BSONObj& _in, zpt::JSONObj& _out);
+void frommongo(mongo::BSONElement& _in, zpt::JSONArr& _out);
 
-void
-tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out);
-void
-tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out);
-void
-tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, string _prefix = "");
-void
-tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, string _prefix);
+void tomongo(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out);
+void tomongo(zpt::JSONArr& _in, mongo::BSONArrayBuilder& _out);
+void tosetcommand(zpt::JSONObj& _in, mongo::BSONObjBuilder& _out, string _prefix = "");
+void tosetcommand(zpt::JSONArr& _in, mongo::BSONObjBuilder& _out, string _prefix);
 
-void
-get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr);
-auto
-get_fields(zpt::json _opts) -> zpt::json;
+void get_query(zpt::json _in, mongo::BSONObjBuilder& _queryr);
+auto get_fields(zpt::json _opts) -> zpt::json;
 
-float
-valid_mongo_version();
+float valid_mongo_version();
 } // namespace mongodb
 } // namespace zpt

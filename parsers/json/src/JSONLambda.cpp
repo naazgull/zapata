@@ -9,10 +9,7 @@ zpt::JSONContext::JSONContext(void* _target)
 
 zpt::JSONContext::~JSONContext() { this->__target = nullptr; }
 
-auto
-zpt::JSONContext::unpack() -> void* {
-    return this->__target;
-}
+auto zpt::JSONContext::unpack() -> void* { return this->__target; }
 
 zpt::context::context(void* _target)
   : __underlying{ std::make_shared<zpt::JSONContext>(_target) } {}
@@ -23,34 +20,24 @@ zpt::context::context(const context& _rhs) { (*this) = _rhs; }
 
 zpt::context::context(context&& _rhs) { (*this) = _rhs; }
 
-auto
-zpt::context::operator->() -> zpt::JSONContext* {
+auto zpt::context::operator->() -> zpt::JSONContext* { return this->__underlying.get(); }
+
+auto zpt::context::operator*() -> zpt::JSONContext& { return *this->__underlying.get(); }
+
+auto zpt::context::operator->() const -> zpt::JSONContext const* {
     return this->__underlying.get();
 }
 
-auto
-zpt::context::operator*() -> zpt::JSONContext& {
+auto zpt::context::operator*() const -> zpt::JSONContext const& {
     return *this->__underlying.get();
 }
 
-auto
-zpt::context::operator->() const -> zpt::JSONContext const* {
-    return this->__underlying.get();
-}
-
-auto
-zpt::context::operator*() const -> zpt::JSONContext const& {
-    return *this->__underlying.get();
-}
-
-auto
-zpt::context::operator=(const zpt::context& _rhs) -> zpt::context& {
+auto zpt::context::operator=(const zpt::context& _rhs) -> zpt::context& {
     this->__underlying = _rhs.__underlying;
     return (*this);
 }
 
-auto
-zpt::context::operator=(zpt::context&& _rhs) -> zpt::context& {
+auto zpt::context::operator=(zpt::context&& _rhs) -> zpt::context& {
     this->__underlying = std::move(_rhs.__underlying);
     return (*this);
 }
@@ -72,23 +59,18 @@ zpt::JSONLambda::JSONLambda(std::string const& _name, unsigned short _n_args)
 
 zpt::JSONLambda::~JSONLambda() {}
 
-auto
-zpt::JSONLambda::name() const -> std::string {
-    return this->__name;
-}
+auto zpt::JSONLambda::name() const -> std::string { return this->__name; }
 
-auto
-zpt::JSONLambda::n_args() const -> unsigned short {
-    return this->__n_args;
-}
+auto zpt::JSONLambda::n_args() const -> unsigned short { return this->__n_args; }
 
-auto
-zpt::JSONLambda::signature() const -> std::string {
+auto zpt::JSONLambda::signature() const -> std::string {
     return zpt::lambda::stringify(this->__name, this->__n_args);
 }
 
-auto
-zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) -> zpt::json {
+auto zpt::JSONLambda::call(zpt::json _args, zpt::context _ctx) -> zpt::json {
+    if (_args->type() != zpt::JSArray) {
+        return zpt::lambda::call(this->__name, zpt::json{ zpt::array, _args }, _ctx);
+    }
     return zpt::lambda::call(this->__name, _args, _ctx);
 }
 
@@ -112,21 +94,21 @@ zpt::lambda::lambda(std::string const& _name, unsigned short _n_args)
 
 zpt::lambda::~lambda() {}
 
-auto
-zpt::lambda::operator()(zpt::json _args, zpt::context _ctx) -> zpt::json {
+auto zpt::lambda::operator()(zpt::json _args, zpt::context _ctx) -> zpt::json {
     return this->get()->call(_args, _ctx);
 }
 
-auto
-zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, unsigned short> {
+auto zpt::lambda::operator()(zpt::json _args, zpt::context _ctx) const -> zpt::json {
+    return this->get()->call(_args, _ctx);
+}
+
+auto zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, unsigned short> {
     auto _lpar = _signature.find("(");
     auto _rpar = _signature.find(")");
     auto _comma = _signature.find(",");
 
     expect(_lpar != std::string::npos && _rpar != std::string::npos && _comma != std::string::npos,
-           "lambda signature format not recognized",
-           412,
-           0);
+           "lambda signature format not recognized");
 
     std::string _name{ _signature.substr(_lpar + 1, _comma - _lpar - 1) };
     std::string _args{ _signature.substr(_comma + 1, _rpar - _comma - 1) };
@@ -137,17 +119,15 @@ zpt::lambda::parse(std::string const& _signature) -> std::tuple<std::string, uns
     return std::make_tuple(_name, _n_args);
 }
 
-auto
-zpt::lambda::stringify(std::string const& _name, unsigned short _n_args) -> std::string {
+auto zpt::lambda::stringify(std::string const& _name, unsigned short _n_args) -> std::string {
     return std::string("lambda(\"") + _name + std::string("\",") + std::to_string(_n_args) +
            std::string(")");
 }
 
-auto
-zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
+auto zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
     try {
         zpt::lambda::find(_signature);
-        expect(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined");
     }
     catch (zpt::failed_expectation const& _e) {
     }
@@ -156,11 +136,11 @@ zpt::lambda::add(std::string const& _signature, zpt::symbol _lambda) -> void {
       _signature, std::make_tuple(std::get<0>(_parsed), std::get<1>(_parsed), _lambda)));
 }
 
-auto
-zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _lambda) -> void {
+auto zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _lambda)
+  -> void {
     try {
         zpt::lambda::find(_name, _n_args);
-        expect(true, "lambda already defined", 412, 0);
+        expect(true, "lambda already defined");
     }
     catch (zpt::failed_expectation const& _e) {
     }
@@ -168,25 +148,21 @@ zpt::lambda::add(std::string const& _name, unsigned short _n_args, zpt::symbol _
     zpt::__lambdas->insert(std::make_pair(_signature, std::make_tuple(_name, _n_args, _lambda)));
 }
 
-auto
-zpt::lambda::call(std::string const& _name, zpt::json _args, zpt::context _ctx) -> zpt::json {
-    expect(_args->type() == zpt::JSArray, "second argument must be a JSON array", 412, 0);
-    zpt::symbol _f = zpt::lambda::find(_name, (**_args->array()).size());
-    return _f(_args, (**_args->array()).size(), _ctx);
+auto zpt::lambda::call(std::string const& _name, zpt::json _args, zpt::context _ctx) -> zpt::json {
+    expect(_args->type() == zpt::JSArray,
+           "Callback function arguments parameter must be a JSON array");
+    zpt::symbol _f = zpt::lambda::find(_name, _args->size());
+    return _f(_args, _args->size(), _ctx);
 }
 
-auto
-zpt::lambda::find(std::string const& _signature) -> zpt::symbol {
+auto zpt::lambda::find(std::string const& _signature) -> zpt::symbol {
     auto _found = zpt::__lambdas->find(_signature);
     expect(_found != zpt::__lambdas->end(),
-           std::string("symbol for ") + _signature + std::string(" was not found"),
-           404,
-           0);
+           std::string("symbol for ") + _signature + std::string(" was not found"));
     return std::get<2>(_found->second);
 }
 
-auto
-zpt::lambda::find(std::string const& _name, unsigned short _n_args) -> zpt::symbol {
+auto zpt::lambda::find(std::string const& _name, unsigned short _n_args) -> zpt::symbol {
     auto _signature = zpt::lambda::stringify(_name, _n_args);
     return zpt::lambda::find(_signature);
 }

@@ -33,8 +33,7 @@
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 
-auto
-zpt::ls(std::string dir, std::vector<std::string>& result, bool recursive) -> int {
+auto zpt::ls(std::string dir, std::vector<std::string>& result, bool recursive) -> int {
     DIR* dp{ nullptr };
     struct dirent* dirp{ nullptr };
     if ((dp = ::opendir(dir.c_str())) == nullptr) { return errno; }
@@ -53,8 +52,7 @@ zpt::ls(std::string dir, std::vector<std::string>& result, bool recursive) -> in
     return 0;
 }
 
-auto
-zpt::mkdir_recursive(std::string const& _name) -> bool {
+auto zpt::mkdir_recursive(std::string const& _name) -> bool {
     std::istringstream _iss(_name);
     std::string _line;
     auto _count{ 0 };
@@ -69,8 +67,7 @@ zpt::mkdir_recursive(std::string const& _name) -> bool {
     return _count != 0;
 }
 
-auto
-zpt::copy_path(std::string const& _from, std::string const& _to) -> bool {
+auto zpt::copy_path(std::string const& _from, std::string const& _to) -> bool {
     auto _read_fd{ 0 };
     auto _write_fd{ 0 };
     struct stat _stat_buf;
@@ -86,14 +83,12 @@ zpt::copy_path(std::string const& _from, std::string const& _to) -> bool {
     return _error != -1;
 }
 
-auto
-zpt::move_path(std::string const& _from, std::string const& _to) -> bool {
+auto zpt::move_path(std::string const& _from, std::string const& _to) -> bool {
     if (zpt::copy_path(_from, _to)) { return std::remove(_from.c_str()) != 0; }
     return false;
 }
 
-auto
-zpt::load_path(std::string const& _in, std::string& _out) -> bool {
+auto zpt::load_path(std::string const& _in, std::string& _out) -> bool {
     std::ifstream _ifs;
     _ifs.open(_in.data());
 
@@ -108,8 +103,7 @@ zpt::load_path(std::string const& _in, std::string& _out) -> bool {
     return false;
 }
 
-auto
-zpt::load_path(std::string const& _in, std::wstring& _out) -> bool {
+auto zpt::load_path(std::string const& _in, std::wstring& _out) -> bool {
     std::wifstream _ifs;
     _ifs.open(_in.data());
 
@@ -124,8 +118,7 @@ zpt::load_path(std::string const& _in, std::wstring& _out) -> bool {
     return false;
 }
 
-auto
-zpt::dump_path(std::string const& _in, std::string& _content) -> bool {
+auto zpt::dump_path(std::string const& _in, std::string& _content) -> bool {
     std::ofstream _ofs;
     _ofs.open(_in.data());
     _ofs << _content << std::flush;
@@ -134,8 +127,7 @@ zpt::dump_path(std::string const& _in, std::string& _content) -> bool {
     return true;
 }
 
-auto
-zpt::dump_path(std::string const& _in, std::wstring& _content) -> bool {
+auto zpt::dump_path(std::string const& _in, std::wstring& _content) -> bool {
     std::wofstream _ofs;
     _ofs.open(_in.data());
     _ofs << _content << std::flush;
@@ -144,11 +136,10 @@ zpt::dump_path(std::string const& _in, std::wstring& _content) -> bool {
     return true;
 }
 
-auto
-zpt::globRegexp(std::string& dir,
-                std::vector<std::string>& result,
-                std::regex& pattern,
-                short recursion) -> int {
+auto zpt::globRegexp(std::string& dir,
+                     std::vector<std::string>& result,
+                     std::regex& pattern,
+                     short recursion) -> int {
     DIR* dp{ nullptr };
     struct dirent* dirp{ nullptr };
     std::vector<std::string> torecurse;
@@ -172,29 +163,27 @@ zpt::globRegexp(std::string& dir,
     return 0;
 }
 
-auto
-zpt::glob(std::string dir, std::vector<std::string>& result, std::string pattern, short recursion)
-  -> int {
+auto zpt::glob(std::string dir,
+               std::vector<std::string>& result,
+               std::string pattern,
+               short recursion) -> int {
     std::regex regexp(pattern);
     return zpt::globRegexp(dir, result, regexp, recursion);
 }
 
-auto
-zpt::is_dir(std::string const& _path) -> bool {
+auto zpt::is_dir(std::string const& _path) -> bool {
     struct stat _s = { 0 };
     if (::stat(_path.data(), &_s) == 0) { return _s.st_mode & S_IFDIR; }
     return false;
 }
 
-auto
-zpt::file_exists(std::string const& _path) -> bool {
+auto zpt::file_exists(std::string const& _path) -> bool {
     struct stat _s = { 0 };
     if (::stat(_path.data(), &_s) == 0) { return true; }
     return false;
 }
 
-auto
-zpt::dirname(std::string const& _path) -> std::string {
+auto zpt::dirname(std::string const& _path) -> std::string {
     if (zpt::is_dir(_path)) { return _path; }
 
     auto _idx = _path.rfind("/");

@@ -47,7 +47,6 @@ extern short int log_lvl;
 extern std::ostream* log_fd;
 extern long log_pid;
 extern std::unique_ptr<std::string> log_pname;
-extern char* log_hname;
 extern short log_format;
 
 extern const char* log_lvl_names[];
@@ -65,57 +64,61 @@ enum LogLevel {
     verbose = 9
 };
 
-auto
-log(std::string const& _text,
-    zpt::LogLevel _level,
-    std::string const& _host,
-    int _line,
-    std::string const& _file) -> int;
+auto log(std::string const& _text,
+         zpt::LogLevel _level,
+         std::string const& _host,
+         int _line,
+         std::string const& _file) -> int;
 
 template<typename T>
-auto
-log(T _text, zpt::LogLevel _level, std::string const& _host, int _line, std::string const& _file)
-  -> int {
+auto log(T _text,
+         zpt::LogLevel _level,
+         std::string const& _host,
+         int _line,
+         std::string const& _file) -> int {
     return zpt::log(to_string(_text), _level, _host, _line, _file);
 }
-auto
-log_hostname() -> char*;
+auto log_hostname() -> std::string;
 
 namespace this_thread {
-template<typename T, int Step>
-class adaptive_timer {
-    static_assert(std::is_integral<T>::value,
-                  "Type `T` in `zpt::this_thread::adaptive_timer` must be an integral type.");
+template<typename T>
+class timer {
+    static_assert(std::is_arithmetic<T>::value,
+                  "Type `T` in `zpt::this_thread::timer` must be an arithmetic type.");
 
   public:
-    adaptive_timer() = default;
-    virtual ~adaptive_timer() = default;
+    timer(T steps, unsigned int _non_waiting_cycles = 0);
+    virtual ~timer() = default;
 
-    auto reset() -> zpt::this_thread::adaptive_timer<T, Step>&;
+    auto reset() -> zpt::this_thread::timer<T>&;
     auto sleep_for(T _upper_limit) -> T;
 
   private:
     T __sleep_tics{ 0 };
+    T __step{ 0 };
+    unsigned int __non_waiting_cycles{ 0 };
 };
 
 } // namespace this_thread
 } // namespace zpt
 
-template<typename T, int Step>
-auto
-zpt::this_thread::adaptive_timer<T, Step>::reset() -> zpt::this_thread::adaptive_timer<T, Step>& {
-    this->__sleep_tics = 0;
+template<typename T>
+zpt::this_thread::timer<T>::timer(T _step, unsigned int _non_waiting_cycles)
+  : __sleep_tics{ _step * -_non_waiting_cycles }
+  , __step{ _step }
+  , __non_waiting_cycles{ _non_waiting_cycles } {}
+
+template<typename T>
+auto zpt::this_thread::timer<T>::reset() -> zpt::this_thread::timer<T>& {
+    this->__sleep_tics = -this->__non_waiting_cycles * this->__step;
     return (*this);
 }
 
-template<typename T, int Step>
-auto
-zpt::this_thread::adaptive_timer<T, Step>::sleep_for(T _upper_limit) -> T {
+template<typename T>
+auto zpt::this_thread::timer<T>::sleep_for(T _upper_limit) -> T {
     if (this->__sleep_tics > _upper_limit) { this->__sleep_tics = _upper_limit; }
-    else { this->__sleep_tics += Step; }
-    if (this->__sleep_tics == 0) { std::this_thread::yield(); }
-    else {
-        std::this_thread::sleep_for(std::chrono::duration<T, std::micro>{ this->__sleep_tics });
-    }
+    else { this->__sleep_tics += this->__step; }
+    if (this->__sleep_tics <= 0) { std::this_thread::yield(); }
+    else { std::this_thread::sleep_for(std::chrono::duration<T>{ this->__sleep_tics }); }
     return this->__sleep_tics;
 }

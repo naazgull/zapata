@@ -269,19 +269,16 @@ inline FunctionalLexerBase::StartCondition_ constexpr FunctionalLexerBase::SC(in
 
 inline int constexpr FunctionalLexerBase::SC(StartCondition_ sc) { return as<int>(sc); }
 
-inline FunctionalLexerBase::StartCondition_
-FunctionalLexerBase::startCondition() const {
+inline FunctionalLexerBase::StartCondition_ FunctionalLexerBase::startCondition() const {
     return SC(d_startCondition);
 }
 
-inline void
-FunctionalLexerBase::begin(StartCondition_ startCondition) {
+inline void FunctionalLexerBase::begin(StartCondition_ startCondition) {
     // d_state is reset to 0 by reset_()
     d_dfaBase_ = s_dfaBase_[d_startCondition = SC(startCondition)];
 }
 
-inline bool
-FunctionalLexerBase::knownFinalState() {
+inline bool FunctionalLexerBase::knownFinalState() {
     return (d_atBOL && available(d_final.bol.rule)) || available(d_final.std.rule);
 }
 
@@ -289,102 +286,48 @@ inline bool constexpr FunctionalLexerBase::available(size_t value) {
     return value != std::numeric_limits<size_t>::max();
 }
 
-inline std::ostream&
-FunctionalLexerBase::out() {
-    return *d_out;
-}
+inline std::ostream& FunctionalLexerBase::out() { return *d_out; }
 
-inline void
-FunctionalLexerBase::push(size_t ch) {
-    d_input->reRead(ch);
-}
+inline void FunctionalLexerBase::push(size_t ch) { d_input->reRead(ch); }
 
-inline void
-FunctionalLexerBase::push(std::string const& str) {
-    d_input->reRead(str, 0);
-}
+inline void FunctionalLexerBase::push(std::string const& str) { d_input->reRead(str, 0); }
 
-inline std::vector<FunctionalLexerBase::StreamStruct> const&
-FunctionalLexerBase::streamStack() const {
+inline std::vector<FunctionalLexerBase::StreamStruct> const& FunctionalLexerBase::streamStack()
+  const {
     return d_streamStack;
 }
 
-inline void
-FunctionalLexerBase::setFilename(std::string const& name) {
-    d_filename = name;
-}
+inline void FunctionalLexerBase::setFilename(std::string const& name) { d_filename = name; }
 
-inline void
-FunctionalLexerBase::setMatched(std::string const& text) {
-    d_matched = text;
-}
+inline void FunctionalLexerBase::setMatched(std::string const& text) { d_matched = text; }
 
-inline std::string const&
-FunctionalLexerBase::matched() const {
-    return d_matched;
-}
+inline std::string const& FunctionalLexerBase::matched() const { return d_matched; }
 
-inline std::string const&
-FunctionalLexerBase::cwd() const {
-    return d_cwd;
-}
+inline std::string const& FunctionalLexerBase::cwd() const { return d_cwd; }
 
-inline std::string const&
-FunctionalLexerBase::filename() const {
-    return d_filename;
-}
+inline std::string const& FunctionalLexerBase::filename() const { return d_filename; }
 
-inline void
-FunctionalLexerBase::echo() const {
-    *d_out << d_matched;
-}
+inline void FunctionalLexerBase::echo() const { *d_out << d_matched; }
 
-inline size_t
-FunctionalLexerBase::length() const {
-    return d_matched.size();
-}
+inline size_t FunctionalLexerBase::length() const { return d_matched.size(); }
 
-inline void
-FunctionalLexerBase::leave(int retValue) const {
-    throw as<Leave_>(retValue);
-}
+inline void FunctionalLexerBase::leave(int retValue) const { throw as<Leave_>(retValue); }
 
-inline size_t
-FunctionalLexerBase::lineNr() const {
-    return d_input->lineNr();
-}
+inline size_t FunctionalLexerBase::lineNr() const { return d_input->lineNr(); }
 
-inline void
-FunctionalLexerBase::more() {
-    d_more = true;
-}
+inline void FunctionalLexerBase::more() { d_more = true; }
 
-inline size_t
-FunctionalLexerBase::state_() const {
-    return d_state;
-}
+inline size_t FunctionalLexerBase::state_() const { return d_state; }
 
-inline size_t
-FunctionalLexerBase::get_() {
-    return (this->*d_get)();
-}
+inline size_t FunctionalLexerBase::get_() { return (this->*d_get)(); }
 
-inline size_t
-FunctionalLexerBase::getInput() {
-    return d_input->get();
-}
+inline size_t FunctionalLexerBase::getInput() { return d_input->get(); }
 
-inline bool
-FunctionalLexerBase::return_() {
-    return d_return;
-}
+inline bool FunctionalLexerBase::return_() { return d_return; }
 
-inline void
-FunctionalLexerBase::noReturn_() {
-    d_return = false;
-}
+inline void FunctionalLexerBase::noReturn_() { d_return = false; }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif //  FunctionalLexerBASE_H_INCLUDED

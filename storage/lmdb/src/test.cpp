@@ -1,9 +1,8 @@
 #include <zapata/lmdb.h>
 
-auto
-main(int _argc, char* _argv[]) -> int {
+auto main(int _argc, char* _argv[]) -> int {
     zpt::json _config{ "storage", { "lmdb", { "path", "/home/pf/Void/lmdb" } } };
-    auto _connection = zpt::storage::connection::alloc<zpt::storage::lmdb::connection>(_config);
+    auto _connection = zpt::make_connection<zpt::storage::lmdb::connection>(_config);
     auto _session = _connection->session();
     auto _database = _session->database("zapata");
     auto _collection = _database->collection("users");
@@ -17,7 +16,7 @@ main(int _argc, char* _argv[]) -> int {
         auto _result = _collection //
                          ->add({ "nick", "jaster", "email", "address@kicker" })
                          ->execute();
-        _id2.assign(_result->to_json()["generated"][0]["_id"]->string());
+        _id2.assign(_result->to_json()("generated")(0)("_id")->string());
         std::cout << "There are " << _collection->count() << " records in the collection."
                   << std::endl
                   << std::flush;
@@ -28,7 +27,7 @@ main(int _argc, char* _argv[]) -> int {
                          ->execute();
 
         std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+                  << zpt::pretty(_result->to_json()("cursor")) << std::endl
                   << std::flush;
     }
     {
@@ -65,7 +64,7 @@ main(int _argc, char* _argv[]) -> int {
                          ->execute();
 
         std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+                  << zpt::pretty(_result->to_json()("cursor")) << std::endl
                   << std::flush;
     }
     {
@@ -83,7 +82,7 @@ main(int _argc, char* _argv[]) -> int {
                          ->execute();
 
         std::cout << "Collection elements: " << std::endl
-                  << zpt::pretty(_result->to_json()["cursor"]) << std::endl
+                  << zpt::pretty(_result->to_json()("cursor")) << std::endl
                   << std::flush;
     }
     return 0;

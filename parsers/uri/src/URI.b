@@ -107,18 +107,26 @@ path :
 
 |
     SLASH
+    {
+        if ((*d_scanner)->type() == zpt::JSObject) {
+            (*d_scanner) << "is_relative" << false;
+        }
+    }
 |
     SLASH STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            if ((*d_scanner)["path"] == zpt::undefined) {
+            if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << false;
             }
-            (*d_scanner)["path"] << d_scanner.matched();
+            (*d_scanner)["raw_path"]->string().append("/");
+            (*d_scanner)["raw_path"]->string().append(d_scanner.matched());
+            (*d_scanner)["path"] << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
     path
@@ -126,10 +134,12 @@ path :
     DOT
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            if ((*d_scanner)["path"] == zpt::undefined) {
+            if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << true;
             }
+            (*d_scanner)["raw_path"]->string().append("/.");
             (*d_scanner)["path"] << ".";
         }
         else {
@@ -141,10 +151,12 @@ path :
     DOT_DOT
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            if ((*d_scanner)["path"] == zpt::undefined) {
+            if (!(*d_scanner)("path")->ok()) {
                 (*d_scanner) << "path" << zpt::json::array();
+                (*d_scanner) << "raw_path" << "";
                 (*d_scanner) << "is_relative" << true;
             }
+            (*d_scanner)["raw_path"]->string().append("/..");
             (*d_scanner)["path"] << "..";
         }
         else {
@@ -164,7 +176,7 @@ paramslist :
 	STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            if ((*d_scanner)["params"] == zpt::undefined) {
+            if (!(*d_scanner)("params")->ok()) {
                 (*d_scanner) << "params" << zpt::json::object();
             }
             (*d_scanner) << "__aux" << d_scanner.matched();
@@ -203,10 +215,10 @@ paramvalue :
     {
         auto __name = static_cast<std::string>((*d_scanner)["__aux"]);
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner)["params"] << __name << d_scanner.matched();
+            (*d_scanner)["params"] << __name << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
 ;
@@ -217,10 +229,10 @@ anchor :
 	CARDINAL STRING
     {
         if ((*d_scanner)->type() == zpt::JSObject) {
-            (*d_scanner) << "anchor" << d_scanner.matched();
+            (*d_scanner) << "anchor" << zpt::url::r_decode(d_scanner.matched());
         }
         else {
-            (*d_scanner) << d_scanner.matched();
+            (*d_scanner) << zpt::url::r_decode(d_scanner.matched());
         }
     }
 ;

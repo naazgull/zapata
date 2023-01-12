@@ -22,12 +22,11 @@
 
 #include <zapata/mail/manip.h>
 
-auto
-zpt::sendmail(std::string const& _to,
-              std::string _from,
-              std::string _subject,
-              std::string _message,
-              std::string _replyto) -> bool {
+auto zpt::sendmail(std::string const& _to,
+                   std::string _from,
+                   std::string _subject,
+                   std::string _message,
+                   std::string _replyto) -> bool {
     bool _retval{ false };
     FILE* _mailpipe = popen("/usr/sbin/sendmail -t", "w");
     if (_mailpipe != nullptr) {

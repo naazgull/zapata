@@ -68,10 +68,7 @@ enum StateType // modify statetype/data.cc when this enum changes
     REQ_DEF,    // REQ_TOKEN | DEF_RED
     ERR_REQ_DEF // ERR_ITEM | REQ_TOKEN | DEF_RED
 };
-inline bool
-operator&(StateType lhs, StateType rhs) {
-    return (static_cast<int>(lhs) & rhs) != 0;
-}
+inline bool operator&(StateType lhs, StateType rhs) { return (static_cast<int>(lhs) & rhs) != 0; }
 enum StateTransition {
     ACCEPT_ = 0, // `ACCEPT' TRANSITION
 };
@@ -248,7 +245,7 @@ SR_ const* s_state[] = {
     s_0, s_1, s_2, s_3, s_4, s_5, s_6, s_7, s_8, s_9, s_10, s_11, s_12, s_13, s_14, s_15, s_16,
 };
 
-} // anonymous namespace ends
+} // namespace
 
 // $insert namespace-open
 namespace zpt {
@@ -267,8 +264,7 @@ FunctionalTokenizerBase::FunctionalTokenizerBase()
   d_requiredTokens_(0) {}
 
 // base/clearin
-void
-FunctionalTokenizerBase::clearin_() {
+void FunctionalTokenizerBase::clearin_() {
     d_nErrors_ = 0;
     d_stackIdx = -1;
     d_stateStack.clear();
@@ -283,21 +279,18 @@ FunctionalTokenizerBase::clearin_() {
 
 // base/debugfunctions
 
-void
-FunctionalTokenizerBase::setDebug(bool mode) {
+void FunctionalTokenizerBase::setDebug(bool mode) {
     d_actionCases_ = false;
     d_debug_ = mode;
 }
 
-void
-FunctionalTokenizerBase::setDebug(DebugMode_ mode) {
+void FunctionalTokenizerBase::setDebug(DebugMode_ mode) {
     d_actionCases_ = mode & ACTIONCASES;
     d_debug_ = mode & ON;
 }
 
 // base/lex
-void
-FunctionalTokenizerBase::lex_(int token) {
+void FunctionalTokenizerBase::lex_(int token) {
     d_token = token;
 
     if (d_token <= 0) d_token = Reserved_::EOF_;
@@ -306,8 +299,7 @@ FunctionalTokenizerBase::lex_(int token) {
 }
 
 // base/lookup
-int
-FunctionalTokenizerBase::lookup_() const {
+int FunctionalTokenizerBase::lookup_() const {
     // if the final transition is negative, then we should reduce by the rule
     // given by its positive value.
 
@@ -339,8 +331,7 @@ FunctionalTokenizerBase::lookup_() const {
 }
 
 // base/pop
-void
-FunctionalTokenizerBase::pop_(size_t count) {
+void FunctionalTokenizerBase::pop_(size_t count) {
     if (d_stackIdx < static_cast<int>(count)) { ABORT(); }
 
     d_stackIdx -= count;
@@ -349,8 +340,7 @@ FunctionalTokenizerBase::pop_(size_t count) {
 }
 
 // base/poptoken
-void
-FunctionalTokenizerBase::popToken_() {
+void FunctionalTokenizerBase::popToken_() {
     d_token = d_next.first;
     d_val_ = std::move(d_next.second);
 
@@ -358,8 +348,7 @@ FunctionalTokenizerBase::popToken_() {
 }
 
 // base/push
-void
-FunctionalTokenizerBase::push_(size_t state) {
+void FunctionalTokenizerBase::push_(size_t state) {
     size_t currentSize = d_stateStack.size();
     if (stackSize_() == currentSize) {
         size_t newSize = currentSize + STACK_EXPANSION_;
@@ -376,21 +365,18 @@ FunctionalTokenizerBase::push_(size_t state) {
 }
 
 // base/pushtoken
-void
-FunctionalTokenizerBase::pushToken_(int token) {
+void FunctionalTokenizerBase::pushToken_(int token) {
     d_next = TokenPair{ d_token, std::move(d_val_) };
     d_token = token;
 }
 
 // base/redotoken
-void
-FunctionalTokenizerBase::redoToken_() {
+void FunctionalTokenizerBase::redoToken_() {
     if (d_token != Reserved_::UNDETERMINED_) pushToken_(d_token);
 }
 
 // base/reduce
-void
-FunctionalTokenizerBase::reduce_(int rule) {
+void FunctionalTokenizerBase::reduce_(int rule) {
     PI_ const& pi = s_productionInfo[rule];
 
     d_token = pi.d_nonTerm;
@@ -400,8 +386,7 @@ FunctionalTokenizerBase::reduce_(int rule) {
 }
 
 // base/shift
-void
-FunctionalTokenizerBase::shift_(int action) {
+void FunctionalTokenizerBase::shift_(int action) {
     push_(action);
     popToken_(); // token processed
 
@@ -412,8 +397,7 @@ FunctionalTokenizerBase::shift_(int action) {
 }
 
 // base/startrecovery
-void
-FunctionalTokenizerBase::startRecovery_() {
+void FunctionalTokenizerBase::startRecovery_() {
     int lastToken = d_token; // give the unexpected token a
                              // chance to be processed
                              // again.
@@ -429,14 +413,10 @@ FunctionalTokenizerBase::startRecovery_() {
 }
 
 // base/top
-inline size_t
-FunctionalTokenizerBase::top_() const {
-    return d_stateStack[d_stackIdx].first;
-}
+inline size_t FunctionalTokenizerBase::top_() const { return d_stateStack[d_stackIdx].first; }
 
 // derived/errorrecovery
-void
-FunctionalTokenizer::errorRecovery_() {
+void FunctionalTokenizer::errorRecovery_() {
     // When an error has occurred, pop elements off the stack until the top
     // state has an error-item. If none is found, the default recovery
     // mode (which is to abort) is activated.
@@ -462,8 +442,7 @@ FunctionalTokenizer::errorRecovery_() {
 }
 
 // derived/executeaction
-void
-FunctionalTokenizer::executeAction_(int production) try {
+void FunctionalTokenizer::executeAction_(int production) try {
     if (token_() != Reserved_::UNDETERMINED_)
         pushToken_(token_()); // save an already available token
     switch (production) {
@@ -511,8 +490,7 @@ catch (std::exception const& exc) {
 }
 
 // derived/nextcycle
-void
-FunctionalTokenizer::nextCycle_() try {
+void FunctionalTokenizer::nextCycle_() try {
     if (s_state[state_()]->d_type & REQ_TOKEN) nextToken_(); // obtain next token
 
     int action = lookup_(); // lookup d_token in d_state
@@ -550,8 +528,7 @@ catch (ErrorRecovery_) {
 }
 
 // derived/nexttoken
-void
-FunctionalTokenizer::nextToken_() {
+void FunctionalTokenizer::nextToken_() {
     // If d_token is Reserved_::UNDETERMINED_ then if savedToken_() is
     // Reserved_::UNDETERMINED_ another token is obtained from lex(). Then
     // savedToken_() is assigned to d_token.
@@ -572,14 +549,12 @@ FunctionalTokenizer::nextToken_() {
 }
 
 // derived/print
-void
-FunctionalTokenizer::print_() {
+void FunctionalTokenizer::print_() {
     // $insert print
 }
 
 // derived/parse
-int
-FunctionalTokenizer::parse() try {
+int FunctionalTokenizer::parse() try {
     // The parsing algorithm:
     // Initially, state 0 is pushed on the stack, and all relevant variables
     // are initialized by Base::clearin_.
@@ -616,4 +591,4 @@ catch (Return_ retValue) {
 // derived/tail
 
 // $insert namespace-close
-}
+} // namespace zpt

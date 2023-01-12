@@ -25,82 +25,70 @@
 #include <sstream>
 #include <execinfo.h>
 #include <ctime>
+#include <cxxabi.h>
 
 #include <zapata/base/expect.h>
 #include <zapata/text/convert.h>
 
-auto
-zpt::tostr(std::string& s, int i) -> void {
+auto zpt::tostr(std::string& s, int i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, bool b) -> void {
-    s.insert(s.length(), b ? "true" : "false");
-}
+auto zpt::tostr(std::string& s, bool b) -> void { s.insert(s.length(), b ? "true" : "false"); }
 
-auto
-zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) -> void {
+auto zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) -> void {
     char oss[512];
     sprintf(oss, "%x", i);
     s.insert(s.length(), oss);
 }
 
 #ifdef __LP64__
-auto
-zpt::tostr(std::string& s, unsigned int i) -> void {
+auto zpt::tostr(std::string& s, unsigned int i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 #endif
 
-auto
-zpt::tostr(std::string& s, size_t i) -> void {
+auto zpt::tostr(std::string& s, size_t i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, long i) -> void {
+auto zpt::tostr(std::string& s, long i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, long long i) -> void {
+auto zpt::tostr(std::string& s, long long i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, float i, int precision) -> void {
+auto zpt::tostr(std::string& s, float i, int precision) -> void {
     std::ostringstream _oss;
     _oss << std::fixed << std::setprecision(precision) << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, double i, int precision) -> void {
+auto zpt::tostr(std::string& s, double i, int precision) -> void {
     std::ostringstream _oss;
     _oss << std::fixed << std::setprecision(precision) << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, char i) -> void {
+auto zpt::tostr(std::string& s, char i) -> void {
     std::ostringstream _oss;
     _oss << i << std::flush;
     s.insert(s.length(), _oss.str());
 }
 
-auto
-zpt::tostr(std::string& s, time_t i, const char* f) -> void {
+auto zpt::tostr(std::string& s, time_t i, const char* f) -> void {
     struct tm _ptm;
     char _buffer_date[80];
     bzero(_buffer_date, 80);
@@ -109,78 +97,65 @@ zpt::tostr(std::string& s, time_t i, const char* f) -> void {
     s.insert(s.length(), _buffer_date);
 }
 
-auto
-zpt::tostr(int i) -> std::string {
+auto zpt::tostr(int i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(bool b) -> std::string {
-    return b ? "true" : "false";
-}
+auto zpt::tostr(bool b) -> std::string { return b ? "true" : "false"; }
 
-auto
-zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) -> std::string {
+auto zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) -> std::string {
     char oss[512];
     sprintf(oss, "%x", i);
     return std::string(oss);
 }
 
 #ifdef __LP64__
-auto
-zpt::tostr(unsigned int i) -> std::string {
+auto zpt::tostr(unsigned int i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 #endif
 
-auto
-zpt::tostr(size_t i) -> std::string {
+auto zpt::tostr(size_t i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(long i) -> std::string {
+auto zpt::tostr(long i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(long long i) -> std::string {
+auto zpt::tostr(long long i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(float i, int precision) -> std::string {
+auto zpt::tostr(float i, int precision) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(double i, int precision) -> std::string {
+auto zpt::tostr(double i, int precision) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(char i) -> std::string {
+auto zpt::tostr(char i) -> std::string {
     std::ostringstream _oss;
     _oss << i << std::flush;
     return _oss.str();
 }
 
-auto
-zpt::tostr(time_t i, const char* f) -> std::string {
+auto zpt::tostr(time_t i, const char* f) -> std::string {
     struct tm _ptm;
     char _buffer_date[80];
     bzero(_buffer_date, 80);
@@ -189,8 +164,7 @@ zpt::tostr(time_t i, const char* f) -> std::string {
     return std::string(_buffer_date);
 }
 
-auto
-zpt::fromstr(std::string s, int* i) -> void {
+auto zpt::fromstr(std::string s, int* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stoi(s, &sz);
@@ -202,8 +176,7 @@ zpt::fromstr(std::string s, int* i) -> void {
 }
 
 #ifdef __LP64__
-auto
-zpt::fromstr(std::string s, unsigned int* i) -> void {
+auto zpt::fromstr(std::string s, unsigned int* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stoul(s, &sz);
@@ -215,8 +188,7 @@ zpt::fromstr(std::string s, unsigned int* i) -> void {
 }
 #endif
 
-auto
-zpt::fromstr(std::string s, size_t* i) -> void {
+auto zpt::fromstr(std::string s, size_t* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stoull(s, &sz);
@@ -227,8 +199,7 @@ zpt::fromstr(std::string s, size_t* i) -> void {
     }
 }
 
-auto
-zpt::fromstr(std::string s, long* i) -> void {
+auto zpt::fromstr(std::string s, long* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stol(s, &sz);
@@ -239,8 +210,7 @@ zpt::fromstr(std::string s, long* i) -> void {
     }
 }
 
-auto
-zpt::fromstr(std::string s, long long* i) -> void {
+auto zpt::fromstr(std::string s, long long* i) -> void {
     size_t sz = 0;
     try {
         int r = std::stoll(s, &sz);
@@ -251,8 +221,7 @@ zpt::fromstr(std::string s, long long* i) -> void {
     }
 }
 
-auto
-zpt::fromstr(std::string s, float* i) -> void {
+auto zpt::fromstr(std::string s, float* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stof(s, &sz);
@@ -263,8 +232,7 @@ zpt::fromstr(std::string s, float* i) -> void {
     }
 }
 
-auto
-zpt::fromstr(std::string s, double* i) -> void {
+auto zpt::fromstr(std::string s, double* i) -> void {
     size_t sz = 0;
     try {
         auto r = std::stod(s, &sz);
@@ -275,20 +243,15 @@ zpt::fromstr(std::string s, double* i) -> void {
     }
 }
 
-auto
-zpt::fromstr(std::string s, char* i) -> void {
+auto zpt::fromstr(std::string s, char* i) -> void {
     std::istringstream _in;
     _in.str(s);
     _in >> (*i);
 }
 
-auto
-zpt::fromstr(std::string s, bool* i) -> void {
-    *i = s == std::string("true");
-}
+auto zpt::fromstr(std::string s, bool* i) -> void { *i = s == std::string("true"); }
 
-auto
-zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void {
+auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void {
     /*
       setenv("TZ", "UTC", 1);
       tzset();
@@ -311,8 +274,7 @@ zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) -> void
     }
 }
 
-auto
-zpt::timezone_offset() -> time_t {
+auto zpt::timezone_offset() -> time_t {
     time_t t{ 0 };
     tm* ptr{ nullptr };
     int day{ 0 };
@@ -342,14 +304,35 @@ zpt::timezone_offset() -> time_t {
     return 0;
 }
 
-auto
-zpt::get_backtrace() -> std::string {
+auto zpt::demangle(std::string const& _mangled) -> std::string {
+    int _state{ -4 };
+    auto _demangled = abi::__cxa_demangle(_mangled.data(), nullptr, nullptr, &_state);
+    std::string _return{ _state == 0 ? _demangled : _mangled };
+    ::free(_demangled);
+    return _return;
+}
+
+auto zpt::get_backtrace(unsigned int _skip) -> std::string {
+    static const std::regex _line_rgx{ "([^(]+)\\(([^)]+)\\) \\[([^\\]]+)\\](.*)",
+                                       std::regex_constants::ECMAScript |
+                                         std::regex_constants::optimize };
     std::ostringstream _oss;
     void* _backtrace_array[30];
     size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
     char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
-    for (size_t _i = 0; _i != _backtrace_size; _i++) {
-        _oss << "\t" << _backtrace[_i] << std::endl;
+    for (size_t _i = 0; _i != _backtrace_size; ++_i, --_skip) {
+        if (_skip > 0) {
+            continue;
+        }
+        std::smatch _matches;
+        std::string _line{ _backtrace[_i] };
+        if (std::regex_match(_line, _matches, _line_rgx)) {
+            auto _plus_idx = _matches[2].str().find("+");
+            _oss << "\t" << zpt::demangle(_matches[2].str().substr(0, _plus_idx)) << " ["
+                 << _matches[3] << "+" << _matches[2].str().substr(_plus_idx) << "] " << _matches[1]
+                 << std::endl;
+        }
+        else { _oss << "\t" << _line << std::endl; }
     }
     _oss << std::flush;
     free(_backtrace);

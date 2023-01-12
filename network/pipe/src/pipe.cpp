@@ -26,70 +26,39 @@
 #include <zapata/io/pipe.h>
 #include <zapata/globals/globals.h>
 
-auto
-zpt::net::transport::pipe_stream::send(zpt::exchange& _channel) const -> void {
-    if (_channel->to_send()->ok()) {
-        zlog("Sending piped message:\n" << _channel->to_send(), zpt::trace);
-        auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-        auto _client =
-          zpt::stream::alloc<zpt::pipestream>(static_cast<zpt::pipestream&>(*_channel->stream()));
-        _polling.listen_on(_client);
-        _channel->stream() << _channel->to_send();
-    }
+auto zpt::INTERNAL_SERVER_STREAM() -> ssize_t& {
+    static ssize_t _global{ -1 };
+    return _global;
 }
 
-auto
-zpt::net::transport::pipe_stream::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
-
-    std::string _content_type = _channel->content_type()[0];
-    _channel->received() =
-      _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
-
-    _channel //
-      ->version()
-      .assign("1.0");
-    _channel //
-      ->scheme()
-      .assign("pipe");
-
-    if (!_channel->received()["performative"]->ok() || _channel->received()["status"]->ok()) {
-        _channel->received() << "performative" << 7;
-    }
-    if (!_channel->received()["resource"]->ok()) {
-        _channel //
-          ->uri()
-          .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
-    }
-    else {
-        _channel //
-          ->uri()
-          .assign(_channel->received()["resource"]);
-    }
-
-    zlog("Received piped message:\n" << _channel->received(), zpt::trace);
-    _channel->keep_alive() = true;
-}
-
-auto
-zpt::net::transport::pipe_stream::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
-    expect(_uri["scheme"] == "pipe", "scheme must be 'pipe'", 500, 0);
-    std::string _path{ zpt::uri::path::to_string(_uri) };
-    auto _stream = zpt::stream::alloc<zpt::pipestream>(zpt::generate::r_uuid());
-    _stream->transport("pipe");
-    zpt::exchange _to_return{ _stream.release() };
-    _to_return //
-      ->scheme()
-      .assign("pipe");
-    _to_return //
-      ->uri()
-      .assign(_path);
-    _to_return->keep_alive() = true;
-    if (_uri["scheme_options"]->ok()) {
-        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
-    }
-    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
+auto zpt::net::transport::pipe_stream::make_request() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
+}
+
+auto zpt::net::transport::pipe_stream::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
+    return _to_return;
+}
+
+auto zpt::net::transport::pipe_stream::make_reply(zpt::message _request) const -> zpt::message {
+    auto _to_return =
+      zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
+    return _to_return;
+}
+
+auto zpt::net::transport::pipe_stream::process_incoming_request(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "pipe", "Stream underlying transport isn't 'pipe'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
+}
+
+auto zpt::net::transport::pipe_stream::process_incoming_reply(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "pipe", "Stream underlying transport isn't 'pipe'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
 }

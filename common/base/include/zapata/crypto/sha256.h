@@ -66,6 +66,5 @@ class SHA256 {
     std::uint32_t m_h[8];
 };
 
-std::string
-sha256(std::string const& input);
+std::string sha256(std::string const& input);
 } // namespace zpt::crypto

@@ -105,68 +105,43 @@ class FunctionalTokenizerBase {
 };
 
 // hdr/abort
-inline void
-FunctionalTokenizerBase::ABORT() const {
-    throw PARSE_ABORT_;
-}
+inline void FunctionalTokenizerBase::ABORT() const { throw PARSE_ABORT_; }
 
 // hdr/accept
-inline void
-FunctionalTokenizerBase::ACCEPT() const {
-    throw PARSE_ACCEPT_;
-}
+inline void FunctionalTokenizerBase::ACCEPT() const { throw PARSE_ACCEPT_; }
 
 // hdr/error
-inline void
-FunctionalTokenizerBase::ERROR() const {
-    throw UNEXPECTED_TOKEN_;
-}
+inline void FunctionalTokenizerBase::ERROR() const { throw UNEXPECTED_TOKEN_; }
 
 // hdr/savedtoken
-inline int
-FunctionalTokenizerBase::savedToken_() const {
-    return d_next.first;
-}
+inline int FunctionalTokenizerBase::savedToken_() const { return d_next.first; }
 
 // hdr/opbitand
-inline FunctionalTokenizerBase::DebugMode_
-operator&(FunctionalTokenizerBase::DebugMode_ lhs, FunctionalTokenizerBase::DebugMode_ rhs) {
+inline FunctionalTokenizerBase::DebugMode_ operator&(FunctionalTokenizerBase::DebugMode_ lhs,
+                                                     FunctionalTokenizerBase::DebugMode_ rhs) {
     return static_cast<FunctionalTokenizerBase::DebugMode_>(static_cast<int>(lhs) & rhs);
 }
 
 // hdr/opbitor
-inline FunctionalTokenizerBase::DebugMode_
-operator|(FunctionalTokenizerBase::DebugMode_ lhs, FunctionalTokenizerBase::DebugMode_ rhs) {
+inline FunctionalTokenizerBase::DebugMode_ operator|(FunctionalTokenizerBase::DebugMode_ lhs,
+                                                     FunctionalTokenizerBase::DebugMode_ rhs) {
     return static_cast<FunctionalTokenizerBase::DebugMode_>(static_cast<int>(lhs) | rhs);
 };
 
 // hdr/recovery
-inline bool
-FunctionalTokenizerBase::recovery_() const {
-    return d_recovery;
-}
+inline bool FunctionalTokenizerBase::recovery_() const { return d_recovery; }
 
 // hdr/stacksize
-inline size_t
-FunctionalTokenizerBase::stackSize_() const {
-    return d_stackIdx + 1;
-}
+inline size_t FunctionalTokenizerBase::stackSize_() const { return d_stackIdx + 1; }
 
 // hdr/state
-inline size_t
-FunctionalTokenizerBase::state_() const {
-    return d_state;
-}
+inline size_t FunctionalTokenizerBase::state_() const { return d_state; }
 
 // hdr/token
-inline int
-FunctionalTokenizerBase::token_() const {
-    return d_token;
-}
+inline int FunctionalTokenizerBase::token_() const { return d_token; }
 
 // hdr/vs
-inline FunctionalTokenizerBase::STYPE_&
-FunctionalTokenizerBase::vs_(int idx) {
+inline FunctionalTokenizerBase::STYPE_& FunctionalTokenizerBase::vs_(int idx) {
     return (d_vsp + idx)->second;
 }
 
@@ -176,6 +151,6 @@ FunctionalTokenizerBase::vs_(int idx) {
 #define FunctionalTokenizer FunctionalTokenizerBase
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif

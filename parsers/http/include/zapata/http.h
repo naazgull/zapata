@@ -34,5 +34,3 @@
 #include <zapata/http/HTTPTokenizerbase.h>
 #include <zapata/http/HTTPTokenizerimpl.h>
 #include <zapata/http/HTTPinc.h>
-
-#include <zapata/http/http.h>

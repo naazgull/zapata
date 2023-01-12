@@ -26,14 +26,10 @@
 #include <zapata/text/convert.h>
 
 zpt::ExpectationException::ExpectationException(std::string const& _what,
-                                                int _http_code,
-                                                int _code,
                                                 std::string _desc,
                                                 int _line,
                                                 std::string _file)
   : zpt::exception{ _what, true }
-  , __http_code(_http_code)
-  , __code(_code)
   , __description(_desc)
   , __line(_line)
   , __file(_file) {
@@ -49,17 +45,6 @@ zpt::ExpectationException::ExpectationException(std::string const& _what,
 
 zpt::ExpectationException::~ExpectationException() throw() {}
 
-auto
-zpt::ExpectationException::description() const -> const char* {
+auto zpt::ExpectationException::description() const -> const char* {
     return this->__description.data();
-}
-
-auto
-zpt::ExpectationException::code() const -> int {
-    return this->__code;
-}
-
-auto
-zpt::ExpectationException::status() const -> int {
-    return this->__http_code;
 }

@@ -3,7 +3,10 @@ set(COMMON_LOCKFREE_INCLUDE_DIR
 )
 
 add_library(zapata-lockfree INTERFACE)
-
+add_dependencies(zapata-lockfree
+  zapata-base
+  zapata-globals
+)
 target_sources(zapata-lockfree
   INTERFACE
     ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata/lockfree.h
@@ -12,11 +15,14 @@ target_sources(zapata-lockfree
 )
 target_include_directories(zapata-lockfree
   INTERFACE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
     ${COMMON_LOCKFREE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-lockfree
   INTERFACE
-    zapata-base
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
 )
 
 include(GNUInstallDirs)
@@ -30,22 +36,28 @@ install(DIRECTORY ${COMMON_LOCKFREE_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_common_lockfree)
-
+add_dependencies(zapata_test_common_lockfree
+  zapata-base
+  zapata-globals
+  zapata-lockfree
+)
 target_sources(zapata_test_common_lockfree
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_common_lockfree
-  PUBLIC
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
     ${COMMON_LOCKFREE_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_common_lockfree
-  PUBLIC
-    zapata-base
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-globals,LIBRARIES>
 )
-
 set_target_properties(zapata_test_common_lockfree
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

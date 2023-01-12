@@ -25,15 +25,13 @@
 #include <unistd.h>
 #include <iomanip>
 
-auto
-zpt::base64::r_encode(std::string const& _in) -> std::string {
+auto zpt::base64::r_encode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::encode(_out);
     return _out;
 }
 
-void
-zpt::base64::encode(std::string& _out) {
+void zpt::base64::encode(std::string& _out) {
     std::istringstream in;
     char buff1[3];
     char buff2[4];
@@ -67,15 +65,13 @@ zpt::base64::encode(std::string& _out) {
     }
 }
 
-auto
-zpt::base64::r_decode(std::string const& _in) -> std::string {
+auto zpt::base64::r_decode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::decode(_out);
     return _out;
 }
 
-void
-zpt::base64::decode(std::string& _out) {
+void zpt::base64::decode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
     char buff1[4];
@@ -109,8 +105,7 @@ zpt::base64::decode(std::string& _out) {
     }
 }
 
-void
-zpt::base64::encode(std::istream& _in, std::ostream& _out) {
+void zpt::base64::encode(std::istream& _in, std::ostream& _out) {
     char buff1[3];
     char buff2[4];
     uint8_t i = 0, j;
@@ -138,8 +133,7 @@ zpt::base64::encode(std::istream& _in, std::ostream& _out) {
     }
 }
 
-void
-zpt::base64::decode(std::istream& _in, std::ostream& _out) {
+void zpt::base64::decode(std::istream& _in, std::ostream& _out) {
     char buff1[4];
     char buff2[4];
     uint8_t i = 0, j;
@@ -168,15 +162,13 @@ zpt::base64::decode(std::istream& _in, std::ostream& _out) {
     }
 }
 
-auto
-zpt::base64::r_url_encode(std::string const& _in) -> std::string {
+auto zpt::base64::r_url_encode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::url_encode(_out);
     return _out;
 }
 
-void
-zpt::base64::url_encode(std::string& _out) {
+void zpt::base64::url_encode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
     char buff1[4];
@@ -211,15 +203,13 @@ zpt::base64::url_encode(std::string& _out) {
     _out.assign(out.str());
 }
 
-auto
-zpt::base64::r_url_decode(std::string const& _in) -> std::string {
+auto zpt::base64::r_url_decode(std::string const& _in) -> std::string {
     std::string _out(_in.data());
     zpt::base64::url_decode(_out);
     return _out;
 }
 
-void
-zpt::base64::url_decode(std::string& _out) {
+void zpt::base64::url_decode(std::string& _out) {
     std::istringstream in;
     std::ostringstream out;
     char buff1[4];

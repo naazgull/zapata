@@ -23,63 +23,23 @@
 #include <zapata/base/performative.h>
 #include <algorithm>
 
-auto
-zpt::ontology::to_str(zpt::performative _performative) -> std::string {
-    switch (_performative) {
-        case zpt::Get: {
-            return "GET";
-        }
-        case zpt::Put: {
-            return "PUT";
-        }
-        case zpt::Post: {
-            return "POST";
-        }
-        case zpt::Delete: {
-            return "DELETE";
-        }
-        case zpt::Head: {
-            return "HEAD";
-        }
-        case zpt::Options: {
-            return "OPTIONS";
-        }
-        case zpt::Patch: {
-            return "PATCH";
-        }
-        case zpt::Reply: {
-            return "REPLY";
-        }
-        case zpt::Msearch: {
-            return "M-SEARCH";
-        }
-        case zpt::Notify: {
-            return "NOTIFY";
-        }
-        case zpt::Trace: {
-            return "TRACE";
-        }
-        case zpt::Connect: {
-            return "CONNECT";
-        }
+namespace {
+inline constexpr char const* STATUS_NAMES[] = { "GET",      "PUT",     "POST",  "DELETE",
+                                                "HEAD",     "OPTIONS", "PATCH", "REPLY",
+                                                "M-SEARCH", "NOTIFY",  "TRACE", "CONNECT" };
+}
+
+auto zpt::ontology::to_str(zpt::performative _performative) -> std::string {
+    if (_performative < zpt::Performative_end) {
+        return std::string{ ::STATUS_NAMES[_performative] };
     }
     return "HEAD";
 }
 
-auto
-zpt::ontology::from_str(std::string _performative) -> zpt::performative {
+auto zpt::ontology::from_str(std::string _performative) -> zpt::performative {
     std::transform(_performative.begin(), _performative.end(), _performative.begin(), ::toupper);
-    if (_performative == "GET") { return zpt::Get; }
-    if (_performative == "PUT") { return zpt::Put; }
-    if (_performative == "POST") { return zpt::Post; }
-    if (_performative == "DELETE") { return zpt::Delete; }
-    if (_performative == "HEAD") { return zpt::Head; }
-    if (_performative == "OPTIONS") { return zpt::Options; }
-    if (_performative == "PATCH") { return zpt::Patch; }
-    if (_performative == "REPLY") { return zpt::Reply; }
-    if (_performative == "M-SEARCH") { return zpt::Msearch; }
-    if (_performative == "NOTIFY") { return zpt::Notify; }
-    if (_performative == "TRACE") { return zpt::Msearch; }
-    if (_performative == "CONNECT") { return zpt::Connect; }
-    return 0;
+    for (size_t _idx = 0; _idx != zpt::Performative_end; ++_idx) {
+        if (_performative == ::STATUS_NAMES[_idx]) { return _idx; }
+    }
+    return zpt::Head;
 }

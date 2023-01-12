@@ -25,11 +25,9 @@
 #include <zapata/transport.h>
 #include <zapata/net/transport/pipe.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    _layer.add("internal", zpt::transport::alloc<zpt::net::transport::pipe_stream>());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
+    _layer.add("file", zpt::make_transport<zpt::net::transport::pipe_stream>());
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {}
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {}

@@ -79,6 +79,5 @@ class SHA512 {
     std::uint64_t m_h[8];
 };
 
-std::string
-sha512(std::string const& input);
+std::string sha512(std::string const& input);
 } // namespace zpt::crypto

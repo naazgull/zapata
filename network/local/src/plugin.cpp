@@ -26,47 +26,48 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/transport/local.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _config = _plugin.config();
+    auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
 
-    _layer.add("file", zpt::transport::alloc<zpt::net::transport::file>());
-    _layer.add("unix", zpt::transport::alloc<zpt::net::transport::unix_socket>());
-    if (_config["path"]->ok()) {
-        expect(!zpt::file_exists(_config["path"]->string()),
-               "Unix socket '" << _config["path"]
-                               << "' already exists. Please, remove before reloading the plugin.",
-               500,
-               0);
-        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
-          zpt::UNIX_SERVER_SOCKET(), _config["path"]->string());
+    _layer.add("file", zpt::make_transport<zpt::net::transport::file>());
+    _layer.add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
+    if (_config("path")->ok()) {
+        expect(!zpt::file_exists(_config("path")->string()),
+               "Unix socket '" << _config("path")
+                               << "' already exists. Please, remove before reloading the plugin.");
+        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),
+                                                                       _config("path")->string());
 
-        _boot.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-            zlog("Starting UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
+        _plugin.add_thread([=]() mutable -> void {
+            auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+            zlog("Started UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
 
             try {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("unix");
-                    _polling.listen_on(_client);
+                    _polling.listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
+                zlog(_e.what(), zpt::error);
             }
-            zlog("Stopping UNIX transport on '" << _config["path"]->string() << "'", zpt::info);
+            catch (zpt::ClosedException const& _e) {
+            }
+            catch (std::exception const& _e) {
+                zlog(_e.what(), zpt::error);
+            }
+            zlog("Stopped UNIX+JSON transport on '" << _config("path")->string() << "'", zpt::info);
         });
     }
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
-    if (_config["path"]->ok()) {
-        zpt::globals::get<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
-        zpt::globals::dealloc<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
-        unlink(_config["path"]->string().data());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
+    auto& _config = _plugin.config();
+    if (_config("path")->ok()) {
+        zpt::global_cast<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET())->close();
+        zpt::release_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET());
+        unlink(_config("path")->string().data());
     }
 }

@@ -3,7 +3,10 @@ set(PARSERS_URI_INCLUDE_DIR
 )
 
 add_library(zapata-parser-uri SHARED)
-
+add_dependencies(zapata-parser-uri
+  zapata-base
+  zapata-parser-json
+)
 target_sources(zapata-parser-uri
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/URIParser.cpp
@@ -25,22 +28,25 @@ target_sources(zapata-parser-uri
     ${PARSERS_URI_INCLUDE_DIR}/zapata/uri/URITokenizerbase.h
 )
 target_include_directories(zapata-parser-uri
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    ${PARSERS_URI_INCLUDE_DIR}
   INTERFACE
     ${PARSERS_URI_INCLUDE_DIR}
 )
 target_link_libraries(zapata-parser-uri
-  INTERFACE
-    zapata-base
-    zapata-parser-json
-    zapata-parser-uri
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
 )
-
 set_target_properties(zapata-parser-uri
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-parser-uri.so
 )
 
 include(GNUInstallDirs)
@@ -54,24 +60,29 @@ install(DIRECTORY ${PARSERS_URI_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_parser_uri)
-
+add_dependencies(zapata_test_parser_uri
+  zapata-base
+  zapata-parser-json
+  zapata-parser-uri
+)
 target_sources(zapata_test_parser_uri
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_parser_uri
-  PUBLIC
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
     ${PARSERS_URI_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_parser_uri
-  PUBLIC
-    zapata-base
-    zapata-parser-json
-    zapata-parser-uri
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-uri,LIBRARIES>
 )
-
 set_target_properties(zapata_test_parser_uri
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

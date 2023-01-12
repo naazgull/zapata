@@ -25,11 +25,13 @@ exp :
 	object
 	{
 		d_scanner.result(zpt::JSObject);
+        d_scanner.justLeave();
 	}
 |
 	array
 	{
 		d_scanner.result(zpt::JSArray);
+        d_scanner.justLeave();
 	}
 |
 	STRING
@@ -38,6 +40,7 @@ exp :
 
         std::string _out(d_scanner.matched());
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	BOOLEAN
@@ -48,6 +51,7 @@ exp :
 		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	INTEGER
@@ -57,6 +61,7 @@ exp :
 		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	DOUBLE
@@ -67,6 +72,7 @@ exp :
 		std::string _in(d_scanner.matched());
 		zpt::fromstr(_in, &_out);
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	LAMBDA
@@ -76,6 +82,7 @@ exp :
         std::string _in(d_scanner.matched());
 		zpt::lambda _out(_in);
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	REGEX
@@ -85,11 +92,13 @@ exp :
         std::string _in(d_scanner.matched());
 		zpt::regex _out(_in);
 		d_scanner.init(_out);
+        d_scanner.justLeave();
 	}
 |
 	NIL
 	{
 		d_scanner.init();
+        d_scanner.justLeave();
 	}
 ;
 

@@ -24,131 +24,119 @@
 
 #include <iostream>
 #include <memory>
+#include <atomic>
 #include <sys/epoll.h>
 #include <systemd/sd-daemon.h>
 #include <zapata/text/convert.h>
-#include <zapata/lockfree/queue.h>
 #include <zapata/locks/spin_lock.h>
 
 namespace zpt {
-
-using epoll_event_t = struct epoll_event;
-
-auto
-STREAM_POLLING() -> ssize_t&;
+auto STREAM_POLLING() -> ssize_t&;
 
 enum class stream_state { IDLE, WAITING, PROCESSING };
+using epoll_event_t = struct epoll_event;
 
-class stream {
+class basic_stream {
   public:
     typedef std::ostream& (*ostream_manipulator)(std::ostream&);
 
-    class polling {
-      public:
-        constexpr static int MAX_EVENT_PER_POLL{ 10 };
+    basic_stream() = default;
+    basic_stream(std::ios& _rhs);
+    basic_stream(std::unique_ptr<std::iostream> _underlying);
+    basic_stream(basic_stream const& _rhs) = delete;
+    basic_stream(basic_stream&& _rhs) = delete;
+    virtual ~basic_stream();
 
-        polling(long _max_stream_readers, long _poll_wait_timeout = -1);
-        virtual ~polling();
+    auto operator=(basic_stream const& _rhs) -> basic_stream& = delete;
+    auto operator=(basic_stream&& _rhs) -> basic_stream& = delete;
 
-        auto listen_on(std::unique_ptr<zpt::stream>& _stream) -> zpt::stream::polling&;
-        auto mute(zpt::stream& _stream) -> zpt::stream::polling&;
-        auto pool() -> void;
-        auto pop() -> zpt::stream*;
-        auto shutdown() -> void;
-
-      private:
-        int __epoll_fd{ -1 };
-        long long __poll_wait_timeout{ 0 };
-        zpt::epoll_event_t __epoll_events[MAX_EVENT_PER_POLL];
-        zpt::lf::queue<zpt::stream*> __alive_streams;
-        std::map<int, zpt::stream*> __polled_streams;
-        std::atomic<bool> __shutdown{ false };
-    };
-
-    stream() = default;
-    stream(std::ios& _rhs);
-    stream(zpt::stream const& _rhs) = delete;
-    stream(zpt::stream&& _rhs) = delete;
-    virtual ~stream();
-
-    auto operator=(zpt::stream const& _rhs) -> zpt::stream& = delete;
-    auto operator=(zpt::stream&& _rhs) -> zpt::stream& = delete;
-
-    auto operator=(int _rhs) -> zpt::stream&;
+    auto operator=(int _rhs) -> basic_stream&;
     template<typename T>
-    auto operator>>(T& _out) -> zpt::stream&;
+    auto operator>>(T& _out) -> basic_stream&;
     template<typename T>
-    auto operator<<(T _in) -> zpt::stream&;
-    auto operator<<(ostream_manipulator _in) -> zpt::stream&;
+    auto operator<<(T _in) -> basic_stream&;
+    auto operator<<(ostream_manipulator _in) -> basic_stream&;
     auto operator->() -> std::iostream*;
     auto operator*() -> std::iostream&;
 
     operator int();
 
-    auto close() -> zpt::stream&;
-    auto transport(const std::string& _rhs) -> zpt::stream&;
+    auto close() -> basic_stream&;
+    auto transport(const std::string& _rhs) -> basic_stream&;
     auto transport() -> std::string&;
-    auto uri(const std::string& _rhs) -> zpt::stream&;
+    auto uri(const std::string& _rhs) -> basic_stream&;
     auto uri() -> std::string&;
-    auto state() -> zpt::stream_state&;
-
-    auto swap(std::ios& _rhs) -> zpt::stream&;
-    auto swap(zpt::stream& _rhs) -> zpt::stream&;
-    auto swap(std::unique_ptr<zpt::stream>& _rhs) -> zpt::stream&;
-    template<typename T, typename... Args>
-    auto swap(Args... _args) -> zpt::stream&;
-
-    template<typename T, typename... Args>
-    static auto alloc(Args... _args) -> std::unique_ptr<zpt::stream>;
+    auto state() -> stream_state&;
 
   private:
     std::unique_ptr<std::iostream> __underlying{ nullptr };
     int __fd{ -1 };
     std::string __transport{ "" };
     std::string __uri{ "" };
-    zpt::locks::spin_lock __input_lock;
-    zpt::locks::spin_lock __output_lock;
     zpt::stream_state __state{ zpt::stream_state::IDLE };
-
-    stream(std::unique_ptr<std::iostream> _underlying);
 };
+
+using stream = std::unique_ptr<zpt::basic_stream>;
+
+class polling {
+  public:
+    using delegate_fn_type = std::function<bool(zpt::polling& _poll, zpt::basic_stream& _stream)>;
+    constexpr static int MAX_EVENT_PER_POLL{ 100 };
+
+    polling();
+    virtual ~polling();
+
+    auto register_delegate(delegate_fn_type _callback) -> zpt::polling&;
+    auto listen_on(zpt::stream _stream) -> zpt::polling&;
+    auto mute(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto unmute(zpt::basic_stream& _stream) -> zpt::polling&;
+
+    auto poll() -> void;
+    auto shutdown() -> void;
+
+  private:
+    int __epoll_fd{ -1 };
+    zpt::locks::spin_lock __poll_lock{};
+    std::map<int, zpt::stream> __polled_streams;
+    std::vector<delegate_fn_type> __delegates;
+    std::atomic<bool> __shutdown{ false };
+
+    auto erase(zpt::basic_stream& _stream) -> zpt::polling&;
+    auto delegate(zpt::basic_stream& _stream) -> zpt::polling&;
+};
+
+template<typename T, typename... Args>
+static auto make_stream(Args... _args) -> zpt::stream;
 
 #define CRLF "\r\n"
 } // namespace zpt
 
 template<typename T>
-auto
-stream_cast(zpt::stream& _rhs) -> T& {
-    return *static_cast<T*>(&(*_rhs));
+auto stream_cast(zpt::stream& _rhs) -> T& {
+    return static_cast<T&>(**_rhs);
 }
 
 template<typename T>
-auto
-zpt::stream::operator>>(T& _out) -> zpt::stream& {
-    zpt::locks::spin_lock::guard _sentry{ this->__input_lock, zpt::locks::spin_lock::exclusive };
-    (*this->__underlying.get()) >> _out;
+auto zpt::basic_stream::operator>>(T& _out) -> zpt::basic_stream& {
+    if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
+        _out->from_stream(*this->__underlying.get());
+    }
+    else { (*this->__underlying.get()) >> _out; }
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::stream::operator<<(T _in) -> zpt::stream& {
-    zpt::locks::spin_lock::guard _sentry{ this->__output_lock, zpt::locks::spin_lock::exclusive };
-    (*this->__underlying.get()) << _in;
+auto zpt::basic_stream::operator<<(T _in) -> zpt::basic_stream& {
+    if constexpr (!std::is_same<T, std::string>::value && std::is_class<T>::value) {
+        _in->to_stream(*this->__underlying.get());
+    }
+    else { (*this->__underlying.get()) << _in; }
     return (*this);
 }
 
 template<typename T, typename... Args>
-auto
-zpt::stream::swap(Args... _args) -> zpt::stream& {
-    this->__underlying.swap(std::make_unique<T>(_args...));
-    return (*this);
-}
-
-template<typename T, typename... Args>
-auto
-zpt::stream::alloc(Args... _args) -> std::unique_ptr<zpt::stream> {
-    std::unique_ptr<zpt::stream> _to_return{ new zpt::stream{ std::make_unique<T>(_args...) } };
+auto zpt::make_stream(Args... _args) -> zpt::stream {
+    zpt::stream _to_return{ new zpt::basic_stream{ std::make_unique<T>(_args...) } };
     if constexpr (std::is_convertible<T, int>::value) {
         (*_to_return) = static_cast<int>(static_cast<T&>(**_to_return));
     }
@@ -156,8 +144,6 @@ zpt::stream::alloc(Args... _args) -> std::unique_ptr<zpt::stream> {
         _to_return->uri(static_cast<std::string>(static_cast<T&>(**_to_return)));
     }
     expect(!(**_to_return.get()).fail() && !(**_to_return.get()).bad(),
-           "unable to open underlying `std::iostream` named '" << _to_return->uri() << "'",
-           500,
-           0);
+           "unable to open underlying `std::iostream` named '" << _to_return->uri() << "'");
     return _to_return;
 }

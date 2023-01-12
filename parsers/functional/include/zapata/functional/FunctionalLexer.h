@@ -44,27 +44,19 @@ inline FunctionalLexer::FunctionalLexer(std::string const& infile,
   : FunctionalLexerBase(infile, outfile, keepCwd) {}
 
 // $insert inlineLexFunction
-inline int
-FunctionalLexer::lex() {
-    return lex_();
-}
+inline int FunctionalLexer::lex() { return lex_(); }
 
-inline void
-FunctionalLexer::preCode() {
+inline void FunctionalLexer::preCode() {
     // optionally replace by your own code
 }
 
-inline void
-FunctionalLexer::postCode([[maybe_unused]] PostEnum_ type) {
+inline void FunctionalLexer::postCode([[maybe_unused]] PostEnum_ type) {
     // optionally replace by your own code
 }
 
-inline void
-FunctionalLexer::print() {
-    print_();
-}
+inline void FunctionalLexer::print() { print_(); }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // FunctionalLexer_H_INCLUDED_

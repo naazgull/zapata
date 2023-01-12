@@ -31,7 +31,6 @@
 
 namespace zpt {
 namespace net {
-auto
-getip(std::string const& _if = "") -> std::string;
+auto getip(std::string const& _if = "") -> std::string;
 }
 } // namespace zpt

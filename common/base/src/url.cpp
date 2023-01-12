@@ -25,10 +25,9 @@
 #include <unistd.h>
 #include <iomanip>
 
-auto
-zpt::quoted_printable::encode(std::string const& _quote,
-                              std::string const& _charset,
-                              std::string& _out) -> void {
+auto zpt::quoted_printable::encode(std::string const& _quote,
+                                   std::string const& _charset,
+                                   std::string& _out) -> void {
     std::ostringstream _oss;
     _oss << "=?" << _charset << "?Q?" << std::flush;
     for (size_t _i = 0; _i != _quote.length(); _i++) {
@@ -38,19 +37,17 @@ zpt::quoted_printable::encode(std::string const& _quote,
         else { _oss << _quote[_i]; }
     }
     _oss << "?=" << std::flush;
-    _out.insert(_out.length(), _oss.str());
+    _out.append(_oss.str());
 }
 
-auto
-zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset)
+auto zpt::quoted_printable::r_encode(std::string const& _quote, std::string const& _charset)
   -> std::string {
     std::string _out;
     zpt::quoted_printable::encode(_quote, _charset, _out);
     return _out;
 }
 
-auto
-zpt::url::encode(std::string& _out) -> void {
+auto zpt::url::encode(std::string& _out) -> void {
     const char DEC2HEX[16 + 1] = "0123456789ABCDEF";
     const unsigned char* pSrc = (const unsigned char*)_out.c_str();
     const int SRC_LEN = _out.length();
@@ -74,8 +71,7 @@ zpt::url::encode(std::string& _out) -> void {
     _out.assign(sResult);
 }
 
-auto
-zpt::url::decode(std::string& _out) -> void {
+auto zpt::url::decode(std::string& _out) -> void {
     const unsigned char* pSrc = (const unsigned char*)_out.c_str();
     const int SRC_LEN = _out.length();
     const unsigned char* const SRC_END = pSrc + SRC_LEN;
@@ -105,15 +101,13 @@ zpt::url::decode(std::string& _out) -> void {
     _out.assign(sResult);
 }
 
-auto
-zpt::url::r_encode(std::string const& _out) -> std::string {
+auto zpt::url::r_encode(std::string const& _out) -> std::string {
     std::string _return(_out.data());
     zpt::url::encode(_return);
     return _return;
 }
 
-auto
-zpt::url::r_decode(std::string const& _out) -> std::string {
+auto zpt::url::r_decode(std::string const& _out) -> std::string {
     std::string _return(_out.data());
     zpt::url::decode(_return);
     return _return;

@@ -136,8 +136,7 @@ URILexerBase::Input::Input(std::istream* iStream, size_t lineNr)
   : d_in(iStream)
   , d_lineNr(lineNr) {}
 
-size_t
-URILexerBase::Input::get() {
+size_t URILexerBase::Input::get() {
     switch (size_t ch = next()) // get the next input char
     {
         case '\n': ++d_lineNr; [[fallthrough]];
@@ -146,8 +145,7 @@ URILexerBase::Input::get() {
     }
 }
 
-size_t
-URILexerBase::Input::next() {
+size_t URILexerBase::Input::next() {
     size_t ch;
 
     if (d_deque.empty()) // deque empty: next char fm d_in
@@ -163,16 +161,14 @@ URILexerBase::Input::next() {
     return ch;
 }
 
-void
-URILexerBase::Input::reRead(size_t ch) {
+void URILexerBase::Input::reRead(size_t ch) {
     if (ch < 0x100) {
         if (ch == '\n') --d_lineNr;
         d_deque.push_front(ch);
     }
 }
 
-void
-URILexerBase::Input::reRead(std::string const& str, size_t fm) {
+void URILexerBase::Input::reRead(std::string const& str, size_t fm) {
     for (size_t idx = str.size(); idx-- > fm;) reRead(str[idx]);
 }
 
@@ -186,8 +182,7 @@ URILexerBase::URILexerBase(std::istream& in, std::ostream& out, bool keepCwd)
     p_pushStream(s_istream, new std::istream(in.rdbuf()));
 }
 
-void
-URILexerBase::switchStream_(std::istream& in, size_t lineNr) {
+void URILexerBase::switchStream_(std::istream& in, size_t lineNr) {
     d_input->close();
     d_streamStack.back().input = { new std::istream(in.rdbuf()), lineNr };
 }
@@ -205,14 +200,12 @@ URILexerBase::URILexerBase(std::string const& infilename,
     toCwd();
 }
 
-void
-URILexerBase::switchStreams(std::istream& in, std::ostream& out) {
+void URILexerBase::switchStreams(std::istream& in, std::ostream& out) {
     switchStream_(in, 1);
     switchOstream(out);
 }
 
-void
-URILexerBase::switchIstream(std::string const& infilename) {
+void URILexerBase::switchIstream(std::string const& infilename) {
     d_input->close();
     d_filename = infilename;
 
@@ -222,19 +215,16 @@ URILexerBase::switchIstream(std::string const& infilename) {
     d_atBOL = true;
 }
 
-void
-URILexerBase::switchStreams(std::string const& infilename, std::string const& outfilename) {
+void URILexerBase::switchStreams(std::string const& infilename, std::string const& outfilename) {
     switchOstream(outfilename);
     switchIstream(infilename);
 }
 
-void
-URILexerBase::pushStream(std::istream& istr) {
+void URILexerBase::pushStream(std::istream& istr) {
     p_pushStream("(istream)", new std::istream(istr.rdbuf())); // streamPtr);
 }
 
-void
-URILexerBase::pushStream(std::string const& name) {
+void URILexerBase::pushStream(std::string const& name) {
     std::istream* streamPtr = new std::ifstream(name);
     if (!*streamPtr) {
         delete streamPtr;
@@ -243,8 +233,7 @@ URILexerBase::pushStream(std::string const& name) {
     p_pushStream(name, streamPtr);
 }
 
-void
-URILexerBase::toCwd() const {
+void URILexerBase::toCwd() const {
     using namespace std;
     using namespace filesystem;
 
@@ -255,8 +244,7 @@ URILexerBase::toCwd() const {
 };
 
 // static
-std::string
-URILexerBase::chgWorkingDir(std::string const& name) // any name
+std::string URILexerBase::chgWorkingDir(std::string const& name) // any name
 {
     using namespace std;
     using namespace filesystem;
@@ -272,8 +260,7 @@ URILexerBase::chgWorkingDir(std::string const& name) // any name
     return path.string(); // return the pathname
 }
 
-void
-URILexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
+void URILexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
     if (d_streamStack.size() == s_maxSizeofStreamStack_) {
         delete streamPtr;
         throw std::length_error("Max stream stack size exceeded");
@@ -287,38 +274,30 @@ URILexerBase::p_pushStream(std::string const& name, std::istream* streamPtr) {
     d_atBOL = true;
 }
 
-void
-URILexerBase::switchOstream(std::ostream& out) {
+void URILexerBase::switchOstream(std::ostream& out) {
     *d_out << std::flush;
     d_out.reset(new std::ostream(out.rdbuf()));
 }
 
 // $insert debugFunctions
-void
-URILexerBase::setDebug(bool onOff) {}
+void URILexerBase::setDebug(bool onOff) {}
 
-bool
-URILexerBase::debug() const {
-    return false;
-}
+bool URILexerBase::debug() const { return false; }
 
-void
-URILexerBase::redo(size_t nChars) {
+void URILexerBase::redo(size_t nChars) {
     size_t from = nChars >= length() ? 0 : length() - nChars;
     d_input->reRead(d_matched, from);
     d_matched.resize(from);
 }
 
-void
-URILexerBase::switchOstream(std::string const& outfilename) {
+void URILexerBase::switchOstream(std::string const& outfilename) {
     *d_out << std::flush;
     d_out.reset(outfilename == "-"  ? new std::ostream(std::cout.rdbuf())
                 : outfilename == "" ? new std::ostream(std::cerr.rdbuf())
                                     : new std::ofstream(outfilename));
 }
 
-bool
-URILexerBase::popStream() {
+bool URILexerBase::popStream() {
     using namespace std::filesystem;
 
     d_input->close();
@@ -336,8 +315,7 @@ URILexerBase::popStream() {
 
 // See the manual's section `Run-time operations' section for an explanation
 // of this member.
-URILexerBase::ActionType_
-URILexerBase::actionType_(size_t range) {
+URILexerBase::ActionType_ URILexerBase::actionType_(size_t range) {
     d_nextState = d_dfaBase_[d_state][range];
 
     if (d_nextState != -1) // transition is possible
@@ -351,8 +329,7 @@ URILexerBase::actionType_(size_t range) {
     return range != s_rangeOfEOF_ ? ActionType_::ECHO_CH : ActionType_::RETURN;
 }
 
-void
-URILexerBase::accept(size_t nChars) // old name: less
+void URILexerBase::accept(size_t nChars) // old name: less
 {
     if (nChars < d_matched.size()) {
         d_input->reRead(d_matched, nChars);
@@ -360,8 +337,7 @@ URILexerBase::accept(size_t nChars) // old name: less
     }
 }
 
-void
-URILexerBase::setMatchedSize(size_t length) {
+void URILexerBase::setMatchedSize(size_t length) {
     d_input->reRead(d_matched, length); // reread the tail section
     d_matched.resize(length);           // return what's left
 }
@@ -372,8 +348,7 @@ URILexerBase::setMatchedSize(size_t length) {
 // d_atBOL is updated. Finally the rule's index is returned.
 // The numbers behind the finalPtr assignments are explained in the
 // manual's `Run-time operations' section.
-size_t
-URILexerBase::matched_(size_t ch) {
+size_t URILexerBase::matched_(size_t ch) {
     d_input->reRead(ch);
 
     FinalData* finalPtr;
@@ -404,23 +379,20 @@ URILexerBase::matched_(size_t ch) {
     return finalPtr->rule;
 }
 
-size_t
-URILexerBase::getRange_(int ch) // using int to prevent casts
+size_t URILexerBase::getRange_(int ch) // using int to prevent casts
 {
     return ch == AT_EOF ? as<size_t>(s_rangeOfEOF_) : s_ranges_[ch];
 }
 
 // At this point d_nextState contains the next state and continuation is
 // possible. The just read char. is appended to d_match
-void
-URILexerBase::continue_(int ch) {
+void URILexerBase::continue_(int ch) {
     d_state = d_nextState;
 
     if (ch != AT_EOF) d_matched += ch;
 }
 
-void
-URILexerBase::echoCh_(size_t ch) {
+void URILexerBase::echoCh_(size_t ch) {
     *d_out << as<char>(ch);
     d_atBOL = ch == '\n';
 }
@@ -430,8 +402,7 @@ URILexerBase::echoCh_(size_t ch) {
 // the buffer. The first char. in the buffer is echoed to stderr.
 // If there isn't any 1st char yet then the current char doesn't fit any
 // rules and that char is then echoed
-void
-URILexerBase::echoFirst_(size_t ch) {
+void URILexerBase::echoFirst_(size_t ch) {
     d_input->reRead(ch);
     d_input->reRead(d_matched, 1);
     echoCh_(d_matched[0]);
@@ -441,8 +412,7 @@ URILexerBase::echoFirst_(size_t ch) {
 // for BOL and std rules.
 // If a rule was set, update the rule index and the current d_matched
 // length.
-void
-URILexerBase::updateFinals_() {
+void URILexerBase::updateFinals_() {
     size_t len = d_matched.size();
 
     int const* rf = d_dfaBase_[d_state] + s_finIdx_;
@@ -458,8 +428,7 @@ URILexerBase::updateFinals_() {
     }
 }
 
-void
-URILexerBase::reset_() {
+void URILexerBase::reset_() {
     d_final = Final{ FinalData{ s_unavailable, 0 }, FinalData{ s_unavailable, 0 } };
 
     d_state = 0;
@@ -470,8 +439,7 @@ URILexerBase::reset_() {
     d_more = false;
 }
 
-int
-URILexer::executeAction_(size_t ruleIdx) try {
+int URILexer::executeAction_(size_t ruleIdx) try {
     switch (ruleIdx) {
         // $insert actions
         case 0: {
@@ -672,8 +640,7 @@ catch (Leave_ value) {
     return static_cast<int>(value);
 }
 
-int
-URILexer::lex_() {
+int URILexer::lex_() {
     reset_();
     preCode();
 
@@ -718,8 +685,7 @@ URILexer::lex_() {
     } // while
 }
 
-void
-URILexerBase::print_() const {}
+void URILexerBase::print_() const {}
 
 // $insert namespace-close
-}
+} // namespace zpt

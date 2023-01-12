@@ -23,15 +23,13 @@
 #include <zapata/functional/functional.h>
 #include <zapata/functional/FunctionalParser.h>
 
-auto
-zpt::functional::parse(std::string const& _in) -> zpt::json {
+auto zpt::functional::parse(std::string const& _in) -> zpt::json {
     std::istringstream _iss;
     _iss.str(_in);
     return zpt::functional::parse(_iss);
 }
 
-auto
-zpt::functional::parse(std::istream& _in) -> zpt::json {
+auto zpt::functional::parse(std::istream& _in) -> zpt::json {
     static thread_local zpt::FunctionalParser _thread_local_parser;
     zpt::json _root = zpt::json::object();
     _thread_local_parser.switchRoots(_root);

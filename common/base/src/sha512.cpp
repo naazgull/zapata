@@ -47,8 +47,7 @@ const std::uint64_t zpt::crypto::SHA512::sha512_k[80] = // ULL = std::uint64_t
     0x28db77f523047d84ULL, 0x32caab7b40c72493ULL, 0x3c9ebe0a15c9bebcULL, 0x431d67c49c100d4cULL,
     0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL };
 
-void
-zpt::crypto::SHA512::transform(const unsigned char* message, unsigned int block_nb) {
+void zpt::crypto::SHA512::transform(const unsigned char* message, unsigned int block_nb) {
     std::uint64_t w[80];
     std::uint64_t wv[8];
     std::uint64_t t1, t2;
@@ -77,8 +76,7 @@ zpt::crypto::SHA512::transform(const unsigned char* message, unsigned int block_
     }
 }
 
-void
-zpt::crypto::SHA512::init() {
+void zpt::crypto::SHA512::init() {
     m_h[0] = 0x6a09e667f3bcc908ULL;
     m_h[1] = 0xbb67ae8584caa73bULL;
     m_h[2] = 0x3c6ef372fe94f82bULL;
@@ -91,8 +89,7 @@ zpt::crypto::SHA512::init() {
     m_tot_len = 0;
 }
 
-void
-zpt::crypto::SHA512::update(const unsigned char* message, unsigned int len) {
+void zpt::crypto::SHA512::update(const unsigned char* message, unsigned int len) {
     unsigned int block_nb;
     unsigned int new_len, rem_len, tmp_len;
     const unsigned char* shifted_message;
@@ -114,8 +111,7 @@ zpt::crypto::SHA512::update(const unsigned char* message, unsigned int len) {
     m_tot_len += (block_nb + 1) << 7;
 }
 
-void
-zpt::crypto::SHA512::finalize(unsigned char* digest) {
+void zpt::crypto::SHA512::finalize(unsigned char* digest) {
     unsigned int block_nb;
     unsigned int pm_len;
     unsigned int len_b;
@@ -130,8 +126,7 @@ zpt::crypto::SHA512::finalize(unsigned char* digest) {
     for (i = 0; i < 8; i++) { SHA2_UNPACK64(m_h[i], &digest[i << 3]); }
 }
 
-std::string
-zpt::crypto::sha512(std::string const& input) {
+std::string zpt::crypto::sha512(std::string const& input) {
     unsigned char digest[zpt::crypto::SHA512::DIGEST_SIZE];
     memset(digest, 0, zpt::crypto::SHA512::DIGEST_SIZE);
     SHA512 ctx = SHA512();

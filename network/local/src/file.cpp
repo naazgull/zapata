@@ -25,37 +25,34 @@
 #include <zapata/uri.h>
 #include <zapata/globals/globals.h>
 
-auto
-zpt::net::transport::file::send(zpt::exchange& _channel) const -> void {}
-
-auto
-zpt::net::transport::file::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
-
-    zpt::json _content = _layer.translate(_is, _channel->content_type()[0]);
-    _channel->received() = { "headers", _channel->to_send()["headers"], "body", _content };
-    _channel->keep_alive() = true;
+auto zpt::net::transport::file::make_request() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
+    return _to_return;
 }
 
-auto
-zpt::net::transport::file::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok(), "URI parameter must contain 'scheme'", 500, 0);
-    expect(_uri["scheme"] == "file", "scheme must be 'file'", 500, 0);
-    std::string _path{ zpt::uri::path::to_string(_uri) };
-    auto _stream = zpt::stream::alloc<std::basic_fstream<char>>(_path);
-    _stream->transport("file");
-    zpt::exchange _to_return{ _stream.release() };
-    _to_return //
-      ->scheme()
-      .assign("file");
-    _to_return //
-      ->uri()
-      .assign(_path);
-    _to_return->keep_alive() = true;
-    if (_uri["scheme_options"]->ok()) {
-        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
-    }
-    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
+auto zpt::net::transport::file::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
+}
+
+auto zpt::net::transport::file::make_reply(zpt::message _request) const -> zpt::message {
+    auto _to_return =
+      zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
+    return _to_return;
+}
+
+auto zpt::net::transport::file::process_incoming_request(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "file", "Stream underlying transport isn't 'file'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
+}
+
+auto zpt::net::transport::file::process_incoming_reply(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "file", "Stream underlying transport isn't 'file'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
 }

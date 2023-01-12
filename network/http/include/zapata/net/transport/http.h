@@ -32,47 +32,19 @@
 #endif
 
 namespace zpt {
-auto
-HTTP_SERVER_SOCKET() -> ssize_t&;
+auto HTTP_SERVER_SOCKET() -> ssize_t&;
 namespace net {
 namespace transport {
-class http : public zpt::transport::transport_t {
+class http : public zpt::basic_transport {
   public:
     http() = default;
     virtual ~http() = default;
 
-    auto set_headers(zpt::exchange& _channel, zpt::HTTPObj& _http_channel) const
-      -> const zpt::net::transport::http&;
-    auto set_body(zpt::exchange& _channel, zpt::HTTPObj& _http_channel) const
-      -> const zpt::net::transport::http&;
-    auto set_params(zpt::exchange& _channel, zpt::http::req& _request) const
-      -> const zpt::net::transport::http&;
-    auto set_method(zpt::exchange& _channel, zpt::http::req& _request) const
-      -> const zpt::net::transport::http&;
-    auto set_method(zpt::exchange& _channel, zpt::http::rep& _response) const
-      -> const zpt::net::transport::http&;
-    auto set_status(zpt::exchange& _channel, zpt::http::rep& _response) const
-      -> const zpt::net::transport::http&;
-    auto set_headers(zpt::http::req& _request, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-    auto set_headers(zpt::http::rep& _response, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-    auto set_body(zpt::http::req& _request, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-    auto set_body(zpt::http::rep& _response, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-    auto set_method(zpt::http::req& _request, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-    auto set_status(zpt::http::rep& _response, zpt::exchange& _channel) const
-      -> const zpt::net::transport::http&;
-
-    auto receive(zpt::exchange& _channel) const -> void override;
-    auto send(zpt::exchange& _channel) const -> void override;
-    auto resolve(zpt::json _uri) const -> zpt::exchange override;
-    auto receive_request(zpt::exchange& _channel) const -> void;
-    auto receive_reply(zpt::exchange& _channel) const -> void;
-    auto send_request(zpt::exchange& _channel) const -> void;
-    auto send_reply(zpt::exchange& _channel) const -> void;
+    auto make_request() const -> zpt::message override;
+    auto make_reply() const -> zpt::message override;
+    auto make_reply(zpt::message _request) const -> zpt::message override;
+    auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override;
+    auto process_incoming_reply(zpt::basic_stream& _stream) const -> zpt::message override;
 };
 } // namespace transport
 } // namespace net

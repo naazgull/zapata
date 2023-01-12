@@ -27,8 +27,7 @@ zpt::MQTTFactory::MQTTFactory()
 
 zpt::MQTTFactory::~MQTTFactory() {}
 
-auto
-zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
+auto zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) { _return = _found->second; }
@@ -57,25 +56,18 @@ zpt::MQTTFactory::produce(zpt::json _options) -> zpt::socket {
     return _return;
 }
 
-auto
-zpt::MQTTFactory::is_reusable(std::string const& _type) -> bool {
-    return true;
-}
+auto zpt::MQTTFactory::is_reusable(std::string const& _type) -> bool { return true; }
 
-auto
-zpt::MQTTFactory::clean(zpt::socket _socket) -> bool {
-    return false;
-}
+auto zpt::MQTTFactory::clean(zpt::socket _socket) -> bool { return false; }
 
-auto
-zpt::MQTTFactory::on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
+auto zpt::MQTTFactory::on_connect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) -> void {
     if (_data->__rc == 0) {
         zlog(std::string("MQTT server is up and connection authenticated"), zpt::notice);
     }
 }
 
-auto
-zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
+auto zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable
+  -> void {
     zpt::poll::instance()->vanished(_mqtt.get(), [=](zpt::ev::emitter _emitter) mutable -> void {
         int _attempts = 0;
         do {
@@ -99,8 +91,7 @@ zpt::MQTTFactory::on_disconnect(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) 
     });
 }
 
-auto
-zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
+auto zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mutable -> void {
     zpt::json _envelope = zpt::json::object();
 
     _envelope << "performative" << int(zpt::ev::Reply);
@@ -125,8 +116,7 @@ zpt::MQTTFactory::on_message(zpt::mqtt::data _data, zpt::mqtt::broker _mqtt) mut
     _mqtt->buffer(_envelope);
 }
 
-extern "C" void
-_zpt_plugin_load_() {
+extern "C" void _zpt_plugin_load_() {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::MQTTFactory());
     _emitter->channel({ { "mqtt", _factory }, { "mqtts", _factory } });

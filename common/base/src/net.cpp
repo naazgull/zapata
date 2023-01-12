@@ -1,7 +1,6 @@
 #include <zapata/net/manip.h>
 
-auto
-zpt::net::getip(std::string const& _if) -> std::string {
+auto zpt::net::getip(std::string const& _if) -> std::string {
     std::string _out;
     struct ifaddrs *_if_addr = nullptr, *_ifa = nullptr;
     void* _tmp_add_ptr = nullptr;

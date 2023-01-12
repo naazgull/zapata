@@ -33,8 +33,7 @@ std::map<std::string, std::string> OPS = { { "gt", ">" },  { "gte", ">=" },
 }
 } // namespace zpt
 
-auto
-zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
+auto zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
 
     for (auto _f : _in) {
 
@@ -928,8 +927,7 @@ zpt::pgsql::fromsql(pqxx::tuple _in, zpt::json _out) -> void {
     }
 }
 
-auto
-zpt::pgsql::fromsql_r(pqxx::tuple _in) -> zpt::json {
+auto zpt::pgsql::fromsql_r(pqxx::tuple _in) -> zpt::json {
 
     zpt::json _return = zpt::json::object();
     zpt::pgsql::fromsql(_in, _return);
@@ -937,8 +935,7 @@ zpt::pgsql::fromsql_r(pqxx::tuple _in) -> zpt::json {
     return _return;
 }
 
-auto
-zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
+auto zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
 
     if (!_in->is_object()) { return; }
 
@@ -1034,13 +1031,11 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                             }
                         }
                         else {
-
                             _queryr += zpt::pgsql::escape_name(_key) + std::string(" = ") +
                                        std::to_string(d);
                         }
                     }
                     else {
-
                         _queryr +=
                           zpt::pgsql::escape_name(_key) + std::string(" = ") + std::to_string(i);
                     }
@@ -1089,7 +1084,6 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
                                 else { _queryr += zpt::pgsql::escape_name(_key) + _op + _bexpr; }
                             }
                             else {
-
                                 _queryr += zpt::pgsql::escape_name(_key) + _op + std::to_string(d);
                             }
                         }
@@ -1138,8 +1132,7 @@ zpt::pgsql::get_query(zpt::json _in, std::string& _queryr) -> void {
     }
 }
 
-auto
-zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
+auto zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
 
     if (!_in->is_object()) { return; }
 
@@ -1184,8 +1177,7 @@ zpt::pgsql::get_opts(zpt::json _in, std::string& _queryr) -> void {
     }
 }
 
-auto
-zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
+auto zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::string {
 
     std::string _columns;
 
@@ -1227,8 +1219,7 @@ zpt::pgsql::get_column_names(zpt::json _document, zpt::json _opts) -> std::strin
     return _columns;
 }
 
-auto
-zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
+auto zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::string {
 
     std::string _values;
 
@@ -1262,8 +1253,7 @@ zpt::pgsql::get_column_values(zpt::json _document, zpt::json _opts) -> std::stri
     return _values;
 }
 
-auto
-zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string {
+auto zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string {
 
     std::string _values;
 
@@ -1299,8 +1289,7 @@ zpt::pgsql::get_column_sets(zpt::json _document, zpt::json _opts) -> std::string
     return _values;
 }
 
-auto
-zpt::pgsql::escape_name(std::string const& _in) -> std::string {
+auto zpt::pgsql::escape_name(std::string const& _in) -> std::string {
 
     std::string _out(_in);
     //_out.insert(0, "\"");
@@ -1308,8 +1297,7 @@ zpt::pgsql::escape_name(std::string const& _in) -> std::string {
     return _out;
 }
 
-auto
-zpt::pgsql::escape(zpt::json _in, std::string const& _str_delimiter) -> std::string {
+auto zpt::pgsql::escape(zpt::json _in, std::string const& _str_delimiter) -> std::string {
 
     std::string _out;
 

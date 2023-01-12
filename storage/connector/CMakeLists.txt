@@ -3,7 +3,11 @@ set(STORAGE_CONNECTOR_INCLUDE_DIR
 )
 
 add_library(zapata-storage-connector SHARED)
-
+add_dependencies(zapata-storage-connector
+  zapata-base
+  zapata-parser-json
+  zapata-parser-functional
+)
 target_sources(zapata-storage-connector
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connector.cpp
@@ -12,22 +16,28 @@ target_sources(zapata-storage-connector
     ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata/connector.h
 )
 target_include_directories(zapata-storage-connector
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
+    ${STORAGE_CONNECTOR_INCLUDE_DIR}
   INTERFACE
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata-storage-connector
-  INTERFACE
-    zapata-base
-    zapata-parser-json
-    zapata-parser-functional
+  PUBLIC
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
 )
 
 set_target_properties(zapata-storage-connector
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-storage-connector.so
 )
 
 include(GNUInstallDirs)
@@ -41,25 +51,33 @@ install(DIRECTORY ${STORAGE_CONNECTOR_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_storage_connector)
-
+add_dependencies(zapata_test_storage_connector
+  zapata-base
+  zapata-parser-json
+  zapata-parser-functional
+  zapata-storage-connector
+)
 target_sources(zapata_test_storage_connector
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_storage_connector
-  PUBLIC
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-functional,INTERFACE_INCLUDE_DIRECTORIES>
     ${STORAGE_CONNECTOR_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_storage_connector
-  PUBLIC
-    zapata-base
-    zapata-parser-json
-    zapata-parser-functional
-    zapata-storage-connector
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-functional,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-storage-connector,LIBRARIES>
 )
 
 set_target_properties(zapata_test_storage_connector
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

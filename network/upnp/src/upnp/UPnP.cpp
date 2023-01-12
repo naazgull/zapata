@@ -115,8 +115,7 @@ zpt::UPnP::UPnP(zpt::json _options)
 
 zpt::UPnP::~UPnP() {}
 
-auto
-zpt::UPnP::listen() -> zpt::http::req {
+auto zpt::UPnP::listen() -> zpt::http::req {
     zpt::http::req _req;
     {
         std::lock_guard<std::mutex> _lock(this->in_mtx());
@@ -125,16 +124,14 @@ zpt::UPnP::listen() -> zpt::http::req {
     return _req;
 }
 
-auto
-zpt::UPnP::notify(std::string const& _search, std::string const& _location) -> void {
+auto zpt::UPnP::notify(std::string const& _search, std::string const& _location) -> void {
     this->send({ "performative",
                  int(zpt::ev::Notify),
                  "headers",
                  { "Location", _location, "ST", _search, "MAN", "\"ssdp:discover\"", "MX", "3" } });
 }
 
-auto
-zpt::UPnP::search(std::string const& _search) -> void {
+auto zpt::UPnP::search(std::string const& _search) -> void {
     this->send({ "performative",
                  int(zpt::ev::Search),
                  "headers",
@@ -146,77 +143,44 @@ zpt::UPnP::search(std::string const& _search) -> void {
                    "3" } });
 }
 
-auto
-zpt::UPnP::id() -> std::string {
-    return "__upnp_connection__";
-}
+auto zpt::UPnP::id() -> std::string { return "__upnp_connection__"; }
 
-auto
-zpt::UPnP::underlying() -> zpt::socketstream_ptr {
+auto zpt::UPnP::underlying() -> zpt::socketstream_ptr {
     return this->__underlying;
     ;
 }
 
-auto
-zpt::UPnP::socket() -> zmq::socket_ptr {
-    return zmq::socket_ptr(nullptr);
-}
+auto zpt::UPnP::socket() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
-auto
-zpt::UPnP::in() -> zmq::socket_ptr {
-    return zmq::socket_ptr(nullptr);
-}
+auto zpt::UPnP::in() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
-auto
-zpt::UPnP::out() -> zmq::socket_ptr {
-    return zmq::socket_ptr(nullptr);
-}
+auto zpt::UPnP::out() -> zmq::socket_ptr { return zmq::socket_ptr(nullptr); }
 
-auto
-zpt::UPnP::fd() -> int {
-    return this->__underlying->buffer().get_socket();
-}
+auto zpt::UPnP::fd() -> int { return this->__underlying->buffer().get_socket(); }
 
-auto
-zpt::UPnP::close() -> void {
+auto zpt::UPnP::close() -> void {
     this->__underlying->close();
     this->__send->close();
 }
 
-auto
-zpt::UPnP::available() -> bool {
-    return true;
-}
+auto zpt::UPnP::available() -> bool { return true; }
 
-auto
-zpt::UPnP::in_mtx() -> std::mutex& {
-    return this->__mtx_underlying;
-}
+auto zpt::UPnP::in_mtx() -> std::mutex& { return this->__mtx_underlying; }
 
-auto
-zpt::UPnP::out_mtx() -> std::mutex& {
-    return this->__mtx_send;
-}
+auto zpt::UPnP::out_mtx() -> std::mutex& { return this->__mtx_send; }
 
-auto
-zpt::UPnP::type() -> short int {
-    return UPNP_RAW;
-}
+auto zpt::UPnP::type() -> short int { return UPNP_RAW; }
 
-auto
-zpt::UPnP::protocol() -> std::string {
-    return "UPnP/1.1";
-}
+auto zpt::UPnP::protocol() -> std::string { return "UPnP/1.1"; }
 
-auto
-zpt::UPnP::send(zpt::performative _performative, std::string const& _resource, zpt::json _payload)
-  -> zpt::json {
+auto zpt::UPnP::send(zpt::performative _performative,
+                     std::string const& _resource,
+                     zpt::json _payload) -> zpt::json {
     return this->send(
       { "performative", _performative, "resource", _resource, "payload", _payload });
 }
 
-auto
-zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
+auto zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
     zpt::performative _performative = (zpt::performative)((int)_envelope["performative"]);
 
     if (_performative != zpt::ev::Search && _performative != zpt::ev::Notify) {
@@ -258,8 +222,7 @@ zpt::UPnP::send(zpt::json _envelope) -> zpt::json {
     return zpt::undefined;
 }
 
-auto
-zpt::UPnP::recv() -> zpt::json {
+auto zpt::UPnP::recv() -> zpt::json {
     zpt::json _in;
     {
         std::lock_guard<std::mutex> _lock(this->in_mtx());
@@ -279,13 +242,9 @@ zpt::UPnP::recv() -> zpt::json {
     return _in;
 }
 
-auto
-zpt::UPnP::is_reusable() -> bool {
-    return false;
-}
+auto zpt::UPnP::is_reusable() -> bool { return false; }
 
-extern "C" auto
-_zpt_plugin_load_() -> void {
+extern "C" auto _zpt_plugin_load_() -> void {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     _emitter->channel({
       { "upnp", zpt::channel_factory(new zpt::ZMQFactory()) },

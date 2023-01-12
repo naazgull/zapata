@@ -27,14 +27,10 @@
 namespace zpt {
 namespace auth {
 namespace oauth2 {
-auto
-authorize_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-auto
-token_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-auto
-refresh_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
-auto
-validate_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+auto authorize_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+auto token_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+auto refresh_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
+auto validate_listener(zpt::pipeline::event<zpt::exchange>& _event) -> void;
 } // namespace oauth2
 } // namespace auth
 } // namespace zpt

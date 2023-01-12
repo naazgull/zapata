@@ -27,8 +27,7 @@ zpt::UPnPFactory::UPnPFactory()
 
 zpt::UPnPFactory::~UPnPFactory() {}
 
-auto
-zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
+auto zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
     zpt::socket _return;
     auto _found = this->__channels.find(_options["connection"]->string());
     if (_found != this->__channels.end()) { _return = _found->second; }
@@ -39,18 +38,11 @@ zpt::UPnPFactory::produce(zpt::json _options) -> zpt::socket {
     return _return;
 }
 
-auto
-zpt::UPnPFactory::is_reusable(std::string const& _type) -> bool {
-    return true;
-}
+auto zpt::UPnPFactory::is_reusable(std::string const& _type) -> bool { return true; }
 
-auto
-zpt::UPnPFactory::clean(zpt::socket _socket) -> bool {
-    return false;
-}
+auto zpt::UPnPFactory::clean(zpt::socket _socket) -> bool { return false; }
 
-extern "C" void
-_zpt_plugin_load_() {
+extern "C" void _zpt_plugin_load_() {
     zpt::ev::emitter_factory _emitter = zpt::emitter();
     zpt::channel_factory _factory(new zpt::UPnPFactory());
     _emitter->channel({ { "upnp", _factory }, { "upnps", _factory } });

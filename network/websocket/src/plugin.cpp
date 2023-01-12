@@ -25,41 +25,38 @@
 #include <zapata/net/socket.h>
 #include <zapata/net/websocket.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _config = _plugin->config();
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _config = _plugin.config();
+    auto& _layer = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER());
 
-    _layer.add("ws", zpt::transport::alloc<zpt::net::transport::websocket>());
-    if (_config["port"]->ok()) {
-        auto& _server_sock = zpt::globals::alloc<zpt::serversocketstream>(
+    _layer.add("ws", zpt::make_transport<zpt::net::transport::websocket>());
+    if (_config("port")->ok()) {
+        auto& _server_sock = zpt::make_global<zpt::serversocketstream>(
           zpt::WEBSOCKET_SERVER_SOCKET(),
-          static_cast<std::uint16_t>(static_cast<unsigned int>(_config["port"])));
+          static_cast<std::uint16_t>(static_cast<unsigned int>(_config("port"))));
 
-        _boot.add_thread([=]() mutable -> void {
-            auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-            zlog("Starting WebSocket transport on port " << _config["port"], zpt::info);
+        _plugin.add_thread([=]() mutable -> void {
+            auto& _polling = zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING());
+            zlog("Started WebSocket transport on port " << _config("port"), zpt::info);
 
             try {
                 do {
                     auto _client = _server_sock->accept();
                     _client->transport("ws");
-                    _polling.listen_on(_client);
+                    _polling.listen_on(std::move(_client));
                 } while (true);
             }
             catch (zpt::failed_expectation const& _e) {
             }
-            zlog("Stopping WebSocket transport on port " << _config["port"], zpt::info);
+            zlog("Stopped WebSocket transport on port " << _config("port"), zpt::info);
         });
     }
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) {
-    auto& _config = _plugin->config();
-    if (_config["port"]->ok()) {
-        zpt::globals::get<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET())->close();
-        zpt::globals::dealloc<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) {
+    auto& _config = _plugin.config();
+    if (_config("port")->ok()) {
+        zpt::global_cast<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET())->close();
+        zpt::release_global<zpt::serversocketstream>(zpt::WEBSOCKET_SERVER_SOCKET());
     }
 }

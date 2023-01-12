@@ -3,7 +3,6 @@ set(COMMON_BASE_INCLUDE_DIR
 )
 
 add_library(zapata-base SHARED)
-
 target_sources(zapata-base
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spin_lock.cpp
@@ -66,21 +65,23 @@ target_sources(zapata-base
     ${COMMON_BASE_INCLUDE_DIR}/zapata/atomics/padded_atomic.h
 )
 target_include_directories(zapata-base
-  PUBLIC
+  PRIVATE
+    ${COMMON_BASE_INCLUDE_DIR}
+  INTERFACE
     ${COMMON_BASE_INCLUDE_DIR}
 )
 target_link_libraries(zapata-base
   PUBLIC
     magic
     ossp-uuid++
-)
-  
+)  
 set_target_properties(zapata-base
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-base.so
 )
 
 include(GNUInstallDirs)
@@ -91,4 +92,26 @@ install(TARGETS zapata-base
 install(DIRECTORY ${COMMON_BASE_INCLUDE_DIR}/zapata
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING PATTERN "*.h"
+)
+
+add_executable(zapata_test_common_base)
+add_dependencies(zapata_test_common_base
+  zapata-base
+)
+target_sources(zapata_test_common_base
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+)
+target_include_directories(zapata_test_common_base
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+)
+target_link_libraries(zapata_test_common_base
+  INTERFACE
+    zapata-base
+)
+set_target_properties(zapata_test_common_base
+  PROPERTIES
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

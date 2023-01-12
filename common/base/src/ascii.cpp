@@ -26,8 +26,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-auto
-zpt::ascii::encode(std::string& _out, bool quote) -> void {
+auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
     std::wstring ws{ wc };
 
@@ -44,8 +43,7 @@ zpt::ascii::encode(std::string& _out, bool quote) -> void {
     _out.assign(_oss.str());
 }
 
-auto
-zpt::generate::key(std::string& _out, size_t _size) -> void {
+auto zpt::generate::key(std::string& _out, size_t _size) -> void {
     static std::string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
     timeval _tv = { 0 };
 
@@ -56,22 +54,19 @@ zpt::generate::key(std::string& _out, size_t _size) -> void {
     }
 }
 
-auto
-zpt::generate::r_key(size_t _size) -> std::string {
+auto zpt::generate::r_key(size_t _size) -> std::string {
     std::string _out;
     zpt::generate::key(_out, _size);
     return _out;
 }
 
-auto
-zpt::generate::r_key() -> std::string {
+auto zpt::generate::r_key() -> std::string {
     std::string _out;
     zpt::generate::key(_out);
     return _out;
 }
 
-auto
-zpt::generate::hash(std::string& _out) -> void {
+auto zpt::generate::hash(std::string& _out) -> void {
     static std::string _charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     std::string _randompass;
     _randompass.resize(45);
@@ -83,23 +78,18 @@ zpt::generate::hash(std::string& _out) -> void {
         if (i % 10 == 0) { srand(_tv.tv_usec * i); }
         _randompass[i] = _charset[rand() % _charset.length()];
     };
-    _out.insert(_out.length(), _randompass);
+    _out.append(_randompass);
 }
 
-auto
-zpt::generate::r_hash() -> std::string {
+auto zpt::generate::r_hash() -> std::string {
     std::string _out;
     zpt::generate::hash(_out);
     return _out;
 }
 
-auto
-zpt::generate::uuid(std::string& _out) -> void {
-    _out.append(zpt::generate::r_uuid());
-}
+auto zpt::generate::uuid(std::string& _out) -> void { _out.append(zpt::generate::r_uuid()); }
 
-auto
-zpt::generate::r_uuid() -> std::string {
+auto zpt::generate::r_uuid() -> std::string {
     static thread_local ::uuid uuid_gen;
     uuid_gen.make(UUID_MAKE_V1);
     auto _generated = uuid_gen.string();
@@ -108,8 +98,7 @@ zpt::generate::r_uuid() -> std::string {
     return _return;
 }
 
-auto
-zpt::test::uuid(std::string const& _uuid) -> bool {
+auto zpt::test::uuid(std::string const& _uuid) -> bool {
     static const std::regex _uuid_rgx("^([a-fA-F0-9]{8})-"
                                       "([a-fA-F0-9]{4})-"
                                       "([a-fA-F0-9]{4})-"
@@ -118,24 +107,16 @@ zpt::test::uuid(std::string const& _uuid) -> bool {
     return std::regex_match(_uuid, _uuid_rgx);
 }
 
-auto
-zpt::test::utf8(std::string const& _uri) -> bool {
-    return true;
-}
+auto zpt::test::utf8(std::string const& _uri) -> bool { return true; }
 
-auto
-zpt::test::ascii(std::string const& _ascii) -> bool {
+auto zpt::test::ascii(std::string const& _ascii) -> bool {
     static const std::regex _ascii_rgx("^([a-zA-Z0-9_@:;./+*|-]+)$");
     return std::regex_match(_ascii, _ascii_rgx);
 }
 
-auto
-zpt::test::token(std::string const& _token) -> bool {
-    return true;
-}
+auto zpt::test::token(std::string const& _token) -> bool { return true; }
 
-auto
-zpt::test::uri(std::string _uri) -> bool {
+auto zpt::test::uri(std::string _uri) -> bool {
     if (_uri.find(":") >= _uri.find("/")) { _uri = std::string("zpt:") + _uri; }
     static const std::regex _uri_rgx("([@>]{0,1})([a-zA-Z][a-zA-Z0-9+.-]+):" // scheme:
                                      "([^?#]*)"                              // authority and path
@@ -145,28 +126,24 @@ zpt::test::uri(std::string _uri) -> bool {
     return std::regex_match(_uri, _uri_rgx);
 }
 
-auto
-zpt::test::email(std::string const& _email) -> bool {
+auto zpt::test::email(std::string const& _email) -> bool {
     static const std::regex _email_rgx("([a-zA-Z0-9])([a-zA-Z0-9+._-]*)@"
                                        "([a-zA-Z0-9])([a-zA-Z0-9+._-]*)");
     return std::regex_match(_email, _email_rgx);
 }
 
-auto
-zpt::test::phone(std::string const& _phone) -> bool {
+auto zpt::test::phone(std::string const& _phone) -> bool {
     static const std::regex _phone_rgx("(?:\\(([0-9]){1,3}\\)([ ]*))?"
                                        "([0-9]){3,12}");
     return std::regex_match(_phone, _phone_rgx);
 }
 
-auto
-zpt::test::regex(std::string const& _target, std::string const& _regex) -> bool {
+auto zpt::test::regex(std::string const& _target, std::string const& _regex) -> bool {
     std::regex _rgx(_regex);
     return std::regex_match(_target, _rgx);
 }
 
-auto
-zpt::test::timestamp(std::string const& _timestamp) -> bool {
+auto zpt::test::timestamp(std::string const& _timestamp) -> bool {
     static const std::regex _timestamp_rgx("([0-9]){4}"
                                            "(?:[ /_-])?"
                                            "([0-9]){2}"

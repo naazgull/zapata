@@ -26,8 +26,7 @@
 
 #define _VALID_OPS std::string("$gt^$gte^$lt^$lte^$ne^$type^$exists^$in^$nin^$elemMatch^")
 
-auto
-zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
+auto zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
     zpt::json _selector = { "_id", { "$lt", "_" } };
     zpt::json _query = { "selector", _selector };
     if (!_in->is_object()) {
@@ -233,8 +232,7 @@ zpt::couchdb::get_query(zpt::json _in) -> zpt::json {
     return _query;
 }
 
-auto
-zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
+auto zpt::couchdb::get_fields(zpt::json _opts) -> zpt::json {
     zpt::json _return = zpt::json::object();
     zpt::json _fields = _opts["fields"];
     if (_fields->ok()) {

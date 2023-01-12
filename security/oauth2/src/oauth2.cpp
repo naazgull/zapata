@@ -19,19 +19,18 @@
   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 #include <ctime>
 #include <memory>
 #include <zapata/rest.h>
 #include <zapata/oauth2/oauth2.h>
 
-auto
-zpt::OAUTH2_TOKEN_PROVIDER() -> ssize_t& {
+auto zpt::OAUTH2_TOKEN_PROVIDER() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-auto
-zpt::OAUTH2_SERVER() -> ssize_t& {
+auto zpt::OAUTH2_SERVER() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -40,26 +39,18 @@ zpt::auth::oauth2::server::server(zpt::auth::oauth2::token_provider_ptr _token_p
                                   zpt::json _options)
   : __token_provider{ _token_provider }
   , __options(_options) {
-    expect(
-      this->__token_provider.get() != nullptr, "a valid token provider must be provided", 500, 0);
+    expect(this->__token_provider.get() != nullptr, "a valid token provider must be provided");
 }
 
 zpt::auth::oauth2::server::~server() {}
 
-auto
-zpt::auth::oauth2::server::options() -> zpt::json {
-    return this->__options;
-}
+auto zpt::auth::oauth2::server::options() -> zpt::json { return this->__options; }
 
-auto
-zpt::auth::oauth2::server::name() -> std::string {
-    return "oauth2.0";
-}
+auto zpt::auth::oauth2::server::name() -> std::string { return "oauth2.0"; }
 
-auto
-zpt::auth::oauth2::server::authorize(zpt::performative _performative,
-                                     zpt::json _envelope,
-                                     zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::authorize(zpt::performative _performative,
+                                          zpt::json _envelope,
+                                          zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
     else { _param.assign("params"); }
@@ -82,10 +73,9 @@ zpt::auth::oauth2::server::authorize(zpt::performative _performative,
     expect(false, "\"response_type\" not valid", 400, 0);
 }
 
-auto
-zpt::auth::oauth2::server::authorize(std::string const& _topic,
-                                     zpt::json _envelope,
-                                     zpt::json _roles_needed) -> zpt::json {
+auto zpt::auth::oauth2::server::authorize(std::string const& _topic,
+                                          zpt::json _envelope,
+                                          zpt::json _roles_needed) -> zpt::json {
     auto _access_token = zpt::auth::extract(_envelope);
     auto _identity = this->__token_provider->get_data_from_token(_access_token);
     expect(_identity["client_id"]->is_string(), "associated token isn't a valid token", 401, 0);
@@ -111,10 +101,9 @@ zpt::auth::oauth2::server::authorize(std::string const& _topic,
     return _identity;
 }
 
-auto
-zpt::auth::oauth2::server::token(zpt::performative _performative,
-                                 zpt::json _envelope,
-                                 zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::token(zpt::performative _performative,
+                                      zpt::json _envelope,
+                                      zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
     else { _param.assign("params"); }
@@ -142,10 +131,9 @@ zpt::auth::oauth2::server::token(zpt::performative _performative,
     else { return { "status", 200, "body", _token }; }
 }
 
-auto
-zpt::auth::oauth2::server::refresh(zpt::performative _performative,
-                                   zpt::json _envelope,
-                                   zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::refresh(zpt::performative _performative,
+                                        zpt::json _envelope,
+                                        zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
     else { _param.assign("params"); }
@@ -174,10 +162,9 @@ zpt::auth::oauth2::server::refresh(zpt::performative _performative,
     else { return { "status", 200, "body", _token }; }
 }
 
-auto
-zpt::auth::oauth2::server::validate(zpt::performative _performative,
-                                    zpt::json _envelope,
-                                    zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::validate(zpt::performative _performative,
+                                         zpt::json _envelope,
+                                         zpt::json _opts) -> zpt::json {
     std::string _param{ "" };
     if (_performative == zpt::Post) { _param.assign("body"); }
     else { _param.assign("params"); }
@@ -192,11 +179,10 @@ zpt::auth::oauth2::server::validate(zpt::performative _performative,
     return _token;
 }
 
-auto
-zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
-                                               zpt::json _request,
-                                               zpt::json _envelope,
-                                               zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
+                                                    zpt::json _request,
+                                                    zpt::json _envelope,
+                                                    zpt::json _opts) -> zpt::json {
     expect_mandatory(_request, "client_id", 412);
     expect_mandatory(_request, "redirect_uri", 412);
     expect_mandatory(_opts, "domain", 412);
@@ -263,11 +249,10 @@ zpt::auth::oauth2::server::authorize_with_code(zpt::performative _performative,
                  std::string("&state=") + static_cast<std::string>(_state))) } };
 }
 
-auto
-zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performative,
-                                                   zpt::json _request,
-                                                   zpt::json _envelope,
-                                                   zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performative,
+                                                        zpt::json _request,
+                                                        zpt::json _envelope,
+                                                        zpt::json _opts) -> zpt::json {
     expect_mandatory(_request, "client_id", 412);
     expect_mandatory(_request, "username", 412);
     expect_mandatory(_request, "password", 412);
@@ -357,11 +342,10 @@ zpt::auth::oauth2::server::authorize_with_password(zpt::performative _performati
     }
 }
 
-auto
-zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _performative,
-                                                             zpt::json _request,
-                                                             zpt::json _envelope,
-                                                             zpt::json _opts) -> zpt::json {
+auto zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _performative,
+                                                                  zpt::json _request,
+                                                                  zpt::json _envelope,
+                                                                  zpt::json _opts) -> zpt::json {
     expect_mandatory(_request, "client_id", 412);
     expect_mandatory(_request, "client_secret", 412);
     expect_mandatory(_opts, "domain", 412);
@@ -423,8 +407,7 @@ zpt::auth::oauth2::server::authorize_with_client_credentials(zpt::performative _
     }
 }
 
-auto
-zpt::auth::oauth2::server::generate_token(zpt::json _data) -> zpt::json {
+auto zpt::auth::oauth2::server::generate_token(zpt::json _data) -> zpt::json {
     auto _client_id = _data["client_id"]->string();
     auto _scope = _data["scope"];
     auto _grant_type = _data["grant_type"]->ok() ? static_cast<std::string>(_data["grant_type"])
@@ -458,8 +441,7 @@ zpt::auth::oauth2::server::generate_token(zpt::json _data) -> zpt::json {
     return _token + this->__token_provider->get_roles_permissions(_token);
 }
 
-auto
-zpt::auth::extract(zpt::json _envelope) -> std::string {
+auto zpt::auth::extract(zpt::json _envelope) -> std::string {
     if (_envelope["headers"]["Authorization"]->ok()) {
         return static_cast<std::string>(
           zpt::split(_envelope["headers"]["Authorization"]->string(), " ")[1]);

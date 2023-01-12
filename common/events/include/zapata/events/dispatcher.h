@@ -22,154 +22,148 @@
 
 #pragma once
 
+#include <memory>
 #include <zapata/base.h>
 #include <zapata/lockfree.h>
 
 namespace zpt {
+auto DISPATCHER() -> ssize_t&;
+
 namespace events {
-
-class unregister : public std::exception {
-  public:
-    unregister() = default;
-    virtual ~unregister() = default;
-};
-
-class factory {
-  public:
-    factory() = default;
-    virtual ~factory() = default;
-};
-
-template<typename C, typename E, typename V>
-class dispatcher : public factory {
-  public:
-    dispatcher(long _max_threads, long _max_pop_wait_micro = 50000L);
-    virtual ~dispatcher();
-
-    auto add_consumer() -> C&;
-    auto trigger(E _type, V _content) -> C&;
-    auto trap() -> C&;
-    template<typename F>
-    auto listen(E _type, F _callback) -> C&;
-    template<typename F>
-    auto mute(E _type, F _callback) -> C&;
-    auto shutdown() -> C&;
-    auto is_shutdown_ongoing() -> bool;
-    auto loop() -> void;
-
-  public:
-    zpt::lf::queue<std::tuple<E, V>> __queue;
-    long __max_pop_wait{ 50000L };
-    std::vector<std::thread> __consumers;
-    std::atomic<bool> __shutdown{ false };
-};
-
+enum state { retrigger = -2, ready = -1, finish = 0, abort = 1 };
+class dispatcher;
 } // namespace events
 } // namespace zpt
 
-template<typename C, typename E, typename V>
-zpt::events::dispatcher<C, E, V>::dispatcher(long _max_threads, long _max_pop_wait_micro)
-  : __queue{ _max_threads }
-  , __max_pop_wait{ _max_pop_wait_micro } {}
+template<typename T>
+concept Operation = requires(T t,
+                             zpt::events::dispatcher& _d,
+                             std::exception const& _e,
+                             zpt::failed_expectation const& _fe) {
+    { t(_d) } -> std::convertible_to<zpt::events::state>;
+    { t.blocked() } -> std::convertible_to<bool>;
+    { t.catch_error(_e) } -> std::convertible_to<bool>;
+    { t.catch_error(_fe) } -> std::convertible_to<bool>;
+};
 
-template<typename C, typename E, typename V>
-zpt::events::dispatcher<C, E, V>::~dispatcher() {
-    if (!this->__shutdown.load()) { zlog("dispatcher has not been shutdown", zpt::error); }
+namespace zpt {
+class abstract_event {
+  public:
+    abstract_event() = default;
+    virtual ~abstract_event() = default;
+
+    virtual auto blocked() const -> bool = 0;
+    virtual auto catch_error(std::exception const& _e) -> bool = 0;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool = 0;
+    virtual auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state = 0;
+};
+using event = std::shared_ptr<zpt::abstract_event>;
+
+template<Operation T>
+class event_t : public zpt::abstract_event {
+  public:
+    template<typename... Args>
+    event_t(Args&&... _args);
+    virtual ~event_t() = default;
+
+    auto operator*() -> T&;
+    auto operator*() const -> T const&;
+    virtual auto blocked() const -> bool override final;
+    virtual auto catch_error(std::exception const& _e) -> bool override final;
+    virtual auto catch_error(zpt::failed_expectation const& _e) -> bool override final;
+    virtual auto operator()(zpt::events::dispatcher& _dispatcher)
+      -> zpt::events::state override final;
+
+  private:
+    T __underlying;
+};
+
+template<typename T>
+auto make_event(T _operator) -> zpt::event;
+template<typename T, typename... Args>
+auto make_event(Args&&... _args) -> zpt::event;
+
+namespace events {
+class dispatcher {
+  public:
+    dispatcher(long _max_consumers);
+    virtual ~dispatcher();
+
+    auto start_consumers(long n_consumers = 0) -> dispatcher&;
+    auto stop_consumers() -> dispatcher&;
+    auto trigger(zpt::event _event) -> dispatcher&;
+    template<typename T, typename... Args>
+    auto trigger(Args&&... _args) -> dispatcher&;
+    auto trap() -> dispatcher&;
+    auto is_stopping_ongoing() -> bool;
+
+  public:
+    zpt::lf::queue<zpt::event> __queue;
+    std::vector<std::thread> __consumers;
+    zpt::padded_atomic<bool> __shutdown{ false };
+    zpt::padded_atomic<long> __running_consumers{ 0 };
+    long __max_consumers{ 2 };
+
+    auto loop(long _consumer_nr) -> void;
+};
+} // namespace events
+template<typename T>
+auto event_cast(zpt::event& _event) -> T&;
+} // namespace zpt
+
+template<Operation T>
+template<typename... Args>
+zpt::event_t<T>::event_t(Args&&... _args)
+  : __underlying{ std::forward<Args>(_args)... } {}
+
+template<Operation T>
+auto zpt::event_t<T>::operator*() -> T& {
+    return this->__underlying;
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::add_consumer() -> C& {
-    this->__consumers.emplace_back([this]() mutable -> void { this->loop(); });
-    return (*static_cast<C*>(this));
+template<Operation T>
+auto zpt::event_t<T>::operator*() const -> T const& {
+    return this->__underlying;
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::trigger(E _event, V _content) -> C& {
-    this->__queue.push(std::make_tuple(_event, _content));
-    return (*static_cast<C*>(this));
+template<Operation T>
+auto zpt::event_t<T>::blocked() const -> bool {
+    return this->__underlying.blocked();
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::trap() -> C& {
-    auto [_event, _content] = this->__queue.pop();
-    try {
-        static_cast<C*>(this)->trapped(_event, _content);
-    }
-    catch (zpt::failed_expectation const& _e) {
-        if (!static_cast<C*>(this)->report_error(_event,
-                                                 _content,
-                                                 _e.what(),
-                                                 _e.description(),
-                                                 _e.backtrace(),
-                                                 _e.code(),
-                                                 _e.status())) {
-            throw;
-        }
-    }
-    catch (std::exception const& _e) {
-        if (!static_cast<C*>(this)->report_error(
-              _event, _content, _e.what(), nullptr, nullptr, -1, 500)) {
-            throw;
-        }
-    }
-    return (*static_cast<C*>(this));
+template<Operation T>
+auto zpt::event_t<T>::catch_error(std::exception const& _e) -> bool {
+    return this->__underlying.catch_error(_e);
 }
 
-template<typename C, typename E, typename V>
-template<typename F>
-auto
-zpt::events::dispatcher<C, E, V>::listen(E _event, F _listener) -> C& {
-    static_cast<C*>(this)->listen_to(_event, _listener);
-    return (*static_cast<C*>(this));
+template<Operation T>
+auto zpt::event_t<T>::catch_error(zpt::failed_expectation const& _e) -> bool {
+    return this->__underlying.catch_error(_e);
 }
 
-template<typename C, typename E, typename V>
-template<typename F>
-auto
-zpt::events::dispatcher<C, E, V>::mute(E _event, F _listener) -> C& {
-    static_cast<C*>(this)->mute_from(_event, _listener);
-    return (*static_cast<C*>(this));
+template<Operation T>
+auto zpt::event_t<T>::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+    return this->__underlying(_dispatcher);
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::shutdown() -> C& {
-    expect(!this->__shutdown.load(),
-           "`shutdown()` already been called from another execution path",
-           500,
-           0);
-    this->__shutdown.store(true);
-    for (size_t _idx = 0; _idx != this->__consumers.size(); ++_idx) {
-        this->__consumers[_idx].join();
-    }
-    return (*static_cast<C*>(this));
+template<typename T>
+auto zpt::make_event(T _operator) -> zpt::event {
+    return std::shared_ptr<zpt::abstract_event>{ new zpt::event_t<T>{ _operator } };
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::is_shutdown_ongoing() -> bool {
-    return this->__shutdown.load();
+template<typename T, typename... Args>
+auto zpt::make_event(Args&&... _args) -> zpt::event {
+    return std::shared_ptr<zpt::abstract_event>(
+      static_cast<zpt::abstract_event*>(new zpt::event_t<T>{ std::forward<Args>(_args)... }));
 }
 
-template<typename C, typename E, typename V>
-auto
-zpt::events::dispatcher<C, E, V>::loop() -> void {
-    zpt::this_thread::adaptive_timer<long, 5> _timer;
-    do {
-        try {
-            this->trap();
-            _timer.reset();
-        }
-        catch (zpt::NoMoreElementsException const& e) {
-            if (this->__shutdown.load()) {
-                this->__queue.clear_thread_context();
-                zlog("Worker is exiting", zpt::trace);
-                return;
-            }
-            _timer.sleep_for(this->__max_pop_wait);
-        }
-    } while (true);
+template<typename T, typename... Args>
+auto zpt::events::dispatcher::trigger(Args&&... _args) -> dispatcher& {
+    this->trigger(zpt::make_event<T>(std::forward<Args>(_args)...));
+    return (*this);
+}
+
+template<typename T>
+auto zpt::event_cast(zpt::event& _event) -> T& {
+    return *static_cast<zpt::event_t<T>&>(*_event.get());
 }

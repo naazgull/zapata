@@ -24,8 +24,7 @@
 #include <zapata/base/sentry.h>
 #include <datetime.h>
 
-auto
-zpt::PYTHON_BRIDGE() -> ssize_t& {
+auto zpt::PYTHON_BRIDGE() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
@@ -49,92 +48,67 @@ zpt::py_object::~py_object() {
     if (this->__underlying != nullptr) { Py_DECREF(this->__underlying); }
 }
 
-auto
-zpt::py_object::operator=(py_object const& _rhs) -> py_object& {
+auto zpt::py_object::operator=(py_object const& _rhs) -> py_object& {
     this->__underlying = _rhs.__underlying;
     if (this->__underlying != nullptr) { Py_INCREF(this->__underlying); }
     return (*this);
 }
 
-auto
-zpt::py_object::operator=(py_object&& _rhs) -> py_object& {
+auto zpt::py_object::operator=(py_object&& _rhs) -> py_object& {
     this->__underlying = _rhs.__underlying;
     _rhs.__underlying = nullptr;
     return (*this);
 }
 
-auto
-zpt::py_object::operator=(PyObject* _rhs) -> py_object& {
+auto zpt::py_object::operator=(PyObject* _rhs) -> py_object& {
     this->__underlying = _rhs;
     if (this->__underlying != nullptr) { Py_INCREF(this->__underlying); }
     return (*this);
 }
 
-auto
-zpt::py_object::operator->() -> PyObject* {
-    return this->__underlying;
-}
+auto zpt::py_object::operator->() -> PyObject* { return this->__underlying; }
 
-auto
-zpt::py_object::operator*() -> PyObject& {
-    return *this->__underlying;
-}
+auto zpt::py_object::operator*() -> PyObject& { return *this->__underlying; }
 
 zpt::py_object::operator PyObject*() { return this->__underlying; }
 
-auto
-zpt::py_object::get() -> PyObject* {
-    return this->__underlying;
-}
+auto zpt::py_object::get() -> PyObject* { return this->__underlying; }
 
 zpt::python::bridge::~bridge() {
     // if (this->is_initialized()) { Py_Finalize(); }
 }
 
-auto
-zpt::python::bridge::name() const -> std::string {
-    return "python";
-}
+auto zpt::python::bridge::name() const -> std::string { return "python"; }
 
-auto
-zpt::python::bridge::setup_module(zpt::json _conf, std::string _name) -> zpt::python::bridge& {
-    expect(!this->is_initialized(),
-           "Python: bridge already initialized, can't add a module now",
-           500,
-           0);
+auto zpt::python::bridge::setup_module(zpt::json _conf, std::string _name) -> zpt::python::bridge& {
+    expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
     this->__external_to_load.insert(std::make_pair(_name, _conf));
     return (*this);
 }
 
-auto
-zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback)
+auto zpt::python::bridge::setup_module(zpt::json _conf, callback_type _callback)
   -> zpt::python::bridge& {
-    expect(!this->is_initialized(),
-           "Python: bridge already initialized, can't add a module now",
-           500,
-           0);
+    expect(!this->is_initialized(), "Python: bridge already initialized, can't add a module now");
     this->__builtin_to_load.insert(
-      std::make_pair(_conf["name"]->string(), std::make_tuple(_callback, _conf)));
+      std::make_pair(_conf("name")->string(), std::make_tuple(_callback, _conf)));
     return (*this);
 }
 
-auto
-zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
-    expect(_to_locate["module"]->is_string(), "Python: module name must be provided", 500, 0);
-    expect(_to_locate["function"]->is_string(), "Python: function name must be provided", 500, 0);
+auto zpt::python::bridge::find(zpt::json _to_locate) -> object_type {
+    expect(_to_locate("module")->is_string(), "Python: module name must be provided");
+    expect(_to_locate("function")->is_string(), "Python: function name must be provided");
     this->initialize();
-    auto _found = this->__modules.find(_to_locate["module"]->string());
+    auto _found = this->__modules.find(_to_locate("module")->string());
     if (_found != this->__modules.end()) {
         auto& _module = _found->second;
         auto _dictionary = PyModule_GetDict(_module);
-        auto _func = PyDict_GetItemString(_dictionary, _to_locate["function"]->string().data());
+        auto _func = PyDict_GetItemString(_dictionary, _to_locate("function")->string().data());
         return _func;
     }
     return nullptr;
 }
 
-auto
-zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
+auto zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     if (_exp == nullptr) { return zpt::undefined; }
     this->initialize();
 
@@ -234,127 +208,89 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         else { _parent = _value; }
     }
     else if (Py_TYPE(_exp) == &PyFilter_Type) {
-        expect(Py_TYPE(_exp) != &PyFilter_Type, "Python: unmanaged python type PyFilter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyFilter_Type, "Python: unmanaged python type PyFilter");
     }
     else if (Py_TYPE(_exp) == &PyMap_Type) {
-        expect(Py_TYPE(_exp) != &PyMap_Type, "Python: unmanaged python type PyMap", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMap_Type, "Python: unmanaged python type PyMap");
     }
     else if (Py_TYPE(_exp) == &PyZip_Type) {
-        expect(Py_TYPE(_exp) != &PyZip_Type, "Python: unmanaged python type PyZip", 500, 0);
+        expect(Py_TYPE(_exp) != &PyZip_Type, "Python: unmanaged python type PyZip");
     }
     else if (Py_TYPE(_exp) == &PyByteArrayIter_Type) {
         expect(Py_TYPE(_exp) != &PyByteArrayIter_Type,
-               "Python: unmanaged python type PyByteArrayIter",
-               500,
-               0);
+               "Python: unmanaged python type PyByteArrayIter");
     }
     else if (Py_TYPE(_exp) == &PyBytesIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyBytesIter_Type, "Python: unmanaged python type PyBytesIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyBytesIter_Type, "Python: unmanaged python type PyBytesIter");
     }
     else if (PyCell_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCell_Type, "Python: unmanaged python type PyCell", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCell_Type, "Python: unmanaged python type PyCell");
     }
     else if (PyMethod_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyMethod_Type, "Python: unmanaged python type PyMethod", 500, 0);
+        expect(Py_TYPE(_exp) != &PyMethod_Type, "Python: unmanaged python type PyMethod");
     }
     else if (PyInstanceMethod_Check(_exp)) {
         expect(Py_TYPE(_exp) != &PyInstanceMethod_Type,
-               "Python: unmanaged python type PyInstanceMethod",
-               500,
-               0);
+               "Python: unmanaged python type PyInstanceMethod");
     }
     else if (Py_TYPE(_exp) == &PyClassMethodDescr_Type) {
         expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-               "Python: unmanaged python type PyClassMethodDescr",
-               500,
-               0);
+               "Python: unmanaged python type PyClassMethodDescr");
     }
     else if (Py_TYPE(_exp) == &PyGetSetDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyGetSetDescr_Type,
-               "Python: unmanaged python type PyGetSetDescr",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyGetSetDescr_Type, "Python: unmanaged python type PyGetSetDescr");
     }
     else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
-               "Python: unmanaged python type PyMemberDescr",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyMemberDescr_Type, "Python: unmanaged python type PyMemberDescr");
     }
     else if (Py_TYPE(_exp) == &PyMethodDescr_Type) {
         expect(Py_TYPE(_exp) != &PyClassMethodDescr_Type,
-               "Python: unmanaged python type PyClassMethodDescr",
-               500,
-               0);
+               "Python: unmanaged python type PyClassMethodDescr");
     }
     else if (Py_TYPE(_exp) == &PyMemberDescr_Type) {
-        expect(Py_TYPE(_exp) != &PyMemberDescr_Type,
-               "Python: unmanaged python type PyMemberDescr",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyMemberDescr_Type, "Python: unmanaged python type PyMemberDescr");
     }
     else if (Py_TYPE(_exp) == &PyDictProxy_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyDictProxy_Type, "Python: unmanaged python type PyDictProxy", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictProxy_Type, "Python: unmanaged python type PyDictProxy");
     }
     else if (Py_TYPE(_exp) == &_PyMethodWrapper_Type) {
         expect(Py_TYPE(_exp) != &_PyMethodWrapper_Type,
-               "Python: unmanaged python type _PyMethodWrapper",
-               500,
-               0);
+               "Python: unmanaged python type _PyMethodWrapper");
     }
     else if (Py_TYPE(_exp) == &PyProperty_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyProperty_Type, "Python: unmanaged python type PyProperty", 500, 0);
+        expect(Py_TYPE(_exp) != &PyProperty_Type, "Python: unmanaged python type PyProperty");
     }
     else if (Py_TYPE(_exp) == &PyDictIterKey_Type) {
-        expect(Py_TYPE(_exp) != &PyDictIterKey_Type,
-               "Python: unmanaged python type PyDictIterKey",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyDictIterKey_Type, "Python: unmanaged python type PyDictIterKey");
     }
     else if (Py_TYPE(_exp) == &PyDictIterValue_Type) {
         expect(Py_TYPE(_exp) != &PyDictIterValue_Type,
-               "Python: unmanaged python type PyDictIterValue",
-               500,
-               0);
+               "Python: unmanaged python type PyDictIterValue");
     }
     else if (Py_TYPE(_exp) == &PyDictIterItem_Type) {
         expect(Py_TYPE(_exp) != &PyDictIterItem_Type,
-               "Python: unmanaged python type PyDictIterItem",
-               500,
-               0);
+               "Python: unmanaged python type PyDictIterItem");
     }
     else if (PyDictKeys_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyDictKeys_Type, "Python: unmanaged python type PyDictKeys", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictKeys_Type, "Python: unmanaged python type PyDictKeys");
     }
     else if (PyDictItems_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyDictItems_Type, "Python: unmanaged python type PyDictItems", 500, 0);
+        expect(Py_TYPE(_exp) != &PyDictItems_Type, "Python: unmanaged python type PyDictItems");
     }
     else if (PyDictValues_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyDictValues_Type,
-               "Python: unmanaged python type PyDictValues",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyDictValues_Type, "Python: unmanaged python type PyDictValues");
     }
     else if (Py_TYPE(_exp) == &PyEnum_Type) {
-        expect(Py_TYPE(_exp) != &PyEnum_Type, "Python: unmanaged python type PyEnum", 500, 0);
+        expect(Py_TYPE(_exp) != &PyEnum_Type, "Python: unmanaged python type PyEnum");
     }
     else if (Py_TYPE(_exp) == &PyReversed_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyReversed_Type, "Python: unmanaged python type PyReversed", 500, 0);
+        expect(Py_TYPE(_exp) != &PyReversed_Type, "Python: unmanaged python type PyReversed");
     }
     else if (Py_TYPE(_exp) == &PyStdPrinter_Type) {
-        expect(Py_TYPE(_exp) != &PyStdPrinter_Type,
-               "Python: unmanaged python type PyStdPrinter",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyStdPrinter_Type, "Python: unmanaged python type PyStdPrinter");
     }
     else if (PyCode_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyCode_Type, "Python: unmanaged python type PyCode", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCode_Type, "Python: unmanaged python type PyCode");
     }
     else if (PyFunction_Check(_exp)) {
         // zdbg("Py_Function");
@@ -365,96 +301,67 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         else { _parent = _value; }
     }
     else if (Py_TYPE(_exp) == &PyClassMethod_Type) {
-        expect(Py_TYPE(_exp) != &PyClassMethod_Type,
-               "Python: unmanaged python type PyClassMethod",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyClassMethod_Type, "Python: unmanaged python type PyClassMethod");
     }
     else if (Py_TYPE(_exp) == &PyStaticMethod_Type) {
         expect(Py_TYPE(_exp) != &PyStaticMethod_Type,
-               "Python: unmanaged python type PyStaticMethod",
-               500,
-               0);
+               "Python: unmanaged python type PyStaticMethod");
     }
     else if (PyGen_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyGen_Type, "Python: unmanaged python type PyGen", 500, 0);
+        expect(Py_TYPE(_exp) != &PyGen_Type, "Python: unmanaged python type PyGen");
     }
     else if (Py_TYPE(_exp) == &PyCoro_Type) {
-        expect(Py_TYPE(_exp) != &PyCoro_Type, "Python: unmanaged python type PyCoro", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCoro_Type, "Python: unmanaged python type PyCoro");
     }
     else if (Py_TYPE(_exp) == &_PyCoroWrapper_Type) {
         expect(Py_TYPE(_exp) != &_PyCoroWrapper_Type,
-               "Python: unmanaged python type _PyCoroWrapper",
-               500,
-               0);
+               "Python: unmanaged python type _PyCoroWrapper");
     }
     else if (Py_TYPE(_exp) == &PyAsyncGen_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyAsyncGen_Type, "Python: unmanaged python type PyAsyncGen", 500, 0);
+        expect(Py_TYPE(_exp) != &PyAsyncGen_Type, "Python: unmanaged python type PyAsyncGen");
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenASend_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenASend_Type,
-               "Python: unmanaged python type _PyAsyncGenASend",
-               500,
-               0);
+               "Python: unmanaged python type _PyAsyncGenASend");
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenWrappedValue_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenWrappedValue_Type,
-               "Python: unmanaged python type _PyAsyncGenWrappedValue",
-               500,
-               0);
+               "Python: unmanaged python type _PyAsyncGenWrappedValue");
     }
     else if (Py_TYPE(_exp) == &_PyAsyncGenAThrow_Type) {
         expect(Py_TYPE(_exp) != &_PyAsyncGenAThrow_Type,
-               "Python: unmanaged python type _PyAsyncGenAThrow",
-               500,
-               0);
+               "Python: unmanaged python type _PyAsyncGenAThrow");
     }
     else if (PySeqIter_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySeqIter_Type, "Python: unmanaged python type PySeqIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PySeqIter_Type, "Python: unmanaged python type PySeqIter");
     }
     else if (PyCallIter_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyCallIter_Type, "Python: unmanaged python type PyCallIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCallIter_Type, "Python: unmanaged python type PyCallIter");
     }
     else if (Py_TYPE(_exp) == &PyListIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyListIter_Type, "Python: unmanaged python type PyListIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyListIter_Type, "Python: unmanaged python type PyListIter");
     }
     else if (Py_TYPE(_exp) == &PyListRevIter_Type) {
-        expect(Py_TYPE(_exp) != &PyListRevIter_Type,
-               "Python: unmanaged python type PyListRevIter",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyListRevIter_Type, "Python: unmanaged python type PyListRevIter");
     }
     else if (Py_TYPE(_exp) == &_PyManagedBuffer_Type) {
         expect(Py_TYPE(_exp) != &_PyManagedBuffer_Type,
-               "Python: unmanaged python type _PyManagedBuffer",
-               500,
-               0);
+               "Python: unmanaged python type _PyManagedBuffer");
     }
     else if (PyMemoryView_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyMemoryView_Type,
-               "Python: unmanaged python type PyMemoryView",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyMemoryView_Type, "Python: unmanaged python type PyMemoryView");
     }
     else if (PyCFunction_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyCFunction_Type, "Python: unmanaged python type PyCFunction", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCFunction_Type, "Python: unmanaged python type PyCFunction");
     }
     else if (PyModule_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyModule_Type, "Python: unmanaged python type PyModule", 500, 0);
+        expect(Py_TYPE(_exp) != &PyModule_Type, "Python: unmanaged python type PyModule");
     }
     else if (Py_TYPE(_exp) == &PyModuleDef_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyModuleDef_Type, "Python: unmanaged python type PyModuleDef", 500, 0);
+        expect(Py_TYPE(_exp) != &PyModuleDef_Type, "Python: unmanaged python type PyModuleDef");
     }
     else if (Py_TYPE(_exp) == &_PyNamespace_Type) {
-        expect(Py_TYPE(_exp) != &_PyNamespace_Type,
-               "Python: unmanaged python type _PyNamespace",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &_PyNamespace_Type, "Python: unmanaged python type _PyNamespace");
     }
     else if (PyType_Check(_exp)) {
         zpt::json _value = zpt::json::string(((PyTypeObject*)_exp.get())->tp_name);
@@ -462,89 +369,66 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
         else { _parent = _value; }
     }
     else if (Py_TYPE(_exp) == &PyBaseObject_Type) {
-        expect(Py_TYPE(_exp) != &PyBaseObject_Type,
-               "Python: unmanaged python type PyBaseObject",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyBaseObject_Type, "Python: unmanaged python type PyBaseObject");
     }
     else if (Py_TYPE(_exp) == &PySuper_Type) {
-        expect(Py_TYPE(_exp) != &PySuper_Type, "Python: unmanaged python type PySuper", 500, 0);
+        expect(Py_TYPE(_exp) != &PySuper_Type, "Python: unmanaged python type PySuper");
     }
     else if (Py_TYPE(_exp) == &_PyNone_Type) {
-        expect(Py_TYPE(_exp) != &_PyNone_Type, "Python: unmanaged python type _PyNone", 500, 0);
+        expect(Py_TYPE(_exp) != &_PyNone_Type, "Python: unmanaged python type _PyNone");
     }
     else if (Py_TYPE(_exp) == &_PyNotImplemented_Type) {
         expect(Py_TYPE(_exp) != &_PyNotImplemented_Type,
-               "Python: unmanaged python type _PyNotImplemented",
-               500,
-               0);
+               "Python: unmanaged python type _PyNotImplemented");
     }
     else if (Py_TYPE(_exp) == &PyODictIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyODictIter_Type, "Python: unmanaged python type PyODictIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyODictIter_Type, "Python: unmanaged python type PyODictIter");
     }
     else if (Py_TYPE(_exp) == &PyODictKeys_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyODictKeys_Type, "Python: unmanaged python type PyODictKeys", 500, 0);
+        expect(Py_TYPE(_exp) != &PyODictKeys_Type, "Python: unmanaged python type PyODictKeys");
     }
     else if (Py_TYPE(_exp) == &PyODictItems_Type) {
-        expect(Py_TYPE(_exp) != &PyODictItems_Type,
-               "Python: unmanaged python type PyODictItems",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyODictItems_Type, "Python: unmanaged python type PyODictItems");
     }
     else if (Py_TYPE(_exp) == &PyODictValues_Type) {
-        expect(Py_TYPE(_exp) != &PyODictValues_Type,
-               "Python: unmanaged python type PyODictValues",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyODictValues_Type, "Python: unmanaged python type PyODictValues");
     }
     else if (Py_TYPE(_exp) == &PyCapsule_Type) {
-        expect(Py_TYPE(_exp) != &PyCapsule_Type, "Python: unmanaged python type PyCapsule", 500, 0);
+        expect(Py_TYPE(_exp) != &PyCapsule_Type, "Python: unmanaged python type PyCapsule");
     }
     else if (PyRange_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PyRange_Type, "Python: unmanaged python type PyRange", 500, 0);
+        expect(Py_TYPE(_exp) != &PyRange_Type, "Python: unmanaged python type PyRange");
     }
     else if (Py_TYPE(_exp) == &PyRangeIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyRangeIter_Type, "Python: unmanaged python type PyRangeIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyRangeIter_Type, "Python: unmanaged python type PyRangeIter");
     }
     else if (Py_TYPE(_exp) == &PyLongRangeIter_Type) {
         expect(Py_TYPE(_exp) != &PyLongRangeIter_Type,
-               "Python: unmanaged python type PyLongRangeIter",
-               500,
-               0);
+               "Python: unmanaged python type PyLongRangeIter");
     }
     else if (PySet_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySet_Type, "Python: unmanaged python type PySet", 500, 0);
+        expect(Py_TYPE(_exp) != &PySet_Type, "Python: unmanaged python type PySet");
     }
     else if (PyFrozenSet_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyFrozenSet_Type, "Python: unmanaged python type PyFrozenSet", 500, 0);
+        expect(Py_TYPE(_exp) != &PyFrozenSet_Type, "Python: unmanaged python type PyFrozenSet");
     }
     else if (Py_TYPE(_exp) == &PySetIter_Type) {
-        expect(Py_TYPE(_exp) != &PySetIter_Type, "Python: unmanaged python type PySetIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PySetIter_Type, "Python: unmanaged python type PySetIter");
     }
     else if (PySlice_Check(_exp)) {
-        expect(Py_TYPE(_exp) != &PySlice_Type, "Python: unmanaged python type PySlice", 500, 0);
+        expect(Py_TYPE(_exp) != &PySlice_Type, "Python: unmanaged python type PySlice");
     }
     else if (Py_TYPE(_exp) == &PyEllipsis_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyEllipsis_Type, "Python: unmanaged python type PyEllipsis", 500, 0);
+        expect(Py_TYPE(_exp) != &PyEllipsis_Type, "Python: unmanaged python type PyEllipsis");
     }
     else if (PyTraceBack_Check(_exp)) {
-        expect(
-          Py_TYPE(_exp) != &PyTraceBack_Type, "Python: unmanaged python type PyTraceBack", 500, 0);
+        expect(Py_TYPE(_exp) != &PyTraceBack_Type, "Python: unmanaged python type PyTraceBack");
     }
     else if (Py_TYPE(_exp) == &PyTupleIter_Type) {
-        expect(
-          Py_TYPE(_exp) != &PyTupleIter_Type, "Python: unmanaged python type PyTupleIter", 500, 0);
+        expect(Py_TYPE(_exp) != &PyTupleIter_Type, "Python: unmanaged python type PyTupleIter");
     }
     else if (Py_TYPE(_exp) == &PyUnicodeIter_Type) {
-        expect(Py_TYPE(_exp) != &PyUnicodeIter_Type,
-               "Python: unmanaged python type PyUnicodeIter",
-               500,
-               0);
+        expect(Py_TYPE(_exp) != &PyUnicodeIter_Type, "Python: unmanaged python type PyUnicodeIter");
     }
     else {
         // zdbg("SOME OTHER Py THINGY");
@@ -555,8 +439,7 @@ zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     return _parent;
 }
 
-auto
-zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
+auto zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
     if (_exp == nullptr) { return zpt::undefined; }
     this->initialize();
     std::ostringstream _oss;
@@ -566,8 +449,7 @@ zpt::python::bridge::to_ref(object_type _exp) -> zpt::json {
     else { return zpt::json::string(std::string("ref(") + _oss.str() + std::string(")")); }
 }
 
-auto
-zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
+auto zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
     object_type _ret = nullptr;
     this->initialize();
     switch (_to_convert->type()) {
@@ -629,8 +511,7 @@ zpt::python::bridge::to_object(zpt::json _to_convert) -> object_type {
     return _ret;
 }
 
-auto
-zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
+auto zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
     this->initialize();
     if (_to_convert->is_lambda()) {
         unsigned long _ref = 0;
@@ -652,12 +533,11 @@ zpt::python::bridge::from_ref(zpt::json _to_convert) -> object_type {
     return nullptr;
 }
 
-auto
-zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
+auto zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
 
-    expect(_func_name->is_object(), "Python: cannot call a null function", 500, 0);
+    expect(_func_name->is_object(), "Python: cannot call a null function");
 
     object_type _func = this->locate(_func_name);
     object_type _tuple = PyTuple_New(_args->size());
@@ -669,17 +549,14 @@ zpt::python::bridge::execute(zpt::json _func_name, zpt::json _args)
     return this->execute(_func, _tuple);
 }
 
-auto
-zpt::python::bridge::execute(object_type _func, object_type _args)
+auto zpt::python::bridge::execute(object_type _func, object_type _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
 
-    expect(_func.get() != nullptr, "Python: cannot call a null function", 500, 0);
+    expect(_func.get() != nullptr, "Python: cannot call a null function");
     expect(PyCallable_Check(_func.get()) == 1,
-           "Python: first argument isnnot a callable python object",
-           500,
-           0);
-    expect(PyTuple_Check(_args.get()) == 1, "Python: arguments must be a tuple", 500, 0);
+           "Python: first argument isnnot a callable python object");
+    expect(PyTuple_Check(_args.get()) == 1, "Python: arguments must be a tuple");
 
     PyErr_Clear();
     object_type _ret = PyObject_CallObject(_func.get(), _args.get());
@@ -687,26 +564,22 @@ zpt::python::bridge::execute(object_type _func, object_type _args)
     PyObject *_py_error_type = nullptr, *_py_error = nullptr, *_traceback = nullptr;
     PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
     expect(_py_error_type == nullptr,
-           "Python: error invoking callable object: " << this->to_json(_py_error),
-           500,
-           0);
+           "Python: error invoking callable object: " << this->to_json(_py_error));
     return _ret;
 }
 
-auto
-zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
+auto zpt::python::bridge::execute(zpt::json _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self->ok(), "Python: cannot call a function over a null instance", 500, 0);
+    expect(_self->ok(), "Python: cannot call a function over a null instance");
     return this->execute(this->to_object(_self), _func_name, nullptr);
 }
 
-auto
-zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
+auto zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nullptr_t)
   -> zpt::python::bridge::object_type {
     this->initialize();
 
-    expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
+    expect(_self != nullptr, "Python: cannot call a function over a null instance");
     auto _func = this->to_object(_func_name);
 
     PyErr_Clear();
@@ -716,19 +589,18 @@ zpt::python::bridge::execute(object_type _self, std::string _func_name, std::nul
     PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
 
     expect(_py_error_type == nullptr,
-           "Python: error invoking callable object: " << this->to_json(_py_error),
-           500,
-           0);
+           "Python: error invoking callable object: " << this->to_json(_py_error));
     return _ret;
 }
 
-auto
-zpt::python::bridge::initialize() -> zpt::python::bridge& {
+auto zpt::python::bridge::initialize() -> zpt::python::bridge& {
     auto _not_initialized{ false };
     if (this->__initialized.compare_exchange_strong(_not_initialized, true)) {
         Py_SetProgramName((wchar_t*)("zpt"));
 
-        struct _inittab _initt[this->__builtin_to_load.size() + 1];
+        std::unique_ptr<struct _inittab[]> _initt{
+            new struct _inittab[this->__builtin_to_load.size() + 1]
+        };
         size_t _k{ 0 };
         for (auto [_name, _value] : this->__builtin_to_load) {
             auto [_init_callback, _conf] = _value;
@@ -738,20 +610,20 @@ zpt::python::bridge::initialize() -> zpt::python::bridge& {
         }
         _initt[_k].name = nullptr;
         _initt[_k].initfunc = nullptr;
-        expect(PyImport_ExtendInittab(_initt) != -1, "Python: could not import modules", 500, 0);
+        expect(PyImport_ExtendInittab(_initt.get()) != -1, "Python: could not import modules");
 
         Py_Initialize();
 
         for (auto [_name, _] : this->__builtin_to_load) {
             object_type _module = PyImport_ImportModule(_name.data());
-            expect(_module != nullptr, "Python: unable to load module '" << _name << "'", 500, 0);
+            expect(_module != nullptr, "Python: unable to load module '" << _name << "'");
             zlog("Python: loaded module '" << _name << "'", zpt::notice);
             this->__modules.insert(std::make_pair(_name, _module));
         }
 
-        if (this->options()["sys_path"]->ok() && this->options()["sys_path"]->is_array()) {
+        if (this->options()("sys_path")->ok() && this->options()("sys_path")->is_array()) {
             zpt::json _new_sys_path =
-              this->to_json(PySys_GetObject("path")) + this->options()["sys_path"];
+              this->to_json(PySys_GetObject("path")) + this->options()("sys_path");
             std::string _sys_path = zpt::join(_new_sys_path, ":");
             PySys_SetPath(zpt::utf8::utf8_to_wstring(_sys_path));
         }
@@ -759,17 +631,12 @@ zpt::python::bridge::initialize() -> zpt::python::bridge& {
         for (auto [_name, _value] : this->__external_to_load) {
             object_type _module = PyImport_ImportModule(_name.data());
             expect(_module != nullptr,
-                   "Python: unable to load module '" << _value["name"]->string() << "'",
-                   500,
-                   0);
-            zlog("Python: loaded module '" << _value["name"]->string() << "'", zpt::notice);
-            this->__modules.insert(std::make_pair(_value["name"]->string(), _module));
+                   "Python: unable to load module '" << _value("name")->string() << "'");
+            zlog("Python: loaded module '" << _value("name")->string() << "'", zpt::notice);
+            this->__modules.insert(std::make_pair(_value("name")->string(), _module));
         }
     }
     return (*this);
 }
 
-auto
-zpt::python::bridge::is_initialized() const -> bool {
-    return this->__initialized.load();
-}
+auto zpt::python::bridge::is_initialized() const -> bool { return this->__initialized.load(); }

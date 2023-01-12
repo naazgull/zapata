@@ -30,8 +30,7 @@
 #define BOM8B 0xBB
 #define BOM8C 0xBF
 
-char*
-zpt::utf8::wstring_to_utf8(std::wstring ws) {
+char* zpt::utf8::wstring_to_utf8(std::wstring ws) {
     std::string dest;
     dest.clear();
     for (size_t i = 0; i < ws.size(); i++) {
@@ -63,8 +62,7 @@ zpt::utf8::wstring_to_utf8(std::wstring ws) {
     return c;
 }
 
-wchar_t*
-zpt::utf8::utf8_to_wstring(std::string s) {
+wchar_t* zpt::utf8::utf8_to_wstring(std::string s) {
     long b = 0, c = 0;
     const char* _str = s.data();
 
@@ -90,8 +88,7 @@ zpt::utf8::utf8_to_wstring(std::string s) {
     return res;
 }
 
-int
-zpt::utf8::length(std::string s) {
+int zpt::utf8::length(std::string s) {
     int size = 0;
     for (size_t i = 0; i != s.length(); i++) {
         if (((wchar_t)s[i]) < 0x80) { size++; }
@@ -101,20 +98,18 @@ zpt::utf8::length(std::string s) {
     return size;
 }
 
-void
-zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
+void zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
     std::ostringstream oss;
 
     for (size_t i = 0; i != s.length(); i++) {
         if (((int)s[i]) > 127) {
             oss << "\\u" << std::setfill('0') << std::setw(4) << std::hex << ((int)s.at(i));
         }
-        else if (quote && (s[i] == '"')) { oss << "\\" << ((char)s.at(i)); }
+        else if (quote && (s[i] == '"' || s[i] == '\'')) { oss << "\\" << ((char)s.at(i)); }
         else if (s[i] == '\n') { oss << "\\n"; }
         else if (s[i] == '\r') { oss << "\\r"; }
         else if (s[i] == '\f') { oss << "\\f"; }
         else if (s[i] == '\t') { oss << "\\t"; }
-        else if (s[i] == '/') { oss << "\\/"; }
         else if (quote && s[i] == '\\') { oss << "\\\\"; }
         else if (((int)s[i]) <= 31) { oss << ""; }
         else { oss << ((char)s.at(i)); }
@@ -123,8 +118,7 @@ zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
     _out.assign(oss.str().data(), oss.str().length());
 }
 
-void
-zpt::utf8::encode(std::string& _out, bool quote) {
+void zpt::utf8::encode(std::string& _out, bool quote) {
     long b = 0, c = 0;
     const char* _str = _out.data();
 
@@ -154,8 +148,7 @@ zpt::utf8::encode(std::string& _out, bool quote) {
     delete[] res;
 }
 
-void
-zpt::utf8::decode(std::string& _out) {
+void zpt::utf8::decode(std::string& _out) {
     std::wostringstream oss;
     for (size_t i = 0; i != _out.length(); i++) {
         if (_out[i] == '\\' && _out[i + 1] == 'u') {
@@ -177,8 +170,7 @@ zpt::utf8::decode(std::string& _out) {
     delete[] c;
 }
 
-void
-zpt::unicode::escape(std::string& _out) {
+void zpt::unicode::escape(std::string& _out) {
     std::ostringstream _oss;
     for (const auto& c : _out) {
         switch (c) {

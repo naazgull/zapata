@@ -39,8 +39,7 @@ const unsigned int zpt::crypto::SHA256::sha256_k[64] = // UL = std::uint32_t
       0xc67178f2
   };
 
-void
-zpt::crypto::SHA256::transform(const unsigned char* message, unsigned int block_nb) {
+void zpt::crypto::SHA256::transform(const unsigned char* message, unsigned int block_nb) {
     std::uint32_t w[64];
     std::uint32_t wv[8];
     std::uint32_t t1, t2;
@@ -70,8 +69,7 @@ zpt::crypto::SHA256::transform(const unsigned char* message, unsigned int block_
     }
 }
 
-void
-zpt::crypto::SHA256::init() {
+void zpt::crypto::SHA256::init() {
     m_h[0] = 0x6a09e667;
     m_h[1] = 0xbb67ae85;
     m_h[2] = 0x3c6ef372;
@@ -84,8 +82,7 @@ zpt::crypto::SHA256::init() {
     m_tot_len = 0;
 }
 
-void
-zpt::crypto::SHA256::update(const unsigned char* message, unsigned int len) {
+void zpt::crypto::SHA256::update(const unsigned char* message, unsigned int len) {
     unsigned int block_nb;
     unsigned int new_len, rem_len, tmp_len;
     const unsigned char* shifted_message;
@@ -107,8 +104,7 @@ zpt::crypto::SHA256::update(const unsigned char* message, unsigned int len) {
     m_tot_len += (block_nb + 1) << 6;
 }
 
-void
-zpt::crypto::SHA256::finalize(unsigned char* digest) {
+void zpt::crypto::SHA256::finalize(unsigned char* digest) {
     unsigned int block_nb;
     unsigned int pm_len;
     unsigned int len_b;
@@ -123,8 +119,7 @@ zpt::crypto::SHA256::finalize(unsigned char* digest) {
     for (i = 0; i < 8; i++) { SHA2_UNPACK32(m_h[i], &digest[i << 2]); }
 }
 
-std::string
-zpt::crypto::sha256(std::string const& input) {
+std::string zpt::crypto::sha256(std::string const& input) {
     unsigned char digest[zpt::crypto::SHA256::DIGEST_SIZE];
     memset(digest, 0, zpt::crypto::SHA256::DIGEST_SIZE);
 

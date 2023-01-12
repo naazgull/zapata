@@ -32,23 +32,24 @@ short int log_lvl = 8;
 std::ostream* log_fd = &std::cout;
 long log_pid = 0;
 std::unique_ptr<std::string> log_pname = nullptr;
-char* log_hname = nullptr;
+std::string log_hname;
 short log_format = 0;
 
 const char* log_lvl_names[] = { "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING",
                                 "NOTICE",    "INFO",  "DEBUG",    "TRACE", "VERBOSE" };
 } // namespace zpt
 
-auto
-zpt::log(std::string const& _text,
-         zpt::LogLevel _level,
-         std::string const& _host,
-         int _line,
-         std::string const& _file) -> int {
+auto zpt::log(std::string const& _text,
+              zpt::LogLevel _level,
+              std::string const& _host,
+              int _line,
+              std::string const& _file) -> int {
     if (zpt::log_fd == nullptr) { return -1; }
     if (!zpt::log_format) {
         std::ostringstream _oss;
-        _oss << zpt::log_lvl_names[_level] << " " << _text << std::endl << std::flush;
+        _oss << zpt::log_lvl_names[_level] << " " << _text;
+        if (_level > 6) { _oss << " " << _file << ":" << _line; }
+        _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
         return 0;
     }
@@ -61,7 +62,6 @@ zpt::log(std::string const& _text,
         _oss << zpt::tostr(time(nullptr), "%b %d %H:%M:%S") << " " << _host << " "
              << *zpt::log_pname << "[" << zpt::log_pid << "]: " << zpt::log_lvl_names[_level] << " "
              << _text;
-        if (_level > 6) { _oss << " " << _file << ":" << _line; }
         _oss << std::endl << std::flush;
         (*zpt::log_fd) << _oss.str() << std::flush;
     }
@@ -80,17 +80,14 @@ zpt::log(std::string const& _text,
     return 0;
 }
 
-auto
-zpt::log_hostname() -> char* {
-    if (zpt::log_hname == nullptr) {
-        zpt::log_hname = new char[65];
-        bzero(zpt::log_hname, 65);
-        gethostname(zpt::log_hname, 64);
+auto zpt::log_hostname() -> std::string {
+    if (zpt::log_hname.length() == 0) {
+        char buffer[65];
+        bzero(buffer, 65);
+        gethostname(buffer, 64);
+        zpt::log_hname.assign(buffer);
     }
     return zpt::log_hname;
 }
 
-extern "C" auto
-zpt_base() -> int {
-    return 1;
-}
+extern "C" auto zpt_base() -> int { return 1; }

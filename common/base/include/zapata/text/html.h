@@ -39,13 +39,10 @@
 
 namespace zpt {
 namespace html {
-auto
-entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false) -> void;
-auto
-entities_encode(std::string& out, bool quote = true, bool tags = false) -> void;
-auto
-entities_decode(std::string& out) -> void;
-auto
-content_boundary(std::string& _in, std::string& _out) -> void;
+auto entities_encode(std::wstring s, std::ostream& out, bool quote = true, bool tags = false)
+  -> void;
+auto entities_encode(std::string& out, bool quote = true, bool tags = false) -> void;
+auto entities_decode(std::string& out) -> void;
+auto content_boundary(std::string& _in, std::string& _out) -> void;
 } // namespace html
 } // namespace zpt

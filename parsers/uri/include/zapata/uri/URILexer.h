@@ -42,27 +42,19 @@ inline URILexer::URILexer(std::string const& infile, std::string const& outfile,
   : URILexerBase(infile, outfile, keepCwd) {}
 
 // $insert inlineLexFunction
-inline int
-URILexer::lex() {
-    return lex_();
-}
+inline int URILexer::lex() { return lex_(); }
 
-inline void
-URILexer::preCode() {
+inline void URILexer::preCode() {
     // optionally replace by your own code
 }
 
-inline void
-URILexer::postCode([[maybe_unused]] PostEnum_ type) {
+inline void URILexer::postCode([[maybe_unused]] PostEnum_ type) {
     // optionally replace by your own code
 }
 
-inline void
-URILexer::print() {
-    print_();
-}
+inline void URILexer::print() { print_(); }
 
 // $insert namespace-close
-}
+} // namespace zpt
 
 #endif // URILexer_H_INCLUDED_

@@ -25,44 +25,14 @@
 #include <zapata/rest.h>
 #include <zapata/transport.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _boot = zpt::globals::get<zpt::startup::engine>(zpt::BOOT_ENGINE());
-    auto& _config = zpt::globals::get<zpt::json>(zpt::GLOBAL_CONFIG());
-    size_t _steps = std::max(static_cast<size_t>(_plugin->config()["pipeline"]["n_steps"]), 1UL);
-    long _max_queue_spin_sleep =
-      std::max(static_cast<long>(_config["limits"]["max_queue_spin_sleep"]), 50000L);
-    zpt::globals::alloc<zpt::rest::engine>(zpt::REST_ENGINE(), _steps, _config["limits"]);
-
-    _boot.add_thread([_max_queue_spin_sleep]() -> void {
-        zlog("Starting REST engine", zpt::info);
-        auto& _polling = zpt::globals::get<zpt::stream::polling>(zpt::STREAM_POLLING());
-        auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
-        _rest.start_threads();
-
-        zpt::this_thread::adaptive_timer<long, 5> _timer;
-        do {
-            try {
-                auto _stream = _polling.pop();
-                std::string _scheme{ _stream->transport() };
-                zpt::exchange _channel{ _stream };
-                _rest.trigger(_scheme + std::string(":"), _channel);
-                _timer.reset();
-            }
-            catch (zpt::NoMoreElementsException const& _e) {
-                if (_rest.is_shutdown_ongoing()) {
-                    zlog("Exiting REST router", zpt::trace);
-                    return;
-                }
-                _timer.sleep_for(_max_queue_spin_sleep);
-            }
-        } while (true);
-    });
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
+      .add_resolver(zpt::make_global<zpt::rest::resolver>(
+        zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
+    zlog("Added REST event resolver", zpt::info);
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping REST engine", zpt::info);
-    zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE()).shutdown();
-    zpt::globals::dealloc<zpt::rest::engine>(zpt::REST_ENGINE());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+    zlog("Disposing REST event resolver", zpt::info);
+    zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
 }

@@ -27,8 +27,7 @@
 #include <zapata/locks/spin_lock.h>
 
 namespace zpt {
-auto
-PYTHON_BRIDGE() -> ssize_t&;
+auto PYTHON_BRIDGE() -> ssize_t&;
 
 class py_object {
   public:
@@ -100,20 +99,18 @@ class bridge : public zpt::programming::bridge<zpt::python::bridge, zpt::py_obje
 } // namespace zpt
 
 template<typename... Args>
-auto
-zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _args)
+auto zpt::python::bridge::execute(zpt::json _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self->ok(), "Python: cannot call a function over a null instance", 500, 0);
+    expect(_self->ok(), "Python: cannot call a function over a null instance");
     return this->execute(this->to_object(_self), _func_name, this->to_object(_args).get()...);
 }
 
 template<typename... Args>
-auto
-zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... _args)
+auto zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... _args)
   -> zpt::python::bridge::object_type {
     this->initialize();
-    expect(_self != nullptr, "Python: cannot call a function over a null instance", 500, 0);
+    expect(_self != nullptr, "Python: cannot call a function over a null instance");
     auto _func = this->to_object(_func_name);
 
     PyErr_Clear();
@@ -123,8 +120,6 @@ zpt::python::bridge::execute(object_type _self, std::string _func_name, Args... 
     PyErr_Fetch(&_py_error_type, &_py_error, &_traceback);
 
     expect(_py_error_type == nullptr,
-           "Python: error invoking callable object: " << this->to_json(_py_error),
-           500,
-           0);
+           "Python: error invoking callable object: " << this->to_json(_py_error));
     return _ret;
 }

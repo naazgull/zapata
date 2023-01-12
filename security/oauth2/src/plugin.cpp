@@ -27,13 +27,12 @@
 
 std::atomic<bool> _shutdown{ false };
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _rest = zpt::globals::get<zpt::rest::engine>(zpt::REST_ENGINE());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _rest = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER());
     auto _config = _plugin->config();
     auto& _token_provider =
-      zpt::globals::get<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
-    zpt::globals::alloc<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER(), _token_provider, _config);
+      zpt::global_cast<zpt::auth::oauth2::token_provider_ptr>(zpt::OAUTH2_TOKEN_PROVIDER());
+    zpt::make_global<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER(), _token_provider, _config);
 
     size_t _step = _plugin->config()["add_to_step"]->integer();
 
@@ -53,8 +52,7 @@ _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Registering listeners for oauth2.0", zpt::info);
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
     zlog("Unregistering listeners for oauth2.0", zpt::info);
-    zpt::globals::dealloc<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
+    zpt::release_global<zpt::auth::oauth2::server>(zpt::OAUTH2_SERVER());
 }

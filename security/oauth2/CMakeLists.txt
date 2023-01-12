@@ -15,11 +15,11 @@ target_sources(zapata-security-oauth2
     ${SECURITY_OAUTH2_INCLUDE_DIR}/zapata/oauth2.h
 )
 target_include_directories(zapata-security-oauth2
-  INTERFACE
+  PUBLIC
     ${SECURITY_OAUTH2_INCLUDE_DIR}
 )
 target_link_libraries(zapata-security-oauth2
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-engine-rest
@@ -29,8 +29,8 @@ set_target_properties(zapata-security-oauth2
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 add_library(zapata-security-oauth2-plugin SHARED)
@@ -40,11 +40,11 @@ target_sources(zapata-security-oauth2-plugin
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-security-oauth2-plugin
-  INTERFACE
+  PUBLIC
     ${SECURITY_OAUTH2_INCLUDE_DIR}
 )
 target_link_libraries(zapata-security-oauth2-plugin
-  INTERFACE
+  PUBLIC
     zapata-base
     zapata-parser-json
     zapata-engine-rest
@@ -55,8 +55,8 @@ set_target_properties(zapata-security-oauth2-plugin
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )
 
 include(GNUInstallDirs)

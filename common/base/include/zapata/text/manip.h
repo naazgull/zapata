@@ -33,34 +33,69 @@
 
 namespace zpt {
 
-void
-ltrim(std::string& _in_out);
-void
-rtrim(std::string& _in_out);
-void
-trim(std::string& _in_out);
-auto
-replace(std::string& str, std::string find, std::string replace) -> void;
+void ltrim(std::string& _in_out);
+void rtrim(std::string& _in_out);
+void trim(std::string& _in_out);
+auto replace(std::string& str, std::string find, std::string replace) -> void;
 
-void
-normalize_path(std::string& _in_out, bool _with_trailing);
+void normalize_path(std::string& _in_out, bool _with_trailing);
 
-void
-prettify_header_name(std::string& name);
+void prettify_header_name(std::string& name);
 
-std::string
-r_ltrim(std::string const& _in_out);
-std::string
-r_rtrim(std::string const& _in_out);
-std::string
-r_trim(std::string const& _in_out);
-std::string
-r_replace(std::string str, std::string find, std::string replace);
+std::string r_ltrim(std::string const& _in_out);
+std::string r_rtrim(std::string const& _in_out);
+std::string r_trim(std::string const& _in_out);
+std::string r_replace(std::string str, std::string find, std::string replace);
 
-std::string
-r_normalize_path(std::string const& _in_out, bool _with_trailing);
+std::string r_normalize_path(std::string const& _in_out, bool _with_trailing);
 
-std::string
-r_prettify_header_name(std::string name);
+std::string r_prettify_header_name(std::string name);
+
+template<typename... Args>
+auto format(std::string _to_format, Args... _params) -> std::string;
 
 } // namespace zpt
+
+namespace {
+#pragma GCC diagnostic ignored "-Wunused-function"
+auto ___format(std::istringstream& _in, std::ostringstream& _out) -> void {
+    char _c{ '\0' };
+    do {
+        _in >> std::noskipws >> _c;
+        if (!_in.eof()) { _out << _c; }
+    } while (_in.good());
+}
+#pragma GCC diagnostic pop
+template<typename P, typename... Args>
+auto ___format(std::istringstream& _in, std::ostringstream& _out, P _param, Args... _rest) -> void {
+    char _c{ '\0' };
+    do {
+        _in >> std::noskipws >> _c;
+        if (!_in.eof()) {
+            if (_c == '{') {
+                _in >> std::noskipws >> _c;
+                if (!_in.eof()) {
+                    if (_c == '}') {
+                        _out << _param;
+                        ::___format(_in, _out, _rest...);
+                        return;
+                    }
+                    else { _out << '{' << _c; }
+                }
+                else { _out << '{'; }
+            }
+            else { _out << _c; }
+        }
+    } while (_in.good());
+}
+} // namespace
+
+template<typename... Args>
+auto zpt::format(std::string _to_format, Args... _params) -> std::string {
+    std::istringstream _iss;
+    _iss.str(_to_format);
+    std::ostringstream _oss;
+    ::___format(_iss, _oss, _params...);
+    _oss << std::flush;
+    return _oss.str();
+}

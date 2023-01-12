@@ -24,8 +24,7 @@
 #include <zapata/log/log.h>
 #include <zapata/redis/convert_redis.h>
 
-auto
-zpt::redis::to_regex(zpt::json _regexp) -> std::string {
+auto zpt::redis::to_regex(zpt::json _regexp) -> std::string {
     std::string _return;
     if (_regexp->type() == zpt::JSObject) {
         for (auto _r : _regexp->object()) {

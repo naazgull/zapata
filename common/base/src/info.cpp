@@ -491,8 +491,7 @@ const char* mimetype_extensions[] = {
 };
 } // namespace zpt
 
-auto
-zpt::get_mime(std::string const& _in) -> zpt::MIMEType {
+auto zpt::get_mime(std::string const& _in) -> zpt::MIMEType {
     auto myt = magic_open(MAGIC_CONTINUE | MAGIC_ERROR | MAGIC_MIME);
     magic_load(myt, nullptr);
 
@@ -507,8 +506,7 @@ zpt::get_mime(std::string const& _in) -> zpt::MIMEType {
     return zpt::application_octet_stream;
 }
 
-auto
-zpt::path_exists(std::string const& _in) -> bool {
+auto zpt::path_exists(std::string const& _in) -> bool {
     struct stat _buffer;
     return (stat(_in.data(), &_buffer) == 0);
 }

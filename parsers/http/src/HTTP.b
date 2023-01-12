@@ -26,7 +26,7 @@ exp :
 	METHOD
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::http::message_type::request);
+		d_scanner.init(0);
 	}
 	SPACE URL
 	{
@@ -47,12 +47,13 @@ exp :
 			d_scanner.d_chunked_length = -1;
 			d_scanner.d_chunked.assign("");
 		}
+        d_scanner.justLeave();
 	}
 |
 	HTTP_VERSION
 	{
 		d_scanner.d_content_length = 0;
-		d_scanner.init(zpt::http::message_type::reply);
+		d_scanner.init(1);
 		d_scanner.version();
 	}
 	SPACE STATUS
@@ -71,6 +72,7 @@ exp :
 			d_scanner.d_chunked_length = -1;
 			d_scanner.d_chunked.assign("");
 		}
+        d_scanner.justLeave();
 	}
 ;
 

@@ -24,22 +24,18 @@
 #include <zapata/startup.h>
 #include <zapata/python.h>
 
-extern "C" auto
-_zpt_load_(zpt::plugin& _plugin) -> void {
-    auto& _bridge = zpt::globals::alloc<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
-
-    _bridge.set_options(_plugin->config());
+extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto& _bridge = zpt::make_global<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
+    _bridge.set_options(_plugin.config());
     if (_bridge.options()["modules"]->is_array()) {
         for (auto [_, __, _module] : _bridge.options()["modules"]) {
             _bridge.add_module(_module["file"]->string(), _module);
         }
     }
-
-    zlog("Starting PYTHON bridge", zpt::info);
+    zlog("Initialized PYTHON bridge", zpt::info);
 }
 
-extern "C" auto
-_zpt_unload_(zpt::plugin& _plugin) -> void {
-    zlog("Stopping PYTHON bridge", zpt::info);
-    zpt::globals::dealloc<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
+extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+    zpt::release_global<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
+    zlog("Unloaded PYTHON bridge", zpt::info);
 }

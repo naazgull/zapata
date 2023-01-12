@@ -29,14 +29,11 @@
 #include <zapata/json.h>
 
 namespace zpt {
-auto
-OAUTH2_TOKEN_PROVIDER() -> ssize_t&;
-auto
-OAUTH2_SERVER() -> ssize_t&;
+auto OAUTH2_TOKEN_PROVIDER() -> ssize_t&;
+auto OAUTH2_SERVER() -> ssize_t&;
 
 namespace auth {
-auto
-extract(zpt::json _envelope) -> std::string;
+auto extract(zpt::json _envelope) -> std::string;
 
 namespace oauth2 {
 class token_provider {

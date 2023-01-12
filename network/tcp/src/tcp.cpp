@@ -25,71 +25,39 @@
 #include <zapata/globals/globals.h>
 #include <zapata/net/socket/socket_stream.h>
 
-auto
-zpt::TCP_SERVER_SOCKET() -> ssize_t& {
+auto zpt::TCP_SERVER_SOCKET() -> ssize_t& {
     static ssize_t _global{ -1 };
     return _global;
 }
 
-auto
-zpt::net::transport::tcp::send(zpt::exchange& _channel) const -> void {
-    if (_channel->to_send()->ok()) { _channel->stream() << _channel->to_send(); }
-}
-
-auto
-zpt::net::transport::tcp::receive(zpt::exchange& _channel) const -> void {
-    auto& _layer = zpt::globals::get<zpt::transport::layer>(zpt::TRANSPORT_LAYER());
-    auto& _is = static_cast<std::iostream&>(*(_channel->stream()));
-
-    std::string _content_type = _channel->content_type()[0];
-    _channel->received() =
-      _layer.translate(_is, _content_type.length() == 0 ? "*/*" : _content_type);
-
-    _channel //
-      ->version()
-      .assign("1.0");
-    _channel //
-      ->scheme()
-      .assign("tcp");
-
-    if (!_channel->received()["performative"]->ok() || _channel->received()["status"]->ok()) {
-        _channel->received() << "performative" << 7;
-    }
-    if (!_channel->received()["resource"]->ok()) {
-        _channel //
-          ->uri()
-          .assign("/" + std::to_string(static_cast<int>(_channel->stream())));
-    }
-    else {
-        _channel //
-          ->uri()
-          .assign(_channel->received()["resource"]);
-    }
-
-    _channel->keep_alive() = true;
-}
-
-auto
-zpt::net::transport::tcp::resolve(zpt::json _uri) const -> zpt::exchange {
-    expect(_uri["scheme"]->ok() && _uri["domain"]->ok() && _uri["port"]->ok(),
-           "URI parameter must contain 'scheme', 'domain' and 'port'",
-           500,
-           0);
-    expect(_uri["scheme"] == "tcp", "scheme must be 'tcp'", 500, 0);
-    auto _stream = zpt::stream::alloc<zpt::basic_socketstream<char>>(
-      _uri["domain"]->string(), static_cast<std::uint16_t>(_uri["port"]->integer()));
-    _stream->transport("tcp");
-    zpt::exchange _to_return{ _stream.release() };
-    _to_return //
-      ->scheme()
-      .assign("tcp");
-    _to_return //
-      ->uri()
-      .assign(zpt::path::join(_uri["path"]));
-    _to_return->keep_alive() = true;
-    if (_uri["scheme_options"]->ok()) {
-        _to_return->to_send() = { "headers", { "Content-Type", _uri["scheme_options"] } };
-    }
-    else { _to_return->to_send() = { "headers", { "Content-Type", "*/*" } }; }
+auto zpt::net::transport::tcp::make_request() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
     return _to_return;
+}
+
+auto zpt::net::transport::tcp::make_reply() const -> zpt::message {
+    auto _to_return = zpt::make_message<zpt::json_message>();
+    return _to_return;
+}
+
+auto zpt::net::transport::tcp::make_reply(zpt::message _request) const -> zpt::message {
+    auto _to_return =
+      zpt::make_message<zpt::json_message>(message_cast<zpt::json_message>(_request), true);
+    return _to_return;
+}
+
+auto zpt::net::transport::tcp::process_incoming_request(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "tcp", "Stream underlying transport isn't 'tcp'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
+}
+
+auto zpt::net::transport::tcp::process_incoming_reply(zpt::basic_stream& _stream) const
+  -> zpt::message {
+    expect(_stream.transport() == "tcp", "Stream underlying transport isn't 'tcp'");
+    auto _message = zpt::make_message<zpt::json_message>();
+    _stream >> std::noskipws >> _message;
+    return _message;
 }

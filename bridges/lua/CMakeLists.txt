@@ -3,7 +3,11 @@ set(BRIDGE_LUA_INCLUDE_DIR
 )
 
 add_library(zapata-bridge-lua SHARED)
-
+add_dependencies(zapata-bridge-lua
+  zapata-base
+  zapata-parser-json
+  zapata-bridge-base
+)
 target_sources(zapata-bridge-lua
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.cpp
@@ -12,50 +16,74 @@ target_sources(zapata-bridge-lua
     ${BRIDGE_LUA_INCLUDE_DIR}/zapata/lua/lua.h
 )
 target_include_directories(zapata-bridge-lua
-  INTERFACE
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
+    ${BRIDGE_LUA_INCLUDE_DIR}
+  INTERFACE    
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua
-  INTERFACE
-    zapata-base
-    zapata-parser-json
-    zapata-bridge-base
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
     ${LUA_LIBRARIES}
 )
-
 set_target_properties(zapata-bridge-lua
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
+    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libzapata-bridge-lua.so
 )
 
 add_library(zapata-bridge-lua-plugin SHARED)
-
+add_dependencies(zapata-bridge-lua-plugin
+  zapata-base
+  zapata-parser-json
+  zapata-events
+  zapata-engine-startup
+  zapata-bridge-base
+  zapata-bridge-lua
+)
 target_sources(zapata-bridge-lua-plugin
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin.cpp
 )
 target_include_directories(zapata-bridge-lua-plugin
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-globals,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-events,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-lockfree,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-lua,INTERFACE_INCLUDE_DIRECTORIES>
+    ${BRIDGE_LUA_INCLUDE_DIR}
   INTERFACE
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata-bridge-lua-plugin
-  INTERFACE
-    zapata-base
-    zapata-parser-json
-    zapata-bridge-base
-    zapata-bridge-lua
+  PUBLIC
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-events,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-lockfree,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-engine-startup,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-lua,LIBRARIES>
     ${LUA_LIBRARIES}
 )
-
 set_target_properties(zapata-bridge-lua-plugin
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fPIC"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS} -shared"
 )
 
 include(GNUInstallDirs)
@@ -69,26 +97,34 @@ install(DIRECTORY ${BRIDGE_LUA_INCLUDE_DIR}/zapata
 )
 
 add_executable(zapata_test_bridge_lua)
-
+add_dependencies(zapata_test_bridge_lua
+  zapata-base
+  zapata-parser-json
+  zapata-bridge-base
+  zapata-bridge-lua
+)
 target_sources(zapata_test_bridge_lua
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
 )
 target_include_directories(zapata_test_bridge_lua
-  PUBLIC
+  PRIVATE
+    $<TARGET_PROPERTY:zapata-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-parser-json,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:zapata-bridge-lua,INTERFACE_INCLUDE_DIRECTORIES>
     ${BRIDGE_LUA_INCLUDE_DIR}
 )
 target_link_libraries(zapata_test_bridge_lua
   PUBLIC
-    zapata-base
-    zapata-parser-json
-    zapata-bridge-base
-    zapata-bridge-lua
-    ${LUA_LIBRARIESPython3_LIBRARIES}
+    $<TARGET_PROPERTY:zapata-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-parser-json,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-base,LIBRARIES>
+    $<TARGET_PROPERTY:zapata-bridge-lua,LIBRARIES>
+    ${LUA_LIBRARIES}
 )
-
 set_target_properties(zapata_test_bridge_lua
   PROPERTIES
-    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS} -fno-omit-frame-pointer"
-    LINK_FLAGS ""
+    COMPILE_FLAGS "${ZAPATA_COMPILE_FLAGS}"
+    LINK_FLAGS "${ZAPATA_LINK_FLAGS}"
 )

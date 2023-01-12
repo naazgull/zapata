@@ -191,16 +191,14 @@ zpt::lf::queue<T>::~queue() {
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::front() const -> T {
+auto zpt::lf::queue<T>::front() const -> T {
     auto _front = this->head();
     if (_front != nullptr && _front->__next->load() != nullptr) { return _front->__value; }
     throw zpt::NoMoreElementsException("there is no element in the front");
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::back() const -> T {
+auto zpt::lf::queue<T>::back() const -> T {
     auto _tail = this->tail();
     if (_tail != nullptr && !_tail->__is_null->load(std::memory_order_relaxed)) {
         return _tail->__value;
@@ -209,20 +207,17 @@ zpt::lf::queue<T>::back() const -> T {
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::head() const -> zpt::lf::forward_node<T>* {
+auto zpt::lf::queue<T>::head() const -> zpt::lf::forward_node<T>* {
     return this->__head->load(std::memory_order_relaxed);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::tail() const -> zpt::lf::forward_node<T>* {
+auto zpt::lf::queue<T>::tail() const -> zpt::lf::forward_node<T>* {
     return this->__tail->load(std::memory_order_relaxed);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
+auto zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
     zpt::lf::forward_node<T>* _new{ new zpt::lf::forward_node<T>{} };
     typename zpt::lf::queue<T>::hazard_domain::guard _new_sentry{ _new, this->__hazard_domain };
 
@@ -232,9 +227,9 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
         auto _tail = _tail_sentry.target();
         zpt::lf::forward_node<T>* _null{ nullptr };
         if (_tail->__next->compare_exchange_strong(_null, _new)) {
+            ++(*this->__size);
             _tail->__value = _value;
             _tail->__is_null = false;
-            ++(*this->__size);
             this->__tail->store(_new, std::memory_order_release);
             return (*this);
         }
@@ -244,8 +239,7 @@ zpt::lf::queue<T>::push(T _value) -> zpt::lf::queue<T>& {
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::pop() -> T {
+auto zpt::lf::queue<T>::pop() -> T {
     do {
         typename zpt::lf::queue<T>::hazard_domain::guard _head_sentry{ *this->__head,
                                                                        this->__hazard_domain };
@@ -254,9 +248,9 @@ zpt::lf::queue<T>::pop() -> T {
         if (_next == nullptr) { break; }
 
         if (this->__head->compare_exchange_strong(_head, _next, std::memory_order_release)) {
-            --(*this->__size);
             while (_head->__is_null)
                 ;
+            --(*this->__size);
             _head->__is_null = true;
             _head_sentry.retire();
             return std::move(_head->__value);
@@ -266,39 +260,33 @@ zpt::lf::queue<T>::pop() -> T {
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::begin() const -> zpt::lf::queue<T>::iterator {
+auto zpt::lf::queue<T>::begin() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{ (*this->__head).load() };
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
+auto zpt::lf::queue<T>::end() const -> zpt::lf::queue<T>::iterator {
     return zpt::lf::queue<T>::iterator{ (*this->__tail).load() };
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::size() const -> size_t {
+auto zpt::lf::queue<T>::size() const -> size_t {
     return this->__size->load(std::memory_order_relaxed);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::get_thread_dangling_count() const -> size_t {
+auto zpt::lf::queue<T>::get_thread_dangling_count() const -> size_t {
     return this->__hazard_domain.get_thread_dangling_count();
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::clear_thread_context() -> queue<T>& {
+auto zpt::lf::queue<T>::clear_thread_context() -> queue<T>& {
     this->__hazard_domain.clear_thread_context();
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::to_string() const -> std::string {
+auto zpt::lf::queue<T>::to_string() const -> std::string {
     return static_cast<std::string>(*this);
 }
 
@@ -328,16 +316,14 @@ zpt::lf::queue<T>::iterator::iterator(iterator&& _rhs)
 }
 
 template<typename T>
-typename zpt::lf::queue<T>::iterator&
-zpt::lf::queue<T>::iterator::operator=(const iterator& _rhs) {
+typename zpt::lf::queue<T>::iterator& zpt::lf::queue<T>::iterator::operator=(const iterator& _rhs) {
     this->__initial = _rhs.__initial;
     this->__current = _rhs.__current;
     return (*this);
 }
 
 template<typename T>
-typename zpt::lf::queue<T>::iterator&
-zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
+typename zpt::lf::queue<T>::iterator& zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
     this->__initial = _rhs.__initial;
     this->__current = _rhs.__current;
     _rhs.__initial = nullptr;
@@ -346,46 +332,39 @@ zpt::lf::queue<T>::iterator::operator=(iterator&& _rhs) {
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::operator++() -> zpt::lf::queue<T>::iterator& {
+auto zpt::lf::queue<T>::iterator::operator++() -> zpt::lf::queue<T>::iterator& {
     if (this->__current != nullptr) { this->__current = this->__current->__next->load(); }
     return (*this);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::operator*() -> zpt::lf::queue<T>::iterator::reference {
+auto zpt::lf::queue<T>::iterator::operator*() -> zpt::lf::queue<T>::iterator::reference {
     return this->__current->__value;
 }
 
 template<typename T>
-typename zpt::lf::queue<T>::iterator
-zpt::lf::queue<T>::iterator::operator++(int) {
+typename zpt::lf::queue<T>::iterator zpt::lf::queue<T>::iterator::operator++(int) {
     auto _to_return = (*this);
     ++(*this);
     return _to_return;
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::operator->() -> zpt::lf::queue<T>::iterator::pointer {
+auto zpt::lf::queue<T>::iterator::operator->() -> zpt::lf::queue<T>::iterator::pointer {
     return this->__current->__value;
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::operator==(iterator const& _rhs) const -> bool {
+auto zpt::lf::queue<T>::iterator::operator==(iterator const& _rhs) const -> bool {
     return this->__current == _rhs.__current;
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::operator!=(iterator const& _rhs) const -> bool {
+auto zpt::lf::queue<T>::iterator::operator!=(iterator const& _rhs) const -> bool {
     return !((*this) == _rhs);
 }
 
 template<typename T>
-auto
-zpt::lf::queue<T>::iterator::node() const -> zpt::lf::forward_node<T>* {
+auto zpt::lf::queue<T>::iterator::node() const -> zpt::lf::forward_node<T>* {
     return this->__current;
 }
