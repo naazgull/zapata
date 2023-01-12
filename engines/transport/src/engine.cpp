@@ -18,26 +18,6 @@ auto catch_error(zpt::failed_expectation const& _e) -> zpt::json {
              "what",       _e.what(),                        //
              "stacktrace", zpt::split(zpt::r_replace(_e.backtrace(), "\t", ""), "\n") };
 }
-
-auto catch_error(std::exception const& _e, zpt::basic_stream& _stream) -> void {
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
-                        .get(_stream.transport());
-    auto _reply = _transport->make_reply();
-    _reply->status(500);
-    _reply->headers()["Content-Type"] = "application/json";
-    _reply->body() = ::catch_error(_e);
-    _transport->send(_stream, _reply);
-}
-
-auto catch_error(zpt::failed_expectation const& _e, zpt::basic_stream& _stream) -> void {
-    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
-                        .get(_stream.transport());
-    auto _reply = _transport->make_reply();
-    _reply->status(500);
-    _reply->headers()["Content-Type"] = "application/json";
-    _reply->body() = ::catch_error(_e);
-    _transport->send(_stream, _reply);
-}
 } // namespace
 
 zpt::events::receive::receive(zpt::transports::engine& _engine,
@@ -54,13 +34,25 @@ zpt::events::receive::~receive() {
 auto zpt::events::receive::blocked() const -> bool { return false; }
 
 auto zpt::events::receive::catch_error(std::exception const& _e) -> bool {
-    ::catch_error(_e, this->__stream);
+    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+                        .get(this->__stream.transport());
+    auto _reply = _transport->make_reply();
+    _reply->status(500);
+    _reply->headers()["Content-Type"] = "application/json";
+    _reply->body() = ::catch_error(_e);
+    _transport->send(this->__stream, _reply);
     this->__unmute = true;
     return true;
 }
 
 auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> bool {
-    ::catch_error(_e, this->__stream);
+    auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
+                        .get(this->__stream.transport());
+    auto _reply = _transport->make_reply();
+    _reply->status(500);
+    _reply->headers()["Content-Type"] = "application/json";
+    _reply->body() = ::catch_error(_e);
+    _transport->send(this->__stream, _reply);
     this->__unmute = true;
     return true;
 }
