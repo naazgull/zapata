@@ -25,7 +25,7 @@
 auto zpt::startup::configuration::load(zpt::json _parameters, zpt::json& _output) -> void {
     for (auto [_, __, _conf_file] : _parameters("--conf-file")) {
         try {
-            zpt::conf::file(static_cast<std::string>(_conf_file), _output);
+            zpt::conf::file(static_cast<std::string>(_conf_file), _output, _output);
         }
         catch (zpt::failed_expectation const& _e) {
             zlog("Found " << _e, zpt::emergency);

@@ -107,8 +107,7 @@ auto zpt::storage::lmdb::session::rollback() -> zpt::storage::session::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::session::sql(std::string const& _statement)
-  -> zpt::storage::session::type* {
+auto zpt::storage::lmdb::session::sql(std::string const&) -> zpt::storage::session::type* {
     expect(false, "Session `sql` method not implemented for LMDB");
     return this;
 }
@@ -124,8 +123,7 @@ zpt::storage::lmdb::database::database(zpt::storage::lmdb::session& _session,
   : __path{ _session.__options("path")->string() + std::string{ "/" } + _db }
   , __commit{ _session.is_to_commit() } {}
 
-auto zpt::storage::lmdb::database::sql(std::string const& _statement)
-  -> zpt::storage::database::type* {
+auto zpt::storage::lmdb::database::sql(std::string const&) -> zpt::storage::database::type* {
     expect(false, "Database `sql` method not implemented for LMDB");
     return this;
 }
@@ -253,64 +251,56 @@ auto zpt::storage::lmdb::action_add::add(zpt::json _document) -> zpt::storage::a
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::lmdb::action_add::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::lmdb::action_add::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't set from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::unset(std::string const&) -> zpt::storage::action::type* {
     expect(false, "can't unset from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::patch(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't patch from an 'add' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_add::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_add::offset(size_t _rows) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::lmdb::action_add::offset(size_t) -> zpt::storage::action::type* { return this; }
 
-auto zpt::storage::lmdb::action_add::limit(size_t _number) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::lmdb::action_add::limit(size_t) -> zpt::storage::action::type* { return this; }
 
-auto zpt::storage::lmdb::action_add::bind(zpt::json _map) -> zpt::storage::action::type* {
-    return this;
-}
+auto zpt::storage::lmdb::action_add::bind(zpt::json) -> zpt::storage::action::type* { return this; }
 
 auto zpt::storage::lmdb::action_add::execute() -> zpt::storage::result {
     MDB_txn* _trx{ nullptr };
@@ -352,28 +342,28 @@ zpt::storage::lmdb::action_modify::action_modify(zpt::storage::lmdb::collection&
   , __set{ zpt::json::object() }
   , __unset{ zpt::json::object() } {}
 
-auto zpt::storage::lmdb::action_modify::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::lmdb::action_modify::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'modify' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'modify' action");
     return this;
 }
@@ -395,26 +385,24 @@ auto zpt::storage::lmdb::action_modify::patch(zpt::json _document) -> zpt::stora
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_modify::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_modify::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::lmdb::action_modify::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const&, zpt::json _item, std::string const&) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -501,12 +489,12 @@ zpt::storage::lmdb::action_remove::action_remove(zpt::storage::lmdb::collection&
   : zpt::storage::lmdb::action::action{ _collection }
   , __search{ _search } {}
 
-auto zpt::storage::lmdb::action_remove::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'remove' action");
     return this;
 }
@@ -516,51 +504,48 @@ auto zpt::storage::lmdb::action_remove::remove(zpt::json _search) -> zpt::storag
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::lmdb::action_remove::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'remove' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::lmdb::action_remove::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_remove::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_remove::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::lmdb::action_remove::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const&, zpt::json _item, std::string const&) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -639,66 +624,63 @@ zpt::storage::lmdb::action_replace::action_replace(zpt::storage::lmdb::collectio
   , __id{ _id }
   , __set{ _document } {}
 
-auto zpt::storage::lmdb::action_replace::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::lmdb::action_replace::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'replace' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::lmdb::action_replace::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::sort(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::sort(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::fields(zpt::json _fields) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::fields(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::offset(size_t _rows) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::offset(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_replace::limit(size_t _number) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_replace::limit(size_t) -> zpt::storage::action::type* {
     return this;
 }
 
 auto zpt::storage::lmdb::action_replace::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const&, zpt::json _item, std::string const&) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }
@@ -755,43 +737,42 @@ zpt::storage::lmdb::action_find::action_find(zpt::storage::lmdb::collection& _co
   , __sort{ zpt::json::array() }
   , __fields{ zpt::json::array() } {}
 
-auto zpt::storage::lmdb::action_find::add(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::add(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't add from a 'find' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::modify(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::modify(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't modify from a 'find' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::remove(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::remove(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't remove from a 'find' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::replace(std::string const& _id, zpt::json _document)
+auto zpt::storage::lmdb::action_find::replace(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     expect(false, "can't replace from a 'find' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::find(zpt::json _search) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::find(zpt::json) -> zpt::storage::action::type* {
     expect(false, "can't find from a 'find' action");
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::set(std::string const& _attribute, zpt::json _value)
+auto zpt::storage::lmdb::action_find::set(std::string const&, zpt::json)
   -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::unset(std::string const& _attribute)
-  -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
-auto zpt::storage::lmdb::action_find::patch(zpt::json _document) -> zpt::storage::action::type* {
+auto zpt::storage::lmdb::action_find::patch(zpt::json) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -817,8 +798,7 @@ auto zpt::storage::lmdb::action_find::limit(size_t _number) -> zpt::storage::act
 }
 
 auto zpt::storage::lmdb::action_find::bind(zpt::json _map) -> zpt::storage::action::type* {
-    auto _transform =
-      [&](std::string const& _key, zpt::json _item, std::string const& _path) -> void {
+    auto _transform = [&](std::string const&, zpt::json _item, std::string const&) -> void {
         if (_item->type() != zpt::JSString) { return; }
         for (auto [_, _key, _value] : _map) {
             if (_item == _key) { _item << _value; }

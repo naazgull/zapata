@@ -29,10 +29,10 @@ class my_operator {
       , __i{ _i } {}
 
     auto blocked() const -> bool { return false; }
-    auto catch_error(std::exception const& _e) -> bool { return false; }
-    auto catch_error(zpt::failed_expectation const& _e) -> bool { return false; }
+    auto catch_error(std::exception const&) -> bool { return false; }
+    auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
-    auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+    auto operator()(zpt::events::dispatcher&) -> zpt::events::state {
         zlog("job1: " << this->__str << " " << this->__i, zpt::info);
         ++this->__i;
         return zpt::events::retrigger;
@@ -49,8 +49,8 @@ class my_other_operator {
       : __i{ _i } {}
 
     auto blocked() const -> bool { return false; }
-    auto catch_error(std::exception const& _e) -> bool { return false; }
-    auto catch_error(zpt::failed_expectation const& _e) -> bool { return false; }
+    auto catch_error(std::exception const&) -> bool { return false; }
+    auto catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
     auto operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
         zlog("job2: xpto " << this->__i, zpt::info);
@@ -62,7 +62,7 @@ class my_other_operator {
     int __i;
 };
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     zpt::events::dispatcher _dispatcher{ 10 };
 
     _dispatcher //

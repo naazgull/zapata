@@ -415,8 +415,7 @@ auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::jso
         auto _remove = _collection->remove(zpt::storage::extract_find(_to_remove));
         if (_to_remove("page_size")->ok()) {
             _remove //
-              ->limit(_to_remove("page_size"))
-              ->offset(_to_remove("page_start_index"));
+              ->limit(_to_remove("page_size"));
         }
         if (_to_remove("page_start_index")->ok()) {
             _remove //

@@ -5,7 +5,10 @@ project(zapata VERSION 2.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(THIRD_PARTY_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/third_party/install)
+option(THIRD_PARTY_INSTALL_PREFIX "Third-party library installation directory")
+if (NOT THIRD_PARTY_INSTALL_PREFIX)
+  set(THIRD_PARTY_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/third_party/install)
+endif()
 
 list(APPEND CMAKE_INSTALL_RPATH
   ${CMAKE_INSTALL_PREFIX}/bin
@@ -25,16 +28,21 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 message("-- Runtime path: ${CMAKE_INSTALL_RPATH}")
 message("-- Build runtime path: ${CMAKE_BUILD_RPATH}")
 
-set(ZAPATA_COMPILE_FLAGS "-O3 -DNDEBUG -fno-omit-frame-pointer -Wno-interference-size -Wall -pedantic -Wno-restrict")
-set(ZAPATA_LINK_FLAGS "")
+add_compile_options(
+  -fno-omit-frame-pointer
+  -Wall
+  -Wextra
+  -pedantic
+  -Wno-interference-size
+  -Wno-restrict
+)
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" ZAPATA_BUILD_TYPE)
 if(ZAPATA_BUILD_TYPE STREQUAL debug)
-  set(ZAPATA_COMPILE_FLAGS "-O0 -ggdb3 -fno-omit-frame-pointer -Wno-interference-size -Wall -pedantic -Wno-restrict")
+  add_compile_options(-O0 -ggdb3)
+else()
+  add_compile_options(-O3)
 endif()
-
-message("-- Compiler flags: ${ZAPATA_COMPILE_FLAGS}")
-message("-- Linker flags: ${ZAPATA_LINK_FLAGS}")
 
 find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Lua)
@@ -74,6 +82,8 @@ add_subdirectory(engines/startup)
 add_subdirectory(engines/events)
 add_subdirectory(engines/transport)
 add_subdirectory(engines/rest)
+add_subdirectory(generators/ast)
+add_subdirectory(generators/rest)
 add_subdirectory(io/pipe)
 add_subdirectory(io/socket)
 add_subdirectory(io/stream)

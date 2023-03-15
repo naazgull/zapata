@@ -48,7 +48,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
         return (*this);
     }
 
-    auto execute(std::string _to_evaluate, object_type _arg, class_type& _bridge) -> zpt::json {
+    auto execute(std::string _to_evaluate, object_type _arg, class_type&) -> zpt::json {
         auto _found = this->__lambdas.find(_to_evaluate);
         expect(_found != this->__lambdas.end(), "unknown expression '" << _to_evaluate << "'");
         return _found->second(_arg, *this);
@@ -62,7 +62,7 @@ class cpp_bridge : public zpt::programming::bridge<cpp_bridge, zpt::json> {
     std::map<std::string, zpt::json> __modules;
 };
 
-auto init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::json {
+auto init_module_x(cpp_bridge::object_type, cpp_bridge& _bridge) -> zpt::json {
     _bridge.add_lambda(
       [](cpp_bridge::object_type _a, cpp_bridge&) -> zpt::json {
           return { "a", _a };
@@ -71,7 +71,7 @@ auto init_module_x(cpp_bridge::object_type _conf, cpp_bridge& _bridge) -> zpt::j
     return zpt::undefined;
 }
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     cpp_bridge _bridge;
     auto _result = _bridge                                       //
                      .set_options({ "flags", "SFGT" })           //

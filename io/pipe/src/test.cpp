@@ -1,6 +1,6 @@
 #include <zapata/io/pipe.h>
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     zpt::pipestream _pss;
     _pss.open("pipe");
     _pss << "abc fgh" << std::flush;

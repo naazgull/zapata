@@ -26,7 +26,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
+auto zpt::ascii::encode(std::string& _out, bool) -> void {
     auto wc = zpt::utf8::utf8_to_wstring(_out);
     std::wstring ws{ wc };
 
@@ -45,7 +45,7 @@ auto zpt::ascii::encode(std::string& _out, bool quote) -> void {
 
 auto zpt::generate::key(std::string& _out, size_t _size) -> void {
     static std::string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-    timeval _tv = { 0 };
+    timeval _tv = { 0, 0 };
 
     for (size_t _idx = 0; _idx != _size; _idx++) {
         gettimeofday(&_tv, nullptr);
@@ -107,14 +107,14 @@ auto zpt::test::uuid(std::string const& _uuid) -> bool {
     return std::regex_match(_uuid, _uuid_rgx);
 }
 
-auto zpt::test::utf8(std::string const& _uri) -> bool { return true; }
+auto zpt::test::utf8(std::string const&) -> bool { return true; }
 
 auto zpt::test::ascii(std::string const& _ascii) -> bool {
     static const std::regex _ascii_rgx("^([a-zA-Z0-9_@:;./+*|-]+)$");
     return std::regex_match(_ascii, _ascii_rgx);
 }
 
-auto zpt::test::token(std::string const& _token) -> bool { return true; }
+auto zpt::test::token(std::string const&) -> bool { return true; }
 
 auto zpt::test::uri(std::string _uri) -> bool {
     if (_uri.find(":") >= _uri.find("/")) { _uri = std::string("zpt:") + _uri; }

@@ -562,7 +562,7 @@ void HTTPLexerBase::switchOstream(std::ostream& out) {
 }
 
 // $insert debugFunctions
-void HTTPLexerBase::setDebug(bool onOff) {}
+void HTTPLexerBase::setDebug(bool) {}
 
 bool HTTPLexerBase::debug() const { return false; }
 

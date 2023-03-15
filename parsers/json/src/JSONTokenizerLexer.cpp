@@ -47,7 +47,7 @@ void zpt::JSONTokenizerLexer::result(zpt::JSONType _in) {
     }
 }
 
-void zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
+void zpt::JSONTokenizerLexer::finish(zpt::JSONType) {
     try {
         zpt::JSONElementT* _cur = this->__parent;
         this->__parent = _cur->parent();
@@ -60,7 +60,7 @@ void zpt::JSONTokenizerLexer::finish(zpt::JSONType _in) {
     }
 }
 
-void zpt::JSONTokenizerLexer::init(zpt::JSONType _in_type, const std::string _in_str) {
+void zpt::JSONTokenizerLexer::init(zpt::JSONType, const std::string _in_str) {
     try {
         (*this->__parent) << _in_str;
     }

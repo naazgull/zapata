@@ -459,7 +459,7 @@ auto zpt::JSONElementT::regex() const -> zpt::regex const& {
     return std::get<zpt::JSRegex>(this->__underlying);
 }
 
-auto zpt::JSONElementT::number() const -> double const {
+auto zpt::JSONElementT::number() const -> double {
     expect(
       this->__underlying.index() == zpt::JSDate || this->__underlying.index() == zpt::JSInteger ||
         this->__underlying.index() == zpt::JSDouble || this->__underlying.index() == zpt::JSBoolean,

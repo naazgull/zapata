@@ -35,7 +35,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Initialized PYTHON bridge", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zpt::release_global<zpt::python::bridge>(zpt::PYTHON_BRIDGE());
     zlog("Unloaded PYTHON bridge", zpt::info);
 }

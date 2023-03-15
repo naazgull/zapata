@@ -19,7 +19,7 @@ inline int URITokenizer::lex() { return d_scanner.lex(); }
 
 inline void URITokenizer::print() {}
 
-inline void URITokenizer::exceptionHandler(std::exception const& exc) {
+inline void URITokenizer::exceptionHandler(std::exception const&) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

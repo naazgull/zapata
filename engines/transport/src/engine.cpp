@@ -37,7 +37,7 @@ auto zpt::events::receive::catch_error(std::exception const& _e) -> bool {
     auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
                         .get(this->__stream.transport());
     auto _reply = _transport->make_reply();
-    _reply->status(500);
+    _reply->status(400);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::catch_error(_e);
     _transport->send(this->__stream, _reply);
@@ -49,7 +49,7 @@ auto zpt::events::receive::catch_error(zpt::failed_expectation const& _e) -> boo
     auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
                         .get(this->__stream.transport());
     auto _reply = _transport->make_reply();
-    _reply->status(500);
+    _reply->status(400);
     _reply->headers()["Content-Type"] = "application/json";
     _reply->body() = ::catch_error(_e);
     _transport->send(this->__stream, _reply);
@@ -86,11 +86,11 @@ zpt::events::send::~send() { this->__polling.unmute(this->__stream); }
 
 auto zpt::events::send::blocked() const -> bool { return false; }
 
-auto zpt::events::send::catch_error(std::exception const& _e) -> bool { return false; }
+auto zpt::events::send::catch_error(std::exception const&) -> bool { return false; }
 
-auto zpt::events::send::catch_error(zpt::failed_expectation const& _e) -> bool { return false; }
+auto zpt::events::send::catch_error(zpt::failed_expectation const&) -> bool { return false; }
 
-auto zpt::events::send::operator()(zpt::events::dispatcher& _dispatcher) -> zpt::events::state {
+auto zpt::events::send::operator()(zpt::events::dispatcher&) -> zpt::events::state {
     auto _transport = zpt::global_cast<zpt::network::layer>(zpt::TRANSPORT_LAYER()) //
                         .get(this->__stream.transport());
     this->__to_send->headers()["Content-Type"] = "application/json";
@@ -105,6 +105,9 @@ zpt::events::process::~process() {
     if (this->__to_send->status() != 0) {
         this->__dispatcher->trigger<zpt::events::send>(
           *this->__polling, *this->__stream, this->__to_send);
+    }
+    else {
+        this->__polling->unmute(*this->__stream);        
     }
 }
 

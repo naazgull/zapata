@@ -33,7 +33,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     _layer.add("file", zpt::make_transport<zpt::net::transport::file>());
     _layer.add("unix", zpt::make_transport<zpt::net::transport::unix_socket>());
     if (_config("path")->ok()) {
-        expect(!zpt::file_exists(_config("path")->string()),
+        expect(!std::filesystem::exists(_config("path")->string()),
                "Unix socket '" << _config("path")
                                << "' already exists. Please, remove before reloading the plugin.");
         auto& _server_sock = zpt::make_global<zpt::serversocketstream>(zpt::UNIX_SERVER_SOCKET(),

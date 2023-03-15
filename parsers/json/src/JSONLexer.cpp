@@ -409,7 +409,7 @@ void JSONLexerBase::switchOstream(std::ostream& out) {
 }
 
 // $insert debugFunctions
-void JSONLexerBase::setDebug(bool onOff) {}
+void JSONLexerBase::setDebug(bool) {}
 
 bool JSONLexerBase::debug() const { return false; }
 

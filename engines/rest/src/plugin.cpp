@@ -32,7 +32,7 @@ extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
     zlog("Added REST event resolver", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Disposing REST event resolver", zpt::info);
     zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
 }

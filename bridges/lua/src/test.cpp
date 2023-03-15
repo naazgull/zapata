@@ -42,7 +42,7 @@ auto init_x(lua_State* _state) -> void {
     lua_setglobal(_state, "builtin");
 }
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     _bridge                                                            //
       .add_module(init_x, { "module", "builtin" })                     //
       .add_module("/home/pf/Void/test1.lua", { "module", "builtin2" }) //

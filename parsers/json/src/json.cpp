@@ -149,32 +149,56 @@ auto zpt::conf::setup(zpt::json _options) -> void {
 }
 
 auto zpt::conf::evaluate_ref(zpt::json _options,
-                             std::string const& _parent_key,
                              zpt::json _parent,
-                             std::string const& _file_context) -> void {
-    for (auto [_, _key, _value] : _options) {
-        if (_key == "$ref") {
-            std::string _href{ (_value->string()[0] != '/' ? zpt::dirname(_file_context)
-                                                           : std::string{ "" }) +
-                               _value->string() };
-            zpt::json _other;
-            zpt::conf::file(_href, _other);
-            if (_parent->is_object()) { _parent << _parent_key << _other; }
-            else { _parent << _other; }
+                             std::variant<std::string, size_t> const& _parent_key,
+                             std::filesystem::path const& _context,
+                             zpt::json _root) -> void {
+    for (auto [_idx, _key, _value] : _options) {
+        if (_options->is_object()) {
+            if (_key == "$ref") {
+                auto& _ref = _value->string();
+                zpt::json _other;
+
+                if (_ref[0] == '#') {
+                    _ref = _ref.substr(2);
+                    _other = _root->get_path(_ref, "/");
+                }
+                else if (_ref.find("file:") == 0) {
+                    _ref = _ref.substr(5);
+                    std::filesystem::path _path{ _ref };
+                    if (!_path.is_absolute()) {
+                        _path = std::filesystem::canonical(_context / _path);
+                    }
+                    else { _path = std::filesystem::canonical(_path); }
+                    zpt::conf::file(_path, _other, _root);
+                }
+
+                if (_parent_key.index() == 1) { _parent[std::get<size_t>(_parent_key)] = _other; }
+                else {
+                    if (std::get<std::string>(_parent_key).length() == 0) { _parent = _other; }
+                    else { _parent[std::get<std::string>(_parent_key)] = _other; }
+                }
+            }
+            else { zpt::conf::evaluate_ref(_value, _options, _key, _context, _root); }
         }
-        else { zpt::conf::evaluate_ref(_value, _key, _options, _file_context); }
+        else if (_options->is_array()) {
+            zpt::conf::evaluate_ref(_value, _options, _idx, _context, _root);
+        }
     }
 }
 
-auto zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
+auto zpt::conf::file(std::filesystem::path const& _file, zpt::json& _options, zpt::json _root)
+  -> void {
     zpt::json _conf;
     std::ifstream _ifs;
-    _ifs.open(_file.data());
+    _ifs.open(_file.string());
     expect(_ifs.is_open(), "no such file '" << _file << "'");
 
+    std::filesystem::path _context = std::filesystem::absolute(_file);
+    _context.remove_filename();
     try {
         _ifs >> _conf;
-        zpt::conf::evaluate_ref(_conf, "", _conf, _file);
+        zpt::conf::evaluate_ref(_conf, _conf, "", _context, _root);
         _options |= _conf;
     }
     catch (zpt::SyntaxErrorException const& _e) {
@@ -187,13 +211,13 @@ auto zpt::conf::file(std::string const& _file, zpt::json& _options) -> void {
 
 auto zpt::conf::dirs(std::string const& _dir, zpt::json& _options) -> void {
     std::vector<std::string> _non_positional;
-    if (zpt::is_dir(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
+    if (std::filesystem::is_directory(_dir)) { zpt::glob(_dir, _non_positional, "(.*)\\.conf"); }
     else { _non_positional.push_back(_dir); }
     std::sort(_non_positional.begin(), _non_positional.end());
     for (auto _file : _non_positional) {
-        expect(zpt::file_exists(_file), "'" << _file << "' can't be found.");
-        if (zpt::is_dir(_file)) { zpt::conf::dirs(_file, _options); }
-        else { zpt::conf::file(static_cast<std::string>(_file), _options); }
+        expect(std::filesystem::exists(_file), "'" << _file << "' can't be found.");
+        if (std::filesystem::is_directory(_file)) { zpt::conf::dirs(_file, _options); }
+        else { zpt::conf::file(static_cast<std::string>(_file), _options, _options); }
     }
 }
 
@@ -227,7 +251,7 @@ auto zpt::conf::env(zpt::json& _options) -> void {
     zpt::json _traversable = _options->clone();
     zpt::json::traverse(
       _traversable,
-      [&](std::string const& _key, zpt::json _item, std::string const& _object_path) -> void {
+      [&](std::string const&, zpt::json _item, std::string const& _object_path) -> void {
           if (_item->type() != zpt::JSString) { return; }
           std::string _value{ static_cast<std::string>(_item) };
           bool _changed{ false };

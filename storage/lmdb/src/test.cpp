@@ -1,6 +1,6 @@
 #include <zapata/lmdb.h>
 
-auto main(int _argc, char* _argv[]) -> int {
+auto main(int, char**) -> int {
     zpt::json _config{ "storage", { "lmdb", { "path", "/home/pf/Void/lmdb" } } };
     auto _connection = zpt::make_connection<zpt::storage::lmdb::connection>(_config);
     auto _session = _connection->session();

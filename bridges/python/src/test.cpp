@@ -24,7 +24,7 @@
 
 zpt::python::bridge _bridge;
 
-auto to_a(PyObject* _self, PyObject* _args) -> PyObject* {
+auto to_a(PyObject*, PyObject* _args) -> PyObject* {
     auto _json = _bridge.object_to_json(_args);
     auto _ret = _bridge.json_to_object({ "a", _json[0] });
     return _ret;
@@ -32,11 +32,11 @@ auto to_a(PyObject* _self, PyObject* _args) -> PyObject* {
 
 PyMethodDef methods[] = { { "to_a", to_a, METH_VARARGS, "To a." },
                           { nullptr, nullptr, 0, nullptr } };
-PyModuleDef spec = { PyModuleDef_HEAD_INIT, "builtin", nullptr, -1, methods };
+PyModuleDef spec = { PyModuleDef_HEAD_INIT, "builtin", nullptr, -1, methods, 0, 0, 0, 0 };
 
 auto init_module_x() -> zpt::python::bridge::underlying_type { return PyModule_Create(&spec); }
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     _bridge //
       .set_options({ "sys_path", { zpt::array, "/home/pf/Void/" } })
       .add_module(init_module_x, { "name", "builtin" })

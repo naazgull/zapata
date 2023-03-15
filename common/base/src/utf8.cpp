@@ -88,16 +88,6 @@ wchar_t* zpt::utf8::utf8_to_wstring(std::string s) {
     return res;
 }
 
-int zpt::utf8::length(std::string s) {
-    int size = 0;
-    for (size_t i = 0; i != s.length(); i++) {
-        if (((wchar_t)s[i]) < 0x80) { size++; }
-        else if (((wchar_t)s[i]) < 0x800) { size += 2; }
-        else { size += 3; }
-    }
-    return size;
-}
-
 void zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
     std::ostringstream oss;
 

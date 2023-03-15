@@ -29,7 +29,7 @@ class some_protocol : public zpt::basic_transport {
 
     auto make_reply() const -> zpt::message override { return nullptr; }
 
-    auto make_reply(zpt::message _request) const -> zpt::message override { return nullptr; }
+    auto make_reply(zpt::message) const -> zpt::message override { return nullptr; }
 
     auto process_incoming_request(zpt::basic_stream& _stream) const -> zpt::message override {
         auto _message = zpt::make_message<zpt::json_message>();

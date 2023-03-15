@@ -26,17 +26,18 @@
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int _signal) -> void {
+auto deallocate(int) -> void {
     zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown();
 }
 
-auto nostop(int _signal) -> void {
+auto nostop(int) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
 }
 
 auto main(int _argc, char* _argv[]) -> int {
     std::signal(SIGUSR1, deallocate);
     std::signal(SIGINT, deallocate);
+    std::signal(SIGTERM, deallocate);
     zpt::json _parameter_setup{
         "--conf-file",
         { "options",

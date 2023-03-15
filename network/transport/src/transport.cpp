@@ -304,7 +304,7 @@ auto zpt::network::layer::translate_from_xml(std::istream& _io) -> zpt::json {
     return { _content };
 }
 
-auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string {
+auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json) -> std::string {
     _io << "" << std::flush;
     return "text/xml";
 }

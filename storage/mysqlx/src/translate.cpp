@@ -74,6 +74,6 @@ auto zpt::storage::mysqlx::translate_array_from_db(::mysqlx::Value const& _rhs) 
     return _to_return;
 }
 
-auto zpt::storage::mysqlx::translate_bytes_from_db(::mysqlx::bytes const& _rhs) -> zpt::json {
+auto zpt::storage::mysqlx::translate_bytes_from_db(::mysqlx::bytes const&) -> zpt::json {
     return zpt::undefined;
 }
