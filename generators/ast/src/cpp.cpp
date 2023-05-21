@@ -109,3 +109,14 @@ auto zpt::ast::cpp_instruction::to_string() const -> std::string {
     _oss << std::flush;
     return _oss.str();
 }
+
+zpt::ast::cmake_instruction::cmake_instruction(std::string const& _code)
+  : zpt::ast::basic_instruction{ _code } {}
+
+auto zpt::ast::cmake_instruction::to_string() const -> std::string {
+    std::ostringstream _oss;
+    _oss << this->__instruction;
+    if (this->__body != nullptr) { _oss << *this->__body; }
+    _oss << std::flush;
+    return _oss.str();
+}

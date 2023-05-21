@@ -38,6 +38,7 @@ class module {
     auto generate_operations() -> module&;
     auto generate_plugin() -> module&;
     auto generate_sql() -> module&;
+    auto generate_cmake() -> module&;
     auto dump() -> module&;
 
   private:
@@ -46,12 +47,13 @@ class module {
     std::string __namespace;
     zpt::json __schema;
     std::vector<std::string> __header_files;
+    std::map<std::string, zpt::json> __schema_components;
 
-    static inline std::map<std::string, std::string> __sql_types{ { "string", "text" },
-                                                                  { "integer", "bigint" },
-                                                                  { "double", "double" },
-                                                                  { "boolean", "tinyint" },
-                                                                  { "date", "datetime" } };
+    static inline std::map<std::string, std::string> __sql_types{
+        { "string", "text" },     { "integer", "bigint" }, { "double", "double" },
+        { "boolean", "tinyint" }, { "date", "timestamp" },    { "object", "json" },
+        { "array", "json" }
+    };
 
     auto generate_operation_h_file(zpt::json _def, std::string const& _method)
       -> std::shared_ptr<zpt::ast::basic_file>;
@@ -93,8 +95,14 @@ class module {
     auto add_parameters_and_validation(std::shared_ptr<zpt::ast::basic_code_block> _block,
                                        zpt::json _def,
                                        zpt::json _path) -> void;
+    auto add_schema_validation(std::shared_ptr<zpt::ast::basic_code_block> _block, zpt::json _def)
+      -> void;
+    auto add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                       zpt::json _def,
+                       std::string const& _generate) -> void;
+    auto get_visible_fields(zpt::json _def) -> std::string;
 
-    auto generate_sql_schemata(zpt::json _def) -> std::shared_ptr<zpt::ast::basic_file>;
+    auto generate_sql_schemata_mysql(zpt::json _def) -> std::shared_ptr<zpt::ast::basic_file>;
 };
 } // namespace rest
 } // namespace gen

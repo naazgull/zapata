@@ -53,15 +53,27 @@ auto test_json_init() -> int {
     _obj1["a"]["b"][0] = "hello";
     _obj1["a"]["b"][1] = "world";
     _obj1["a"]["b"][3] = "!!!";
+    zpt::json _obj2 = zpt::json::object();
+    _obj2["a"]["b"][0] = "hello";
+    _obj2["a"]["b"][1] = "world";
+    _obj2["a"]["b"][3] = "!!";
     if (_obj1("x")("y")("z")->ok()) zlog(_obj1["x"], zpt::info);
     zlog(_obj1, zpt::info);
+    zlog((_obj1 & _obj2), zpt::info);
+    _obj2 &= _obj1;
+    zlog(_obj2, zpt::info);
     return 0;
 }
 
 int main(int argc, char* argv[]) {
+    test_json_init();
+    return 0;
+
     if (argc > 1) {
-        auto _parameters = zpt::parameters::parse(
-          argc, argv, { "--print", { "options", { zpt::array, "optional", "single" } } });
+        zpt::json _parameter_config{ "--print",
+                                     { "options", { zpt::array, "optional", "single" } } };
+        auto _parameters = zpt::parameters::parse(argc, argv, _parameter_config);
+        zpt::parameters::verify(_parameters, _parameter_config);
 
         auto _init = "null"_JSON;
 

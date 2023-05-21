@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 namespace zpt::crypto {
 class SHA1 {

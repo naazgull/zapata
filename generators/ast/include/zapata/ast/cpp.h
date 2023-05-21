@@ -67,5 +67,13 @@ class cpp_instruction : public zpt::ast::basic_instruction {
 
     auto to_string() const -> std::string override;
 };
+
+class cmake_instruction : public zpt::ast::basic_instruction {
+  public:
+    cmake_instruction(std::string const& _code);
+    ~cmake_instruction() = default;
+
+    auto to_string() const -> std::string override;
+};
 } // namespace ast
 } // namespace zpt

@@ -45,147 +45,147 @@ auto func_default(std::string const& _functor, zpt::json _params, std::ostream& 
 }
 auto func_lower(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(lower(" << static_cast<std::string>(_params[0]) << ") = ";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(lower(" << static_cast<std::string>(_params(0)) << ") = ";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << ")" << std::flush;
     }
     else {
         _find << "lower(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << ")" << std::flush;
     }
 }
 auto func_upper(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(upper(" << static_cast<std::string>(_params[0]) << ") = ";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(upper(" << static_cast<std::string>(_params(0)) << ") = ";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << ")" << std::flush;
     }
     else {
         _find << "upper(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << ")" << std::flush;
     }
 }
 auto func_boolean(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(" << static_cast<std::string>(_params[0]) << " = cast(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(" << static_cast<std::string>(_params(0)) << " = cast(";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << " as boolean))" << std::flush;
     }
     else {
         _find << "cast(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << " as boolean)" << std::flush;
     }
 }
 auto func_date(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(" << static_cast<std::string>(_params[0]) << " = cast(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(" << static_cast<std::string>(_params(0)) << " = cast(";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << " as datetime(3)))" << std::flush;
     }
     else {
         _find << "cast(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << " as datetime(3))" << std::flush;
     }
 }
 auto func_integer(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(" << static_cast<std::string>(_params[0]) << " = cast(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(" << static_cast<std::string>(_params(0)) << " = cast(";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << " as integer))" << std::flush;
     }
     else {
         _find << "cast(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << " as integer)" << std::flush;
     }
 }
 auto func_floating(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(" << static_cast<std::string>(_params[0]) << " = cast(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(" << static_cast<std::string>(_params(0)) << " = cast(";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << " as double))" << std::flush;
     }
     else {
         _find << "cast(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << " as double)" << std::flush;
     }
 }
 auto func_string(zpt::json _params, std::ostream& _find) -> void {
     if (_params->size() > 1) {
-        _find << "(" << static_cast<std::string>(_params[0]) << " = cast(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        _find << "(" << static_cast<std::string>(_params(0)) << " = cast(";
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << " as char))" << std::flush;
     }
     else {
         _find << "cast(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(0), _find, ::value_output);
         _find << " as char)" << std::flush;
     }
 }
 auto func_ne(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " <> ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_gt(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " > ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_gte(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " >= ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_lt(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " < ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_lte(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " <= ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_between(zpt::json _params, std::ostream& _find) -> void {
     _find << "(";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " > ";
-    zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
     _find << " and ";
-    zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+    zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
     _find << " < ";
-    zpt::storage::functional_to_sql(_params[2], _find, ::value_output);
+    zpt::storage::functional_to_sql(_params(2), _find, ::value_output);
     _find << ")" << std::flush;
 }
 auto func_like(zpt::json _params, std::ostream& _find) -> void {
-    if (_params[2] == "i") {
+    if (_params(2) == "i") {
         _find << "(lower(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+        zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
         _find << ") like lower(";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << "))" << std::flush;
     }
     else {
         _find << "(";
-        zpt::storage::functional_to_sql(_params[0], _find, ::variable_name);
+        zpt::storage::functional_to_sql(_params(0), _find, ::variable_name);
         _find << " like ";
-        zpt::storage::functional_to_sql(_params[1], _find, ::value_output);
+        zpt::storage::functional_to_sql(_params(1), _find, ::value_output);
         _find << ")" << std::flush;
     }
 }
@@ -432,7 +432,7 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
     std::ostringstream _find;
     bool _first{ true };
     for (auto [_, _key, _value] : _to_process) {
-        if (_key == "page_size" || _key == "page_start_index") { continue; }
+        if (_key == "page_size" || _key == "page_start_index" || _key == "fields") { continue; }
         if (!_first) { _find << " and " << std::flush; }
         _first = false;
 

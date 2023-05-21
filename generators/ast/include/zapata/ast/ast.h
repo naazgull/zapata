@@ -96,6 +96,8 @@ class basic_module {
     auto add(Args... _args) -> basic_module&;
     auto dump() -> basic_module&;
     auto dump(std::ostream& _out) -> basic_module&;
+    template<typename Callback>
+    auto traverse_elements(Callback _callback) -> basic_module&;
 
   protected:
     std::string __module_name;
@@ -121,6 +123,8 @@ class basic_file {
     auto add(Args... _args) -> basic_file&;
     auto dump() -> basic_file&;
     auto dump(std::ostream& _out) -> basic_file&;
+    template<typename Callback>
+    auto traverse_elements(Callback _callback) -> basic_file&;
 
   protected:
     std::filesystem::path __filename;
@@ -141,6 +145,8 @@ class basic_class : public basic_element {
     auto add(std::shared_ptr<T> _to_add, int _visibility) -> basic_class&;
     template<BasicASTElement T, typename... Args>
     auto add(int _visibility, Args... _args) -> basic_class&;
+    template<typename Callback>
+    auto traverse_elements(Callback _callback) -> basic_class&;
 
   protected:
     std::string __name;
@@ -165,6 +171,8 @@ class basic_code_block : public basic_element {
     auto add(std::shared_ptr<T> _to_add) -> basic_code_block&;
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_code_block&;
+    template<typename Callback>
+    auto traverse_elements(Callback _callback) -> basic_code_block&;
 
   protected:
     std::string __prefix;
@@ -183,6 +191,7 @@ class basic_function : public basic_element {
     template<BasicASTElement T, typename... Args>
     auto add(Args... _args) -> basic_function&;
     auto set_modifiers(int _modifiers) -> basic_function&;
+    auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
     std::string __name;
@@ -201,6 +210,7 @@ class basic_variable : public basic_element {
     template<typename... Args>
     auto add(Args... _args) -> basic_variable&;
     auto set_modifiers(int _modifiers) -> basic_variable&;
+    auto initialization() -> std::shared_ptr<basic_code_block>;
 
   protected:
     std::string __name;
@@ -217,6 +227,7 @@ class basic_instruction : public basic_element {
     auto add(std::shared_ptr<basic_code_block> _body) -> basic_instruction&;
     template<typename... Args>
     auto add(Args... _args) -> basic_instruction&;
+    auto body() -> std::shared_ptr<basic_code_block>;
 
   protected:
     std::string __instruction;
@@ -239,6 +250,12 @@ template<zpt::ast::BasicASTElement T, typename... Args>
 auto make_instruction(Args... _args) -> std::shared_ptr<ast::basic_instruction>;
 } // namespace zpt
 
+template<typename Callback>
+auto zpt::ast::basic_module::traverse_elements(Callback _callback) -> basic_module& {
+    for (auto& _file : this->__files) { _callback(_file); }
+    return (*this);
+}
+
 template<zpt::ast::BasicASTElement T>
 auto zpt::ast::basic_file::add(std::shared_ptr<T> _to_add) -> basic_file& {
     this->__elements.push_back(_to_add);
@@ -248,6 +265,14 @@ auto zpt::ast::basic_file::add(std::shared_ptr<T> _to_add) -> basic_file& {
 template<zpt::ast::BasicASTElement T, typename... Args>
 auto zpt::ast::basic_file::add(Args... _args) -> basic_file& {
     return this->add<T>(std::make_shared<T>(std::forward<Args>(_args)...));
+}
+
+template<typename Callback>
+auto zpt::ast::basic_file::traverse_elements(Callback _callback) -> basic_file& {
+    for (auto& _element : this->__elements) {
+        std::visit([&_callback](auto&& arg) -> void { _callback(arg); }, _element);
+    }
+    return (*this);
 }
 
 template<zpt::ast::BasicASTElement T>
@@ -275,6 +300,20 @@ auto zpt::ast::basic_class::add(int _visibility, Args... _args) -> basic_class& 
     return this->add<T>(std::make_shared<T>(std::forward<Args>(_args)...), _visibility);
 }
 
+template<typename Callback>
+auto zpt::ast::basic_class::traverse_elements(Callback _callback) -> basic_class& {
+    for (auto& _element : this->__public) {
+        std::visit([&_callback](auto&& arg) -> void { _callback(arg); }, _element);
+    }
+    for (auto& _element : this->__protected) {
+        std::visit([&_callback](auto&& arg) -> void { _callback(arg); }, _element);
+    }
+    for (auto& _element : this->__private) {
+        std::visit([&_callback](auto&& arg) -> void { _callback(arg); }, _element);
+    }
+    return (*this);
+}
+
 template<zpt::ast::BasicASTElement T>
 auto zpt::ast::basic_code_block::add(std::shared_ptr<T> _to_add) -> basic_code_block& {
     this->__elements.push_back(_to_add);
@@ -285,6 +324,14 @@ auto zpt::ast::basic_code_block::add(std::shared_ptr<T> _to_add) -> basic_code_b
 template<zpt::ast::BasicASTElement T, typename... Args>
 auto zpt::ast::basic_code_block::add(Args... _args) -> basic_code_block& {
     return this->add<T>(std::make_shared<T>(std::forward<Args>(_args)...));
+}
+
+template<typename Callback>
+auto zpt::ast::basic_code_block::traverse_elements(Callback _callback) -> basic_code_block& {
+    for (auto& _element : this->__elements) {
+        std::visit([&_callback](auto&& arg) -> void { _callback(arg); }, _element);
+    }
+    return (*this);
 }
 
 template<zpt::ast::BasicASTElement T>

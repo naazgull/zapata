@@ -215,19 +215,24 @@ class json {
     operator zpt::regex&() const;
     operator std::regex&() const;
 
-    auto operator+(std::initializer_list<zpt::json> _in) -> json;
+    auto operator+(std::initializer_list<zpt::json> _in) const -> json;
     auto operator+=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator-(std::initializer_list<zpt::json> _in) -> json;
+    auto operator-(std::initializer_list<zpt::json> _in) const -> json;
     auto operator-=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator/(std::initializer_list<zpt::json> _in) -> json;
-    auto operator|(std::initializer_list<zpt::json> _in) -> json;
-    auto operator+(zpt::json _rhs) -> json;
+    auto operator/(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator&(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator&=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator+(zpt::json _rhs) const -> json;
     auto operator+=(zpt::json _rhs) -> json&;
-    auto operator-(zpt::json _rhs) -> json;
+    auto operator-(zpt::json _rhs) const -> json;
     auto operator-=(zpt::json _rhs) -> json&;
-    auto operator/(zpt::json _rhs) -> json;
-    auto operator|(zpt::json _rhs) -> json;
+    auto operator/(zpt::json _rhs) const -> json;
+    auto operator|(zpt::json _rhs) const -> json;
     auto operator|=(zpt::json _rhs) -> json&;
+    auto operator&(zpt::json _rhs) const -> json;
+    auto operator&=(zpt::json _rhs) -> json&;
 
     friend auto operator>>(std::istream& _in, zpt::json& _out) -> std::istream& {
         _out.load_from(_in);
@@ -300,6 +305,7 @@ class json {
 
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
     auto strict_union(zpt::json _rhs) -> void;
+    auto strict_intersection(zpt::json _rhs) -> void;
 
     static auto traverse(zpt::json _document,
                          zpt::json::traverse_callback _callback,

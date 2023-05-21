@@ -360,9 +360,9 @@ auto zpt::python::bridge::to_json(object_type _exp) -> zpt::json {
     else if (Py_TYPE(_exp) == &PyModuleDef_Type) {
         expect(Py_TYPE(_exp) != &PyModuleDef_Type, "Python: unmanaged python type PyModuleDef");
     }
-    else if (Py_TYPE(_exp) == &_PyNamespace_Type) {
-        expect(Py_TYPE(_exp) != &_PyNamespace_Type, "Python: unmanaged python type _PyNamespace");
-    }
+    // else if (Py_TYPE(_exp) == &_PyNamespace_Type) {
+    //     expect(Py_TYPE(_exp) != &_PyNamespace_Type, "Python: unmanaged python type _PyNamespace");
+    // }
     else if (PyType_Check(_exp)) {
         zpt::json _value = zpt::json::string(((PyTypeObject*)_exp.get())->tp_name);
         if (_parent->is_object() || _parent->is_array()) { _parent << _value; }

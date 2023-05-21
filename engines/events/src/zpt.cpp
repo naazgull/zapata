@@ -26,9 +26,7 @@
 #include <unistd.h>
 #include <csignal>
 
-auto deallocate(int) -> void {
-    zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown();
-}
+auto deallocate(int) -> void { zpt::global_cast<zpt::polling>(zpt::STREAM_POLLING()).shutdown(); }
 
 auto nostop(int) -> void {
     zlog("Please, use `zpt --terminate " << zpt::log_pid << "`", zpt::notice);
@@ -43,29 +41,22 @@ auto main(int _argc, char* _argv[]) -> int {
         { "options",
           { zpt::array, "optional", "multiple" },
           "type",
-          "path",
+          "string",
           "description",
           "configuration file" },
         "--conf-dir",
         { "options",
           { zpt::array, "optional", "multiple" },
           "type",
-          "path",
+          "string",
           "description",
           "configuration directory, all the files in it are assumed to be configuration "
           "files" },
-        "--help",
-        { "options",
-          { zpt::array, "optional", "single" },
-          "type",
-          "void",
-          "description",
-          "show this help" },
         "--terminate",
         { "options",
           { zpt::array, "optional", "single" },
           "type",
-          "number",
+          "int",
           "description",
           "PID for the `zpt` process to terminate" }
     };
@@ -83,6 +74,8 @@ auto main(int _argc, char* _argv[]) -> int {
         kill(static_cast<int>(_parameters("--terminate")), SIGUSR1);
         return 0;
     }
+
+    zpt::parameters::verify(_parameters, _parameter_setup);
 
     auto _config = zpt::make_global<zpt::json>(zpt::GLOBAL_CONFIG(), zpt::json::object());
     zpt::log_lvl = 8;

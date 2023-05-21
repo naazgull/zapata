@@ -61,7 +61,7 @@ namespace {
 auto ___format(std::istringstream& _in, std::ostringstream& _out) -> void {
     char _c{ '\0' };
     do {
-        _in >> std::noskipws >> _c;
+        _c = _in.get();
         if (!_in.eof()) { _out << _c; }
     } while (_in.good());
 }
@@ -70,17 +70,15 @@ template<typename P, typename... Args>
 auto ___format(std::istringstream& _in, std::ostringstream& _out, P _param, Args... _rest) -> void {
     char _c{ '\0' };
     do {
-        _in >> std::noskipws >> _c;
+        _c = _in.get();
         if (!_in.eof()) {
             if (_c == '{') {
-                _in >> std::noskipws >> _c;
-                if (!_in.eof()) {
-                    if (_c == '}') {
-                        _out << _param;
-                        ::___format(_in, _out, _rest...);
-                        return;
-                    }
-                    else { _out << '{' << _c; }
+                _c = _in.peek();
+                if (_c == '}') {
+                    _in.get();
+                    _out << _param;
+                    ::___format(_in, _out, _rest...);
+                    return;
                 }
                 else { _out << '{'; }
             }

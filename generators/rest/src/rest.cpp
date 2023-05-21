@@ -1,5 +1,6 @@
 #include <zapata/generator/rest/rest.h>
 #include <zapata/uri.h>
+#include <set>
 
 zpt::gen::rest::module::module(std::string const& _module_name,
                                std::filesystem::path const& _base_path,
@@ -50,14 +51,14 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
 
     auto _load =
       zpt::make_function<zpt::ast::cpp_function>("_zpt_load_", "void", zpt::ast::EXTERNC);
-    _load->add<zpt::ast::cpp_variable>("_plugin", "zpt::plugin&");
+    _load->add<zpt::ast::cpp_variable>("_plugin [[maybe_unused]]", "zpt::plugin&");
     auto _load_block = zpt::make_code_block<zpt::ast::cpp_code_block>();
     _load->add(_load_block);
     _file->add(_load);
 
     auto _unload =
       zpt::make_function<zpt::ast::cpp_function>("_zpt_unload_", "void", zpt::ast::EXTERNC);
-    _unload->add<zpt::ast::cpp_variable>("_plugin", "zpt::plugin&");
+    _unload->add<zpt::ast::cpp_variable>("_plugin [[maybe_unused]]", "zpt::plugin&");
     auto _unload_block = zpt::make_code_block<zpt::ast::cpp_code_block>();
     _unload_block //
       ->add<zpt::ast::cpp_instruction>(
@@ -69,7 +70,11 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
       ->add<zpt::ast::cpp_instruction>(zpt::format(
         "zlog(\"Registering listeners for module '{}'\", zpt::info)", this->__module.name()))
       .add<zpt::ast::cpp_instruction>(
-        "auto _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER())");
+        "auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG())")
+      .add<zpt::ast::cpp_instruction>(
+        "auto& _resolver = zpt::global_cast<zpt::rest::resolver>(zpt::REST_RESOLVER())")
+      .add<zpt::ast::cpp_instruction>("auto _prefix = _config(\"rest\")(\"prefix\")->ok() ? "
+                                      "_config(\"rest\")(\"prefix\")->string() : \"\"");
 
     for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
         std::string _method;
@@ -88,11 +93,14 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
         }
         if (_path_def("resource")->string() == "controller") {
             _load_block->add<zpt::ast::cpp_instruction>(
-              zpt::format("_resolver->add<{}>(zpt::Post, \"{}\")", _operation, _ref));
+              zpt::format("_resolver->add<{}>(zpt::Post, zpt::format(\"{{}}{}\", _prefix))",
+                          _operation,
+                          "",
+                          _ref));
         }
         else {
-            _load_block->add<zpt::ast::cpp_instruction>(
-              zpt::format("_resolver->add<{}>(\"{}\")", _operation, _ref));
+            _load_block->add<zpt::ast::cpp_instruction>(zpt::format(
+              "_resolver->add<{}>(zpt::format(\"{{}}{}\", _prefix))", _operation, "", _ref));
         }
     }
     return (*this);
@@ -100,7 +108,90 @@ auto zpt::gen::rest::module::generate_plugin() -> module& {
 
 auto zpt::gen::rest::module::generate_sql() -> module& {
     for (auto const& [_, __, _schema] : this->__schema("components")("schemas")) {
-        this->generate_sql_schemata(_schema);
+        this->generate_sql_schemata_mysql(_schema);
+    }
+    return (*this);
+}
+
+auto zpt::gen::rest::module::generate_cmake() -> module& {
+    auto _base_path = std::filesystem::absolute(this->__base_path) / this->__module.name();
+    auto _file_path = _base_path / "CMakeLists.txt";
+
+    if (!std::filesystem::exists(_file_path)) {
+        std::filesystem::create_directories(_base_path);
+        auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
+        this->__module.add(_file);
+        std::cout << "> Generating " << _file_path << "." << std::endl;
+
+        auto _lib = zpt::format("{}-{}",
+                                this->__schema("info")("namespace")->ok()
+                                  ? this->__schema("info")("namespace")->string()
+                                  : "",
+                                zpt::r_replace(this->__module.name(), "_", "-"));
+        _file->add<zpt::ast::cmake_instruction>(zpt::format("add_library({} SHARED)", _lib));
+        std::ostringstream _oss;
+        _oss << zpt::format("target_sources({}\n"
+                            "  PRIVATE\n",
+                            _lib);
+        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
+            if (_file->path().string().find(".cpp") != std::string::npos) {
+                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
+                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
+            }
+        });
+        _oss << "  INTERFACE\n";
+        this->__module.traverse_elements([&_oss, _base_path](auto const& _file) -> void {
+            if (_file->path().string().find(".h") != std::string::npos) {
+                _oss << "    ${CMAKE_CURRENT_SOURCE_DIR}"
+                     << _file->path().string().replace(0, _base_path.string().length(), "") << "\n";
+            }
+        });
+        _oss << ")";
+        _file->add<zpt::ast::cmake_instruction>(_oss.str());
+        _file->add<zpt::ast::cmake_instruction>(
+          zpt::format("target_include_directories({}\n"
+                      "  PRIVATE\n"
+                      "    ${CMAKE_CURRENT_SOURCE_DIR}/include\n"
+                      "  INTERFACE\n"
+                      "    ${CMAKE_CURRENT_SOURCE_DIR}/include\n"
+                      ")",
+                      _lib));
+        _file->add<zpt::ast::cmake_instruction>(zpt::format("target_link_libraries({}\n"
+                                                            "  PRIVATE\n"
+                                                            "    zapata-storage-mysqlx\n"
+                                                            "    zapata-engine-transport\n"
+                                                            "    zapata-engine-rest\n"
+                                                            "    mysqlcppconn8\n"
+                                                            ")",
+                                                            _lib));
+        _file->add<zpt::ast::cmake_instruction>(
+          zpt::format("set_target_properties({}\n"
+                      "  PROPERTIES\n"
+                      "    VERSION ${PROJECT_VERSION}\n"
+                      "    SOVERSION ${PROJECT_VERSION_MAJOR}\n"
+                      "    COMPILE_FLAGS -fPIC\n"
+                      "    LINK_FLAGS -shared\n"
+                      "    LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/lib{}.so\n"
+                      ")",
+                      _lib,
+                      _lib));
+        _file->add<zpt::ast::cmake_instruction>("include(GNUInstallDirs)");
+        _file->add<zpt::ast::cmake_instruction>(
+          zpt::format("install(TARGETS {}\n"
+                      "  LIBRARY\n"
+                      "    DESTINATION ${CMAKE_INSTALL_LIBDIR}\n"
+                      ")",
+                      _lib));
+        _file->add<zpt::ast::cmake_instruction>(
+          zpt::format("install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/{}\n"
+                      "  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}\n"
+                      "  FILES_MATCHING PATTERN \"*.h\"\n"
+                      ")",
+                      this->__schema("info")("namespace")->string()));
+    }
+    else {
+        std::cout << "> Skipping generation of " << _file_path
+                  << ", file already exists, move it out of the way first." << std::endl;
     }
     return (*this);
 }
@@ -221,7 +312,8 @@ auto zpt::gen::rest::module::generate_collection(zpt::json _def, zpt::json _path
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
-        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher&");
+        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
+                                                   "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
           "switch(this->received()->performative())");
@@ -320,7 +412,8 @@ auto zpt::gen::rest::module::generate_document(zpt::json _def, zpt::json _path)
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
-        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher&");
+        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
+                                                   "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
           "switch(this->received()->performative())");
@@ -415,7 +508,8 @@ auto zpt::gen::rest::module::generate_controller(zpt::json _def, zpt::json _path
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
-        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher&");
+        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
+                                                   "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
           "switch(this->received()->performative())");
@@ -505,7 +599,8 @@ auto zpt::gen::rest::module::generate_store(zpt::json _def, zpt::json _path)
 
         auto _cpp_operator = zpt::make_function<zpt::ast::cpp_function>(
           zpt::format("{}operator()", _class_method_prefix), "zpt::events::state");
-        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher", "zpt::events::dispatcher&");
+        _cpp_operator->add<zpt::ast::cpp_variable>("_dispatcher [[maybe_unused]]",
+                                                   "zpt::events::dispatcher&");
         auto _cpp_operator_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
         auto _cpp_operator_switch = zpt::make_code_block<zpt::ast::cpp_code_block>(
           "switch(this->received()->performative())");
@@ -547,7 +642,9 @@ auto zpt::gen::rest::module::generate_add_element(std::shared_ptr<zpt::ast::basi
     this->add_db_configuration(_method_body, _def);
     _method_body //
       ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
+    this->add_generated(_method_body, _def, "create");
     this->add_parameters_and_validation(_method_body, _def, _path);
+    this->add_schema_validation(_method_body, _def);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
@@ -588,7 +685,10 @@ auto zpt::gen::rest::module::generate_list_elements(std::shared_ptr<zpt::ast::ba
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
         "auto _find = zpt::storage::filter_find(_collection, _params)")
-      .add<zpt::ast::cpp_instruction>("auto _result = _find->execute()->fetch()");
+      .add<zpt::ast::cpp_instruction>(
+        zpt::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+      .add<zpt::ast::cpp_instruction>("auto _result = _find->fields(_fields)->execute()->fetch()");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
@@ -665,6 +765,7 @@ auto zpt::gen::rest::module::generate_update_element(
     _method_body //
       ->add<zpt::ast::cpp_instruction>("auto _received = this->received()->body()");
     this->add_parameters_and_validation(_method_body, _def, _path);
+    this->add_generated(_method_body, _def, "update");
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
@@ -673,7 +774,7 @@ auto zpt::gen::rest::module::generate_update_element(
                      "})->patch(_received)->execute()->count()" });
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
+      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(202)")
       .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"updated_count\", _result }");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
@@ -704,13 +805,17 @@ auto zpt::gen::rest::module::generate_get_element(std::shared_ptr<zpt::ast::basi
       zpt::format("{}get_element", _class_method_prefix), "zpt::events::state");
     auto _method_body = zpt::make_code_block<zpt::ast::cpp_code_block>();
     this->add_db_configuration(_method_body, _def);
+    _method_body //
+      ->add<zpt::ast::cpp_instruction>("auto _params = this->received()->parameters()");
     this->add_parameters_and_validation(_method_body, _def, _path);
 
     auto _method_try_body = zpt::make_code_block<zpt::ast::cpp_code_block>("try");
     _method_try_body //
       ->add<zpt::ast::cpp_instruction>(
-        std::string{ "auto _result = _collection->find(\"_id = :id\")->bind({ \"id\", _id "
-                     "})->execute()->fetch(1)" });
+        zpt::format("zpt::json _fields = {}", this->get_visible_fields(_def)))
+      .add<zpt::ast::cpp_instruction>("_fields << \"_id\"")
+      .add<zpt::ast::cpp_instruction>("auto _result = _collection->find(\"_id = :id\")->bind({ "
+                                      "\"id\", _id })->fields(_fields)->execute()->fetch(1)");
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result->ok())");
     _if_block //
       ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
@@ -754,7 +859,7 @@ auto zpt::gen::rest::module::generate_remove_element(
                      "})->execute()->count()" });
     auto _if_block = zpt::make_code_block<zpt::ast::cpp_code_block>("if (_result != 0)");
     _if_block //
-      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(200)")
+      ->add<zpt::ast::cpp_instruction>("this->to_send()->status(202)")
       .add<zpt::ast::cpp_instruction>("this->to_send()->body() = { \"removed_count\", _result }");
     _method_try_body->add(_if_block);
     auto _else_block = zpt::make_code_block<zpt::ast::cpp_code_block>("else");
@@ -838,8 +943,11 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
         }
         else if (_param("in")->string() == "path") {
             if (!_has_path) {
-                _block->add<zpt::ast::cpp_instruction>(
-                  "auto _path = this->received()->uri()(\"path\")");
+                _block
+                  ->add<zpt::ast::cpp_instruction>("auto _path = this->received()->uri()(\"path\")")
+                  .add<zpt::ast::cpp_instruction>("size_t _prefix_len = "
+                                                  "zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG()"
+                                                  ")(\"rest\")(\"prefix_path_len\")->integer()");
                 _has_path = true;
             }
         }
@@ -856,7 +964,7 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
         if (_variable.find("{") == 0) {
             std::string _name = _variable.substr(1, _variable.length() - 2);
             _block->add<zpt::ast::cpp_instruction>(
-              zpt::format("auto _{} = _path({})", _name, _idx));
+              zpt::format("auto _{} = _path(_prefix_len + {})", _name, _idx));
         }
     }
     for (auto const& [_, __, _param] : _def("parameters")) {
@@ -871,11 +979,57 @@ auto zpt::gen::rest::module::add_parameters_and_validation(
     }
 }
 
-auto zpt::gen::rest::module::generate_sql_schemata(zpt::json _def)
+auto zpt::gen::rest::module::add_schema_validation(
+  std::shared_ptr<zpt::ast::basic_code_block> _block,
+  zpt::json _def) -> void {
+    for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
+        auto _required = _object("required");
+        if (_required->is_array()) {
+            for (auto const& [_, __, _name] : _required) {
+                _block->add<zpt::ast::cpp_instruction>(zpt::format(
+                  "expect(_received(\"{}\")->ok(), \"Required request member field '{}'\")",
+                  _name->string(),
+                  _name->string()));
+            }
+        }
+    }
+}
+
+auto zpt::gen::rest::module::add_generated(std::shared_ptr<zpt::ast::basic_code_block> _block,
+                                           zpt::json _def,
+                                           std::string const& _generate) -> void {
+    for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
+        for (auto const& [___, _name, _prop] : _object("properties")) {
+            if (_prop("generation_expr")->ok() && (_prop("generate")->string() == _generate ||
+                                                   _prop("generate")->string() == "always")) {
+                _block->add<zpt::ast::cpp_instruction>(
+                  zpt::format("_received[\"{}\"] = {}", _name, _prop("generation_expr")->string()));
+            }
+        }
+    }
+}
+
+auto zpt::gen::rest::module::get_visible_fields(zpt::json _def) -> std::string {
+    std::ostringstream _oss;
+    _oss << R"((_params("fields")->ok() ? zpt::split(_params("fields")->string(), ",") : )";
+    if (_def("*")("requestBody")("allOf")->ok()) {
+        std::set<std::string> _visible;
+        for (auto const& [_, __, _type] : _def("*")("requestBody")("allOf")) {
+            for (auto const& [___, _name, _prop] : _type("properties")) { _visible.insert(_name); }
+            for (auto const& [___, __, _prop] : _type("hidden")) { _visible.erase(_prop); }
+        }
+        _oss << "zpt::json{ zpt::array";
+        for (auto const& _prop : _visible) { _oss << ", \"" << _prop << "\""; }
+        _oss << " })" << std::flush;
+    }
+    return _oss.str();
+}
+
+auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
   -> std::shared_ptr<zpt::ast::basic_file> {
     auto _collection = _def("dbCollection")->string();
     auto _directory = std::filesystem::absolute(this->__base_path) / this->__module.name() / "sql";
-    auto _file_path = _directory / zpt::format("{}.sql", _collection);
+    auto _file_path = _directory / zpt::format("{}_mysql.sql", _collection);
     if (std::filesystem::exists(_file_path)) { return nullptr; }
 
     std::cout << "> Generating " << _file_path << "." << std::endl;
@@ -901,10 +1055,18 @@ auto zpt::gen::rest::module::generate_sql_schemata(zpt::json _def)
          << "use " << this->__schema("info")("database")->string() << ";" << std::endl;
 
     for (auto const& [_, __, _object] : _def("allOf")) {
+        std::set<std::string> _required;
+        for (auto const& [_, __, _name] : _object("required")) { _required.insert(_name); }
+
         for (auto const& [_, _name, _field] : _object("properties")) {
             _oss << "alter table " << _collection << " add column " << _name << " "
-                 << zpt::gen::rest::module::__sql_types[_field("type")->string()]
-                 << " generated always as (doc->>\"$." << _name << "\") stored;" << std::endl;
+                 << (_field("index")->ok() && _field("type")->string() == "string"
+                       ? zpt::format("varchar({})",
+                                     (_field("maximum")->ok() ? _field("maximum")->integer() : 512))
+                       : zpt::gen::rest::module::__sql_types[_field("type")->string()])
+                 << " generated always as (doc->>\"$." << _name << "\") stored"
+                 << (_required.find(_name) != _required.end() ? " not null" : "") << ";"
+                 << std::endl;
             if (_field("index")->ok()) {
                 _oss << "alter table " << _collection << " add " << _field("index")->string()
                      << " index " << _name << "_" << _field("index")->string() << "_idx(" << _name

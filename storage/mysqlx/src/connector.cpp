@@ -537,8 +537,7 @@ auto zpt::storage::mysqlx::action_find::set(std::string const&, zpt::json)
     return this;
 }
 
-auto zpt::storage::mysqlx::action_find::unset(std::string const&)
-  -> zpt::storage::action::type* {
+auto zpt::storage::mysqlx::action_find::unset(std::string const&) -> zpt::storage::action::type* {
     return this;
 }
 
@@ -553,7 +552,17 @@ auto zpt::storage::mysqlx::action_find::sort(std::string const& _attribute)
 }
 
 auto zpt::storage::mysqlx::action_find::fields(zpt::json _fields) -> zpt::storage::action::type* {
-    for (auto [_, __, _value] : _fields) { this->__underlying.fields(_value->string()); }
+    std::ostringstream _oss;
+    bool _first{ true };
+    _oss << "{";
+    for (auto [_, __, _value] : _fields) {
+        if (!_first) { _oss << ","; }
+        else
+            _first = false;
+        _oss << _value << ":$." << _value->string() << "";
+    }
+    _oss << "}" << std::flush;
+    this->__underlying.fields(::mysqlx::expr(_oss.str()));
     return this;
 }
 
@@ -626,7 +635,7 @@ auto zpt::storage::mysqlx::result::generated_id() -> zpt::json {
 
 auto zpt::storage::mysqlx::result::count() -> size_t {
     if (this->__is_doc_result) { return this->__doc_result.count(); }
-    return 0;
+    return this->__result.getAffectedItemsCount();
 }
 
 auto zpt::storage::mysqlx::result::status() -> zpt::status {

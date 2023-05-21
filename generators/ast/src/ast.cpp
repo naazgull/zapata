@@ -76,6 +76,8 @@ auto zpt::ast::basic_function::set_modifiers(int _modifiers) -> basic_function& 
     return (*this);
 }
 
+auto zpt::ast::basic_function::body() -> std::shared_ptr<basic_code_block> { return this->__body; }
+
 zpt::ast::basic_variable::basic_variable(std::string const& _name,
                                          std::string const& _type,
                                          int _modifiers)
@@ -96,6 +98,10 @@ auto zpt::ast::basic_variable::set_modifiers(int _modifiers) -> basic_variable& 
     return (*this);
 }
 
+auto zpt::ast::basic_variable::initialization() -> std::shared_ptr<basic_code_block> {
+    return this->__initialization;
+}
+
 zpt::ast::basic_instruction::basic_instruction(std::string const& _code)
   : __instruction{ _code } {}
 
@@ -105,4 +111,8 @@ auto zpt::ast::basic_instruction::add(std::shared_ptr<basic_code_block> _body)
     this->__body->__parent = this->shared_from_this();
     this->__body->set_new_line(false);
     return (*this);
+}
+
+auto zpt::ast::basic_instruction::body() -> std::shared_ptr<basic_code_block> {
+    return this->__body;
 }

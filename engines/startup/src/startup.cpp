@@ -47,13 +47,8 @@ zpt::plugin::plugin(zpt::json _options, zpt::json _config)
         void (*_populate)(zpt::plugin&);
         _populate = (void (*)(zpt::plugin&))dlsym(this->__lib_handler, "_zpt_load_");
         if (_populate != nullptr) {
-            // try {
             _populate((*this));
             return;
-            // }
-            // catch (zpt::failed_expectation const& _e) {
-            //     zlog(_e, zpt::emergency);
-            // }
         }
         else { zlog(dlerror(), zpt::emergency); }
     }
@@ -70,14 +65,7 @@ zpt::plugin::~plugin() {
 
     void (*_unpopulate)(zpt::plugin&);
     _unpopulate = (void (*)(zpt::plugin&))dlsym(this->__lib_handler, "_zpt_unload_");
-    if (_unpopulate != nullptr) {
-        // try {
-        _unpopulate((*this));
-        // }
-        // catch (zpt::failed_expectation const& _e) {
-        //     zlog(_e, zpt::emergency);
-        // }
-    }
+    if (_unpopulate != nullptr) { _unpopulate((*this)); }
     else { zlog(dlerror(), zpt::emergency); }
 
     for (auto& thr : this->__threads) { thr.join(); }
@@ -137,6 +125,8 @@ auto zpt::startup::boot::load() -> zpt::startup::boot& {
 
 auto zpt::startup::boot::load(zpt::json _plugin_options, zpt::json _plugin_config) -> zpt::plugin& {
     expect(_plugin_options("name")->ok(), "missing name definition in plugin configuration");
+    expect(this->__plugins.find(_plugin_options("name")->string()) == this->__plugins.end(),
+           "duplicate plugin name in plugin configuration list");
 
     auto [_it, _inserted] = this->__plugins.emplace(
       _plugin_options("name")->string(),
