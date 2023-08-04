@@ -1,0 +1,122 @@
+/* ZptList */
+/* 1. declare transition */
+.list-item-fade-move,
+.list-item-fade-enter-active,
+.list-item-fade-leave-active {
+  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+/* 2. declare enter from and leave to state */
+.list-item-fade-enter-from,
+.list-item-fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0.01) translate(30px, 0);
+}
+
+/* 3. ensure leaving items are taken out of layout flow so that moving
+      animations can be calculated correctly. */
+.list-item-fade-leave-active {
+  position: absolute;
+}
+
+/* ZptModal */
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  transition: opacity 0.3s ease;
+}
+
+.modal-container {
+  width: 300px;
+  margin: auto;
+  padding: 20px 30px;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  transition: all 0.3s ease;
+}
+
+.modal-header h3 {
+  margin-top: 0;
+  color: #42b983;
+}
+
+.modal-body {
+  margin: 20px 0;
+}
+
+.modal-default-button {
+  float: right;
+}
+
+.modal-enter-from {
+  opacity: 0;
+}
+
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .modal-container,
+.modal-leave-to .modal-container {
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
+}
+
+/* ZptSideTab */
+.side-tab-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  transition: opacity 0.3s ease;
+}
+
+.side-tab-container {
+  position: absolute;
+  right: 0;
+  width: auto;
+  height: 100%;
+  overflow: auto;
+  padding: 20px 30px;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  transition: all 0.3s ease;
+}
+
+.side-tab-header h3 {
+  margin-top: 0;
+  color: #42b983;
+}
+
+.side-tab-body {
+  margin: 20px 0;
+}
+
+.side-tab-default-button {
+  float: right;
+}
+
+.side-tab-enter-from {
+  opacity: 0;
+}
+
+.side-tab-leave-to {
+  opacity: 0;
+}
+
+.side-tab-enter-from .side-tab-container,
+.side-tab-leave-to .side-tab-container {
+  right: -50%;
+}

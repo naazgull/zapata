@@ -337,8 +337,8 @@ class JSONIterator {
     // INPUT ITERATOR METHODS //
     auto operator++(int) -> JSONIterator;
     auto operator->() -> pointer;
-    auto operator==(JSONIterator _rhs) const -> bool;
-    auto operator!=(JSONIterator _rhs) const -> bool;
+    auto operator==(JSONIterator const& _rhs) const -> bool;
+    auto operator!=(JSONIterator const& _rhs) const -> bool;
     // END / INPUT ITERATOR METHODS //
 
     // OUTPUT ITERATOR METHODS //

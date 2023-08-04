@@ -9,13 +9,20 @@ auto main(int _argc, char* _argv[]) -> int {
                                   "string",
                                   "description",
                                   "schema definition file" },
-                                "--output-dir",
+                                "--backend-output-dir",
                                 { "options",
                                   { zpt::array, "mandatory", "single" },
                                   "type",
                                   "string",
                                   "description",
-                                  "root directory for the generated files" },
+                                  "root directory for the generated backend files" },
+                                "--frontend-output-dir",
+                                { "options",
+                                  { zpt::array, "mandatory", "single" },
+                                  "type",
+                                  "string",
+                                  "description",
+                                  "root directory for the generated frontend files" },
                                 "--with-cmake",
                                 { "options",
                                   { zpt::array, "optional", "single" },
@@ -32,8 +39,10 @@ auto main(int _argc, char* _argv[]) -> int {
     }
     zpt::parameters::verify(_parameters, _parameter_setup);
 
-    std::filesystem::path _output =
-      std::filesystem::absolute(_parameters("--output-dir")->string());
+    std::filesystem::path _output_backend =
+      std::filesystem::absolute(_parameters("--backend-output-dir")->string());
+    std::filesystem::path _output_frontend =
+      std::filesystem::absolute(_parameters("--frontend-output-dir")->string());
     std::filesystem::path _context = std::filesystem::absolute(_parameters("--schema")->string());
     _context.remove_filename();
 
@@ -43,11 +52,14 @@ auto main(int _argc, char* _argv[]) -> int {
     _ifs >> _schema;
     zpt::conf::evaluate_ref(_schema, _schema, "", _context, _schema);
 
-    zpt::gen::rest::module _module{ _schema("module")->string(), _output, _schema };
+    zpt::gen::rest::module _module{
+        _schema("module")->string(), _output_backend, _output_frontend, _schema
+    };
     _module //
       .generate_operations()
       .generate_sql()
-      .generate_plugin();
+      .generate_plugin()
+      .generate_ui();
 
     if (_parameters("--with-cmake")->ok()) { _module.generate_cmake(); }
 

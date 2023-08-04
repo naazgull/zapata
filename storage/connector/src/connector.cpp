@@ -392,6 +392,13 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
             _find //
               ->offset(_to_find("page_start_index"));
         }
+        if (_to_find("order_by")->ok()) {
+            auto _sort = zpt::split(_to_find("order_by")->string(), ",");
+            for (auto [_, __, _expr] : _sort) {
+                _find //
+                  ->sort(_expr);
+            }
+        }
         return _find;
     }
     return _collection->find({});
@@ -400,11 +407,10 @@ auto zpt::storage::filter_find(zpt::storage::collection& _collection, zpt::json 
 auto zpt::storage::reply_find(zpt::json& _reply, zpt::json _params) -> void {
     if (_params->ok()) {
         if (_params("page_size")->ok()) {
-            _reply["body"] << "page_size" << static_cast<long long>(_params("page_size"));
+            _reply << "page_size" << static_cast<long long>(_params("page_size"));
         }
         if (_params("page_start_index")->ok()) {
-            _reply["body"] << "page_start_index"
-                           << static_cast<long long>(_params("page_start_index"));
+            _reply << "page_start_index" << static_cast<long long>(_params("page_start_index"));
         }
     }
 }
@@ -421,6 +427,13 @@ auto zpt::storage::filter_remove(zpt::storage::collection& _collection, zpt::jso
             _remove //
               ->offset(_to_remove("page_start_index"));
         }
+        if (_to_remove("order_by")->ok()) {
+            auto _sort = zpt::split(_to_remove("order_by")->string(), ",");
+            for (auto [_, __, _expr] : _sort) {
+                _remove //
+                  ->sort(_expr);
+            }
+        }
         return _remove;
     }
     return _collection->remove({});
@@ -432,7 +445,10 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
     std::ostringstream _find;
     bool _first{ true };
     for (auto [_, _key, _value] : _to_process) {
-        if (_key == "page_size" || _key == "page_start_index" || _key == "fields") { continue; }
+        if (_key == "page_size" || _key == "page_start_index" || _key == "fields" ||
+            _key == "order_by") {
+            continue;
+        }
         if (!_first) { _find << " and " << std::flush; }
         _first = false;
 
@@ -463,6 +479,7 @@ auto zpt::storage::extract_find(zpt::json _to_process) -> std::string {
             else { _find << ")" << std::flush; }
         }
     }
+    _find << std::flush;
     return _find.str();
 }
 

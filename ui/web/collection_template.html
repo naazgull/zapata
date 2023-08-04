@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preload stylesheet" href="/components/zpt/style.css" as="style">
+    <script type="importmap">
+      { "imports": {
+          "data::menu": "/menu.js",
+          "data::lang": "/lang/{{collection-dictionary}}.js",
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+          "zpt": "/components/zpt/zpt.js",
+          "zpt::menu": "/components/zpt/menu.js",
+          "zpt::modal": "/components/zpt/modal.js",
+          "zpt::side_tab": "/components/zpt/side_tab.js",
+          "zpt::list": "/components/zpt/list.js",
+          "zpt::form": "/components/zpt/form.js",
+          "zpt::new_record": "./components/zpt/new_record.js"
+      } }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+      import { default as config } from 'zpt'
+      import { init_menu } from 'data::menu'
+      import { init_dictionary } from 'data::lang'
+      import { createApp } from 'vue'
+      import { default as ZptMenu } from 'zpt::menu'
+      import { default as ZptModal } from 'zpt::modal'
+      import { default as ZptSideTab } from 'zpt::side_tab'
+      import { default as ZptList } from 'zpt::list'
+      import { default as ZptForm } from 'zpt::form'
+      import { default as ZptNewRecord } from 'zpt::new_record'
+
+      init_menu(config)
+      init_dictionary(config)
+
+      createApp({
+          components: {
+              ZptMenu,
+              ZptModal,
+              ZptSideTab,
+              ZptList,
+              ZptForm,
+              ZptNewRecord
+          },
+          data() {
+              let dictionary = config.pages.{{collection-name}}.dictionary
+              let lang = config.get_lang()
+              return {
+                  config: config,
+                  list: {
+                      fields: {{list-fields}},
+                      page_sizes: [ 10, 25, 50, 100 ]
+                  },
+                  form: {
+                      fields: {{form-fields}}
+                  }
+              }
+          }
+      }).mount('#app')
+    </script>
+    <div id="app">
+      <zpt-menu
+        :config="config"
+        :items="config.menu.items">
+      </zpt-menu>
+      <zpt-list
+        :lang="config.get_lang()"
+        :dictionary="config.pages.{{collection-name}}.dictionary"
+        :id="'{{collection-name}}'"
+        :url="'{{collection-uri}}'"
+        :columns="list.fields"
+        :sizes="list.page_sizes">
+      </zpt-list>
+      <zpt-new-record
+        :trigger="'hashtag'"
+        :label="'+'"
+        :event="'?action=new'">
+      </zpt-new-record>
+      <teleport to="body">
+        <zpt-side-tab
+          :listen="'hashtag'">
+          <template #content>
+            <zpt-form
+              :lang="config.get_lang()"
+              :dictionary="config.pages.{{collection-name}}.dictionary"
+              :id="'{{collection-name}}'"
+              :target_url="'{{collection-uri}}'"
+              :fields="form.fields"
+              :clear_on_save="true">
+            </zpt-form>
+          </template>
+        </zpt-side-tab>
+      </teleport>
+    </div>
+  </body>
+</html>

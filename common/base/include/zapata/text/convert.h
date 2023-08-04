@@ -153,8 +153,8 @@ using uchar = unsigned char;
 namespace utf8 {
 char* wstring_to_utf8(std::wstring ws);
 wchar_t* utf8_to_wstring(std::string s);
-void encode(std::wstring s, std::string& _out, bool quote = true);
-void encode(std::string& _out, bool quote = true);
+void encode(std::wstring s, std::string& _out, char quote = '\0');
+void encode(std::string& _out, char quote = '\0');
 void decode(std::string& _out);
 } // namespace utf8
 

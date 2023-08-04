@@ -3,9 +3,11 @@
 #include <set>
 
 zpt::gen::rest::module::module(std::string const& _module_name,
-                               std::filesystem::path const& _base_path,
+                               std::filesystem::path const& _base_path_backend,
+                               std::filesystem::path const& _base_path_frontend,
                                zpt::json _schema)
-  : __base_path{ _base_path }
+  : __base_path{ _base_path_backend }
+  , __ui_path{ _base_path_frontend }
   , __module{ _module_name }
   , __schema{ _schema } {
     this->__namespace = (this->__schema("info")("namespace")->ok()
@@ -192,6 +194,21 @@ auto zpt::gen::rest::module::generate_cmake() -> module& {
     else {
         std::cout << "> Skipping generation of " << _file_path
                   << ", file already exists, move it out of the way first." << std::endl;
+    }
+    return (*this);
+}
+
+auto zpt::gen::rest::module::generate_ui() -> module& {
+    for (auto const& [_, _path, _path_def] : this->__schema("paths")) {
+        if (_path_def("resource")->string() == "collection") {
+            this->generate_collection_ui(_path_def, zpt::uri::parse(_path));
+        }
+        else if (_path_def("resource")->string() == "document") {
+            this->generate_document_ui(_path_def, zpt::uri::parse(_path));
+        }
+        else if (_path_def("resource")->string() == "store") {
+            this->generate_collection_ui(_path_def, zpt::uri::parse(_path));
+        }
     }
     return (*this);
 }
@@ -1079,3 +1096,104 @@ auto zpt::gen::rest::module::generate_sql_schemata_mysql(zpt::json _def)
     _file->add<zpt::ast::cpp_instruction>(_oss.str());
     return _file;
 }
+
+auto zpt::gen::rest::module::generate_operation_lang_file(zpt::json _def,
+                                                          std::string const& _method)
+  -> std::shared_ptr<zpt::ast::basic_file> {
+    auto _directory = std::filesystem::absolute(this->__ui_path) / "lang" / this->__module.name();
+    auto _file_path = _directory / zpt::format("{}.js", _def(_method)("operationId")->string());
+    if (!std::filesystem::exists(_file_path)) {
+        std::filesystem::create_directories(_directory);
+        auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
+        this->__module.add(_file);
+        std::cout << "> Generating " << _file_path << "." << std::endl;
+        return _file;
+    }
+    else {
+        std::cout << "> Skipping generation of " << _file_path
+                  << ", file already exists, move it out of the way first." << std::endl;
+    }
+    return nullptr;
+}
+
+auto zpt::gen::rest::module::generate_operation_html_file(zpt::json _def,
+                                                          std::string const& _method)
+  -> std::shared_ptr<zpt::ast::basic_file> {
+    auto _directory = std::filesystem::absolute(this->__ui_path) / this->__module.name();
+    auto _file_path = _directory / zpt::format("{}.html", _def(_method)("operationId")->string());
+    if (!std::filesystem::exists(_file_path)) {
+        std::filesystem::create_directories(_directory);
+        auto _file = std::make_shared<zpt::ast::basic_file>(_file_path);
+        this->__module.add(_file);
+        std::cout << "> Generating " << _file_path << "." << std::endl;
+        return _file;
+    }
+    else {
+        std::cout << "> Skipping generation of " << _file_path
+                  << ", file already exists, move it out of the way first." << std::endl;
+    }
+    return nullptr;
+}
+
+auto zpt::gen::rest::module::generate_collection_ui(zpt::json _def, zpt::json _path)
+  -> std::shared_ptr<zpt::ast::basic_file> {
+    auto _lang_file = this->generate_operation_lang_file(_def, "*");
+    if (_lang_file != nullptr) { _lang_file->add<zpt::ast::cpp_instruction>(""); }
+
+    auto _html_file = this->generate_operation_html_file(_def, "*");
+    if (_html_file != nullptr) {
+        auto _html = zpt::gen::rest::collection_html_template;
+        auto _collection_name = _def("*")("operationId")->string();
+        zpt::replace(_html,
+                     "{{collection-dictionary}}",
+                     this->__module.name() + std::string{ "/" } +
+                       zpt::format("{}", _collection_name));
+        zpt::replace(_html, "{{collection-name}}", _collection_name);
+        zpt::replace(_html, "{{collection-uri}}", _path("raw_path")->string());
+        zpt::replace(_html, "{{list-fields}}", this->extract_list_fields(_def));
+        zpt::replace(_html, "{{form-fields}}", this->extract_form_fields(_def));
+        _html_file->add<zpt::ast::cpp_instruction>(_html);
+    }
+
+    return _html_file;
+}
+
+auto zpt::gen::rest::module::generate_document_ui(zpt::json _def, zpt::json _path)
+  -> std::shared_ptr<zpt::ast::basic_file> {
+    auto _lang_file = this->generate_operation_lang_file(_def, "*");
+    if (_lang_file != nullptr) { _lang_file->add<zpt::ast::cpp_instruction>(""); }
+
+    auto _html_file = this->generate_operation_html_file(_def, "*");
+    if (_html_file != nullptr) {
+        auto _html = zpt::gen::rest::document_html_template;
+        auto _document_name = _def("*")("operationId")->string();
+        zpt::replace(_html,
+                     "{{document-dictionary}}",
+                     this->__module.name() + std::string{ "/" } +
+                       zpt::format("{}", _document_name));
+        zpt::replace(_html, "{{document-name}}", _document_name);
+        zpt::replace(_html, "{{document-uri}}", _path("raw_path")->string());
+        auto _form_fields = this->extract_form_fields(_def);
+        zpt::replace(_html, "{{form-fields}}", static_cast<std::string>(_form_fields));
+        _html_file->add<zpt::ast::cpp_instruction>(_html);
+    }
+
+    return _html_file;
+}
+
+auto zpt::gen::rest::module::extract_list_fields(zpt::json _def) -> std::string {
+    std::ostringstream _oss;
+    bool _first{ true };
+    _oss << "{" << std::endl;
+    for (auto const& [_, __, _object] : _def("*")("requestBody")("allOf")) {
+        for (auto const& [___, _name, _prop] : _object("properties")) {
+            if (!_first) { _oss << "," << std::endl; }
+            _first = false;
+            _oss << "                         " << _name << ": dictionary." << _name << "[lang]";
+        }
+    }
+    _oss << "}" << std::flush;
+    return _oss.str();
+}
+
+auto zpt::gen::rest::module::extract_form_fields(zpt::json _def) -> std::string { return ""; }

@@ -987,7 +987,7 @@ auto zpt::json::parse_json_str(std::string const& _in) -> zpt::json {
     return _to_return;
 }
 
-auto zpt::json::to_unicode(std::string& _str) -> void { zpt::utf8::encode(_str, true); }
+auto zpt::json::to_unicode(std::string& _str) -> void { zpt::utf8::encode(_str, '"'); }
 
 auto zpt::json::object() -> zpt::json {
     zpt::JSONObj _empty;
@@ -1210,12 +1210,14 @@ auto zpt::JSONIterator::operator->() -> pointer {
     return std::make_tuple(this->__index, "", this->__target);
 }
 
-auto zpt::JSONIterator::operator==(JSONIterator _rhs) const -> bool {
+auto zpt::JSONIterator::operator==(JSONIterator const& _rhs) const -> bool {
     return this->__index == _rhs.__index &&
            (this->__target->type() != zpt::JSObject || this->__iterator == _rhs.__iterator);
 }
 
-auto zpt::JSONIterator::operator!=(JSONIterator _rhs) const -> bool { return !((*this) == _rhs); }
+auto zpt::JSONIterator::operator!=(JSONIterator const& _rhs) const -> bool {
+    return !((*this) == _rhs);
+}
 
 auto zpt::JSONIterator::operator--() -> JSONIterator& {
     --this->__index;

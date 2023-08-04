@@ -88,14 +88,14 @@ wchar_t* zpt::utf8::utf8_to_wstring(std::string s) {
     return res;
 }
 
-void zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
+void zpt::utf8::encode(std::wstring s, std::string& _out, char quote) {
     std::ostringstream oss;
 
     for (size_t i = 0; i != s.length(); i++) {
         if (((int)s[i]) > 127) {
             oss << "\\u" << std::setfill('0') << std::setw(4) << std::hex << ((int)s.at(i));
         }
-        else if (quote && (s[i] == '"' || s[i] == '\'')) { oss << "\\" << ((char)s.at(i)); }
+        else if (s[i] == quote) { oss << "\\" << ((char)s.at(i)); }
         else if (s[i] == '\n') { oss << "\\n"; }
         else if (s[i] == '\r') { oss << "\\r"; }
         else if (s[i] == '\f') { oss << "\\f"; }
@@ -108,7 +108,7 @@ void zpt::utf8::encode(std::wstring s, std::string& _out, bool quote) {
     _out.assign(oss.str().data(), oss.str().length());
 }
 
-void zpt::utf8::encode(std::string& _out, bool quote) {
+void zpt::utf8::encode(std::string& _out, char quote) {
     long b = 0, c = 0;
     const char* _str = _out.data();
 
