@@ -38,7 +38,7 @@ auto zpt::tostr(std::string& s, int i) -> void {
 
 auto zpt::tostr(std::string& s, bool b) -> void { s.insert(s.length(), b ? "true" : "false"); }
 
-auto zpt::tostr(std::string& s, int i, std::ios_base& (&hex)(std::ios_base&)) -> void {
+auto zpt::tostr(std::string& s, int i, std::ios_base& (&)(std::ios_base&)) -> void {
     char oss[512];
     sprintf(oss, "%x", i);
     s.insert(s.length(), oss);
@@ -105,7 +105,7 @@ auto zpt::tostr(int i) -> std::string {
 
 auto zpt::tostr(bool b) -> std::string { return b ? "true" : "false"; }
 
-auto zpt::tostr(int i, std::ios_base& (&hex)(std::ios_base&)) -> std::string {
+auto zpt::tostr(int i, std::ios_base& (&)(std::ios_base&)) -> std::string {
     char oss[512];
     sprintf(oss, "%x", i);
     return std::string(oss);
@@ -139,13 +139,13 @@ auto zpt::tostr(long long i) -> std::string {
 
 auto zpt::tostr(float i, int precision) -> std::string {
     std::ostringstream _oss;
-    _oss << i << std::flush;
+    _oss << std::setprecision(precision) << i << std::flush;
     return _oss.str();
 }
 
 auto zpt::tostr(double i, int precision) -> std::string {
     std::ostringstream _oss;
-    _oss << i << std::flush;
+    _oss << std::setprecision(precision) << i << std::flush;
     return _oss.str();
 }
 
@@ -259,14 +259,14 @@ auto zpt::fromstr(std::string s, time_t* i, const char* f, bool _no_timezone) ->
     if (_no_timezone) {
         auto _localtime = time(nullptr);
         struct tm* local_tm = std::localtime(&_localtime);
-        struct tm tm[1] = { { 0 } };
+        struct tm tm[1] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
         strptime(s.data(), f, tm);
         *i = std::mktime(tm) - (local_tm->tm_isdst ? 3600 : 0);
     }
     else {
         auto _localtime = time(nullptr);
         struct tm* local_tm = std::localtime(&_localtime);
-        struct tm tm[1] = { { 0 } };
+        struct tm tm[1] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
         strptime(s.data(), f, tm);
         auto _local_offset = local_tm->tm_gmtoff - (local_tm->tm_isdst ? 3600 : 0);
         auto _target_offset = tm->tm_gmtoff - (tm->tm_isdst ? 3600 : 0);
@@ -321,9 +321,7 @@ auto zpt::get_backtrace(unsigned int _skip) -> std::string {
     size_t _backtrace_size = ::backtrace(_backtrace_array, 30);
     char** _backtrace = ::backtrace_symbols(_backtrace_array, _backtrace_size);
     for (size_t _i = 0; _i != _backtrace_size; ++_i, --_skip) {
-        if (_skip > 0) {
-            continue;
-        }
+        if (_skip > 0) { continue; }
         std::smatch _matches;
         std::string _line{ _backtrace[_i] };
         if (std::regex_match(_line, _matches, _line_rgx)) {
@@ -337,4 +335,19 @@ auto zpt::get_backtrace(unsigned int _skip) -> std::string {
     _oss << std::flush;
     free(_backtrace);
     return _oss.str();
+}
+
+auto zpt::timestamp_to_str(std::uint64_t _timestamp) -> std::string {
+    std::string _date = zpt::tostr((size_t)(_timestamp / 1000), "%Y-%m-%dT%H:%M:%S");
+    _date.append(".");
+    size_t _remainder = _timestamp % 1000;
+    if (_remainder < 100) {
+        _date.append("0");
+        if (_remainder < 10) { _date.append("0"); }
+    }
+    zpt::tostr(_date, _remainder);
+    size_t _time_offset = (size_t)(_timestamp / 1000);
+    zpt::tostr(_date, _time_offset, "%z");
+    _date.insert(_date.length() - 2, 1, ':');
+    return _date;
 }

@@ -60,7 +60,7 @@ zpt::json_message::json_message(basic_message const& _request, bool) {
 
     auto _headers =
       zpt::json{ "Content-Type",
-                 _request.content_type(),
+                 "application/json",
                  "Cache-Control",
                  _req_headers("Cache-Control")->ok() ? _req_headers("Cache-Control") : "no-store",
                  "X-Conversation-ID",
@@ -116,9 +116,7 @@ auto zpt::json_message::keep_alive() const -> bool {
     return this->__underlying("headers")("Connection") == "keep-alive" ? true : false;
 }
 
-auto zpt::json_message::content_type() const -> std::string {
-    return this->__underlying("headers")("Content-Type")->string();
-}
+auto zpt::json_message::content_type() const -> std::string { return "application/json"; }
 
 auto zpt::json_message::to_stream(std::ostream& _out) const -> void { _out << this->__underlying; }
 
@@ -304,7 +302,7 @@ auto zpt::network::layer::translate_from_xml(std::istream& _io) -> zpt::json {
     return { _content };
 }
 
-auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json _content) -> std::string {
+auto zpt::network::layer::translate_to_xml(std::ostream& _io, zpt::json) -> std::string {
     _io << "" << std::flush;
     return "text/xml";
 }

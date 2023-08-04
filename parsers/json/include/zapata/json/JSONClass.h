@@ -195,39 +195,44 @@ class json {
     operator zpt::regex&();
     operator std::regex&();
 
-    operator const std::string() const;
-    operator const bool() const;
-    operator const int() const;
-    operator const long() const;
-    operator const long long() const;
-    operator const size_t() const;
-    operator const double() const;
+    operator std::string() const;
+    operator bool() const;
+    operator int() const;
+    operator long() const;
+    operator long long() const;
+    operator size_t() const;
+    operator double() const;
 #ifdef __LP64__
-    operator const unsigned int() const;
+    operator unsigned int() const;
 #endif
-    operator const zpt::timestamp_t() const;
-    operator const zpt::JSONObj() const;
-    operator const zpt::JSONArr() const;
-    operator const zpt::JSONObj&() const;
-    operator const zpt::JSONArr&() const;
-    operator const zpt::lambda() const;
-    operator const zpt::regex() const;
-    operator const zpt::regex&() const;
-    operator const std::regex&() const;
+    operator zpt::timestamp_t() const;
+    operator zpt::JSONObj() const;
+    operator zpt::JSONArr() const;
+    operator zpt::JSONObj&() const;
+    operator zpt::JSONArr&() const;
+    operator zpt::lambda() const;
+    operator zpt::regex() const;
+    operator zpt::regex&() const;
+    operator std::regex&() const;
 
-    auto operator+(std::initializer_list<zpt::json> _in) -> json;
+    auto operator+(std::initializer_list<zpt::json> _in) const -> json;
     auto operator+=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator-(std::initializer_list<zpt::json> _in) -> json;
+    auto operator-(std::initializer_list<zpt::json> _in) const -> json;
     auto operator-=(std::initializer_list<zpt::json> _in) -> json&;
-    auto operator/(std::initializer_list<zpt::json> _in) -> json;
-    auto operator|(std::initializer_list<zpt::json> _in) -> json;
-    auto operator+(zpt::json _rhs) -> json;
+    auto operator/(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator|=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator&(std::initializer_list<zpt::json> _in) const -> json;
+    auto operator&=(std::initializer_list<zpt::json> _in) -> json&;
+    auto operator+(zpt::json _rhs) const -> json;
     auto operator+=(zpt::json _rhs) -> json&;
-    auto operator-(zpt::json _rhs) -> json;
+    auto operator-(zpt::json _rhs) const -> json;
     auto operator-=(zpt::json _rhs) -> json&;
-    auto operator/(zpt::json _rhs) -> json;
-    auto operator|(zpt::json _rhs) -> json;
+    auto operator/(zpt::json _rhs) const -> json;
+    auto operator|(zpt::json _rhs) const -> json;
     auto operator|=(zpt::json _rhs) -> json&;
+    auto operator&(zpt::json _rhs) const -> json;
+    auto operator&=(zpt::json _rhs) -> json&;
 
     friend auto operator>>(std::istream& _in, zpt::json& _out) -> std::istream& {
         _out.load_from(_in);
@@ -300,6 +305,7 @@ class json {
 
     json(std::tuple<size_t, std::string, zpt::json> _rhs);
     auto strict_union(zpt::json _rhs) -> void;
+    auto strict_intersection(zpt::json _rhs) -> void;
 
     static auto traverse(zpt::json _document,
                          zpt::json::traverse_callback _callback,
@@ -331,8 +337,8 @@ class JSONIterator {
     // INPUT ITERATOR METHODS //
     auto operator++(int) -> JSONIterator;
     auto operator->() -> pointer;
-    auto operator==(JSONIterator _rhs) const -> bool;
-    auto operator!=(JSONIterator _rhs) const -> bool;
+    auto operator==(JSONIterator const& _rhs) const -> bool;
+    auto operator!=(JSONIterator const& _rhs) const -> bool;
     // END / INPUT ITERATOR METHODS //
 
     // OUTPUT ITERATOR METHODS //
@@ -852,7 +858,7 @@ class JSONElementT {
     virtual auto date() const -> zpt::timestamp_t const&;
     virtual auto lambda() const -> zpt::lambda const&;
     virtual auto regex() const -> zpt::regex const&;
-    virtual auto number() const -> double const;
+    virtual auto number() const -> double;
 
     auto operator=(const JSONElementT& _rhs) -> JSONElementT&;
     auto operator=(JSONElementT&& _rhs) -> JSONElementT&;

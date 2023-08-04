@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preload stylesheet" href="/components/zpt/style.css" as="style">
+    <script type="importmap">
+      { "imports": {
+          "data::menu": "/menu.js",
+          "data::lang": "/lang/{{document-dictionary}}.js",
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+          "zpt": "/components/zpt/zpt.js",
+          "zpt::menu": "/components/zpt/menu.js",
+          "zpt::modal": "/components/zpt/modal.js",
+          "zpt::form": "/components/zpt/form.js"
+      } }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+      import { default as config } from 'zpt'
+      import { init_menu } from 'data::menu'
+      import { init_dictionary } from 'data::lang'
+      import { createApp } from 'vue'
+      import { default as ZptMenu } from 'zpt::menu'
+      import { default as ZptModal } from 'zpt::modal'
+      import { default as ZptSideTab } from 'zpt::side_tab'
+      import { default as ZptList } from 'zpt::list'
+      import { default as ZptForm } from 'zpt::form'
+
+      init_menu(config)
+      init_dictionary(config)
+
+      createApp({
+          components: {
+              ZptMenu,
+              ZptModal,
+              ZptForm
+          },
+          data() {
+              let dictionary = config.pages.{{document-name}}.dictionary
+              let lang = config.get_lang()
+              return {
+                  config: config,
+                  form: {
+                      fields: {{form-fields}}
+                  }
+              }
+          }
+      }).mount('#app')
+    </script>
+    <div id="app">
+      <zpt-menu
+        :config="config"
+        :items="config.menu.items">
+      </zpt-menu>
+      <zpt-form
+        :lang="config.get_lang()"
+        :dictionary="config.pages.{{document-name}}.dictionary"
+        :id="'{{document-name}}'"
+        :target_url="'{{document-uri}}'"
+        :fields="form.fields"
+        :clear_on_save="false">
+      </zpt-form>
+    </div>
+  </body>
+</html>

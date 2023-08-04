@@ -57,8 +57,8 @@ auto zpt::http::basic_request::to_stream(std::ostream& _out) const -> void {
 
     if (this->__underlying("uri")("params")->ok()) {
         _out << "?";
-        for (auto const& [_, _name, _value] : this->__underlying("params")) {
-            _out << _name << "=" << _value;
+        for (auto const& [_, _name, _value] : this->__underlying("uri")("params")) {
+            _out << _name << "=" << static_cast<std::string>(_value);
         }
     }
 

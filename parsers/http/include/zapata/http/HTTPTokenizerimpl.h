@@ -18,7 +18,7 @@ inline int HTTPTokenizer::lex() { return d_scanner.lex(); }
 
 inline void HTTPTokenizer::print() {}
 
-inline void HTTPTokenizer::exceptionHandler(std::exception const& exc) {
+inline void HTTPTokenizer::exceptionHandler(std::exception const&) {
     throw; // re-implement to handle exceptions thrown by actions
 }
 

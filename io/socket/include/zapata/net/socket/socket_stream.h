@@ -316,9 +316,11 @@ auto zpt::basic_socketbuf<Char>::set_protocol(short _protocol) -> void {
         case IPPROTO_TCP:
         case IPPROTO_UDP: {
             this->__server.reset((zpt::sockaddr_t*)new zpt::sockaddrin_t());
+            break;
         }
         case UNIXPROTO_RAW: {
             this->__server.reset((zpt::sockaddr_t*)new zpt::sockaddrun_t());
+            break;
         }
     }
 }

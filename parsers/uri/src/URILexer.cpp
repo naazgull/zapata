@@ -280,7 +280,7 @@ void URILexerBase::switchOstream(std::ostream& out) {
 }
 
 // $insert debugFunctions
-void URILexerBase::setDebug(bool onOff) {}
+void URILexerBase::setDebug(bool) {}
 
 bool URILexerBase::debug() const { return false; }
 
@@ -451,7 +451,10 @@ int URILexer::executeAction_(size_t ruleIdx) try {
         } break;
         case 1: {
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
                 d_path_helper.assign("{");
+#pragma GCC diagnostic pop
                 d_intermediate_state = StartCondition_::scheme;
                 begin(StartCondition_::placeholder);
             }
@@ -549,20 +552,29 @@ int URILexer::executeAction_(size_t ruleIdx) try {
         } break;
         case 17: {
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
                 d_path_helper.assign("{");
+#pragma GCC diagnostic pop
                 d_intermediate_state = StartCondition_::server;
                 begin(StartCondition_::placeholder);
             }
         } break;
         case 18: {
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
                 d_path_helper.assign("");
+#pragma GCC diagnostic pop
                 return zpt::uri::lex::SLASH;
             }
         } break;
         case 19: {
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
                 d_path_helper.assign("{");
+#pragma GCC diagnostic pop
                 d_intermediate_state = StartCondition_::path;
                 begin(StartCondition_::placeholder);
             }

@@ -26,13 +26,19 @@
 #include <zapata/transport.h>
 
 extern "C" auto _zpt_load_(zpt::plugin& _plugin) -> void {
+    auto _config = zpt::global_cast<zpt::json>(zpt::GLOBAL_CONFIG());
     zpt::global_cast<zpt::transports::engine>(zpt::TRANSPORT_ENGINE()) //
       .add_resolver(zpt::make_global<zpt::rest::resolver>(
         zpt::REST_RESOLVER(), new zpt::rest::resolver_t(_plugin.config())));
+    if (_config("rest")("prefix")->ok()) {
+        _config["rest"]["prefix_path_len"] =
+          zpt::json::integer(zpt::split(_config("rest")("prefix")->string(), "/")->size());
+    }
+    else { _config["rest"]["prefix_path_len"] = 0; }
     zlog("Added REST event resolver", zpt::info);
 }
 
-extern "C" auto _zpt_unload_(zpt::plugin& _plugin) -> void {
+extern "C" auto _zpt_unload_(zpt::plugin&) -> void {
     zlog("Disposing REST event resolver", zpt::info);
     zpt::release_global<zpt::rest::resolver>(zpt::REST_RESOLVER());
 }

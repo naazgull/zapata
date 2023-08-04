@@ -23,6 +23,7 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <errno.h>
 #include <fstream>
@@ -152,9 +153,8 @@ using uchar = unsigned char;
 namespace utf8 {
 char* wstring_to_utf8(std::wstring ws);
 wchar_t* utf8_to_wstring(std::string s);
-int length(std::string s);
-void encode(std::wstring s, std::string& _out, bool quote = true);
-void encode(std::string& _out, bool quote = true);
+void encode(std::wstring s, std::string& _out, char quote = '\0');
+void encode(std::string& _out, char quote = '\0');
 void decode(std::string& _out);
 } // namespace utf8
 
@@ -200,4 +200,20 @@ auto phone(std::string const& _phone) -> bool;
 auto regex(std::string const& _target, std::string const& _regex) -> bool;
 auto timestamp(std::string const& _timestamp) -> bool;
 } // namespace test
+
+auto timestamp_to_str(std::uint64_t _millis) -> std::string;
+template<typename T>
+auto now() -> T;
 } // namespace zpt
+
+template<typename T>
+auto zpt::now() -> T {
+    auto _now = std::chrono::system_clock::now();
+    auto _epoch = _now.time_since_epoch();
+    auto _millis = std::chrono::duration_cast<std::chrono::milliseconds>(_epoch).count();
+    if constexpr (std::is_same_v<T, std::string>) { return zpt::timestamp_to_str(_millis); }
+    else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
+        return static_cast<T>(static_cast<T>(_millis) / 1000);
+    }
+    else { return static_cast<T>(_millis); }
+}

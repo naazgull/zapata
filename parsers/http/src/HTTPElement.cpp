@@ -70,7 +70,8 @@ auto zpt::http::basic_message::keep_alive() const -> bool {
 }
 
 auto zpt::http::basic_message::content_type() const -> std::string {
-    return this->__underlying("headers")("Content-Type")->string();
+    auto ct = this->__underlying("headers")("Content-Type");
+    return ct->ok() ? ct->string() : "text/plain";
 }
 
 auto zpt::http::basic_message::anchor() const -> std::string {

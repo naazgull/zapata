@@ -118,7 +118,7 @@ auto zpt::release_global(ssize_t _variable) -> void {
     expect(static_cast<ssize_t>(_found->second.size()) > _variable,
            "no such global variable for " << typeid(T).name());
     auto _ptr = static_cast<T*>(_found->second[_variable]);
-    _found->second.erase(_found->second.begin() + _variable);
+    _found->second[_variable] = nullptr;
     zpt::globals::__variables_lock.release_exclusive();
     delete _ptr;
 }

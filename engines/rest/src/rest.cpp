@@ -34,8 +34,11 @@ auto zpt::rest::resolver_t::resolve(zpt::message _received,
                                     zpt::events::initializer_t _initializer) const
   -> std::list<zpt::event> {
     std::list<zpt::event> _return;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
     auto _to_search = std::string{ "/" } + zpt::ontology::to_str(_received->performative()) +
                       _received->resource()->string();
+#pragma GCC diagnostic pop
     for (auto [_, __, _record] : this->__catalogue.search(_to_search)) {
         auto _hash_code = _record("metadata")("callback")->integer();
         expect(static_cast<unsigned>(_hash_code) < this->__callbacks.size(),

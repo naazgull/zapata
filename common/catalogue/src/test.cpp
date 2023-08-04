@@ -1,11 +1,11 @@
 #include <zapata/catalogue.h>
 
-auto factory(zpt::json _argv, std::uint16_t _argc, zpt::context _context) -> zpt::json {
+auto factory(zpt::json _argv, std::uint16_t, zpt::context) -> zpt::json {
     zlog(_argv(1), zpt::info);
     return zpt::undefined;
 }
 
-auto main(int argc, char* argv[]) -> int {
+auto main(int, char**) -> int {
     zpt::catalogue<std::string, zpt::json> _catalogue{ "catalogue" };
     _catalogue.clear();
 
