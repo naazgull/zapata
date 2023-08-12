@@ -23,6 +23,8 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
+#include <cinttypes>
 
 #define SHA2_SHFR(x, n) (x >> n)
 #define SHA2_ROTR(x, n) ((x >> n) | (x << ((sizeof(x) << 3) - n)))
